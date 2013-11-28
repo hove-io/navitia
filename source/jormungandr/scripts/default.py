@@ -166,7 +166,7 @@ class Script(object):
                         section.uris.physical_mode = section.pt_display_informations.uris.physical_mode
                         section.uris.network = section.pt_display_informations.uris.network
 
-    def get_journey(self, req, instance, trip_type):
+    def get_journey(self, req, instance, trip_type, debug):
         resp = None
 
         for origin_mode, destination_mode in itertools.product(
@@ -188,7 +188,8 @@ class Script(object):
                        or earliest_dt > resp.journeys[i].arrival_date_time:
                     earliest_dt = resp.journeys[i].arrival_date_time
                     earliest_i = i
-            if earliest_dt:
+
+            if earliest_dt and not debug:
                 #We list the journeys to delete
                 to_delete = range(0, len(resp.journeys))
                 del to_delete[earliest_i]
@@ -246,7 +247,7 @@ class Script(object):
         if not request.has_key("type"):
             request["type"] = "all"
         #call to kraken
-        resp = self.get_journey(req, instance, request["type"])
+        resp = self.get_journey(req, instance, request["type"], request["debug"])
         if len(resp.journeys) > 0 and request.has_key("count"):
             while request["count"] and request["count"] > len(resp.journeys):
                 temp_datetime = None
@@ -266,26 +267,28 @@ class Script(object):
 
 
                 req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
-                tmp_resp = self.get_journey(req, instance, request["type"])
+                tmp_resp = self.get_journey(req, instance, request["type"], request["debug"])
                 if len(tmp_resp.journeys) == 0:
                     break
                 else:
                     resp.journeys.extend(tmp_resp.journeys)
             to_delete = []
-            if request['destination']:
-                for i in range(0, len(resp.journeys)):
-                    if resp.journeys[i].type == "" and not i in to_delete:
-                        to_delete.append(i)
 
-            to_delete.sort(reverse=True)
-            for i in to_delete:
-                del resp.journeys[i]
+            if not request["debug"]: #in debug we want to keep all journeys
+                if request['destination']:
+                    for i in range(0, len(resp.journeys)):
+                        if resp.journeys[i].type == "" and not i in to_delete:
+                            to_delete.append(i)
 
-            if request["count"] and len(resp.journeys) > request["count"]:
-                to_delete = range(request["count"], len(resp.journeys))
                 to_delete.sort(reverse=True)
                 for i in to_delete:
                     del resp.journeys[i]
+
+                if request["count"] and len(resp.journeys) > request["count"]:
+                    to_delete = range(request["count"], len(resp.journeys))
+                    to_delete.sort(reverse=True)
+                    for i in to_delete:
+                        del resp.journeys[i]
 
             if not request["clockwise"]:
                 resp.journeys.sort(self.journey_compare)
