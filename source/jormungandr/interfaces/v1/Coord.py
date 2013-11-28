@@ -27,7 +27,8 @@ class Coord(ResourceUri):
                     "distance" : 200,
                     "type[]" : ["address"],
                     "depth" : 1,
-                    "start_page": 0
+                    "start_page": 0,
+                    "filter" : ""
             }
             pb_result = InstanceManager().dispatch(args, self.region, "places_nearby")
             if len(pb_result.places_nearby) > 0:

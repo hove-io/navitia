@@ -1,5 +1,5 @@
 from flask.ext.restful import Resource
-
+from flask import url_for
 
 def index(api):
     api.add_resource(Index, '/')
@@ -14,7 +14,7 @@ class Index(Resource):
                 "status" : "deprecated",
                 "links" : [
                     {
-                        "href" : "http://api.navitia.io/v0",
+                        "href" : url_for("v0", _external=True),
                         "templated" : False
                     }
                 ]
@@ -25,7 +25,7 @@ class Index(Resource):
                 "status" : "current",
                 "links" : [
                     {
-                        "href" : "http://api.navitia.io/v1",
+                        "href" : url_for("v1.index", _external=True),
                         "templated" : False
                     }
                 ]

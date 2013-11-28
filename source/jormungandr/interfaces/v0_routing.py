@@ -11,6 +11,9 @@ def v0_routing(api):
     api.app.url_map.converters['region'] = RegionConverter
     api.add_resource(Regions.Regions,
                      '/v0/regions.json',
+                     endpoint='v0') #it just redirect to regions
+    api.add_resource(Regions.Regions,
+                     '/v0/regions.json',
                      endpoint='v0.regions')
     api.add_resource(Ptref.StopAreas,
                      '/v0/<region:region>/stop_areas.json',

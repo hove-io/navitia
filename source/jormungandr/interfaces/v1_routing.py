@@ -65,9 +65,7 @@ def v1_routing(api):
                      endpoint='v1.coverage')
 
     api.add_resource(Coord.Coord,
-                     region + 'coord',
-                     region + 'coord/<lon:lon>;<lat:lat>',
-                     coord,
+                     '/v1/coord/<lon:lon>;<lat:lat>',
                      endpoint='v1.coord')
 
     collections = converters_collection_type.collections_to_resource_type.keys()
