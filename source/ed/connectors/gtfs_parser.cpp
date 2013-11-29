@@ -33,6 +33,30 @@ int time_to_int(const std::string & time) {
     return result;
 }
 
+void FileParser::read() {
+    headers = required_headers();
+    if(!csv.validate(header)) {
+        LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                " il manque les colonnes  : " + csv.missing_headers(headers));
+        throw InvalidHeaders(csv.filename);
+    }
+
+    int id_c = csv.get_pos_col("commercial_mode_id"), name_c = csv.get_pos_col("commercial_mode_name");
+
+    bool line_read = false;
+    while(!csv.eof()) {
+        auto row = csv.next();
+        if(!row.empty()) {
+            if(line_read && id_c == -1) {
+                LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                                + " " + get_empty_file_error());
+                throw InvalidHeaders(csv.filename);
+            }
+            handleLine(row);
+            line_read = true;
+        }
+    }
+}
 
 GtfsParser::GtfsParser(const std::string & path) :
     path(path), production_date(boost::gregorian::date(), boost::gregorian::date()){

@@ -13,10 +13,9 @@
   *
   * http://code.google.com/intl/fr/transit/spec/transit_feed_specification.html
   */
-namespace ed{ namespace connectors{
-class GtfsParser {
-private:
-    std::string path;///< Chemin vers les fichiers
+namespace ed { namespace connectors {
+
+struct GtfsData {
 
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
@@ -31,6 +30,36 @@ private:
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
+};
+
+class FileParser {
+    GtfsData& gtfs_data;
+    Data & data;
+    CsvReader &csv;
+    std::vector<std::string> headers;
+    FileParser(GtfsData& gdata, Data& d, CsvReader& reader) : gtfs_data(gdata), data(d), csv(reader){}
+
+    virtual std::vector<std::string> required_headers() const { return {}; }
+    virtual init() {}
+    virtual void handleLine(const std::vector<std::string>& line) = 0;
+    virtual std::string get_empty_file_error() const {}
+
+public:
+    void read();
+};
+
+template <typename T>
+class SimpleObjectFileParser : public FileParser {
+
+    virtual handleLine() {
+
+    }
+};
+
+class GtfsParser {
+private:
+    std::string path;///< Chemin vers les fichiers
+
     log4cplus::Logger logger;
 
 public:
