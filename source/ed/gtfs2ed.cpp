@@ -73,7 +73,7 @@ int main(int argc, char * argv[])
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     navitia::type::MetaData meta;
-    meta.production_date = connector.production_date;
+    meta.production_date = connector.gtfs_data.production_date;
 
     start = pt::microsec_clock::local_time();
     data.complete();
