@@ -5,7 +5,7 @@ How to build kraken and run it
 Dependencies
 ============
 
-* gcc 4.7 or newer
+* gcc 4.6 or newer
 * cmake
 * log4cplus
 * osmpbf (https://github.com/scrosby/OSM-binary)
@@ -26,10 +26,10 @@ We hope you got the source code from git.
 
    ``git submodule update --init``
 
-2. Create a directory where everything will be built and eter it
+2. Create a directory where everything will be built and enter it
 
-   ``mkdir build``
-   ``cd build``
+   ``mkdir release``
+   ``cd release``
 
 3. Run cmake
 
@@ -48,32 +48,50 @@ We hope you got the source code from git.
 Testing
 =======
 
-#. Testing everything
+#. Data configuration
+
+   The data manager is called *ed*. It relies on GTFS and Open Street Map data centralized in a postgres database
+
+   #. Configure the postgres database
+
+         #. TODO
 
    #. Get some GTFS data. For instance from http://data.navitia.io
 
-   #. We suppose you create a data directory at the root of the kraken directory where you unziped the data
+         Import them using the gtfs2ed tool
 
-   #. Transform the data : ``./navimake -i ../data/ -o ../data/data.nav.lz4``
+   #. Get some Open Street Map data. For instance from http://metro.teczno.com/ 
 
-   #. Go to the navitia directory cd navitia
+         Import them using the osm2ed tool
 
-   #. Create the navitia.ini file with the following content ::
+   #. Once *ed* has been loaded with all the data, you have to export the data for *Kraken* with the ed2nav tool
 
-       [GENERAL]
-       database=../../data/data.nav.lz4
+         This step will generate a ziped nav file that can be given as input to *Kraken*
 
-   #. Run navitia  ./navitia it should tell you what data it tries to load, and give some figures about the data
+#. Running the *Kraken* backend
 
-#. Running the "frontend". Note : this frontend is an API, and not oriented towards final users
+   #. To run *Kraken*, you need to supply some parameters. You can give those parameters either via a file or via the command-line. By default you can take the documentation/examples/config/kraken.ini configuration file. The configuration file needs at least the path of the exported nav file and the zmq socket used to communicate with Jörmungandr. Run ``kraken --help`` to see the list of arguments
+
+   #. Run *Kraken*. It should tell you what data it tries to load, and give some figures about the data
+
+#. Running the *Jörmungandr* front-end. Note : this front-end is an API, and not oriented towards final users
 
    #. Dependencies : python2 and the following python libraries werkzeug, shapely, zmq, protobuf
 
-   #. Create the Jörmungandr.ini file with the following content: ::
+   #. Edit if you want the Jormungandr.ini file. 
 
-       [instance]
-       key = some_region
-       socket = ipc:///tmp/default_navitia
+        Note: If you want to put the file elsewhere, you can change the INSTANCES_DIR variable
 
-   #. Run-it python2 navitia.py
-   #. Grab a browser and open http://localhost:8088/some_region/stop_areas.txt
+        example file : ::
+
+            [instance]
+            # name of the kraken
+            key = some_region 
+            # zmq socket used to talk to the kraken, should be the same as the one defined by the zmq_socket param in kraken
+            socket = ipc:///tmp/default_kraken
+
+   #. Give him the configuration file (by default it uses source/jormungandr/default_settings.py) and run it
+
+         ``JORMUNGANDR_CONFIG_FILE=your_config.py python jormungandr.py``
+
+   #. Grab a browser and open http://localhost:5000/v1/coverage/default_region
