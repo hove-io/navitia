@@ -844,8 +844,8 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
             }else itm = physical_mode_map.find(line->commercial_mode->id);
 
             if(itm == physical_mode_map.end()) {
-                LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " + line->commercial_mode->id
-                          + " référencée par trip " + row[trip_c]);
+                LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " << row[physical_mode_c]
+                          + " référencée par trip " << row[trip_c]);
                 ignored++;
             } else {
                 nm::ValidityPattern * vp_xx;
