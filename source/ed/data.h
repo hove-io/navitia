@@ -11,7 +11,7 @@ namespace ed{
 
 template<typename T>
 void normalize_uri(std::vector<T*>& vec){
-    std::string prefix = navitia::type::static_data::get()->captionByType(T::type);
+    std::string prefix = navitia::type::static_data::get()->captionByType(T::type);    
     for(auto* element : vec){
         element->uri = prefix + ":" + element->uri;
     }
@@ -40,8 +40,6 @@ public:
     /// Liste des alias et synonymes
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
-
-
 
     /**
          * trie les différentes donnée et affecte l'idx

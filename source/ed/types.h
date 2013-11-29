@@ -61,6 +61,7 @@ struct JourneyPatternPointConnection: public Header {
 
 struct StopArea : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopArea;
+    std::string external_code;
     nt::GeographicalCoord coord;
 
     navitia::type::StopArea* get_navitia_type() const;
@@ -73,6 +74,7 @@ struct StopArea : public Header, Nameable, hasProperties{
 
 struct Contributor : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Contributor;
+    std::string external_code;
     Contributor() {}
 
     nt::Contributor* get_navitia_type() const;
@@ -82,6 +84,7 @@ struct Contributor : public Header, Nameable{
 
 struct Network : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Network;
+    std::string external_code;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -97,6 +100,7 @@ struct Network : public Header, Nameable{
 
 struct Company : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Company;
+    std::string external_code;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -112,6 +116,7 @@ struct Company : public Header, Nameable{
 
 struct CommercialMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::CommercialMode;
+    std::string external_code;
     nt::CommercialMode* get_navitia_type() const;
 
     bool operator<(const CommercialMode& other)const ;
@@ -119,6 +124,7 @@ struct CommercialMode : public Header, Nameable{
 
 struct PhysicalMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::PhysicalMode;
+    std::string external_code;
     PhysicalMode() {}
 
     nt::PhysicalMode* get_navitia_type() const;
@@ -128,6 +134,7 @@ struct PhysicalMode : public Header, Nameable{
 
 struct Line : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::Line;
+    std::string external_code;
     std::string code;
     std::string forward_name;
     std::string backward_name;
@@ -149,6 +156,7 @@ struct Line : public Header, Nameable {
 
 struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
+    std::string external_code;
     Line * line;
 
     navitia::type::Route* get_navitia_type() const;
@@ -172,6 +180,7 @@ struct JourneyPattern : public Header, Nameable{
 
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     const static nt::Type_e type = nt::Type_e::VehicleJourney;
+    std::string external_code;
     JourneyPattern* journey_pattern;
     Company* company;
     PhysicalMode* physical_mode; // Normalement on va lire cette info dans JourneyPattern
@@ -239,6 +248,7 @@ public:
 
 struct StopPoint : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopPoint;
+    std::string external_code;
     nt::GeographicalCoord coord;
     int fare_zone;
 

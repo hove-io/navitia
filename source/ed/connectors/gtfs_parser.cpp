@@ -319,7 +319,9 @@ void GtfsParser::parse_agency(Data & data, CsvReader & csv){
         throw InvalidHeaders(csv.filename);
     }
 
-    int id_c = csv.get_pos_col("agency_id"), name_c = csv.get_pos_col("agency_name");
+    int id_c = csv.get_pos_col("agency_id"),
+                name_c = csv.get_pos_col("agency_name"),
+                ext_code_c = csv.get_pos_col("external_code");
 
     bool line_read = false;
     while(!csv.eof()) {
@@ -335,6 +337,11 @@ void GtfsParser::parse_agency(Data & data, CsvReader & csv){
                 network->uri = row[id_c];
             }else{
                 network->uri = "default_agency";
+            }
+            if (ext_code_c != -1){
+                network->external_code = row[ext_code_c];
+            }else{
+                network->external_code = network->uri;
             }
             network->name = row[name_c];
             data.networks.push_back(network);
@@ -366,7 +373,7 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
         escalator_c = csv.get_pos_col("escalator"), bike_accepted_c = csv.get_pos_col("bike_accepted"),
         bike_depot_c = csv.get_pos_col("bike_depot"), visual_announcement_c =csv.get_pos_col("visual_announcement"),
         audible_announcement_c = csv.get_pos_col("audible_announcement"), appropriate_escort_c = csv.get_pos_col("appropriate_escort"),
-        appropriate_signage_c =csv.get_pos_col("appropriate_signage");
+        appropriate_signage_c =csv.get_pos_col("appropriate_signage"), ext_code_c = csv.get_pos_col("external_code");
 
     if(code_c == -1){
         code_c = id_c;
@@ -406,12 +413,19 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
             if (desc_c != -1)
                 sp->comment = row[desc_c];
 
+            if(ext_code_c != -1){
+                sp->external_code = row[ext_code_c];
+            }else{
+                sp->external_code = sp->uri;
+            }
+
             // Si c'est un stopArea
             if(type_c != -1 && row[type_c] == "1") {
                 nm::StopArea * sa = new nm::StopArea();
                 sa->coord = sp->coord;
                 sa->name = sp->name;
                 sa->uri = sp->uri;
+                sa->external_code = sp->external_code;
                 if(wheelchair_c != -1 && row[wheelchair_c] == "1")
                     sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
                 if(sheltered_c != -1 && row[sheltered_c] == "1")
@@ -745,7 +759,7 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
         long_name_c = csv.get_pos_col("route_long_name"), type_c = csv.get_pos_col("route_type"),
         desc_c = csv.get_pos_col("route_desc"),
         color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id"),
-        commercial_mode_c = csv.get_pos_col("commercial_mode_id");
+        commercial_mode_c = csv.get_pos_col("commercial_mode_id"), ext_code_c = csv.get_pos_col("external_code");
     int ignored = 0;
 
     while(!csv.eof()) {
@@ -755,6 +769,11 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
         if(line_map.find(row[id_c]) == line_map.end()) {
             nm::Line * line = new nm::Line();
             line->uri = row[id_c];
+            if(ext_code_c != -1){
+                line->external_code = row[ext_code_c];
+            }else{
+                line->external_code = line->uri;
+            }
             line->name = row[long_name_c];
             line->code = row[short_name_c];
             if ( desc_c != -1 )
@@ -821,6 +840,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
     int company_id_c = csv.get_pos_col("company_id");
     int condition_c = csv.get_pos_col("trip_condition");
     int physical_mode_c = csv.get_pos_col("physical_mode_id");
+    int ext_code_c = csv.get_pos_col("external_code");
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -862,6 +882,11 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                 if(vj_it == vj_map.end()) {
                     nm::VehicleJourney * vj = new nm::VehicleJourney();
                     vj->uri = row[trip_c];
+                    if(ext_code_c != -1){
+                        vj->external_code = row[ext_code_c];
+                    }else{
+                        vj->external_code = vj->uri;
+                    }
                     if(headsign_c != -1)
                         vj->name = row[headsign_c];
                     else
