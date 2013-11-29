@@ -1,6 +1,7 @@
 stats
 debug
 release
+build
 Doc
 qtcreator-build
 ui_mainwindow.h
@@ -15,4 +16,8 @@ tags
 DEBIAN/
 build_package/
 *.log
+*.orig
 source/scripts/settings_jormungandr.sh
+debian/navitia-ed
+debian/navitia-jormungandr
+debian/tmp
