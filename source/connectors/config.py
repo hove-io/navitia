@@ -20,6 +20,11 @@ class Config(object):
         self.exchange_name = None
         self.rt_topics = []
 
+        self.redisqueque_host = None
+        self.redisqueque_port = None
+        self.redisqueque_password = None
+        self.redisqueque_db = None
+
     def build_error(self, config, validate_result):
         """
         construit la chaine d'erreur si la config n'est pas valide
@@ -38,6 +43,7 @@ class Config(object):
             result += section_string + ' => ' + str(error) + "\n"
         return result
 
+
     def load(self, config_file):
         """
         charge la configuration depuis le fichier de conf et la valide
@@ -53,6 +59,12 @@ class Config(object):
 
         confspec.append('[at]')
         confspec.append('connection-string = string()')
+
+        confspec.append('[redisqueue]')
+        confspec.append('host = string(default="localhost")')
+        confspec.append('password = string(default="password")')
+        confspec.append('port = integer(default=6379)')
+        confspec.append('db = string(default=0)')
 
         config = ConfigObj(config_file, configspec=confspec, stringify=True)
 
@@ -72,3 +84,4 @@ class Config(object):
         self.at_connection_string = config['at']['connection-string']
         self.exchange_name = config['connector_at']['exchange-name']
         self.rt_topics = config['connector_at']['rt-topics']
+

@@ -5,7 +5,7 @@
 """
 import sys
 
-from connectors.at.daemon import ConnectorAT
+from at.daemon import ConnectorAT
 import argparse
 
 

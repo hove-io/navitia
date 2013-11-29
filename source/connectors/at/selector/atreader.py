@@ -86,15 +86,13 @@ class AtRealtimeReader(object):
     Classe responsable de la lecture en base de donnee des evenements
     temps reel.
     """
-
-    def __init__(self, config):
-
+    def __init__(self, config, rqueue):
         self.message_list = []
         self.perturbation_list = []
         self.__engine = create_engine(
             config.at_connection_string + '?charset=utf8',
             echo=False)
-
+        self._redis_queque = rqueue
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
 
@@ -136,6 +134,11 @@ class AtRealtimeReader(object):
 
         self.last_exec_file_name = './last_exec_time.txt'
         self.datetime_format = '%Y-%m-%d %H:%M:%S'
+        self._collections = {"StopPoint" : "stop_point",
+                            "VehicleJourney" : "vehicle_journey",
+                            "Line" : "line",
+                            "Network" : "network",
+                            "StopArea" : "stop_area"}
 
     def get_last_execution_time(self):
         if os.path.exists(self.last_exec_file_name):
@@ -150,6 +153,16 @@ class AtRealtimeReader(object):
         last_exec_file = open(self.last_exec_file_name, 'w')
         str_date = last_execution_time.strftime(self.datetime_format)
         last_exec_file.write(str_date)
+ 	
+	def get_uri(self, externalcode, object_type):
+        uri = None
+        if object_type in self._collections.keys():
+            self._redis_queque.set_prefix(self._collections[object_type])
+            uri = self._redis_queque.get(externalcode)
+        if uri == None:
+            return externalcode
+        else:
+            return uri
 
     def create_pertubation(self, message):
         pertubation = at.realtime_pb2.AtPerturbation()
@@ -210,8 +223,11 @@ class AtRealtimeReader(object):
                             row[self.label_application_daily_end_hour])
                     message.active_days = \
                         int_to_bitset(row[self.label_active_days]) + '1'
-                    message.object.object_uri = row[
-                        self.label_object_external_code]
+
+                    message.object.object_uri = self.get_uri(
+									row[self.label_object_external_code],
+									row[self.label_object_type])
+
                     message.object.object_type = \
                         get_navitia_type(row[self.label_object_type])
                     state = row[self.label_impact_state]
