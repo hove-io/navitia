@@ -22,27 +22,26 @@ Build instruction
 
 We hope you got the source code from git.
 
-1. Get the submodules: at the root of project :
+#. Get the submodules: at the root of project :
 
    ``git submodule update --init``
 
-2. Create a directory where everything will be built and enter it
+#. With CMake you can build in a repository different than the source directory.
 
+   By convention, you can have one build repository for each kind of build.
+   Create a directory where everything will be built and enter it
    ``mkdir release``
    ``cd release``
 
-3. Run cmake
+#. Run cmake
 
    ``cmake ../source``
-
    Note: il will build in debug mode. If you want to compile it as a release run
-
    ``cmake -DCMAKE_BUILD_TYPE=Release ../source``
 
-4. compile
+#. Compile
 
    ``make -j4``
-
    Note: adjust -jX according to the number of cores you have
 
 Testing
@@ -52,21 +51,21 @@ Testing
 
    The data manager is called *ed*. It relies on GTFS and Open Street Map data centralized in a postgres database
 
-   #. Configure the postgres database
+#. Configure the postgres database
 
-         #. TODO
+   #. TODO
 
-   #. Get some GTFS data. For instance from http://data.navitia.io
+#. Get some GTFS data. For instance from http://data.navitia.io
 
-         Import them using the gtfs2ed tool
+   Import them using the gtfs2ed tool
 
-   #. Get some Open Street Map data. For instance from http://metro.teczno.com/ 
+#. Get some Open Street Map data. For instance from http://metro.teczno.com/ 
 
-         Import them using the osm2ed tool
+   Import them using the osm2ed tool
 
-   #. Once *ed* has been loaded with all the data, you have to export the data for *Kraken* with the ed2nav tool
+#. Once *ed* has been loaded with all the data, you have to export the data for *Kraken* with the ed2nav tool
 
-         This step will generate a ziped nav file that can be given as input to *Kraken*
+   This step will generate a ziped nav file that can be given as input to *Kraken*
 
 #. Running the *Kraken* backend
 
@@ -80,18 +79,18 @@ Testing
 
    #. Edit if you want the Jormungandr.ini file. 
 
-        Note: If you want to put the file elsewhere, you can change the INSTANCES_DIR variable
+      Note: If you want to put the file elsewhere, you can change the INSTANCES_DIR variable
 
-        example file : ::
+      example file : ::
 
-            [instance]
-            # name of the kraken
-            key = some_region 
-            # zmq socket used to talk to the kraken, should be the same as the one defined by the zmq_socket param in kraken
-            socket = ipc:///tmp/default_kraken
+        [instance]
+        # name of the kraken
+        key = some_region 
+        # zmq socket used to talk to the kraken, should be the same as the one defined by the zmq_socket param in kraken
+        socket = ipc:///tmp/default_kraken
 
    #. Give him the configuration file (by default it uses source/jormungandr/default_settings.py) and run it
 
-         ``JORMUNGANDR_CONFIG_FILE=your_config.py python jormungandr.py``
+      ``JORMUNGANDR_CONFIG_FILE=your_config.py python jormungandr.py``
 
    #. Grab a browser and open http://localhost:5000/v1/coverage/default_region

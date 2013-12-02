@@ -4,37 +4,42 @@ Navitia
 
 Presentation
 ============
+This is the Navitia repository.
+
 Navitia is a service providing:
 
-    #. journeys computation
+#. journeys computation
 
-    #. line schedules
+#. line schedules
 
-    #. next departures
+#. next departures
 
-    #. explore public transport data
+#. explore public transport data
 
-    #. sexy things such as isochrones
+#. sexy things such as isochrones
+
+The API can be found in http://api.navitia.io/
 
 For more information see http://www.navitia.io/
 
 Organisation
 ============
 At the root of the repository, several directories can be found:
-    #. source: contains the navitia source code
 
-    #. third_party: third party developped modules
+#. source: contains the navitia source code
 
-    #. documentation: all the navitia documentation
+#. third_party: third party developped modules
 
-    #. (debug|release): by convention, the build repositories
+#. documentation: all the navitia documentation
+
+#. (debug|release): by convention, the build repositories
 
 Tools
 ======
-    #. Gcc as the C++ compiler (g++)
+#. Gcc as the C++ compiler (g++)
 
-    #. Cmake for the build system
+#. Cmake for the build system
 
-    #. Python for the api 
+#. Python for the api 
 
-    #. Doxygen and swagger for the automated documentation
+#. Doxygen and swagger for the automated documentation
