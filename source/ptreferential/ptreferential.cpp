@@ -164,6 +164,7 @@ std::vector<Filter> parse(std::string request){
 
 
 std::vector<idx_t> make_query(Type_e requested_type, std::string request,
+                              const std::vector<std::string>& forbidden_uris,
                               const Data & data) {
     std::vector<Filter> filters;
 
@@ -176,7 +177,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         try {
             filter.navitia_type = static_data->typeByCaption(filter.object);
         } catch(...) {
-            throw parsing_error(parsing_error::error_type::unknown_object, "Filter Unknown object type: " + filter.object);
+            throw parsing_error(parsing_error::error_type::unknown_object,
+                    "Filter Unknown object type: " + filter.object);
         }
     }
     std::vector<idx_t> final_indexes = data.get_all_index(requested_type);
@@ -195,7 +197,9 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
             case Type_e::POIType: indexes = get_indexes<georef::POIType>(filter, requested_type, data); break;
             case Type_e::Connection: indexes = get_indexes<type::StopPointConnection>(filter, requested_type, data); break;
         default:
-            throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
+            throw parsing_error(parsing_error::partial_error,
+                    "Filter: Unable to find the requested type. Not parsed: >>"
+                    + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
         }
         // Attention ! les structures doivent être triées !
         std::sort(indexes.begin(), indexes.end());
@@ -205,6 +209,44 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
         final_indexes = tmp_indexes;
     }
+    //We now filter with forbidden uris
+    for(const auto forbidden_uri : forbidden_uris) {
+        const auto type_ = data.get_type_of_id(forbidden_uri);
+        std::string caption_type;
+        try {
+            caption_type = static_data->captionByType(type_);
+        } catch(std::out_of_range&) {
+            throw parsing_error(parsing_error::error_type::unknown_object,
+                    "Filter Unknown object type: " + forbidden_uri);
+        }
+
+        Filter filter_forbidden(caption_type, "uri", Operator_e::EQ, forbidden_uri);
+        filter_forbidden.navitia_type = type_;
+        std::vector<idx_t> forbidden_idx;
+        switch(type_){
+#define GET_INDEXES_FORBID(type_name, collection_name) case Type_e::type_name: forbidden_idx = get_indexes<type_name>(filter_forbidden, requested_type, data); break;
+        ITERATE_NAVITIA_PT_TYPES(GET_INDEXES_FORBID)
+            case Type_e::POI:
+                forbidden_idx = get_indexes<georef::POI>(filter_forbidden, requested_type, data);
+                break;
+            case Type_e::POIType:
+                forbidden_idx = get_indexes<georef::POIType>(filter_forbidden, requested_type, data);
+                break;
+            case Type_e::Connection:
+                forbidden_idx = get_indexes<type::StopPointConnection>(filter_forbidden, requested_type, data);
+                break;
+        default:
+            throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter_forbidden.navitia_type) + "<<");
+        }
+        // Attention ! les structures doivent être triées !
+        std::sort(forbidden_idx.begin(), forbidden_idx.end());
+        std::unique(forbidden_idx.begin(), forbidden_idx.end());
+        std::vector<idx_t> tmp_indexes;
+        std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
+        std::set_difference(final_indexes.begin(), final_indexes.end(),
+                forbidden_idx.begin(), forbidden_idx.end(), it);
+        final_indexes = tmp_indexes;
+    }
 
     // Cas où c’est les filtres qui font qu’on ne trouve rien
     if(final_indexes.empty()){
@@ -212,6 +254,12 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         throw ptref_error("Filters: Unable to find object");
     }
     return final_indexes;
+}
+std::vector<type::idx_t> make_query(type::Type_e requested_type,
+                                    std::string request,
+                                    const type::Data &data) {
+    const std::vector<std::string> forbidden_uris;
+    return make_query(requested_type, request, forbidden_uris, data);
 }
 
 }} // navitia::ptref

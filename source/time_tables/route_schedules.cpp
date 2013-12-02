@@ -88,11 +88,13 @@ get_vehicle_jorney(const std::vector<std::vector<datetime_stop_time> >& stop_tim
 
 
 pbnavitia::Response
-route_schedule(const std::string& filter, const std::string &str_dt,
+route_schedule(const std::string& filter,
+               const std::vector<std::string>& forbidden_uris,
+               const std::string &str_dt,
                uint32_t duration, uint32_t interface_version,
                const uint32_t max_depth, int count, int start_page,
                type::Data &d) {
-    RequestHandle handler("ROUTE_SCHEDULE", filter, str_dt, duration, d);
+    RequestHandle handler("ROUTE_SCHEDULE", filter, forbidden_uris, str_dt, duration, d);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
@@ -102,7 +104,7 @@ route_schedule(const std::string& filter, const std::string &str_dt,
     auto pt_max_datetime = to_posix_time(handler.max_datetime, d);
     pt::time_period action_period(pt_datetime, pt_max_datetime);
     Thermometer thermometer(d);
-    auto routes_idx = ptref::make_query(type::Type_e::Route, filter, d);
+    auto routes_idx = ptref::make_query(type::Type_e::Route, filter, forbidden_uris, d);
     size_t total_result = routes_idx.size();
     routes_idx = paginate(routes_idx, count, start_page);
     for(type::idx_t route_idx : routes_idx) {

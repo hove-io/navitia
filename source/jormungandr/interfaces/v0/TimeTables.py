@@ -27,6 +27,8 @@ class TimeTables(Resource):
                description="Maximal depth of the returned objects")
         self.parsers["get"].add_argument("interface_version", type=depth_argument,
                                  default=0, hidden=True)
+        self.parsers["get"].add_argument("forbidden_uris[]", type=str, required=False,
+                description="List of uris you want to forbid", action="append")
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
