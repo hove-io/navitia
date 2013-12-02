@@ -11,7 +11,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    additional_informations_vj, UrisToLinks,  error
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
-from ResourceUri import ResourceUri, add_notes,manage_response_status
+from ResourceUri import ResourceUri, add_notes
 from datetime import datetime
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
@@ -108,7 +108,8 @@ stop_schedule = {
     "route" : PbField(route, attribute="route"),
     "display_informations" : PbField(display_informations_route, attribute='pt_display_informations'),
     "date_times" : fields.List(fields.Nested(date_time)),
-    "links" : UrisToLinks()
+    "links" : UrisToLinks(),
+    "status":enum_type(attribute="status")
 }
 stop_schedules = {
     "stop_schedules" : fields.List(fields.Nested(stop_schedule)),
@@ -120,7 +121,6 @@ class StopSchedules(Schedules):
     def __init__(self):
         super(StopSchedules, self).__init__("departure_boards")
         self.parsers["get"].add_argument("interface_version", type=int, default=1, hidden=True)
-        self.method_decorators.append(manage_response_status(self))
     @marshal_with(stop_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):

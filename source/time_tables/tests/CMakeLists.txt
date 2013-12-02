@@ -12,3 +12,7 @@ add_executable(thermometer thermometer.cpp)
 target_link_libraries(thermometer time_tables ptreferential ed data routing utils pb_lib georef ${BOOST_LIBS} log4cplus)
 ADD_TEST(thermometer ${EXECUTABLE_OUTPUT_PATH}/thermometer --report_level=no)
 
+
+add_executable(departure_boards_test departure_boards_test.cpp)
+target_link_libraries(departure_boards_test time_tables ptreferential ed data routing utils pb_lib georef ${BOOST_LIBS} log4cplus)
+ADD_TEST(departure_boards_test ${EXECUTABLE_OUTPUT_PATH}/departure_boards_test --report_level=no)
