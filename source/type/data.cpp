@@ -235,7 +235,7 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     return result;
 }
 
-Type_e Data::get_type_of_id(const std::string & id) {
+Type_e Data::get_type_of_id(const std::string & id) const {
     if(id.size()>6 && id.substr(0,6) == "coord:")
         return Type_e::Coord;
     if(id.size()>6 && id.substr(0,8) == "address:")
