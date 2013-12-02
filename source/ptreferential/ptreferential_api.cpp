@@ -83,13 +83,14 @@ pbnavitia::Response extract_data(const type::Data & data,
 
 
 pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
+                             const std::vector<std::string>& forbidden_uris,
                              const int depth, const int startPage,
                              const int count, const type::Data &data){
     std::vector<type::idx_t> final_indexes;
     pbnavitia::Response pb_response;
     int total_result;
     try {
-        final_indexes = make_query(requested_type, request, data);
+        final_indexes = make_query(requested_type, request, forbidden_uris, data);
         total_result = final_indexes.size();
         final_indexes = paginate(final_indexes, count, startPage);
     } catch(const parsing_error &parse_error) {

@@ -59,7 +59,7 @@ std::vector<std::string> vector_of_admins(const T & admin){
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
 
-    auto status = result.mutable_status();    
+    auto status = result.mutable_status();
     const auto d = *data;
     boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
     status->set_publication_date(pt::to_iso_string(d->meta.publication_date));
@@ -116,34 +116,38 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     int32_t max_date_times = request.has_max_date_times() ? request.max_date_times() : std::numeric_limits<int>::max();
+    std::vector<std::string> forbidden_uri;
+    for(int i = 0; i < request.forbidden_uri_size(); ++i)
+        forbidden_uri.push_back(request.forbidden_uri(i));
     this->init_worker_data();
     try {
         switch(api){
         case pbnavitia::NEXT_DEPARTURES:
             return timetables::next_departures(request.departure_filter(),
-                    request.from_datetime(), request.duration(),
-                    request.nb_stoptimes(), request.depth(),
+                    forbidden_uri, request.from_datetime(),
+                    request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(), *(*this->data), request.count(),
                     request.start_page());
         case pbnavitia::NEXT_ARRIVALS:
             return timetables::next_arrivals(request.arrival_filter(),
-                    request.from_datetime(), request.duration(),
-                    request.nb_stoptimes(), request.depth(),
+                    forbidden_uri, request.from_datetime(),
+                    request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
                     *(*this->data), request.count(), request.start_page());
         case pbnavitia::STOPS_SCHEDULES:
             return timetables::stops_schedule(request.departure_filter(),
-                    request.arrival_filter(), request.from_datetime(),
-                    request.duration(), request.depth(), *(*this->data));
+                    request.arrival_filter(), forbidden_uri,
+                    request.from_datetime(), request.duration(), request.depth(),
+                    *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
-                    request.from_datetime(), request.duration(),max_date_times,
-                    request.interface_version(), request.count(),
-                    request.start_page(), *(*this->data));
+                    forbidden_uri, request.from_datetime(),
+                    request.duration(),max_date_times, request.interface_version(),
+                    request.count(), request.start_page(), *(*this->data));
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
-                    request.from_datetime(), request.duration(),
-                    request.interface_version(), request.depth(),
+                    forbidden_uri, request.from_datetime(),
+                    request.duration(), request.interface_version(), request.depth(),
                     request.count(), request.start_page(), *(*this->data));
         default:
             LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
@@ -367,10 +371,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
 pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    std::vector<std::string> forbidden_uri;
+    for(int i = 0; i < request.forbidden_uri_size(); ++i)
+        forbidden_uri.push_back(request.forbidden_uri(i));
     return navitia::ptref::query_pb(get_type(request.requested_type()),
-                                    request.filter(), request.depth(),
-                                    request.start_page(), request.count(),
-                                    *(*this->data));
+                                    request.filter(), forbidden_uri,
+                                    request.depth(), request.start_page(),
+                                    request.count(), *(*this->data));
 }
 
 

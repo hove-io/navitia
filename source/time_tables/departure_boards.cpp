@@ -2,10 +2,8 @@
 #include "request_handle.h"
 #include "get_stop_times.h"
 #include "type/pb_converter.h"
-
 #include "boost/lexical_cast.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
-#include "ptreferential/ptreferential.h"
 #include "utils/paginate.h"
 
 namespace pt = boost::posix_time;
@@ -127,12 +125,13 @@ render_v1(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
 
 
 pbnavitia::Response
-departure_board(const std::string &request, const std::string &date,
+departure_board(const std::string& request, const std::vector<std::string>& forbidden_uris,
+                const std::string& date,
                 uint32_t duration, int32_t max_date_times,
                 int interface_version,
                 int count, int start_page, const type::Data &data) {
 
-    RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
+    RequestHandle handler("DEPARTURE_BOARD", request, forbidden_uris, date,  duration, data);
 
     if(handler.pb_response.has_error())
         return handler.pb_response;
