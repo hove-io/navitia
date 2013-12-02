@@ -5,7 +5,7 @@ How to build kraken and run it
 Dependencies
 ============
 
-* gcc 4.6 or newer
+* gcc 4.7 or newer
 * cmake
 * log4cplus
 * osmpbf (https://github.com/scrosby/OSM-binary)
