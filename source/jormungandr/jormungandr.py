@@ -44,8 +44,7 @@ v1_documentation(api)
 def kill_thread(signal, frame):
     InstanceManager().stop()
     sys.exit(0)
-config_file = 'Jormungandr.ini' if not os.environ.has_key('JORMUNGANDR_CONFIG_FILE')\
-                                else os.environ['JORMUNGANDR_CONFIG_FILE']
+
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)
     signal.signal(signal.SIGTERM, kill_thread)
