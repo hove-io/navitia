@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields, abort
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
@@ -34,5 +34,5 @@ class Places(Resource):
         args = self.parsers["get"].parse_args()
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
-        response = NavitiaManager().dispatch(args, region, "places")
+        response = InstanceManager().dispatch(args, region, "places")
         return protobuf_to_dict(response, use_enum_labels=True), 200

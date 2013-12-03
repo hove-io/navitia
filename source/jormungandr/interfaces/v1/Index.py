@@ -1,5 +1,5 @@
 #coding=utf-8
-from flask import Flask, url_for, current_app
+from flask import url_for
 from flask.ext.restful import Resource
 
 class Index(Resource):
@@ -9,10 +9,12 @@ class Index(Resource):
                     {"href"  : url_for('v1.coverage', _external=True),
                      "rel"   : "coverage",
                      "title" : "Coverage of navitia"},
-                    {"href"  : "/coord/lon;lat",
+                    {"href"  : url_for('v1.coord', lon=.0, lat=.0, _external=True),#TODO find a way to display {long:lat} in the url
                      "rel"   : "coord",
-                     "title" : "Inverted geocooding" },
-                    {"href"  : "v1/journeys",
+                     "title" : "Inverted geocoding for a given longitude and latitude",
+                     "templated" : True
+                     },
+                    {"href"  : url_for('v1.journeys', _external=True),
                      "rel"   : "journeys",
                      "title" : "Compute journeys"}
                     ]

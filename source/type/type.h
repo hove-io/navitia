@@ -16,6 +16,7 @@
 #include <boost/geometry/geometries/polygon.hpp>
 
 #include "datetime.h"
+#include "utils/flat_enum_map.h"
 
 namespace mpl = boost::mpl;
 namespace navitia { namespace georef {
@@ -79,6 +80,7 @@ enum class Mode_e{
     Bike = 1,       // Vélo
     Car = 2,        // Voiture
     Vls = 3         // Vls
+    //Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
 };
 
 struct PT_Data;
@@ -266,10 +268,17 @@ struct GeographicalCoord{
     void set_lat(double lat) { this->_lat = lat;}
     void set_xy(double x, double y){this->set_lon(x*M_TO_DEG); this->set_lat(y*M_TO_DEG);}
 
+    constexpr static double coord_epsilon = 1e-15;
     /// Ordre des coordonnées utilisé par ProximityList
-    bool operator<(GeographicalCoord other) const {return this->_lon < other._lon;}
-    bool operator != (GeographicalCoord other) const {return this->_lon != other._lon;}
-
+    bool operator<(GeographicalCoord other) const {
+        if ( fabs(lon() - other.lon()) > coord_epsilon )
+            return lon() < other.lon();
+        return lat() < other.lat();
+    }
+    bool operator != (GeographicalCoord other) const {
+        return fabs(lon() - other.lon()) > coord_epsilon
+                || fabs(lat() - other.lat()) > coord_epsilon ;
+    }
 
     constexpr static double DEG_TO_RAD = 0.01745329238;
     constexpr static double M_TO_DEG = 1.0/111319.9;
@@ -634,18 +643,18 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
     std::vector<navitia::georef::Admin*> admin_list;
     Network* network;
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
+    std::vector<StopPointConnection*> stop_point_connection_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         journey_pattern_point_list.resize(0);
         ar & uri & name & stop_area & coord & fare_zone & idx
-            & journey_pattern_point_list & admin_list & _properties & messages;
+            & journey_pattern_point_list & admin_list & _properties & messages & stop_point_connection_list;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const StopPoint & other) const { return this < &other; }
-
 
 };
 
@@ -852,7 +861,16 @@ struct EntryPoint {
     EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };
 
-} } //namespace navitia::type
+} //namespace navitia::type
+
+//trait to access the number of elements in the Mode_e enum
+template <>
+struct enum_size_trait<type::Mode_e> {
+    static constexpr typename get_enum_type<type::Mode_e>::type size() {
+        return 4;
+    }
+};
+} //namespace navitia
 
 
 // Adaptateurs permettant d'utiliser boost::geometry avec les geographical coord

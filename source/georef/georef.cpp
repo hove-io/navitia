@@ -285,22 +285,37 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
     }
 
     if(found) {
-        // On cherche les coordonnées des extrémités de ce segment
-        this->source = boost::source(edge, sn.graph);
-        this->target = boost::target(edge, sn.graph);
-        type::GeographicalCoord vertex1_coord = sn.graph[this->source].coord;
-        type::GeographicalCoord vertex2_coord = sn.graph[this->target].coord;
-        // On projette le nœud sur le segment
-        this->projected = coord.project(vertex1_coord, vertex2_coord).first;
-        // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
-        this->source_distance = projected.distance_to(vertex1_coord);
-        this->target_distance = projected.distance_to(vertex2_coord);
+        init(coord, sn, edge);
     }
 }
 
-void ProjectionData::inc_vertex(const vertex_t value){
-    this->source += value;
-    this->target += value;
+ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox){
+    edge_t edge;
+    found = true;
+    try {
+        edge = sn.nearest_edge(coord, offset, prox);
+    } catch(proximitylist::NotFound) {
+        found = false;
+        this->source = std::numeric_limits<vertex_t>::max();
+        this->target = std::numeric_limits<vertex_t>::max();
+    }
+
+    if(found) {
+        init(coord, sn, edge);
+    }
+}
+
+void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge) {
+    // On cherche les coordonnées des extrémités de ce segment
+    this->source = boost::source(nearest_edge, sn.graph);
+    this->target = boost::target(nearest_edge, sn.graph);
+    type::GeographicalCoord vertex1_coord = sn.graph[this->source].coord;
+    type::GeographicalCoord vertex2_coord = sn.graph[this->target].coord;
+    // On projette le nœud sur le segment
+    this->projected = coord.project(vertex1_coord, vertex2_coord).first;
+    // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
+    this->source_distance = projected.distance_to(vertex1_coord);
+    this->target_distance = projected.distance_to(vertex2_coord);
 }
 
 
@@ -340,9 +355,11 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
 }
 
 void GeoRef::init_offset(nt::idx_t value){
-    vls_offset = value;
-    bike_offset = 2 * value;
-    car_offset = 3 * value;
+    //TODO ? with something like boost::enum we could even handle loops and only define the different transport modes in the enum
+    offsets[nt::Mode_e::Walking] = 0;
+    offsets[nt::Mode_e::Vls] = value;
+    offsets[nt::Mode_e::Bike] = 2 * value;
+    offsets[nt::Mode_e::Car] = 3 * value;
 
     /// Pour la gestion du vls
     for(vertex_t v = 0; v<value; ++v){
@@ -363,13 +380,13 @@ void GeoRef::init_offset(nt::idx_t value){
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
 
-    if(this->vls_offset == 0){
+    if(this->offsets[navitia::type::Mode_e::Vls] == 0){
         BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
             pl.add(graph[u].coord, u);
         }
     }else{
         // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo, voiture
-        for(vertex_t v = 0; v < this->vls_offset; ++v){
+        for(vertex_t v = 0; v < this->offsets[navitia::type::Mode_e::Vls]; ++v){
             pl.add(graph[v].coord, v);
         }
     }
@@ -527,13 +544,31 @@ int GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points
     int matched = 0;
     this->projected_stop_points.clear();
     this->projected_stop_points.reserve(stop_points.size());
-    for(const type::StopPoint* stop_point : stop_points){
-        ProjectionData proj(stop_point->coord, *this, this->pl);
-        this->projected_stop_points.push_back(proj);
-        if(proj.found)
+
+    for(const type::StopPoint* stop_point : stop_points) {
+        std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
+
+        this->projected_stop_points.push_back(pair.first);
+        if(pair.second)
             matched++;
     }
     return matched;
+}
+
+std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
+    bool one_proj_found = false;
+    ProjectionByMode projections;
+
+    for (const auto& pair : offsets) {
+        type::idx_t offset = pair.second;
+        type::Mode_e transportation_mode = pair.first;
+
+        ProjectionData proj(stop_point->coord, *this, offset, this->pl);
+        projections[transportation_mode] = proj;
+        if(proj.found)
+            one_proj_found = true;
+    }
+    return {projections, one_proj_found};
 }
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
@@ -541,14 +576,24 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
 }
 
 vertex_t GeoRef::nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
-    vertex_t u;
-    try {
-        u = prox.find_nearest(coordinates);
-    } catch(proximitylist::NotFound) {
-        throw proximitylist::NotFound();
-    }
-    return u;
+    return prox.find_nearest(coordinates);
 }
+
+/// Get the nearest_edge with at least one vertex in the graph corresponding to the offset (walking, bike, ...)
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, type::idx_t offset, const proximitylist::ProximityList<vertex_t>& prox) const {
+    auto vertexes_within = prox.find_within(coordinates);
+    for (const auto pair_coord : vertexes_within) {
+        //we increment the index to get the vertex in the other graph
+        const auto new_vertex = pair_coord.first + offset;
+
+        try {
+            edge_t edge_in_graph = nearest_edge(coordinates, new_vertex);
+            return edge_in_graph;
+        } catch(proximitylist::NotFound) {}
+    }
+    throw proximitylist::NotFound();
+}
+
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const{
 

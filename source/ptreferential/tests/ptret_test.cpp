@@ -229,6 +229,18 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(forbidden_uri) {
+
+    ed::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.connection("stop2", "stop3", 10*60);
+    b.connection("stop3", "stop2", 10*60);
+    b.data.pt_data.build_uri();
+
+    BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Line, "stop_point.uri=stop1", {"A"}, b.data), ptref_error);
+}
 BOOST_AUTO_TEST_CASE(after_filter) {
     ed::builder b("201303011T1739");
     b.generate_dummy_basis();

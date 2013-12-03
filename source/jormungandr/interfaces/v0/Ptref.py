@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
@@ -22,12 +22,14 @@ class Ptref(Resource):
                 description="The number of objects you want on the page")
         self.parsers["get"].add_argument("filter", type=str, default = "",
                 description="The filter parameter")
+        self.parsers["get"].add_argument("forbidden_uris[]", type=str, required=False,
+                description="List of uris you want to forbid", action="append")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
                 description="The depth of your object")
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
-        response = NavitiaManager().dispatch(args, region, self.resource_type)
+        response = InstanceManager().dispatch(args, region, self.resource_type)
         return protobuf_to_dict(response, use_enum_labels=True), 200
 
 class StopAreas(Ptref):

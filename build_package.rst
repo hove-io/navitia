@@ -20,7 +20,7 @@ Build instructions
     ``git-dch -R -N version --ignore-branch``
     ``commit the changes made to debian/changelog``
 4. Build the new version
-     git-buildpackage --git-tag --git-ignore-branch
+     ``git-buildpackage --git-tag --git-ignore-branch``
 
 5. Files are available in the parent directory.
 

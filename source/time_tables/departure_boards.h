@@ -10,8 +10,9 @@ typedef std::pair<uint32_t, uint32_t> stop_point_line;
 typedef std::vector<datetime_stop_time> vector_dt_st;
 
 pbnavitia::Response departure_board(const std::string &filter,
+                                    const std::vector<std::string>& forbidden_uris,
                                     const std::string &date,
-                                    uint32_t duration, uint32_t max_date_times,
+                                    uint32_t duration, int32_t max_date_times,
                                     int interface_version,
                                     int count, int start_page, const type::Data &data);
 }

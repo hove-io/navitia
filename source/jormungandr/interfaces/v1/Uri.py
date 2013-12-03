@@ -1,7 +1,7 @@
 #coding=utf-8
 from flask import url_for, redirect
 from flask.ext.restful import fields, marshal_with, reqparse, abort
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination,\
@@ -26,6 +26,9 @@ class Uri(ResourceUri):
                 description="The number of objects you want on the page")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
                 description="The depth of your object")
+        self.parsers["get"].add_argument("forbidden_id[]", type=str, required=False,
+                description="List of ids you want to forbid", action="append",
+                                         dest="forbidden_uris[]")
         if is_collection:
             self.parsers["get"].add_argument("filter", type=str, default = "",
                     description="The filter parameter")
@@ -35,7 +38,7 @@ class Uri(ResourceUri):
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
-        self.region = NavitiaManager().get_region(region, lon, lat)
+        self.region = InstanceManager().get_region(region, lon, lat)
         if not self.region:
             return {"error" : "No region"}, 404
         args = self.parsers["get"].parse_args()
@@ -52,7 +55,7 @@ class Uri(ResourceUri):
             if collection is None:
                 collection = uris[-1] if len(uris)%2!=0 else uris[-2]
             args["filter"] = self.get_filter(uris)
-        response = NavitiaManager().dispatch(args, self.region, collection)
+        response = InstanceManager().dispatch(args, self.region, collection)
         return response
 
 def journey_pattern_points(is_collection):
@@ -315,7 +318,7 @@ def coords(is_collection):
 def Redirect(*args, **kwargs):
     id = kwargs["id"]
     collection = kwargs["collection"]
-    region = NavitiaManager().key_of_id(id)
+    region = InstanceManager().key_of_id(id)
     if not region:
         region = "{region.id}"
     url = url_for("v1.uri", region=region, collection=collection, id=id)

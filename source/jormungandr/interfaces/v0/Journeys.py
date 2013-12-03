@@ -1,11 +1,12 @@
 # coding=utf-8
 from flask import Flask, request
 from flask.ext.restful import Resource, fields
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from interfaces.parsers import true_false, option_value
 from protobuf_to_dict import protobuf_to_dict
 from find_extrem_datetimes import extremes
 from flask.ext.restful import reqparse
+from flask.ext.restful.types import boolean
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
 from authentification import authentification_required
@@ -60,11 +61,15 @@ class Journeys(Resource):
         parser_get.add_argument("forbidden_uris[]", type=str, action="append",
                 description="Uri you want to forbid")
         parser_get.add_argument("type", type=option_value(types), default="all")
+        parser_get.add_argument("wheelchair", type=boolean, default=False)
         parser_get.add_argument("count", type=int)
+        parser_get.add_argument("debug", type=boolean, default=False, hidden=True)
 
-    def get(self, region):
+    def get(self, region=None):
         args = self.parsers["get"].parse_args()
-        response = NavitiaManager().dispatch(args, region, "journeys")
+        if region is None:
+            region = InstanceManager().key_of_id(args["origin"])
+        response = InstanceManager().dispatch(args, region, "journeys")
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:
@@ -96,10 +101,13 @@ class Isochrone(Resource):
         parser_get.add_argument("car_speed", type=float, default=16.8)
         parser_get.add_argument("car_distance", type=int, default=15000)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
+        parser_get.add_argument("wheelchair", type=boolean, default=False)
 
-    def get(self, region):
+    def get(self, region=None):
         args = self.parsers["get"].parse_args()
-        response = NavitiaManager().dispatch(args, region, "isochrone")
+        if region is None:
+            region = InstanceManager().key_of_id(args["origin"])
+        response = InstanceManager().dispatch(args, region, "isochrone")
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:

@@ -590,26 +590,25 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
                 if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
                     connection->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
 
-                if(real_time_c != -1) {
-                    try{
-                        connection->duration = boost::lexical_cast<int>(row[real_time_c]);
-                    } catch (...) {
-                        connection->duration = 120;
-                    }
-                } else {
-                   connection->duration = 120;
-                }
-
                 if(time_c != -1) {
                     try{
                         connection->display_duration = boost::lexical_cast<int>(row[time_c]);
                     } catch (...) {
-                        connection->display_duration = connection->duration;
+                        connection->display_duration = 120;
                     }
                 } else {
-                   connection->display_duration = connection->duration;
+                   connection->display_duration = 120;
                 }
 
+                if(real_time_c != -1) {
+                    try{
+                        connection->duration = boost::lexical_cast<int>(row[real_time_c]);
+                    } catch (...) {                        
+                        connection->duration = connection->display_duration;
+                    }
+                } else {
+                   connection->duration = connection->display_duration;
+                }
                 data.stop_point_connections.push_back(connection);
             }
         }
@@ -845,8 +844,8 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
             }else itm = physical_mode_map.find(line->commercial_mode->id);
 
             if(itm == physical_mode_map.end()) {
-                LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " + line->commercial_mode->id
-                          + " référencée par trip " + row[trip_c]);
+                LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " << row[physical_mode_c]
+                          + " référencée par trip " << row[trip_c]);
                 ignored++;
             } else {
                 nm::ValidityPattern * vp_xx;

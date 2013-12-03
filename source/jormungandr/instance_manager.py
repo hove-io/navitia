@@ -2,51 +2,20 @@
 from shapely import geometry, geos, wkt
 import ConfigParser
 import zmq
-from threading import Lock, Thread, Event
+from threading import Thread, Event
 import type_pb2
 import request_pb2
-import response_pb2
 import glob
 from singleton import singleton
 import importlib
 import logging
 from renderers import protobuf_to_dict
-from jormungandr_exceptions import ApiNotFound, RegionNotFound, DeadSocketException
+from jormungandr_exceptions import ApiNotFound, RegionNotFound
 from app import app
-import Queue
-from contextlib import contextmanager
-
-
-class Instance:
-    def __init__(self):
-        self.geom = None
-        self._sockets = Queue.Queue()
-        self.socket_path = None
-        self.script = None
-        self.nb_created_socket = 0
-        self.lock = Lock()
-
-    @contextmanager
-    def socket(self, context):
-        socket = None
-        try:
-            socket = self._sockets.get(block=False)
-        except Queue.Empty:
-            socket = context.socket(zmq.REQ)
-            socket.connect(self.socket_path)
-            self.lock.acquire()
-            self.nb_created_socket += 1
-            self.lock.release()
-        try:
-            yield socket
-        finally:
-            if not socket.closed:
-                self._sockets.put(socket)
-
-
+from instance import Instance
 
 @singleton
-class NavitiaManager(object):
+class InstanceManager(object):
     """ Permet de coordonner les différents NAViTiA gérés par le front-end
     Un identifiant correspond à une socket ZMQ Navitia où se connecter
     Plusieurs identifiants peuvent se connecter à une même socket
@@ -74,9 +43,10 @@ class NavitiaManager(object):
         ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
 
         for file_name in ini_files:
+            logging.info("Initialisation, reading file : " + file_name)
             conf = ConfigParser.ConfigParser()
             conf.read(file_name)
-            instance =  Instance()
+            instance = Instance(self.context, conf.get('instance' , 'key'))
             instance.socket_path = conf.get('instance' , 'socket')
             if conf.has_option('instance', 'script') :
                 instance.script = importlib.import_module(conf.get('instance','script')).Script()
@@ -93,30 +63,11 @@ class NavitiaManager(object):
         if region in self.instances:
             if api in self.instances[region].script.apis:
                 api_func = getattr(self.instances[region].script, api)
-                return api_func(arguments, region)
+                return api_func(arguments, self.instances[region])
             else:
                 raise ApiNotFound(api)
         else:
             raise RegionNotFound(region)
-
-    def send_and_receive(self, request, region = None, timeout=10000):
-        if region in self.instances:
-            instance = self.instances[region]
-            with instance.socket(self.context) as socket:
-                socket.send(request.SerializeToString())
-                if socket.poll(timeout=timeout) > 0:
-                    pb = socket.recv()
-                    resp = response_pb2.Response()
-                    resp.ParseFromString(pb)
-                    return resp
-                else :
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
-                    logging.error(u"La requête : " + unicode(request)
-                            + u" a echoue " + instance.socket_path)
-                    raise DeadSocketException(region, instance.socket_path)
-        else:
-            raise RegionNotFound(region=region)
 
 
     def thread_ping(self, timer=1):
@@ -125,7 +76,7 @@ class NavitiaManager(object):
         while not self.thread_event.is_set():
             for key, instance in self.instances.iteritems():
                 try:
-                    resp = self.send_and_receive(req, key, timeout=1000)
+                    resp = instance.send_and_receive(req, timeout=1000)
                     if resp.HasField("metadatas"):
                         metadatas = resp.metadatas
                         for contributor in metadatas.contributors:
@@ -139,14 +90,18 @@ class NavitiaManager(object):
     def stop(self) :
         self.thread_event.set()
 
+
     def key_of_id(self, object_id):
         """ Retrieves the key of the region of a given id
             if it's a coord calls key_of_coord
             Return the region key, or None if it doesn't exists
         """
 #Il s'agit d'une coordonnée
-        if object_id.count(";") == 1:
-            lon, lat = object_id.split(";")
+        if object_id.count(";") == 1 or object_id[:6] == "coord:":
+            if object_id.count(";") == 1:
+                lon, lat = object_id.split(";")
+            else:
+                lon, lat = object_id[6:].split(":")
             try:
                 flon = float(lon)
                 flat = float(lat)
@@ -164,6 +119,7 @@ class NavitiaManager(object):
                 return contributor
         raise RegionNotFound(object_id=object_id)
 
+
     def key_of_coord(self, lon, lat):
         """ Étant donné une coordonnée, retourne à quelle clef NAViTiA cela correspond
 
@@ -175,6 +131,7 @@ class NavitiaManager(object):
                 return key
 
         raise RegionNotFound(lon=lon, lat=lat)
+
 
     def is_region_exists(self, region_str):
         if (region_str in self.instances.keys()):
@@ -198,16 +155,14 @@ class NavitiaManager(object):
     def regions(self, region=None, lon=None, lat=None):
         response = {'regions': []}
         regions = []
-
         if region or lon or lat:
             regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
         else:
             regions = self.instances.keys()
-
         for key_region in regions :
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
-            resp = self.send_and_receive(req, key_region)
+            resp = self.instances[key_region].send_and_receive(req, timeout=2000)
             resp_dict = protobuf_to_dict(resp)
             if 'metadatas' in resp_dict.keys():
                 resp_dict['metadatas']['region_id'] = key_region

@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
@@ -24,6 +24,8 @@ class PlacesNearby(Resource):
                 description="Type of the objects to return")
         self.parsers["get"].add_argument("distance", type=int, default=500,
                 description="Distance range of the query")
+        self.parsers["get"].add_argument("filter", type=str, default="",
+                description="Filter places")
         self.parsers["get"].add_argument("count", type=int, default=10,
                 description="Number of elements per page")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
@@ -34,5 +36,5 @@ class PlacesNearby(Resource):
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
-        response = NavitiaManager().dispatch(args, region, "places_nearby")
+        response = InstanceManager().dispatch(args, region, "places_nearby")
         return protobuf_to_dict(response, use_enum_labels=True), 200

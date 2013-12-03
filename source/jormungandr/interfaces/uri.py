@@ -1,4 +1,4 @@
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 
 collections_to_resource_type = {
         "stop_points": "stop_point", "routes":"route",
@@ -33,7 +33,7 @@ class Uri:
     def region(self):
         if not self.region_ and self.lon and self.lat:
             #On va chercher la region associee
-            self.region_ = NavitiaManager().key_of_coord(self.lon, self.lat)
+            self.region_ = InstanceManager().key_of_coord(self.lon, self.lat)
             if not self.region_:
                 error = "No region is covering these coordinates"
                 raise InvalidUriException(error)

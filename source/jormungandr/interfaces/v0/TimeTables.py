@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
@@ -27,10 +27,12 @@ class TimeTables(Resource):
                description="Maximal depth of the returned objects")
         self.parsers["get"].add_argument("interface_version", type=depth_argument,
                                  default=0, hidden=True)
+        self.parsers["get"].add_argument("forbidden_uris[]", type=str, required=False,
+                description="List of uris you want to forbid", action="append")
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
-        response = NavitiaManager().dispatch(args, region, self.api)
+        response = InstanceManager().dispatch(args, region, self.api)
         return protobuf_to_dict(response, use_enum_labels=True), 200
 
 class NextDepartures(TimeTables):

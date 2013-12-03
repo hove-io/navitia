@@ -1,6 +1,3 @@
-//on inclue simpleAmqpClient dés le début, sinon probléme avec la compatibilité C++ 11
-#define BOOST_NO_CXX11_RVALUE_REFERENCES
-#include <SimpleAmqpClient/SimpleAmqpClient.h>
 #include "worker.h"
 #include "maintenance_worker.h"
 #include "type/type.pb.h"

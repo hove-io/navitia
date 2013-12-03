@@ -1,6 +1,6 @@
 #include "type/message.h"
 
-#include <log4cplus/logger.h>
+#include "utils/logger.h"
 
 #include <boost/format.hpp>
 

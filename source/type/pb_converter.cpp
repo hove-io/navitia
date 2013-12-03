@@ -567,37 +567,36 @@ void fill_pb_placemark(navitia::georef::Way* way,
 }
 
 
-void fill_street_section(const type::EntryPoint &ori_dest,
-                         const georef::Path &path, const type::Data &data,
+void fill_street_section(const type::EntryPoint& ori_dest,
+                         const georef::Path& path, const type::Data& data,
                          pbnavitia::Section* section, int max_depth,
                          const pt::ptime& now,
                          const pt::time_period& action_period){
     int depth = (max_depth <= 3) ? max_depth : 3;
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::STREET_NETWORK);
-        pbnavitia::StreetNetwork * sn = section->mutable_street_network();
+        pbnavitia::StreetNetwork* sn = section->mutable_street_network();
         create_pb(ori_dest, path, data, sn);
-        section->set_duration(sn->length()/ori_dest.streetnetwork_params.speed);
+        section->set_duration(sn->length() / ori_dest.streetnetwork_params.speed);
         section->set_length(sn->length());
         navitia::georef::Way* way;
         type::GeographicalCoord coord;
-        if(path.path_items.size() > 0){
+        if(path.path_items.size() > 0) {
             pbnavitia::Place* orig_place = section->mutable_origin();
             way = data.geo_ref.ways[path.path_items.front().way_idx];
-            orig_place = section->mutable_origin();
             coord = path.coordinates.front();
-            fill_pb_placemark(way,  data, orig_place, way->nearest_number(coord), coord,
+            fill_pb_placemark(way, data, orig_place, way->nearest_number(coord), coord,
                               depth,  now, action_period);
 
             pbnavitia::Place* dest_place = section->mutable_destination();
             way = data.geo_ref.ways[path.path_items.back().way_idx];
-            dest_place = section->mutable_destination();
             coord = path.coordinates.back();
-            fill_pb_placemark(way,  data, dest_place, way->nearest_number(coord), coord,
+            fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
                                     depth,  now, action_period);
         }
     }
 }
+
 
 void fill_message(const boost::shared_ptr<type::Message> message,
         const type::Data&, pbnavitia::Message* pb_message, int,
@@ -641,18 +640,18 @@ void create_pb(const type::EntryPoint &ori_dest,
     }
 
     uint32_t length = 0;
-    for(auto item : path.path_items){
-        if(item.way_idx < data.geo_ref.ways.size()){
+    for(auto item : path.path_items) {
+        if(item.way_idx < data.geo_ref.ways.size()) {
             pbnavitia::PathItem * path_item = sn->add_path_items();
             path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
             path_item->set_length(item.length);
             length += item.length;
-        }else{
+        } else {
             std::cout << "Way étrange : " << item.way_idx << std::endl;
         }
     }
     sn->set_length(length);
-    for(auto coord : path.coordinates){
+    for(auto coord : path.coordinates) {
         if(coord.is_initialized()) {
             pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
             pb_coord->set_lon(coord.lon());
