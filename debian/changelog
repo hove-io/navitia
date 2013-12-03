@@ -1,8 +1,9 @@
-navitia2 (0.76.0) UNRELEASED; urgency=low
+navitia2 (0.76.1) stable; urgency=low
 
-  * Added new features 
-
- -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 03 Dec 2013 11:12:20 +0100
+  [ Vincent Lara ]
+  * Added default status
+  * Fixed Cmake of jormungandr
+ -- vlara <vlara@vlara-OptiPlex-790>  Tue, 03 Dec 2013 14:10:36 +0100
 
 navitia2 (0.74.1) unstable; urgency=low
 
