@@ -4,6 +4,24 @@ navitia2 (0.76.0) stable; urgency=low
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 03 Dec 2013 11:12:20 +0100
 
+navitia2 (0.75.3) unstable; urgency=low
+
+  * Ajout d'un index
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 15 Nov 2013 14:13:44 +0100
+
+navitia2 (0.75.2) unstable; urgency=low
+
+  * Ajout api dans v0
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 15 Nov 2013 13:45:43 +0100
+
+navitia2 (0.75.1) unstable; urgency=low
+
+  * hotfix : We go back to connections at the endings of journeys
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 15 Nov 2013 09:21:55 +0100
+
 navitia2 (0.75.0) unstable; urgency=low
 
   * Accessibilite
