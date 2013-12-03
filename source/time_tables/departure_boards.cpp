@@ -121,9 +121,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus> &response_status,
                            now, action_period, dt_st.first);
         }
         auto it = response_status.at(id_vec.first.second);
-        if(it != pbnavitia::ResponseStatus::default_status){
-            schedule->set_status(it);
-        }
+        schedule->set_status(it);
     }
     return response;
 }
