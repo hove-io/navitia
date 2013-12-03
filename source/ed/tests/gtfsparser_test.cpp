@@ -11,7 +11,6 @@
 const std::string gtfs_path = "/ed/gtfs";
 
 BOOST_AUTO_TEST_CASE(required_files) {
-    throw std::logic_error("remember to update the tests"); //remember to update after refacto
     std::vector<std::string> files = {"agency", "routes", "stop_times", "trips"};
     for(auto file : files)
     {
@@ -20,12 +19,13 @@ BOOST_AUTO_TEST_CASE(required_files) {
         BOOST_REQUIRE_THROW(parser.fill(data, "20130305"), ed::connectors::FileNotFoundException);
     }
 }
-/*
+
 BOOST_AUTO_TEST_CASE(parse_agencies) {
     std::vector<std::string> fields={"agency_id", "agency_name", "agency_url",
         "agency_timezone", "agency_lang", "agency_phone", "agency_fare_url"},
     required_fields = {"agency_name", "agency_url", "agency_timezone"};
 
+    using file_parser = ed::connectors::FileParser<ed::connectors::AgencyGtfsHandler>;
     //Check des champs obligatoires
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
@@ -33,8 +33,7 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         sstream << "\n";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_agency(data, csv), ed::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
     {
@@ -42,8 +41,7 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_NO_THROW(parser.parse_agency(data, csv));
+        BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 
     //Check que les networks sont bien remplis
@@ -54,7 +52,13 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         sstream << ", ACME,,,,,";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
+        file_parser(parser.gtfs_data, sstream).fill(data);
+
+        BOOST_REQUIRE_EQUAL(data.networks.size(), 2);
+        BOOST_REQUIRE_EQUAL(data.networks.front()->uri, "ratp");
+        BOOST_REQUIRE_EQUAL(data.networks.front()->name, "RATP");
+        BOOST_REQUIRE_EQUAL(data.networks[1]->uri, "");
+        BOOST_REQUIRE_EQUAL(data.networks[1]->name, "ACME");
     }
 }
 
@@ -64,6 +68,7 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
                                      "stop_timezone", "wheelchair_boarding"},
             required_fields = {"stop_id", "stop_name", "stop_lat", "stop_lon"};
 
+    using file_parser = ed::connectors::FileParser<ed::connectors::StopsGtfsHandler>;
     //Check des champs obligatoires
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
@@ -71,8 +76,7 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         sstream << "\n";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_stops(data, csv), ed::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
     {
@@ -80,8 +84,7 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_NO_THROW(parser.parse_stops(data, csv));
+        BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 
     {
@@ -90,8 +93,7 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         sstream << "\"a\", \"A\",\"bad_lon\",\"bad_lat\"";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_NO_THROW(parser.parse_stops(data, csv));
+        BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 }
 
@@ -99,8 +101,9 @@ BOOST_AUTO_TEST_CASE(parse_transfers) {
 
     std::vector<std::string> fields={"from_stop_id","to_stop_id","transfer_type",
                                      "min_transfer_type"},
-            required_fields = {"from_stop_id","to_stop_id","transfer_type"};
+            required_fields = {"from_stop_id","to_stop_id"};
 
+    using file_parser = ed::connectors::FileParser<ed::connectors::TransfersGtfsHandler>;
     //Check des champs obligatoires
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
@@ -108,8 +111,7 @@ BOOST_AUTO_TEST_CASE(parse_transfers) {
         sstream << "\n";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_transfers(data, csv), ed::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
     {
@@ -117,8 +119,7 @@ BOOST_AUTO_TEST_CASE(parse_transfers) {
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_NO_THROW(parser.parse_transfers(data, csv));
+        BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 }
 
@@ -130,6 +131,7 @@ BOOST_AUTO_TEST_CASE(parse_lines) {
             required_fields = {"route_id", "route_short_name", "route_long_name",
                                "route_type"};
 
+    using file_parser = ed::connectors::FileParser<ed::connectors::RouteGtfsHandler>;
     //Check des champs obligatoires
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
@@ -137,8 +139,7 @@ BOOST_AUTO_TEST_CASE(parse_lines) {
         sstream << "\n";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_lines(data, csv), ed::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
     {
@@ -146,8 +147,7 @@ BOOST_AUTO_TEST_CASE(parse_lines) {
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_NO_THROW(parser.parse_lines(data, csv));
+        BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 }
 
@@ -158,6 +158,7 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
                 "shape_id", "wheelchair_accessible"},
             required_fields = {"route_id", "service_id", "trip_id"};
 
+    using file_parser = ed::connectors::FileParser<ed::connectors::TripsGtfsHandler>;
     //Check des champs obligatoires
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
@@ -165,8 +166,7 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
         sstream << "\n";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_trips(data, csv), ed::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
     {
@@ -174,8 +174,7 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_NO_THROW(parser.parse_trips(data, csv));
+        BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 }
 
@@ -192,7 +191,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
         std::cout  << vj->uri << "  " << vj->journey_pattern->uri << "  "<<
             vj->journey_pattern->route->uri << "  "<< vj->journey_pattern->route->line->uri <<
             std::endl;
-    //Agency*/
+    //Agency
     /*
     BOOST_REQUIRE_EQUAL(data.networks.size(), 2);
     BOOST_CHECK_EQUAL(data.networks[0]->name, "RATP");
@@ -366,4 +365,4 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "myonetruetrip");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "My one true headsign");
 */
-//}
+}

@@ -5,7 +5,6 @@ SET(SOURCE_LIB
         build_helper.cpp
         adapted.cpp
         external_parser.cpp
-
 )
 
 
@@ -24,9 +23,14 @@ target_link_libraries(osm2ed ed connectors pq pqxx ${OSMPBF} pb_lib utils
 
 add_subdirectory(tests)
 
+add_library(transportation_data_import ed_persistor.cpp)
 
-add_executable(gtfs2ed gtfs2ed.cpp ed_persistor.cpp)
-target_link_libraries(gtfs2ed ed connectors types pq pqxx data pb_lib utils hiredis
+add_executable(gtfs2ed gtfs2ed.cpp)
+target_link_libraries(gtfs2ed transportation_data_import ed connectors types pq pqxx data pb_lib utils hiredis
+    routing ${BOOST_LIBS} log4cplus)
+
+add_executable(fusio2ed fusio2ed.cpp)
+target_link_libraries(fusio2ed transportation_data_import ed connectors types pq pqxx data pb_lib utils hiredis
     routing ${BOOST_LIBS} log4cplus)
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
