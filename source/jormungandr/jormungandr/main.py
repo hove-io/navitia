@@ -34,6 +34,7 @@ def output_jsonp(data, code, headers=None):
     if callback:
         resp.data = str(callback)+'(' + resp.data + ')'
     return resp
+
 index(api)
 v1_routing.v1_routing(api)
 v0_routing.v0_routing(api)
@@ -43,8 +44,8 @@ documentation.v1_documentation(api)
 def kill_thread(signal, frame):
     InstanceManager().stop()
     sys.exit(0)
-config_file = 'Jormungandr.ini' if not os.environ.has_key('JORMUNGANDR_CONFIG_FILE')\
-                                else os.environ['JORMUNGANDR_CONFIG_FILE']
+
+
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)
     signal.signal(signal.SIGTERM, kill_thread)
