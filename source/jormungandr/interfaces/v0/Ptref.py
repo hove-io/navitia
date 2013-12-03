@@ -22,6 +22,8 @@ class Ptref(Resource):
                 description="The number of objects you want on the page")
         self.parsers["get"].add_argument("filter", type=str, default = "",
                 description="The filter parameter")
+        self.parsers["get"].add_argument("forbidden_uris[]", type=str, required=False,
+                description="List of uris you want to forbid", action="append")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
                 description="The depth of your object")
 
