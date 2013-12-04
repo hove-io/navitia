@@ -5,17 +5,30 @@ How to build kraken and run it
 Dependencies
 ============
 
-* gcc 4.7 or newer
-* cmake
-* log4cplus
-* osmpbf (https://github.com/scrosby/OSM-binary)
-* boost
-* zeromq 2.2
-* libpqxx 3
-* libgoogle-perftools-dev
-* rabbitmq (>=3.1)
-* pika (>=0.9.7)
-* psycopg2
+#. C++
+
+   * gcc 4.7 or newer
+   * cmake
+   * log4cplus
+   * osmpbf (https://github.com/scrosby/OSM-binary)
+   * boost
+   * zeromq 2.2
+   * libpqxx 3
+   * libgoogle-perftools-dev
+
+#. Python
+
+   * rabbitmq (>=3.1)
+   * zmq
+   * protobuf
+   * pika (>=0.9.7)
+   * psycopg2
+   * flask-restfull (https://github.com/l-vincent-l/flask-restful)
+   * werkzeug
+   * shapely
+   * six
+   * sqlalchemy
+   * redis
 
 Build instruction
 =================
@@ -47,6 +60,10 @@ We hope you got the source code from git.
 Testing
 =======
 
+#. Overview
+
+.. image:: documentation/diagrams/simple_archi_data_view.png
+
 #. Data configuration
 
    The data manager is called *ed*. It relies on GTFS and Open Street Map data centralized in a postgres database
@@ -65,7 +82,7 @@ Testing
 
 #. Once *ed* has been loaded with all the data, you have to export the data for *Kraken* with the ed2nav tool
 
-   This step will generate a ziped nav file that can be given as input to *Kraken*
+   This step will generate a compressed nav file that can be given as input to *Kraken*
 
 #. Running the *Kraken* backend
 
