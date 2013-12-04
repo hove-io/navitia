@@ -15,20 +15,27 @@ Dependencies
    * zeromq 2.2
    * libpqxx 3
    * libgoogle-perftools-dev
+   * protobuf
 
 #. Python
 
-   * rabbitmq (>=3.1)
    * zmq
    * protobuf
    * pika (>=0.9.7)
    * psycopg2
-   * flask-restfull (https://github.com/l-vincent-l/flask-restful)
-   * werkzeug
+   * sqlalchemy
+   * flask-restfull (https://github.com/l-vincent-l/flask-restful) **patched version**
    * shapely
    * six
-   * sqlalchemy
    * redis
+   * dict2xml
+   * Flask-SQLAlchemy (only for Tyr currently)
+
+#. Other
+
+   * RabbitMQ
+   * PostgreSQL (9.1+)
+   * Redis server
 
 Build instruction
 =================
@@ -76,7 +83,7 @@ Testing
 
    Import them using the gtfs2ed tool
 
-#. Get some Open Street Map data. For instance from http://metro.teczno.com/ 
+#. Get some Open Street Map data. For instance from http://metro.teczno.com/
 
    Import them using the osm2ed tool
 
@@ -92,9 +99,7 @@ Testing
 
 #. Running the *Jörmungandr* front-end. Note : this front-end is an API, and not oriented towards final users
 
-   #. Dependencies : python2 and the following python libraries werkzeug, shapely, zmq, protobuf
-
-   #. Edit if you want the Jormungandr.ini file. 
+   #. Edit if you want the Jormungandr.ini file.
 
       Note: If you want to put the file elsewhere, you can change the INSTANCES_DIR variable
 
@@ -102,7 +107,7 @@ Testing
 
         [instance]
         # name of the kraken
-        key = some_region 
+        key = some_region
         # zmq socket used to talk to the kraken, should be the same as the one defined by the zmq_socket param in kraken
         socket = ipc:///tmp/default_kraken
 
