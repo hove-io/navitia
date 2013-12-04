@@ -83,7 +83,9 @@ struct Message: public AtPerturbation{
     std::map<std::string, LocalizedMessage> localized_messages;
     MessageStatus message_status;
 
-    Message(): publication_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
+    Message(): publication_period(boost::posix_time::not_a_date_time,
+            boost::posix_time::seconds(0)),
+        message_status(MessageStatus::information){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int){
         ar & uri & object_type & object_uri & publication_period

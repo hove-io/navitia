@@ -18,7 +18,7 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string type, input, output, date, connection_string, aliases_file,
+    std::string input, date, connection_string, aliases_file,
                 synonyms_file;
     po::options_description desc("Allowed options");
     desc.add_options()
