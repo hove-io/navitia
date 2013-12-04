@@ -19,8 +19,7 @@ namespace pt = boost::posix_time;
 int main(int argc, char * argv[])
 {
     init_logger();
-    std::string output, input, connection_string, media_lang,
-        media_media;
+    std::string output, input, connection_string;
     uint32_t shift_days;
     po::options_description desc("Allowed options");
     desc.add_options()

@@ -576,7 +576,12 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey;
 
-    VehicleJourney(): journey_pattern(nullptr), company(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
+    VehicleJourney(): journey_pattern(nullptr), company(nullptr),
+        validity_pattern(nullptr),
+        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false),
+        adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
+
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
             & idx /*& wheelchair_boarding*/ & stop_time_list & is_adapted

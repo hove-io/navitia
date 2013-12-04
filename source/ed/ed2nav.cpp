@@ -17,8 +17,7 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string output, connection_string, at_connection_string, media_lang,
-        media_media;
+    std::string output, connection_string;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")

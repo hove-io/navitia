@@ -37,7 +37,7 @@ struct Autocomplete
         navitia::type::GeographicalCoord coord;
         int house_number;
 
-        fl_quality() :nb_found(0), word_len(0), quality(0),house_number(-1) {}
+        fl_quality() :idx(0), nb_found(0), word_len(0), quality(0), house_number(-1) {}
         bool operator<(const fl_quality & other) const{
             return this->quality > other.quality;
         }
@@ -50,7 +50,7 @@ struct Autocomplete
         int word_distance;
         int score;
 
-        word_quality():word_count(0), word_distance(0){}
+        word_quality():word_count(0), word_distance(0), score(0){}
         template<class Archive> void serialize(Archive & ar, const unsigned int) {
             ar & word_count & word_distance & score;
         }

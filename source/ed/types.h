@@ -190,7 +190,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey;
 
-    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL),/* wheelchair_boarding(false),*/
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL), wheelchair_boarding(false),
      vehicle_journey_type(navitia::type::VehicleJourneyType::regular), validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
 
     navitia::type::VehicleJourney* get_navitia_type() const;
