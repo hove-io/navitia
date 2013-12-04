@@ -34,9 +34,9 @@ At the root of the repository, several directories can be found:
 
 #. (debug|release): by convention, the build repositories
 
-Archtecture overview
-====================
-Navitia is made of of 3 main modules:
+Architecture overview
+=====================
+Navitia is made of 3 main modules:
 
 #. *Kraken* is the c++ core
 
@@ -46,7 +46,7 @@ Navitia is made of of 3 main modules:
 
 *Kraken* and *Jörmungandr* communicate with each other through protocol buffer messages send by ZMQ.
 
-Transportation data (in the `GTFS <https://developers.google.com/transit/gtfs/>`_ format) or routing data (from `OpenStreetMap <http://www.openstreetmap.org/>`_ for the moment) can be given to *Ed* . *Ed* produces a binary file used by *Kraken*.
+Transportation data (in the `GTFS <https://developers.google.com/transit/gtfs/>`_ format) or routing data (from `OpenStreetMap <http://www.openstreetmap.org/>`_ for the moment) can be given to *Ed*. *Ed* produces a binary file used by *Kraken*.
 
 .. image:: documentation/diagrams/simple_archi.png
 
@@ -59,3 +59,7 @@ Tools
 #. Python for the api 
 
 #. Doxygen and swagger for the automated documentation
+
+Installation
+============
+For the installation procedure, please refer to the installation documentation : install.rst
