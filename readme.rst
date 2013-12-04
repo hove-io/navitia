@@ -56,10 +56,10 @@ Tools
 
 #. Cmake for the build system
 
-#. Python for the api 
+#. Python for the api
 
 #. Doxygen and swagger for the automated documentation
 
 Installation
 ============
-For the installation procedure, please refer to the installation documentation : install.rst
+For the installation procedure, please refer to the `installation documentation <https://github.com/canaltp/kraken/blob/dev/install.rst>`_
