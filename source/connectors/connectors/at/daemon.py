@@ -1,10 +1,10 @@
 #encoding: utf-8
-from config import Config
+from connectors.config import Config
 from selector.atreader import AtRealtimeReader
 import logging
 import pika
-import at.task_pb2
-import ext_code_2_uri
+import connectors.at.task_pb2
+import connectors.redis_queue
 
 
 class ConnectorAT(object):
@@ -42,7 +42,7 @@ class ConnectorAT(object):
                 .setLevel(logging.INFO)
 
     def _init_redisqueue(self):
-        self.redis_queue = ext_code_2_uri.RedisQueue(self.config.redisqueque_host,
+        self.redis_queue = connectors.redis_queue.RedisQueue(self.config.redisqueque_host,
                                                      self.config.redisqueque_port,
                                                      self.config.redisqueque_db,
                                                      self.config.redisqueque_password)
@@ -68,8 +68,8 @@ class ConnectorAT(object):
         logging.getLogger('connector').info("put message to following topics: "
                                             "%s", self.config.rt_topics)
         for message in self.at_realtime_reader.message_list:
-            task = at.task_pb2.Task()
-            task.action = at.task_pb2.MESSAGE
+            task = connectors.at.task_pb2.Task()
+            task.action = connectors.at.task_pb2.MESSAGE
             task.message.MergeFrom(message)
             for routing_key in self.config.rt_topics:
                 exchange_name = self.config.exchange_name
@@ -77,8 +77,8 @@ class ConnectorAT(object):
                                            routing_key=routing_key,
                                            body=task.SerializeToString())
         for perturbation in self.at_realtime_reader.perturbation_list:
-            task = at.task_pb2.Task()
-            task.action = at.task_pb2.AT_PERTURBATION
+            task = connectors.at.task_pb2.Task()
+            task.action = connectors.at.task_pb2.AT_PERTURBATION
             task.at_perturbation.MergeFrom(perturbation)
             for routing_key in self.config.rt_topics:
                 exchange_name = self.config.exchange_name

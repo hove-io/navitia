@@ -5,9 +5,9 @@ import datetime
 import time
 from sqlalchemy import Column, Table, MetaData, select, create_engine, \
     ForeignKey, bindparam, and_, or_, exc
-import at.task_pb2
-import at.realtime_pb2
-import at.type_pb2
+import connectors.at.task_pb2
+import connectors.at.realtime_pb2
+import connectors.at.type_pb2
 import google
 import os
 #
@@ -64,19 +64,19 @@ def get_datetime_to_second(sql_time):
 
 def get_navitia_type(object_type):
     if object_type == 'StopPoint':
-        return at.type_pb2.STOP_POINT
+        return connectors.at.type_pb2.STOP_POINT
     elif object_type == 'VehicleJourney':
-        return at.type_pb2.VEHICLE_JOURNEY
+        return connectors.at.type_pb2.VEHICLE_JOURNEY
     elif object_type == 'Line':
-        return at.type_pb2.LINE
+        return connectors.at.type_pb2.LINE
     elif object_type == 'Network':
-        return at.type_pb2.NETWORK
+        return connectors.at.type_pb2.NETWORK
     elif object_type == 'Route':
-        return at.type_pb2.JOURNEY_PATTERN
+        return connectors.at.type_pb2.JOURNEY_PATTERN
     elif object_type == 'StopArea':
-        return at.type_pb2.STOP_AREA
+        return connectors.at.type_pb2.STOP_AREA
     elif object_type == 'RoutePoint':
-        return at.type_pb2.JOURNEY_PATTERN_POINT
+        return connectors.at.type_pb2.JOURNEY_PATTERN_POINT
     else:
         return -1
 
@@ -165,7 +165,7 @@ class AtRealtimeReader(object):
             return uri
 
     def create_pertubation(self, message):
-        pertubation = at.realtime_pb2.AtPerturbation()
+        pertubation = connectors.at.realtime_pb2.AtPerturbation()
         pertubation.uri = message.uri
         pertubation.object.object_uri = message.object.object_uri
         pertubation.object.object_type = message.object.object_type
@@ -197,10 +197,16 @@ class AtRealtimeReader(object):
         last_impact_id = -1
         for row in result_proxy:
             try:
-                if last_impact_id != row[self.label_impact_id]:
-                    last_impact_id = row[self.label_impact_id]
-                    message = at.realtime_pb2.Message()
-                    self.message_list.append(message)
+                current_uri = self.get_uri(row[
+                        self.label_object_external_code],row[self.label_object_type])
+                if current_uri == None:
+                    print "".join(["l objet [", row[
+                        self.label_object_external_code], "] est rejetté : pas de correspondance extcode et uri"])
+                else:
+                    if last_impact_id != row[self.label_impact_id]:
+                        last_impact_id = row[self.label_impact_id]
+                        message = connectors.at.realtime_pb2.Message()
+                        self.message_list.append(message)
 
                     message.uri = str(row[self.label_impact_id]) + '-' + \
                                   row[self.label_message_lang]
@@ -224,9 +230,7 @@ class AtRealtimeReader(object):
                     message.active_days = \
                         int_to_bitset(row[self.label_active_days]) + '1'
 
-                    message.object.object_uri = self.get_uri(
-									row[self.label_object_external_code],
-									row[self.label_object_type])
+                        message.object.object_uri = current_uri
 
                     message.object.object_type = \
                         get_navitia_type(row[self.label_object_type])
