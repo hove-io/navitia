@@ -105,7 +105,7 @@ int main(int argc, char * argv[])
         try{
             ext_code_2_uri.to_redis(data);
         }catch(const navitia::exception& ne){
-            std::cout << "Impossible d'e sauvegarder'alimenter redis" << std::endl;
+            std::cout << "Impossible d'alimenter redis" << std::endl;
             std::cout << ne.what() << std::endl;
         }
     }
