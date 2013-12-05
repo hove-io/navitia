@@ -92,6 +92,10 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 item.type = stay_in;
             else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee)
                 item.type = guarantee;
+
+            BOOST_ASSERT(item.arrival >= item.departure);
+            BOOST_ASSERT(result.items.empty() || !clockwise || (result.items.back().arrival >= item.departure));
+            BOOST_ASSERT(result.items.empty() || clockwise ||  (result.items.back().arrival <= item.departure));
             result.items.push_back(item);
             boarding_jpp = type::invalid_idx;
             current_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
@@ -99,6 +103,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             // Est-ce que qu'on a à faire à un nouveau trajet ?
             if(boarding_jpp == type::invalid_idx) {
                 l = raptor_.labels[countb][current_jpp_idx];
+                BOOST_ASSERT(result.items.empty() || l >= result.items.back().arrival);
                 boarding_jpp = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
                 std::tie(current_st, workingDate) = raptor_.get_current_stidx_gap(countb, current_jpp_idx, accessibilite_params/*required_properties*/, clockwise);
                 item = PathItem();
@@ -180,6 +185,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 }
 
                 //On stocke l'item créé
+                BOOST_ASSERT(item.arrival >= item.departure);
+                BOOST_ASSERT(result.items.empty() || !clockwise || (result.items.back().arrival >= item.departure));
+                BOOST_ASSERT(result.items.empty() || clockwise ||  (result.items.back().arrival <= item.departure));
                 result.items.push_back(item);
 
                 --countb;
@@ -242,6 +250,9 @@ void patch_datetimes(Path &path){
                     waitingItem.type = waiting;
                     waitingItem.stop_points.push_back(previous_item.stop_points.front());
                     to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
+                    BOOST_ASSERT(previous_item.arrival <= waitingItem.departure);
+                    BOOST_ASSERT(waitingItem.arrival <= item->departure);
+                    BOOST_ASSERT(previous_item.arrival <= item->departure);
                 }
             }
             previous_item = *item;
