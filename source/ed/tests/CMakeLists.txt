@@ -17,9 +17,9 @@ ADD_TEST(adapted_test ${EXECUTABLE_OUTPUT_PATH}/adapted_test --report_level=no)
 
 add_executable(extcode2uri_test extcode2uri_test.cpp)
 target_link_libraries(extcode2uri_test ed connectors types utils hiredis ${BOOST_LIBS} log4cplus)
+ADD_TEST(extcode2uri_test ${EXECUTABLE_OUTPUT_PATH}/extcode2uri_test --report_level=no)
 
 add_executable(osm_test osm_test.cpp)
 target_link_libraries(osm_test ed connectors osmpbf types data georef pb_lib
     utils routing ${BOOST_LIBS} log4cplus)
 ADD_TEST(osm_test ${EXECUTABLE_OUTPUT_PATH}/osm_test --report_level=no)
-

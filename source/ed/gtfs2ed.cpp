@@ -31,7 +31,7 @@ int main(int argc, char * argv[])
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
-        ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379");
+        ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379 timeout=2");
 
 
     po::variables_map vm;
@@ -98,6 +98,18 @@ int main(int argc, char * argv[])
         extConnecteur.fill_aliases(aliases_file, data);
     }
 
+    // Ajout dans la table des correspondances
+    if(vm.count("redis-string")){
+        std::cout << "Alimentation de redis" <<std::endl;        
+        ed::connectors::ExtCode2Uri ext_code_2_uri(redis_string);
+        try{
+            ext_code_2_uri.to_redis(data);
+        }catch(const navitia::exception& ne){
+            std::cout << "Impossible d'e sauvegarder'alimenter redis" << std::endl;
+            std::cout << ne.what() << std::endl;
+        }
+    }
+
     std::cout << "line: " << data.lines.size() << std::endl;
     std::cout << "route: " << data.routes.size() << std::endl;
     std::cout << "journey_pattern: " << data.journey_patterns.size() << std::endl;
@@ -112,13 +124,6 @@ int main(int argc, char * argv[])
     std::cout << "journey_pattern point connections : " << data.journey_pattern_point_connections.size() << std::endl;
     std::cout << "alias : " <<data.alias.size() << std::endl;
     std::cout << "synonyms : " <<data.synonymes.size() << std::endl;
-
-    // Ajout dans la table des correspondances
-    if(vm.count("redis-string")){
-        std::cout << "Alimentation de redis" <<std::endl;
-        ed::connectors::ExtCode2Uri ext_code_2_uri(redis_string);
-        ext_code_2_uri.set_lists(data);
-    }
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);

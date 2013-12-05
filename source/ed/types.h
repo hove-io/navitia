@@ -74,7 +74,6 @@ struct StopArea : public Header, Nameable, hasProperties{
 
 struct Contributor : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Contributor;
-    std::string external_code;
     Contributor() {}
 
     nt::Contributor* get_navitia_type() const;
@@ -100,7 +99,6 @@ struct Network : public Header, Nameable{
 
 struct Company : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Company;
-    std::string external_code;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -116,7 +114,6 @@ struct Company : public Header, Nameable{
 
 struct CommercialMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::CommercialMode;
-    std::string external_code;
     nt::CommercialMode* get_navitia_type() const;
 
     bool operator<(const CommercialMode& other)const ;
@@ -124,7 +121,6 @@ struct CommercialMode : public Header, Nameable{
 
 struct PhysicalMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::PhysicalMode;
-    std::string external_code;
     PhysicalMode() {}
 
     nt::PhysicalMode* get_navitia_type() const;
@@ -156,7 +152,6 @@ struct Line : public Header, Nameable {
 
 struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
-    std::string external_code;
     Line * line;
 
     navitia::type::Route* get_navitia_type() const;

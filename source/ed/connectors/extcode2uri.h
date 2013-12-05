@@ -1,34 +1,33 @@
 #pragma once
-#include <hiredis/hiredis.h>
 #include<string>
-#include "utils/logger.h"
-#include "utils/exception.h"
-#include "utils/functions.h"
 #include "ed/data.h"
 #include"type/type.h"
+#include "utils/redis.h"
+#include "utils/logger.h"
 
-namespace ed{ namespace connectors{
-class ExtCode2Uri
-    {
-private:
-    std::string host;
-    std::string password;
-    int port;
-    int db;
-    std::string prefix;
-    std::string separator;
-    log4cplus::Logger logger;
+namespace ed{
+namespace connectors{
 
-    redisContext* connect;
+    class ExtCode2Uri{
+    public:
+        Redis redis;
+        log4cplus::Logger logger;
 
-public:
         ExtCode2Uri(const std::string& redis_connection);
-        ~ExtCode2Uri();
-        bool connected();
-        bool set(const std::string& key, const std::string& value);
-        bool set_lists(const ed::Data & data);
+        void to_redis(const ed::Data & data);
+
     };
 }
+
+template<typename T>
+void add_redis(const std::vector<T*>& vec, connectors::ExtCode2Uri& extcode2uri){
+    extcode2uri.redis.set_prefix(navitia::type::static_data::get()->captionByType(T::type));
+    for(auto* element : vec){
+        try{
+            extcode2uri.redis.set(element->external_code, element->uri);
+        }catch(const navitia::exception& ne){
+            LOG4CPLUS_WARN(extcode2uri.logger, "add_redis : " + std::string(ne.what()));
+        }
+    }
 }
-
-
+}

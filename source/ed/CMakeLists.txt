@@ -26,7 +26,7 @@ add_subdirectory(tests)
 
 
 add_executable(gtfs2ed gtfs2ed.cpp ed_persistor.cpp)
-target_link_libraries(gtfs2ed ed connectors types pq pqxx hiredis data pb_lib utils
+target_link_libraries(gtfs2ed ed connectors types pq pqxx data pb_lib utils
     routing ${BOOST_LIBS} log4cplus)
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
