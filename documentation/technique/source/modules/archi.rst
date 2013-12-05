@@ -31,6 +31,9 @@ gtfs2ed est responsable de l'intégration d'un fichier gtfs++ dans ED.
 
 Il est aussi le responsable de création de toutes les correspondances entre les codes externes NAViTiA 1 et les URIs NAViTiA2 sous la forme (clef,valeur), ces correspndances **doivent être persistantes** et exposées via REDIS au connecteur temps réel.
 
+.. warning::
+   Les correspondance envoyées à REDIS ne concernent que les objets suivants : StopArea, StopPoint, Line, VehicleJourney et le Network
+   
 osm2ed
 ~~~~~~
 osm2ed est responsable de l'intégration d'un export OSM dans ED
@@ -90,6 +93,12 @@ Ceci permettra à Sindri de gérer la reprise sur incident
 Correspondance entre codes externes et uris
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Lors de la construction des messages par le connecteur temps réel, ce dernier récupère l'URI de chaque objet TC qui correspond au code externe à partir des données exposées par REDIS.
+
+.. warning::
+   A prendre en compte les points suivants:
+   
+   * Les messages pour lesquelles pas de correspondance, pas de URI NAViTiA, sont rejettés.
+   * Les objets pris en compte sont : StopArea, StopPoint, Line, VehicleJourney et le Network
 
 Brokk
 -----
