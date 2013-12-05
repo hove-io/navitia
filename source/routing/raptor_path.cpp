@@ -213,13 +213,6 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
         result.duration = result.items.back().arrival - result.items.front().departure;
     else
         result.duration = 0;
-    int count_visites = 0;
-//    for(auto t: raptor_.best_labels) {
-//        if(t.type != uninitialized) {
-//            ++count_visites;
-//        }
-//    }
-    result.percent_visited = 100*count_visites / raptor_.data.pt_data.stop_points.size();
 
     result.nb_changes = 0;
     if(result.items.size() > 2) {

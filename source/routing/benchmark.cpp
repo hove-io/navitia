@@ -20,12 +20,11 @@ struct PathDemand {
 
 struct Result {
     int duration;
-    int visited;
     int time;
     int arrival;
     int nb_changes;
 
-    Result(Path path) : duration(path.duration), visited(path.percent_visited), time(-1), arrival(-1), nb_changes(path.nb_changes) {
+    Result(Path path) : duration(path.duration), time(-1), arrival(-1), nb_changes(path.nb_changes) {
         if(!path.items.empty())
             arrival = DateTimeUtils::hour(path.items.back().arrival);
     }
@@ -153,7 +152,6 @@ int main(int argc, char** argv){
                  << results[i].arrival << ", "
                  << results[i].duration << ", "
                  << results[i].nb_changes << ", "
-                 << results[i].visited << ", "
                  << results[i].time;
 
         out_file << "\n";
