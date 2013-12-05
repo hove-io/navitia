@@ -159,10 +159,7 @@ class AtRealtimeReader(object):
         if object_type in self._collections.keys():
             self._redis_queque.set_prefix(self._collections[object_type])
             uri = self._redis_queque.get(externalcode)
-        if uri == None:
-            return externalcode
-        else:
-            return uri
+        return uri
 
     def create_pertubation(self, message):
         pertubation = connectors.at.realtime_pb2.AtPerturbation()
