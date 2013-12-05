@@ -234,9 +234,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
 }
 
 void patch_datetimes(Path &path){
-    PathItem previous_item;
+    PathItem previous_item = *path.items.begin();
     std::vector<std::pair<int, PathItem>> to_insert;
-    for(auto item = path.items.begin(); item!= path.items.end(); ++item) {
+    for(auto item = path.items.begin() + 1; item!= path.items.end(); ++item) {
         if(previous_item.departure != DateTimeUtils::inf) {
             if(item->type == walking || item->type == stay_in || item->type == guarantee) {
                 auto duration = item->arrival - item->departure;
@@ -255,10 +255,8 @@ void patch_datetimes(Path &path){
                     BOOST_ASSERT(previous_item.arrival <= item->departure);
                 }
             }
-            previous_item = *item;
-        } else if(item->type == public_transport) {
-            previous_item = *item;
         }
+        previous_item = *item;
     }
 
     std::reverse(to_insert.begin(), to_insert.end());
