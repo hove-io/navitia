@@ -260,8 +260,27 @@ void patch_datetimes(Path &path){
     }
 
     std::reverse(to_insert.begin(), to_insert.end());
-    for(auto pos_value : to_insert)
+    for(auto pos_value : to_insert) {
         path.items.insert(path.items.begin()+pos_value.first, pos_value.second);
+    }
+
+    //Deletion of waiting items when departure = destination, and update of next waiting item
+    auto previous_it = path.items.begin();
+    std::vector<size_t> to_delete;
+    for(auto item = path.items.begin() + 1; item!= path.items.end(); ++item) {
+        if(previous_it->departure != DateTimeUtils::inf) {
+            if((previous_it->type == walking || previous_it->type == guarantee)
+                    && (previous_it->stop_points.front() == previous_it->stop_points.back())) {
+                item->departure = previous_it->departure;
+                to_delete.push_back(previous_it-path.items.begin());
+            }
+        }
+        previous_it = item;
+    }
+    std::reverse(to_delete.begin(), to_delete.end());
+    for(auto pos_value : to_delete) {
+        path.items.erase(path.items.begin() + pos_value);
+    }
 }
 
 
