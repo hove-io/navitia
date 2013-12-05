@@ -64,9 +64,8 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             auto destination = destination_jpp->stop_point;
             auto connections = departure->stop_point_connection_list;
             l = raptor_.labels[countb][current_jpp_idx];
-            auto find_predicate = [&](type::idx_t idx)->bool {
-                const auto connection = raptor_.data.pt_data.stop_point_connections[idx];
-                return destination->idx == connection->destination->idx;
+            auto find_predicate = [&](type::StopPointConnection* connection)->bool {
+                return departure == connection->departure && destination == connection->destination;
             };
 
             auto it = std::find_if(connections.begin(), connections.end(), find_predicate);
