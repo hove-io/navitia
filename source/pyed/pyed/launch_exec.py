@@ -10,7 +10,7 @@ def launch_exec(exec_name, args, execwriter, pyed_writer=None):
     if pyed_writer == None:
         pyed_writer = execwriter
     else:
-        pyed_writer.info("Launching "+ exec_name + " " + " ".join(args))
+        pyed_writer.debug("Launching "+ exec_name + " " + " ".join(args))
     args.insert(0, exec_name)
     proc = subprocess.Popen(args, stderr=subprocess.PIPE,
                      stdout=subprocess.PIPE)
