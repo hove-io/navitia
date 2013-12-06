@@ -8,10 +8,10 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
                    get_label,display_informations_vj,display_informations_route,\
-                   additional_informations_vj, UrisToLinks,  error
+                   additional_informations_vj, UrisToLinks,  error, status_stop_scedule
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
-from ResourceUri import ResourceUri, add_notes
+from ResourceUri import ResourceUri, add_notes,update_message_status
 from datetime import datetime
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
@@ -42,6 +42,7 @@ class Schedules(ResourceUri):
                 description="List of ids you want to forbid", action="append",
                                          dest="forbidden_uris[]")
         self.method_decorators.append(add_notes(self))
+        self.method_decorators.append(update_message_status(self))
 
 
     def get(self, uri=None, region=None, lon=None, lat=None):
@@ -105,14 +106,13 @@ class RouteSchedules(Schedules):
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(RouteSchedules, self).get(uri=uri, region=region, lon=lon, lat=lat)
 
-
 stop_schedule = {
     "stop_point" : PbField(stop_point),
     "route" : PbField(route, attribute="route"),
     "display_informations" : PbField(display_informations_route, attribute='pt_display_informations'),
     "date_times" : fields.List(fields.Nested(date_time)),
     "links" : UrisToLinks(),
-    "status":enum_type(attribute="status")
+    "additional_informations" : status_stop_scedule(attribute="response_status")
 }
 stop_schedules = {
     "stop_schedules" : fields.List(fields.Nested(stop_schedule)),

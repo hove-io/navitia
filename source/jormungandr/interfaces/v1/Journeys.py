@@ -12,7 +12,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
 
 from interfaces.parsers import option_value
 #from exceptions import RegionNotFound
-from ResourceUri import ResourceUri, add_notes,update_journeys_status
+from ResourceUri import ResourceUri, add_notes,update_message_status
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
@@ -130,8 +130,7 @@ journey = {
     'sections' : NonNullList(NonNullNested(section)),
     'from' : PbField(place, attribute='origin'),
     'to' : PbField(place, attribute='destination'),
-    'type' : fields.String(),
-    "status" : enum_type(attribute="message_status")
+    'type' : fields.String()
 }
 
 journeys = {
@@ -308,7 +307,7 @@ class Journeys(ResourceUri):
         parser_get.add_argument("wheelchair", type=boolean, default=False)
         parser_get.add_argument("debug", type=boolean, default=False, hidden=True)
         self.method_decorators.append(add_notes(self))
-        self.method_decorators.append(update_journeys_status(self))
+        self.method_decorators.append(update_message_status(self))
 
 
     @clean_links()
