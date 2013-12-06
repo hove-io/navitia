@@ -21,7 +21,7 @@ def redis_queque_test():
     try:
         _password = os.environ["REDISPASSWORD"]
     except:
-        _password = "password"
+        _password = None
 
     redis_test = RedisQueue(_host, _port, _db, _password)
 
