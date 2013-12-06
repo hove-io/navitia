@@ -30,6 +30,7 @@ Dependencies
    * redis
    * dict2xml
    * Flask-SQLAlchemy (only for Tyr currently)
+   * Celery (>=3.0)
 
 #. Other
 
