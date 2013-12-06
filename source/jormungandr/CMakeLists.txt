@@ -5,5 +5,7 @@ add_subdirectory("scripts")
 add_subdirectory("interfaces")
 
 add_test(jormungandr nosetests --where=${CMAKE_CURRENT_SOURCE_DIR})
-set_tests_properties(jormungandr PROPERTIES ENVIRONMENT
-    PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR})
+SET_PROPERTY(TEST jormungandr PROPERTY
+    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}")
+SET_PROPERTY(TEST jormungandr APPEND PROPERTY
+    ENVIRONMENT "JORMUNGANDR_CONFIG_FILE=${CMAKE_CURRENT_SOURCE_DIR}/default_settings.py")
