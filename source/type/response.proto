@@ -32,15 +32,10 @@ message Place {
     optional int32 quality = 12;
 }
 
-enum Direction {
-    TURN_RIGHT= 1;
-    TURN_LEFT= 2;
-}
-
 message PathItem {
     optional string name = 1;
     optional double length = 2;
-    optional Direction direction =3;
+    optional int32 direction = 3;
 }
 
 enum StreetNetworkMode {

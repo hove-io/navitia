@@ -182,7 +182,7 @@ double StreetNetwork::get_distance(const ng::ProjectionData& start,
 }
 
 
-ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second){
+ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
     ng::Path result;
     if(!use_second){
         if(!departure_launched()
@@ -201,7 +201,8 @@ ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second){
             result = this->geo_ref.build_path(projection.target, this->predecessors);
             result.length = dist_target;
         }
-        result.coordinates.push_front(departure.projected);
+        if (! result.path_items.empty())
+            result.path_items.front().coordinates.push_front(departure.projected);
     } else {
         if(!arrival_launched()
             || (distances2[idx] == std::numeric_limits<float>::max() &&
@@ -220,8 +221,11 @@ ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second){
             result.length = dist_target;
         }
         std::reverse(result.path_items.begin(), result.path_items.end());
-        std::reverse(result.coordinates.begin(), result.coordinates.end());
-        result.coordinates.push_back(destination.projected);
+        for (auto& item : result.path_items) {
+            std::reverse(item.coordinates.begin(), item.coordinates.end());
+        }
+        if (! result.path_items.empty())
+            result.path_items.back().coordinates.push_back(destination.projected);
     }
 
     return result;
@@ -253,13 +257,10 @@ ng::Path StreetNetwork::get_direct_path() {
             result.path_items.push_back(*p);
             result.length += p->length;
         }
-        for(auto c = path2.coordinates.rbegin(); c != path2.coordinates.rend(); ++c) {
-            result.coordinates.push_back(*c);
-        }
     }
 
-    result.coordinates.push_front(departure.projected);
-    result.coordinates.push_back(destination.projected);
+    result.path_items.front().coordinates.push_front(departure.projected);
+    result.path_items.back().coordinates.push_back(destination.projected);
     return result;
 }
 }}
