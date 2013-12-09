@@ -30,16 +30,36 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths,
         const nt::Data& d, streetnetwork::StreetNetwork& worker,
-        const type::EntryPoint& origin, const type::EntryPoint& destination) {
+        const type::EntryPoint& origin, const type::EntryPoint& destination,
+        const std::vector<boost::posix_time::ptime>& datetimes,
+                                bool clockwise, float walking_speed) {
     pbnavitia::Response pb_response;
     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
     auto temp = worker.get_direct_path();
     if(!temp.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
-        pbnavitia::Journey* pb_journey = pb_response.add_journeys();
-        pb_journey->set_duration(temp.length);
-        fill_street_section(origin, temp, d, pb_journey->add_sections(), 1);
+
+        //for each date time we add a direct street journey
+        for(boost::posix_time::ptime datetime : datetimes) {
+            pbnavitia::Journey* pb_journey = pb_response.add_journeys();
+            pb_journey->set_duration(temp.length);
+
+            boost::posix_time::ptime departure, arrival;
+            auto duration (boost::posix_time::seconds(temp.length / walking_speed));
+            if (clockwise) {
+                departure = datetime;
+                arrival = departure + duration;
+            } else {
+                arrival = datetime;
+                departure = arrival - duration;
+            }
+            const auto str_departure = boost::posix_time::to_iso_string(departure);
+            const auto str_arrival = boost::posix_time::to_iso_string(arrival);
+            pb_journey->set_departure_date_time(str_departure);
+            pb_journey->set_arrival_date_time(str_arrival);
+            fill_street_section(origin, temp, d, pb_journey->add_sections(), 1);
+        }
     }
 
     pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
@@ -361,7 +381,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     if(clockwise)
         std::reverse(result.begin(), result.end());
 
-    return make_pathes(result, raptor.data, worker, origin, destination);
+    return make_pathes(result, raptor.data, worker, origin, destination, datetimes, clockwise, walking_speed);
 }
 
 
