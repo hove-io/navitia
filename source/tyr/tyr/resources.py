@@ -29,7 +29,7 @@ instance_fields = {'id': fields.Raw, 'name': fields.Raw, "is_free": fields.Raw}
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
 user_fields = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw}
-user_fields_full = {'id': fields.Raw, 'login': fields.Raw, \
+user_fields_full = {'id': fields.Raw, 'login': fields.Raw,
         'email': fields.Raw, 'keys': fields.List(fields.Nested(key_fields)),
         'authorizations': fields.List(fields.Nested(
             {'instance': fields.Nested(instance_fields),
@@ -49,7 +49,7 @@ class Instance(restful.Resource):
                 case_sensitive=False, help='boolean for returning only free '
                 'or private instances')
         args = parser.parse_args()
-        if args['is_free'] != None:
+        if args['is_free'] is not None:
             return models.Instance.query.filter_by(**args).all()
         else:
             return models.Instance.query.all()
