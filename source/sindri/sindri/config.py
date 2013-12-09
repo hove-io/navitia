@@ -34,7 +34,7 @@ class Config(object):
             else:
                 section_list.append('[missing section]')
             section_string = ', '.join(section_list)
-            if error == False:
+            if type(error) is bool and not error:
                 error = 'Missing value or section.'
             result += section_string + ' => ' + str(error) + "\n"
         return result
@@ -65,7 +65,7 @@ class Config(object):
         val = Validator()
         res = config.validate(val, preserve_errors=True)
         #validate retourne true, ou un dictionaire  ...
-        if res != True:
+        if type(res) is bool and res:
             error = self.build_error(config, res)
             raise ValueError("Config is not valid: " + error)
 

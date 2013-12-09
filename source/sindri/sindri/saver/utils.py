@@ -39,4 +39,4 @@ def parse_active_days(active_days):
     else:
         if (active_days.count('0') + active_days.count('1')) != 8:
             raise FunctionalError('active_days not valid: ' + active_days)
-        return  active_days
+        return active_days
