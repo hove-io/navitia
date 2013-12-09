@@ -116,6 +116,9 @@ class Script(object):
                            else request["start_page"]
         if request["max_date_times"]:
             st.max_date_times = request["max_date_times"]
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                st.forbidden_uri.append(forbidden_uri)
         resp = instance.send_and_receive(req)
         return resp
 
@@ -311,6 +314,9 @@ class Script(object):
         req.ptref.depth      = request["depth"]
         req.ptref.start_page = request["start_page"]
         req.ptref.count      = request["count"]
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.ptref.forbidden_uri.append(forbidden_uri)
 
         resp = instance.send_and_receive(req)
         self.__pagination(request, resource_name, resp)
