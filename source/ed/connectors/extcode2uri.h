@@ -26,7 +26,7 @@ void add_redis(const std::vector<T*>& vec, connectors::ExtCode2Uri& extcode2uri)
         try{
             extcode2uri.redis.set(element->external_code, element->uri);
         }catch(const navitia::exception& ne){
-            LOG4CPLUS_WARN(extcode2uri.logger, "add_redis : " + std::string(ne.what()));
+            throw navitia::exception(ne.what());
         }
     }
 }
