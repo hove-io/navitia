@@ -83,8 +83,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                        current_boardings[jpp_idx] = data.pt_data.journey_pattern_points[best_jpp];
                        current_boarding_types[jpp_idx] = boarding_type::connection;
 
-                       if(/*!b_dest.is_eligible_solution(jpp_idx)
-                               && */v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
+                       if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
                            Q[jpp->journey_pattern->idx] = jpp->order;
                        }
                     }

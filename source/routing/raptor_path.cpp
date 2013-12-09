@@ -62,15 +62,14 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             auto departure = raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point;
             auto destination_jpp = raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
             auto destination = destination_jpp->stop_point;
-            auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);
+            auto connections = departure->stop_point_connection_list;
             l = raptor_.labels[countb][current_jpp_idx];
-            auto find_predicate = [&](type::idx_t idx)->bool {
-                const auto connection = raptor_.data.pt_data.stop_point_connections[idx];
-                return destination->idx == connection->destination->idx;
+            auto find_predicate = [&](type::StopPointConnection* connection)->bool {
+                return departure == connection->departure && destination == connection->destination;
             };
 
-            auto it = std::find_if(connections_idx.begin(), connections_idx.end(), find_predicate);
-            if(it == connections_idx.end()) {
+            auto it = std::find_if(connections.begin(), connections.end(), find_predicate);
+            if(it == connections.end()) {
                 auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
                 if(clockwise) {
                    item = PathItem(r2, l);
@@ -78,7 +77,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                    item = PathItem(l, r2);
                 }
             } else {
-                const auto stop_point_connection = raptor_.data.pt_data.stop_point_connections[*it];
+                const auto stop_point_connection = *it;
                 if(clockwise) {
                     item = PathItem(l - stop_point_connection->display_duration, l);
                 } else {
@@ -93,6 +92,10 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 item.type = stay_in;
             else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee)
                 item.type = guarantee;
+
+            BOOST_ASSERT(item.arrival >= item.departure);
+            BOOST_ASSERT(result.items.empty() || !clockwise || (result.items.back().arrival >= item.departure));
+            BOOST_ASSERT(result.items.empty() || clockwise ||  (result.items.back().arrival <= item.departure));
             result.items.push_back(item);
             boarding_jpp = type::invalid_idx;
             current_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
@@ -100,6 +103,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             // Est-ce que qu'on a à faire à un nouveau trajet ?
             if(boarding_jpp == type::invalid_idx) {
                 l = raptor_.labels[countb][current_jpp_idx];
+                BOOST_ASSERT(result.items.empty() || l >= result.items.back().arrival);
                 boarding_jpp = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
                 std::tie(current_st, workingDate) = raptor_.get_current_stidx_gap(countb, current_jpp_idx, accessibilite_params/*required_properties*/, clockwise);
                 item = PathItem();
@@ -181,6 +185,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 }
 
                 //On stocke l'item créé
+                BOOST_ASSERT(item.arrival >= item.departure);
+                BOOST_ASSERT(result.items.empty() || !clockwise || (result.items.back().arrival >= item.departure));
+                BOOST_ASSERT(result.items.empty() || clockwise ||  (result.items.back().arrival <= item.departure));
                 result.items.push_back(item);
 
                 --countb;
@@ -206,13 +213,6 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
         result.duration = result.items.back().arrival - result.items.front().departure;
     else
         result.duration = 0;
-    int count_visites = 0;
-//    for(auto t: raptor_.best_labels) {
-//        if(t.type != uninitialized) {
-//            ++count_visites;
-//        }
-//    }
-    result.percent_visited = 100*count_visites / raptor_.data.pt_data.stop_points.size();
 
     result.nb_changes = 0;
     if(result.items.size() > 2) {
@@ -227,9 +227,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
 }
 
 void patch_datetimes(Path &path){
-    PathItem previous_item;
+    PathItem previous_item = *path.items.begin();
     std::vector<std::pair<int, PathItem>> to_insert;
-    for(auto item = path.items.begin(); item!= path.items.end(); ++item) {
+    for(auto item = path.items.begin() + 1; item!= path.items.end(); ++item) {
         if(previous_item.departure != DateTimeUtils::inf) {
             if(item->type == walking || item->type == stay_in || item->type == guarantee) {
                 auto duration = item->arrival - item->departure;
@@ -243,17 +243,37 @@ void patch_datetimes(Path &path){
                     waitingItem.type = waiting;
                     waitingItem.stop_points.push_back(previous_item.stop_points.front());
                     to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
+                    BOOST_ASSERT(previous_item.arrival <= waitingItem.departure);
+                    BOOST_ASSERT(waitingItem.arrival <= item->departure);
+                    BOOST_ASSERT(previous_item.arrival <= item->departure);
                 }
             }
-            previous_item = *item;
-        } else if(item->type == public_transport) {
-            previous_item = *item;
         }
+        previous_item = *item;
     }
 
     std::reverse(to_insert.begin(), to_insert.end());
-    for(auto pos_value : to_insert)
+    for(auto pos_value : to_insert) {
         path.items.insert(path.items.begin()+pos_value.first, pos_value.second);
+    }
+
+    //Deletion of waiting items when departure = destination, and update of next waiting item
+    auto previous_it = path.items.begin();
+    std::vector<size_t> to_delete;
+    for(auto item = path.items.begin() + 1; item!= path.items.end(); ++item) {
+        if(previous_it->departure != DateTimeUtils::inf) {
+            if((previous_it->type == walking || previous_it->type == guarantee)
+                    && (previous_it->stop_points.front() == previous_it->stop_points.back())) {
+                item->departure = previous_it->departure;
+                to_delete.push_back(previous_it-path.items.begin());
+            }
+        }
+        previous_it = item;
+    }
+    std::reverse(to_delete.begin(), to_delete.end());
+    for(auto pos_value : to_delete) {
+        path.items.erase(path.items.begin() + pos_value);
+    }
 }
 
 
