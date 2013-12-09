@@ -50,7 +50,7 @@ class NonNullList(fields.List):
 
 class additional_informations(fields.Raw):
     def output(self, key, obj):
-        properties = getattr(obj, "has_properties")
+        properties = getattr(obj, "properties")
         enum = properties.DESCRIPTOR.enum_types_by_name["AdditionalInformation"]
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
@@ -60,21 +60,8 @@ class status_stop_scedule(fields.Raw):
         result = []
         if self.attribute:
             key = self.attribute
-        keys = key.split(".")
-        if len(keys) > 1:
-            try :
-                if obj.HasField(keys[0]):
-                    return enum_type().output(".".join(keys[1:]), getattr(obj, keys[0]))
-                return result
-            except ValueError:
-                return result
-        try:
-            if not obj.HasField(key):
-                return result
-        except ValueError:
-            return result
-        enum = obj.DESCRIPTOR.fields_by_name[key].enum_type.values_by_number
-        result.append(str.lower(enum[getattr(obj, key)].name))
+            enum = obj.DESCRIPTOR.fields_by_name[key].enum_type.values_by_number
+            result.append(str.lower(enum[getattr(obj, key)].name))
         return result
 
 class additional_informations_vj(fields.Raw):
@@ -108,7 +95,7 @@ class has_equipments():
 
 class notes(fields.Raw):
     def output(self, key, obj):
-        properties = getattr(obj, "has_properties")
+        properties = getattr(obj, "properties")
         r = []
         for note_ in properties.notes:
             r.append({"id": note_.uri, "value": note_.note})
@@ -116,7 +103,7 @@ class notes(fields.Raw):
 
 class notes_links(fields.Raw):
     def output(self, key, obj):
-        properties = getattr(obj, "has_properties")
+        properties = getattr(obj, "properties")
         r = []
         for note_ in properties.notes:
             r.append({"id": note_.uri, "type": "notes", "value": note_.note})

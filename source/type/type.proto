@@ -151,7 +151,7 @@ message Note{
     optional string note = 2;
 }
 
-message hasProperties{
+message Properties{
     enum AdditionalInformation{
         pick_up_only = 1;
         drop_off_only = 2;
@@ -185,7 +185,7 @@ message StopDateTime {
     optional string arrival_date_time = 1;
     optional string departure_date_time = 2;
     optional StopPoint stop_point = 3;
-    optional hasProperties has_properties = 4;
+    optional Properties properties = 4;
 }
 
 

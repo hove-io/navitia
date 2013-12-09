@@ -404,18 +404,18 @@ void fill_pb_object(const nt::StopTime* st, const type::Data&,
     if(st == nullptr)
         return ;
 
-    pbnavitia::hasProperties * hp = stop_date_time->mutable_has_properties();
+    pbnavitia::Properties * hp = stop_date_time->mutable_properties();
     if ((!st->drop_off_allowed()) && st->pick_up_allowed()){
-        hp->add_additional_informations(pbnavitia::hasProperties::pick_up_only);
+        hp->add_additional_informations(pbnavitia::Properties::pick_up_only);
     }
     if(st->drop_off_allowed() && (!st->pick_up_allowed())){
-        hp->add_additional_informations(pbnavitia::hasProperties::drop_off_only);
+        hp->add_additional_informations(pbnavitia::Properties::drop_off_only);
     }
     if (st->odt()){
-        hp->add_additional_informations(pbnavitia::hasProperties::on_demand_transport);
+        hp->add_additional_informations(pbnavitia::Properties::on_demand_transport);
     }
     if (st->date_time_estimated()){
-        hp->add_additional_informations(pbnavitia::hasProperties::date_time_estimated);
+        hp->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
     if(!st->comment.empty()){
         pbnavitia::Note* note = hp->add_notes();
@@ -703,18 +703,18 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     if(stop_time != nullptr) {
         const auto str_datetime = iso_string(date_time, data);
         rs_date_time->set_date_time(str_datetime);
-        pbnavitia::hasProperties * hn = rs_date_time->mutable_has_properties();
+        pbnavitia::Properties * hn = rs_date_time->mutable_properties();
         if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
-            hn->add_additional_informations(pbnavitia::hasProperties::pick_up_only);
+            hn->add_additional_informations(pbnavitia::Properties::pick_up_only);
         }
         if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
-            hn->add_additional_informations(pbnavitia::hasProperties::drop_off_only);
+            hn->add_additional_informations(pbnavitia::Properties::drop_off_only);
         }
         if (stop_time->odt()){
-            hn->add_additional_informations(pbnavitia::hasProperties::on_demand_transport);
+            hn->add_additional_informations(pbnavitia::Properties::on_demand_transport);
         }
         if (stop_time->date_time_estimated()){
-            hn->add_additional_informations(pbnavitia::hasProperties::date_time_estimated);
+            hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
         }
         if(!stop_time->comment.empty()){
             pbnavitia::Note* note = hn->add_notes();

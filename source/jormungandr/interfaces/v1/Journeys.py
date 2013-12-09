@@ -12,7 +12,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
 
 from interfaces.parsers import option_value
 #from exceptions import RegionNotFound
-from ResourceUri import ResourceUri, add_notes,update_message_status
+from ResourceUri import ResourceUri, add_notes, update_message_status
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links

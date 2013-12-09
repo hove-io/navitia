@@ -8,10 +8,10 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
                    get_label,display_informations_vj,display_informations_route,\
-                   additional_informations_vj, UrisToLinks,  error, status_stop_scedule
+                   additional_informations_vj, UrisToLinks, error, status_stop_scedule
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
-from ResourceUri import ResourceUri, add_notes,update_message_status
+from ResourceUri import ResourceUri, add_notes, update_message_status
 from datetime import datetime
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument

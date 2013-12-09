@@ -189,7 +189,7 @@ message PairStopTime {
 
 message ScheduleStopTime {
     optional string date_time = 1;
-    optional hasProperties has_properties = 2;
+    optional Properties properties = 2;
 }
 
 message RouteScheduleRow {

@@ -120,9 +120,9 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
             fill_pb_object(dt_st.second, data, date_time, 0,
                            now, action_period, dt_st.first);
         }
-        if(response_status.find(id_vec.first.second) != response_status.end()){
-            auto it = response_status.at(id_vec.first.second);
-            schedule->set_response_status(it);
+        const auto& it = response_status.find(id_vec.first.second);
+        if(it != response_status.end()){
+            schedule->set_response_status(it->second);
         }
     }
     return response;
