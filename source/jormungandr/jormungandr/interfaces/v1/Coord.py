@@ -1,8 +1,8 @@
 from flask.ext.restful import marshal_with, abort, marshal
-from instance_manager import InstanceManager
+from jormungandr.instance_manager import InstanceManager
 from ResourceUri import ResourceUri
-from interfaces.v1.fields import address
-from type_pb2 import _NAVITIATYPE
+from jormungandr.interfaces.v1.fields import address
+from jormungandr.type_pb2 import _NAVITIATYPE
 from collections import OrderedDict
 #from exceptions import RegionNotFound
 

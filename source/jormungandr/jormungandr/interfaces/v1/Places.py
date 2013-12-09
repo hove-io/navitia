@@ -1,13 +1,13 @@
 #coding=utf-8
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
-from instance_manager import InstanceManager
+from jormungandr.instance_manager import InstanceManager
 from make_links import add_id_links
 from fields import place, NonNullList, NonNullNested, PbField, pagination
 from ResourceUri import ResourceUri
 from make_links import add_id_links
-from interfaces.argument import ArgumentDoc
-from interfaces.parsers import depth_argument
+from jormungandr.interfaces.argument import ArgumentDoc
+from jormungandr.interfaces.parsers import depth_argument
 from copy import deepcopy
 
 

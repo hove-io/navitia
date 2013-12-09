@@ -2,9 +2,9 @@
 from flask import Flask, got_request_exception
 from flask.ext.restful import Api
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
-from jormungandr_exceptions import log_exception
+from exceptions import log_exception
 app = Flask(__name__)
-app.config.from_object('default_settings')
+app.config.from_object('jormungandr.default_settings')
 app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
 
 if app.config.has_key('ERROR_HANDLER_TYPE') and\

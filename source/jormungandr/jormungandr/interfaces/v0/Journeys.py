@@ -1,15 +1,15 @@
 # coding=utf-8
 from flask import Flask, request
 from flask.ext.restful import Resource, fields
-from instance_manager import InstanceManager
-from interfaces.parsers import true_false, option_value
+from jormungandr.instance_manager import InstanceManager
+from jormungandr.interfaces.parsers import true_false, option_value
 from protobuf_to_dict import protobuf_to_dict
-from find_extrem_datetimes import extremes
+from jormungandr.find_extrem_datetimes import extremes
 from flask.ext.restful import reqparse
 from flask.ext.restful.types import boolean
-from interfaces.argument import ArgumentDoc
-from interfaces.parsers import depth_argument
-from authentification import authentification_required
+from jormungandr.interfaces.argument import ArgumentDoc
+from jormungandr.interfaces.parsers import depth_argument
+from jormungandr.authentification import authentification_required
 
 class Journeys(Resource):
     """ Compute journeys"""

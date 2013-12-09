@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields, marshal_with
-from instance_manager import InstanceManager
+from jormungandr.instance_manager import InstanceManager
 
 region_fields = {
     'region_id': fields.String,

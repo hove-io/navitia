@@ -1,8 +1,8 @@
 # coding=utf-8
-import type_pb2
-import request_pb2
-import response_pb2
-from renderers import render_from_protobuf
+import jormungandr.type_pb2 as type_pb2
+import jormungandr.request_pb2 as request_pb2
+import jormungandr.response_pb2 as response_pb2
+from jormungandr.renderers import render_from_protobuf
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools

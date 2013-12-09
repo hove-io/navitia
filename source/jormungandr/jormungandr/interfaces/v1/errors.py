@@ -1,5 +1,5 @@
 # coding=utf-8
-import response_pb2
+import jormungandr.response_pb2
 from functools import wraps
 from flask import request
 

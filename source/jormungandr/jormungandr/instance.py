@@ -5,7 +5,7 @@ from threading import Lock
 import zmq
 import response_pb2
 import logging
-from jormungandr_exceptions import DeadSocketException
+from exceptions import DeadSocketException
 
 
 class Instance(object):

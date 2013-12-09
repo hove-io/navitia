@@ -1,6 +1,6 @@
 #coding=utf-8
 from flask.ext.restful import Resource, fields, marshal_with
-from instance_manager import InstanceManager
+from jormungandr.instance_manager import InstanceManager
 from make_links import add_coverage_link, add_collection_links, clean_links
 from converters_collection_type import collections_to_resource_type
 from collections import OrderedDict

@@ -10,7 +10,7 @@ from singleton import singleton
 import importlib
 import logging
 from renderers import protobuf_to_dict
-from jormungandr_exceptions import ApiNotFound, RegionNotFound
+from jormungandr.exceptions import ApiNotFound, RegionNotFound
 from app import app
 from instance import Instance
 
@@ -27,7 +27,7 @@ class InstanceManager(object):
         pass
 
 
-    def initialisation(self):
+    def initialisation(self, start_ping=True):
         """ Charge la configuration à partir d'un fichier ini indiquant
             les chemins des fichiers contenant :
             - géométries de la région sur laquelle s'applique le moteur
@@ -51,12 +51,13 @@ class InstanceManager(object):
             if conf.has_option('instance', 'script') :
                 instance.script = importlib.import_module(conf.get('instance','script')).Script()
             else:
-                instance.script = importlib.import_module("scripts.default").Script()
+                instance.script = importlib.import_module("jormungandr.scripts.default").Script()
 
             self.instances[conf.get('instance' , 'key')] = instance
         self.thread_event = Event()
         self.thread = Thread(target = self.thread_ping)
-        self.thread.start()
+        if start_ping:
+            self.thread.start()
 
 
     def dispatch(self, arguments, region, api, request=None):

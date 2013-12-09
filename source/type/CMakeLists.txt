@@ -6,7 +6,7 @@ add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
 target_link_libraries(pb_lib ${PROTOBUF_LIBRARY})
 add_custom_command (TARGET pb_lib
     PRE_BUILD
-    COMMAND protoc ARGS --python_out=${CMAKE_SOURCE_DIR}/jormungandr type.proto
+    COMMAND protoc ARGS --python_out=${CMAKE_SOURCE_DIR}/jormungandr/jormungandr type.proto
     response.proto request.proto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type )
 
