@@ -12,7 +12,7 @@ class Sindri(object):
     """
     Classe gérant le service de persitances des événements temps réel envoyés
     sur rabbitmq.
-    Sindri et son frére Brokk sont les nains forgerons de la mythologie nordique
+    Sindri et Brokk sont des fréres nains forgerons de la mythologie nordique
 
     l'utilisation est la suivante:
     sindri = Sindri()
@@ -143,6 +143,3 @@ class Sindri(object):
     def close(self):
         if self.connection:
             self.connection.close()
-
-
-

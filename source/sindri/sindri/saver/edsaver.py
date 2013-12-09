@@ -8,7 +8,6 @@ from sindri.saver.at_perturbation import persist_at_perturbation
 from sindri.saver.utils import FunctionalError, TechnicalError
 
 
-
 class EdRealtimeSaver(object):
     """
     Classe responsable de l'enregistrement en base de donnée des événements
@@ -26,7 +25,6 @@ class EdRealtimeSaver(object):
 
     def persist_message(self, message):
         self.__persist(message, persist_message)
-
 
     def persist_at_perturbation(self, perturbation):
         self.__persist(perturbation, persist_at_perturbation)
@@ -61,7 +59,8 @@ class EdRealtimeSaver(object):
             raise FunctionalError(str(e))
         except sqlalchemy.exc.SQLAlchemyError, e:
             logger.exception('error durring transaction')
-            if not hasattr(e, 'connection_invalidated') or not e.connection_invalidated:
+            if not hasattr(e, 'connection_invalidated') \
+                    or not e.connection_invalidated:
                 transaction.rollback()
             raise TechnicalError('problem with databases: ' + str(e))
         except:
@@ -74,5 +73,3 @@ class EdRealtimeSaver(object):
         finally:
             if conn:
                 conn.close()
-
-

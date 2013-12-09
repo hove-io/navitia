@@ -1,5 +1,6 @@
 import logging
 
+
 def configure_logger(app):
     """
     configuration du logging
@@ -12,8 +13,10 @@ def configure_logger(app):
     app.logger.addHandler(handler)
     app.logger.setLevel(app.config["LOG_LEVEL"])
 
-    logging.getLogger('sqlalchemy.engine').setLevel(app.config["LOG_LEVEL_SQLALCHEMY"])
-    logging.getLogger('sqlalchemy.pool').setLevel(app.config["LOG_LEVEL_SQLALCHEMY"])
+    logging.getLogger('sqlalchemy.engine').setLevel(
+            app.config["LOG_LEVEL_SQLALCHEMY"])
+    logging.getLogger('sqlalchemy.pool').setLevel(
+            app.config["LOG_LEVEL_SQLALCHEMY"])
     logging.getLogger('sqlalchemy.dialects.postgresql')\
             .setLevel(app.config["LOG_LEVEL_SQLALCHEMY"])
 

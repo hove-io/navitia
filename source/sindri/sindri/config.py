@@ -2,6 +2,7 @@
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 
+
 class Config(object):
     """
     class de configuration de sindri
@@ -29,7 +30,7 @@ class Config(object):
             # each entry is a tuple
             section_list, key, error = entry
             if key is not None:
-               section_list.append(key)
+                section_list.append(key)
             else:
                 section_list.append('[missing section]')
             section_string = ', '.join(section_list)
@@ -37,7 +38,6 @@ class Config(object):
                 error = 'Missing value or section.'
             result += section_string + ' => ' + str(error) + "\n"
         return result
-
 
     def load(self, config_file):
         """
@@ -79,4 +79,3 @@ class Config(object):
         self.instance_name = config['sindri']['instance-name']
         self.rt_topics = config['sindri']['rt-topics']
         self.exchange_name = config['sindri']['exchange-name']
-

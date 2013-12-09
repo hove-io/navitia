@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sindri.saver.utils import parse_active_days, from_timestamp, from_time, \
         FunctionalError
 
+
 def build_message_dict(message):
     """
     construit à partir d'un object protobuf pbnavitia.realtime.Message le
@@ -34,6 +35,7 @@ def build_message_dict(message):
 
     return result
 
+
 def build_localized_message_dict(localized_msg, message_id):
     """
     construit à partir d'un object protobuf pbnavitia.realtime.LocalizeMessage
@@ -45,6 +47,7 @@ def build_localized_message_dict(localized_msg, message_id):
     result['body'] = localized_msg.body if localized_msg.body else None
     result['title'] = localized_msg.title if localized_msg.title else None
     return result
+
 
 def persist_message(meta, conn, message):
     """
@@ -65,6 +68,7 @@ def find_message_id(meta, conn, message_uri):
     result = conn.execute(query)
     row = result.fetchone()
     return row[0] if row else None
+
 
 def save_message(meta, conn, message_id, message):
     """
