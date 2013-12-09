@@ -1,6 +1,5 @@
 from jormungandr import app
-import unittest
-from instance_manager import InstanceManager
+from jormungandr.instance_manager import InstanceManager
 from instance_read import InstanceRead
 from nose.tools import *
 
@@ -28,6 +27,5 @@ class TestCase:
 
     def test_region(self):
         self.tester = app.test_client(self)
-        print InstanceManager()
         response = self.tester.get(self.urls["test_region"])
         eq_(response.status_code, 200)

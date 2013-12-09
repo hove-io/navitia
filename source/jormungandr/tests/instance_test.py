@@ -1,4 +1,4 @@
-from instance import Instance
+from jormungandr.instance import Instance
 import os
 import hashlib
 
