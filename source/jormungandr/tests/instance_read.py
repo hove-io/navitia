@@ -7,7 +7,7 @@ class InstanceRead(InstanceTest):
 
     def send_and_receive(self, *args, **kwargs):
         request = None
-        if kwargs.has_key("request"):
+        if "request" in kwargs:
             request = kwargs["request"]
         else:
             for arg in args:
