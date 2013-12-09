@@ -43,7 +43,6 @@ class Config(object):
             result += section_string + ' => ' + str(error) + "\n"
         return result
 
-
     def load(self, config_file):
         """
         charge la configuration depuis le fichier de conf et la valide

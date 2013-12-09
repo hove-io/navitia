@@ -1,14 +1,16 @@
 #encoding: utf-8
 from redis import Redis
 
+
 class RedisHelper(object):
-    def __init__(self, host = "localhost", port = 6379, db = 0, password = None, prefix='REDIS'):
+    def __init__(self, host="localhost", port=6379, db=0,
+                 password=None, prefix="REDIS"):
         try:
-            self._redis = Redis(host=host,port=port,db=db,password=password)
+            self._redis = Redis(host=host, port=port, db=db, password=password)
             self._prefix = prefix
             self._separator = "|"
         except:
-            raise ValueError("Redis : Connecting redis failed" )
+            raise ValueError("Redis : Connecting redis failed")
 
     def set_prefix(self, prefix):
         self._prefix = prefix
@@ -19,7 +21,7 @@ class RedisHelper(object):
         else:
             return False
 
-    def get(self,key):
+    def get(self, key):
         if self._redis != None:
             return self._redis.get(self._prefix + self._separator + key)
         else:
