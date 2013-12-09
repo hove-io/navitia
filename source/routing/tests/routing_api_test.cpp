@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
 
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
-// Marche Ã  pied
+    // Walking
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
     pbnavitia::Journey journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ab");
     BOOST_REQUIRE_EQUAL(pathitem.length(), 10);
 
-// vÃ©lo
+    // Biking
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bike];
     origin.streetnetwork_params.speed = 13;

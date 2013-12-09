@@ -257,10 +257,10 @@ ng::Path StreetNetwork::get_direct_path() {
             result.path_items.push_back(*p);
             result.length += p->length;
         }
+        result.path_items.front().coordinates.push_front(departure.projected);
+        result.path_items.back().coordinates.push_back(destination.projected);
     }
 
-    result.path_items.front().coordinates.push_front(departure.projected);
-    result.path_items.back().coordinates.push_back(destination.projected);
     return result;
 }
 }}

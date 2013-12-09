@@ -192,7 +192,9 @@ void GeoRef::init(std::vector<float> &distances, std::vector<vertex_t> &predeces
   *the angle ABC = cos-1(_________________________)
   *                          2 * l(AB) * l(AC)
   *
-  * with l(AB) = length the AB
+  * with l(AB) = length OF AB
+  *
+  * The computed angle is 180 - the angle ABC, ie we compute the turn angle of the path
  */
 int compute_directions(const navitia::georef::Path& path, const nt::GeographicalCoord& c_coord) {
     if (path.path_items.empty()) {
@@ -225,14 +227,16 @@ int compute_directions(const navitia::georef::Path& path, const nt::Geographical
     //conversion into angle
     raw_angle *= 360 / (2 * boost::math::constants::pi<double>());
 
-    std::cout << "angle : " << raw_angle << std::endl;
     int rounded_angle = static_cast<int>(raw_angle);
+    std::cout << "angle : " << raw_angle << std::endl;
+
+    rounded_angle = 180 - rounded_angle;
 
     return rounded_angle;
 }
 
 
-Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) const {
+Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds, bool add_one_elt) const {
     Path p;
     std::vector<vertex_t> reverse_path;
     while (best_destination != preds[best_destination]){
@@ -271,7 +275,9 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) 
             p.path_items.back().angle = compute_directions(p, coord);
         }
     }
-    if (reverse_path.size() > 0)
+    //in some case we want to add even if we have only one vertex (which means there is no valid edge)
+    size_t min_nb_elt_to_add = add_one_elt ? 1 : 2;
+    if (reverse_path.size() >= min_nb_elt_to_add)
         p.path_items.push_back(path_item);
 
     return p;
@@ -327,7 +333,7 @@ Path GeoRef::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destina
 
     // Si un chemin existe
     if(best_distance < std::numeric_limits<float>::max()){
-        Path p = build_path(best_destination, preds);
+        Path p = build_path(best_destination, preds, true);
         p.length = best_distance;
         return p;
     } else {

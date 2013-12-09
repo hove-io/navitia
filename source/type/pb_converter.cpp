@@ -3,6 +3,8 @@
 #include "georef/street_network.h"
 #include "boost/lexical_cast.hpp"
 #include <functional>
+#include "utils/exception.h"
+#include "utils/exception.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -647,8 +649,9 @@ void create_pb(const type::EntryPoint &ori_dest,
             path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
             path_item->set_length(item.length);
             length += item.length;
+            path_item->set_direction(item.angle);
         } else {
-            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Wrong way idx : " << item.way_idx);
+            throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
         }
         //we add each path item coordinate to the global coordinate liste
         for(auto coord : item.coordinates) {

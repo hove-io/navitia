@@ -317,7 +317,7 @@ struct GeoRef {
     }
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
-    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
+    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds, bool add_in_only_one = false) const;
     void add_way(const Way& w);
 
     ///Add the projected start and end to the path
