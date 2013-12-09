@@ -3,7 +3,6 @@ Functions to launch the binaratisations
 """
 from pyed.launch_exec import launch_exec
 import logging
-import subprocess
 import os
 import pyed.task_pb2
 import zipfile
@@ -11,6 +10,7 @@ from pyed.app import celery, redis
 import datetime
 from flask import current_app
 import kombu
+
 
 def move_to_backupdirectory(filename, instance):
     """ If there is no backup directory it creates one in
@@ -20,11 +20,12 @@ def move_to_backupdirectory(filename, instance):
     """
     now = datetime.datetime.now()
     working_directory = instance.backup_directory
-    working_directory += "/"+now.strftime("%Y%m%d-%H%M%S%f")
+    working_directory += "/" + now.strftime("%Y%m%d-%H%M%S%f")
     os.mkdir(working_directory)
     destination = working_directory + '/' + os.path.basename(filename)
     os.rename(filename, destination)
     return destination
+
 
 def make_connection_string(instance):
     """ Make a connection string connection from the config """
@@ -83,11 +84,10 @@ def gtfs2ed(instance, gtfs_filename):
     try:
         pyed_logger = logging.getLogger('pyed')
         gtfs_logger = logging.getLogger('gtfs2ed')
-        gtfs_bnanme = os.path.basename(gtfs_filename)
         working_directory = os.path.dirname(gtfs_filename)
 
         os.rename(gtfs_filename, gtfs_filename)
-        zip_file = zipfile.ZipFile(gtfs_filename);
+        zip_file = zipfile.ZipFile(gtfs_filename)
         zip_file.extractall(path=working_directory)
 
         params = ["-i", working_directory]
@@ -132,6 +132,7 @@ def osm2ed(instance, osm_filename):
     finally:
         lock.release()
 
+
 @celery.task()
 def reload_data(instance):
     """ reload data on all kraken"""
@@ -145,7 +146,7 @@ def reload_data(instance):
 
     pyed_logger.info("reload kraken")
     producer.publish(task.SerializeToString(),
-            routing_key=instance.name+'.task.reload')
+            routing_key=instance.name + '.task.reload')
     connection.release()
 
 
@@ -168,6 +169,7 @@ def ed2nav(instance):
             raise ValueError('todo: exception')
     finally:
         lock.release()
+
 
 @celery.task()
 def nav2rt(instance):

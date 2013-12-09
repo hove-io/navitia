@@ -5,6 +5,7 @@ All functions related to the loggers:
 
 import logging
 
+
 def init_loggers(config):
     """ Initialize all the loggers,
         It will be great to be able to customize the level of logging
@@ -34,7 +35,6 @@ def init_loggers(config):
     OSM2ed_logger = logging.getLogger('osm2ed')
     OSM2ed_logger.setLevel(logging.INFO)
     OSM2ed_logger.addHandler(OSM2ed_handler)
-
 
     ed2nav_handler = logging.FileHandler(config.get("log_files", "ed2nav"))
     ed2nav_handler.setFormatter(formatter)
