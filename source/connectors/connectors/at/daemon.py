@@ -4,7 +4,7 @@ from selector.atreader import AtRealtimeReader
 import logging
 import pika
 import connectors.at.task_pb2
-import connectors.redis_queue
+from connectors.redis_helper import RedisHelper
 
 
 class ConnectorAT(object):
@@ -14,15 +14,15 @@ class ConnectorAT(object):
         self.at_realtime_reader = None
         self._init_logger()
         self.config = Config()
-        self.redis_queue = None
+        self.redis_helper = None
 
     def init(self, filename):
         """
         initialise le service via le fichier de conf passer en paramétre
         """
         self.config.load(filename)
-        self._init_redisqueue()
-        self.at_realtime_reader = AtRealtimeReader(self.config, self.redis_queue)
+        self._init_redishelper()
+        self.at_realtime_reader = AtRealtimeReader(self.config, self.redis_helper)
         self._init_rabbitmq()
 
     def _init_logger(self, filename='', level='debug'):
@@ -41,11 +41,11 @@ class ConnectorAT(object):
             logging.getLogger('sqlalchemy.dialects.postgresql') \
                 .setLevel(logging.INFO)
 
-    def _init_redisqueue(self):
-        self.redis_queue = connectors.redis_queue.RedisQueue(self.config.redisqueque_host,
-                                                     self.config.redisqueque_port,
-                                                     self.config.redisqueque_db,
-                                                     self.config.redisqueque_password)
+    def _init_redishelper(self):
+        self.redis_helper = RedisHelper(self.config.redishelper_host,
+                                                     self.config.redishelper_port,
+                                                     self.config.redishelper_db,
+                                                     self.config.redishelper_password)
 
     def _init_rabbitmq(self):
         """

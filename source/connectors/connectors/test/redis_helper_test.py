@@ -1,8 +1,8 @@
 #encoding: utf-8
-from connectors.redis_queue import RedisQueue
+from connectors.redis_helper import RedisHelper
 import os
 
-def redis_queque_test():
+def redis_helper_test():
     try:
         _host = os.environ["REDISHOST"]
     except:
@@ -23,7 +23,7 @@ def redis_queque_test():
     except:
         _password = None
 
-    redis_test = RedisQueue(_host, _port, _db, _password)
+    redis_test = RedisHelper(_host, _port, _db, _password)
 
     assert(redis_test)
     redis_test.set("R1","REDISTEST1")

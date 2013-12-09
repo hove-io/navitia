@@ -86,13 +86,13 @@ class AtRealtimeReader(object):
     Classe responsable de la lecture en base de donnee des evenements
     temps reel.
     """
-    def __init__(self, config, rqueue):
+    def __init__(self, config, redis_helper):
         self.message_list = []
         self.perturbation_list = []
         self.__engine = create_engine(
             config.at_connection_string + '?charset=utf8',
             echo=False)
-        self._redis_queque = rqueue
+        self._redis_helper = redis_helper
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
 
@@ -157,8 +157,8 @@ class AtRealtimeReader(object):
 	def get_uri(self, externalcode, object_type):
         uri = None
         if object_type in self._collections.keys():
-            self._redis_queque.set_prefix(self._collections[object_type])
-            uri = self._redis_queque.get(externalcode)
+            self._redis_helper.set_prefix(self._collections[object_type])
+            uri = self._redis_helper.get(externalcode)
         return uri
 
     def create_pertubation(self, message):
@@ -194,11 +194,9 @@ class AtRealtimeReader(object):
         last_impact_id = -1
         for row in result_proxy:
             try:
-                current_uri = self.get_uri(row[
-                        self.label_object_external_code],row[self.label_object_type])
+                current_uri = self.get_uri(row[self.label_object_external_code],row[self.label_object_type])
                 if current_uri == None:
-                    print "".join(["l objet [", row[
-                        self.label_object_external_code], "] est rejetté : pas de correspondance extcode et uri"])
+                    print "".join(["l objet [", row[self.label_object_external_code], "] est rejette : pas de correspondance extcode et uri"])
                 else:
                     if last_impact_id != row[self.label_impact_id]:
                         last_impact_id = row[self.label_impact_id]

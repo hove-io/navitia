@@ -1,8 +1,7 @@
 #encoding: utf-8
 from redis import Redis
 
-class RedisQueue():
-
+class RedisHelper(object):
     def __init__(self, host = "localhost", port = 6379, db = 0, password = None, prefix='REDIS'):
         try:
             self._redis = Redis(host=host,port=port,db=db,password=password)
@@ -25,4 +24,3 @@ class RedisQueue():
             return self._redis.get(self._prefix + self._separator + key)
         else:
             return None
-

@@ -60,7 +60,7 @@ class Config(object):
         confspec.append('[at]')
         confspec.append('connection-string = string()')
 
-        confspec.append('[redisqueue]')
+        confspec.append('[redishelper]')
         confspec.append('host = string(default="localhost")')
         confspec.append('password = string(default="password")')
         confspec.append('port = integer(default=6379)')
@@ -85,3 +85,7 @@ class Config(object):
         self.exchange_name = config['connector_at']['exchange-name']
         self.rt_topics = config['connector_at']['rt-topics']
 
+        self.redishelper_host = config['redishelper']['host']
+        self.redishelper_password = config['redishelper']['password']
+        self.redishelper_port = config['redishelper']['port']
+        self.redishelper_db = config['redishelper']['db']
