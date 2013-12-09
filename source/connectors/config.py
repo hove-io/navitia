@@ -2,6 +2,7 @@
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 
+
 class Config(object):
     """
     class de configuration de at_connector
@@ -28,15 +29,14 @@ class Config(object):
             # each entry is a tuple
             section_list, key, error = entry
             if key is not None:
-               section_list.append(key)
+                section_list.append(key)
             else:
                 section_list.append('[missing section]')
             section_string = ', '.join(section_list)
-            if error == False:
+            if type(error) is bool and not error:
                 error = 'Missing value or section.'
             result += section_string + ' => ' + str(error) + "\n"
         return result
-
 
     def load(self, config_file):
         """
@@ -59,7 +59,7 @@ class Config(object):
         val = Validator()
         res = config.validate(val, preserve_errors=True)
         #validate retourne true, ou un dictionaire  ...
-        if res != True:
+        if not res:
             error = self.build_error(config, res)
             raise ValueError("Config is not valid: " + error)
 
@@ -72,4 +72,3 @@ class Config(object):
         self.at_connection_string = config['at']['connection-string']
         self.exchange_name = config['connector_at']['exchange-name']
         self.rt_topics = config['connector_at']['rt-topics']
-
