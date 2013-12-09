@@ -27,7 +27,7 @@ class InstanceManager(object):
         pass
 
 
-    def initialisation(self):
+    def initialisation(self, start_ping=True):
         """ Charge la configuration à partir d'un fichier ini indiquant
             les chemins des fichiers contenant :
             - géométries de la région sur laquelle s'applique le moteur
@@ -56,7 +56,8 @@ class InstanceManager(object):
             self.instances[conf.get('instance' , 'key')] = instance
         self.thread_event = Event()
         self.thread = Thread(target = self.thread_ping)
-        self.thread.start()
+        if start_ping:
+            self.thread.start()
 
 
     def dispatch(self, arguments, region, api, request=None):
