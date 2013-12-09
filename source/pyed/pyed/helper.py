@@ -6,6 +6,7 @@ from configobj import ConfigObj, flatten_errors
 from validate import Validator
 import glob
 
+
 def configure_logger(app):
     """
     configuration du logging
@@ -23,13 +24,20 @@ def make_celery(app):
     celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
     celery.conf.update(app.config)
     TaskBase = celery.Task
+
     class ContextTask(TaskBase):
         abstract = True
+
+        def __init__(self):
+            pass
+
         def __call__(self, *args, **kwargs):
             with app.app_context():
                 return TaskBase.__call__(self, *args, **kwargs)
+
     celery.Task = ContextTask
     return celery
+
 
 def load_instances(app):
     confspec = []
@@ -60,11 +68,13 @@ def load_instances(app):
         #validate retourne true, ou un dictionaire  ...
         if res != True:
             error = build_error(config, res)
-            raise ValueError("Config is not valid: " + error + "in " + filename)
+            raise ValueError("Config is not valid: %s in %s" \
+                    % (error, filename))
         instance = Instance(config)
         instances[instance.name] = instance
 
     app.instances = instances
+
 
 def build_error(config, validate_result):
     """
@@ -83,4 +93,3 @@ def build_error(config, validate_result):
             error = 'Missing value or section.'
         result += section_string + ' => ' + str(error) + "\n"
     return result
-
