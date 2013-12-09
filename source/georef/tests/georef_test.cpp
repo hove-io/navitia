@@ -231,10 +231,6 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     destination.set_xy(4, 11);
     Path p = sn.compute(start, destination);
     auto coords = get_coords_from_path(p);
-    for ( auto c : coords ) {
-        std::cout << "coord: " << c.lon() / nt::GeographicalCoord::M_TO_DEG
-                  << " - " << c.lat() / nt::GeographicalCoord::M_TO_DEG << std::endl;
-    }
     BOOST_REQUIRE_EQUAL(coords.size(), 4);
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
     GeographicalCoord expected;
@@ -251,10 +247,6 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     start.set_xy(7,6);
     p = sn.compute(start, destination);
     coords = get_coords_from_path(p);
-    for ( auto c : coords ) {
-        std::cout << "coord: " << c.lon() / nt::GeographicalCoord::M_TO_DEG
-                  << " - " << c.lat() / nt::GeographicalCoord::M_TO_DEG << std::endl;
-    }
     BOOST_CHECK_EQUAL(p.path_items.size(), 2);
     BOOST_REQUIRE_EQUAL(coords.size(), 3);
     BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(10,6, false) );
@@ -712,21 +704,48 @@ BOOST_AUTO_TEST_CASE(angle_computation) {
       */
     Path p;
     p.path_items.push_back(PathItem());
-    p.path_items.back().coordinates.push_back({1, 1, true});
-    p.path_items.back().coordinates.push_back({1, 2, true});
+    p.path_items.back().coordinates.push_back({1, 1});
+    p.path_items.back().coordinates.push_back({1, 2});
 
-    int angle = compute_directions(p, {2, 2, true});
+    int angle = compute_directions(p, {2, 2});
 
-    BOOST_REQUIRE_EQUAL(angle, 90);
+    BOOST_CHECK_CLOSE(1.0 * angle, 90, 1);
 }
 
 BOOST_AUTO_TEST_CASE(angle_computation_2) {
     Path p;
     p.path_items.push_back(PathItem());
-    p.path_items.back().coordinates.push_back({2, -3, true});
-    p.path_items.back().coordinates.push_back({3, 1, true});
+    p.path_items.back().coordinates.push_back({2, -3});
+    p.path_items.back().coordinates.push_back({3, 1});
 
-    int angle = compute_directions(p, {-1, 4, true});
+    int angle = compute_directions(p, {-1, 4});
 
-    BOOST_REQUIRE_EQUAL(angle, 180-112);
+    BOOST_CHECK_CLOSE(1.0 * angle, 112 - 180, 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
+    Path p;
+    p.path_items.push_back(PathItem());
+
+    nt::GeographicalCoord a {48.849143, 2.391776};
+    nt::GeographicalCoord b {48.850456, 2.390596};
+    nt::GeographicalCoord c {48.850428, 2.387356};
+    p.path_items.back().coordinates.push_back(a);
+    p.path_items.back().coordinates.push_back(b);
+
+    int angle = compute_directions(p, c);
+
+    int val = 49;
+    BOOST_CHECK_CLOSE(1.0 * angle, val, 1);
+
+    Path p2;
+    p2.path_items.push_back(PathItem());
+
+    p2.path_items.back().coordinates.push_back(c);
+    p2.path_items.back().coordinates.push_back(b);
+
+    angle = compute_directions(p2, a);
+
+    BOOST_CHECK_CLOSE(1.0 * angle, -1 * val, 1.0);
 }

@@ -223,9 +223,15 @@ ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
         std::reverse(result.path_items.begin(), result.path_items.end());
         for (auto& item : result.path_items) {
             std::reverse(item.coordinates.begin(), item.coordinates.end());
+            //we have to reverse the directions too
+            item.angle *= -1;
         }
-        if (! result.path_items.empty())
+
+        if (! result.path_items.empty()) {
+            //no direction for the last elt
+            result.path_items.back().angle = 0;
             result.path_items.back().coordinates.push_back(destination.projected);
+        }
     }
 
     return result;
@@ -254,11 +260,15 @@ ng::Path StreetNetwork::get_direct_path() {
         result = this->geo_ref.build_path(target, this->predecessors);
         auto path2 = this->geo_ref.build_path(target, this->predecessors2);
         for(auto p = path2.path_items.rbegin(); p != path2.path_items.rend(); ++p) {
-            result.path_items.push_back(*p);
+            auto& item = *p;
+            std::reverse(item.coordinates.begin(), item.coordinates.end());
+            item.angle *= -1;
+            result.path_items.push_back(item);
             result.length += p->length;
         }
         result.path_items.front().coordinates.push_front(departure.projected);
         result.path_items.back().coordinates.push_back(destination.projected);
+        result.path_items.back().angle = 0;
     }
 
     return result;

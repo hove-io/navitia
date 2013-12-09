@@ -221,16 +221,26 @@ int compute_directions(const navitia::georef::Path& path, const nt::Geographical
     double len_ac = a_coord.distance_to(c_coord);
 
     double numerator = pow(len_ab, 2) + pow(len_ac, 2) - pow(len_bc, 2);
+    double ab_lon = b_coord.lon() - a_coord.lon();
+    double bc_lat = c_coord.lat() - b_coord.lat();
+    double ab_lat = b_coord.lat() - a_coord.lat();
+    double bc_lon = c_coord.lon() - b_coord.lon();
+
     double denominator =  2 * len_ab * len_ac;
     double raw_angle = acos(numerator / denominator);
+
+    double det = ab_lon * bc_lat - ab_lat * bc_lon;
 
     //conversion into angle
     raw_angle *= 360 / (2 * boost::math::constants::pi<double>());
 
     int rounded_angle = static_cast<int>(raw_angle);
-    std::cout << "angle : " << raw_angle << std::endl;
 
     rounded_angle = 180 - rounded_angle;
+    if ( det < 0 )
+        rounded_angle *= -1.0;
+
+//    std::cout << "angle : " << rounded_angle << std::endl;
 
     return rounded_angle;
 }
