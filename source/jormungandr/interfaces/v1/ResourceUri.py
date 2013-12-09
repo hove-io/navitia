@@ -181,7 +181,7 @@ class add_notes(object):
 
         return wrapper
 
-class update_journeys_status(object):
+class update_message_status(object):
     def __init__(self, resource):
         self.resource = resource
 
@@ -194,28 +194,33 @@ class update_journeys_status(object):
             else:
                 data = objects
 
-            def update_status(journey, _items):
+            def update_status(message_obj, _items):
 
                 if isinstance(_items, list) or isinstance(_items, tuple):
                     for item in _items:
-                        update_status(journey, item)
+                        update_status(message_obj, item)
                 elif isinstance(_items, dict) or\
                          isinstance(_items, OrderedDict):
                          if 'messages' in _items.keys():
                             for msg in _items["messages"]:
-                                if not "status" in journey.keys():
-                                    journey["status"] = msg["level"]
+                                if not "status" in message_obj.keys():
+                                    message_obj["status"] = msg["level"]
                                 else:
                                     message_status = type_pb2.Message.DESCRIPTOR.fields_by_name['message_status'].enum_type.values_by_name
-                                    if message_status[journey["status"]] < message_status[msg["level"]]:
-                                        journey["status"] = msg["level"]
+                                    if message_status[message_obj["status"]] < message_status[msg["level"]]:
+                                        message_obj["status"] = msg["level"]
                          else:
                              for v in _items.items():
-                                 update_status(journey, v)
+                                 update_status(message_obj, v)
 
-            if self.resource.region and data.has_key("journeys"):
-               for journey in data["journeys"]:
-                    update_status(journey, journey)
+            obj = None
+            if self.resource.region and (data.has_key("stop_schedules") or data.has_key("journeys")):
+                if data.has_key("stop_schedules") :
+                    obj = "stop_schedules"
+                if data.has_key("journeys"):
+                    obj = "journeys"
+                for message_obj in data[obj]:
+                    update_status(message_obj, message_obj)
 
             if isinstance(objects, tuple):
                 return data, code, header

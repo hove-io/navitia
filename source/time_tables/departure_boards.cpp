@@ -86,7 +86,7 @@ render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
 
 
 pbnavitia::Response
-render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus> &response_status,
+render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
           DateTime datetime, DateTime max_datetime,
           const type::Data &data) {
@@ -120,8 +120,10 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus> &response_status,
             fill_pb_object(dt_st.second, data, date_time, 0,
                            now, action_period, dt_st.first);
         }
-        auto it = response_status.at(id_vec.first.second);
-        schedule->set_status(it);
+        const auto& it = response_status.find(id_vec.first.second);
+        if(it != response_status.end()){
+            schedule->set_response_status(it->second);
+        }
     }
     return response;
 }
@@ -149,6 +151,7 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
     //  <idx_route, status>
     std::map<uint32_t, pbnavitia::ResponseStatus> response_status;
 
+
     std::map<stop_point_line, vector_dt_st> map_route_stop_point;
     //Mapping route/stop_point
     std::vector<stop_point_line> sps_routes;
@@ -163,7 +166,6 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
         auto it = std::find_if(sps_routes.begin(), sps_routes.end(), find_predicate);
         if(it == sps_routes.end()){
             sps_routes.push_back(key);
-            response_status[route_idx] = pbnavitia::ResponseStatus::default_status;
         }
     }
     size_t total_result = sps_routes.size();

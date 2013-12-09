@@ -121,8 +121,8 @@ class json_renderer:
         result['date_time'] = obj.stop_time
         result['additional_informations'] = []
         r = []
-        if obj.HasField("has_properties"):
-            properties = obj.has_properties
+        if obj.HasField("properties"):
+            properties = obj.properties
             for additional_information in properties.additional_informations:
                 tmp = self.name_has_propertie(additional_information)
                 result['additional_informations'].append(tmp)
@@ -139,8 +139,8 @@ class json_renderer:
         for row in obj.table.rows :
             if row.stop_times:
                 for stop_time in row.stop_times:
-                    if stop_time.HasField("has_properties"):
-                        for note_ in stop_time.has_properties.notes:
+                    if stop_time.HasField("properties"):
+                        for note_ in stop_time.properties.notes:
                             r.append({"id": note_.uri, "value": note_.note})
         return r
 
@@ -184,8 +184,8 @@ class json_renderer:
         for section in obj.sections:
             if section.stop_date_times:
                 for stop_date_time in section.stop_date_times:
-                    if stop_date_time.HasField('has_properties'):
-                        for note_ in stop_date_time.has_properties.notes:
+                    if stop_date_time.HasField('properties'):
+                        for note_ in stop_date_time.properties.notes:
                             r.append({"id": note_.uri, "value": note_.note})
         return r
 
@@ -475,8 +475,8 @@ class json_renderer:
 
         return result
 
-    def name_has_propertie(self, enum_id):
-        properties_descriptor = type_pb2.hasPropertie.DESCRIPTOR
+    def name_propertie(self, enum_id):
+        properties_descriptor = type_pb2.Propertie.DESCRIPTOR
         enum = properties_descriptor.enum_types_by_name['AdditionalInformation']
         return enum.values_by_number[enum_id].name
 
@@ -492,25 +492,25 @@ class json_renderer:
             self.visited_types.add("stop_point")
             result['stop_point'] = self.stop_point(obj.stop_point, region_name)
 
-        if obj.HasField('has_properties'):
+        if obj.HasField('properties'):
             result['additional_informations'] = []
-            properties = obj.has_properties
+            properties = obj.properties
             for additional_information in properties.additional_informations:
-                information = self.name_has_propertie(additional_information)
+                information = self.name_propertie(additional_information)
                 result['additional_informations'].append(information)
 
-        if obj.HasField('has_properties'):
+        if obj.HasField('properties'):
             result['notes'] = []
-            for note_ in obj.has_properties.notes:
+            for note_ in obj.properties.notes:
                 result['notes'].append({"id": note_.uri})
         return result
 
     def estimated_duration(self, stop_date_times):
         for stop_dt in stop_date_times:
-            if stop_dt.HasField('has_properties'):
-                informations = stop_dt.has_properties.additional_informations
+            if stop_dt.HasField('properties'):
+                informations = stop_dt.properties.additional_informations
                 for information in informations:
-                    if information == type_pb2.hasPropertie.DATE_TIME_ESTIMATED:
+                    if information == type_pb2.Propertie.DATE_TIME_ESTIMATED:
                         return True
         return False
 
@@ -526,8 +526,6 @@ class json_renderer:
                   'duration': obj.duration,
                   'from': self.time_place(obj, region_name),
                   'to': self.time_place(obj, region_name, False)}
-        #if obj.pt_display_informations.odt_type != type_pb2.regular_line:
-            #result["odt_type"] = get_name_enum(obj.pt_display_informations, obj.pt_display_informations.odt_type)
         result['additional_information'] = []
         if self.estimated_duration(obj.stop_date_times):
             result['additional_information'].append("duration_estimated")
@@ -644,7 +642,6 @@ def render_ptref(response, region, resource_type, uid, format, callback):
         if resource_type in json_renderer.scheduable_types:
             resp_dict['links'].append({"href" : link_first_part+"/route_schedules",
                                        "rel":"route_schedules", "templated":False})
-            #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/stop_schedules", "rel":"stop_schedules"})
             resp_dict['links'].append({"href" : link_first_part+"/departures",
                                        "rel":"departures", "templated":False})
             resp_dict['links'].append({"href" : link_first_part+"/arrivals",
