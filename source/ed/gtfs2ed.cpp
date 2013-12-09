@@ -100,13 +100,14 @@ int main(int argc, char * argv[])
 
     // Ajout dans la table des correspondances
     if(vm.count("redis-string")){
-        std::cout << "Alimentation de redis" <<std::endl;        
-        ed::connectors::ExtCode2Uri ext_code_2_uri(redis_string);
+        std::cout << "Alimentation de redis" <<std::endl;
         try{
+            ed::connectors::ExtCode2Uri ext_code_2_uri(redis_string);
             ext_code_2_uri.to_redis(data);
         }catch(const navitia::exception& ne){
             std::cout << "Impossible d'alimenter redis" << std::endl;
             std::cout << ne.what() << std::endl;
+            return 1;
         }
     }
 
