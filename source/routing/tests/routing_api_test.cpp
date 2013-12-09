@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
 // Marche Ã  pied
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
     pbnavitia::Journey journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
     journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
     journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
