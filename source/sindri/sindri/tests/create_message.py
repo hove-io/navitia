@@ -15,7 +15,7 @@ task.message.localized_messages[0].language = 'fr'
 task.message.localized_messages[0].body = 'hello'
 
 #for i in range(10000):
-channel.basic_publish(exchange='navitia', routing_key='realtime.at', body=task.SerializeToString())
+channel.basic_publish(exchange='navitia', routing_key='realtime.at',
+        body=task.SerializeToString())
 
 conn.close()
-

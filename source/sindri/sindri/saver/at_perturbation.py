@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sindri.saver.utils import parse_active_days, from_timestamp, from_time, \
         FunctionalError
 
+
 def build_at_perturbation_dict(perturbation):
     """
     construit à partir d'un object protobuf pbnavitia.realtime.AtPerturbation
@@ -47,6 +48,7 @@ def find_at_perturbation_id(meta, conn, perturbation_uri):
     result = conn.execute(query)
     row = result.fetchone()
     return row[0] if row else None
+
 
 def save_at_perturbation(meta, conn, perturbation_id, perturbation):
     """
