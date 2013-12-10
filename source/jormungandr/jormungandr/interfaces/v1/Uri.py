@@ -30,8 +30,9 @@ class Uri(ResourceUri):
         parser.add_argument("depth", type=depth_argument,
                             default=1,
                             description="The depth of your object")
-		self.parsers["get"].add_argument("forbidden_id[]", type=unicode,
-                description="id to forbid", dest="forbidden_uris[]")
+        parser.add_argument("forbidden_id[]", type=unicode,
+                            description="forbidden ids",
+                            dest="forbidden_uris[]")
         if is_collection:
             parser.add_argument("filter", type=str, default="",
                                 description="The filter parameter")

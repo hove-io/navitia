@@ -32,7 +32,7 @@ class Ptref(Resource):
                                          description="The depth of your\
                                          object")
         self.parsers["get"].add_argument("forbidden_uris[]", type=unicode,
-                description="uri to forbid")
+                						  description="Uri to forbid")
 
     def get(self, region):
         args = self.parsers["get"].parse_args()

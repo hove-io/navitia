@@ -34,8 +34,8 @@ class TimeTables(Resource):
         parser_get.add_argument("interface_version",
                                 type=depth_argument,
                                 default=0, hidden=True)
-	    parser_get.add_argument("forbidden_uris[]", type=unicode,
-               					description="uri to forbid")
+        parser_get.add_argument("forbidden_uris[]", type=unicode,
+                                description="Uri to forbid")
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
