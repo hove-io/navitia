@@ -96,7 +96,7 @@ class add_pagination_links(object):
                                 "templated": False
                             })
 
-                    del kwargs["start_page"]
+                        del kwargs["start_page"]
                     data["links"].append({
                         "href": url_for(endpoint, **kwargs),
                         "type": "first",
