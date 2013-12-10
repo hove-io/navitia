@@ -12,40 +12,41 @@ import google
 import os
 #
 # SELECT "
-#    "event.event_id AS event_id, " //0
-#    "impact.impact_id AS impact_id, " //1
-#    "convert(varchar, event.event_publicationstartdate, 121)
-#       AS  publication_start_date, "//2
-#    "convert(varchar, event.event_publicationenddate, 121)
-#       AS  publication_end_date, "//3
-#    "convert(varchar, impact.impact_eventstartdate, 121)
-#       AS application_start_date, "//4
-#    "convert(varchar, impact.impact_eventenddate, 121)
-#       AS application_end_date, "//5
-#    "convert(varchar, impact.impact_dailystartdate, 108)
-#       AS application_daily_start_hour, "//6
-#    "convert(varchar, impact.impact_dailyenddate, 108)
-#       AS application_daily_end_hour, "//7
-#    "impact.impact_activedays AS active_days, "//8
-#    "tcobjectref.tcobjectcodeext AS object_external_code, "//9
-#    "tcobjectref.tcobjecttype AS object_type, "//10
-#    "impactBroadcast.impact_title AS title, "//11
-#    "ImpactBroadcast.impact_msg AS message "//12
-#  "FROM "
-#    "event "
-#    "INNER JOIN impact ON (event.event_id = impact.event_id) "
-#    "INNER JOIN tcobjectref
-#          ON (impact.tcobjectref_id = tcobjectref.tcobjectref_id) "
-#    "INNER JOIN impactbroadcast
-#          ON (impactbroadcast.Impact_ID = impact.Impact_ID) "
-#    "INNER JOIN msgmedia
-#          ON (impactbroadcast.msgmedia_id = msgmedia.msgmedia_id) "
-#  "WHERE "
-#    "event.event_publicationenddate >= CONVERT(DATETIME, :date_pub, 126) "
-#    "AND (event.event_closedate IS NULL
-#            OR event.event_closedate > CONVERT(DATETIME, :date_clo, 126)) "
-#    "AND msgmedia.msgmedia_lang = :media_lang "
-#    "AND msgmedia.msgmedia_media = :media_media"
+#             "event.event_id AS event_id, " //0
+#             "impact.impact_id AS impact_id, " //1
+#             "convert(varchar, event.event_publicationstartdate, 121)
+# AS  publication_start_date, "//2
+#             "convert(varchar, event.event_publicationenddate, 121)
+# AS  publication_end_date, "//3
+#             "convert(varchar, impact.impact_eventstartdate, 121)
+# AS application_start_date, "//4
+#             "convert(varchar, impact.impact_eventenddate, 121)
+# AS application_end_date, "//5
+#             "convert(varchar, impact.impact_dailystartdate, 108)
+# AS application_daily_start_hour, "//6
+#             "convert(varchar, impact.impact_dailyenddate, 108)
+# AS application_daily_end_hour, "//7
+#             "impact.impact_activedays AS active_days, "//8
+#             "tcobjectref.tcobjectcodeext AS object_external_code, "//9
+#             "tcobjectref.tcobjecttype AS object_type, "//10
+#             "impactBroadcast.impact_title AS title, "//11
+#             "ImpactBroadcast.impact_msg AS message "//12
+#         "FROM "
+#             "event "
+#             "INNER JOIN impact ON (event.event_id = impact.event_id) "
+#             "INNER JOIN tcobjectref ON (impact.tcobjectref_id =
+# tcobjectref.tcobjectref_id) "
+#             "INNER JOIN impactbroadcast ON
+# (impactbroadcast.Impact_ID = impact.Impact_ID) "
+#             "INNER JOIN msgmedia ON
+# (impactbroadcast.msgmedia_id = msgmedia.msgmedia_id) "
+#         "WHERE "
+#             "event.event_publicationenddate >=
+# CONVERT(DATETIME, :date_pub, 126) "
+#             "AND (event.event_closedate IS NULL OR
+# event.event_closedate > CONVERT(DATETIME, :date_clo, 126)) "
+#             "AND msgmedia.msgmedia_lang = :media_lang "
+#             "AND msgmedia.msgmedia_media = :media_media"
 #     );
 
 
@@ -105,14 +106,13 @@ class AtRealtimeReader(object):
 
         self.tcobjectref_table = Table('tcobjectref', self.meta, autoload=True)
 
-        self.impactbroadcast_table = Table('impactbroadcast', self.meta,
-                                           Column('Impact_ID', None,
-                                                  ForeignKey(
-                                                      'impact.Impact_ID')),
-                                           Column('MsgMedia_ID', None,
-                                                  ForeignKey(
-                                                      'msgmedia.MsgMedia_ID')),
-                                           autoload=True)
+        self.impactbroadcast_table = \
+            Table('impactbroadcast', self.meta,
+                  Column('Impact_ID', None,
+                         ForeignKey('impact.Impact_ID')),
+                  Column('MsgMedia_ID', None,
+                         ForeignKey('msgmedia.MsgMedia_ID')),
+                  autoload=True)
 
         self.msgmedia_table = Table('msgmedia', self.meta, autoload=True)
 
@@ -123,8 +123,9 @@ class AtRealtimeReader(object):
         self.label_application_start_date = 'application_start_date'
         self.label_application_end_date = 'application_end_date'
         self.label_application_daily_start_hour =\
-                'application_daily_start_hour'
-        self.label_application_daily_end_hour = 'application_daily_end_hour'
+            'application_daily_start_hour'
+        self.label_application_daily_end_hour =\
+            'application_daily_end_hour'
         self.label_active_days = 'active_days'
         self.label_object_external_code = 'object_external_code'
         self.label_object_type = 'object_type'
@@ -134,11 +135,11 @@ class AtRealtimeReader(object):
 
         self.last_exec_file_name = './last_exec_time.txt'
         self.datetime_format = '%Y-%m-%d %H:%M:%S'
-        self._collections = {"StopPoint" : "stop_point",
-                            "VehicleJourney" : "vehicle_journey",
-                            "Line" : "line",
-                            "Network" : "network",
-                            "StopArea" : "stop_area"}
+        self._collections = {"StopPoint": "stop_point",
+                            "VehicleJourney": "vehicle_journey",
+                            "Line": "line",
+                            "Network": "network",
+                            "StopArea": "stop_area"}
 
     def get_last_execution_time(self):
         if os.path.exists(self.last_exec_file_name):
@@ -151,10 +152,10 @@ class AtRealtimeReader(object):
 
     def set_last_execution_time(self, last_execution_time):
         last_exec_file = open(self.last_exec_file_name, 'w')
-        str_date = last_execution_time.strftime(self.datetime_format)
-        last_exec_file.write(str_date)
- 	
-	def get_uri(self, externalcode, object_type):
+        last_exec_file.write(
+            last_execution_time.strftime(self.datetime_format))
+
+    def get_uri(self, externalcode, object_type):
         uri = None
         if object_type in self._collections.keys():
             self._redis_helper.set_prefix(self._collections[object_type])
@@ -194,59 +195,69 @@ class AtRealtimeReader(object):
         last_impact_id = -1
         for row in result_proxy:
             try:
-                current_uri = self.get_uri(row[self.label_object_external_code],row[self.label_object_type])
+                current_uri = self.get_uri(
+                    row[self.label_object_external_code],
+                    row[self.label_object_type])
                 if current_uri == None:
-                    print "".join(["l objet [", row[self.label_object_external_code], "] est rejette : pas de correspondance extcode et uri"])
+                    logging.getLogger('connector').warn(
+                        "l objet [%s] est rejette : "
+                    "pas de correspondance extcode et uri",
+                        row[self.label_object_external_code])
                 else:
                     if last_impact_id != row[self.label_impact_id]:
                         last_impact_id = row[self.label_impact_id]
                         message = connectors.at.realtime_pb2.Message()
                         self.message_list.append(message)
 
-                    message.uri = str(row[self.label_impact_id]) + '-' + \
-                                  row[self.label_message_lang]
+                        message.uri = str(row[self.label_impact_id]) + '-' + \
+                                      row[self.label_message_lang]
 
-                    message.start_publication_date = \
-                        get_pos_time(row[self.label_publication_start_date])
+                        message.start_publication_date = \
+                            get_pos_time(
+                                row[self.label_publication_start_date])
 
-                    message.end_publication_date = \
-                        get_pos_time(row[self.label_publication_end_date])
-                    message.start_application_date = \
-                        get_pos_time(row[self.label_application_start_date])
-                    message.end_application_date = \
-                        get_pos_time(row[self.label_application_end_date])
-                    # number of seconds since midnigth
-                    message.start_application_daily_hour = \
-                        get_datetime_to_second(
-                            row[self.label_application_daily_start_hour])
-                    message.end_application_daily_hour = \
-                        get_datetime_to_second(
-                            row[self.label_application_daily_end_hour])
-                    message.active_days = \
-                        int_to_bitset(row[self.label_active_days]) + '1'
+                        message.end_publication_date = \
+                            get_pos_time(row[self.label_publication_end_date])
+                        message.start_application_date = \
+                            get_pos_time(
+                                row[self.label_application_start_date])
+                        message.end_application_date = \
+                            get_pos_time(row[self.label_application_end_date])
+                        # number of seconds since midnigth
+                        message.start_application_daily_hour = \
+                            get_datetime_to_second(
+                                row[self.label_application_daily_start_hour])
+                        message.end_application_daily_hour = \
+                            get_datetime_to_second(
+                                row[self.label_application_daily_end_hour])
+                        message.active_days = \
+                            int_to_bitset(row[self.label_active_days]) + '1'
 
                         message.object.object_uri = current_uri
 
-                    message.object.object_type = \
-                        get_navitia_type(row[self.label_object_type])
-                    state = row[self.label_impact_state]
-                    message.message_status = self.get_status_message(state)
+                        message.object.object_type = \
+                            get_navitia_type(row[self.label_object_type])
 
-                localized_message = message.localized_messages.add()
-                localized_message.language = row[self.label_message_lang]
-                localized_message.body = row[self.label_message]
-                localized_message.title = row[self.label_title]
+                        message.message_status =\
+                            self.get_status_message(
+                                row[self.label_impact_state])
 
-                if row[self.label_impact_state] == 'Disrupt':
-                    self.perturbation_list.append(
-                        self.create_pertubation(message))
+                    localized_message = message.localized_messages.add()
+                    localized_message.language = row[self.label_message_lang]
+                    localized_message.body = row[self.label_message]
+                    localized_message.title = row[self.label_title]
 
-                print str(
-                    row[self.label_active_days]) + ' - ' + message.active_days
+                    if row[self.label_impact_state] == 'Disrupt':
+                        self.perturbation_list.append(
+                            self.create_pertubation(message))
+
+                    print str(
+                        row[self.label_active_days]) + ' - ' +\
+                          message.active_days
             except google.protobuf.message.DecodeError, e:
-                logger = logging.getLogger('connector')
-                logger.warn("message is not a valid "
-                            "protobuf task: %s", str(e))
+                logging.getLogger('connector').warn(
+                    "message is not a valid "
+                    "protobuf task: %s", str(e))
 
     def set_request(self):
         return select([self.event_table.c.Event_ID,
@@ -320,16 +331,18 @@ class AtRealtimeReader(object):
                 s = self.set_request()
                 execution_time = datetime.datetime.now()
                 #read last execution time
-                last_exec_time = self.get_last_execution_time()
-                result = conn.execute(s, media_media='Internet',
-                                      event_publicationenddate=last_exec_time,
-                                      #datetime.datetime(2013, 9, 01),
-                                      event_closedate=datetime.datetime.now(),
-                                      impact_modification_date=last_exec_time)
+                last_execution_time = self.get_last_execution_time()
+                result = \
+                    conn.execute(s,
+                                 media_media='Internet',
+                                 event_publicationenddate=last_execution_time,
+                                  #datetime.datetime(2013, 9, 01),
+                                 event_closedate=datetime.datetime.now(),
+                                 impact_modification_date=last_execution_time)
                 #save execution time
                 self.set_last_execution_time(execution_time)
             except exc.SQLAlchemyError, e:
-                logger.exception('error durring request')
+                logger.exception('error during request')
             if result is not None:
                 self.set_message(result)
                 result.close()
