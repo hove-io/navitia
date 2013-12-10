@@ -124,17 +124,16 @@ private:
 /** Un bout d'itinéraire :
         un nom de voie et une liste de segments */
 struct PathItem{
-    nt::idx_t way_idx; //< Voie sur laquel porte le bout du trajet
-    float length; //< Longueur du trajet effectué sur cette voie
-    std::vector<edge_t> segments; //< Segments traversés
-    PathItem() : length(0){}
+    nt::idx_t way_idx = nt::invalid_idx; //< Way of this path item
+    float length = 0.; //< Length of the journey on this item
+    std::deque<nt::GeographicalCoord> coordinates;//< path item coordinates
+    int angle = 0; //< Angle with the next PathItem (needed to give direction)
 };
 
 /** Itinéraire complet */
 struct Path {
     float length; //< Longueur totale du parcours
-    std::vector<PathItem> path_items; //< Liste des voies parcourues
-    std::deque<nt::GeographicalCoord> coordinates; //< Coordonnées du parcours
+    std::deque<PathItem> path_items; //< Liste des voies parcourues
 };
 
 class ProjectionData;
@@ -318,8 +317,11 @@ struct GeoRef {
     }
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
-    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
+    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds, bool add_in_only_one = false) const;
     void add_way(const Way& w);
+
+    ///Add the projected start and end to the path
+    void add_projections(Path& p, const ProjectionData& start, const ProjectionData& end) const;
 
     ~GeoRef();
 };
@@ -416,5 +418,7 @@ struct POI : public nt::Nameable, nt::Header{
 
     private:
 };
+
+int compute_directions(const navitia::georef::Path& path, const nt::GeographicalCoord& c_coord);
 
 }} //namespace navitia::streetnetwork

@@ -364,7 +364,7 @@ std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data &) const 
     return result;
 }
 
-std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
+std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopArea: result.push_back(stop_area->idx); break;

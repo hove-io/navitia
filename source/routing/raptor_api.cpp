@@ -78,9 +78,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 //because of projection problem, the walking path might not join exactly the routing one
                 nt::GeographicalCoord routing_first_coord =
                         d.pt_data.stop_points[path.items.front().stop_points.front()]->coord;
-                if (temp.coordinates.back() != routing_first_coord) {
+                if (temp.path_items.back().coordinates.back() != routing_first_coord) {
                     //if it's the case, we artificialy add the missing segment
-                    temp.coordinates.push_back(routing_first_coord);
+                    temp.path_items.back().coordinates.push_back(routing_first_coord);
                 }
 
                 pbnavitia::Section* pb_section = pb_journey->add_sections();
@@ -179,8 +179,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             if(temp.path_items.size() > 0) {
                //add a junction between the routing path and the walking one if needed
                 nt::GeographicalCoord routing_last_coord = d.pt_data.stop_points[path.items.back().stop_points.back()]->coord;
-                if (temp.coordinates.front() != routing_last_coord) {
-                    temp.coordinates.push_front(routing_last_coord);
+                if (temp.path_items.front().coordinates.front() != routing_last_coord) {
+                    temp.path_items.front().coordinates.push_front(routing_last_coord);
                 }
 
                 pbnavitia::Section* pb_section = pb_journey->add_sections();
@@ -461,6 +461,5 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 
     return response;
 }
-
 
 }}
