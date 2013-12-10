@@ -26,6 +26,8 @@ class Uri(ResourceUri):
                 description="The number of objects you want on the page")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
                 description="The depth of your object")
+        self.parsers["get"].add_argument("forbidden_id[]", type=unicode,
+                description="id to forbid", dest="forbidden_uris[]")
         if is_collection:
             self.parsers["get"].add_argument("filter", type=str, default = "",
                     description="The filter parameter")

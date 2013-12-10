@@ -38,6 +38,8 @@ class Schedules(ResourceUri):
                 description="The current page")
         parser_get.add_argument("max_date_times", type=natural,
                 description="Maximum number of schedule per stop_point/route")
+        self.parsers["get"].add_argument("forbidden_id[]", type=unicode,
+                description="id to forbid", dest="forbidden_uris[]")
         self.method_decorators.append(add_notes(self))
 
 
