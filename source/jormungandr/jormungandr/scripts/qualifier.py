@@ -109,8 +109,7 @@ def qualifier_one(journeys):
         return
 
     standard = choose_standard(journeys)
-
-    assert standard is None
+    assert standard is not None
 
     #constraints
     def journey_length_constraint(journey, max_evolution):
