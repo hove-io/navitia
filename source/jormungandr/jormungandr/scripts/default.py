@@ -17,6 +17,8 @@ pb_type = {
         'line' : type_pb2.LINE
         }
 
+f_date_time = f_date_time
+
 class Script(object):
     def __init__(self):
         self.apis = ["places", "places_nearby", "next_departures",
@@ -205,19 +207,73 @@ class Script(object):
 
 
     def journey_compare(self, j1, j2):
-        if datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") > datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
+        if datetime.strptime(j1.arrival_date_time, f_date_time) > datetime.strptime(j2.arrival_date_time, f_date_time) :
             return 1
-        elif datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") == datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
+        elif datetime.strptime(j1.arrival_date_time, f_date_time) == datetime.strptime(j2.arrival_date_time, f_date_time) :
             return 0
         else:
             return -1
 
+    def fill_journeys(self, resp, req, request):
+        if count is None:
+            return
+        while request["count"] > len(resp.journeys):
+            temp_datetime = None
+            if request['clockwise']:
+                str_dt = ""
+                last_journey = resp.journeys[-1]
+                if last_journey.HasField("departure_date_time"):
+                    l_date_time = last_journeys.departure_date_time
+                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                    temp_datetime =  l_date_time + timedelta(seconds=1)
+                else:
+                    duration = int(resp.journeys[-1].duration) + 1
+                    r_datetime = req.journeys.datetimes[0]
+                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
+                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
+            else:
+                if resp.journeys[-1].HasField("arrival_date_time"):
+                    l_date_time = last_journeys.arrival_date_time
+                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                    temp_datetime = l_date_time_f + timedelta(seconds=-1)
+                else:
+                    duration = int(resp.journeys[-1].duration) - 1
+                    r_datetime = req.journeys.datetimes[0]
+                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
+                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
+
+                req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
+                tmp_resp = self.get_journey(req, instance, request["type"],
+                                            request["debug"])
+                if len(tmp_resp.journeys) == 0:
+                    break
+                else:
+                    resp.journeys.extend(tmp_resp.journeys)
+
+    def delete_journeys(self, resp, request):
+        to_delete = []
+
+        if not request["debug"]:  # in debug we want to keep all journeys
+            if request['destination']:
+                for i in range(0, len(resp.journeys)):
+                    if resp.journeys[i].type == "" and not i in to_delete:
+                        to_delete.append(i)
+
+                to_delete.sort(reverse=True)
+                for i in to_delete:
+                    del resp.journeys[i]
+
+                if request["count"] and len(resp.journeys) > request["count"]:
+                    to_delete = range(request["count"], len(resp.journeys))
+                    to_delete.sort(reverse=True)
+                    for i in to_delete:
+                        del resp.journeys[i]
 
     def __on_journeys(self, requested_type, request, instance):
         req = request_pb2.Request()
         req.requested_api = requested_type
         req.journeys.origin = request["origin"]
-        if request.has_key("destination") and request["destination"]:
+        if "destination" in request and request["destination"]:
             req.journeys.destination = request["destination"]
             self.destination_modes = request["destination_mode"]
         else:
@@ -247,60 +303,21 @@ class Script(object):
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
-        if not request.has_key("type"):
+        if not "type" in request:
             request["type"] = "all"
         #call to kraken
-        resp = self.get_journey(req, instance, request["type"], request["debug"])
-        if len(resp.journeys) > 0 and request.has_key("count"):
-            while request["count"] and request["count"] > len(resp.journeys):
-                temp_datetime = None
-                if request["clockwise"]:
-                    str_dt = ""
-                    if resp.journeys[-1].HasField("departure_date_time"):
-                        temp_datetime = datetime.strptime(resp.journeys[-1].departure_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = 1)
-                    else:
-                        duration = int(resp.journeys[-1].duration) + 1
-                        temp_datetime = datetime.strptime(req.journeys.datetimes[0], "%Y%m%dT%H%M%S") + timedelta(seconds=duration)
-                else:
-                    if resp.journeys[-1].HasField("arrival_date_time"):
-                        temp_datetime = datetime.strptime(resp.journeys[-1].arrival_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = -1)
-                    else:
-                        duration = int(resp.journeys[-1].duration) -1
-                        temp_datetime = datetime.strptime(req.journeys.datetimes[0], "%Y%m%dT%H%M%S") + timedelta(seconds=duration)
-
-
-                req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
-                tmp_resp = self.get_journey(req, instance, request["type"], request["debug"])
-                if len(tmp_resp.journeys) == 0:
-                    break
-                else:
-                    resp.journeys.extend(tmp_resp.journeys)
-            to_delete = []
-
-            if not request["debug"]: #in debug we want to keep all journeys
-                if request['destination']:
-                    for i in range(0, len(resp.journeys)):
-                        if resp.journeys[i].type == "" and not i in to_delete:
-                            to_delete.append(i)
-
-                to_delete.sort(reverse=True)
-                for i in to_delete:
-                    del resp.journeys[i]
-
-                if request["count"] and len(resp.journeys) > request["count"]:
-                    to_delete = range(request["count"], len(resp.journeys))
-                    to_delete.sort(reverse=True)
-                    for i in to_delete:
-                        del resp.journeys[i]
+        resp = self.get_journey(req, instance, request["type"],
+                                request["debug"])
+        if len(resp.journeys) > 0 and "coutn" in request:
+            fill_journeys(resp, req, request)
+            delete_journeys(resp, request)
 
             if not request["clockwise"]:
                 resp.journeys.sort(self.journey_compare)
         return resp
 
-
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
-
 
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
@@ -310,10 +327,10 @@ class Script(object):
         req.requested_api = type_pb2.PTREFERENTIAL
 
         req.ptref.requested_type = requested_type
-        req.ptref.filter     = request["filter"]
-        req.ptref.depth      = request["depth"]
+        req.ptref.filter = request["filter"]
+        req.ptref.depth = request["depth"]
         req.ptref.start_page = request["start_page"]
-        req.ptref.count      = request["count"]
+        req.ptref.count = request["count"]
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
@@ -323,10 +340,12 @@ class Script(object):
         return resp
 
     def stop_areas(self, request, instance):
-        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request, instance)
+        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request,
+                               instance)
 
     def stop_points(self, request, instance):
-        return self.__on_ptref("stop_points", type_pb2.STOP_POINT, request, instance)
+        return self.__on_ptref("stop_points", type_pb2.STOP_POINT, request,
+                               instance)
 
     def lines(self, request, instance):
         return self.__on_ptref("lines", type_pb2.LINE, request, instance)
@@ -338,28 +357,37 @@ class Script(object):
         return self.__on_ptref("networks", type_pb2.NETWORK, request, instance)
 
     def physical_modes(self, request, instance):
-        return self.__on_ptref("physical_modes", type_pb2.PHYSICAL_MODE, request, instance)
+        return self.__on_ptref("physical_modes", type_pb2.PHYSICAL_MODE,
+                               request, instance)
 
     def commercial_modes(self, request, instance):
-        return self.__on_ptref("commercial_modes", type_pb2.COMMERCIAL_MODE, request, instance)
+        return self.__on_ptref("commercial_modes", type_pb2.COMMERCIAL_MODE,
+                               request, instance)
 
     def connections(self, request, instance):
-        return self.__on_ptref("connections", type_pb2.CONNECTION, request, instance)
+        return self.__on_ptref("connections", type_pb2.CONNECTION, request,
+                               instance)
 
     def journey_pattern_points(self, request, instance):
-        return self.__on_ptref("journey_pattern_points", type_pb2.JOURNEY_PATTERN_POINT, request,  instance)
+        return self.__on_ptref("journey_pattern_points",
+                               type_pb2.JOURNEY_PATTERN_POINT, request,
+                               instance)
 
     def journey_patterns(self, request, instance):
-        return self.__on_ptref("journey_patterns", type_pb2.JOURNEY_PATTERN, request, instance)
+        return self.__on_ptref("journey_patterns", type_pb2.JOURNEY_PATTERN,
+                               request, instance)
 
     def companies(self, request, instance):
-        return self.__on_ptref("companies", type_pb2.COMPANY, request, instance)
+        return self.__on_ptref("companies", type_pb2.COMPANY, request,
+                               instance)
 
     def vehicle_journeys(self, request, instance):
-        return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, request, instance)
+        return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY,
+                               request, instance)
 
     def pois(self, request, instance):
         return self.__on_ptref("pois", type_pb2.POI, request, instance)
 
     def poi_types(self, request, instance):
-        return self.__on_ptref("poi_types", type_pb2.POITYPE, request, instance)
+        return self.__on_ptref("poi_types", type_pb2.POITYPE, request,
+                               instance)
