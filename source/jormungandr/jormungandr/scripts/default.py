@@ -302,7 +302,7 @@ class Script(object):
         sn_params.car_distance = request["car_distance"]
         sn_params.vls_speed = request["br_speed"]
         sn_params.vls_distance = request["br_distance"]
-        if "origin_filter":
+        if "origin_filter" in request:
             sn_params.origin_filter = request["origin_filter"]
         else:
             sn_params.origin_filter = ""

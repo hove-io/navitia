@@ -27,7 +27,7 @@ class Places(ResourceUri):
                                          default=["stop_area", "address",
                                                   "poi",
                                                   "administrative_region"],
-                                         description="The type of data to
+                                         description="The type of data to\
                                          search")
         self.parsers["get"].add_argument("count", type=int, default=10,
                                          description="The maximum number of\

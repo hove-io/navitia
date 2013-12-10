@@ -95,8 +95,9 @@ class has_equipments():
 
     def output(self, key, obj):
         if obj.HasField("has_equipments"):
-            equipments = getattr(obj, "has_equipments").has_equipments
+            properties = getattr(obj, "has_equipments")
             enum = properties.DESCRIPTOR.enum_types_by_name["Equipment"]
+            equipments = properties.has_equipments
             values = enum.values_by_number
             return [str.lower(values[v].name) for v in equipments]
         else:

@@ -81,7 +81,7 @@ def choose_standard(journeys):
 
 #comparison of 2 fields. 0=>equality, 1=>1 better than 2
 def compare(field_1, field_2):
-    if field_1 == field2:
+    if field_1 == field_2:
         return 0
     elif field_1 < field_2:
         return 1
