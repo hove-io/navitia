@@ -12,7 +12,7 @@ region_fields = {
 }
 
 regions_fields = {
-    'regions' : fields.List(fields.Nested(region_fields))
+    'regions': fields.List(fields.Nested(region_fields))
 }
 
 
