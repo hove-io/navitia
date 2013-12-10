@@ -1,9 +1,10 @@
 #encoding: utf-8
-from config import Config
+from connectors.config import Config
 from selector.atreader import AtRealtimeReader
 import logging
 import pika
-import at.task_pb2
+import connectors.at.task_pb2
+from connectors.redis_helper import RedisHelper
 
 
 class ConnectorAT(object):
@@ -13,13 +14,15 @@ class ConnectorAT(object):
         self.at_realtime_reader = None
         self._init_logger()
         self.config = Config()
+        self.redis_helper = None
 
     def init(self, filename):
         """
         initialise le service via le fichier de conf passer en paramétre
         """
         self.config.load(filename)
-        self.at_realtime_reader = AtRealtimeReader(self.config)
+        self._init_redishelper()
+        self.at_realtime_reader = AtRealtimeReader(self.config, self.redis_helper)
         self._init_rabbitmq()
 
     def _init_logger(self, filename='', level='debug'):
@@ -37,6 +40,12 @@ class ConnectorAT(object):
             logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
             logging.getLogger('sqlalchemy.dialects.postgresql') \
                 .setLevel(logging.INFO)
+
+    def _init_redishelper(self):
+        self.redis_helper = RedisHelper(self.config.redishelper_host,
+                                                     self.config.redishelper_port,
+                                                     self.config.redishelper_db,
+                                                     self.config.redishelper_password)
 
     def _init_rabbitmq(self):
         """
@@ -59,8 +68,8 @@ class ConnectorAT(object):
         logging.getLogger('connector').info("put message to following topics: "
                                             "%s", self.config.rt_topics)
         for message in self.at_realtime_reader.message_list:
-            task = at.task_pb2.Task()
-            task.action = at.task_pb2.MESSAGE
+            task = connectors.at.task_pb2.Task()
+            task.action = connectors.at.task_pb2.MESSAGE
             task.message.MergeFrom(message)
             for routing_key in self.config.rt_topics:
                 exchange_name = self.config.exchange_name
@@ -68,8 +77,8 @@ class ConnectorAT(object):
                                            routing_key=routing_key,
                                            body=task.SerializeToString())
         for perturbation in self.at_realtime_reader.perturbation_list:
-            task = at.task_pb2.Task()
-            task.action = at.task_pb2.AT_PERTURBATION
+            task = connectors.at.task_pb2.Task()
+            task.action = connectors.at.task_pb2.AT_PERTURBATION
             task.at_perturbation.MergeFrom(perturbation)
             for routing_key in self.config.rt_topics:
                 exchange_name = self.config.exchange_name
