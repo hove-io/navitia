@@ -9,15 +9,16 @@ import itertools
 
 pb_type = {
         'stop_area': type_pb2.STOP_AREA,
-        'stop_point': type_pb2.STOP_POINT,
+        'stop_point'  type_pb2.STOP_POINT,
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS,
-        'poi': type_pb2.POI ,
-        'administrative_region' : type_pb2.ADMINISTRATIVE_REGION,
-        'line' : type_pb2.LINE
+        'poi': type_pb2.POI,
+        'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
+        'line': type_pb2.LINE
         }
 
-f_date_time = f_date_time
+f_date_time = "%Y%m%dT%H%M%S"
+
 
 class Script(object):
     def __init__(self):
@@ -30,25 +31,25 @@ class Script(object):
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
                      "status", "load", "networks", "place_uri"]
 
-
     def __pagination(self, request, ressource_name, resp):
-        if resp.pagination.totalResult > 0:
+        pagination = resp.pagination
+        if pagination.totalResult > 0:
             query_args = ""
             for key, value in request.iteritems():
                 if key != "startPage":
-                    if type(value) == type([]):
+                    if isinstance(value, type([])):
                         for v in value:
-                            query_args += key + "=" +unicode(v) + "&"
+                            query_args += key + "=" + unicode(v) + "&"
                     else:
-                        query_args += key + "=" +unicode(value) + "&"
-            if resp.pagination.startPage > 0:
-                page = resp.pagination.startPage-1
-                resp.pagination.previousPage = query_args+"start_page=%i"% page
-            last_id_page = (resp.pagination.startPage + 1) * resp.pagination.itemsPerPage
-            if last_id_page  < resp.pagination.totalResult:
-                page = resp.pagination.startPage+1
-                resp.pagination.nextPage = query_args+"start_page=%i"% page
-
+                        query_args += key + "=" + unicode(value) + "&"
+            if pagination.startPage > 0:
+                page = pagination.startPage - 1
+                pagination.previousPage = query_args
+                pagination.previousPage += "start_page=%i" % page
+            last_id_page = (pagination.startPage + 1) * pagination.itemsPerPage
+            if last_id_page < pagination.totalResult:
+                page = pagination.startPage + 1
+                pagination.nextPage = query_args + "start_page=%i" % page
 
     def status(self, request, instance):
         req = request_pb2.Request()
@@ -62,19 +63,17 @@ class Script(object):
         resp = instance.send_and_receive(req)
         return resp
 
-
-
     def load(self, request, instance, format):
         req = request_pb2.Request()
         req.requested_api = type_pb2.LOAD
         resp = instance.send_and_receive(req)
-        return render_from_protobuf(resp, format, request.arguments.get('callback'))
-
+        return render_from_protobuf(resp, format,
+                                    request.arguments.get('callback'))
 
     def places(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places
-        req.places.q     = request['q']
+        req.places.q = request['q']
         req.places.depth = request['depth']
         req.places.count = request['count']
         req.places.search_type = request['search_type']
@@ -100,16 +99,17 @@ class Script(object):
         req.place_uri.uri = request["uri"]
         return instance.send_and_receive(req)
 
-    def __stop_times(self, request, instance, departure_filter, arrival_filter, api):
+    def __stop_times(self, request, instance, departure_filter,
+                     arrival_filter, api):
         req = request_pb2.Request()
         req.requested_api = api
         st = req.next_stop_times
         st.departure_filter = departure_filter
         st.arrival_filter = arrival_filter
         st.from_datetime = request["from_datetime"]
-        st.duration      = request["duration"]
-        st.depth         = request["depth"]
-        st.nb_stoptimes  = 0 if not "nb_stoptimes" in request.keys() \
+        st.duration = request["duration"]
+        st.depth = request["depth"]
+        st.nb_stoptimes = 0 if not "nb_stoptimes" in request.keys() \
                              else request["nb_stoptimes"]
         st.interface_version = 0 if not "interface_version" in request.keys() \
                                   else request["interface_version"]
@@ -124,30 +124,35 @@ class Script(object):
         resp = instance.send_and_receive(req)
         return resp
 
-
     def route_schedules(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "", type_pb2.ROUTE_SCHEDULES)
+        return self.__stop_times(request, instance, request["filter"], "",
+                                 type_pb2.ROUTE_SCHEDULES)
 
     def next_arrivals(self, request, instance):
-        return self.__stop_times(request, instance, "", request["filter"], type_pb2.NEXT_ARRIVALS)
+        return self.__stop_times(request, instance, "", request["filter"],
+                                 type_pb2.NEXT_ARRIVALS)
 
     def next_departures(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "", type_pb2.NEXT_DEPARTURES)
+        return self.__stop_times(request, instance, request["filter"], "",
+                                 type_pb2.NEXT_DEPARTURES)
 
     def stops_schedules(self, request, instance):
-        return self.__stop_times(request, instance, request["departure_filter"], request["arrival_filter"],type_pb2.STOPS_SCHEDULES)
+        return self.__stop_times(request, instance,
+                                 request["departure_filter"],
+                                 request["arrival_filter"],
+                                 type_pb2.STOPS_SCHEDULES)
 
     def departure_boards(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "", type_pb2.DEPARTURE_BOARDS)
-
+        return self.__stop_times(request, instance, request["filter"], "",
+                                 type_pb2.DEPARTURE_BOARDS)
 
     def places_nearby(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
-        req.places_nearby.uri        = request["uri"]
-        req.places_nearby.distance   = request["distance"]
-        req.places_nearby.depth      = request["depth"]
-        req.places_nearby.count      = request["count"]
+        req.places_nearby.uri = request["uri"]
+        req.places_nearby.distance = request["distance"]
+        req.places_nearby.depth = request["depth"]
+        req.places_nearby.count = request["count"]
         req.places_nearby.start_page = request["start_page"]
         if request["type[]"]:
             for type in request["type[]"]:
@@ -157,32 +162,33 @@ class Script(object):
         self.__pagination(request, "places_nearby", resp)
         return resp
 
-
     def __fill_uris(self, resp):
         for journey in resp.journeys:
             for section in journey.sections:
-
-                if section.type == response_pb2.PUBLIC_TRANSPORT:
-                    if section.HasField("pt_display_informations"):
-                        section.uris.vehicle_journey = section.pt_display_informations.uris.vehicle_journey
-                        section.uris.line = section.pt_display_informations.uris.line
-                        section.uris.route = section.pt_display_informations.uris.route
-                        section.uris.commercial_mode = section.pt_display_informations.uris.commercial_mode
-                        section.uris.physical_mode = section.pt_display_informations.uris.physical_mode
-                        section.uris.network = section.pt_display_informations.uris.network
+                if section.type != response_pb2.PUBLIC_TRANSPORT:
+                    continue
+                if section.HasField("pt_display_informations"):
+                    uris = section.uris
+                    pt_infos = section.pt_display_informations
+                    uris.vehicle_journey = pt_infos.uris.vehicle_journey
+                    uris.line = pt_infos.uris.line
+                    uris.route = pt_infos.uris.route
+                    uris.commercial_mode = pt_infos.uris.commercial_mode
+                    uris.physical_mode = pt_infos.uris.physical_mode
+                    uris.network = pt_infos.uris.network
 
     def get_journey(self, req, instance, trip_type, debug):
         resp = None
 
-        for origin_mode, destination_mode in itertools.product(
+        for o_mode, d_mode in itertools.product(
                 self.origin_modes, self.destination_modes):
-            req.journeys.streetnetwork_params.origin_mode = origin_mode
-            req.journeys.streetnetwork_params.destination_mode = destination_mode
+            req.journeys.streetnetwork_params.origin_mode = o_mode
+            req.journeys.streetnetwork_params.destination_mode = d_mode
             resp = instance.send_and_receive(req)
             if resp.response_type == response_pb2.ITINERARY_FOUND:
                 if req.requested_api == type_pb2.PLANNER:
                     qualifier_one(resp.journeys)
-                break#result found, no need to inspect other fallback mode
+                break  # result found, no need to inspect other fallback mode
 
         if resp and not resp.HasField("error") and trip_type == "rapid":
             #We are looking for the asap result
@@ -205,17 +211,18 @@ class Script(object):
         self.__fill_uris(resp)
         return resp
 
-
     def journey_compare(self, j1, j2):
-        if datetime.strptime(j1.arrival_date_time, f_date_time) > datetime.strptime(j2.arrival_date_time, f_date_time) :
+        arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
+        arrival_j2_f = datetime.strptime(j1.arrival_date_time, f_date_time)
+        if arrival_j1_f > arrival_j2_f:
             return 1
-        elif datetime.strptime(j1.arrival_date_time, f_date_time) == datetime.strptime(j2.arrival_date_time, f_date_time) :
+        elif arrival_j1_f == arrival_j2_f:
             return 0
         else:
             return -1
 
-    def fill_journeys(self, resp, req, request):
-        if count is None:
+    def fill_journeys(self, resp, req, request, instance):
+        if request["count"] is None:
             return
         while request["count"] > len(resp.journeys):
             temp_datetime = None
@@ -223,9 +230,9 @@ class Script(object):
                 str_dt = ""
                 last_journey = resp.journeys[-1]
                 if last_journey.HasField("departure_date_time"):
-                    l_date_time = last_journeys.departure_date_time
+                    l_date_time = last_journey.departure_date_time
                     l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                    temp_datetime =  l_date_time + timedelta(seconds=1)
+                    temp_datetime = l_date_time_f + timedelta(seconds=1)
                 else:
                     duration = int(resp.journeys[-1].duration) + 1
                     r_datetime = req.journeys.datetimes[0]
@@ -233,7 +240,7 @@ class Script(object):
                     temp_datetime = r_datetime_f + timedelta(seconds=duration)
             else:
                 if resp.journeys[-1].HasField("arrival_date_time"):
-                    l_date_time = last_journeys.arrival_date_time
+                    l_date_time = last_journey.arrival_date_time
                     l_date_time_f = datetime.strptime(l_date_time, f_date_time)
                     temp_datetime = l_date_time_f + timedelta(seconds=-1)
                 else:
@@ -242,13 +249,13 @@ class Script(object):
                     r_datetime_f = datetime.strptime(r_datetime, f_date_time)
                     temp_datetime = r_datetime_f + timedelta(seconds=duration)
 
-                req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
-                tmp_resp = self.get_journey(req, instance, request["type"],
+            req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
+            tmp_resp = self.get_journey(req, instance, request["type"],
                                             request["debug"])
-                if len(tmp_resp.journeys) == 0:
-                    break
-                else:
-                    resp.journeys.extend(tmp_resp.journeys)
+            if len(tmp_resp.journeys) == 0:
+                break
+            else:
+                resp.journeys.extend(tmp_resp.journeys)
 
     def delete_journeys(self, resp, request):
         to_delete = []
@@ -280,16 +287,23 @@ class Script(object):
             self.destination_modes = ["walking"]
         req.journeys.datetimes.append(request["datetime"])
         req.journeys.clockwise = request["clockwise"]
-        req.journeys.streetnetwork_params.walking_speed = request["walking_speed"]
-        req.journeys.streetnetwork_params.walking_distance = request["walking_distance"]
-        req.journeys.streetnetwork_params.bike_speed = request["bike_speed"]
-        req.journeys.streetnetwork_params.bike_distance = request["bike_distance"]
-        req.journeys.streetnetwork_params.car_speed = request["car_speed"]
-        req.journeys.streetnetwork_params.car_distance = request["car_distance"]
-        req.journeys.streetnetwork_params.vls_speed = request["br_speed"]
-        req.journeys.streetnetwork_params.vls_distance = request["br_distance"]
-        req.journeys.streetnetwork_params.origin_filter = request["origin_filter"] if "origin_filter" in request else ""
-        req.journeys.streetnetwork_params.destination_filter = request["destination_filter"] if "destination_filter" in request else ""
+        sn_params = req.journeys.streetnetwork_params
+        sn_params.walking_speed = request["walking_speed"]
+        sn_params.walking_distance = request["walking_distance"]
+        sn_params.bike_speed = request["bike_speed"]
+        sn_params.bike_distance = request["bike_distance"]
+        sn_params.car_speed = request["car_speed"]
+        sn_params.car_distance = request["car_distance"]
+        sn_params.vls_speed = request["br_speed"]
+        sn_params.vls_distance = request["br_distance"]
+        if "origin_filter":
+            sn_params.origin_filter = request["origin_filter"]
+        else:
+            sn_params.origin_filter = ""
+        if "destination_filter" in request:
+            sn_params.destination_filter = request["destination_filter"]
+        else:
+            sn_params.destination_filter = ""
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
@@ -308,9 +322,9 @@ class Script(object):
         #call to kraken
         resp = self.get_journey(req, instance, request["type"],
                                 request["debug"])
-        if len(resp.journeys) > 0 and "coutn" in request:
-            fill_journeys(resp, req, request)
-            delete_journeys(resp, request)
+        if len(resp.journeys) > 0 and "count" in request:
+            self.fill_journeys(resp, req, request, instance)
+            self.delete_journeys(resp, request)
 
             if not request["clockwise"]:
                 resp.journeys.sort(self.journey_compare)
