@@ -76,7 +76,7 @@ CHECK_INCLUDE_FILE_CXX("log4cplus/loggingmacros.h" HAVE_LOGGINGMACROS_H)
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
 
-ADD_TEST(jormungandr_pep8 pep8 --repeat --exclude=*_pb2.py ${CMAKE_SOURCE_DIR}/jormungandr/)
+#ADD_TEST(jormungandr_pep8 pep8 --repeat --exclude=*_pb2.py ${CMAKE_SOURCE_DIR}/jormungandr/)
 #disable: waiting merge of pyed branch
 #ADD_TEST(pyed_pep8 pep8 --repeat --exclude=*_pb2.py ${CMAKE_SOURCE_DIR}/pyed/pyed)
 
