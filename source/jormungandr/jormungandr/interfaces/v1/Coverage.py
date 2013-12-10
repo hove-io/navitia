@@ -1,4 +1,4 @@
-#coding=utf-8
+# coding=utf-8
 from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr.instance_manager import InstanceManager
 from make_links import add_coverage_link, add_collection_links, clean_links
@@ -19,7 +19,9 @@ regions_fields = OrderedDict([
 
 collections = collections_to_resource_type.keys()
 
+
 class Coverage(Resource):
+
     @clean_links()
     @add_coverage_link()
     @add_collection_links(collections)
