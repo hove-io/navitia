@@ -1,6 +1,7 @@
 from instance_test import InstanceTest
 import os
-import response_pb2, request_pb2
+import response_pb2
+import request_pb2
 
 
 class InstanceRead(InstanceTest):

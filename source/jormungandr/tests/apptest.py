@@ -3,11 +3,13 @@ from jormungandr.instance_manager import InstanceManager
 from instance_read import InstanceRead
 from nose.tools import *
 
+
 __all__ = ['TestCase']
+
 
 class TestCase:
     urls = {"test_index": "/v1/", "test_coverage": "/v1/coverage",
-            "test_region" : "/v1/coverage/rennes"}
+            "test_region": "/v1/coverage/rennes"}
 
     def __init__(self, *args, **kwargs):
         InstanceManager().initialisation()
