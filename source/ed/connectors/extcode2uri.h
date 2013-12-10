@@ -23,11 +23,7 @@ template<typename T>
 void add_redis(const std::vector<T*>& vec, connectors::ExtCode2Uri& extcode2uri){
     extcode2uri.redis.set_prefix(navitia::type::static_data::get()->captionByType(T::type));
     for(auto* element : vec){
-        try{
-            extcode2uri.redis.set(element->external_code, element->uri);
-        }catch(const navitia::exception& ne){
-            throw navitia::exception(ne.what());
-        }
+        extcode2uri.redis.set(element->external_code, element->uri);
     }
 }
 }
