@@ -3,7 +3,7 @@ from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with
 from flask.ext.restful.types import boolean
 from jormungandr.instance_manager import InstanceManager
-from .protobuf_to_dict import protobuf_to_dict
+from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode,\
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\

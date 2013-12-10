@@ -2,7 +2,7 @@
 from flask import Flask
 from flask.ext.restful import Resource, fields, abort
 from jormungandr.instance_manager import InstanceManager
-from .protobuf_to_dict import protobuf_to_dict
+from jormungandr.protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from jormungandr.interfaces.parsers import depth_argument
 from jormungandr.interfaces.argument import ArgumentDoc

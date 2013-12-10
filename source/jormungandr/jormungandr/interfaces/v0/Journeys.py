@@ -3,7 +3,7 @@ from flask import Flask, request
 from flask.ext.restful import Resource, fields
 from jormungandr.instance_manager import InstanceManager
 from jormungandr.interfaces.parsers import true_false, option_value
-from .protobuf_to_dict import protobuf_to_dict
+from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.find_extrem_datetimes import extremes
 from flask.ext.restful import reqparse
 from flask.ext.restful.types import boolean

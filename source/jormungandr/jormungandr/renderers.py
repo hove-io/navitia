@@ -1,7 +1,7 @@
 # coding=utf-8
 import json
 import dict2xml
-from .protobuf_to_dict import protobuf_to_dict
+from jormungandr.protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Response
 from .error import generate_error
 
