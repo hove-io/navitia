@@ -13,21 +13,22 @@ def qualifier_one_direct_test():
     journeys = []
     journey_direct = response_pb2.Journey()
     journey_direct.arrival_date_time = "20131107T151200"
-    journey_direct.duration = 25*60
+    journey_direct.duration = 25 * 60
     journey_direct.nb_transfers = 0
     journey_direct.sections.add()
     journey_direct.sections.add()
 
     journey_direct.sections[0].type = response_pb2.STREET_NETWORK
-    journey_direct.sections[0].duration = 2*60
+    journey_direct.sections[0].duration = 2 * 60
 
     journey_direct.sections[1].type = response_pb2.STREET_NETWORK
-    journey_direct.sections[1].duration = 4*60
+    journey_direct.sections[1].duration = 4 * 60
     journeys.append(journey_direct)
 
     qualifier.qualifier_one(journeys)
 
     assert(journey_direct.type == "rapid")
+
 
 # Test with 5 journeys
 # a standard with 3 tranfers and 60mn trip
@@ -40,7 +41,7 @@ def qualifier_two_test():
     journey_standard = response_pb2.Journey()
     journey_standard.type = "none"
     journey_standard.arrival_date_time = "20131107T150000"
-    journey_standard.duration = 60*60
+    journey_standard.duration = 60 * 60
     journey_standard.nb_transfers = 3
     journey_standard.sections.add()
     journey_standard.sections.add()
@@ -48,63 +49,63 @@ def qualifier_two_test():
     journey_standard.sections.add()
 
     journey_standard.sections[0].type = response_pb2.STREET_NETWORK
-    journey_standard.sections[0].duration = 10*60
+    journey_standard.sections[0].duration = 10 * 60
 
     journey_standard.sections[-1].type = response_pb2.STREET_NETWORK
-    journey_standard.sections[-1].duration = 10*60
+    journey_standard.sections[-1].duration = 10 * 60
     journeys.append(journey_standard)
 
     journey_rapid = response_pb2.Journey()
     journey_rapid.arrival_date_time = "20131107T150500"
-    journey_rapid.duration = 62*60
+    journey_rapid.duration = 62 * 60
     journey_rapid.nb_transfers = 2
     journey_rapid.sections.add()
     journey_rapid.sections.add()
     journey_rapid.sections.add()
 
     journey_rapid.sections[0].type = response_pb2.STREET_NETWORK
-    journey_rapid.sections[0].duration = 10*60
+    journey_rapid.sections[0].duration = 10 * 60
 
     journey_rapid.sections[-1].type = response_pb2.STREET_NETWORK
-    journey_rapid.sections[-1].duration = 10*60
+    journey_rapid.sections[-1].duration = 10 * 60
     journeys.append(journey_rapid)
 
     journey_health = response_pb2.Journey()
     journey_health.arrival_date_time = "20131107T151000"
-    journey_health.duration = 70*60
+    journey_health.duration = 70 * 60
     journey_health.nb_transfers = 1
     journey_health.sections.add()
     journey_health.sections.add()
     journey_health.sections.add()
 
     journey_health.sections[0].type = response_pb2.STREET_NETWORK
-    journey_health.sections[0].duration = 15*60
+    journey_health.sections[0].duration = 15 * 60
 
     journey_health.sections[1].type = response_pb2.TRANSFER
-    journey_health.sections[1].duration = 10*60
+    journey_health.sections[1].duration = 10 * 60
 
     journey_health.sections[-1].type = response_pb2.STREET_NETWORK
-    journey_health.sections[-1].duration = 10*60
+    journey_health.sections[-1].duration = 10 * 60
     journeys.append(journey_health)
 
     journey_confort = response_pb2.Journey()
     journey_confort.arrival_date_time = "20131107T152000"
-    journey_confort.duration = 80*60
+    journey_confort.duration = 80 * 60
     journey_confort.nb_transfers = 1
     journey_confort.sections.add()
     journey_confort.sections.add()
     journey_confort.sections.add()
 
     journey_confort.sections[0].type = response_pb2.STREET_NETWORK
-    journey_confort.sections[0].duration = 5*60
+    journey_confort.sections[0].duration = 5 * 60
 
     journey_confort.sections[-1].type = response_pb2.STREET_NETWORK
-    journey_confort.sections[-1].duration = 5*60
+    journey_confort.sections[-1].duration = 5 * 60
     journeys.append(journey_confort)
 
     qualifier.qualifier_one(journeys)
 
-    eq_(journey_standard.type, "none") #the standard should not have be selected
+    eq_(journey_standard.type, "none")  # the standard shouldnt be selected
     eq_(journey_rapid.type, "rapid")
     eq_(journey_confort.type, "comfort")
     eq_(journey_health.type, "healthy")
@@ -131,6 +132,7 @@ def has_car_test():
     foot_journey.sections[3].type = response_pb2.STREET_NETWORK
     foot_journey.sections[3].street_network.mode = response_pb2.Car
     assert(qualifier.has_car(foot_journey))
+
 
 def standard_choice_test():
     journeys = []
@@ -180,6 +182,7 @@ def standard_choice_test():
     print "standard ", standard.arrival_date_time
     eq_(standard, journey_1)
 
+
 def tranfers_cri_test():
     journeys = []
 
@@ -193,10 +196,10 @@ def tranfers_cri_test():
 
         journeys.append(journey)
 
-    best = qualifier.min_from_criteria(journeys, [qualifier.transfers_crit, qualifier.arrival_crit])
+    best = qualifier.min_from_criteria(journeys, [qualifier.transfers_crit,
+                                                  qualifier.arrival_crit])
 
-    #the transfert criterion is first, and then if 2 journeys have the same nb_transfers, we compare the dates
+    #the transfert criterion is first, and then if 2 journeys have
+    #the same nb_transfers, we compare the dates
     eq_(best.nb_transfers, 1)
     eq_(best.arrival_date_time, "20131107T100000")
-
-
