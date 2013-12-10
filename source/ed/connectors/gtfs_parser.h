@@ -34,6 +34,10 @@ struct GtfsData {
     boost::gregorian::date_period production_date;///<Période de validité des données
 };
 
+inline bool has_col(int col_idx, const std::vector<std::string>& row) {
+    return col_idx >= 0 && static_cast<size_t>(col_idx) < row.size();
+}
+
 template <typename Handler>
 class FileParser {
 protected:
@@ -45,6 +49,7 @@ public:
         csv(file_name, ',' , true), fail_if_no_file(fail), handler(gdata, csv) {}
     FileParser(GtfsData& gdata, std::stringstream& ss, bool fail = false) :
         csv(ss, ',' , true), fail_if_no_file(fail), handler(gdata, csv)  {}
+
     void fill(Data& data);
 };
 
@@ -101,6 +106,8 @@ struct StopsGtfsHandler : public GenericHandler {
     }
     template <typename T>
     bool parse_common_data(const csv_row& row, T* stop);
+
+    void handle_stop_point_without_area(Data& data); //might be different between stopss parser
 };
 
 struct RouteGtfsHandler : public GenericHandler {
@@ -277,7 +284,7 @@ struct InvalidHeaders {
 template <typename Handler>
 inline void FileParser<Handler>::fill(Data& data) {
     auto logger = log4cplus::Logger::getInstance("log");
-    if (! csv.is_open()) {
+    if (! csv.is_open() && ! csv.filename.empty()) {
         LOG4CPLUS_FATAL(logger, "Impossible to read " + csv.filename);
         if ( fail_if_no_file ) {
             throw FileNotFoundException(csv.filename);

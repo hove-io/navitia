@@ -39,14 +39,14 @@ void AgencyGtfsHandler::init(Data&) {
 }
 
 void AgencyGtfsHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    if(! is_first_line && id_c == -1) {
+    if(! is_first_line && ! has_col(id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         + " file has more than one agency and no agency_id column");
         throw InvalidHeaders(csv.filename);
     }
     nm::Network * network = new nm::Network();
 
-    if(id_c != -1) {
+    if(has_col(id_c, row)) {
         network->uri = row[id_c];
     } else {
         network->uri = "default_agency";
@@ -98,15 +98,57 @@ void StopsGtfsHandler::finish(Data& data) {
             LOG4CPLUS_WARN(logger, error_message);
         }
     }
+
     //On va chercher l'accessibilité pour les stop points qui hérite de l'accessibilité de leur stop area
-    for(auto sp : wheelchair_heritance) {
-        if(sp->stop_area != 0 && sp->stop_area->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING)) {
+    for (auto sp : wheelchair_heritance) {
+        if(sp->stop_area == nullptr)
+            continue;
+        if (sp->stop_area->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING)) {
             sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
         } else {
             LOG4CPLUS_WARN(logger, "Impossible to get the stop area accessibility value for the stop point " + sp->uri);
         }
     }
-    //Deletion of the stop point withou stop areas
+
+    handle_stop_point_without_area(data);
+
+    LOG4CPLUS_TRACE(logger, data.stop_points.size() << " added stop points");;
+    LOG4CPLUS_TRACE(logger, data.stop_areas.size() << " added stop areas");
+    LOG4CPLUS_TRACE(logger, ignored << " points ignored because of dupplicates" );
+}
+
+void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
+    //we have to check if there was stop area in the file
+    bool has_stop_area = (!data.stop_areas.empty());
+    if (! has_stop_area) {
+        for (const auto sp : data.stop_points) {
+            if (sp->stop_area) {
+                has_stop_area = true;
+                break;
+            }
+        }
+    }
+
+    if (! has_stop_area) {
+        //we artificialy create one stop_area by stop point
+        for (const auto sp : data.stop_points) {
+            auto sa = new nm::StopArea;
+
+            sa->coord.set_lon(sp->coord.lon());
+            sa->coord.set_lat(sp->coord.lat());
+            sa->name = sp->name;
+            sa->uri = sp->uri;
+            if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING))
+                sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+
+            gtfs_data.stop_area_map[sa->uri] = sa;
+            data.stop_areas.push_back(sa);
+            sp->stop_area = sa;
+        }
+        return;
+    }
+
+    //Deletion of the stop point without stop areas
     std::vector<size_t> erasest;
     for (int i = data.stop_points.size()-1; i >=0;--i) {
         if (data.stop_points[i]->stop_area == nullptr) {
@@ -122,10 +164,6 @@ void StopsGtfsHandler::finish(Data& data) {
     }
     data.stop_points.resize(num_elements);
     LOG4CPLUS_INFO(logger, "Deletion of " << erasest.size() << " stop_point wihtout stop_area");
-
-    LOG4CPLUS_TRACE(logger, data.stop_points.size() << " added stop points");;
-    LOG4CPLUS_TRACE(logger, data.stop_areas.size() << " added stop areas");
-    LOG4CPLUS_TRACE(logger, ignored << " points ignored because of dupplicates" );
 }
 
 template <typename T>
@@ -147,7 +185,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
 
     stop->name = row[name_c];
     stop->uri = row[id_c];
-    if (desc_c != -1)
+    if (has_col(desc_c, row))
         stop->comment = row[desc_c];
     return true;
 }
@@ -155,7 +193,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
 StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     // In GTFS the file contains the stop_area and the stop_point
     // We test if it's a dupplicate
-    if(gtfs_data.stop_map.find(row[id_c]) != gtfs_data.stop_map.end() ||
+    if (gtfs_data.stop_map.find(row[id_c]) != gtfs_data.stop_map.end() ||
             gtfs_data.stop_area_map.find(row[id_c]) != gtfs_data.stop_area_map.end()) {
         LOG4CPLUS_WARN(logger, "The stop " + row[id_c] +" has been ignored");
         ignored++;
@@ -164,14 +202,14 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
 
     stop_point_and_area return_wrapper {};
     // Si c'est un stopArea
-    if(type_c != -1 && row[type_c] == "1") {
+    if (has_col(type_c, row) && row[type_c] == "1") {
         nm::StopArea * sa = new nm::StopArea();
-        if ( ! parse_common_data(row, sa) ) {
+        if (! parse_common_data(row, sa)) {
             delete sa; //don't forget to free the data
             return {};
         }
 
-        if(wheelchair_c != -1 && row[wheelchair_c] == "1")
+        if (has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
         gtfs_data.stop_area_map[sa->uri] = sa;
         data.stop_areas.push_back(sa);
@@ -180,23 +218,23 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
     // C'est un StopPoint
     else {
         nm::StopPoint* sp = new nm::StopPoint();
-        if ( ! parse_common_data(row, sp) ) {
+        if (! parse_common_data(row, sp)) {
             delete sp;
             return {};
         }
 
-        if(wheelchair_c != -1) {
-            if(row[wheelchair_c] == "0") {
+        if (has_col(wheelchair_c, row)) {
+            if (row[wheelchair_c] == "0") {
                 wheelchair_heritance.push_back(sp);
-            } else if(row[wheelchair_c] == "1"){
+            } else if (row[wheelchair_c] == "1") {
                 sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
             }
         }
         gtfs_data.stop_map[sp->uri] = sp;
         data.stop_points.push_back(sp);
-        if(parent_c!=-1 && row[parent_c] != "") {// we save the reference to the stop area
+        if (has_col(parent_c, row) && row[parent_c] != "") {// we save the reference to the stop area
             auto it = gtfs_data.sa_spmap.find(row[parent_c]);
-            if(it == gtfs_data.sa_spmap.end()) {
+            if (it == gtfs_data.sa_spmap.end()) {
                 it = gtfs_data.sa_spmap.insert(std::make_pair(row[parent_c], GtfsData::vector_sp())).first;
             }
             it->second.push_back(sp);
@@ -224,14 +262,25 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     line->uri = row[id_c];
     line->name = row[long_name_c];
     line->code = row[short_name_c];
-    if ( desc_c != -1 )
+    if ( has_col(desc_c, row) )
         line->comment = row[desc_c];
 
-    if(color_c != -1)
+    if(has_col(color_c, row))
         line->color = row[color_c];
     line->additional_data = row[long_name_c];
 
-    if(agency_c != -1) {
+    auto it_commercial_mode = gtfs_data.commercial_mode_map.find(row[type_c]);
+    if (it_commercial_mode != gtfs_data.commercial_mode_map.end())
+        line->commercial_mode = it_commercial_mode->second;
+    else {
+        LOG4CPLUS_ERROR(logger, "impossible to find route type " << row[type_c]
+                        << " we ignore the route " << row[id_c]);
+        ignored++;
+        delete line;
+        return nullptr;
+    }
+
+    if(has_col(agency_c, row)) {
         auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
         if(agency_it != gtfs_data.agency_map.end())
             line->network = agency_it->second;
@@ -265,7 +314,7 @@ void TransfersGtfsHandler::finish(Data& data) {
 }
 
 void TransfersGtfsHandler::fill_stop_point_connection(nm::StopPointConnection* connection, const csv_row& row) const {
-    if(time_c != -1) {
+    if(has_col(time_c, row)) {
         try{
             connection->display_duration = boost::lexical_cast<int>(row[time_c]);
         } catch (...) {
@@ -450,7 +499,7 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
     }
     nm::VehicleJourney* vj = new nm::VehicleJourney();
     vj->uri = row[trip_c];
-    if(headsign_c != -1)
+    if(has_col(headsign_c, row))
         vj->name = row[headsign_c];
     else
         vj->name = vj->uri;
@@ -459,16 +508,32 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
     vj->adapted_validity_pattern = vp_xx;
     vj->journey_pattern = 0;
     vj->tmp_line = line;
-    //with no information, we take the first company attached to the line
-    vj->company = line->company;
-    if(block_id_c != -1)
+    if(has_col(block_id_c, row))
         vj->block_id = row[block_id_c];
     else
         vj->block_id = "";
-    //                    if(wheelchair_c != -1)
+    //                    if(has_col(wheelchair_c, row))
     //                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
-    if(wheelchair_c != -1 && row[wheelchair_c] == "1")
+    if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+
+    auto itm = gtfs_data.physical_mode_map.find(line->commercial_mode->id);
+    if (itm == gtfs_data.physical_mode_map.end()) {
+        LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs mode " << line->commercial_mode->id
+                       << " referenced by trip " << row[trip_c]);
+        ignored++;
+        delete vj;
+        return nullptr;
+    }
+    vj->physical_mode = itm->second;
+
+    auto company_it = gtfs_data.company_map.find("default_company");
+    if (company_it != gtfs_data.company_map.end()){
+        vj->company = company_it->second;
+    } else {
+        //with no information, we take the first company attached to the line
+        vj->company = line->company;
+    }
 
     gtfs_data.vj_map[vj->uri] = vj;
 
@@ -477,9 +542,12 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
 }
 
 void StopTimeGtfsHandler::init(Data&) {
-    id_c = csv.get_pos_col("trip_id"), arrival_c = csv.get_pos_col("arrival_time"),
-            departure_c = csv.get_pos_col("departure_time"), stop_c = csv.get_pos_col("stop_id"),
-            stop_seq_c = csv.get_pos_col("stop_sequence"), pickup_c = csv.get_pos_col("pickup_type"),
+    id_c = csv.get_pos_col("trip_id"),
+            arrival_c = csv.get_pos_col("arrival_time"),
+            departure_c = csv.get_pos_col("departure_time"),
+            stop_c = csv.get_pos_col("stop_id"),
+            stop_seq_c = csv.get_pos_col("stop_sequence"),
+            pickup_c = csv.get_pos_col("pickup_type"),
             drop_off_c = csv.get_pos_col("drop_off_type");
 }
 
@@ -506,15 +574,15 @@ nm::StopTime* StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, b
     stop_time->order = boost::lexical_cast<int>(row[stop_seq_c]);
     stop_time->vehicle_journey = vj_it->second;
 
-    if(pickup_c != -1 && drop_off_c != -1)
+    if(has_col(pickup_c, row) && has_col(drop_off_c, row))
         stop_time->ODT = (row[pickup_c] == "2" && row[drop_off_c] == "2");
     else
         stop_time->ODT = false;
-    if(pickup_c != -1)
+    if(has_col(pickup_c, row))
         stop_time->pick_up_allowed = row[pickup_c] != "1";
     else
         stop_time->pick_up_allowed = true;
-    if(drop_off_c != -1)
+    if(has_col(drop_off_c, row))
         stop_time->drop_off_allowed = row[drop_off_c] != "1";
     else
         stop_time->drop_off_allowed = true;

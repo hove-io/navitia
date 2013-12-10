@@ -15,6 +15,26 @@ void StopsFusioHandler::init(Data& data) {
             appropriate_signage_c = csv.get_pos_col("appropriate_signage");
 }
 
+//in fusio we want to delete all stop points without stop area
+void StopsFusioHandler::handle_stop_point_without_area(Data& data) {
+    //Deletion of the stop point without stop areas
+    std::vector<size_t> erasest;
+    for (int i = data.stop_points.size()-1; i >=0;--i) {
+        if (data.stop_points[i]->stop_area == nullptr) {
+            erasest.push_back(i);
+        }
+    }
+    int num_elements = data.stop_points.size();
+    for (size_t to_erase : erasest) {
+        gtfs_data.stop_map.erase(data.stop_points[to_erase]->uri);
+        delete data.stop_points[to_erase];
+        data.stop_points[to_erase] = data.stop_points[num_elements - 1];
+        num_elements--;
+    }
+    data.stop_points.resize(num_elements);
+    LOG4CPLUS_INFO(logger, "Deletion of " << erasest.size() << " stop_point wihtout stop_area");
+}
+
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     auto return_wrapper = StopsGtfsHandler::handle_line(data, row, is_first_line);
 
@@ -22,23 +42,23 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
     if ( return_wrapper.second == nullptr )
         return return_wrapper;
 
-    if(sheltered_c != -1 && row[sheltered_c] == "1")
+    if(has_col(sheltered_c, row) && row[sheltered_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::SHELTERED);
-    if(elevator_c != -1 && row[elevator_c] == "1")
+    if(has_col(elevator_c, row) && row[elevator_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::ELEVATOR);
-    if(escalator_c != -1 && row[escalator_c] == "1")
+    if(has_col(escalator_c, row) && row[escalator_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::ESCALATOR);
-    if(bike_accepted_c != -1 && row[bike_accepted_c] == "1")
+    if(has_col(bike_accepted_c, row) && row[bike_accepted_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
-    if(bike_depot_c != -1 && row[bike_depot_c] == "1")
+    if(has_col(bike_depot_c, row) && row[bike_depot_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::BIKE_DEPOT);
-    if(visual_announcement_c != -1 && row[visual_announcement_c] == "1")
+    if(has_col(visual_announcement_c, row) && row[visual_announcement_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::VISUAL_ANNOUNCEMENT);
-    if(audible_announcement_c != -1 && row[audible_announcement_c] == "1")
+    if(has_col(audible_announcement_c, row) && row[audible_announcement_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::AUDIBLE_ANNOUNVEMENT);
-    if(appropriate_escort_c != -1 && row[appropriate_escort_c] == "1")
+    if(has_col(appropriate_escort_c, row) && row[appropriate_escort_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::APPOPRIATE_ESCORT);
-    if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
+    if(has_col(appropriate_signage_c, row) && row[appropriate_signage_c] == "1")
         return_wrapper.second->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
 
     return return_wrapper;
@@ -56,13 +76,14 @@ ed::types::Line* RouteFusioHandler::handle_line(Data& data, const csv_row& row, 
         return nullptr;
     }
 
-    std::unordered_map<std::string, ed::types::CommercialMode*>::iterator it;
-    if(commercial_mode_c != -1)
+    //if we have a commercial_mode column we update the value
+    if(has_col(commercial_mode_c, row)) {
+        std::unordered_map<std::string, ed::types::CommercialMode*>::iterator it;
         it = gtfs_data.commercial_mode_map.find(row[commercial_mode_c]);
-    else it = gtfs_data.commercial_mode_map.find(row[type_c]);
 
-    if(it != gtfs_data.commercial_mode_map.end())
-        ed_line->commercial_mode = it->second;
+        if(it != gtfs_data.commercial_mode_map.end())
+            ed_line->commercial_mode = it->second;
+    }
 
     return ed_line;
 }
@@ -84,28 +105,28 @@ void TransfersFusioHandler::init(Data& d) {
 void TransfersFusioHandler::fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const {
     TransfersGtfsHandler::fill_stop_point_connection(connection, row);
 
-    if(wheelchair_c != -1 && row[wheelchair_c] == "1")
+    if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
         connection->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-    if(sheltered_c != -1 && row[sheltered_c] == "1")
+    if(has_col(sheltered_c, row) && row[sheltered_c] == "1")
         connection->set_property(navitia::type::hasProperties::SHELTERED);
-    if(elevator_c != -1 && row[elevator_c] == "1")
+    if(has_col(elevator_c, row) && row[elevator_c] == "1")
         connection->set_property(navitia::type::hasProperties::ELEVATOR);
-    if(escalator_c != -1 && row[escalator_c] == "1")
+    if(has_col(escalator_c, row) && row[escalator_c] == "1")
         connection->set_property(navitia::type::hasProperties::ESCALATOR);
-    if(bike_accepted_c != -1 && row[bike_accepted_c] == "1")
+    if(has_col(bike_accepted_c, row) && row[bike_accepted_c] == "1")
         connection->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
-    if(bike_depot_c != -1 && row[bike_depot_c] == "1")
+    if(has_col(bike_depot_c, row) && row[bike_depot_c] == "1")
         connection->set_property(navitia::type::hasProperties::BIKE_DEPOT);
-    if(visual_announcement_c != -1 && row[visual_announcement_c] == "1")
+    if(has_col(visual_announcement_c, row) && row[visual_announcement_c] == "1")
         connection->set_property(navitia::type::hasProperties::VISUAL_ANNOUNCEMENT);
-    if(audible_announcement_c != -1 && row[audible_announcement_c] == "1")
+    if(has_col(audible_announcement_c, row) && row[audible_announcement_c] == "1")
         connection->set_property(navitia::type::hasProperties::AUDIBLE_ANNOUNVEMENT);
-    if(appropriate_escort_c != -1 && row[appropriate_escort_c] == "1")
+    if(has_col(appropriate_escort_c, row) && row[appropriate_escort_c] == "1")
         connection->set_property(navitia::type::hasProperties::APPOPRIATE_ESCORT);
-    if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
+    if(has_col(appropriate_signage_c, row) && row[appropriate_signage_c] == "1")
         connection->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
 
-    if(real_time_c != -1) {
+    if(has_col(real_time_c, row)) {
         try{
             connection->duration = boost::lexical_cast<int>(row[real_time_c]);
         } catch (...) {
@@ -129,14 +150,14 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     if (! stop_time) {
         return nullptr;
     }
-    if (date_time_estimated_c != -1)
+    if (has_col(date_time_estimated_c, row))
         stop_time->date_time_estimated = (row[date_time_estimated_c] == "1");
     else stop_time->date_time_estimated = false;
 
-    if (desc_c != -1)
+    if (has_col(desc_c, row))
         stop_time->comment = row[desc_c];
 
-    if(itl_c != -1){
+    if(has_col(itl_c, row)){
         int local_traffic_zone = str_to_int(row[itl_c]);
         if (local_traffic_zone > 0)
             stop_time->local_traffic_zone = local_traffic_zone;
@@ -175,70 +196,56 @@ void TripsFusioHandler::clean_and_delete(Data& data, ed::types::VehicleJourney* 
 ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     ed::types::VehicleJourney* vj = TripsGtfsHandler::handle_line(data, row, is_first_line);
 
-    if (vj == nullptr) {
+    if (! vj) {
         return nullptr;
     }
 
-    auto it_line = gtfs_data.line_map.find(row[id_c]);
-    if (it_line == gtfs_data.line_map.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs route " + row[id_c]
-                       + " referenced by trip " + row[trip_c]);
-        return nullptr;
+    //if a physical_mode is given we override the value
+    if (has_col(physical_mode_c, row)) {
+        auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
+
+        if (itm == gtfs_data.physical_mode_map.end()) {
+            LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs mode " << row[physical_mode_c]
+                           << " referenced by trip " << row[trip_c]);
+            ignored++;
+            clean_and_delete(data, vj);
+            return nullptr;
+        }
+        vj->physical_mode = itm->second;
     }
 
-    ed::types::Line* line = it_line->second;
-    std::unordered_map<std::string, ed::types::PhysicalMode*>::iterator itm;
-
-    if (physical_mode_c != -1) {
-        itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
-    } else itm = gtfs_data.physical_mode_map.find(line->commercial_mode->id);
-
-    if (itm == gtfs_data.physical_mode_map.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs mode " + (physical_mode_c != -1 ? row[physical_mode_c] : line->commercial_mode->id)
-                       + " referenced by trip " + row[trip_c]);
-        ignored++;
-        clean_and_delete(data, vj);
-        return nullptr;
-    }
-    vj->physical_mode = itm->second;
-
-    if (trip_desc_c != -1)
+    if (has_col(trip_desc_c, row))
         vj->comment = row[trip_desc_c];
 
-    if (condition_c != -1)
+    if (has_col(condition_c, row))
         vj->odt_message = row[condition_c];
 
-    if(bike_accepted_c != -1 && row[bike_accepted_c] == "1")
+    if(has_col(bike_accepted_c, row) && row[bike_accepted_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
-    if(air_conditioned_c != -1 && row[air_conditioned_c] == "1")
+    if(has_col(air_conditioned_c, row) && row[air_conditioned_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
-    if(visual_announcement_c != -1 && row[visual_announcement_c] == "1")
+    if(has_col(visual_announcement_c, row) && row[visual_announcement_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::VISUAL_ANNOUNCEMENT);
-    if(audible_announcement_c != -1 && row[audible_announcement_c] == "1")
+    if(has_col(audible_announcement_c, row) && row[audible_announcement_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNCEMENT);
-    if(appropriate_escort_c != -1 && row[appropriate_escort_c] == "1")
+    if(has_col(appropriate_escort_c, row) && row[appropriate_escort_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_ESCORT);
-    if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
+    if(has_col(appropriate_signage_c, row) && row[appropriate_signage_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_SIGNAGE);
-    if(school_vehicle_c != -1 && row[school_vehicle_c] == "1")
+    if(has_col(school_vehicle_c, row) && row[school_vehicle_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
 
-    if(odt_type_c != -1){
+    if(has_col(odt_type_c, row)){
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
     }
 
     std::string company_s;
-    if ((company_id_c != -1) && (!row[company_id_c].empty())) {
+    if ((has_col(company_id_c, row)) && (!row[company_id_c].empty())) {
         company_s = row[company_id_c];
     }
     auto company_it = gtfs_data.company_map.find(company_s);
     if (company_it != gtfs_data.company_map.end()) {
         vj->company = company_it->second;
-    } else {
-        auto company_it = gtfs_data.company_map.find("default_company");
-        if(company_it != gtfs_data.company_map.end()){
-            vj->company = company_it->second;
-        }
     }
     return vj;
 }
@@ -249,13 +256,13 @@ void ContributorFusioHandler::init(Data&) {
 }
 
 void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    if(! is_first_line && id_c == -1) {
+    if(! is_first_line && ! has_col(id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         "  file has more than one contributor and no contributor_id column");
         throw InvalidHeaders(csv.filename);
     }
     ed::types::Contributor * contributor = new ed::types::Contributor();
-    if (id_c != -1) {
+    if (has_col(id_c, row)) {
         contributor->uri = row[id_c];
     } else {
         contributor->uri = "default_contributor";
@@ -278,36 +285,35 @@ void CompanyFusioHandler::init(Data&) {
 }
 
 void CompanyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    if(! is_first_line && id_c == -1) {
+    if(! is_first_line && ! has_col(id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         "  file has more than one company and no company_id column");
         throw InvalidHeaders(csv.filename);
     }
     ed::types::Company * company = new ed::types::Company();
-    if(id_c != -1){
+    if(has_col(id_c, row)){
         company->uri = row[id_c];
     }else{
         company->uri = "default_company";
     }
     company->name = row[name_c];
-    if (company_address_name_c != -1)
+    if (has_col(company_address_name_c, row))
         company->address_name = row[company_address_name_c];
-    if (company_address_number_c != -1)
+    if (has_col(company_address_number_c, row))
         company->address_number = row[company_address_number_c];
-    if (company_address_type_c != -1)
+    if (has_col(company_address_type_c, row))
         company->address_type_name = row[company_address_type_c];
-    if (company_url_c != -1)
+    if (has_col(company_url_c, row))
         company->website = row[company_url_c];
-    if (company_mail_c != -1)
+    if (has_col(company_mail_c, row))
         company->mail = row[company_mail_c];
-    if (company_phone_c != -1)
+    if (has_col(company_phone_c, row))
         company->phone_number = row[company_phone_c];
-    if (company_fax_c != -1)
+    if (has_col(company_fax_c, row))
         company->fax = row[company_fax_c];
     data.companies.push_back(company);
     gtfs_data.company_map[company->uri] = company;
 }
-
 
 void PhysicalModeFusioHandler::init(Data&) {
     id_c = csv.get_pos_col("physical_mode_id");
@@ -315,7 +321,7 @@ void PhysicalModeFusioHandler::init(Data&) {
 }
 
 void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    if(! is_first_line && id_c == -1) {
+    if(! is_first_line && ! has_col(id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         "  file has more than one physical mode and no physical_mode_id column");
         throw InvalidHeaders(csv.filename);
@@ -334,7 +340,7 @@ void CommercialModeFusioHandler::init(Data&) {
 }
 
 void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    if(! is_first_line && id_c == -1) {
+    if(! is_first_line && ! has_col(id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         "  file has more than one commercial mode and no commercial_mode_id column");
         throw InvalidHeaders(csv.filename);

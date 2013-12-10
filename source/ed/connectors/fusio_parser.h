@@ -7,7 +7,6 @@
   */
 namespace ed { namespace connectors {
 
-
 struct StopsFusioHandler : public StopsGtfsHandler {
     StopsFusioHandler(GtfsData& gdata, CsvReader& reader) : StopsGtfsHandler(gdata, reader) {}
     int sheltered_c,
@@ -22,6 +21,7 @@ struct StopsFusioHandler : public StopsGtfsHandler {
 
     void init(Data& data);
     stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_stop_point_without_area(Data& data);
 };
 
 struct RouteFusioHandler : public RouteGtfsHandler {
@@ -69,7 +69,6 @@ struct StopTimeFusioHandler : public StopTimeGtfsHandler {
     void init(Data&);
     ed::types::StopTime* handle_line(Data& data, const csv_row& line, bool is_first_line);
 };
-
 
 struct ContributorFusioHandler : public GenericHandler {
     ContributorFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
