@@ -8,14 +8,14 @@ from datetime import datetime, timedelta
 import itertools
 
 pb_type = {
-        'stop_area': type_pb2.STOP_AREA,
-        'stop_point'  type_pb2.STOP_POINT,
-        'city': type_pb2.CITY,
-        'address': type_pb2.ADDRESS,
-        'poi': type_pb2.POI,
-        'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
-        'line': type_pb2.LINE
-        }
+    'stop_area': type_pb2.STOP_AREA,
+    'stop_point':  type_pb2.STOP_POINT,
+    'city': type_pb2.CITY,
+    'address': type_pb2.ADDRESS,
+    'poi': type_pb2.POI,
+    'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
+    'line': type_pb2.LINE
+}
 
 f_date_time = "%Y%m%dT%H%M%S"
 
@@ -109,13 +109,19 @@ class Script(object):
         st.from_datetime = request["from_datetime"]
         st.duration = request["duration"]
         st.depth = request["depth"]
-        st.nb_stoptimes = 0 if not "nb_stoptimes" in request.keys() \
-                             else request["nb_stoptimes"]
-        st.interface_version = 0 if not "interface_version" in request.keys() \
-                                  else request["interface_version"]
+        if not "nb_stoptimes" in request:
+            st.nb_stoptimes = 0
+        else:
+            st.nb_stoptimes = request["nb_stoptimes"]
+        if not "interface_version" in request:
+            st.interface_version = 0
+        else:
+            st.interface_version = request["interface_version"]
         st.count = 10 if not "count" in request.keys() else request["count"]
-        st.start_page = 0 if not "start_page" in request.keys() \
-                           else request["start_page"]
+        if not "start_page" in request:
+            st.start_page = 0
+        else:
+            st.start_page = request["start_page"]
         if request["max_date_times"]:
             st.max_date_times = request["max_date_times"]
         if request["forbidden_uris[]"]:
@@ -195,8 +201,8 @@ class Script(object):
             earliest_dt = None
             earliest_i = None
             for i in range(0, len(resp.journeys)):
-                if not earliest_dt \
-                       or earliest_dt > resp.journeys[i].arrival_date_time:
+                if not earliest_dt\
+                        or earliest_dt > resp.journeys[i].arrival_date_time:
                     earliest_dt = resp.journeys[i].arrival_date_time
                     earliest_i = i
 
@@ -251,7 +257,7 @@ class Script(object):
 
             req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
             tmp_resp = self.get_journey(req, instance, request["type"],
-                                            request["debug"])
+                                        request["debug"])
             if len(tmp_resp.journeys) == 0:
                 break
             else:

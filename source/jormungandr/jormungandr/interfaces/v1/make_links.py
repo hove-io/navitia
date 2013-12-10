@@ -2,13 +2,14 @@ from flask import url_for
 from collections import OrderedDict
 from functools import wraps
 from converters_collection_type import resource_type_to_collection,\
-                                       collections_to_resource_type
+    collections_to_resource_type
 from flask.ext.restful.utils import unpack
 
 
 class generate_links(object):
+
     def prepare_objetcs(self, objects, hasCollections=False):
-        if type(objects) is tuple:
+        if isinstance(objects, tuple):
             objects = objects[0]
         if not "links" in objects.keys():
             objects["links"] = []
@@ -29,6 +30,7 @@ class generate_links(object):
 
 
 class add_pagination_links(object):
+
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -55,9 +57,9 @@ class add_pagination_links(object):
             if pagination and endpoint:
                 pagination = data["pagination"]
                 if "start_page" in pagination.keys() and \
-                    "items_on_page" in pagination.keys() and \
-                    "items_per_page" in pagination.keys() and \
-                    "total_result" in pagination.keys():
+                        "items_on_page" in pagination.keys() and \
+                        "items_per_page" in pagination.keys() and \
+                        "total_result" in pagination.keys():
                     if not "links" in data.keys():
                         data["links"] = []
                     start_page = int(pagination["start_page"])
@@ -108,6 +110,7 @@ class add_pagination_links(object):
 
 
 class add_coverage_link(generate_links):
+
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -123,7 +126,7 @@ class add_coverage_link(generate_links):
                 kwargs = self.prepare_kwargs(kwargs, data)
                 url = url_for("v1.coverage", _external=True, **kwargs)
                 data["links"].append({"href": url, "rel": "related",
-                                             "templated": True})
+                                      "templated": True})
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -132,6 +135,7 @@ class add_coverage_link(generate_links):
 
 
 class add_collection_links(generate_links):
+
     def __init__(self, collections):
         self.collections = collections
 
@@ -150,9 +154,9 @@ class add_collection_links(generate_links):
                 kwargs = self.prepare_kwargs(kwargs, data)
                 for collection in self.collections:
                     url = url_for("v1." + collection + ".collection",
-                                    _external=True, **kwargs)
+                                  _external=True, **kwargs)
                     data["links"].append({"href": url, "rel": collection,
-                                             "templated": True})
+                                          "templated": True})
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -161,6 +165,7 @@ class add_collection_links(generate_links):
 
 
 class add_id_links(generate_links):
+
     def __init__(self, *args, **kwargs):
         self.data = set()
 
@@ -192,12 +197,12 @@ class add_id_links(generate_links):
                         kwargs["id"] = "{" + obj + ".id}"
                     endpoint = "v1." + kwargs["collection"] + "."
                     endpoint += "id" if "region" in kwargs.keys() or\
-                                            "lon" in kwargs.keys()\
+                        "lon" in kwargs.keys()\
                                         else "redirect"
                     del kwargs["collection"]
                     url = url_for(endpoint, _external=True, **kwargs)
                     data["links"].append({"href": url, "rel": obj,
-                                             "templated": True})
+                                          "templated": True})
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -220,6 +225,7 @@ class add_id_links(generate_links):
 
 
 class clean_links(object):
+
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
