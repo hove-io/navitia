@@ -1,11 +1,11 @@
 from sqlalchemy import Table, MetaData, select, create_engine, join
-from app import app
+from .app import app
 from sqlalchemy.sql import and_, or_, not_
 
-from cache import Cache
+from .cache import Cache
 
-__ALL__ = ['engine', 'meta', 'key', 'user', 'instance', 'api', 'authorization' \
-        'get_user']
+__ALL__ = ['engine', 'meta', 'key', 'user', 'instance', 'api', 'authorization'
+           'get_user']
 
 engine = create_engine(app.config['PG_CONNECTION_STRING'])
 meta = MetaData(engine)
@@ -14,16 +14,16 @@ _user = Table('user', meta, autoload=True, schema='jormungandr')
 _instance = Table('instance', meta, autoload=True, schema='jormungandr')
 _api = Table('api', meta, autoload=True, schema='jormungandr')
 _authorization = Table('authorization', meta, autoload=True,
-        schema='jormungandr')
+                       schema='jormungandr')
 
 _cache = Cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
-        db=app.config['REDIS_DB'], password=app.config['REDIS_PASSWORD'],
-        disabled=app.config['CACHE_DISABLED'])
-
-
+               db=app.config['REDIS_DB'],
+               password=app.config['REDIS_PASSWORD'],
+               disabled=app.config['CACHE_DISABLED'])
 
 
 class User(object):
+
     def __init__(self):
         self.id = None
         self.login = None
@@ -34,13 +34,13 @@ class User(object):
         try:
             conn = engine.connect()
 
-            query = select([_instance], from_obj=[join(_authorization, _api)]) \
+            query = select([_instance], from_obj=[join(_authorization, _api)])\
                 .where(_instance.c.name == instance_name) \
                 .where(_api.c.name == api_name) \
                 .where(_authorization.c.user_id == self.id)\
-                .union(select([_instance]) \
-                        .where(_instance.c.name == instance_name) \
-                        .where(_instance.c.is_free == True))
+                .union(select([_instance])
+                       .where(_instance.c.name == instance_name)
+                       .where(_instance.c.is_free is True))
 
             res = conn.execute(query)
             if res.rowcount > 0:
@@ -60,8 +60,6 @@ class User(object):
         return res
 
 
-
-
 def get_user(token, valid_until):
     user = _cache.get(token)
     if not user:
@@ -69,15 +67,17 @@ def get_user(token, valid_until):
         _cache.set(token, user, app.config['AUTH_CACHE_TTL'])
     return user
 
+
 def get_user_with_db(token, valid_until):
     conn = None
 
     try:
         conn = engine.connect()
         query = _user.join(_key) \
-                .select(use_labels=True) \
-                .where(_key.c.token == token)\
-                .where((_key.c.valid_until > valid_until) | (_key.c.valid_until == None))
+            .select(use_labels=True) \
+            .where(_key.c.token == token)\
+            .where((_key.c.valid_until > valid_until)
+                   | (_key.c.valid_until is None))
 
         res = conn.execute(query)
         if res.rowcount > 0:
