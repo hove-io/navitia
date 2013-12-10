@@ -155,6 +155,6 @@ def v1_routing(api):
     api.add_resource(Schedules.StopSchedules,
                      region + '<uri:uri>/stop_schedules',
                      coord + '<uri:uri>/stop_schedules',
-                     '/v1/stop_schedules',
+                     '/v1/stop_schedules', tion
                      endpoint='v1.stop_schedules',
                      )
