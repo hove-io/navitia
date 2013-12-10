@@ -1,24 +1,27 @@
-from instance_manager import InstanceManager
+from .instance_manager import InstanceManager
 
 collections_to_resource_type = {
-        "stop_points": "stop_point", "routes":"route",
-         "networks":"network", "commercial_modes":"commercial_mode",
-         "physical_modes":"physical_mode", "companies":"company",
-         "stop_areas":"stop_area", "lines":"line",
-         "addresses":"address", "coords":"coord"}
+    "stop_points": "stop_point", "routes": "route",
+    "networks": "network", "commercial_modes": "commercial_mode",
+    "physical_modes": "physical_mode", "companies": "company",
+    "stop_areas": "stop_area", "lines": "line",
+    "addresses": "address", "coords": "coord"}
 
-resource_type_to_collection = {resource_type:collection for collection,
+resource_type_to_collection = {resource_type: collection for collection,
                                resource_type in
                                collections_to_resource_type.iteritems()}
 
-types_not_ptrefable =  ["addresses", "administrative_regions"]
+types_not_ptrefable = ["addresses", "administrative_regions"]
+
 
 class InvalidUriException(Exception):
+
     def __init__(self, message):
         Exception.__init__(self, message)
 
 
 class Uri:
+
     def __init__(self, string):
         self.uri = string
         self.params = None
@@ -32,17 +35,16 @@ class Uri:
 
     def region(self):
         if not self.region_ and self.lon and self.lat:
-            #On va chercher la region associee
+            # On va chercher la region associee
             self.region_ = InstanceManager().key_of_coord(self.lon, self.lat)
             if not self.region_:
                 error = "No region is covering these coordinates"
                 raise InvalidUriException(error)
         return self.region_
 
-
     def parse_region_coord(self):
-        #On caste la premiere partie de l'url qui est soit une region, soit une
-        #coordonnee (coord/lon;lat)
+        # On caste la premiere partie de l'url qui est soit une region,
+        # soit une coordonnee (coord/lon;lat)
         parts = self.uri.split("/")
         parts.reverse()
         self.region_or_coord_part = parts.pop()
@@ -50,14 +52,15 @@ class Uri:
             self.is_region = False
             lonlatsplitted = self.region_or_coord_part.split(";")
             if len(lonlatsplitted) != 2:
-                raise InvalidUriException(", unable to parse lon or lat",lonlat)
+                raise InvalidUriException(", unable to parse lon or lat",
+                                          lonlat)
             lon = lonlatsplitted[0]
             lat = lonlatsplitted[1]
-            try :
+            try:
                 self.lon = float(lon)
                 self.lat = float(lat)
             except ValueError:
-                error = ", unable to parse lon or lat" + lon + ":"+lat
+                error = ", unable to parse lon or lat" + lon + ":" + lat
                 raise InvalidUriException(error)
         else:
             self.is_region = True
@@ -74,7 +77,7 @@ class Uri:
                     if self.valid_resource_type(par):
                         resource_type = par
                     else:
-                        error = "Invalid resource type : "+par
+                        error = "Invalid resource type : " + par
                         raise InvalidUriException(error)
                 else:
                     uid = par
@@ -83,18 +86,20 @@ class Uri:
         if resource_type:
             self.objects.append((resource_type, uid))
 
-
     def valid_resource_type(self, resource_type):
         resource_types = ["connections", "stop_points", "networks",
-        "commercial_modes", "physical_modes", "companies", "stop_areas",
-        "routes", "lines", "addresses", "administrative_regions", "coords"]
+                          "commercial_modes", "physical_modes", "companies",
+                          "stop_areas", "routes", "lines", "addresses",
+                          "administrative_regions", "coords"]
 
         return resource_type in resource_types
 
 
 import unittest
 
+
 class Tests(unittest.TestCase):
+
     def testOnlyRegionWithoutBeginningSlash(self):
         string = "paris"
         uri = Uri(string)
