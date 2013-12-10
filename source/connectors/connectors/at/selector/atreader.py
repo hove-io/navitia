@@ -198,10 +198,10 @@ class AtRealtimeReader(object):
                 current_uri = self.get_uri(
                     row[self.label_object_external_code],
                     row[self.label_object_type])
-                if current_uri == None:
+                if current_uri is None:
                     logging.getLogger('connector').warn(
-                        "l objet [%s] est rejette : "
-                    "pas de correspondance extcode et uri",
+                        "Object [%s] rejected : "
+                    "No extcode and uri correspondance",
                         row[self.label_object_external_code])
                 else:
                     if last_impact_id != row[self.label_impact_id]:
