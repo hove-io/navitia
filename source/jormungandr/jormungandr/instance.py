@@ -3,12 +3,13 @@ from contextlib import contextmanager
 import Queue
 from threading import Lock
 import zmq
-import response_pb2
+from . import response_pb2
 import logging
-from exceptions import DeadSocketException
+from .exceptions import DeadSocketException
 
 
 class Instance(object):
+
     def __init__(self, context, name):
         self.geom = None
         self._sockets = Queue.Queue()
@@ -18,7 +19,6 @@ class Instance(object):
         self.lock = Lock()
         self.context = context
         self.name = name
-
 
     @contextmanager
     def socket(self, context):
@@ -37,7 +37,6 @@ class Instance(object):
             if not socket.closed:
                 self._sockets.put(socket)
 
-
     def send_and_receive(self, request, timeout=10000):
         with self.socket(self.context) as socket:
             socket.send(request.SerializeToString())
@@ -46,11 +45,9 @@ class Instance(object):
                 resp = response_pb2.Response()
                 resp.ParseFromString(pb)
                 return resp
-            else :
+            else:
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
                 logging.error(u"La requête : " + unicode(request)
-                        + u" a echoue " + self.socket_path)
+                              + u" a echoue " + self.socket_path)
                 raise DeadSocketException(self.name, self.socket_path)
-
-
