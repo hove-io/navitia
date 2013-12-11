@@ -2,6 +2,23 @@
 
 namespace ed { namespace connectors {
 
+void AgencyFusioHandler::init(Data& data) {
+    AgencyGtfsHandler::init(data);
+    ext_code_c = csv.get_pos_col("external_code");
+}
+
+ed::types::Network* AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+    auto network = AgencyGtfsHandler::handle_line(data, row, is_first_line);
+
+    if (! network)
+        return nullptr;
+
+    if (has_col(ext_code_c, row)) {
+        network->external_code = row[ext_code_c];
+    }
+    return network;
+}
+
 void StopsFusioHandler::init(Data& data) {
     StopsGtfsHandler::init(data);
     sheltered_c = csv.get_pos_col("sheltered"),
@@ -12,7 +29,8 @@ void StopsFusioHandler::init(Data& data) {
             visual_announcement_c = csv.get_pos_col("visual_announcement"),
             audible_announcement_c = csv.get_pos_col("audible_announcement"),
             appropriate_escort_c = csv.get_pos_col("appropriate_escort"),
-            appropriate_signage_c = csv.get_pos_col("appropriate_signage");
+            appropriate_signage_c = csv.get_pos_col("appropriate_signage"),
+            ext_code_c = csv.get_pos_col("external_code");
 }
 
 //in fusio we want to delete all stop points without stop area
@@ -38,6 +56,12 @@ void StopsFusioHandler::handle_stop_point_without_area(Data& data) {
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     auto return_wrapper = StopsGtfsHandler::handle_line(data, row, is_first_line);
 
+    if (has_col(ext_code_c, row)) {
+        if ( return_wrapper.second != nullptr )
+            return_wrapper.second->external_code = row[ext_code_c];
+        else if ( return_wrapper.first != nullptr )
+                return_wrapper.first->external_code = row[ext_code_c];
+    }
     //the additional data are only for stop area
     if ( return_wrapper.second == nullptr )
         return return_wrapper;
@@ -66,7 +90,8 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
 
 void RouteFusioHandler::init(Data& data) {
     RouteGtfsHandler::init(data);
-    commercial_mode_c = csv.get_pos_col("commercial_mode_id");
+    commercial_mode_c = csv.get_pos_col("commercial_mode_id"),
+            ext_code_c = csv.get_pos_col("external_code");
 }
 
 ed::types::Line* RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -75,6 +100,9 @@ ed::types::Line* RouteFusioHandler::handle_line(Data& data, const csv_row& row, 
     if (! ed_line) {
         return nullptr;
     }
+
+    if (has_col(ext_code_c, row))
+        ed_line->external_code = row[ext_code_c];
 
     //if we have a commercial_mode column we update the value
     if(has_col(commercial_mode_c, row)) {
@@ -183,7 +211,8 @@ void TripsFusioHandler::init(Data& d) {
     odt_type_c = csv.get_pos_col("odt_type"),
     company_id_c = csv.get_pos_col("company_id"),
     condition_c = csv.get_pos_col("trip_condition"),
-    physical_mode_c = csv.get_pos_col("physical_mode_id");
+    physical_mode_c = csv.get_pos_col("physical_mode_id"),
+    ext_code_c = csv.get_pos_col("external_code");
 }
 
 void TripsFusioHandler::clean_and_delete(Data& data, ed::types::VehicleJourney* vj) {
@@ -199,6 +228,9 @@ ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_
     if (! vj) {
         return nullptr;
     }
+
+    if (has_col(ext_code_c, row))
+        vj->external_code = row[ext_code_c];
 
     //if a physical_mode is given we override the value
     if (has_col(physical_mode_c, row)) {

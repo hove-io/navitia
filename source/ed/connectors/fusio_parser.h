@@ -7,6 +7,13 @@
   */
 namespace ed { namespace connectors {
 
+struct AgencyFusioHandler : public AgencyGtfsHandler {
+    AgencyFusioHandler(GtfsData& gdata, CsvReader& reader) : AgencyGtfsHandler(gdata, reader) {}
+    int ext_code_c;
+    void init(Data& data);
+    ed::types::Network* handle_line(Data& data, const csv_row& line, bool is_first_line);
+};
+
 struct StopsFusioHandler : public StopsGtfsHandler {
     StopsFusioHandler(GtfsData& gdata, CsvReader& reader) : StopsGtfsHandler(gdata, reader) {}
     int sheltered_c,
@@ -17,7 +24,8 @@ struct StopsFusioHandler : public StopsGtfsHandler {
     visual_announcement_c,
     audible_announcement_c,
     appropriate_escort_c,
-    appropriate_signage_c;
+    appropriate_signage_c,
+    ext_code_c;
 
     void init(Data& data);
     stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);
@@ -26,7 +34,8 @@ struct StopsFusioHandler : public StopsGtfsHandler {
 
 struct RouteFusioHandler : public RouteGtfsHandler {
     RouteFusioHandler(GtfsData& gdata, CsvReader& reader) : RouteGtfsHandler(gdata, reader) {}
-    int commercial_mode_c;
+    int commercial_mode_c,
+    ext_code_c;
     void init(Data&);
     ed::types::Line* handle_line(Data& data, const csv_row& line, bool is_first_line);
 };
@@ -57,7 +66,8 @@ struct TripsFusioHandler : public TripsGtfsHandler {
     odt_type_c,
     company_id_c,
     condition_c,
-    physical_mode_c;
+    physical_mode_c,
+    ext_code_c;
     void init(Data&);
     void clean_and_delete(Data&, ed::types::VehicleJourney*);
     ed::types::VehicleJourney* handle_line(Data& data, const csv_row& line, bool is_first_line);

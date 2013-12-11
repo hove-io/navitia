@@ -38,7 +38,7 @@ void AgencyGtfsHandler::init(Data&) {
     name_c = csv.get_pos_col("agency_name");
 }
 
-void AgencyGtfsHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     if(! is_first_line && ! has_col(id_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         + " file has more than one agency and no agency_id column");
@@ -51,10 +51,13 @@ void AgencyGtfsHandler::handle_line(Data& data, const csv_row& row, bool is_firs
     } else {
         network->uri = "default_agency";
     }
+    network->external_code = network->uri;
+
     network->name = row[name_c];
     data.networks.push_back(network);
 
     gtfs_data.agency_map[network->uri] = network;
+    return network;
 }
 
 void DefaultContributorHandler::init(Data& data) {
@@ -70,10 +73,14 @@ void StopsGtfsHandler::init(Data& data) {
     // we allocate with values sized for the Île-de-France
     data.stop_points.reserve(56000);
     data.stop_areas.reserve(13000);
-    id_c = csv.get_pos_col("stop_id"), code_c = csv.get_pos_col("stop_code"),
-            lat_c = csv.get_pos_col("stop_lat"), lon_c = csv.get_pos_col("stop_lon"),
-            type_c = csv.get_pos_col("location_type"), parent_c = csv.get_pos_col("parent_station"),
-            name_c = csv.get_pos_col("stop_name"), desc_c = csv.get_pos_col("stop_desc"),
+    id_c = csv.get_pos_col("stop_id"),
+            code_c = csv.get_pos_col("stop_code"),
+            lat_c = csv.get_pos_col("stop_lat"),
+            lon_c = csv.get_pos_col("stop_lon"),
+            type_c = csv.get_pos_col("location_type"),
+            parent_c = csv.get_pos_col("parent_station"),
+            name_c = csv.get_pos_col("stop_name"),
+            desc_c = csv.get_pos_col("stop_desc"),
             wheelchair_c = csv.get_pos_col("wheelchair_boarding");
     if (code_c == -1) {
         code_c = id_c;
@@ -185,6 +192,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
 
     stop->name = row[name_c];
     stop->uri = row[id_c];
+    stop->external_code = stop->uri;
     if (has_col(desc_c, row))
         stop->comment = row[desc_c];
     return true;
@@ -260,6 +268,7 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
     nm::Line* line = new nm::Line();
     line->uri = row[id_c];
+    line->external_code = line->uri;
     line->name = row[long_name_c];
     line->code = row[short_name_c];
     if ( has_col(desc_c, row) )
@@ -499,6 +508,7 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
     }
     nm::VehicleJourney* vj = new nm::VehicleJourney();
     vj->uri = row[trip_c];
+    vj->external_code = vj->uri;
     if(has_col(headsign_c, row))
         vj->name = row[headsign_c];
     else
