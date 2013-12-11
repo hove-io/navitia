@@ -10,6 +10,13 @@ BEGIN
         RAISE NOTICE 'schema "jormungandr" already exists, skipping';
     END CASE;
 
+    CASE WHEN (select count(*) = 0 from pg_namespace where nspname = 'tyr')
+    THEN
+        CREATE SCHEMA tyr;
+    ELSE
+        RAISE NOTICE 'schema "tyr" already exists, skipping';
+    END CASE;
+
 END$$;
 
 
@@ -49,5 +56,13 @@ CREATE TABLE IF NOT EXISTS jormungandr.authorization(
     api_id int REFERENCES jormungandr.api,
 --    max_allowed_request int,
     PRIMARY KEY (user_id, instance_id, api_id)
+);
+
+CREATE TABLE IF NOT EXISTS tyr.job(
+    id BIGSERIAL PRIMARY KEY,
+    task_uuid text,
+    filename text,
+    type text,
+    instance_id INT NOT NULL REFERENCES jormungandr.instance
 );
 
