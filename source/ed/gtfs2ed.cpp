@@ -12,6 +12,7 @@
 #include <boost/filesystem.hpp>
 #include "utils/exception.h"
 #include "ed_persistor.h"
+#include "connectors/extcode2uri.h"
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -19,7 +20,7 @@ namespace pt = boost::posix_time;
 int main(int argc, char * argv[])
 {
     std::string input, date, connection_string, aliases_file,
-                synonyms_file;
+                synonyms_file, redis_string;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -29,7 +30,8 @@ int main(int argc, char * argv[])
         ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
+        ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379 timeout=2");
 
 
     po::variables_map vm;
@@ -94,6 +96,19 @@ int main(int argc, char * argv[])
 
     if(vm.count("aliases")){
         extConnecteur.fill_aliases(aliases_file, data);
+    }
+
+    // Ajout dans la table des correspondances
+    if(vm.count("redis-string")){
+        std::cout << "Alimentation de redis" <<std::endl;
+        try{
+            ed::connectors::ExtCode2Uri ext_code_2_uri(redis_string);
+            ext_code_2_uri.to_redis(data);
+        }catch(const navitia::exception& ne){
+            std::cout << "Impossible d'alimenter redis" << std::endl;
+            std::cout << ne.what() << std::endl;
+            return 1;
+        }
     }
 
     std::cout << "line: " << data.lines.size() << std::endl;
