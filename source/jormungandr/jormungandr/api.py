@@ -3,18 +3,17 @@
 import sys
 import signal
 import os
-from conf import base_url
-from .instance_manager import InstanceManager
+from jormungandr.instance_manager import InstanceManager
 from flask import url_for, make_response
 from flask.ext.restful.representations import json
-from .interfaces.v0_routing import v0_routing
-from .interfaces.v1_routing import v1_routing
-from .interfaces.documentation import v0_documentation, v1_documentation
+from jormungandr.interfaces.v0_routing import v0_routing
+from jormungandr.interfaces.v1_routing import v1_routing
+from jormungandr.interfaces.documentation import v0_documentation, v1_documentation
 import os
 from werkzeug.serving import run_simple
 from flask import request
 import dict2xml
-from .app import app, api
+from jormungandr.app import app, api
 
 
 #@api.representation("application/xml")
