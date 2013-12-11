@@ -16,13 +16,13 @@ class RedisHelper(object):
         self._prefix = prefix
 
     def set(self, key, value):
-        if self._redis != None:
+        if self._redis is not None:
             return self._redis.set(self._prefix + self._separator + key, value)
         else:
             return False
 
     def get(self, key):
-        if self._redis != None:
+        if self._redis  is not None:
             return self._redis.get(self._prefix + self._separator + key)
         else:
             return None

@@ -2,6 +2,7 @@
 from connectors.redis_helper import RedisHelper
 import os
 
+
 def redis_helper_test():
     try:
         _host = os.environ["REDISHOST"]
@@ -26,11 +27,11 @@ def redis_helper_test():
     redis_test = RedisHelper(_host, _port, _db, _password)
 
     assert(redis_test)
-    redis_test.set("R1","REDISTEST1")
-    redis_test.set("R2","REDISTEST2")
-    redis_test.set("R3","REDISTEST3")
+    redis_test.set("R1", "REDISTEST1")
+    redis_test.set("R2", "REDISTEST2")
+    redis_test.set("R3", "REDISTEST3")
     print redis_test.get("R1")
     assert(redis_test.get("R1") == "REDISTEST1")
     assert(redis_test.get("R2") == "REDISTEST2")
     assert(redis_test.get("R3") == "REDISTEST3")
-    assert(redis_test.get("R4") == None)
+    assert(redis_test.get("R4") is None)

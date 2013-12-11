@@ -22,7 +22,8 @@ class ConnectorAT(object):
         """
         self.config.load(filename)
         self._init_redishelper()
-        self.at_realtime_reader = AtRealtimeReader(self.config, self.redis_helper)
+        self.at_realtime_reader = AtRealtimeReader(self.config,
+                                                   self.redis_helper)
         self._init_rabbitmq()
 
     def _init_logger(self, filename='', level='debug'):
@@ -43,9 +44,9 @@ class ConnectorAT(object):
 
     def _init_redishelper(self):
         self.redis_helper = RedisHelper(self.config.redishelper_host,
-                                                     self.config.redishelper_port,
-                                                     self.config.redishelper_db,
-                                                     self.config.redishelper_password)
+                                        self.config.redishelper_port,
+                                        self.config.redishelper_db,
+                                        self.config.redishelper_password)
 
     def _init_rabbitmq(self):
         """
