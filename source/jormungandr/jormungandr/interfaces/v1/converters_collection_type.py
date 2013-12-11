@@ -8,6 +8,6 @@ collections_to_resource_type = {
     "pois": "poi", "poi_types": "poi_type",
     "connections": "connection"}
 
-resource_type_to_collection = {resource_type: collection for collection,
-                               resource_type in
-                               collections_to_resource_type.iteritems()}
+resource_type_to_collection = dict((resource_type, collection)
+                                   for (collection, resource_type)
+                                   in collections_to_resource_type.iteritems())
