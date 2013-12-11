@@ -1,4 +1,4 @@
-#encoding: utf-8
+# encoding: utf-8
 #!/usr/bin/env python
 import logging
 import datetime
@@ -83,10 +83,12 @@ def get_navitia_type(object_type):
 
 
 class AtRealtimeReader(object):
+
     """
     Classe responsable de la lecture en base de donnee des evenements
     temps reel.
     """
+
     def __init__(self, config, redis_helper):
         self.message_list = []
         self.perturbation_list = []
@@ -136,10 +138,10 @@ class AtRealtimeReader(object):
         self.last_exec_file_name = './last_exec_time.txt'
         self.datetime_format = '%Y-%m-%d %H:%M:%S'
         self._collections = {"StopPoint": "stop_point",
-                            "VehicleJourney": "vehicle_journey",
-                            "Line": "line",
-                            "Network": "network",
-                            "StopArea": "stop_area"}
+                             "VehicleJourney": "vehicle_journey",
+                             "Line": "line",
+                             "Network": "network",
+                             "StopArea": "stop_area"}
 
     def get_last_execution_time(self):
         if os.path.exists(self.last_exec_file_name):
@@ -201,7 +203,7 @@ class AtRealtimeReader(object):
                 if current_uri is None:
                     logging.getLogger('connector').warn(
                         "Object [%s] rejected : "
-                    "No extcode and uri correspondance",
+                        "No extcode and uri correspondance",
                         row[self.label_object_external_code])
                 else:
                     if last_impact_id != row[self.label_impact_id]:
@@ -210,7 +212,7 @@ class AtRealtimeReader(object):
                         self.message_list.append(message)
 
                         message.uri = str(row[self.label_impact_id]) + '-' + \
-                                      row[self.label_message_lang]
+                            row[self.label_message_lang]
 
                         message.start_publication_date = \
                             get_pos_time(
@@ -253,8 +255,8 @@ class AtRealtimeReader(object):
 
                     print str(
                         row[self.label_active_days]) + ' - ' +\
-                          message.active_days
-            except google.protobuf.message.DecodeError, e:
+                        message.active_days
+            except google.protobuf.message.DecodeError as e:
                 logging.getLogger('connector').warn(
                     "message is not a valid "
                     "protobuf task: %s", str(e))
@@ -289,32 +291,32 @@ class AtRealtimeReader(object):
                        .label(self.label_message),
                        self.msgmedia_table.c.MsgMedia_Lang
                        .label(self.label_message_lang)],
-                      #clause where
+                      # clause where
                       and_(self.msgmedia_table.c.MsgMedia_Media == bindparam(
                           'media_media'),
-                           self.event_table.c.Event_PublicationEndDate
-                           >= bindparam('event_publicationenddate'),
-                           or_(not self.event_table.c.Event_CloseDate,
-                               self.event_table.c.Event_CloseDate > bindparam(
-                                   'event_closedate'),
-                               self.impact_table.c
-                               .Impact_SelfModificationDate is None,
-                               self.impact_table.c
-                               .Impact_SelfModificationDate > bindparam(
-                                   'impact_modification_date'),
-                               self.impact_table.c
-                               .Impact_ChildrenModificationDate is None,
-                               self.impact_table.c
-                               .Impact_ChildrenModificationDate > bindparam(
-                                   'impact_modification_date'),
-                           )
+                          self.event_table.c.Event_PublicationEndDate
+                          >= bindparam('event_publicationenddate'),
+                          or_(not self.event_table.c.Event_CloseDate,
+                              self.event_table.c.Event_CloseDate > bindparam(
+                                  'event_closedate'),
+                              self.impact_table.c
+                              .Impact_SelfModificationDate is None,
+                              self.impact_table.c
+                              .Impact_SelfModificationDate > bindparam(
+                                  'impact_modification_date'),
+                              self.impact_table.c
+                              .Impact_ChildrenModificationDate is None,
+                              self.impact_table.c
+                              .Impact_ChildrenModificationDate > bindparam(
+                                  'impact_modification_date'),
+                              )
                       ),
-                      #jointure
+                      # jointure
                       from_obj=[self.event_table.join(self.impact_table).join(
                           self.tcobjectref_table).join(
                           self.impactbroadcast_table).join(self
-                      .msgmedia_table)]
-        ).order_by(self.impact_table.c.Impact_ID)
+                                                           .msgmedia_table)]
+                      ).order_by(self.impact_table.c.Impact_ID)
 
     # impact_SelfModificationDate, impact_ChildrenModificationDate
 
@@ -323,25 +325,25 @@ class AtRealtimeReader(object):
         conn = None
         try:
             conn = self.__engine.connect()
-        except exc.SQLAlchemyError, e:
+        except exc.SQLAlchemyError as e:
             logger.exception('error durring connection')
         if conn is not None:
             result = None
             try:
                 s = self.set_request()
                 execution_time = datetime.datetime.now()
-                #read last execution time
+                # read last execution time
                 last_execution_time = self.get_last_execution_time()
                 result = \
                     conn.execute(s,
                                  media_media='Internet',
                                  event_publicationenddate=last_execution_time,
-                                  #datetime.datetime(2013, 9, 01),
+                                 #datetime.datetime(2013, 9, 01),
                                  event_closedate=datetime.datetime.now(),
                                  impact_modification_date=last_execution_time)
-                #save execution time
+                # save execution time
                 self.set_last_execution_time(execution_time)
-            except exc.SQLAlchemyError, e:
+            except exc.SQLAlchemyError as e:
                 logger.exception('error during request')
             if result is not None:
                 self.set_message(result)

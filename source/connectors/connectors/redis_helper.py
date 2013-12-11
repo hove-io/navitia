@@ -1,8 +1,9 @@
-#encoding: utf-8
+# encoding: utf-8
 from redis import Redis
 
 
 class RedisHelper(object):
+
     def __init__(self, host="localhost", port=6379, db=0,
                  password=None, prefix="REDIS"):
         try:
@@ -22,7 +23,7 @@ class RedisHelper(object):
             return False
 
     def get(self, key):
-        if self._redis  is not None:
+        if self._redis is not None:
             return self._redis.get(self._prefix + self._separator + key)
         else:
             return None

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#encoding: utf-8
+# encoding: utf-8
 """
     service charger de persister dans ED les messages temps réel
 """
@@ -14,7 +14,8 @@ def main():
         main: ce charge d'interpreter les parametres de la ligne de commande
     """
     parser = argparse.ArgumentParser(description="Connector se charge "
-            "de publier les flux temps réels associés une instance")
+                                     "de publier les flux temps réels "
+                                     "associés une instance")
     parser.add_argument('config_file', type=str)
     config_file = ""
     try:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#encoding: utf-8
+# encoding: utf-8
 """
     service charger de créer les messages temps réel à partir de la base at
 """
@@ -14,8 +14,8 @@ def main():
         main: ce charge d'interpreter les parametres de la ligne de commande
     """
     parser = argparse.ArgumentParser(description="connector_at se charge "
-            "de génerer les flux temps réels associés à "
-            "une base at")
+                                     "de génerer les flux temps réels "
+                                     "associés à une base at")
     parser.add_argument('config_file', type=str)
     config_file = ""
     try:
