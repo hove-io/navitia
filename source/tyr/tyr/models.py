@@ -1,4 +1,4 @@
-#encoding: utf-8
+# encoding: utf-8
 from tyr.app import db
 import uuid
 
@@ -11,7 +11,7 @@ class User(db.Model):
     keys = db.relationship('Key', backref='user', lazy='dynamic')
 
     authorizations = db.relationship('Authorization', backref='user',
-            lazy='dynamic')
+                                     lazy='dynamic')
 
     def __init__(self, login=None, email=None, keys=None, authorizations=None):
         self.login = login
@@ -61,7 +61,7 @@ class Instance(db.Model):
     is_free = db.Column(db.Boolean)
 
     authorizations = db.relationship('Authorization', backref='instance',
-            lazy='dynamic')
+                                     lazy='dynamic')
 
     def __init__(self, name=None, is_free=False, authorizations=None):
         self.name = name
@@ -79,7 +79,7 @@ class Api(db.Model):
     name = db.Column(db.Text, unique=True)
 
     authorizations = db.relationship('Authorization', backref='api',
-            lazy='dynamic')
+                                     lazy='dynamic')
 
     def __init__(self, name=None):
         self.name = name
@@ -91,11 +91,12 @@ class Api(db.Model):
 class Authorization(db.Model):
     __table_args__ = {"schema": "jormungandr"}
     user_id = db.Column(db.Integer, db.ForeignKey('jormungandr.user.id'),
-            primary_key=True)
+                        primary_key=True)
     instance_id = db.Column(db.Integer,
-            db.ForeignKey('jormungandr.instance.id'), primary_key=True)
+                            db.ForeignKey('jormungandr.instance.id'),
+                            primary_key=True)
     api_id = db.Column(db.Integer,
-            db.ForeignKey('jormungandr.api.id'), primary_key=True)
+                       db.ForeignKey('jormungandr.api.id'), primary_key=True)
 
     def __init__(self, user_id=None, instance_id=None, api_id=None):
         self.user_id = user_id
@@ -104,4 +105,4 @@ class Authorization(db.Model):
 
     def __repr__(self):
         return '<Authorization %r-%r-%r>' \
-                % (self.user_id, self.instance_id, self.api_id)
+            % (self.user_id, self.instance_id, self.api_id)

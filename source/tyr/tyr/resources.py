@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 
 from flask import abort
 from flask.ext import restful
@@ -16,6 +16,7 @@ __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
 
 class FieldDate(fields.Raw):
+
     def format(self, value):
         if value:
             return value.isoformat()
@@ -30,24 +31,28 @@ api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
 user_fields = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw}
 user_fields_full = {'id': fields.Raw, 'login': fields.Raw,
-        'email': fields.Raw, 'keys': fields.List(fields.Nested(key_fields)),
-        'authorizations': fields.List(fields.Nested(
-            {'instance': fields.Nested(instance_fields),
-                'api': fields.Nested(api_fields)}))}
+                    'email': fields.Raw,
+                    'keys': fields.List(fields.Nested(key_fields)),
+                    'authorizations': fields.List(fields.Nested(
+                        {'instance': fields.Nested(instance_fields),
+                         'api': fields.Nested(api_fields)}))}
 
 
 class Api(restful.Resource):
+
     def get(self):
         return marshal(models.Api.query.all(), api_fields)
 
 
 class Instance(restful.Resource):
+
     @marshal_with(instance_fields)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('is_free', type=types.boolean, required=False,
-                case_sensitive=False, help='boolean for returning only free '
-                'or private instances')
+                            case_sensitive=False,
+                            help='boolean for returning only free '
+                            'or private instances')
         args = parser.parse_args()
         if args['is_free'] is not None:
             return models.Instance.query.filter_by(**args).all()
@@ -56,14 +61,15 @@ class Instance(restful.Resource):
 
 
 class User(restful.Resource):
+
     def get(self, user_id=None, login=None):
         if user_id:
             return marshal(models.User.query.get_or_404(user_id),
-                    user_fields_full)
+                           user_fields_full)
         elif login:
             return marshal(
-                    models.User.query.filter_by(login=login).first_or_404(),
-                    user_fields_full)
+                models.User.query.filter_by(login=login).first_or_404(),
+                user_fields_full)
         else:
             return marshal(models.User.query.all(), user_fields)
 
@@ -71,18 +77,18 @@ class User(restful.Resource):
         user = None
         parser = reqparse.RequestParser()
         parser.add_argument('login', type=unicode, required=True,
-                case_sensitive=False, help='login is required')
+                            case_sensitive=False, help='login is required')
         parser.add_argument('email', type=unicode, required=True,
-                case_sensitive=False, help='email is required')
+                            case_sensitive=False, help='email is required')
         args = parser.parse_args()
         try:
             user = models.User(login=args['login'], email=args['email'])
             db.session.add(user)
             db.session.commit()
             return marshal(user, user_fields_full)
-        except sqlalchemy.exc.IntegrityError, e:
+        except sqlalchemy.exc.IntegrityError as e:
             return ({'error': 'duplicate user'}, 409)
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
 
@@ -90,15 +96,15 @@ class User(restful.Resource):
         user = models.User.query.get_or_404(user_id)
         parser = reqparse.RequestParser()
         parser.add_argument('email', type=unicode, required=True,
-                case_sensitive=False, help='email is required')
+                            case_sensitive=False, help='email is required')
         args = parser.parse_args()
         try:
             user.email = args['email']
             db.session.commit()
             return marshal(user, user_fields_full)
-        except sqlalchemy.exc.IntegrityError, e:
+        except sqlalchemy.exc.IntegrityError as e:
             return ({'error': 'duplicate user'}, 409)  # Conflict
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
 
@@ -107,18 +113,19 @@ class User(restful.Resource):
         try:
             db.session.delete(user)
             db.session.commit()
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
         return ({}, 204)
 
 
 class Key(restful.Resource):
+
     @marshal_with(key_fields)
     def get(self, user_id, key_id=None):
         try:
             return models.User.query.get_or_404(user_id).keys.all()
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
 
@@ -126,13 +133,14 @@ class Key(restful.Resource):
     def post(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
-                case_sensitive=False, help='date de fin de validité de la clé')
+                            case_sensitive=False,
+                            help='date de fin de validité de la clé')
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
             user.add_key(valid_until=args['valid_until'])
             db.session.commit()
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
         return user
@@ -146,7 +154,7 @@ class Key(restful.Resource):
                 abort(404)
             db.session.delete(key)
             db.session.commit()
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
         return user
@@ -155,7 +163,8 @@ class Key(restful.Resource):
     def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=True,
-                case_sensitive=False, help='date de fin de validité de la clé')
+                            case_sensitive=False,
+                            help='date de fin de validité de la clé')
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
@@ -164,30 +173,32 @@ class Key(restful.Resource):
                 abort(404)
             key.valid_until = args['valid_until']
             db.session.commit()
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
         return user
 
 
 class Authorization(restful.Resource):
+
     def delete(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('api_id', type=int, required=True,
-                case_sensitive=False, help='api_id is required')
+                            case_sensitive=False, help='api_id is required')
         parser.add_argument('instance_id', type=int, required=True,
-                case_sensitive=False, help='instance_id is required')
+                            case_sensitive=False,
+                            help='instance_id is required')
         args = parser.parse_args()
 
         try:
             user = models.User.query.get_or_404(user_id)
             authorization = user.authorizations.filter_by(
-                    api_id=args['api_id'], instance_id=args['instance_id'])
+                api_id=args['api_id'], instance_id=args['instance_id'])
             if not authorization:
                 abort(404)
             db.session.delete(authorization)
             db.session.commit()
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
         return user
@@ -195,9 +206,10 @@ class Authorization(restful.Resource):
     def post(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('api_id', type=int, required=True,
-                case_sensitive=False, help='api_id is required')
+                            case_sensitive=False, help='api_id is required')
         parser.add_argument('instance_id', type=int, required=True,
-                case_sensitive=False, help='instance_id is required')
+                            case_sensitive=False,
+                            help='instance_id is required')
         args = parser.parse_args()
 
         user = models.User.query.get_or_404(user_id)
@@ -212,9 +224,9 @@ class Authorization(restful.Resource):
             user.authorizations.append(authorization)
             db.session.add(authorization)
             db.session.commit()
-        except sqlalchemy.exc.IntegrityError, e:
+        except sqlalchemy.exc.IntegrityError as e:
             return ({'error': 'duplicate entry'}, 409)
-        except Exception, e:
+        except Exception as e:
             logging.exception("fail")
             raise
         return marshal(user, user_fields_full)
