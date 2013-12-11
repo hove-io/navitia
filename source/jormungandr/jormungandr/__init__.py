@@ -3,3 +3,4 @@
 
 from jormungandr.instance_manager import InstanceManager
 from jormungandr.app import app
+import jormungandr.api
