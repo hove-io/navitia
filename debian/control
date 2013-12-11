@@ -26,11 +26,11 @@ Description: Navitia-Ed
 Package: navitia-jormungandr
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-redis
+Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-redis, python2.7
 Section: devel
 Priority: optional
 Description: Navitia-Jormungandr
-
+X-Python-Version: >=2.7
 
 Package: navitia-sindri
 Architecture: all
