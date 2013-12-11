@@ -1,9 +1,15 @@
 #pragma once
 #include "gtfs_parser.h"
 
-/** Read CanalTP custom transportation files
+/**
+  * Read CanalTP custom transportation files
   *
   * The format is based on GTFS but additional data have been added
+  *
+  * In most case the FusioHandler will inherit from the GTFS handler and add additional data to the created object
+  *
+  * Note: In case of errors don't forget to clean the created object since
+  * it will have been added in the data structure during the GTFSHandler::handle_line
   */
 namespace ed { namespace connectors {
 
@@ -124,8 +130,10 @@ struct CommercialModeFusioHandler : public GenericHandler {
     }
 };
 
-///custom parser
-///simply define the list of elemental parsers to use
+/**
+ * custom parser
+ * simply define the list of elemental parsers to use
+ */
 struct FusioParser : public GenericGtfsParser {
     void parse_files(Data&);
     FusioParser(const std::string & path) : GenericGtfsParser(path) {}

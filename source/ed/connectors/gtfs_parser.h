@@ -9,7 +9,8 @@
 #include <utils/logger.h>
 #include <utils/functions.h>
 
-/** Lit les fichiers au format General Transit Feed Specifications
+/**
+  * Read General Transit Feed Specifications Files
   *
   * http://code.google.com/intl/fr/transit/spec/transit_feed_specification.html
   */
@@ -38,6 +39,14 @@ inline bool has_col(int col_idx, const std::vector<std::string>& row) {
     return col_idx >= 0 && static_cast<size_t>(col_idx) < row.size();
 }
 
+/**
+ * Parser used to parse one kind of file
+ * The actual parsing is handed to the Handler who need to have 4 methods
+ * - required_headers: for the required file headers
+ * - init(Data&) called before reading the file to init what needs to be inited
+ * - finish(Data&) called after reading the file to clean and log if needed
+ * - handle_line(Data& data, const csv_row& line, bool is_first_line): called at each line
+ */
 template <typename Handler>
 class FileParser {
 protected:
@@ -53,6 +62,13 @@ public:
     void fill(Data& data);
 };
 
+/**
+ * Base handler
+ * for handiness handler can inherit from it (but it's not mandatory)
+ * No virtual call will be done, so no need for virtual method
+ *
+ * provide default method for init, finish and required_headers
+ */
 struct GenericHandler {
     GenericHandler(GtfsData& gdata, CsvReader& reader) : gtfs_data(gdata), csv(reader) {}
 
@@ -213,6 +229,10 @@ struct FrequenciesGtfsHandler : public GenericHandler {
     }
 };
 
+/**
+ * Generic class for GTFS file read
+ * the list of elemental parser to be called has to be defined
+ */
 class GenericGtfsParser {
 protected:
     std::string path;///< Chemin vers les fichiers
@@ -253,6 +273,10 @@ inline void GenericGtfsParser::parse(Data& data) {
 }
 
 
+/**
+ * GTFS parser
+ * simply define the list of elemental parsers to use
+ */
 struct GtfsParser : public GenericGtfsParser {
     virtual void parse_files(Data&);
     GtfsParser(const std::string & path) : GenericGtfsParser(path) {}
@@ -285,7 +309,7 @@ template <typename Handler>
 inline void FileParser<Handler>::fill(Data& data) {
     auto logger = log4cplus::Logger::getInstance("log");
     if (! csv.is_open() && ! csv.filename.empty()) {
-        LOG4CPLUS_FATAL(logger, "Impossible to read " + csv.filename);
+        LOG4CPLUS_ERROR(logger, "Impossible to read " + csv.filename);
         if ( fail_if_no_file ) {
             throw FileNotFoundException(csv.filename);
         }

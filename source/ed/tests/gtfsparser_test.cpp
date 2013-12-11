@@ -8,6 +8,11 @@
 #include "ed/build_helper.h"
 #include "utils/csv.h"
 
+struct logger_initialized {
+    logger_initialized()   { init_logger(); }
+};
+BOOST_GLOBAL_FIXTURE( logger_initialized )
+
 const std::string gtfs_path = "/ed/gtfs";
 
 BOOST_AUTO_TEST_CASE(required_files) {
@@ -178,7 +183,7 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(parse_gtfs){
+BOOST_AUTO_TEST_CASE(parse_raw_gtfs){
     ed::Data data;
     ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
     parser.fill(data);
@@ -191,178 +196,95 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
         std::cout  << vj->uri << "  " << vj->journey_pattern->uri << "  "<<
             vj->journey_pattern->route->uri << "  "<< vj->journey_pattern->route->line->uri <<
             std::endl;
+}
+
+BOOST_AUTO_TEST_CASE(parse_gtfs){
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example");
+    parser.fill(data);
+
     //Agency
-    /*
-    BOOST_REQUIRE_EQUAL(data.networks.size(), 2);
-    BOOST_CHECK_EQUAL(data.networks[0]->name, "RATP");
-    BOOST_CHECK_EQUAL(data.networks[0]->uri, "ratp");
-    BOOST_CHECK_EQUAL(data.networks[1]->name, "ACME");
-    BOOST_CHECK_EQUAL(data.networks[1]->uri, "");
+    BOOST_REQUIRE_EQUAL(data.networks.size(), 1);
+    BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
+    BOOST_CHECK_EQUAL(data.networks[0]->uri, "DTA");
 
+    //=> no stop area in the file, so one area has been created for each stop point
     //Stop areas
-    BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 5);
-    BOOST_CHECK_EQUAL(data.stop_areas[0]->name, "Doublon");
-    BOOST_CHECK_EQUAL(data.stop_areas[0]->uri, "doublon_sa");
-    BOOST_CHECK_EQUAL(data.stop_areas[0]->coord.lon(), 0);
-    BOOST_CHECK_EQUAL(data.stop_areas[0]->coord.lat(), 1);
-    BOOST_CHECK_EQUAL(data.stop_areas[0]->wheelchair_boarding, false);
+    BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 9);
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->uri, "FUR_CREEK_RES");
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->name, "Furnace Creek Resort (Demo)");
+    BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lat(), 36.425288, 0.1);
+    BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lon(), -117.133162, 0.1);
 
-
-    BOOST_CHECK_EQUAL(data.stop_areas[1]->name, "Stop Area avant");
-    BOOST_CHECK_EQUAL(data.stop_areas[1]->uri, "sa_avant");
-    BOOST_CHECK_EQUAL(data.stop_areas[1]->coord.lon(), 2.355022);
-    BOOST_CHECK_EQUAL(data.stop_areas[1]->coord.lat(), 48.880342);
-    BOOST_CHECK_EQUAL(data.stop_areas[1]->wheelchair_boarding, false);
-
-    BOOST_CHECK_EQUAL(data.stop_areas[2]->name, "Stop Area apres");
-    BOOST_CHECK_EQUAL(data.stop_areas[2]->uri, "sa_apres");
-    BOOST_CHECK_EQUAL(data.stop_areas[2]->coord.lon(), 2.355022);
-    BOOST_CHECK_EQUAL(data.stop_areas[2]->coord.lat(), 48.880342);
-    BOOST_CHECK_EQUAL(data.stop_areas[2]->wheelchair_boarding, false);
-
-    BOOST_CHECK_EQUAL(data.stop_areas[3]->name, "Stop area seul");
-    BOOST_CHECK_EQUAL(data.stop_areas[3]->uri, "sa_seul");
-    BOOST_CHECK_EQUAL(data.stop_areas[3]->coord.lon(), 2.355022);
-    BOOST_CHECK_EQUAL(data.stop_areas[3]->coord.lat(), 48.880342);
-    BOOST_CHECK_EQUAL(data.stop_areas[3]->wheelchair_boarding, false);
-
-    BOOST_CHECK_EQUAL(data.stop_areas[4]->name, "Stop area wheelchair");
-    BOOST_CHECK_EQUAL(data.stop_areas[4]->uri, "sa_wheelchair");
-    BOOST_CHECK_EQUAL(data.stop_areas[4]->coord.lon(), 2.355022);
-    BOOST_CHECK_EQUAL(data.stop_areas[4]->coord.lat(), 48.880342);
-    BOOST_CHECK_EQUAL(data.stop_areas[4]->wheelchair_boarding, true);
-
-
+    BOOST_CHECK_EQUAL(data.stop_areas[8]->uri, "AMV");
+    BOOST_CHECK_EQUAL(data.stop_areas[8]->name, "Amargosa Valley (Demo)");
+    BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lat(), 36.641496, 0.1);
+    BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lon(), -116.40094, 0.1);
 
     //Stop points
     BOOST_REQUIRE_EQUAL(data.stop_points.size(), 9);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->uri, "FUR_CREEK_RES");
+    BOOST_CHECK_EQUAL(data.stop_points[0]->name, "Furnace Creek Resort (Demo)");
+    BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lat(), 36.425288, 0.1);
+    BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lon(), -117.133162, 0.1);
 
-    BOOST_CHECK_EQUAL(data.stop_points[0]->name, "Doublon");
-    BOOST_CHECK_EQUAL(data.stop_points[0]->uri, "doublon_sp");
-    BOOST_CHECK_EQUAL(data.stop_points[0]->coord.lon(), 0);
-    BOOST_CHECK_EQUAL(data.stop_points[0]->coord.lat(), 1);
-    BOOST_CHECK_EQUAL(data.stop_points[0]->wheelchair_boarding, false);
-    BOOST_REQUIRE(data.stop_points[0]->stop_area== NULL);
-
-    BOOST_CHECK_EQUAL(data.stop_points[1]->name, "StopPoint apres sa 1");
-    BOOST_CHECK_EQUAL(data.stop_points[1]->uri, "sa_avant:sp1");
-    BOOST_CHECK_EQUAL(data.stop_points[1]->coord.lat(), 48.880531);
-    BOOST_CHECK_EQUAL(data.stop_points[1]->coord.lon(), 2.355381);
-    BOOST_CHECK_EQUAL(data.stop_points[1]->wheelchair_boarding, false);
-    BOOST_REQUIRE(data.stop_points[1]->stop_area!= NULL);
-    BOOST_CHECK_EQUAL(data.stop_points[1]->stop_area->uri, "sa_avant");
-
-    BOOST_CHECK_EQUAL(data.stop_points[2]->name, "StopPoint apres sa 2");
-    BOOST_CHECK_EQUAL(data.stop_points[2]->uri, "sa_avant:sp2");
-    BOOST_CHECK_EQUAL(data.stop_points[2]->coord.lon(), 2.354786);
-    BOOST_CHECK_EQUAL(data.stop_points[2]->coord.lat(), 48.880191);
-    BOOST_CHECK_EQUAL(data.stop_points[2]->wheelchair_boarding, false);
-    BOOST_REQUIRE(data.stop_points[2]->stop_area!= NULL);
-    BOOST_CHECK_EQUAL(data.stop_points[2]->stop_area->uri, "sa_avant");
-
-    BOOST_CHECK_EQUAL(data.stop_points[3]->name, "Stop Point avant sa 1");
-    BOOST_CHECK_EQUAL(data.stop_points[3]->uri, "sa_apres:sp1");
-    BOOST_CHECK_EQUAL(data.stop_points[3]->coord.lon(), 2.355381);
-    BOOST_CHECK_EQUAL(data.stop_points[3]->coord.lat(), 48.880531);
-    BOOST_CHECK_EQUAL(data.stop_points[3]->wheelchair_boarding, false);
-    BOOST_REQUIRE(data.stop_points[3]->stop_area!= NULL);
-    BOOST_CHECK_EQUAL(data.stop_points[3]->stop_area->uri, "sa_apres");
-
-    BOOST_CHECK_EQUAL(data.stop_points[4]->name, "Stop Point avant sa 2");
-    BOOST_CHECK_EQUAL(data.stop_points[4]->uri, "sa_apres:sp2");
-    BOOST_CHECK_EQUAL(data.stop_points[4]->coord.lon(), 2.354786);
-    BOOST_CHECK_EQUAL(data.stop_points[4]->coord.lat(), 48.880191);
-    BOOST_CHECK_EQUAL(data.stop_points[4]->wheelchair_boarding, false);
-    BOOST_REQUIRE(data.stop_points[4]->stop_area!= NULL);
-    BOOST_CHECK_EQUAL(data.stop_points[4]->stop_area->uri, "sa_apres");
-
-    BOOST_CHECK_EQUAL(data.stop_points[5]->name, "Stop point seul");
-    BOOST_CHECK_EQUAL(data.stop_points[5]->uri, "sp_seul");
-    BOOST_CHECK_EQUAL(data.stop_points[5]->coord.lon(), 2.355022);
-    BOOST_CHECK_EQUAL(data.stop_points[5]->coord.lat(), 48.880342);
-    BOOST_CHECK_EQUAL(data.stop_points[5]->wheelchair_boarding, false);
-    BOOST_CHECK(data.stop_points[5]->stop_area == NULL);
-
-    BOOST_CHECK_EQUAL(data.stop_points[6]->name, "Sp wheelchair");
-    BOOST_CHECK_EQUAL(data.stop_points[6]->uri, "sp_wheelchair");
-    BOOST_CHECK_EQUAL(data.stop_points[6]->coord.lat(), 4);
-    BOOST_CHECK_EQUAL(data.stop_points[6]->coord.lon(), 2);
-    BOOST_CHECK_EQUAL(data.stop_points[6]->wheelchair_boarding, true);
-
-    BOOST_CHECK_EQUAL(data.stop_points[7]->name, "Stop point inherits");
-    BOOST_CHECK_EQUAL(data.stop_points[7]->uri, "sa_wheelchair:sp1");
-    BOOST_CHECK_EQUAL(data.stop_points[7]->coord.lon(), 2.355022);
-    BOOST_CHECK_EQUAL(data.stop_points[7]->coord.lat(), 48.880342);
-    BOOST_CHECK_EQUAL(data.stop_points[7]->wheelchair_boarding, true);
-    BOOST_REQUIRE(data.stop_points[7]->stop_area!= NULL);
-    BOOST_CHECK_EQUAL(data.stop_points[7]->stop_area->uri, "sa_wheelchair");
-
-    BOOST_CHECK_EQUAL(data.stop_points[8]->name, "Stop point change");
-    BOOST_CHECK_EQUAL(data.stop_points[8]->uri, "sa_wheelchair:sp2");
-    BOOST_CHECK_EQUAL(data.stop_points[8]->coord.lon(), 2.355022);
-    BOOST_CHECK_EQUAL(data.stop_points[8]->coord.lat(), 48.880342);
-    BOOST_CHECK_EQUAL(data.stop_points[8]->wheelchair_boarding, false);
-    BOOST_REQUIRE(data.stop_points[8]->stop_area!= NULL);
-    BOOST_CHECK_EQUAL(data.stop_points[8]->stop_area->uri, "sa_wheelchair");
+    BOOST_CHECK_EQUAL(data.stop_points[8]->uri, "AMV");
+    BOOST_CHECK_EQUAL(data.stop_points[8]->name, "Amargosa Valley (Demo)");
+    BOOST_CHECK_CLOSE(data.stop_points[8]->coord.lat(), 36.641496, 0.1);
+    BOOST_CHECK_CLOSE(data.stop_points[8]->coord.lon(), -116.40094, 0.1);
 
     //Transfers
-    BOOST_REQUIRE_EQUAL(data.connections.size(), 9);
-    BOOST_CHECK_EQUAL(data.connections[0]->departure_stop_point->uri, "sp_seul");
-    BOOST_CHECK_EQUAL(data.connections[0]->destination_stop_point->uri, "sa_avant:sp1");
-    BOOST_CHECK_EQUAL(data.connections[0]->duration, 150);
-
-    BOOST_CHECK_EQUAL(data.connections[1]->departure_stop_point->uri,"sa_avant:sp1");
-    BOOST_CHECK_EQUAL(data.connections[1]->destination_stop_point->uri, "sp_seul");
-    BOOST_CHECK_EQUAL(data.connections[1]->duration, 160);
-
-    BOOST_CHECK_EQUAL(data.connections[2]->departure_stop_point->uri,"sa_avant:sp2");
-    BOOST_CHECK_EQUAL(data.connections[2]->destination_stop_point->uri, "sp_seul");
-    BOOST_CHECK_EQUAL(data.connections[2]->duration, 160);
-
-    BOOST_CHECK_EQUAL(data.connections[3]->departure_stop_point->uri, "sp_seul");
-    BOOST_CHECK_EQUAL(data.connections[3]->destination_stop_point->uri, "sa_wheelchair:sp1");
-    BOOST_CHECK_EQUAL(data.connections[3]->duration, 170);
-
-    BOOST_CHECK_EQUAL(data.connections[4]->departure_stop_point->uri, "sp_seul");
-    BOOST_CHECK_EQUAL(data.connections[4]->destination_stop_point->uri, "sa_wheelchair:sp2");
-    BOOST_CHECK_EQUAL(data.connections[4]->duration, 170);
-
-    BOOST_CHECK_EQUAL(data.connections[5]->departure_stop_point->uri, "sa_apres:sp1");
-    BOOST_CHECK_EQUAL(data.connections[5]->destination_stop_point->uri, "sa_avant:sp1");
-    BOOST_CHECK_EQUAL(data.connections[5]->duration, 180);
-
-    BOOST_CHECK_EQUAL(data.connections[6]->departure_stop_point->uri, "sa_apres:sp1");
-    BOOST_CHECK_EQUAL(data.connections[6]->destination_stop_point->uri, "sa_avant:sp2");
-    BOOST_CHECK_EQUAL(data.connections[6]->duration, 180);
-
-    BOOST_CHECK_EQUAL(data.connections[7]->departure_stop_point->uri, "sa_apres:sp2");
-    BOOST_CHECK_EQUAL(data.connections[7]->destination_stop_point->uri, "sa_avant:sp1");
-    BOOST_CHECK_EQUAL(data.connections[7]->duration, 180);
-
-    BOOST_CHECK_EQUAL(data.connections[8]->departure_stop_point->uri, "sa_apres:sp2");
-    BOOST_CHECK_EQUAL(data.connections[8]->destination_stop_point->uri, "sa_avant:sp2");
-    BOOST_CHECK_EQUAL(data.connections[8]->duration, 180);
-
+    BOOST_REQUIRE_EQUAL(data.stop_point_connections.size(), 0);
 
     // Lignes
-    BOOST_REQUIRE_EQUAL(data.lines.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 5);
     for(auto l : data.lines)
         std::cout << l->uri << " " << l->name << "  " << l->id << std::endl;
-    BOOST_CHECK_EQUAL(data.lines[0]->uri, "1");
-    BOOST_CHECK_EQUAL(data.lines[0]->name, "Ligne 1");
-    BOOST_REQUIRE(data.lines[0]->network!=NULL);
-    BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "ratp");
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "AB");
+    BOOST_CHECK_EQUAL(data.lines[0]->name, "Airport - Bullfrog");
+    BOOST_REQUIRE(data.lines[0]->network != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "DTA");
+    BOOST_REQUIRE(data.lines[0]->commercial_mode != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->id, "3");
 
-    BOOST_CHECK_EQUAL(data.lines[1]->uri, "2");
-    BOOST_CHECK_EQUAL(data.lines[1]->name, "Ligne 2");
-    BOOST_REQUIRE(data.lines[1]->network==NULL);
+    BOOST_CHECK_EQUAL(data.lines[4]->uri, "AAMV");
+    BOOST_CHECK_EQUAL(data.lines[4]->name, "Airport - Amargosa Valley");
+    BOOST_REQUIRE(data.lines[4]->network != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[4]->network->uri, "DTA");
+    BOOST_REQUIRE(data.lines[4]->commercial_mode != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->id, "3");
 
     //Trips
-    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 2);
-    for(auto t : data.vehicle_journeys)
-        std::cout  << t->uri << "  " << t->journey_pattern->route->line->uri <<
-            std::endl;
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "myonetruetrip");
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "My one true headsign");
-*/
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "AB1");
+    BOOST_REQUIRE(data.vehicle_journeys[0]->tmp_line != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->tmp_line->uri, "AB");
+    BOOST_REQUIRE(data.vehicle_journeys[0]->validity_pattern != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->validity_pattern->uri, "FULLW");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "to Bullfrog");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->block_id, "1");
+
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->uri, "AAMV4");
+    BOOST_REQUIRE(data.vehicle_journeys[10]->tmp_line != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->tmp_line->uri, "AAMV");
+    BOOST_REQUIRE(data.vehicle_journeys[10]->validity_pattern != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->validity_pattern->uri, "WE");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->name, "to Airport");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->block_id, "");
+
+    //Calendar
+    BOOST_REQUIRE_EQUAL(data.validity_patterns.size(), 2);
+    BOOST_CHECK_EQUAL(data.validity_patterns[0]->uri, "FULLW");
+
+    BOOST_CHECK_EQUAL(data.validity_patterns[1]->uri, "WE");
+
+    //Stop time
+    BOOST_REQUIRE_EQUAL(data.stops.size(), 28);
+    BOOST_REQUIRE(data.stops[0]->vehicle_journey != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[0]->vehicle_journey->uri, "STBA");
+    BOOST_CHECK_EQUAL(data.stops[0]->arrival_time, 6*3600);
+    BOOST_CHECK_EQUAL(data.stops[0]->departure_time, 6*3600);
+    BOOST_REQUIRE(data.stops[0]->tmp_stop_point != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
+    BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
 }
