@@ -32,7 +32,8 @@ class Uri(ResourceUri):
                             description="The depth of your object")
         parser.add_argument("forbidden_id[]", type=unicode,
                             description="forbidden ids",
-                            dest="forbidden_uris[]")
+                            dest="forbidden_uris[]",
+                            action="append")
         if is_collection:
             parser.add_argument("filter", type=str, default="",
                                 description="The filter parameter")

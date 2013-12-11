@@ -45,7 +45,8 @@ class Schedules(ResourceUri):
                                 stop_point/route")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="forbidden ids",
-                                dest="forbidden_uris[]")
+                                dest="forbidden_uris[]",
+                                action="append")
         self.method_decorators.append(add_notes(self))
 
     def get(self, uri=None, region=None, lon=None, lat=None):

@@ -35,6 +35,7 @@ class TimeTables(Resource):
                                 type=depth_argument,
                                 default=0, hidden=True)
         parser_get.add_argument("forbidden_uris[]", type=unicode,
+                                action="append",
                                 description="Uri to forbid")
 
     def get(self, region):
