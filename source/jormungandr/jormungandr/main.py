@@ -18,7 +18,7 @@ from jormungandr.app import app, api
 
 
 #@api.representation("application/xml")
-#def output_xml(data, code, headers=None):
+# def output_xml(data, code, headers=None):
 #    """Makes a Flask response with a XML encoded body"""
 #    data_xml = dict2xml.dict2xml({'response' :data})
 #    resp = make_response(data_xml, code)
@@ -32,7 +32,7 @@ def output_jsonp(data, code, headers=None):
     resp = json.output_json(data, code, headers)
     callback = request.args.get('callback', False)
     if callback:
-        resp.data = str(callback)+'(' + resp.data + ')'
+        resp.data = str(callback) + '(' + resp.data + ')'
     return resp
 
 index(api)
@@ -40,6 +40,7 @@ v1_routing.v1_routing(api)
 v0_routing.v0_routing(api)
 documentation.v0_documentation(api)
 documentation.v1_documentation(api)
+
 
 def kill_thread(signal, frame):
     InstanceManager().stop()

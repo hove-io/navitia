@@ -1,8 +1,11 @@
 from v0 import Regions, Ptref, Places, PlacesNearby, Journeys, TimeTables
 from werkzeug.routing import BaseConverter
 
+
 class RegionConverter(BaseConverter):
+
     """ The region you want to query"""
+
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
         self.type_ = "string"
@@ -12,7 +15,7 @@ def v0_routing(api):
     api.app.url_map.converters['region'] = RegionConverter
     api.add_resource(Regions.Regions,
                      '/v0/regions.json',
-                     endpoint='v0') #it just redirect to regions
+                     endpoint='v0')  # it just redirect to regions
     api.add_resource(Regions.Regions,
                      '/v0/regions.json',
                      endpoint='v0.regions')
@@ -87,5 +90,3 @@ def v0_routing(api):
     api.add_resource(TimeTables.StopsSchedules,
                      '/v0/<region:region>/stops_schedules.json',
                      endpoint='v0.stops_schedules')
-
-

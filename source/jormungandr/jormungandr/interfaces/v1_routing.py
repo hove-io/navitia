@@ -6,25 +6,35 @@ from v1 import Schedules
 from v1 import Places
 from v1 import Coord
 from v1 import converters_collection_type
-from werkzeug.routing import BaseConverter, FloatConverter, PathConverter, ValidationError
+from werkzeug.routing import BaseConverter, FloatConverter, PathConverter,\
+    ValidationError
 from flask import redirect, current_app
 
+
 class RegionConverter(BaseConverter):
+
     """ The region you want to query"""
+
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
         self.type_ = "string"
         self.regex = '[^(/;)]+'
 
+
 class LonConverter(FloatConverter):
+
     """ The longitude of where the coord you want to query"""
+
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
         self.type_ = "float"
         self.regex = '-?\\d+(\\.\\d+)?'
 
+
 class LatConverter(FloatConverter):
+
     """ The latitude of where the coord you want to query"""
+
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
         self.type_ = "float"
@@ -32,15 +42,22 @@ class LatConverter(FloatConverter):
 
 
 class UriConverter(PathConverter):
+
     """First part of the uri"""
+
     def __init__(self, *args, **kwargs):
         PathConverter.__init__(self, *args, **kwargs)
         self.type_ = "string"
+
+
 class IdConverter(BaseConverter):
+
     """Id of the object you want to query"""
+
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
         self.type_ = "string"
+
 
 def v1_routing(api):
     api.app.url_map.converters['region'] = RegionConverter
@@ -68,43 +85,43 @@ def v1_routing(api):
                      '/v1/coord/<lon:lon>;<lat:lat>',
                      endpoint='v1.coord')
 
-    collections = converters_collection_type.collections_to_resource_type.keys()
-    for collection in collections:
+    collecs = converters_collection_type.collections_to_resource_type.keys()
+    for collection in collecs:
         api.add_resource(getattr(Uri, collection)(True),
-            region + collection,
-            coord + collection,
-            region + '<uri:uri>/' + collection,
-            coord + '<uri:uri>/' + collection,
-            endpoint = 'v1.'+collection+'.collection')
+                         region + collection,
+                         coord + collection,
+                         region + '<uri:uri>/' + collection,
+                         coord + '<uri:uri>/' + collection,
+                         endpoint='v1.' + collection + '.collection')
 
         api.add_resource(getattr(Uri, collection)(False),
-            region + collection + '/<id:id>',
-            coord + collection + '/<id:id>',
-            region + '<uri:uri>/' + collection + '/<id:id>',
-            coord + '<uri:uri>/' + collection + '/<id:id>',
-                            endpoint='v1.'+collection+'.id')
-        api.app.add_url_rule('/v1/coverage/'+collection+ '/<string:id>',
-            'v1.'+collection+'.redirect',
-            Uri.Redirect)
+                         region + collection + '/<id:id>',
+                         coord + collection + '/<id:id>',
+                         region + '<uri:uri>/' + collection + '/<id:id>',
+                         coord + '<uri:uri>/' + collection + '/<id:id>',
+                         endpoint='v1.' + collection + '.id')
+        api.app.add_url_rule('/v1/coverage/' + collection + '/<string:id>',
+                             'v1.' + collection + '.redirect',
+                             Uri.Redirect)
 
     api.add_resource(Places.Places,
-                     region+'places',
-                     coord+'places',
-                     endpoint = 'v1.places'
+                     region + 'places',
+                     coord + 'places',
+                     endpoint='v1.places'
                      )
 
     api.add_resource(Places.PlaceUri,
-                     region+'places/<id:id>',
-                     coord+'places/<id:id>',
-                     endpoint = 'v1.place_uri'
+                     region + 'places/<id:id>',
+                     coord + 'places/<id:id>',
+                     endpoint='v1.place_uri'
                      )
 
     api.add_resource(Places.PlacesNearby,
-                     region+'places_nearby',
-                     coord+'places_nearby',
-                     region+'<uri:uri>/places_nearby',
-                     coord+'<uri:uri>/places_nearby',
-                     endpoint = 'v1.places_nearby'
+                     region + 'places_nearby',
+                     coord + 'places_nearby',
+                     region + '<uri:uri>/places_nearby',
+                     coord + '<uri:uri>/places_nearby',
+                     endpoint='v1.places_nearby'
                      )
 
     api.add_resource(Journeys.Journeys,

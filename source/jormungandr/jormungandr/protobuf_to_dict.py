@@ -32,9 +32,11 @@ def enum_label_name(field, value):
     return field.enum_type.values_by_number[int(value)].name
 
 
-def protobuf_to_dict(pb, type_callable_map=TYPE_CALLABLE_MAP, use_enum_labels=False):
+def protobuf_to_dict(pb, type_callable_map=TYPE_CALLABLE_MAP,
+                     use_enum_labels=False):
     # recursion!
-    type_callable_map[FieldDescriptor.TYPE_MESSAGE] = lambda pb: protobuf_to_dict(pb, type_callable_map, use_enum_labels)
+    type_callable_map[FieldDescriptor.TYPE_MESSAGE] = \
+        lambda pb: protobuf_to_dict(pb, type_callable_map, use_enum_labels)
     result_dict = {}
     for field, value in pb.ListFields():
         if field.type not in type_callable_map:
@@ -47,4 +49,3 @@ def protobuf_to_dict(pb, type_callable_map=TYPE_CALLABLE_MAP, use_enum_labels=Fa
             type_callable = repeated(type_callable)
         result_dict[field.name] = type_callable(value)
     return result_dict
-

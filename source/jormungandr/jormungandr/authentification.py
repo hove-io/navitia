@@ -1,13 +1,14 @@
-#encoding: utf-8
+# encoding: utf-8
 from flask.ext.restful import reqparse
 import flask.ext.restful
 
 from flask import current_app
 from functools import wraps
-import db
-from instance_manager import InstanceManager, RegionNotFound
+from . import db
+from .instance_manager import InstanceManager, RegionNotFound
 import datetime
 import base64
+
 
 def authentification_required(func):
     """
@@ -18,12 +19,12 @@ def authentification_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         region = None
-        if kwargs.has_key('region'):
+        if 'region' in kwargs:
             region = kwargs['region']
-        elif kwargs.has_key('lon') and kwargs.has_key('lat'):
+        elif 'lon' in kwargs and 'lat' in kwargs:
             try:
                 region = InstanceManager().key_of_coord(lon=kwargs['lon'],
-                        lat=kwargs['lat'])
+                                                        lat=kwargs['lat'])
             except RegionNotFound:
                 pass
 
@@ -31,6 +32,7 @@ def authentification_required(func):
             return func(*args, **kwargs)
 
     return wrapper
+
 
 def get_token():
     parser = reqparse.RequestParser()
@@ -52,11 +54,10 @@ def get_token():
         return args[0]
 
 
-
 def authenticate(region, api, abort=False):
-    if current_app.config.has_key('PUBLIC') \
+    if 'PUBLIC' in current_app.config \
             and current_app.config['PUBLIC']:
-        #si jormungandr est en mode public: on zap l'authentification
+        # si jormungandr est en mode public: on zap l'authentification
         return True
 
     token = get_token()
@@ -82,4 +83,3 @@ def authenticate(region, api, abort=False):
             flask.ext.restful.abort(401)
         else:
             return False
-
