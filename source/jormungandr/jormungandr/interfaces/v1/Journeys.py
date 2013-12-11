@@ -353,10 +353,10 @@ class Journeys(ResourceUri):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
         # TODO : Changer le protobuff pour que ce soit propre
-        args['destination_mode'] = 'vls' if args['destination_mode'] == 'br'\
-            else args['destination_mode']
-        args['origin_mode'] = 'vls' if args['origin_mode'] == 'br'\
-            else args['origin_mode']
+        if args['destination_mode'] == 'br':
+            args['destination_mode'] = 'vls'
+        if args['origin_mode'] == 'br':
+            args['origin_mode'] = 'vls'
         if region or (lon and lat):
             self.region = InstanceManager().get_region(region, lon, lat)
             if uri:
