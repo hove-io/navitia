@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#encoding: utf-8
+# encoding: utf-8
 """
     service charger de persister dans ED les messages temps réel
 """
@@ -14,8 +14,8 @@ def main():
         main: ce charge d'interpreter les parametres de la ligne de commande
     """
     parser = argparse.ArgumentParser(description="Sindri se charge "
-            "d'enregister dans au sein d'ED les flux temps réels associés à "
-            "une instance")
+                                     "d'enregister dans au sein d'ED les flux "
+                                     "temps réels associés à une instance")
     parser.add_argument('config_file', type=str)
     config_file = ""
     try:
@@ -28,7 +28,6 @@ def main():
     daemon = Sindri()
     daemon.init(config_file)
     daemon.run()
-
 
     sys.exit(0)
 

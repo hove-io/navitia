@@ -1,4 +1,4 @@
-#encoding: utf-8
+# encoding: utf-8
 import logging
 import datetime
 from sqlalchemy import Table, MetaData, select, create_engine
@@ -9,19 +9,21 @@ from sindri.saver.utils import FunctionalError, TechnicalError
 
 
 class EdRealtimeSaver(object):
+
     """
     Classe responsable de l'enregistrement en base de donnée des événements
     temps réel.
     """
+
     def __init__(self, config):
         self.__engine = create_engine(config.ed_connection_string)
         self.meta = MetaData(self.__engine)
         self.message_table = Table('message', self.meta, autoload=True,
-                schema='realtime')
+                                   schema='realtime')
         self.localized_message_table = Table('localized_message', self.meta,
-                autoload=True, schema='realtime')
+                                             autoload=True, schema='realtime')
         self.at_perturbation_table = Table('at_perturbation', self.meta,
-                autoload=True, schema='realtime')
+                                           autoload=True, schema='realtime')
 
     def persist_message(self, message):
         self.__persist(message, persist_message)
@@ -46,18 +48,18 @@ class EdRealtimeSaver(object):
         try:
             conn = self.__engine.connect()
             transaction = conn.begin()
-        except sqlalchemy.exc.SQLAlchemyError, e:
+        except sqlalchemy.exc.SQLAlchemyError as e:
             logger.exception('error durring transaction')
             raise TechnicalError('problem with databases: ' + str(e))
 
         try:
             callback(self.meta, conn, item)
             transaction.commit()
-        except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.DataError), e:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.DataError) as e:
             logger.exception('error durring transaction')
             transaction.rollback()
             raise FunctionalError(str(e))
-        except sqlalchemy.exc.SQLAlchemyError, e:
+        except sqlalchemy.exc.SQLAlchemyError as e:
             logger.exception('error durring transaction')
             if not hasattr(e, 'connection_invalidated') \
                     or not e.connection_invalidated:
