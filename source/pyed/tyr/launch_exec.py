@@ -4,13 +4,13 @@ Function to launch a bin
 import subprocess
 
 
-def launch_exec(exec_name, args, execwriter, pyed_writer=None):
+def launch_exec(exec_name, args, execwriter, tyr_writer=None):
     """ Launch an exec with args, log the outputs """
     execwriter.info("Launching " + exec_name + " " + " ".join(args))
-    if pyed_writer == None:
-        pyed_writer = execwriter
+    if tyr_writer == None:
+        tyr_writer = execwriter
     else:
-        pyed_writer.debug("Launching " + exec_name + " " + " ".join(args))
+        tyr_writer.debug("Launching " + exec_name + " " + " ".join(args))
     args.insert(0, exec_name)
     proc = subprocess.Popen(args, stderr=subprocess.PIPE,
                      stdout=subprocess.PIPE)

@@ -8,15 +8,21 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
 
 CELERYBEAT_SCHEDULE = {
-    'scan-every-30-seconds': {
-        'task': 'pyed.tasks.scan',
+    'udpate-data-every-30-seconds': {
+        'task': 'tyr.tasks.update_data',
         'schedule': timedelta(seconds=30),
-        'options': {'expires': 30}
+        'options': {'expires': 25}
+    },
+    'scan-instances-every-minutes': {
+        'task': 'tyr.tasks.scan_instances',
+        'schedule': timedelta(minutes=1),
+        'options': {'expires': 50}
     },
 }
 
-CELERY_TIMEZONE = 'UTC'
+SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun'
 
+CELERY_TIMEZONE = 'UTC'
 
 #chaine de connnection à postgresql pour la base jormungandr
 #PG_CONNECTION_STRING = 'postgresql://navitia:navitia@localhost/jormun'
@@ -32,7 +38,7 @@ INSTANCES_DIR = '..'
 #niveau de log de l'application
 LOG_LEVEL = logging.INFO
 #ou sont écrit les logs de l'application
-LOG_FILENAME = "/tmp/pyed.log"
+LOG_FILENAME = "/tmp/tyr.log"
 
 #nivrau de log de l'orm
 #INFO => requete executé

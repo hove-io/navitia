@@ -1,11 +1,9 @@
 import logging
 from celery import Celery
-from pyed.models import Instance
 
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
-import glob
-
+from flask import current_app
 
 def configure_logger(app):
     """
@@ -18,6 +16,17 @@ def configure_logger(app):
     handler.setFormatter(logging.Formatter(log_format))
     app.logger.addHandler(handler)
     app.logger.setLevel(app.config["LOG_LEVEL"])
+
+    logging.getLogger('sqlalchemy.engine').setLevel(
+            app.config["LOG_LEVEL_SQLALCHEMY"])
+    logging.getLogger('sqlalchemy.pool').setLevel(
+            app.config["LOG_LEVEL_SQLALCHEMY"])
+    logging.getLogger('sqlalchemy.dialects.postgresql')\
+            .setLevel(app.config["LOG_LEVEL_SQLALCHEMY"])
+
+    logging.getLogger('sqlalchemy.engine').addHandler(handler)
+    logging.getLogger('sqlalchemy.pool').addHandler(handler)
+    logging.getLogger('sqlalchemy.dialects.postgresql').addHandler(handler)
 
 
 def make_celery(app):
@@ -39,10 +48,9 @@ def make_celery(app):
     return celery
 
 
-def load_instances(app):
+def load_instance_config(instance_name):
     confspec = []
     confspec.append('[instance]')
-    confspec.append('name = string()')
     confspec.append('source-directory = string()')
     confspec.append('backup-directory = string()')
     confspec.append('tmp-file = string()')
@@ -57,23 +65,20 @@ def load_instances(app):
     confspec.append('dbname = string()')
     confspec.append('username = string()')
     confspec.append('password = string()')
-    instances = {}
 
-    ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
+    ini_file = '%s/%s.ini' % \
+            (current_app.config['INSTANCES_DIR'], instance_name)
 
-    for filename in ini_files:
-        config = ConfigObj(filename, configspec=confspec, stringify=True)
-        val = Validator()
-        res = config.validate(val, preserve_errors=True)
-        #validate retourne true, ou un dictionaire  ...
-        if res != True:
-            error = build_error(config, res)
-            raise ValueError("Config is not valid: %s in %s" \
-                    % (error, filename))
-        instance = Instance(config)
-        instances[instance.name] = instance
+    config = ConfigObj(ini_file, configspec=confspec, stringify=True)
+    val = Validator()
+    res = config.validate(val, preserve_errors=True)
+    #validate retourne true, ou un dictionaire  ...
+    if res != True:
+        error = build_error(config, res)
+        raise ValueError("Config is not valid: %s in %s" \
+                % (error, ini_file))
 
-    app.instances = instances
+    return config
 
 
 def build_error(config, validate_result):

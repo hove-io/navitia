@@ -62,7 +62,6 @@ add_subdirectory(georef)
 add_subdirectory(validator)
 add_subdirectory(time_tables)
 add_subdirectory(jormungandr)
-add_subdirectory(pyed)
 add_subdirectory(sql)
 add_subdirectory(disruption)
 
