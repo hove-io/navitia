@@ -3,7 +3,7 @@
 namespace ed { namespace connectors {
 
 void AgencyFusioHandler::init(Data& data) {
-    AgencyGtfsHandler::init(data);
+    AgencyGtfsHandler::init(data); //don't forget to call the parent init
     ext_code_c = csv.get_pos_col("external_code");
 }
 

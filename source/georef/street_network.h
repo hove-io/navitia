@@ -1,12 +1,9 @@
 #pragma once
 #include "georef.h"
 
-
-
 namespace ng = navitia::georef;
 
 namespace navitia { namespace streetnetwork {
-
 
 // Visiteur qui s'arrête au bout d'une certaine distance
 struct distance_visitor : public boost::dijkstra_visitor<> {
@@ -30,7 +27,6 @@ public:
 
     /**
      *  Met à jour les indicateurs pour savoir si les calculs ont été lancés
-     *
      */
     void init();
 
@@ -55,10 +51,14 @@ public:
                         bool use_second, nt::Mode_e mode,
                         bool init);
 
-    /// Reconstruit l'itinéraire piéton à partir de l'idx
+    /**
+     * Reconstruit l'itinéraire piéton à partir de l'idx
+     */
     ng::Path get_path(type::idx_t idx, bool use_second = false);
 
-    /// Construit l'itinéraire piéton direct. Le path est vide s'il n'existe pas
+    /**
+     *Construit l'itinéraire piéton direct. Le path est vide s'il n'existe pas
+     **/
     ng::Path get_direct_path();
 
 private:
