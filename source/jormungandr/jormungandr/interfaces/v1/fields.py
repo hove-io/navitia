@@ -69,7 +69,7 @@ class additional_informations(fields.Raw):
 class additional_informations_vj(fields.Raw):
 
     def output(self, key, obj):
-        addinfo = getattr(obj, "add_info_vehicle_journey")
+        addinfo = obj.add_info_vehicle_journey
         result = []
         if (addinfo.has_date_time_estimated):
             result.append("has_date_time_estimated")
@@ -95,7 +95,7 @@ class has_equipments():
 
     def output(self, key, obj):
         if obj.HasField("has_equipments"):
-            properties = getattr(obj, "has_equipments")
+            properties = obj.has_equipments
             enum = properties.DESCRIPTOR.enum_types_by_name["Equipment"]
             equipments = properties.has_equipments
             values = enum.values_by_number
@@ -107,7 +107,7 @@ class has_equipments():
 class notes(fields.Raw):
 
     def output(self, key, obj):
-        properties = getattr(obj, "has_properties")
+        properties = obj.has_properties
         r = []
         for note_ in properties.notes:
             r.append({"id": note_.uri, "value": note_.note})
@@ -267,8 +267,8 @@ error = {
 class UrisToLinks():
 
     def output(self, key, obj):
-        display_info = getattr(obj, "pt_display_informations")
-        uris = getattr(display_info, "uris")
+        display_info = obj.pt_display_informations
+        uris = display_info.uris
         response = []
         if uris.line != '':
             response.append({"type": "line", "id": uris.line})
