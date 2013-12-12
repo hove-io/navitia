@@ -12,13 +12,14 @@
 #include "type/data.h"
 #include "ed/connectors/messages_connector.h"
 #include "ed/adapted.h"
+#include "utils/init.h"
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    init_logger();
+    navitia::init_app();
     std::string output, input, connection_string;
     uint32_t shift_days;
     po::options_description desc("Allowed options");
