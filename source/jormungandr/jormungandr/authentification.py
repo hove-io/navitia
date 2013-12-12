@@ -1,13 +1,14 @@
 # encoding: utf-8
-from flask.ext.restful import reqparse
-import flask.ext.restful
+from flask_restful import reqparse
+import flask_restful
 
 from flask import current_app
 from functools import wraps
-from . import db
-from .instance_manager import InstanceManager, RegionNotFound
+from jormungandr import db
+from jormungandr.instance_manager import InstanceManager, RegionNotFound
 import datetime
 import base64
+from models import User
 
 
 def authentification_required(func):
@@ -64,22 +65,22 @@ def authenticate(region, api, abort=False):
 
     if not token:
         if abort:
-            flask.ext.restful.abort(401)
+            flask_restful.abort(401)
         else:
             return False
 
-    user = db.get_user(token, datetime.datetime.now())
+    user = User.get_from_token(token, datetime.datetime.now())
 
     if user:
         if user.has_access(region, api):
             return True
         else:
             if abort:
-                flask.ext.restful.abort(403)
+                flask_restful.abort(403)
             else:
                 return False
     else:
         if abort:
-            flask.ext.restful.abort(401)
+            flask_restful.abort(401)
         else:
             return False
