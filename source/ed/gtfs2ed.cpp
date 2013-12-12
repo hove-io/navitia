@@ -12,17 +12,19 @@
 #include <boost/filesystem.hpp>
 #include "utils/exception.h"
 #include "ed_persistor.h"
+#include "connectors/extcode2uri.h"
+#include "utils/init.h"
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    init_logger();
+    navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, date, connection_string, aliases_file,
-                synonyms_file;
+                synonyms_file, redis_string;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -32,7 +34,8 @@ int main(int argc, char * argv[])
         ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
+        ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379 timeout=2");
 
 
     po::variables_map vm;
@@ -58,7 +61,6 @@ int main(int argc, char * argv[])
         return 1;
     }
     po::notify(vm);
-
 
     pt::ptime start;
     int read, complete, clean, sort, save;
@@ -111,8 +113,8 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());
     LOG4CPLUS_INFO(logger, "alias : " <<data.alias.size());
     LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonymes.size());
-
-    start = pt::microsec_clock::local_time();
+   
+	start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);
     p.persist(data, meta);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
