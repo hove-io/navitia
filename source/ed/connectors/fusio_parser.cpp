@@ -36,21 +36,21 @@ void StopsFusioHandler::init(Data& data) {
 //in fusio we want to delete all stop points without stop area
 void StopsFusioHandler::handle_stop_point_without_area(Data& data) {
     //Deletion of the stop point without stop areas
-    std::vector<size_t> erasest;
+    std::vector<size_t> erase_sp;
     for (int i = data.stop_points.size()-1; i >=0;--i) {
         if (data.stop_points[i]->stop_area == nullptr) {
-            erasest.push_back(i);
+            erase_sp.push_back(i);
         }
     }
     int num_elements = data.stop_points.size();
-    for (size_t to_erase : erasest) {
+    for (size_t to_erase : erase_sp) {
         gtfs_data.stop_map.erase(data.stop_points[to_erase]->uri);
         delete data.stop_points[to_erase];
         data.stop_points[to_erase] = data.stop_points[num_elements - 1];
         num_elements--;
     }
     data.stop_points.resize(num_elements);
-    LOG4CPLUS_INFO(logger, "Deletion of " << erasest.size() << " stop_point wihtout stop_area");
+    LOG4CPLUS_INFO(logger, "Deletion of " << erase_sp.size() << " stop_point wihtout stop_area");
 }
 
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -180,7 +180,8 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     }
     if (has_col(date_time_estimated_c, row))
         stop_time->date_time_estimated = (row[date_time_estimated_c] == "1");
-    else stop_time->date_time_estimated = false;
+    else
+        stop_time->date_time_estimated = false;
 
     if (has_col(desc_c, row))
         stop_time->comment = row[desc_c];
@@ -189,7 +190,8 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
         int local_traffic_zone = str_to_int(row[itl_c]);
         if (local_traffic_zone > 0)
             stop_time->local_traffic_zone = local_traffic_zone;
-        else stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
+        else
+            stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
     }
     else
         stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
@@ -225,9 +227,8 @@ void TripsFusioHandler::clean_and_delete(Data& data, ed::types::VehicleJourney* 
 ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     ed::types::VehicleJourney* vj = TripsGtfsHandler::handle_line(data, row, is_first_line);
 
-    if (! vj) {
+    if (! vj)
         return nullptr;
-    }
 
     if (has_col(ext_code_c, row))
         vj->external_code = row[ext_code_c];
@@ -272,13 +273,13 @@ ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_
     }
 
     std::string company_s;
-    if ((has_col(company_id_c, row)) && (!row[company_id_c].empty())) {
+    if ((has_col(company_id_c, row)) && (!row[company_id_c].empty()))
         company_s = row[company_id_c];
-    }
+
     auto company_it = gtfs_data.company_map.find(company_s);
-    if (company_it != gtfs_data.company_map.end()) {
+    if (company_it != gtfs_data.company_map.end())
         vj->company = company_it->second;
-    }
+
     return vj;
 }
 
