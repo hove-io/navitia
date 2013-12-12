@@ -1,5 +1,4 @@
 # encoding: utf-8
-#from jormungandr.instance_manager import InstanceManager
 from flask import Flask, got_request_exception
 from flask.ext.restful import Api
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
@@ -30,5 +29,9 @@ app.logger.setLevel(app.config['LOG_LEVEL'])
 got_request_exception.connect(log_exception, app)
 
 rest_api = Api(app, catch_all_404s=True)
+
+from jormungandr.instance_manager import InstanceManager
+i_manager = InstanceManager()
+i_manager.initialisation()
 
 from jormungandr import api

@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask, request
 from flask.ext.restful import Resource, fields
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import i_manager
 from jormungandr.interfaces.parsers import true_false, option_value
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.find_extrem_datetimes import extremes
@@ -83,8 +83,8 @@ class Journeys(Resource):
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
         if region is None:
-            region = InstanceManager().key_of_id(args["origin"])
-        response = InstanceManager().dispatch(args, region, "journeys")
+            region = i_manager.key_of_id(args["origin"])
+        response = i_manager.dispatch(args, region, "journeys")
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:
@@ -125,8 +125,8 @@ class Isochrone(Resource):
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
         if region is None:
-            region = InstanceManager().key_of_id(args["origin"])
-        response = InstanceManager().dispatch(args, region, "isochrone")
+            region = i_manager.key_of_id(args["origin"])
+        response = i_manager.dispatch(args, region, "isochrone")
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:

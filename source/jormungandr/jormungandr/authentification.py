@@ -5,7 +5,8 @@ import flask_restful
 from flask import current_app
 from functools import wraps
 from jormungandr import db
-from jormungandr.instance_manager import InstanceManager, RegionNotFound
+from jormungandr.exceptions import RegionNotFound
+from jormungandr import i_manager
 import datetime
 import base64
 from models import User
@@ -24,7 +25,7 @@ def authentification_required(func):
             region = kwargs['region']
         elif 'lon' in kwargs and 'lat' in kwargs:
             try:
-                region = InstanceManager().key_of_coord(lon=kwargs['lon'],
+                region = i_manager.key_of_coord(lon=kwargs['lon'],
                                                         lat=kwargs['lat'])
             except RegionNotFound:
                 pass

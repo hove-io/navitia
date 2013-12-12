@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 # coding=utf-8
 from jormungandr import app
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import i_manager
+from jormungandr import commands
 import signal
 from werkzeug.serving import run_simple
 import sys
+from flask_script import Manager
+
 
 def kill_thread(signal, frame):
-    InstanceManager().stop()
+    i_manager.stop()
     sys.exit(0)
 
+manager = Manager(app)
+manager.add_command('syncdb', commands.CreateDb())
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)
     signal.signal(signal.SIGTERM, kill_thread)
-    InstanceManager().initialisation()
     app.config['DEBUG'] = True
-    run_simple('localhost', 5000, app, use_evalex=True)
-
-else:
-    InstanceManager().initialisation()
+    manager.run()

@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields, marshal_with, reqparse
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import i_manager
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
     commercial_mode, company, network, pagination, PbField,\
@@ -59,15 +59,15 @@ class Schedules(ResourceUri):
                 error = "Unable to parse filter {filter}"
                 return {"error": error.format(filter=args["filter"])}, 503
             else:
-                self.region = InstanceManager().key_of_id(parts[1].strip())
+                self.region = i_manager.key_of_id(parts[1].strip())
         else:
             self.collection = 'schedules'
             args["filter"] = self.get_filter(uri.split("/"))
-            self.region = InstanceManager().get_region(region, lon, lat)
+            self.region = i_manager.get_region(region, lon, lat)
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
-        return InstanceManager().dispatch(args, self.region, self.endpoint)
+        return i_manager.dispatch(args, self.region, self.endpoint)
 
 
 date_time = {

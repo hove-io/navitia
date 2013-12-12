@@ -1,5 +1,5 @@
 from flask.ext.restful import marshal_with, abort, marshal
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import i_manager
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.fields import address
 from jormungandr.type_pb2 import _NAVITIATYPE
@@ -18,7 +18,7 @@ class Coord(ResourceUri):
             lon, lat = splitted
 
         if region is None:
-            self.region = InstanceManager().get_region("", lon, lat)
+            self.region = i_manager.get_region("", lon, lat)
         else:
             self.region = region
         result.update(regions=[self.region])
@@ -32,7 +32,7 @@ class Coord(ResourceUri):
                 "start_page": 0,
                 "filter": ""
             }
-            pb_result = InstanceManager().dispatch(args, self.region,
+            pb_result = i_manager.dispatch(args, self.region,
                                                    "places_nearby")
             if len(pb_result.places_nearby) > 0:
                 e_type = pb_result.places_nearby[0].embedded_type
