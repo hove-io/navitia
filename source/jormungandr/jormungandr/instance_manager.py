@@ -3,16 +3,16 @@ from shapely import geometry, geos, wkt
 import ConfigParser
 import zmq
 from threading import Thread, Event
-from . import type_pb2
-from . import request_pb2
+from jormungandr import type_pb2
+from jormungandr import request_pb2
 import glob
-from .singleton import singleton
+from jormungandr.singleton import singleton
 from importlib import import_module
 import logging
-from .renderers import protobuf_to_dict
+from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound
-from .app import app
-from .instance import Instance
+from jormungandr import app
+from jormungandr.instance import Instance
 
 
 @singleton
