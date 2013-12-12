@@ -4,6 +4,7 @@ from jormungandr import app
 import uuid
 
 
+
 class User(db.Model):
     __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
@@ -72,7 +73,8 @@ class User(db.Model):
 class Key(db.Model):
     __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('jormungandr.user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('jormungandr.user.id'),
+                        nullable=False)
     token = db.Column(db.Text, unique=True, nullable=False)
     valid_until = db.Column(db.Date)
 

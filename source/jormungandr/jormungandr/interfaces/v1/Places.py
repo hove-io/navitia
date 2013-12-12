@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import i_manager
 from make_links import add_id_links
 from fields import place, NonNullList, NonNullNested, PbField, pagination
 from ResourceUri import ResourceUri
@@ -46,11 +46,11 @@ class Places(ResourceUri):
 
     @marshal_with(places)
     def get(self, region=None, lon=None, lat=None):
-        self.region = InstanceManager().get_region(region, lon, lat)
+        self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
-        response = InstanceManager().dispatch(args, self.region, "places")
+        response = i_manager.dispatch(args, self.region, "places")
         return response, 200
 
 
@@ -58,7 +58,7 @@ class PlaceUri(ResourceUri):
 
     @marshal_with(places)
     def get(self, id, region=None, lon=None, lat=None):
-        self.region = InstanceManager().get_region(region, lon, lat)
+        self.region = i_manager.get_region(region, lon, lat)
         args = {}
         if id.count(";") == 1:
             lon, lat = id.split(";")
@@ -73,7 +73,7 @@ class PlaceUri(ResourceUri):
             args["uri"] = "admin:" + id.split(":")[-1]
         if not "uri" in args.keys():
             args["uri"] = id
-        response = InstanceManager().dispatch(args, self.region, "place_uri")
+        response = i_manager.dispatch(args, self.region, "place_uri")
         return response, 200
 
 place_nearby = deepcopy(place)
@@ -113,7 +113,7 @@ class PlacesNearby(ResourceUri):
 
     @marshal_with(places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):
-        self.region = InstanceManager().get_region(region, lon, lat)
+        self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
         if uri:
             if uri[-1] == '/':
@@ -139,6 +139,6 @@ class PlacesNearby(ResourceUri):
         else:
             abort(404)
         args["filter"] = args["filter"].replace(".id", ".uri")
-        response = InstanceManager().dispatch(args, self.region,
+        response = i_manager.dispatch(args, self.region,
                                               "places_nearby")
         return response, 200

@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields, abort
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import i_manager
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from jormungandr.interfaces.parsers import depth_argument
@@ -46,5 +46,5 @@ class Places(Resource):
         args = self.parsers["get"].parse_args()
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
-        response = InstanceManager().dispatch(args, region, "places")
+        response = i_manager.dispatch(args, region, "places")
         return protobuf_to_dict(response, use_enum_labels=True), 200
