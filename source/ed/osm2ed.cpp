@@ -5,6 +5,7 @@
 
 #include "ed/connectors/osm_tags_reader.h"
 #include "utils/functions.h"
+#include "utils/init.h"
 
 #include "config.h"
 #include <boost/program_options.hpp>
@@ -387,6 +388,7 @@ void Visitor::set_coord_admin(){
 }}
 //void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
 int main(int argc, char** argv) {
+    navitia::init_app();
     pt::ptime start;
     std::string input, connection_string;
     po::options_description desc("Allowed options");
