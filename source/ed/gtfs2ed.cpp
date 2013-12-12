@@ -114,7 +114,7 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "alias : " <<data.alias.size());
     LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonymes.size());
    
-	start = pt::microsec_clock::local_time();
+    start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);
     p.persist(data, meta);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
