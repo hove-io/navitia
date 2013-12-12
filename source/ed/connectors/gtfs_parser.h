@@ -9,15 +9,15 @@
 #include <utils/logger.h>
 #include <utils/functions.h>
 
-/** Lit les fichiers au format General Transit Feed Specifications
+/**
+  * Read General Transit Feed Specifications Files
   *
   * http://code.google.com/intl/fr/transit/spec/transit_feed_specification.html
   */
-namespace ed{ namespace connectors{
-class GtfsParser {
-private:
-    std::string path;///< Chemin vers les fichiers
+namespace ed { namespace connectors {
 
+struct GtfsData {
+    GtfsData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
@@ -31,16 +31,223 @@ private:
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
-    log4cplus::Logger logger;
 
-public:
     boost::gregorian::date_period production_date;///<Période de validité des données
+};
+
+inline bool has_col(int col_idx, const std::vector<std::string>& row) {
+    return col_idx >= 0 && static_cast<size_t>(col_idx) < row.size();
+}
+
+/**
+ * Parser used to parse one kind of file
+ * The actual parsing is handed to the Handler who need to have 4 methods
+ * - required_headers: for the required file headers
+ * - init(Data&) called before reading the file to init what needs to be inited
+ * - finish(Data&) called after reading the file to clean and log if needed
+ * - handle_line(Data& data, const csv_row& line, bool is_first_line): called at each line
+ */
+template <typename Handler>
+class FileParser {
+protected:
+    CsvReader csv;
+    bool fail_if_no_file;
+    Handler handler;
+public:
+    FileParser(GtfsData& gdata, std::string file_name, bool fail = false) :
+        csv(file_name, ',' , true), fail_if_no_file(fail), handler(gdata, csv) {}
+    FileParser(GtfsData& gdata, std::stringstream& ss, bool fail = false) :
+        csv(ss, ',' , true), fail_if_no_file(fail), handler(gdata, csv)  {}
+
+    void fill(Data& data);
+};
+
+/**
+ * Base handler
+ * for handiness handler can inherit from it (but it's not mandatory)
+ * No virtual call will be done, so no need for virtual method
+ *
+ * provide default method for init, finish and required_headers
+ */
+struct GenericHandler {
+    GenericHandler(GtfsData& gdata, CsvReader& reader) : gtfs_data(gdata), csv(reader) {}
+
+    GtfsData& gtfs_data;
+    using csv_row = std::vector<std::string>;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    CsvReader& csv;
+
+    //default definition (not virtual since no dynamic polymorphism will occur)
+    const std::vector<std::string> required_headers() const { return {}; }
+    void init(Data&) {}
+    void finish(Data&) {}
+};
+
+struct AgencyGtfsHandler : public GenericHandler {
+    AgencyGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c, name_c;
+    void init(Data&);
+    types::Network* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"agency_name", "agency_url", "agency_timezone"}; }
+};
+
+//read no file, add a default contributor
+struct DefaultContributorHandler : public GenericHandler {
+    DefaultContributorHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    void init(Data&);
+    void handle_line(Data&, const csv_row&, bool) {} //nothing to do
+};
+
+struct StopsGtfsHandler : public GenericHandler {
+    StopsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    using stop_point_and_area = std::pair<ed::types::StopPoint*, ed::types::StopArea*>;
+
+    int id_c,
+    code_c,
+    name_c,
+    desc_c,
+    lat_c,
+    lon_c,
+    type_c,
+    parent_c,
+    wheelchair_c;
+
+    int ignored = 0;
+    std::vector<types::StopPoint*> wheelchair_heritance;
+    void init(Data& data);
+    void finish(Data& data);
+    stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"stop_id", "stop_name", "stop_lat", "stop_lon"};
+    }
+    template <typename T>
+    bool parse_common_data(const csv_row& row, T* stop);
+
+    void handle_stop_point_without_area(Data& data); //might be different between stopss parser
+};
+
+struct RouteGtfsHandler : public GenericHandler {
+    RouteGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c, short_name_c,
+    long_name_c, type_c,
+    desc_c,
+    color_c, agency_c;
+    int ignored = 0;
+    void init(Data&);
+    void finish(Data& data);
+    ed::types::Line* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"route_id", "route_short_name", "route_long_name", "route_type"};
+    }
+};
+
+struct TransfersGtfsHandler : public GenericHandler {
+    TransfersGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int from_c,
+    to_c,
+    time_c;
+
+    size_t nblines = 0;
+    void init(Data&);
+    void finish(Data& data);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"from_stop_id", "to_stop_id"};
+    }
+    virtual void fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const;
+};
+
+struct CalendarGtfsHandler : public GenericHandler {
+    CalendarGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+        int id_c, monday_c,
+            tuesday_c, wednesday_c,
+            thursday_c, friday_c,
+            saturday_c, sunday_c,
+            start_date_c, end_date_c;
+    size_t nblignes = 0;
+    void init(Data& data);
+    void finish(Data& data);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"service_id" , "monday", "tuesday", "wednesday", "thursday",
+            "friday", "saturday", "sunday", "start_date", "end_date"};
+    }
+};
+
+struct CalendarDatesGtfsHandler : public GenericHandler {
+    CalendarDatesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c, date_c, e_type_c;
+    void init(Data&);
+    void finish(Data& data);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"service_id", "date", "exception_type"};
+    }
+};
+
+struct TripsGtfsHandler : public GenericHandler {
+    TripsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c, service_c,
+            trip_c, headsign_c,
+            block_id_c, wheelchair_c,
+            ;
+
+    int ignored = 0;
+    int ignored_vj = 0;
+
+    void init(Data& data);
+    void finish(Data& data);
+    ed::types::VehicleJourney* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"route_id", "service_id", "trip_id"};
+    }
+};
+struct StopTimeGtfsHandler : public GenericHandler {
+    StopTimeGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c, arrival_c,
+    departure_c, stop_c,
+    stop_seq_c, pickup_c,
+    drop_off_c;
+
+    size_t count = 0;
+    void init(Data& data);
+    void finish(Data& data);
+    ed::types::StopTime* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"trip_id" , "arrival_time", "departure_time", "stop_id", "stop_sequence"};
+    }
+};
+
+struct FrequenciesGtfsHandler : public GenericHandler {
+    FrequenciesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int trip_id_c, start_time_c,
+    end_time_c, headway_secs_c;
+    void init(Data& data);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"trip_id", "start_time", "end_time", "headway_secs"};
+    }
+};
+
+/**
+ * Generic class for GTFS file read
+ * the list of elemental parser to be called has to be defined
+ */
+class GenericGtfsParser {
+protected:
+    std::string path;///< Chemin vers les fichiers
+    log4cplus::Logger logger;
+    template <typename Handler>
+    void parse(Data&, std::string file_name, bool = false);
+    template <typename Handler>
+    void parse(Data&); //some parser do not need a file since they just add default data
+
+    virtual void parse_files(Data&) = 0;
+public:
+    GtfsData gtfs_data;
 
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
-    GtfsParser(const std::string & path);
-
-    /// Constructeur d'une instance vide
-    GtfsParser() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
+    GenericGtfsParser(const std::string & path);
 
     /// Remplit la structure passée en paramètre
     void fill(ed::Data& data, const std::string beginning_date = "");
@@ -48,53 +255,31 @@ public:
     /// Ajout des objets par défaut
     void fill_default_objects(Data & data);
 
-    /// Remplit les commercial_mode et les physical_mode
-    void parse_physical_modes(Data & data, CsvReader &csv);
-    void parse_commercial_modes(Data & data, CsvReader &csv);
-
-    /// Parse le fichier des agency, on s'en sert pour remplir les network
-    void parse_agency(Data & data, CsvReader &csv);
-    /// Parse le fichier des contributor, on s'en sert pour remplir les contributor
-    void parse_contributor(Data & data, CsvReader &csv);
-    /// Parse le fichier des company, on s'en sert pour remplir les company
-    void parse_company(Data & data, CsvReader &csv);
-
-    /// Parse le fichier calendar.txt
-    /// Remplit les validity_patterns par période
-    void parse_calendar(Data & data, CsvReader &csv);
-
-    /// Parse le fichier calendar_dates.txt
-    /// Contient les dates définies par jour (et non par période)
-    void parse_calendar_dates(Data & data, CsvReader &csv);
-
-    /// Parse le fichier journey_patterns.txt
-    /// Contient les lignes (au sens navitia)
-    void parse_lines(Data & data, CsvReader &csv);
-
-    /// Parse le fichier stops.txt
-    /// Contient les points d'arrêt et les zones d'arrêt
-    void parse_stops(Data & data, CsvReader &csv);
-
-    /// Parse le fichier stop_times.txt
-    /// Contient les horaires
-    void parse_stop_times(Data & data, CsvReader &csv);
-
-    /// Parse le fichier transfers.txt
-    /// Contient les correspondances entre arrêts
-    void parse_transfers(Data & data, CsvReader &csv);
-
-    /// Parse le fichier trips.txt
-    /// Contient les VehicleJourney
-    void parse_trips(Data & data, CsvReader &csv);
-
-    /// Parse le fichier frequencies.txt
-    /// Contient les fréquencs
-    void parse_frequencies(Data & data, CsvReader &csv);
-    //
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string &beginning_date);
 
     boost::gregorian::date_period basic_production_date(const std::string &beginning_date);
+};
+
+template <typename Handler>
+inline void GenericGtfsParser::parse(Data& data, std::string file_name, bool fail_if_no_file) {
+    FileParser<Handler> parser (this->gtfs_data, path + "/" + file_name, fail_if_no_file);
+    parser.fill(data);
+}
+template <typename Handler>
+inline void GenericGtfsParser::parse(Data& data) {
+    FileParser<Handler> parser (this->gtfs_data, "");
+    parser.fill(data);
+}
+
+
+/**
+ * GTFS parser
+ * simply define the list of elemental parsers to use
+ */
+struct GtfsParser : public GenericGtfsParser {
+    virtual void parse_files(Data&);
+    GtfsParser(const std::string & path) : GenericGtfsParser(path) {}
 };
 
 /// Normalise les external code des stop_point et stop_areas
@@ -108,15 +293,46 @@ void normalize_extcodes(Data & data);
   */
 int time_to_int(const std::string & time);
 
-struct FileNotFoundException{
+struct FileNotFoundException {
     std::string filename;
     FileNotFoundException(std::string filename) : filename(filename) {}
 };
 
 struct UnableToFindProductionDateException {};
 
-struct InvalidHeaders{
+struct InvalidHeaders {
     std::string filename;
     InvalidHeaders(std::string filename) : filename(filename) {}
 };
+
+template <typename Handler>
+inline void FileParser<Handler>::fill(Data& data) {
+    auto logger = log4cplus::Logger::getInstance("log");
+    if (! csv.is_open() && ! csv.filename.empty()) {
+        LOG4CPLUS_ERROR(logger, "Impossible to read " + csv.filename);
+        if ( fail_if_no_file ) {
+            throw FileNotFoundException(csv.filename);
+        }
+        return;
+    }
+
+    typename Handler::csv_row headers = handler.required_headers();
+    if(!csv.validate(headers)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        " missing headers : " + csv.missing_headers(headers));
+        throw InvalidHeaders(csv.filename);
+    }
+    handler.init(data);
+
+    bool line_read = true;
+    while(!csv.eof()) {
+        auto row = csv.next();
+        if(!row.empty()) {
+            handler.handle_line(data, row, line_read);
+            line_read = false;
+        }
+    }
+    handler.finish(data);
+}
+
 }}
