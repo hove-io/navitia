@@ -1,7 +1,7 @@
 from instance_test import InstanceTest
 import os
-import response_pb2
-import request_pb2
+from jormungandr import response_pb2
+from jormungandr import request_pb2
 
 
 class InstanceRead(InstanceTest):
@@ -16,13 +16,14 @@ class InstanceRead(InstanceTest):
                     request = arg
         if request:
             pb = self.read(request)
-            resp = response_pb2.Response()
-            resp.ParseFromString(pb)
-            return resp
+            if pb:
+                resp = response_pb2.Response()
+                resp.ParseFromString(pb)
+                return resp
         return None
 
     def read(self, request):
-        if not os.path.exists(self.saving_directory):
+        if not os.path.exists(self.make_filename(request)):
             return
         file_ = open(self.make_filename(request), 'rb')
         to_return = file_.read()

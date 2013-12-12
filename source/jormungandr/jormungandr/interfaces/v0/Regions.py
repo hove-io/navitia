@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields, marshal_with
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import i_manager
 
 region_fields = {
     'region_id': fields.String,
@@ -20,5 +20,5 @@ class Regions(Resource):
     """Retrieves the list of the regions"""
     @marshal_with(regions_fields)
     def get(self):
-        regions = InstanceManager().regions()
+        regions = i_manager.regions()
         return regions

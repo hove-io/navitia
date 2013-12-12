@@ -13,7 +13,7 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound
 from jormungandr import app
 from jormungandr.instance import Instance
-
+import traceback
 
 @singleton
 class InstanceManager(object):
@@ -90,7 +90,8 @@ class InstanceManager(object):
             self.thread_event.wait(timer)
 
     def stop(self):
-        self.thread_event.set()
+        if not self.thread_event.is_set():
+            self.thread_event.set()
 
     def key_of_id(self, object_id):
         """ Retrieves the key of the region of a given id

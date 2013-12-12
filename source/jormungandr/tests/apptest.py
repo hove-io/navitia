@@ -1,7 +1,8 @@
 from jormungandr import app
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import i_manager
 from instance_read import InstanceRead
 from nose.tools import *
+from jormungandr.db import syncdb, db
 
 
 __all__ = ['TestCase']
@@ -12,10 +13,15 @@ class TestCase:
             "test_region": "/v1/coverage/rennes"}
 
     def __init__(self, *args, **kwargs):
-        InstanceManager().initialisation()
+        i_manager.stop()
+        app.config.from_object('jormungandr.test_settings')
+        app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
+        db.drop_all()
+        syncdb()
         self.tester = app.test_client()
-        for name, instance in InstanceManager().instances.iteritems():
-            InstanceManager().instances[name] = InstanceRead("tests", instance)
+        for name, instance in i_manager.instances.iteritems():
+            i_manager.instances[name] = InstanceRead("tests/fixtures",
+                                                     instance)
 
     def test_index(self):
         self.tester = app.test_client(self)
