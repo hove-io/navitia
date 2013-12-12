@@ -4,6 +4,7 @@
 #include "external_parser.h"
 
 #include "utils/timer.h"
+#include "utils/init.h"
 
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -18,7 +19,7 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    init_logger();
+    navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, date, connection_string, aliases_file,
@@ -86,6 +87,19 @@ int main(int argc, char * argv[])
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     data.normalize_uri();
+
+    // Ajout dans la table des correspondances
+    if(vm.count("redis-string")){
+        LOG4CPLUS_INFO(logger, "Alimentation de redis");
+        try{
+            ed::connectors::ExtCode2Uri ext_code_2_uri(redis_string);
+            ext_code_2_uri.to_redis(data);
+        }catch(const navitia::exception& ne){
+            LOG4CPLUS_INFO(logger, "Impossible d'alimenter redis");
+            LOG4CPLUS_INFO(logger, ne.what());
+            return 1;
+        }
+    }
 
     ed::connectors::ExternalParser extConnecteur;
     if(vm.count("synonyms")){

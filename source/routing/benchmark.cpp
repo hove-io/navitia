@@ -5,6 +5,7 @@
 #include <boost/progress.hpp>
 #include <random>
 #include <fstream>
+#include "utils/init.h"
 //#include <valgrind/callgrind.h>
 
 using namespace navitia;
@@ -31,6 +32,7 @@ struct Result {
 };
 
 int main(int argc, char** argv){
+    navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
     std::string file, output;
     int iterations, start, target, date, hour;

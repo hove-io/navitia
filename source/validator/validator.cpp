@@ -1,4 +1,5 @@
 #include "type/data.h"
+#include "utils/init.h"
 
 using namespace navitia::type;
 
@@ -83,6 +84,7 @@ template<typename A, typename B> int check_relations(const std::vector<A*> &as, 
     return error_count;
 }
 int main(int argc, char** argv) {
+    navitia::init_app();
     if(argc != 2){
         std::cout << "Utilisation : " << argv[0] << " fichier_navitia.lz4" << std::endl;
     }
