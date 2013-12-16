@@ -288,17 +288,23 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     GeographicalCoord o(0,0);
 
     StreetNetwork w(sn);
-    auto res = w.find_nearest_stop_points(o, pl, 10, false, Mode_e::Walking);
+    EntryPoint starting_point;
+    starting_point.coordinates = o;
+    starting_point.streetnetwork_params.mode = Mode_e::Walking;
+    w.init(starting_point);
+    auto res = w.find_nearest_stop_points(10.0, pl, false);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    res = w.find_nearest_stop_points(o, pl, 100, false, Mode_e::Walking);
+    w.init(starting_point);//not mandatory, but reinit to clean the distance table to get fresh dijsktra
+    res = w.find_nearest_stop_points(100.0, pl, false);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
 
-    res = w.find_nearest_stop_points(o, pl, 1000, false, Mode_e::Walking);
+    w.init(starting_point);
+    res = w.find_nearest_stop_points(1000.0, pl, false);
     std::sort(res.begin(), res.end());
-    BOOST_CHECK_EQUAL(res.size(), 2);
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
     BOOST_CHECK_EQUAL(res[1].first , 1);
@@ -683,11 +689,14 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     stop_points.push_back(sp2);
     sn.project_stop_points(stop_points);
 
-    GeographicalCoord o(0,0);
-
     StreetNetwork w(sn);
 
-    auto max = w.get_distance(c1, 1, false, Mode_e::Walking, false);
+    EntryPoint starting_point;
+    starting_point.coordinates = c1;
+    starting_point.streetnetwork_params.mode = Mode_e::Walking;
+    w.init(starting_point);
+
+    auto max = w.get_distance(1, false);
     BOOST_CHECK_EQUAL(max, std::numeric_limits<float>::max());
 }
 

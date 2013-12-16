@@ -219,7 +219,6 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
-    bool init_done = false;
     if(ep.type == type::Type_e::StopArea){
         auto it = pt_data.stop_areas_map.find(ep.uri);
         if(it!= pt_data.stop_areas_map.end()) {
@@ -234,11 +233,10 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         }
     }else if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
-        init_done = true;
-        result = worker.find_nearest_stop_points(ep.coordinates,
-                pt_data.stop_point_proximity_list,
-                ep.streetnetwork_params.distance, use_second,
-                ep.streetnetwork_params.mode);
+        result = worker.find_nearest_stop_points(
+                    ep.streetnetwork_params.distance,
+                    pt_data.stop_point_proximity_list,
+                    use_second);
     }
     //On va chercher tous les stop_points en correspondance
     //avec ceux déjà trouvés.
@@ -259,9 +257,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             }
             visited_stop_points.insert(destination->idx);
 
-            auto distance = worker.get_distance(ep.coordinates, destination->idx,
-                                        use_second, ep.streetnetwork_params.mode,
-                                        init_done);
+            auto distance = worker.get_distance(destination->idx, use_second);
             /*
              * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
              * if(distance == std::numeric_limits<double>::max()) {
@@ -271,7 +267,6 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             }*/
 
             tmp_result.push_back({destination->idx, distance});
-            init_done = true;
         }
     }
 
@@ -328,7 +323,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     if(response.has_error() || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
-    worker.init();
+    worker.init(origin, {destination});
     auto departures = get_stop_points(origin, raptor.data.pt_data, worker);
     auto destinations = get_stop_points(destination, raptor.data.pt_data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
@@ -401,7 +396,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         return response;
     }
     datetime = tmp_datetime.front();
-    worker.init();
+    worker.init(origin);
     auto departures = get_stop_points(origin, raptor.data.pt_data, worker);
 
     if(departures.size() == 0){

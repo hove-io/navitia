@@ -20,7 +20,7 @@ struct computation_results {
     std::vector<float> distances_matrix; //distances matrix
     std::vector<vertex_t> predecessor;
 
-    computation_results(double d, const StreetNetwork& worker) : distance(d), distances_matrix(worker.distances), predecessor(worker.predecessors) {}
+    computation_results(double d, const GeoRefPathFinder& worker) : distance(d), distances_matrix(worker.distances), predecessor(worker.predecessors) {}
 
     bool operator ==(const computation_results& other) {
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         }
     }
 
-    StreetNetwork worker(geo_ref);
+    GeoRefPathFinder worker(geo_ref);
 
     //we project 2 stations
     type::GeographicalCoord start;
@@ -94,8 +94,9 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     type::idx_t target_idx(sp->idx);
 
     const bool use_second = false;
+    worker.init(start, type::Mode_e::Walking);
 
-    double distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, false);
+    double distance = worker.get_distance(target_idx);
 
     //we have to find a way to get there
     BOOST_REQUIRE_NE(distance, std::numeric_limits<float>::max());
@@ -103,8 +104,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     std::cout << "distance " << distance
               << " proj distance to source " << proj.source_distance
               << " proj distance to target " << proj.target_distance
-            << " distance to source " << worker.distances[proj.source]
-                 << " distance to target " << worker.distances[proj.target] << std::endl;
+              << " distance to source " << worker.distances[proj.source]
+              << " distance to target " << worker.distances[proj.target] << std::endl;
 
     // the distance matrix also has to be updated
     BOOST_REQUIRE(almost_equal(worker.distances[proj.source] + proj.source_distance, distance) //we have to take into account the projection distance
@@ -114,7 +115,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     //we ask again with the init again
     {
-        double other_distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, false);
+        worker.init(start, type::Mode_e::Walking);
+        double other_distance = worker.get_distance(target_idx);
 
         computation_results other_res {other_distance, worker};
 
@@ -129,7 +131,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     //we ask again without a init
     {
-        double other_distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, true);
+        double other_distance = worker.get_distance(target_idx);
 
         computation_results other_res {other_distance, worker};
         //we have to find a way to get there

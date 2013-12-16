@@ -499,6 +499,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     origin.streetnetwork_params.distance = S.distance_to(B) + B.distance_to(C) + C.distance_to(F) + F.distance_to(E) + E.distance_to(A) + 1;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Car];
+    destination.streetnetwork_params.speed = 13;
     destination.streetnetwork_params.distance = 5;
     resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
