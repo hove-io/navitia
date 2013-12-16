@@ -41,16 +41,16 @@ class RegionNotFound(Exception):
 class DeadSocketException(Exception):
 
     def __init__(self, region, path):
-        error = "unknown_object", "The region " + region + " is dead"
-        self.data = format_error(error)
+        error = "The region " + region + " is dead"
+        self.data = format_error("dead_socket", error)
         self.code = 503
 
 
 class ApiNotFound(Exception):
 
     def __init__(self, api):
-        error = "unknown_object", "The api " + api + " doesn't exist"
-        self.data = format_error(error)
+        error = "The api " + api + " doesn't exist"
+        self.data = format_error("unknown_object", error)
         self.code = 404
 
 
