@@ -18,38 +18,67 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
     }
 };
 
+struct GeoRefPathFinder {
+    const ng::GeoRef & geo_ref;
+
+    bool computation_launch = false;
+
+    /// Points de départ et d'arrivée fournis par la requête
+    type::GeographicalCoord start_coord;
+    ng::ProjectionData starting_edge;
+
+    nt::Mode_e mode;
+
+    /// Tableau des distances utilisé par Dijkstra
+    std::vector<float> distances;
+
+    /// Tableau des prédécesseurs utilisé par Dijkstra
+    std::vector<ng::vertex_t> predecessors;
+
+    GeoRefPathFinder(const ng::GeoRef& geo_ref);
+    /**
+     *  Met à jour les indicateurs pour savoir si les calculs ont été lancés
+     */
+    void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode);
+
+    /**
+     *Calcule quels sont les stop point atteignables en radius mètres de marche à pied
+     */
+    std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(double radius,
+                                                                         const proximitylist::ProximityList<type::idx_t>& pl);
+
+    double get_distance(type::idx_t target_idx);
+
+    ng::Path get_path(type::idx_t idx);
+};
 
 /** Structures avec toutes les données écriture pour streetnetwork */
-struct StreetNetwork {
+class StreetNetwork {
 public:
-
     StreetNetwork(const ng::GeoRef& geo_ref);
 
     /**
      *  Met à jour les indicateurs pour savoir si les calculs ont été lancés
      */
-    void init();
+    void init(const type::EntryPoint& start_coord, boost::optional<const type::EntryPoint&> end_coord = {});
 
     /**
      * Indique si le calcul itinéraire piéton de départ a été lancé
      */
-    bool departure_launched();
+    bool departure_launched() const;
     /**
      * Indique si le calcul itinéraire piéton de fin a été lancé
      */
-    bool arrival_launched();
+    bool arrival_launched() const;
 
     /** Calcule quels sont les stop point atteignables en radius mètres de marche à pied
      */
     std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(
-            const type::GeographicalCoord& start_coord,
-            const proximitylist::ProximityList<type::idx_t>& pl,
-            double radius, bool use_second, nt::Mode_e mode);
+                                                    double radius,
+                                                    const proximitylist::ProximityList<type::idx_t>& pl,
+                                                    bool use_second);
 
-    double get_distance(const type::GeographicalCoord& start_coord,
-                        const type::idx_t& target_idx,
-                        bool use_second, nt::Mode_e mode,
-                        bool init);
+    double get_distance(type::idx_t target_idx, bool use_second = false);
 
     /**
      * Reconstruit l'itinéraire piéton à partir de l'idx
@@ -63,38 +92,9 @@ public:
 
 private:
     const ng::GeoRef & geo_ref;
-
-    std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(
-            const ng::ProjectionData& start, double radius,
-            const std::vector<std::pair<type::idx_t, type::GeographicalCoord>>& elements,
-            std::vector<float>& dist, std::vector<ng::vertex_t>& preds,
-            std::map<type::idx_t, ng::ProjectionData>& idx_proj, nt::Mode_e modem);
-
-    double get_distance(const ng::ProjectionData& start,
-            const ng::ProjectionData& target, const type::idx_t target_idx,
-            std::vector<float>& dist,
-            std::vector<ng::vertex_t>& preds,
-            std::map<type::idx_t, ng::ProjectionData>& idx_proj, bool init);
-
-    /// Points de départ et d'arrivée fournis par la requête
-    ng::ProjectionData departure;
-    ng::ProjectionData destination;
-
-    // Les données sont doublées pour garder les données au départ et à l'arrivée
-    /// Tableau des distances utilisé par Dijkstra
-    std::vector<float> distances;
-    std::vector<float> distances2;
-
-    /// Tableau des prédécesseurs utilisé par Dijkstra
-    std::vector<ng::vertex_t> predecessors;
-    std::vector<ng::vertex_t> predecessors2;
-
-    /// Associe chaque idx_t aux données de projection sur le filaire associées
-    std::map<type::idx_t, ng::ProjectionData> idx_projection;
-    std::map<type::idx_t, ng::ProjectionData> idx_projection2;
-
-    /// Savoir si les calculs ont été lancés en début et fin
-    bool departure_launch;
-    bool arrival_launch;
+    GeoRefPathFinder departure_path_finder;
+    GeoRefPathFinder arrival_path_finder;
 };
+
+
 }}//namespace navitia::georef
