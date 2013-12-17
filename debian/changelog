@@ -1,3 +1,9 @@
+navitia2 (0.77.4) unstable; urgency=low
+
+  * Fixed control file
+
+ -- vlara <vincent.lara@canaltp.fr>  Tue, 17 Dec 2013 18:27:34 +0100
+
 navitia2 (0.77.3) unstable; urgency=low
 
   * Fusio2ed packaging
