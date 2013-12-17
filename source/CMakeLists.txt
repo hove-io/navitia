@@ -73,6 +73,7 @@ set(CMAKE_REQUIRED_INCLUDES "/usr/include")
 CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 CHECK_INCLUDE_FILE_CXX("log4cplus/loggingmacros.h" HAVE_LOGGINGMACROS_H)
 
+configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
 ## TEST
 add_test(connectors nosetests --where=${CMAKE_CURRENT_SOURCE_DIR}/connectors)
