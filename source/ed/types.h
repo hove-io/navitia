@@ -140,10 +140,11 @@ struct Line : public Header, Nameable {
     int sort;
 
     CommercialMode* commercial_mode;
+    PhysicalMode* physical_mode;
     Network* network;
     Company* company;
 
-    Line(): color(""), sort(0), commercial_mode(NULL), network(NULL), company(NULL){}
+    Line(): color(""), sort(0), commercial_mode(NULL), physical_mode(NULL), network(NULL), company(NULL){}
 
     nt::Line* get_navitia_type() const;
 
