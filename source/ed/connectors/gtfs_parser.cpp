@@ -288,6 +288,10 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         delete line;
         return nullptr;
     }
+    auto it_physical_mode = gtfs_data.physical_mode_map.find(row[type_c]);
+    if (it_physical_mode != gtfs_data.physical_mode_map.end()){
+        line->physical_mode = it_physical_mode->second;
+    }
 
     if(has_col(agency_c, row)) {
         auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
@@ -527,9 +531,9 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
     if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
 
-    auto itm = gtfs_data.physical_mode_map.find(line->commercial_mode->id);
+    auto itm = gtfs_data.physical_mode_map.find(line->physical_mode->uri);
     if (itm == gtfs_data.physical_mode_map.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs mode " << line->commercial_mode->id
+        LOG4CPLUS_WARN(logger, "TripsGtfsHandler : Impossible to find the Gtfs mode " << line->physical_mode->uri
                        << " referenced by trip " << row[trip_c]);
         ignored++;
         delete vj;
@@ -658,56 +662,56 @@ void GenericGtfsParser::fill_default_objects(Data& data){
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "0";
     commercial_mode->name = "Tram";
-    commercial_mode->uri = "0x0";
+    commercial_mode->uri = "0";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "1";
     commercial_mode->name = "Metro";
-    commercial_mode->uri = "0x1";
+    commercial_mode->uri = "1";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "2";
     commercial_mode->name = "Rail";
-    commercial_mode->uri = "0x2";
+    commercial_mode->uri = "2";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "3";
     commercial_mode->name = "Bus";
-    commercial_mode->uri = "0x3";
+    commercial_mode->uri = "3";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "4";
     commercial_mode->name = "Ferry";
-    commercial_mode->uri = "0x4";
+    commercial_mode->uri = "4";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "5";
     commercial_mode->name = "Cable car";
-    commercial_mode->uri = "0x5";
+    commercial_mode->uri = "5";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "6";
     commercial_mode->name = "Gondola";
-    commercial_mode->uri = "0x6";
+    commercial_mode->uri = "6";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "7";
     commercial_mode->name = "Funicular";
-    commercial_mode->uri = "0x7";
+    commercial_mode->uri = "7";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
@@ -717,7 +721,7 @@ void GenericGtfsParser::fill_default_objects(Data& data){
         mode->name = mt->name;
         mode->uri = mt->uri;
         data.physical_modes.push_back(mode);
-        gtfs_data.physical_mode_map[mode->id] = mode;
+        gtfs_data.physical_mode_map[mode->uri] = mode;
     }
 }
 
