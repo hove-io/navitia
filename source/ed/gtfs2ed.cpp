@@ -12,14 +12,19 @@
 #include <boost/filesystem.hpp>
 #include "utils/exception.h"
 #include "ed_persistor.h"
+#include "connectors/extcode2uri.h"
+#include "utils/init.h"
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string type, input, output, date, connection_string, aliases_file,
-                synonyms_file;
+    navitia::init_app();
+    auto logger = log4cplus::Logger::getInstance("log");
+
+    std::string input, date, connection_string, aliases_file,
+                synonyms_file, redis_string;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -29,17 +34,17 @@ int main(int argc, char * argv[])
         ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
+        ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379 timeout=2");
 
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        std::cout << argv[0] << " V" << NAVITIA_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
+        LOG4CPLUS_INFO(logger, argv[0] << " V" << NAVITIA_VERSION << " " << NAVITIA_BUILD_TYPE);
         return 0;
     }
-
 
     if(vm.count("config-file")){
         std::ifstream stream;
@@ -57,21 +62,19 @@ int main(int argc, char * argv[])
     }
     po::notify(vm);
 
-    pt::ptime start, end;
+    pt::ptime start;
     int read, complete, clean, sort, save;
 
     ed::Data data;
 
-
     start = pt::microsec_clock::local_time();
 
-
-    ed::connectors::GtfsParser connector(input);
-    connector.fill(data, date);
+    ed::connectors::GtfsParser gtfs_parser(input);
+    gtfs_parser.fill(data, date);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     navitia::type::MetaData meta;
-    meta.production_date = connector.production_date;
+    meta.production_date = gtfs_parser.gtfs_data.production_date;
 
     start = pt::microsec_clock::local_time();
     data.complete();
@@ -96,32 +99,32 @@ int main(int argc, char * argv[])
         extConnecteur.fill_aliases(aliases_file, data);
     }
 
-    std::cout << "line: " << data.lines.size() << std::endl;
-    std::cout << "route: " << data.routes.size() << std::endl;
-    std::cout << "journey_pattern: " << data.journey_patterns.size() << std::endl;
-    std::cout << "stoparea: " << data.stop_areas.size() << std::endl;
-    std::cout << "stoppoint: " << data.stop_points.size() << std::endl;
-    std::cout << "vehiclejourney: " << data.vehicle_journeys.size() << std::endl;
-    std::cout << "stop: " << data.stops.size() << std::endl;
-    std::cout << "connection: " << data.stop_point_connections.size() << std::endl;
-    std::cout << "journey_pattern points: " << data.journey_pattern_points.size() << std::endl;
-    std::cout << "modes: " << data.physical_modes.size() << std::endl;
-    std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
-    std::cout << "journey_pattern point connections : " << data.journey_pattern_point_connections.size() << std::endl;
-    std::cout << "alias : " <<data.alias.size() << std::endl;
-    std::cout << "synonyms : " <<data.synonymes.size() << std::endl;
+    LOG4CPLUS_INFO(logger, "line: " << data.lines.size());
+    LOG4CPLUS_INFO(logger, "route: " << data.routes.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern: " << data.journey_patterns.size());
+    LOG4CPLUS_INFO(logger, "stoparea: " << data.stop_areas.size());
+    LOG4CPLUS_INFO(logger, "stoppoint: " << data.stop_points.size());
+    LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.vehicle_journeys.size());
+    LOG4CPLUS_INFO(logger, "stop: " << data.stops.size());
+    LOG4CPLUS_INFO(logger, "connection: " << data.stop_point_connections.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.journey_pattern_points.size());
+    LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
+    LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());
+    LOG4CPLUS_INFO(logger, "alias : " <<data.alias.size());
+    LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonymes.size());
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);
     p.persist(data, meta);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    std::cout << "temps de traitement" << std::endl;
-    std::cout << "\t lecture des fichiers " << read << "ms" << std::endl;
-    std::cout << "\t completion des données " << complete << "ms" << std::endl;
-    std::cout << "\t netoyage des données " << clean << "ms" << std::endl;
-    std::cout << "\t trie des données " << sort << "ms" << std::endl;
-    std::cout << "\t enregistrement des données " << save << "ms" << std::endl;
+    LOG4CPLUS_INFO(logger, "temps de traitement");
+    LOG4CPLUS_INFO(logger, "\t lecture des fichiers " << read << "ms");
+    LOG4CPLUS_INFO(logger, "\t completion des données " << complete << "ms");
+    LOG4CPLUS_INFO(logger, "\t netoyage des données " << clean << "ms");
+    LOG4CPLUS_INFO(logger, "\t trie des données " << sort << "ms");
+    LOG4CPLUS_INFO(logger, "\t enregistrement des données " << save << "ms");
 
     return 0;
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#encoding: utf-8
+# encoding: utf-8
 
 from distutils.core import setup
 
@@ -11,4 +11,4 @@ setup(name='sindri',
       url='www.navitia.io',
       packages=['sindri'],
       scripts=['sindri.py']
-)
+      )

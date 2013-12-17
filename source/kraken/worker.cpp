@@ -59,7 +59,7 @@ std::vector<std::string> vector_of_admins(const T & admin){
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
 
-    auto status = result.mutable_status();    
+    auto status = result.mutable_status();
     const auto d = *data;
     boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
     status->set_publication_date(pt::to_iso_string(d->meta.publication_date));
@@ -115,34 +115,39 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
         pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    int32_t max_date_times = request.has_max_date_times() ? request.max_date_times() : std::numeric_limits<int>::max();
+    std::vector<std::string> forbidden_uri;
+    for(int i = 0; i < request.forbidden_uri_size(); ++i)
+        forbidden_uri.push_back(request.forbidden_uri(i));
     this->init_worker_data();
     try {
         switch(api){
         case pbnavitia::NEXT_DEPARTURES:
             return timetables::next_departures(request.departure_filter(),
-                    request.from_datetime(), request.duration(),
-                    request.nb_stoptimes(), request.depth(),
+                    forbidden_uri, request.from_datetime(),
+                    request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(), *(*this->data), request.count(),
                     request.start_page());
         case pbnavitia::NEXT_ARRIVALS:
             return timetables::next_arrivals(request.arrival_filter(),
-                    request.from_datetime(), request.duration(),
-                    request.nb_stoptimes(), request.depth(),
+                    forbidden_uri, request.from_datetime(),
+                    request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
                     *(*this->data), request.count(), request.start_page());
         case pbnavitia::STOPS_SCHEDULES:
             return timetables::stops_schedule(request.departure_filter(),
-                    request.arrival_filter(), request.from_datetime(),
-                    request.duration(), request.depth(), *(*this->data));
+                    request.arrival_filter(), forbidden_uri,
+                    request.from_datetime(), request.duration(), request.depth(),
+                    *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
-                    request.from_datetime(), request.duration(),request.max_date_times(),
-                    request.interface_version(), request.count(),
-                    request.start_page(), *(*this->data));
+                    forbidden_uri, request.from_datetime(),
+                    request.duration(),max_date_times, request.interface_version(),
+                    request.count(), request.start_page(), *(*this->data));
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
-                    request.from_datetime(), request.duration(),
-                    request.interface_version(), request.depth(),
+                    forbidden_uri, request.from_datetime(),
+                    request.duration(), request.interface_version(), request.depth(),
                     request.count(), request.start_page(), *(*this->data));
         default:
             LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
@@ -167,8 +172,8 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
     type::EntryPoint ep((*data)->get_type_of_id(request.uri()), request.uri());
     auto coord = this->coord_of_entry_point(ep);
     return proximitylist::find(coord, request.distance(), vector_of_pb_types(request),
-                               request.depth(), request.count(), request.start_page(),
-                               *(*this->data));
+                request.filter(), request.depth(), request.count(),
+                request.start_page(), *(*this->data));
 }
 
 
@@ -223,17 +228,17 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
     }
     switch(result.mode){
         case type::Mode_e::Bike:
-            result.offset = (*data)->geo_ref.bike_offset;
+            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Bike];
             result.distance = request.bike_distance();
             result.speed = request.bike_speed();
             break;
         case type::Mode_e::Car:
-            result.offset = (*data)->geo_ref.car_offset;
+            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Car];
             result.distance = request.car_distance();
             result.speed = request.car_speed();
             break;
         case type::Mode_e::Vls:
-            result.offset = (*data)->geo_ref.vls_offset;
+            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Vls];
             result.distance = request.vls_distance();
             result.speed = request.vls_speed();
             break;
@@ -255,13 +260,13 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
         auto coord = this->coord_of_entry_point(ep);
-        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, 1, 1, 0, *(*this->data));
+        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *(*this->data));
         if(tmp.places_nearby().size() == 1){
             auto place = pb_response.add_places();
             place->CopyFrom(tmp.places_nearby(0));
         }
         return pb_response;
-    }    
+    }
     auto it_sa = (*data)->pt_data.stop_areas_map.find(request.uri());
     if(it_sa != (*data)->pt_data.stop_areas_map.end()) {
         pbnavitia::Place* place = pb_response.add_places();
@@ -366,10 +371,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
 pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    std::vector<std::string> forbidden_uri;
+    for(int i = 0; i < request.forbidden_uri_size(); ++i)
+        forbidden_uri.push_back(request.forbidden_uri(i));
     return navitia::ptref::query_pb(get_type(request.requested_type()),
-                                    request.filter(), request.depth(),
-                                    request.start_page(), request.count(),
-                                    *(*this->data));
+                                    request.filter(), forbidden_uri,
+                                    request.depth(), request.start_page(),
+                                    request.count(), *(*this->data));
 }
 
 

@@ -15,6 +15,7 @@ struct RequestHandle {
     int total_result;
 
     RequestHandle(const std::string &api, const std::string &request,
+                  const std::vector<std::string>& forbidden_uris,
                   const std::string &change_time, uint32_t duration,
                   const type::Data & data);
 };

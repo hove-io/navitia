@@ -19,8 +19,8 @@ task.at_perturbation.end_application_date = 1390033727
 task.at_perturbation.start_application_daily_hour = 0
 task.at_perturbation.end_application_daily_hour = 86399
 
-#for i in range(10000):
-channel.basic_publish(exchange='navitia', routing_key='realtime.at', body=task.SerializeToString())
+# for i in range(10000):
+channel.basic_publish(exchange='navitia', routing_key='realtime.at',
+                      body=task.SerializeToString())
 
 conn.close()
-

@@ -41,8 +41,6 @@ public:
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
 
-
-
     /**
          * trie les différentes donnée et affecte l'idx
          *

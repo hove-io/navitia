@@ -5,6 +5,7 @@
 #include <boost/progress.hpp>
 #include <random>
 #include <fstream>
+#include "utils/init.h"
 //#include <valgrind/callgrind.h>
 
 using namespace navitia;
@@ -20,18 +21,18 @@ struct PathDemand {
 
 struct Result {
     int duration;
-    int visited;
     int time;
     int arrival;
     int nb_changes;
 
-    Result(Path path) : duration(path.duration), visited(path.percent_visited), time(-1), arrival(-1), nb_changes(path.nb_changes) {
+    Result(Path path) : duration(path.duration), time(-1), arrival(-1), nb_changes(path.nb_changes) {
         if(!path.items.empty())
             arrival = DateTimeUtils::hour(path.items.back().arrival);
     }
 };
 
 int main(int argc, char** argv){
+    navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
     std::string file, output;
     int iterations, start, target, date, hour;
@@ -153,7 +154,6 @@ int main(int argc, char** argv){
                  << results[i].arrival << ", "
                  << results[i].duration << ", "
                  << results[i].nb_changes << ", "
-                 << results[i].visited << ", "
                  << results[i].time;
 
         out_file << "\n";

@@ -32,15 +32,10 @@ message Place {
     optional int32 quality = 12;
 }
 
-enum Direction {
-    TURN_RIGHT= 1;
-    TURN_LEFT= 2;
-}
-
 message PathItem {
     optional string name = 1;
     optional double length = 2;
-    optional Direction direction =3;
+    optional int32 direction = 3;
 }
 
 enum StreetNetworkMode {
@@ -141,7 +136,6 @@ message Journey {
     optional Place origin = 7;
     optional Place destination = 8;
     optional string type =9;
-    optional MessageStatus status = 10;
 }
 
 enum ResponseType {
@@ -190,7 +184,7 @@ message PairStopTime {
 
 message ScheduleStopTime {
     optional string date_time = 1;
-    optional hasPropertie has_properties = 2;
+    optional Properties properties = 2;
 }
 
 message RouteScheduleRow {
@@ -268,6 +262,7 @@ message StopSchedule {
     required PtDisplayInfo pt_display_informations = 2;
     required StopPoint stop_point = 3;
     repeated ScheduleStopTime date_times = 4;
+    optional ResponseStatus response_status = 5;
 }
 
 

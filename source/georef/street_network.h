@@ -1,12 +1,9 @@
 #pragma once
 #include "georef.h"
 
-
-
 namespace ng = navitia::georef;
 
 namespace navitia { namespace streetnetwork {
-
 
 // Visiteur qui s'arrête au bout d'une certaine distance
 struct distance_visitor : public boost::dijkstra_visitor<> {
@@ -30,7 +27,6 @@ public:
 
     /**
      *  Met à jour les indicateurs pour savoir si les calculs ont été lancés
-     *
      */
     void init();
 
@@ -43,23 +39,26 @@ public:
      */
     bool arrival_launched();
 
-    type::idx_t get_offset(const type::Mode_e &);
     /** Calcule quels sont les stop point atteignables en radius mètres de marche à pied
      */
     std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(
             const type::GeographicalCoord& start_coord,
             const proximitylist::ProximityList<type::idx_t>& pl,
-            double radius, bool use_second, nt::idx_t offset);
+            double radius, bool use_second, nt::Mode_e mode);
 
     double get_distance(const type::GeographicalCoord& start_coord,
-                        const type::idx_t& target_idx, const double radius,
-                        bool use_second, nt::idx_t offset,
-                        bool init=false);
+                        const type::idx_t& target_idx,
+                        bool use_second, nt::Mode_e mode,
+                        bool init);
 
-    /// Reconstruit l'itinéraire piéton à partir de l'idx
+    /**
+     * Reconstruit l'itinéraire piéton à partir de l'idx
+     */
     ng::Path get_path(type::idx_t idx, bool use_second = false);
 
-    /// Construit l'itinéraire piéton direct. Le path est vide s'il n'existe pas
+    /**
+     *Construit l'itinéraire piéton direct. Le path est vide s'il n'existe pas
+     **/
     ng::Path get_direct_path();
 
 private:
@@ -69,11 +68,11 @@ private:
             const ng::ProjectionData& start, double radius,
             const std::vector<std::pair<type::idx_t, type::GeographicalCoord>>& elements,
             std::vector<float>& dist, std::vector<ng::vertex_t>& preds,
-            std::map<type::idx_t, ng::ProjectionData>& idx_proj, nt::idx_t offset);
+            std::map<type::idx_t, ng::ProjectionData>& idx_proj, nt::Mode_e modem);
 
     double get_distance(const ng::ProjectionData& start,
             const ng::ProjectionData& target, const type::idx_t target_idx,
-            const double radius, std::vector<float>& dist,
+            std::vector<float>& dist,
             std::vector<ng::vertex_t>& preds,
             std::map<type::idx_t, ng::ProjectionData>& idx_proj, bool init);
 

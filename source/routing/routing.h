@@ -64,11 +64,10 @@ struct PathItem{
 struct Path {
     uint32_t duration;
     uint32_t nb_changes;
-    uint32_t percent_visited;
     boost::posix_time::ptime request_time;
     std::vector<PathItem> items;
 
-    Path() : duration(std::numeric_limits<uint32_t>::max()), nb_changes(std::numeric_limits<uint32_t>::max()), percent_visited(std::numeric_limits<uint32_t>::max()) {}
+    Path() : duration(std::numeric_limits<uint32_t>::max()), nb_changes(std::numeric_limits<uint32_t>::max()) {}
 
     void print(const navitia::type::PT_Data & data) const {
         for(auto item : items)

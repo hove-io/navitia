@@ -3,6 +3,8 @@
 #include "georef/street_network.h"
 #include "boost/lexical_cast.hpp"
 #include <functional>
+#include "utils/exception.h"
+#include "utils/exception.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -404,18 +406,18 @@ void fill_pb_object(const nt::StopTime* st, const type::Data&,
     if(st == nullptr)
         return ;
 
-    pbnavitia::hasPropertie * hp = stop_date_time->mutable_has_properties();
+    pbnavitia::Properties * hp = stop_date_time->mutable_properties();
     if ((!st->drop_off_allowed()) && st->pick_up_allowed()){
-        hp->add_additional_informations(pbnavitia::hasPropertie::PICK_UP_ONLY);
+        hp->add_additional_informations(pbnavitia::Properties::pick_up_only);
     }
     if(st->drop_off_allowed() && (!st->pick_up_allowed())){
-        hp->add_additional_informations(pbnavitia::hasPropertie::DROP_OFF_ONLY);
+        hp->add_additional_informations(pbnavitia::Properties::drop_off_only);
     }
     if (st->odt()){
-        hp->add_additional_informations(pbnavitia::hasPropertie::ON_DEMAND_TRANSPORT);
+        hp->add_additional_informations(pbnavitia::Properties::on_demand_transport);
     }
     if (st->date_time_estimated()){
-        hp->add_additional_informations(pbnavitia::hasPropertie::DATE_TIME_ESTIMATED);
+        hp->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
     if(!st->comment.empty()){
         pbnavitia::Note* note = hp->add_notes();
@@ -567,37 +569,36 @@ void fill_pb_placemark(navitia::georef::Way* way,
 }
 
 
-void fill_street_section(const type::EntryPoint &ori_dest,
-                         const georef::Path &path, const type::Data &data,
+void fill_street_section(const type::EntryPoint& ori_dest,
+                         const georef::Path& path, const type::Data& data,
                          pbnavitia::Section* section, int max_depth,
                          const pt::ptime& now,
                          const pt::time_period& action_period){
     int depth = (max_depth <= 3) ? max_depth : 3;
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::STREET_NETWORK);
-        pbnavitia::StreetNetwork * sn = section->mutable_street_network();
+        pbnavitia::StreetNetwork* sn = section->mutable_street_network();
         create_pb(ori_dest, path, data, sn);
-        section->set_duration(sn->length()/ori_dest.streetnetwork_params.speed);
+        section->set_duration(sn->length() / ori_dest.streetnetwork_params.speed);
         section->set_length(sn->length());
         navitia::georef::Way* way;
         type::GeographicalCoord coord;
-        if(path.path_items.size() > 0){
+        if(path.path_items.size() > 0) {
             pbnavitia::Place* orig_place = section->mutable_origin();
             way = data.geo_ref.ways[path.path_items.front().way_idx];
-            orig_place = section->mutable_origin();
-            coord = path.coordinates.front();
-            fill_pb_placemark(way,  data, orig_place, way->nearest_number(coord), coord,
+            coord = path.path_items.front().coordinates.front();
+            fill_pb_placemark(way, data, orig_place, way->nearest_number(coord), coord,
                               depth,  now, action_period);
 
             pbnavitia::Place* dest_place = section->mutable_destination();
             way = data.geo_ref.ways[path.path_items.back().way_idx];
-            dest_place = section->mutable_destination();
-            coord = path.coordinates.back();
-            fill_pb_placemark(way,  data, dest_place, way->nearest_number(coord), coord,
+            coord = path.path_items.back().coordinates.back();
+            fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
                                     depth,  now, action_period);
         }
     }
 }
+
 
 void fill_message(const boost::shared_ptr<type::Message> message,
         const type::Data&, pbnavitia::Message* pb_message, int,
@@ -641,24 +642,27 @@ void create_pb(const type::EntryPoint &ori_dest,
     }
 
     uint32_t length = 0;
-    for(auto item : path.path_items){
-        if(item.way_idx < data.geo_ref.ways.size()){
+
+    for(auto item : path.path_items) {
+        if(item.way_idx < data.geo_ref.ways.size()) {
             pbnavitia::PathItem * path_item = sn->add_path_items();
             path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
             path_item->set_length(item.length);
             length += item.length;
-        }else{
-            std::cout << "Way étrange : " << item.way_idx << std::endl;
+            path_item->set_direction(item.angle);
+        } else {
+            throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
+        }
+        //we add each path item coordinate to the global coordinate liste
+        for(auto coord : item.coordinates) {
+            if(coord.is_initialized()) {
+                pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+                pb_coord->set_lon(coord.lon());
+                pb_coord->set_lat(coord.lat());
+            }
         }
     }
     sn->set_length(length);
-    for(auto coord : path.coordinates){
-        if(coord.is_initialized()) {
-            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
-            pb_coord->set_lon(coord.lon());
-            pb_coord->set_lat(coord.lat());
-        }
-    }
 }
 
 void fill_pb_object(const georef::POIType* geo_poi_type, const type::Data &,
@@ -704,18 +708,18 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     if(stop_time != nullptr) {
         const auto str_datetime = iso_string(date_time, data);
         rs_date_time->set_date_time(str_datetime);
-        pbnavitia::hasPropertie * hn = rs_date_time->mutable_has_properties();
+        pbnavitia::Properties * hn = rs_date_time->mutable_properties();
         if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
-            hn->add_additional_informations(pbnavitia::hasPropertie::PICK_UP_ONLY);
+            hn->add_additional_informations(pbnavitia::Properties::pick_up_only);
         }
         if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
-            hn->add_additional_informations(pbnavitia::hasPropertie::DROP_OFF_ONLY);
+            hn->add_additional_informations(pbnavitia::Properties::drop_off_only);
         }
         if (stop_time->odt()){
-            hn->add_additional_informations(pbnavitia::hasPropertie::ON_DEMAND_TRANSPORT);
+            hn->add_additional_informations(pbnavitia::Properties::on_demand_transport);
         }
         if (stop_time->date_time_estimated()){
-            hn->add_additional_informations(pbnavitia::hasPropertie::DATE_TIME_ESTIMATED);
+            hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
         }
         if(!stop_time->comment.empty()){
             pbnavitia::Note* note = hn->add_notes();

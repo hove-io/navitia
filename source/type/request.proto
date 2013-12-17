@@ -20,7 +20,8 @@ message NextStopTimeRequest {
     optional int32 interface_version    = 8;
     required int32 start_page           = 9;
     required int32 count                = 10;
-    required int32 max_date_times       = 11;
+    optional int32 max_date_times       = 11;
+    repeated string forbidden_uri       = 12;
 }
 
 message StreetNetworkParams{
@@ -58,6 +59,7 @@ message PlacesNearbyRequest {
     required int32 depth        = 4;
     required int32 count        = 5;
     required int32 start_page   = 6;
+    optional string filter      = 7;
 }
 
 message PlaceUriRequest {
@@ -70,6 +72,7 @@ message PTRefRequest {
     required int32 depth                = 3;
     required int32 start_page           = 4;
     required int32 count                = 5;
+    repeated string forbidden_uri       = 6;
 }
 
 message Request {

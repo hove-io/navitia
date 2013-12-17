@@ -10,6 +10,7 @@
 #include "utils/exception.h"
 #include "ed_reader.h"
 #include "type/data.h"
+#include "utils/init.h"
 
 
 namespace po = boost::program_options;
@@ -17,8 +18,8 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string output, connection_string, at_connection_string, media_lang,
-        media_media;
+    navitia::init_app();
+    std::string output, connection_string;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -26,7 +27,6 @@ int main(int argc, char * argv[])
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "Fichier de sortie")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
-
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

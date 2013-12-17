@@ -48,7 +48,7 @@ struct ProximityList
     }
 
     /// Retourne tous les éléments dans un rayon de x mètres
-    std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance ) const {
+    std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance = 500) const {
         double distance_degree = distance / 111320;
 
         double DEG_TO_RAD = 0.0174532925199432958;
@@ -78,9 +78,9 @@ struct ProximityList
         if(temp.empty())
             throw NotFound();
         else
+
             return temp.front().first;
     }
-
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *

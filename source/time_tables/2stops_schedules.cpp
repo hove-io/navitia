@@ -5,13 +5,16 @@ namespace navitia { namespace timetables {
 
 
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
+                                       const std::vector<std::string>& forbidden_uris,
                                         const DateTime &datetime, const DateTime &max_datetime,
                                         type::Data & data) {
 
     std::vector<pair_dt_st> result;
     //On va chercher tous les journey_pattern points correspondant au deuxieme filtre
-    std::vector<type::idx_t> departure_journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, departure_filter, data);
-    std::vector<type::idx_t> arrival_journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, arrival_filter, data);
+    auto departure_journey_pattern_points = ptref::make_query(type::Type_e::JourneyPatternPoint,
+                                                    departure_filter, forbidden_uris, data);
+    auto arrival_journey_pattern_points = ptref::make_query(type::Type_e::JourneyPatternPoint,
+                                                    arrival_filter, forbidden_uris, data);
 
     std::unordered_map<type::idx_t, size_t> departure_idx_arrival_order;
     for(type::idx_t idx : departure_journey_pattern_points) {
@@ -46,7 +49,8 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 
 
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                    const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data) {
+                                   const std::vector<std::string>& forbidden_uris,
+                                   const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data) {
     pbnavitia::Response pb_response;
 
     boost::posix_time::ptime ptime;
@@ -64,7 +68,7 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
     max_dt = dt + duration;
     std::vector<pair_dt_st> board;
     try {
-        board = stops_schedule(departure_filter, arrival_filter, dt, max_dt, data);
+        board = stops_schedule(departure_filter, arrival_filter, forbidden_uris, dt, max_dt, data);
     } catch(const ptref::parsing_error &parse_error) {
 //        pb_response.set_error(parse_error.more);
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse :" + parse_error.more,pb_response.mutable_error());

@@ -1,13 +1,12 @@
 SET(SOURCE_LIB
     gtfs_parser.cpp
+    fusio_parser.cpp
     osm2nav.cpp
     osm_tags_reader.cpp
     poi_parser.cpp
     messages_connector.cpp
+    extcode2uri.cpp
 )
-
-FIND_PACKAGE(Qt4 REQUIRED QtCore QtSql)
-include_directories(${QT_INCLUDE_DIR})
 
 add_library(connectors ${SOURCE_LIB})
 

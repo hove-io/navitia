@@ -1,7 +1,8 @@
-#encoding: utf-8
+# encoding: utf-8
 from sqlalchemy import select
 from sindri.saver.utils import parse_active_days, from_timestamp, from_time, \
-        FunctionalError
+    FunctionalError
+
 
 def build_at_perturbation_dict(perturbation):
     """
@@ -16,14 +17,14 @@ def build_at_perturbation_dict(perturbation):
     result['active_days'] = parse_active_days(perturbation.active_days)
 
     result['start_application_date'] = from_timestamp(
-            perturbation.start_application_date)
+        perturbation.start_application_date)
     result['end_application_date'] = from_timestamp(
-            perturbation.end_application_date)
+        perturbation.end_application_date)
 
     result['start_application_daily_hour'] = from_time(
-            perturbation.start_application_daily_hour)
+        perturbation.start_application_daily_hour)
     result['end_application_daily_hour'] = from_time(
-            perturbation.end_application_daily_hour)
+        perturbation.end_application_daily_hour)
 
     return result
 
@@ -43,10 +44,11 @@ def find_at_perturbation_id(meta, conn, perturbation_uri):
     """
     perturbation_table = meta.tables['realtime.at_perturbation']
     query = select([perturbation_table.c.id],
-            perturbation_table.c.uri == perturbation_uri)
+                   perturbation_table.c.uri == perturbation_uri)
     result = conn.execute(query)
     row = result.fetchone()
     return row[0] if row else None
+
 
 def save_at_perturbation(meta, conn, perturbation_id, perturbation):
     """
@@ -57,7 +59,7 @@ def save_at_perturbation(meta, conn, perturbation_id, perturbation):
         query = perturbation_table.insert()
     else:
         query = perturbation_table.update().where(
-                perturbation_table.c.id == perturbation_id)
+            perturbation_table.c.id == perturbation_id)
 
     conn.execute(query.values(build_at_perturbation_dict(
         perturbation)))

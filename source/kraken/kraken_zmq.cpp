@@ -1,6 +1,3 @@
-//on inclue simpleAmqpClient dés le début, sinon probléme avec la compatibilité C++ 11
-#define BOOST_NO_CXX11_RVALUE_REFERENCES
-#include <SimpleAmqpClient/SimpleAmqpClient.h>
 #include "worker.h"
 #include "maintenance_worker.h"
 #include "type/type.pb.h"
@@ -12,6 +9,7 @@
 #include <string>
 #include <iostream>
 #include "utils/logger.h"
+#include "utils/init.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace pt = boost::posix_time;
@@ -68,15 +66,14 @@ void doWork(zmq::context_t & context, navitia::type::Data** data) {
 
 
 int main(int, char** argv){
+    navitia::init_app();
     Configuration * conf = Configuration::get();
     std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );
     conf->set_string("application", std::string(argv[0]).substr(posSlash+1));
     char buf[256];
     if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");
 
-
     navitia::type::Data* data = new navitia::type::Data();
-
 
     boost::thread_group threads;
     // Prepare our context and sockets

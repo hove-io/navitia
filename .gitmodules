@@ -1,9 +1,6 @@
 [submodule "source/utils"]
 	path = source/utils
 	url = git@github.com:CanalTP/utils.git
-[submodule "source/jormungandr/flask-restful"]
-	path = source/jormungandr/flask-restful
-	url = https://github.com/l-vincent-l/flask-restful.git
 [submodule "source/third_party/osmpbfreader"]
 	path = source/third_party/osmpbfreader
 	url = git@github.com:CanalTP/libosmpbfreader.git

@@ -1,3 +1,9 @@
+navitia2 (0.77.0) unstable; urgency=low
+
+  * Fusio2ed
+
+ -- vlara <vincent.lara@canaltp.fr>  Tue, 17 Dec 2013 11:50:24 +0100
+
 navitia2 (0.75.3) unstable; urgency=low
 
   * Ajout d'un index

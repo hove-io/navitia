@@ -10,11 +10,14 @@ namespace type {
 struct Data;
 enum class Type_e;
 struct GeographicalCoord;
+typedef uint32_t idx_t;
 }
 
 namespace proximitylist {
+
+typedef std::vector<std::pair<type::idx_t, type::GeographicalCoord>> vector_idx_coord;
 pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
-                         const std::vector<type::Type_e> & filter,
+                         const std::vector<type::Type_e>& types, const std::string& filter,
                          const uint32_t depth, const uint32_t count, const uint32_t start_page,
-                         const type::Data & data);
+                         const type::Data& data);
 }} // namespace navitia::proximitylist
