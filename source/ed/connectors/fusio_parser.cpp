@@ -238,7 +238,7 @@ ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_
         auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
 
         if (itm == gtfs_data.physical_mode_map.end()) {
-            LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs mode " << row[physical_mode_c]
+            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the Gtfs mode " << row[physical_mode_c]
                            << " referenced by trip " << row[trip_c]);
             ignored++;
             clean_and_delete(data, vj);
@@ -360,7 +360,7 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         throw InvalidHeaders(csv.filename);
     }
     ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
-    mode->id = data.physical_modes.size() + 1;
+    mode->id = row[id_c];
     mode->name = row[name_c];
     mode->uri = row[id_c];
     data.physical_modes.push_back(mode);
@@ -379,7 +379,7 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
         throw InvalidHeaders(csv.filename);
     }
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = data.commercial_modes.size() + 1;
+    commercial_mode->id = row[id_c];
     commercial_mode->name = row[name_c];
     commercial_mode->uri = row[id_c];
     data.commercial_modes.push_back(commercial_mode);
