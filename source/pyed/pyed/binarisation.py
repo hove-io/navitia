@@ -17,16 +17,16 @@ def make_connection_string(config):
     connection_string += " password="+config.get("database", "password")
     return connection_string
 
-def gtfs2ed(gtfs_filename, config, backup_directory):
-    """ Unzip gtfs file, remove the file, launch gtfs2ed """
+def fusio2ed(fusio_filename, config, backup_directory):
+    """ Unzip fusio file, remove the file, launch fusio2ed """
     pyed_logger = logging.getLogger('pyed')
-    gtfs_logger = logging.getLogger('gtfs2ed')
-    res = launch_exec("mv", [gtfs_filename, backup_directory], pyed_logger)
+    fusio_logger = logging.getLogger('fusio2ed')
+    res = launch_exec("mv", [fusio_filename, backup_directory], pyed_logger)
     if res != 0:
         return 1
-    gtfs_bnanme = os.path.basename(gtfs_filename)
-    new_gtfs = backup_directory + "/" +gtfs_bnanme
-    res = launch_exec("unzip", [new_gtfs, "-d", backup_directory],
+    fusio_bnanme = os.path.basename(fusio_filename)
+    new_fusio = backup_directory + "/" +fusio_bnanme
+    res = launch_exec("unzip", [new_fusio, "-d", backup_directory],
                        pyed_logger)
     if res != 0:
         return 2
@@ -46,12 +46,12 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
     try :
         connection_string = make_connection_string(config)
     except ConfigException:
-        pyed_logger.error("gtfs2ed : Unable to make the connection string")
+        pyed_logger.error("fusio2ed : Unable to make the connection string")
         return 3
     params.append("--connection-string")
     params.append(connection_string)
-    res = launch_exec(config.get("instance", "exec_directory")+"/gtfs2ed",
-                      params, gtfs_logger, pyed_logger)
+    res = launch_exec(config.get("instance", "exec_directory")+"/fusio2ed",
+                      params, fusio_logger, pyed_logger)
     if res != 0:
         return 4
     return 0

@@ -23,11 +23,11 @@ def init_loggers(config):
     pyed_logger.setLevel(logging.INFO)
     pyed_logger.addHandler(pyed_handler)
 
-    gtfs2ed_handler = logging.FileHandler(config.get("log_files", "gtfs2ed"))
-    gtfs2ed_handler.setFormatter(formatter)
-    gtfs2ed_logger = logging.getLogger('gtfs2ed')
-    gtfs2ed_logger.setLevel(logging.INFO)
-    gtfs2ed_logger.addHandler(gtfs2ed_handler)
+    fusio2ed_handler = logging.FileHandler(config.get("log_files", "fusio2ed"))
+    fusio2ed_handler.setFormatter(formatter)
+    fusio2ed_logger = logging.getLogger('fusio2ed')
+    fusio2ed_logger.setLevel(logging.INFO)
+    fusio2ed_logger.addHandler(fusio2ed_handler)
 
     OSM2ed_handler = logging.FileHandler(config.get("log_files", "osm2ed"))
     OSM2ed_handler.setFormatter(formatter)

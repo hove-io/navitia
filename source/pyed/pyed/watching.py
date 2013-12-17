@@ -3,7 +3,7 @@
 Class with the main loop
 """
 import glob
-from pyed.binarisation import osm2ed, gtfs2ed, ed2nav, nav2rt
+from pyed.binarisation import osm2ed, fusio2ed, ed2nav, nav2rt
 from datetime import datetime
 from pyed.launch_exec import launch_exec
 from pyed.config import ConfigException
@@ -13,7 +13,7 @@ import pika
 
 class Watching():
     """ when launch with run(), it looks in the source directory if there are
-        any new file (osm or gtfs) to compute.
+        any new file (osm or fusio) to compute.
         If there was any file it will launch ed2nav after
     """
 
@@ -81,9 +81,9 @@ class Watching():
         """
         while True:
             osm_files = glob.glob(self.directory+"/*.pbf")
-            gtfs_files = glob.glob(self.directory+"/*.zip")
+            fusio_files = glob.glob(self.directory+"/*.zip")
             worked_on_files = []
-            while len(osm_files) > 0 or len(gtfs_files)>0 :
+            while len(osm_files) > 0 or len(fusio_files)>0 :
                 try:
                     if self.make_backupdirectory() != 0:
                         self.pyed_logger.error("""Unable to make backup
@@ -101,21 +101,21 @@ class Watching():
                     else:
                         self.pyed_logger.error("""Osm file's binarisation
                                                   failed %s"""% osmfile)
-                elif len(gtfs_files) > 0:
-                    gtfsfile = gtfs_files.pop()
-                    self.pyed_logger.info("Gtfs file found " + gtfsfile )
-                    res = gtfs2ed(gtfsfile, self.conf, self.working_directory)
+                elif len(fusio_files) > 0:
+                    fusiofile = fusio_files.pop()
+                    self.pyed_logger.info("fusio file found " + fusiofile )
+                    res = fusio2ed(fusiofile, self.conf, self.working_directory)
                     if res == 0:
-                        self.pyed_logger.info("""Gtfs file added
-                                                 to ed %s""" % gtfsfile )
-                        worked_on_files.append(gtfsfile)
+                        self.pyed_logger.info("""fusio file added
+                                                 to ed %s""" % fusiofile )
+                        worked_on_files.append(fusiofile)
                     else:
-                        self.pyed_logger.error("""Gtfs file's binarisation
-                                                  failed %s""" % gtfsfile)
+                        self.pyed_logger.error("""fusio file's binarisation
+                                                  failed %s""" % fusiofile)
                 else:
-                    self.pyed_logger.debug("No gtfs nor osm file found")
+                    self.pyed_logger.debug("No fusio nor osm file found")
                 osm_files = glob.glob(self.directory+"/*.pbf")
-                gtfs_files = glob.glob(self.directory+"/*.zip")
+                fusio_files = glob.glob(self.directory+"/*.zip")
 
             if len(worked_on_files) > 0:
                 self.pyed_logger.info("Launching ed2nav")

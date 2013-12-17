@@ -21,12 +21,12 @@ class Config:
     backup/ (you'll find directories with backup data of the data computed)
     error/ (where the error logs go)
     data/ (computed datas)
-    gtfs2ed the gtfs2ed program
+    fusio2ed the fusio2ed program
     osm2ed the osm2ed program
     ed2nav the ed2nav program
     .
     Another section database, with params, name, user, host and password.
-    Another one logs_files, with the params : osm2ed, gtfs2ed, ed2nav, pyed.
+    Another one logs_files, with the params : osm2ed, fusio2ed, ed2nav, pyed.
 
     Example file :
     [instance]
@@ -45,7 +45,7 @@ class Config:
 
     [log_files] =
     osm2ed = /var/log/ed/osm2ed_instance_name
-    gtfs2ed = /var/log/ed/gtfs2ed_instance_name
+    fusio2ed = /var/log/ed/fusio2ed_instance_name
     ed2nav = /var/log/ed/ed2nav_instance_name
     pyed = /var/log/ed/pyed_instance_name
 
@@ -82,7 +82,7 @@ class Config:
                                     },
                             "log_files" : {
                                 "osm2ed" : None,
-                                "gtfs2ed" : None,
+                                "fusio2ed" : None,
                                 "ed2nav" : None,
                                 "pyed" : None,
                                 "nav2rt" : None
@@ -136,7 +136,7 @@ class Config:
         confspec.append("password=string")
         confspec.append("[log_files]")
         confspec.append("osm2ed=string")
-        confspec.append("gtfs2ed=string")
+        confspec.append("fusio2ed=string")
         confspec.append("ed2nav=string")
         confspec.append("pyed=string")
         confspec.append('[broker]')
