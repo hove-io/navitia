@@ -10,7 +10,7 @@ Tous les modules sont des web-services REST.
 * http/JSON
 * http/ProtocolBuffer
 
-Chaque ressource étant proposée en lecture seule, seul les méthodes GET et POST sont implémentées. 
+Chaque ressource étant proposée en lecture seule, seul les méthodes GET et POST sont implémentées.
 
 Toutefois la méthode GET étant limitée à quelques ko, et la méthode POST à 100ko, il est donc conseillé d'utiliser la méthode POST sur les longues URI (calcul d'itinéraire en particulier).
 

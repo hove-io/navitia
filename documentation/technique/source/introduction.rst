@@ -1,26 +1,26 @@
 Introduction
 ============
 
-**NAViTiA** est un **SIM** (système d'information multimodale). 
+**NAViTiA** est un **SIM** (système d'information multimodale).
 C'est une suite applicative complète permettant la conception, la gestion et la diffusion d'information voyageur multi-modale.
 
 Nous présentons dans cette introduction les 4 niveaux suivants :
 
 * Les fournisseurs d’information.
-* Le noyau de communication, qui assure l’interface avec les systèmes partenaires. 
-  Dans notre architecture, le noyau de communication est principalement composé des services FUSiO (données structurelles) 
+* Le noyau de communication, qui assure l’interface avec les systèmes partenaires.
+  Dans notre architecture, le noyau de communication est principalement composé des services FUSiO (données structurelles)
   et AlerteTrafic (données événementielles).
-* Le SIV qui assure la production des services applicatifs à destination des voyageurs et des partenaires. 
+* Le SIV qui assure la production des services applicatifs à destination des voyageurs et des partenaires.
   Dans notre architecture, le SIV est principalement composé du hub NAViTiA.
 * Les canaux d’accès à l’information.
 
-Les interfaces de ces sous-systèmes sont claires et documentées. 
+Les interfaces de ces sous-systèmes sont claires et documentées.
 
 * Elles reposent sur des « web services », ce qui en garantit l’ouverture et la souplesse d’intégration
   pour intégrer une problématique locale spécifique par exemple.
-* Elles s’appuient sur la normalisation Transmodel notamment pour ce qui est des interfaces 
+* Elles s’appuient sur la normalisation Transmodel notamment pour ce qui est des interfaces
   avec les systèmes des contributeurs ou de l’export du référentiel consolidé vers d’autres systèmes.
-* Elles sont évolutives. L’approche en service hébergé facilite l’accès à de nouveaux services développés dans le cadre d’autres projets. 
+* Elles sont évolutives. L’approche en service hébergé facilite l’accès à de nouveaux services développés dans le cadre d’autres projets.
 
 .. warning::
    La mise à disposition d’interfaces automatisées avec un nombre toujours plus important d’autres systèmes est un point fort de notre solution.
@@ -31,10 +31,10 @@ Présentation générale
 
 La suite NAViTiA est composée des 3 modules fonctionnels principaux suivants:
 
-* **FUSiO** permet de récupérer les données de transport structurelles des différents partenaires (exploitants ou autorités organisatrices) 
-* Le cas échéant **AlerteTrafic** permet de recueillir les informations conjoncturelles de façon automatique 
+* **FUSiO** permet de récupérer les données de transport structurelles des différents partenaires (exploitants ou autorités organisatrices)
+* Le cas échéant **AlerteTrafic** permet de recueillir les informations conjoncturelles de façon automatique
   ou manuelle afin d’alimenter le hub NAViTiA en informations conjoncturelles. Ce module permet également l’envoi de messages aux abonnés.
-* Le **hub NAViTiA** s’appuie sur les 2 précédents modules FUSiO et AlerteTrafic et permet de diffuser une information cohérente sur l'ensemble des médias qui composent le SIM: 
+* Le **hub NAViTiA** s’appuie sur les 2 précédents modules FUSiO et AlerteTrafic et permet de diffuser une information cohérente sur l'ensemble des médias qui composent le SIM:
   Internet, centres de relations clients, afficheurs…
 * Ces modes de diffusion peuvent servir différentes communautés d’utilisateurs : voyageurs, télé-conseillers ou partenaires du projet.
 
@@ -52,7 +52,7 @@ Ce module permet de décrire :
 
 * Le référentiel topologique de transport en commun.
 * L’offre en horaires théoriques sur ce référentiel.
-  Afin de définir le référentiel théorique complet, il met en place les procédures suivantes : 
+  Afin de définir le référentiel théorique complet, il met en place les procédures suivantes :
 * Récupération des données de chaque contributeur.
 * Enrichissement de propriétés complémentaires sur ces données.
 * Définition des correspondances entre chaque contributeur.
@@ -83,12 +83,12 @@ Ce module permet :
 Les perturbations sont définies par rapport au référentiel théorique. Il est donc nécessaire de mettre en place les modules FUSiO et NAViTiA-SIV sur le même référentiel du réseau de transport que le module Alerte-Trafic.
 
 .. warning::
-   La mise en place de l’information perturbée au sein d’un système d’information voyageur nécessite 
+   La mise en place de l’information perturbée au sein d’un système d’information voyageur nécessite
    que chaque élément de la suite NAViTiA (FUSiO, Alerte-trafic, NAViTiA-SIV…) soit:
-   
+
    * Basé sur *le même référentiel de transport*
    * Ce référentiel utilisant des codes d’objets ("codes externes") *pérennes et uniques*
-   
+
    Les modalités de mise en œuvre sont décrites dans le catalogue de service
 
 Pour tout complément de description, voir le document de référence Alerte-Trafic "AlerteTrafic_Document de référence.doc".
@@ -120,7 +120,7 @@ Cette intégration « type » permet de diffuser l’information sur différents
 * Site mobile
 * ...
 
-L'intégration proposée par Canal TP permet également de gérer l’ensemble du contenu des rubriques annexes au hub NAViTiA : 
+L'intégration proposée par Canal TP permet également de gérer l’ensemble du contenu des rubriques annexes au hub NAViTiA :
 information touristique, information sur les tarifs, sur les points de ventes...
 
 Développement d’un média spécifique
@@ -133,5 +133,5 @@ Le développement d’une application de mise en forme spécifique permet de red
 * Widget.
 * Site internet spécifique.
 
-Le développement d’une interface spécifique doit suivre les préconisations décrites 
+Le développement d’une interface spécifique doit suivre les préconisations décrites
 dans la suite de cette documentation et être suivie dans le cadre d’un "projet d’intégration NAViTiA" par Canal TP.

@@ -67,3 +67,12 @@ Section: devel
 Priority: optional
 Description: Navitia-Tyr
     Tyr is a web service for managing account used on jormungandr
+
+Package: navitia-pyed
+Architecture: all
+Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
+Depends: python-configobj, python-pika
+Section: devel
+Priority: optional
+Description: Navitia-Pyed
+    Watch a repository and lanch ed components

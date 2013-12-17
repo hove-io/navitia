@@ -157,7 +157,7 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
     std::vector<stop_point_line> sps_routes;
     for(auto jpp_idx : handler.journey_pattern_points) {
         auto jpp = data.pt_data.journey_pattern_points[jpp_idx];
-        auto route_idx  = jpp->journey_pattern->route->idx;        
+        auto route_idx  = jpp->journey_pattern->route->idx;
         auto sp_idx = jpp->stop_point->idx;
         stop_point_line key = stop_point_line(sp_idx, route_idx);
         auto find_predicate = [&](stop_point_line spl) {
@@ -184,7 +184,7 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
         const type::Route* route = data.pt_data.routes[sp_route.second];
         auto jpps = stop_point->journey_pattern_point_list;
         for(auto jpp : jpps) {
-            if(jpp->journey_pattern->route == route) {                 
+            if(jpp->journey_pattern->route == route) {
                 if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx){ // dans le cas de terminus
                     response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
                 }else{

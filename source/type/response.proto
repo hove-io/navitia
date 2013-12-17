@@ -261,8 +261,8 @@ message StopSchedule {
     required Route route = 1;
     required PtDisplayInfo pt_display_informations = 2;
     required StopPoint stop_point = 3;
-    repeated ScheduleStopTime date_times = 4;    
-    optional ResponseStatus response_status = 5;    
+    repeated ScheduleStopTime date_times = 4;
+    optional ResponseStatus response_status = 5;
 }
 
 

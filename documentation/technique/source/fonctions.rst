@@ -7,7 +7,7 @@ Il ne parle pas de l’implémentation ni des appels à navitia.
 
 .. toctree::
    :maxdepth: 2
-   
+
    modules/planner
    modules/georef
    modules/ptref

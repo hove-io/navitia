@@ -9,7 +9,7 @@ La procédure d'alimentation des NAViTiA 2 de chaque "région" vient se greffer 
 
 
 .. image:: ../_static/alim_donnees/alim-NLY++.png
-    :align: center    
+    :align: center
     :alt: récapitulatif sommaire de l'alimentation
 
 .. todo::
@@ -18,7 +18,7 @@ La procédure d'alimentation des NAViTiA 2 de chaque "région" vient se greffer 
 Récupération des données des transporteurs
 -------------------------------------------
 
-Lors de la mise en production sur le FUSiO concerné, les données consolidées des contributeurs souhaités sont automatiquement exportées au format GTFS, puis mises à disposition de la suite applicative sur un serveur FTP. 
+Lors de la mise en production sur le FUSiO concerné, les données consolidées des contributeurs souhaités sont automatiquement exportées au format GTFS, puis mises à disposition de la suite applicative sur un serveur FTP.
 
 Il est également possible de déclencher automatiquement l'export et la mise à disposition en utilisant l'API autoimport de FUSiO.
 
@@ -46,7 +46,7 @@ Les fichiers créés sont alors mis à disposition de NAViTiA sur une plateforme
 Récapitulatif du processus
 ------------------------------
 .. image:: ../_static/alim_donnees/alim-AJN++.png
-    :align: center    
+    :align: center
     :alt: récapitulatif plus précis de l'alimentation
 
 

@@ -110,7 +110,7 @@ Ne pas utiliser des techniques du C :
  * casts à la C : Type t = (Type) other; On ne devrait jamais avoir besoin de caster (transtyper). Si on doit le faire, utiliser les casts C++
 
 On peut déclarer et initialiser en une seule fois ::
-  
+
   std::string hello = "World !";
 
 Passages de paramètres dans les fonctions
@@ -156,7 +156,7 @@ Documentation
 -------------
 * Privilégiez la description de ce que font les fonctions dans le .h. Chaque fonction doit être commentée de manière à permettre une extraction par Doxygen.
 * Dans le .h, nommez les paramètres. Cela permet à IDE de donner des informations quant à l'appel des fonctions.
-  
+
 ::
 
     string convert(string source, string destination); // bien

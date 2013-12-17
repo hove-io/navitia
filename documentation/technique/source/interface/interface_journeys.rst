@@ -10,10 +10,10 @@ Cette fonction est exposé sous différentes API de type GET
 Paramètres d'entrée
 *******************
 
-Comme tous les services exposés de NAViTiA, le calcul d'itinéraire accepte des requêtes GET ou POST. 
+Comme tous les services exposés de NAViTiA, le calcul d'itinéraire accepte des requêtes GET ou POST.
 Il est toutefois conseillé d'utiliser la méthode POST sur ce type de requête, les URI pouvant être assez longue.
 
-Certains paramètres sont partagés sur les 2 API de calcul d'itinéraire. 
+Certains paramètres sont partagés sur les 2 API de calcul d'itinéraire.
 
 Paramètres généraux
 -------------------
@@ -53,7 +53,7 @@ Paramètres généraux
 |                  |                        | l'accessibilité                     |                                 |
 +------------------+------------------------+-------------------------------------+---------------------------------+
 
-Les paramètres origin et destination peuvent accueillir au choix une URI issue d'une autre API 
+Les paramètres origin et destination peuvent accueillir au choix une URI issue d'une autre API
 (par exemple firstletter ou PTReferential) ou des coordonnées au format WGS84. Ces 2 paramètres sont obligatoires sous une de ces 2 formes.
 
 Paramètres spécifiques à l'API "Journeys"
@@ -111,9 +111,9 @@ Cet itinéraire combine tous les modes couvert par le NAViTiA sous-jacent, c'est
 
 En fonction du mode utilisé pour chaque étape ("section") de l'itinéraire, le détail peut être
 
-  * soit de type "ROAD_NETWORK" ("filaire de voirie", pour les modes piéton, vélos, véhicule personnel...) 
-  * soit de type "PUBLIC_TRANSPORT" ("transport en commun" pour les modes bus, train, avion...) 
-  * soit de type "TRANSFERT" ("transport en commun" pour les modes bus, train, avion...) 
+  * soit de type "ROAD_NETWORK" ("filaire de voirie", pour les modes piéton, vélos, véhicule personnel...)
+  * soit de type "PUBLIC_TRANSPORT" ("transport en commun" pour les modes bus, train, avion...)
+  * soit de type "TRANSFERT" ("transport en commun" pour les modes bus, train, avion...)
 
 
 La réponse repliée est structurée ainsi:

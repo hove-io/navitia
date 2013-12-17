@@ -68,7 +68,7 @@ enum ResponseStatus{
 	no_direct_route_this_day = 4;
 	no_departure_stoppoint = 5;
 	terminus = 6;
-	date_out_of_bound = 7;	
+	date_out_of_bound = 7;
 }
 
 message Message{

@@ -3,7 +3,7 @@ Street network
 
 Ce module est en charge de gérer le référentiel routier.
 
-Ce référentiel peut être alimenté par différentes sources de données telles que 
+Ce référentiel peut être alimenté par différentes sources de données telles que
 
 * Téléatlas
 * OpenStreetMap
@@ -29,7 +29,7 @@ Cette API calcul un itinéraire entre deux points
 **Sortie** :
 
 * Informations générales :
-    
+
   * Longueur du trajet (en mètres)
   * Durée du trajet (en secondes)
 
@@ -88,7 +88,7 @@ Lorsque la projection orthogonale tombe en dehors de l'arc, la projection tombe 
 
    x
     .
-     . 
+     .
       o-------------o
       u             v
 
