@@ -35,3 +35,6 @@ i_manager = InstanceManager()
 i_manager.initialisation()
 
 from jormungandr import api
+
+def setup_package():
+    i_manager.stop()
