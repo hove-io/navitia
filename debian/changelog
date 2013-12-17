@@ -1,8 +1,21 @@
+navitia2 (0.77.3) unstable; urgency=low
+
+  * Fusio2ed packaging
+
+ -- vlara <vincent.lara@canaltp.fr>  Tue, 17 Dec 2013 17:59:30 +0100
+
 navitia2 (0.77.2) unstable; urgency=low
 
   * Pyed packaging
 
  -- vlara <vincent.lara@canaltp.fr>  Tue, 17 Dec 2013 16:29:42 +0100
+
+navitia2 (0.77.1) UNRELEASED; urgency=low
+
+  * Fixes in gtfs and fusio 2 ed
+  * Jormungandr: fix tests
+
+ -- vlara <vincent.lara@canaltp.fr>  Tue, 17 Dec 2013 15:16:10 +0100
 
 navitia2 (0.77.0) unstable; urgency=low
 

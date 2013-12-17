@@ -15,7 +15,7 @@ Description: Navitia Kraken
 
 
 Package: navitia-ed
-Architecture: amd64
+Architecture: amd4064
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Depends: ${shlibs:Depends}, ${misc:Depends}, python-protobuf, python-configobj
 Section: devel
