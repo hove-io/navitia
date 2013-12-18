@@ -4,13 +4,13 @@ Les horaires
 Les interfaces contenues dans timetables permettent de renvoyer des horaires présentés de différentes manières
 
 Liste des interfaces :
-	* next_departures : Renvoie la liste des prochains départs selon les paramètres passés en entrée 
+	* next_departures : Renvoie la liste des prochains départs selon les paramètres passés en entrée
 	* departure_board : Renvoie la liste des départs/arrivées entre deux arrêts
-	* line_schedule : Renvoie la liste des horaires d'une ligne 	
+	* line_schedule : Renvoie la liste des horaires d'une ligne
 
 
 
-NextDepartures 
+NextDepartures
 ****************
 
 Paramètres d'entrée
@@ -28,7 +28,7 @@ Paramètres d'entrée
 |               |                        | souhaite les horaires.              |                                        |
 +---------------+------------------------+-------------------------------------+----------------------------------------+
 | max_datetime  | <yyyymmdd>T<hhmi>      | La date maximale pour les horaires. | max_datetime=20121122T1056             |
-+---------------+------------------------+-------------------------------------+----------------------------------------+  
++---------------+------------------------+-------------------------------------+----------------------------------------+
 | nb_departures | nombre entier          | Le nombre maximal d'horaires        | nb_departures=2000                     |
 |               |                        | souhaité                            |                                        |
 +---------------+------------------------+-------------------------------------+----------------------------------------+
@@ -41,17 +41,17 @@ Paramètres d'entrée
 |               |                        | l'accessibilité                     |                                        |
 +---------------+------------------------+-------------------------------------+----------------------------------------+
 
-Remarques : 
+Remarques :
 	* Si aucun des deux paramètres *nb_departures* ou *max_datetime* n'est renseigné il sera alors assigné au paramètre *nb_departure* la valeur 10.
-	* Si les deux paramètres limitant *nb_departures* et *max_datetime* sont renseignés, les deux paramètres par défaut sont alors pris en compte. La liste sera coupé à la première des conditions atteinte. 
+	* Si les deux paramètres limitant *nb_departures* et *max_datetime* sont renseignés, les deux paramètres par défaut sont alors pris en compte. La liste sera coupé à la première des conditions atteinte.
 
 Format de sortie
 ------------------
 
-Liste de stopTime : 
+Liste de stopTime :
 
 DepartureBoard
-**************** 
+****************
 
 Paramètres d'entrée
 ---------------------
@@ -73,7 +73,7 @@ Paramètres d'entrée
 |                         |                        | les horaires.                       |                                        |
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+
 | max_datetime            | <yyyymmdd>T<hhmi>      | La date maximale pour les horaires. | max_datetime=20121122T1056             |
-+-------------------------+------------------------+-------------------------------------+----------------------------------------+  
++-------------------------+------------------------+-------------------------------------+----------------------------------------+
 | nb_departures           | nombre entier          | Le nombre maximal d'horaires        | nb_departures=2000                     |
 |                         |                        | souhaité                            |                                        |
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+
@@ -103,9 +103,9 @@ Paramètres d'entrée
 |                         |                        | les horaires.                       |                                        |
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+
 | changetime              | T<hhmi>                | L'heure de départ du schedule     . | changetime=T0500                       |
-+-------------------------+------------------------+-------------------------------------+----------------------------------------+  
++-------------------------+------------------------+-------------------------------------+----------------------------------------+
 | max_depth               | nombre entier          | Même argument que dans ptref        | max_depth=2                            |
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+
 
 
-                                
+

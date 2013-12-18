@@ -45,7 +45,7 @@ The filter argument used for requesting public transport object are defined by t
 **object**
 
 .. figure:: ptref_grammar/object.png
-    
+
 **attribute**
 
 .. figure:: ptref_grammar/attribute.png
@@ -53,7 +53,7 @@ The filter argument used for requesting public transport object are defined by t
 **bin_op**
 
 .. figure:: ptref_grammar/bin_op.png
-    
+
 
 **value**
 

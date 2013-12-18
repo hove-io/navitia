@@ -8,14 +8,14 @@ Ce module permet de traduire une suite de date exhaustive (régime de circulatio
 
 Cette fonction peut être utilisable par exemple conjointement avec les services suivants :
 
-* Recherche des propriétés d’une desserte : 
-  en plus des propriétés d’arrêt et d’horaire desservis, de véhicule utilisé, 
-  la consultation de desserte retourne la condition de service. Il est alors possible 
+* Recherche des propriétés d’une desserte :
+  en plus des propriétés d’arrêt et d’horaire desservis, de véhicule utilisé,
+  la consultation de desserte retourne la condition de service. Il est alors possible
   d’appeler l’API de traduction de régime pour signifier de façon intelligible les jours de circulation.
-* En calcul multimodal : 
-  NAViTiA calcule la chaîne binaire de condition de circulation globale 
-  à chaque itinéraire proposé en faisant l’intersection des conditions de service utilisées. 
-  Il est donc possible d’appeler ensuite cette fonction afin de fournir au client une réponse 
+* En calcul multimodal :
+  NAViTiA calcule la chaîne binaire de condition de circulation globale
+  à chaque itinéraire proposé en faisant l’intersection des conditions de service utilisées.
+  Il est donc possible d’appeler ensuite cette fonction afin de fournir au client une réponse
   multimodale sur l’information de circulation : itinéraire circulant du lundi au vendredi sauf mercredi, du... au...
 
 
@@ -55,7 +55,7 @@ Spécifications fonctionnelles du service
 Principe global
 ---------------
 
-Dans la chaîne représentant la condition de circulation ("111100111100111100") 
+Dans la chaîne représentant la condition de circulation ("111100111100111100")
 
 * NAViTiA recherche les motifs les plus représentatifs (chaque motif est composé de 7 jours).
 * Pour chaque motif (du plus représenté au moins représenté) :
@@ -65,7 +65,7 @@ Dans la chaîne représentant la condition de circulation ("111100111100111100")
 
 Quelque soit le paramétrage, la réponse du traducteur de régime sera juste, mais pas forcément optimale selon des critères subjectifs.
 
-Les paramétrages (voir ci-dessous) permettent de corriger certaines réponses. 
+Les paramétrages (voir ci-dessous) permettent de corriger certaines réponses.
 L’intégration dans le média permet également de présenter au mieux la réponse par rapport au client visé.
 
 Algorithme détaillé
@@ -77,7 +77,7 @@ On teste en premier s'il y au moins un jour actif dans la condition de circulati
 si faux -> on renvoie "ne circule pas"
 
 sinon
-  Mise à l’écart des jours précédent le premier lundi et des jours suivant le dernier dimanche 
+  Mise à l’écart des jours précédent le premier lundi et des jours suivant le dernier dimanche
   traitement ultérieur avec les premiers jours libres
 
   Découpage de la condition de service (CS) en semaine
@@ -107,9 +107,9 @@ Les paramétrages permettent d’influer sur la réponse. Ainsi pour une demande
     Les lundi, mardi, jeudi et vendredi du 01/06/2009 au 05/06/2009.
   * Selon les paramétrages de présentation mis en place.
 
-Il n’est possible de paramétrer qu’une seule liste de dates pour les jours fériés, basée sur les jours fériés français. 
-Pour les autres pays, il est nécessaire de modifier le fichier de paramétrage et 
-de désactiver la génération automatique des jours fériés. 
+Il n’est possible de paramétrer qu’une seule liste de dates pour les jours fériés, basée sur les jours fériés français.
+Pour les autres pays, il est nécessaire de modifier le fichier de paramétrage et
+de désactiver la génération automatique des jours fériés.
 La fonction de calcul automatique des jours fériés retourne :
 
 * Le 1er janvier

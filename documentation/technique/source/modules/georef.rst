@@ -12,7 +12,7 @@ Ce référentiel peut être alimenté par différentes sources de données telle
 Dictionnaire
 ------------
 
-* Une adresse( numéro d'une maison) représente un point dans la rue, elle se caractérise par les éléments suivants : 
+* Une adresse( numéro d'une maison) représente un point dans la rue, elle se caractérise par les éléments suivants :
 	#. Numéro dans la rue
 	#. Coordonnées géographiques
 
@@ -55,9 +55,9 @@ Conversion adresse en coordonnées
 Format de sortie
 -----------------------------
 Le module fournit en sortie les informations suivantes :
- 
+
 * Informations générales :
-    
+
   * Longueur du trajet (en mètres)
   * Durée du trajet (en secondes)
 
@@ -109,7 +109,7 @@ Lorsque la projection orthogonale tombe en dehors de l'arc, la projection tombe 
 
    x
     .
-     . 
+     .
       o-------------o
       u             v
 
@@ -141,7 +141,7 @@ Trouver une adresse à partir de coordonnées
 À partir d'une coordonnée, on cherche l'adresse. la recherche se fait la façon suivante :
 
 #. Trouver la rue à partir des coordonnées
-#. Trouver le numéro dont sa distance et la plus petite par rapport aux coordonnées. 
+#. Trouver le numéro dont sa distance et la plus petite par rapport aux coordonnées.
 
 Trouver les coordonnées d'une adresse
 *************************************
@@ -169,7 +169,7 @@ Dans les cas suivants, on récupère le barycentre de la rue :
 Module utilisé
 **************
 
-Fonctions internes 
+Fonctions internes
 *******************
 
 UseCase

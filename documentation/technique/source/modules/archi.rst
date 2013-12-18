@@ -33,7 +33,7 @@ Il est aussi le responsable de création de toutes les correspondances entre les
 
 .. warning::
    Les correspondance envoyées à REDIS ne concernent que les objets suivants : StopArea, StopPoint, Line, VehicleJourney et le Network
-   
+
 osm2ed
 ~~~~~~
 osm2ed est responsable de l'intégration d'un export OSM dans ED
@@ -96,7 +96,7 @@ Lors de la construction des messages par le connecteur temps réel, ce dernier r
 
 .. warning::
    A prendre en compte les points suivants:
-   
+
    * Les messages pour lesquelles pas de correspondance, pas de URI NAViTiA, sont rejettés.
    * Les objets pris en compte sont : StopArea, StopPoint, Line, VehicleJourney et le Network
 

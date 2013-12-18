@@ -36,9 +36,9 @@ At some point you will want to read:
     public_transport
     details
     API Reference <http://doc.navitia.io>
-        
+
 Our APIs are available at the following url: http://api.navitia.io.
-        
+
 Requests have the following structure :  ``http://api.navitia.io/v0/[region/]api.format?arg=val``.
 
 Have a look at the examples below to learn what API we provide and how to use them.
@@ -70,7 +70,7 @@ We need to use the ``journeys`` API.
 The coordinates of the view point are ``lon=-122.4752``, ``lat=37.80826`` and the coordinates of the Transamercia Pyramid are ``lon=-122.402770``, ``lat=37.794682``.
 The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates).
 
-The arguments are the following: 
+The arguments are the following:
 
 
 * ``origin=coord:-122.4752:37.80826``

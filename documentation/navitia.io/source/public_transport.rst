@@ -6,8 +6,8 @@ A small introduction to public transportation data
 Introduction
 ------------
 
-The world of public transportation is really specific, you will see here a small 
-introduction to it. A lot of people in the world of public transportation use 
+The world of public transportation is really specific, you will see here a small
+introduction to it. A lot of people in the world of public transportation use
 different words to speak about the same thing. Here are the definitions of terms
 employed in www.navitia.io
 
@@ -45,7 +45,7 @@ same stop points in exactly the same order belong to to the same journey pattern
 Route
 -----
 
-A route is a collection of journey pattern that match the same commercial direction. 
+A route is a collection of journey pattern that match the same commercial direction.
 
 .. warning::
     The GTFS specification uses the term *route* for the object we call *line*. It does not
@@ -61,5 +61,5 @@ Stop Time
 -----------
 
 A stop time represents the time when a bus is planned to arrive and to leave a
-stop point. 
+stop point.
 

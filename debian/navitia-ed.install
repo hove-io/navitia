@@ -1,4 +1,5 @@
 usr/bin/gtfs2ed usr/bin
+usr/bin/fusio2ed usr/bin
 usr/bin/osm2ed usr/bin
 usr/bin/ed2nav usr/bin
 usr/bin/pyed_service.py usr/bin

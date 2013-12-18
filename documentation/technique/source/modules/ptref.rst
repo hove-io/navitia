@@ -37,7 +37,7 @@ avec :
 Opérateurs logiques de PTReferential
 ******************************************
 
-Les opérateurs acceptés par le module PTReferential sont : 
+Les opérateurs acceptés par le module PTReferential sont :
  * **=**  : Opérateur égal
  * **<>** : Opérateur différent
  * **<**  : Opérateur inférieur
@@ -73,7 +73,7 @@ Après réception de la requête, la procédure suivie par PTReferential pour do
 Module utilisé
 **************
 
-Fonctions internes 
+Fonctions internes
 *******************
 
 UseCase
@@ -103,7 +103,7 @@ dans l'exemple, nous supposons que nous avons deux objets **stop_areas** et **st
 |       10191               |         Lanaja         |
 +---------------------------+------------------------+
 
- * stop_points 
+ * stop_points
 
 +---------------------------+------------------------+------------------------+
 |   external_code           |         name           |        stop_area_idx   |

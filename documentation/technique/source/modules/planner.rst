@@ -9,7 +9,7 @@ Fonctionnement général
 
 .. toctree::
    :maxdepth: 2
-   
+
    planner_general_function.rst
 
 
@@ -19,7 +19,7 @@ Transformation/calcul du service
 
 .. toctree::
    :maxdepth: 2
-   
+
    planner_algo.rst
 
 Exemple d'utilisation
