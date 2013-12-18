@@ -343,26 +343,6 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
     this->target_distance = projected.distance_to(vertex2_coord);
 }
 
-
-//Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
-//    ProjectionData start(start_coord, *this, this->pl);
-//    ProjectionData dest(dest_coord, *this, this->pl);
-
-//    if (start.found && dest.found) {
-//        Path p = compute({start.source, start.target},
-//                     {dest.source, dest.target},
-//                     {start.source_distance, start.target_distance},
-//                     {dest.source_distance, dest.target_distance});
-
-//        //we add the missing segment to and from the projected departure and arrival
-//        add_projections(p, start, dest);
-//        return p;
-//    } else {
-//        throw proximitylist::NotFound();
-//    }
-//}
-
-
 std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCoord &coord){
     std::vector<navitia::type::idx_t> to_return;
     navitia::georef::Rect search_rect(coord);
