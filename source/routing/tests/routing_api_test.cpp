@@ -60,6 +60,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     b.data.pt_data.index();
     b.data.build_raptor();
     b.data.build_uri();
+    b.data.build_proximity_list();
     b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     RAPTOR raptor(b.data);
 
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
       |                                             |
       |                                             |
       |                                             | g
-      |                                             ---------------------- A --------------------------------R
+      |                                             ---------------------- A ------------R
       |                                                               /  |
       |                                                             /    |
       |                                                           /      |
@@ -156,11 +157,11 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
                         I(7, 10)    3
                         J(7, 12)    4
                         K(1, 12)    5
-                        B(1, 2)     6
-                        C(15, 2)    7
+                        B(1, 3)     6
+                        C(15, 3)    7
                         F(15, 5)    8
                         E(12, 5)    9
-                        R(21, 8)    10
+                        R(14, 8)    10
                         S(1, 1)     11
 
 
@@ -199,13 +200,13 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     type::GeographicalCoord K(1, 12, false);
     boost::add_vertex(ng::Vertex(K),b.data.geo_ref.graph);
 
-    type::GeographicalCoord B(1, 2, false);
+    type::GeographicalCoord B(1, 3, false);
     boost::add_vertex(ng::Vertex(B),b.data.geo_ref.graph);
 
-    type::GeographicalCoord C(15, 2, false);
+    type::GeographicalCoord C(22, 3, false);
     boost::add_vertex(ng::Vertex(C),b.data.geo_ref.graph);
 
-    type::GeographicalCoord F(15, 5, false);
+    type::GeographicalCoord F(22, 5, false);
     boost::add_vertex(ng::Vertex(F),b.data.geo_ref.graph);
 
     type::GeographicalCoord E(12, 5, false);
@@ -447,13 +448,18 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
+    for (int i = 0; i < section.street_network().coordinates_size(); ++i)
+        std::cout << "coord: " << section.street_network().coordinates(i).lon() / type::GeographicalCoord::M_TO_DEG
+                     << ", " << section.street_network().coordinates(i).lat() / type::GeographicalCoord::M_TO_DEG
+                        <<std::endl;
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 4);
     BOOST_REQUIRE_EQUAL(section.street_network().length(), 10);
     BOOST_REQUIRE_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
-    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
-    pbnavitia::PathItem pathitem = section.street_network().path_items(0);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ab");
-    BOOST_REQUIRE_EQUAL(pathitem.length(), 10);
+    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 3);
+    BOOST_CHECK_EQUAL(section.street_network().path_items(0).name(), "rue bs");
+    BOOST_CHECK_EQUAL(section.street_network().path_items(1).name(), "rue ab");
+    BOOST_CHECK_EQUAL(section.street_network().path_items(1).length(), 10);
+    BOOST_CHECK_EQUAL(section.street_network().path_items(2).name(), "rue ar");
 
     // Biking
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
@@ -472,25 +478,27 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_REQUIRE_EQUAL(section.origin().address().name(), "rue kb");
-    BOOST_REQUIRE_EQUAL(section.destination().address().name(), "rue ag");
-    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 9);
-    BOOST_REQUIRE_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
-    BOOST_REQUIRE_EQUAL(section.street_network().length(), 19);
-    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 6);
+    BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
+    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ag");
+    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 8);
+    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
+    BOOST_CHECK_EQUAL(section.street_network().length(), 18);
+    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 7);
 
-    pathitem = section.street_network().path_items(0);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue kb");
+    auto pathitem = section.street_network().path_items(0);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
     pathitem = section.street_network().path_items(1);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue jk");
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
     pathitem = section.street_network().path_items(2);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ij");
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue jk");
     pathitem = section.street_network().path_items(3);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue hi");
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ij");
     pathitem = section.street_network().path_items(4);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue gh");
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue hi");
     pathitem = section.street_network().path_items(5);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ag");
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
+    pathitem = section.street_network().path_items(6);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
 
     // Car
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Car;
@@ -508,19 +516,21 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
-    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_REQUIRE_EQUAL(section.origin().address().name(), "rue cb");
-    BOOST_REQUIRE_EQUAL(section.destination().address().name(), "rue fc");
-    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 5);
-    BOOST_REQUIRE_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Car);
-    BOOST_REQUIRE_EQUAL(section.street_network().length(), 7);
-    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 2);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
+    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue fc");
+    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 4);
+    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Car);
+    BOOST_CHECK_EQUAL(section.street_network().length(), 6);
+    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 3);
     //since R is not accessible by car, we project R in the closest edge in the car graph
     //this edge is F-C, so this is the end of the journey (the rest of it is as the crow flies)
     pathitem = section.street_network().path_items(0);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue cb");
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
     pathitem = section.street_network().path_items(1);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue fc");
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue cb");
+    pathitem = section.street_network().path_items(2);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue fc");
 }
 
 

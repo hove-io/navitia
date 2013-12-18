@@ -173,12 +173,6 @@ int Way::nearest_number(const nt::GeographicalCoord& coord){
     return to_return;
 }
 
-void GeoRef::init(std::vector<float> &distances, std::vector<vertex_t> &predecessors) const{
-    size_t n = boost::num_vertices(this->graph);
-    distances.assign(n, std::numeric_limits<float>::max());
-    predecessors.resize(n);
-}
-
 /**
   * Compute the angle between the last segment of the path and the next point
   *
@@ -303,56 +297,6 @@ void GeoRef::add_way(const Way& w){
     ways.push_back(to_add);
 }
 
-Path GeoRef::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros, std::vector<double> dest_zeros) const {
-    if(starts.size() == 0 || destinations.size() == 0)
-        throw proximitylist::NotFound();
-
-    if(start_zeros.size() != starts.size())
-        start_zeros.assign(starts.size(), 0);
-
-    if(dest_zeros.size() != destinations.size())
-        dest_zeros.assign(destinations.size(), 0);
-
-    std::vector<vertex_t> preds;
-
-    // Tableau des distances des nœuds à l'origine, par défaut à l'infini
-    std::vector<float> dists;
-
-    this->init(dists, preds);
-
-    for(size_t i = 0; i < starts.size(); ++i){
-        vertex_t start = starts[i];
-        dists[start] = start_zeros[i];
-        // On effectue un Dijkstra sans ré-initialiser les tableaux de distances et de prédécesseur
-        try {
-            this->dijkstra(start, dists, preds, target_visitor(destinations));
-        } catch (DestinationFound) {}
-    }
-
-    // On cherche la destination la plus proche
-    vertex_t best_destination = destinations.front();
-    float best_distance = std::numeric_limits<float>::max();
-    for(size_t i = 0; i < destinations.size(); ++i){
-        vertex_t destination = destinations[i];
-        dists[i] += dest_zeros[i];
-        if(dists[destination] < best_distance) {
-            best_distance = dists[destination];
-            best_destination = destination;
-        }
-    }
-
-    // Si un chemin existe
-    if(best_distance < std::numeric_limits<float>::max()){
-        Path p = build_path(best_destination, preds, true);
-        p.length = best_distance;
-        return p;
-    } else {
-        throw proximitylist::NotFound();
-    }
-
-}
-
-
 ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, const proximitylist::ProximityList<vertex_t> &prox){
 
     edge_t edge;
@@ -399,56 +343,24 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
     this->target_distance = projected.distance_to(vertex2_coord);
 }
 
-void GeoRef::add_projections(Path& p, const ProjectionData& start, const ProjectionData& dest) const {
-    edge_t start_e = boost::edge(start.source, start.target, graph).first;
-    edge_t end_e = boost::edge(dest.source, dest.target, graph).first;
-    Edge start_edge = graph[start_e];
-    Edge end_edge = graph[end_e];
 
-    //we aither add the starting coordinate to the first path item or create a new path item if it was another way
-    nt::idx_t first_way_idx = (p.path_items.empty() ? type::invalid_idx : p.path_items.front().way_idx);
-    if (start_edge.way_idx != first_way_idx || first_way_idx == type::invalid_idx) {
-        if (! p.path_items.empty() && p.path_items.front().way_idx == type::invalid_idx) { //there can be an item with no way, so we will update this item
-            p.path_items.front().way_idx = start_edge.way_idx;
-        }
-        else {
-            PathItem item;
-            item.way_idx = start_edge.way_idx;
-            p.path_items.push_front(item);
-        }
-    }
-    auto& coord_list = p.path_items.front().coordinates;
-    if (coord_list.empty() || coord_list.front() != start.projected)
-        coord_list.push_front(start.projected);
+//Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
+//    ProjectionData start(start_coord, *this, this->pl);
+//    ProjectionData dest(dest_coord, *this, this->pl);
 
-    nt::idx_t last_way_idx = p.path_items.back().way_idx;
-    if (end_edge.way_idx != last_way_idx) {
-        PathItem item;
-        item.way_idx = end_edge.way_idx;
-        p.path_items.push_back(item);
-    }
-    auto& back_coord_list = p.path_items.back().coordinates;
-    if (back_coord_list.empty() || back_coord_list.back() != dest.projected)
-        back_coord_list.push_back(dest.projected);
-}
+//    if (start.found && dest.found) {
+//        Path p = compute({start.source, start.target},
+//                     {dest.source, dest.target},
+//                     {start.source_distance, start.target_distance},
+//                     {dest.source_distance, dest.target_distance});
 
-Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
-    ProjectionData start(start_coord, *this, this->pl);
-    ProjectionData dest(dest_coord, *this, this->pl);
-
-    if (start.found && dest.found) {
-        Path p = compute({start.source, start.target},
-                     {dest.source, dest.target},
-                     {start.source_distance, start.target_distance},
-                     {dest.source_distance, dest.target_distance});
-
-        //we add the missing segment to and from the projected departure and arrival
-        add_projections(p, start, dest);
-        return p;
-    } else {
-        throw proximitylist::NotFound();
-    }
-}
+//        //we add the missing segment to and from the projected departure and arrival
+//        add_projections(p, start, dest);
+//        return p;
+//    } else {
+//        throw proximitylist::NotFound();
+//    }
+//}
 
 
 std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCoord &coord){

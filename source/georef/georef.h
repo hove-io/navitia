@@ -132,8 +132,8 @@ struct PathItem{
 
 /** Itinéraire complet */
 struct Path {
-    float length; //< Longueur totale du parcours
-    std::deque<PathItem> path_items; //< Liste des voies parcourues
+    float length = 0.; //< Longueur totale du parcours
+    std::deque<PathItem> path_items = {}; //< Liste des voies parcourues
 };
 
 class ProjectionData;
@@ -257,9 +257,8 @@ struct GeoRef {
 
 
     /** Projete chaque stop_point sur le filaire de voirie
-
-        Retourne le nombre de stop_points effectivement accrochés
-    */
+     *  Retourne le nombre de stop_points effectivement accrochés
+     */
     int project_stop_points(const std::vector<type::StopPoint*> & stop_points);
 
     /** project the stop point on all transportation mode
@@ -268,16 +267,6 @@ struct GeoRef {
       * - a boolean corresponding to the fact that at least one projection has been found
     */
     std::pair<ProjectionByMode, bool> project_stop_point(const type::StopPoint* stop_point) const;
-
-    /** Calcule le meilleur itinéraire entre deux listes de nœuds
-     *
-     * Le paramètre zeros indique la distances (en mètres) de chaque nœud de départ. Il faut qu'il y ait autant d'éléments que dans starts
-     * Si la taille ne correspond pas, on considère une distance de 0
-     */
-    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros = std::vector<double>(), std::vector<double> dest_zeros = std::vector<double>()) const;
-
-    /// Calcule le meilleur itinéraire entre deux coordonnées
-    Path compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const;
 
     /** Retourne l'arc (segment) le plus proche
       *
@@ -291,11 +280,6 @@ struct GeoRef {
     vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
-    /** Initialise les structures nécessaires à dijkstra
-     *
-     * Attention !!! Modifie distances et predecessors
-     **/
-    void init(std::vector<float> & distances, std::vector<vertex_t> & predecessors) const;
 
     /** Lance un calcul de dijkstra sans initaliser de structure de données
      *
@@ -337,6 +321,21 @@ struct target_visitor : public boost::dijkstra_visitor<> {
     void finish_vertex(vertex_t u, const Graph&){
         if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
             throw DestinationFound();
+    }
+};
+
+// Visitor who throw a DestinationFound exception when all target has been visited
+struct target_all_visitor : public boost::dijkstra_visitor<> {
+    std::vector<vertex_t> destinations;
+    size_t nbFound = 0;
+    target_all_visitor(std::vector<vertex_t> destinations) : destinations(destinations){}
+    void finish_vertex(vertex_t u, const Graph&){
+        if (std::find(destinations.begin(), destinations.end(), u) != destinations.end()) {
+            nbFound++;
+            if (nbFound == destinations.size()) {
+                throw DestinationFound();
+            }
+        }
     }
 };
 

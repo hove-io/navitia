@@ -28,6 +28,15 @@ std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& p
     return res;
 }
 
+void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
+    std::cout << " coord : " << std::endl;
+    for (auto c : coord) {
+        std::cout << " -- " << c.lon() / navitia::type::GeographicalCoord::M_TO_DEG
+                  << ", " << c.lat() / navitia::type::GeographicalCoord::M_TO_DEG
+                     << std::endl;
+    }
+}
+
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
     //StreetNetwork sn;
     GeoRef sn;
@@ -93,76 +102,83 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
     BOOST_CHECK_THROW(sn.nearest_edge(c), navitia::proximitylist::NotFound);
 }
 
+//not used for the moment so it is not possible anymore (but it would not be difficult to do again)
 // Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
-BOOST_AUTO_TEST_CASE(compute_route_n_n){
-    using namespace navitia::type;
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder b(sn);
+//BOOST_AUTO_TEST_CASE(compute_route_n_n){
+//    using namespace navitia::type;
+//    //StreetNetwork sn;
+//    GeoRef sn;
+//    GraphBuilder b(sn);
 
-    /*               a           e
-                     |
-                  b—–o––c
-                     |
-                     d             */
-    b("e", 0,0)("a",0,1)("b",0,2)("c",0,3)("d",0,4)("o",0,5);
-    b("a", "o", 1)("b","o",2)("o","c", 3)("o","d", 4);
+//    /*               a           e
+//                     |
+//                  b—–o––c
+//                     |
+//                     d             */
+//    b("e", 0,0)("a",0,1)("b",0,2)("c",0,3)("d",0,4)("o",0,5);
+//    b("a", "o", 1)("b","o",2)("o","c", 3)("o","d", 4);
 
-    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
-    std::vector<vertex_t> dests = {b.get("c"), b.get("d")};
-    Path p = sn.compute(starts, dests);
+//    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
+//    std::vector<vertex_t> dests = {b.get("c"), b.get("d")};
 
-    auto coords = get_coords_from_path(p);
-    BOOST_CHECK_EQUAL(coords.size(), 3);
-    GeographicalCoord expected;
-    expected.set_xy(0,1);
-    BOOST_CHECK_EQUAL(coords[0], expected); // a
-    expected.set_xy(0,5);
-    BOOST_CHECK_EQUAL(coords[1], expected); // o
-    expected.set_xy(0,3);
-    BOOST_CHECK_EQUAL(coords[2], expected); // c
+//    GeoRefPathFinder path_finder(sn);
+//    path_finder.init(starts, Mode_e::Walking);
+//    Path p = path_finder.compute_path(dests);
 
-    // On lève une exception s'il n'y a pas d'itinéraire
-    starts = {b.get("e")};
-    dests = {b.get("a")};
-    BOOST_CHECK_THROW(sn.compute(starts, dests), navitia::proximitylist::NotFound);
+//    auto coords = get_coords_from_path(p);
+//    BOOST_CHECK_EQUAL(coords.size(), 3);
+//    GeographicalCoord expected;
+//    expected.set_xy(0,1);
+//    BOOST_CHECK_EQUAL(coords[0], expected); // a
+//    expected.set_xy(0,5);
+//    BOOST_CHECK_EQUAL(coords[1], expected); // o
+//    expected.set_xy(0,3);
+//    BOOST_CHECK_EQUAL(coords[2], expected); // c
 
-    //we add a way to a, otherwise 2 path item will be created
-    Way w;
-    w.name = "Bob"; sn.add_way(w);
-    sn.graph[b.get("a","o")].way_idx = 0;
+//    starts = {b.get("e")};
+//    dests = {b.get("a")};
+//    path_finder.init(starts, Mode_e::Walking);
+//    p = path_finder.compute_path(dests);
+//    // no throw in no itineraryn but the path should be empty
+//    BOOST_CHECK(p.path_items.empty());
 
-    // If the departure and arrival nodes are the same one
-    GeographicalCoord projected_start(0,1,true);
-    p = sn.compute(projected_start, projected_start);
-    coords = get_coords_from_path(p);
-    BOOST_REQUIRE_EQUAL(coords.size(), 1); //only one coord
-    BOOST_CHECK_EQUAL(p.path_items.size(), 1); //there is 2 default item
-    BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(0,1, true)); // a
-}
+
+//    //we add a way to a, otherwise 2 path item will be created
+//    Way w;
+//    w.name = "Bob"; sn.add_way(w);
+//    sn.graph[b.get("a","o")].way_idx = 0;
+
+//    // If the departure and arrival nodes are the same one
+//    GeographicalCoord projected_start(0,1,true);
+//    p = sn.compute(projected_start, projected_start);
+//    coords = get_coords_from_path(p);
+//    BOOST_REQUIRE_EQUAL(coords.size(), 1); //only one coord
+//    BOOST_CHECK_EQUAL(p.path_items.size(), 1); //there is 2 default item
+//    BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(0,1, true)); // a
+//}
 
 // On teste la prise en compte de la distance initiale au nœud
-BOOST_AUTO_TEST_CASE(compute_zeros){
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder b(sn);
-    b("a", "o", 1)("b", "o",2);
-    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
-    std::vector<vertex_t> dests = {b.get("o")};
+//BOOST_AUTO_TEST_CASE(compute_zeros){
+//    //StreetNetwork sn;
+//    GeoRef sn;
+//    GraphBuilder b(sn);
+//    b("a", "o", 1)("b", "o",2);
+//    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
+//    std::vector<vertex_t> dests = {b.get("o")};
 
-    Path p = sn.compute(starts, dests);
-    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
-//    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
+//    Path p = sn.compute(starts, dests);
+//    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
+////    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
 
-    p = sn.compute(starts, dests, {3,1});
-//    BOOST_CHECK(p.path_items[0].segments[0] == b.get("b","o"));
+//    p = sn.compute(starts, dests, {3,1});
+////    BOOST_CHECK(p.path_items[0].segments[0] == b.get("b","o"));
 
-    p = sn.compute(starts, dests, {2,2});
-//    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
-}
+//    p = sn.compute(starts, dests, {2,2});
+////    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
+//}
 
 // Est-ce que les indications retournées sont bonnes
-BOOST_AUTO_TEST_CASE(compute_directions_test){
+BOOST_AUTO_TEST_CASE(compute_directions_test) {
     using namespace navitia::type;
     //StreetNetwork sn;
     GeoRef sn;
@@ -171,16 +187,18 @@ BOOST_AUTO_TEST_CASE(compute_directions_test){
     w.name = "Jaures"; sn.add_way(w);
     w.name = "Hugo"; sn.add_way(w);
 
-    b("a", "b")("b","c")("c","d")("d","e");
+    b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
+    b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
     sn.graph[b.get("a","b")].way_idx = 0;
     sn.graph[b.get("b","c")].way_idx = 0;
     sn.graph[b.get("c","d")].way_idx = 1;
     sn.graph[b.get("d","e")].way_idx = 1;
+    sn.graph[b.get("e","d")].way_idx = 1;
 
-    std::vector<vertex_t> starts = {b.get("a")};
-    std::vector<vertex_t> dests = {b.get("e")};
-    Path p = sn.compute(starts, dests);
-    BOOST_CHECK_EQUAL(p.path_items.size(), 2);
+    GeoRefPathFinder path_finder(sn);
+    path_finder.init({0, 0, true}, Mode_e::Walking); //starting from a
+    Path p = path_finder.compute_path({4, 4, true}); //going to e
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
     BOOST_CHECK_EQUAL(p.path_items[1].way_idx, 1);
 //    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a", "b"));
@@ -188,9 +206,8 @@ BOOST_AUTO_TEST_CASE(compute_directions_test){
 //    BOOST_CHECK(p.path_items[1].segments[0] == b.get("c", "d"));
 //    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
 
-    starts = {b.get("d")};
-    dests = {b.get("e")};
-    p = sn.compute(starts, dests);
+    path_finder.init({3, 3, true}, Mode_e::Walking); //starting from d
+    p = path_finder.compute_path({4, 4, true}); //going to e
     BOOST_CHECK_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
 }
@@ -201,6 +218,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     //StreetNetwork sn;
     GeoRef sn;
     GraphBuilder b(sn);
+    GeoRefPathFinder path_finder(sn);
 
     /*           a+------+b
      *            |      |
@@ -229,8 +247,10 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     start.set_xy(3, -1);
     GeographicalCoord destination;
     destination.set_xy(4, 11);
-    Path p = sn.compute(start, destination);
+    path_finder.init(start, Mode_e::Walking);
+    Path p = path_finder.compute_path(destination);
     auto coords = get_coords_from_path(p);
+    print_coord(coords);
     BOOST_REQUIRE_EQUAL(coords.size(), 4);
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
     GeographicalCoord expected;
@@ -245,8 +265,10 @@ BOOST_AUTO_TEST_CASE(compute_coord){
 
     // Trajet partiel : on ne parcourt pas un arc en entier, mais on passe par un nœud
     start.set_xy(7,6);
-    p = sn.compute(start, destination);
+    path_finder.init(start, Mode_e::Walking);
+    p = path_finder.compute_path(destination);
     coords = get_coords_from_path(p);
+    print_coord(coords);
     BOOST_CHECK_EQUAL(p.path_items.size(), 2);
     BOOST_REQUIRE_EQUAL(coords.size(), 3);
     BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(10,6, false) );
