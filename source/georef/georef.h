@@ -281,25 +281,6 @@ struct GeoRef {
 
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
 
-    /** Lance un calcul de dijkstra sans initaliser de structure de données
-     *
-     * Attention !!! Modifie distances et predecessors
-     **/
-    template<class Visitor>
-    void dijkstra(vertex_t start, std::vector<float> & distances, std::vector<vertex_t> & predecessors, Visitor visitor) const{
-        predecessors[start] = start;
-        boost::two_bit_color_map<> color(boost::num_vertices(this->graph));
-        boost::dijkstra_shortest_paths_no_init(this->graph, start, &predecessors[0], &distances[0],
-
-                                               boost::get(&Edge::length, this->graph), // weigth map
-                                               boost::identity_property_map(),
-                                               std::less<float>(), boost::closed_plus<float>(),
-                                               0,
-                                               visitor,
-                                               color
-                                               );
-    }
-
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
     Path build_path(vertex_t best_destination, std::vector<vertex_t> preds, bool add_in_only_one = false) const;
     void add_way(const Way& w);
@@ -308,48 +289,6 @@ struct GeoRef {
     void add_projections(Path& p, const ProjectionData& start, const ProjectionData& end) const;
 
     ~GeoRef();
-};
-
-// Exception levée dès que l'on trouve une destination
-struct DestinationFound{};
-struct DestinationNotFound{};
-
-// Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
-struct target_visitor : public boost::dijkstra_visitor<> {
-    const std::vector<vertex_t> & destinations;
-    target_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
-    void finish_vertex(vertex_t u, const Graph&){
-        if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
-            throw DestinationFound();
-    }
-};
-
-// Visitor who throw a DestinationFound exception when all target has been visited
-struct target_all_visitor : public boost::dijkstra_visitor<> {
-    std::vector<vertex_t> destinations;
-    size_t nbFound = 0;
-    target_all_visitor(std::vector<vertex_t> destinations) : destinations(destinations){}
-    void finish_vertex(vertex_t u, const Graph&){
-        if (std::find(destinations.begin(), destinations.end(), u) != destinations.end()) {
-            nbFound++;
-            if (nbFound == destinations.size()) {
-                throw DestinationFound();
-            }
-        }
-    }
-};
-
-// Visiteur qui lève une exception dès que la cible souhaitée est atteinte
-struct target_unique_visitor : public boost::dijkstra_visitor<> {
-    const vertex_t & destination;
-
-    target_unique_visitor(const vertex_t & destination) :
-        destination(destination){}
-
-    void finish_vertex(vertex_t u, const Graph&){
-        if(u == destination)
-            throw DestinationFound();
-    }
 };
 
 /** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche

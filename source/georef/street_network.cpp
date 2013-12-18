@@ -147,12 +147,12 @@ GeoRefPathFinder::find_nearest_stop_points(double radius, const proximitylist::P
 
     // On lance un dijkstra depuis les deux nœuds de départ
     try {
-        geo_ref.dijkstra(starting_edge.source, distances, predecessors, distance_visitor(radius, distances));
-    } catch(ng::DestinationFound){}
+        dijkstra(starting_edge.source, distance_visitor(radius, distances));
+    } catch(DestinationFound){}
 
     try {
-        geo_ref.dijkstra(starting_edge.target, distances, predecessors, distance_visitor(radius, distances));
-    } catch(ng::DestinationFound){}
+        dijkstra(starting_edge.target, distance_visitor(radius, distances));
+    } catch(DestinationFound){}
 
     const auto max = std::numeric_limits<float>::max();
 
@@ -281,9 +281,8 @@ std::pair<double, ng::vertex_t> GeoRefPathFinder::update_path(const ng::Projecti
     if (distances[target.source] == max || distances[target.target] == max) {
         bool found = false;
         try {
-            geo_ref.dijkstra(starting_edge.source, distances, predecessors,
-                             ng::target_all_visitor({target.source, target.target}));
-        } catch(ng::DestinationFound) { found = true; }
+            dijkstra(starting_edge.source, target_all_visitor({target.source, target.target}));
+        } catch(DestinationFound) { found = true; }
 
         //if no way has been found, we can stop the search
         if ( ! found ) {
@@ -293,9 +292,8 @@ std::pair<double, ng::vertex_t> GeoRefPathFinder::update_path(const ng::Projecti
             return {max, {}};
         }
         try {
-            geo_ref.dijkstra(starting_edge.target, distances, predecessors,
-                             ng::target_all_visitor({target.source, target.target}));
-        } catch(ng::DestinationFound) { found = true; }
+            dijkstra(starting_edge.target, target_all_visitor({target.source, target.target}));
+        } catch(DestinationFound) { found = true; }
 
     }
     //if we succeded in the first search, we must have found one of the other distances
