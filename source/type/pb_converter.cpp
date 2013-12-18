@@ -168,9 +168,9 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         fill_pb_object(l->commercial_mode, data,
                 line->mutable_commercial_mode(), depth-1);
         fill_pb_object(l->network, data, line->mutable_network(), depth-1);
-        for(const auto message : l->get_applicable_messages(now, action_period)){
-            fill_message(message, data, line->add_messages(), depth-1, now, action_period);
-        }
+    }
+    for(const auto message : l->get_applicable_messages(now, action_period)){
+        fill_message(message, data, line->add_messages(), depth-1, now, action_period);
     }
 }
 

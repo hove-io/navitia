@@ -38,6 +38,7 @@ enum API {
     METADATAS = 14;
     place_uri = 15;
     UNKNOWN_API = 16;
+    disruptions = 17;
 }
 
 enum VehicleJourneyType{

@@ -5,6 +5,7 @@
 #include "type/type.pb.h"
 #include "type/response.pb.h"
 #include "type/request.pb.h"
+#include "disruption/disruption_api.h"
 
 #include <memory>
 
@@ -37,6 +38,7 @@ class Worker {
         pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request);
         pbnavitia::Response journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api);
         pbnavitia::Response pt_ref(const pbnavitia::PTRefRequest &request);
+        pbnavitia::Response disruptions(const pbnavitia::DisruptionsRequest &request);
 };
 
 }
