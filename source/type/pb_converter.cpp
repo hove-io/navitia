@@ -620,6 +620,12 @@ void fill_message(const boost::shared_ptr<type::Message> message,
         pb_message->set_message(it->second.body);
         pb_message->set_title(it->second.title);
     }
+
+    pb_message->set_start_application_date(boost::posix_time::to_iso_string((message->application_period).begin()));
+    pb_message->set_end_application_date(boost::posix_time::to_iso_string((message->application_period).end()));
+
+    pb_message->set_start_application_daily_hour(boost::posix_time::to_iso_string(message->application_daily_start_hour));
+    pb_message->set_end_application_daily_hour(boost::posix_time::to_iso_string(message->application_daily_end_hour));
 }
 
 

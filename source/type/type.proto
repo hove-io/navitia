@@ -73,10 +73,14 @@ enum ResponseStatus{
 }
 
 message Message{
-    optional string uri = 1;
-    optional string message = 2;
-    optional string title = 3;
-    optional MessageStatus message_status = 4;
+    optional string uri 							= 1;
+    optional string message 						= 2;
+    optional string title 							= 3;
+    optional string start_application_date 			= 4;
+    optional string end_application_date 			= 5;
+    optional string start_application_daily_hour 	= 6;
+    optional string end_application_daily_hour 		= 7;    
+    optional MessageStatus message_status 			= 8;
 }
 
 message GeographicalCoord {
