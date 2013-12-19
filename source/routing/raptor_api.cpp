@@ -434,7 +434,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             type::idx_t initial_rp;
             DateTime initial_dt;
             int round = raptor.best_round(best_rp);
-            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, clockwise, raptor.labels, raptor.boardings, raptor.boarding_types, raptor.data);
+            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, clockwise, raptor.labels);
 
             int duration = ::abs(label - init_dt);
 

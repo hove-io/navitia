@@ -11,13 +11,13 @@ std::pair<const type::StopTime*, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
               const DateTime dt,
               const type::Data &data, bool reconstructing_path = false,
-              const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams()/*const type::Properties &required_properties=0*/);
+              const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
 ///Cherche le premier stop_time partant avant dt sur la journey_pattern au journey_pattern point order
 /// Renvoie la première heure d'arrivée avant dt
 std::pair<const type::StopTime*, uint32_t>
 tardiest_stop_time(const type::JourneyPatternPoint* jpp,
               const DateTime dt, const type::Data &data, bool reconstructing_path,
-              const type::AccessibiliteParams & accessibilite_params);
+              const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
 
 /// Returns the next stop time at given journey pattern point
 /// either a vehicle that leaves or that arrives depending on clockwise
@@ -25,7 +25,7 @@ std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const type::JourneyPatternPoint* jpp,
           const DateTime dt,
           /*const type::Properties &required_properties*/
-          const type::AccessibiliteParams & accessibilite_params,
+          const type::VehicleProperties & vehicle_properties,
           const bool clockwise, const type::Data &data, bool reconstructing_path = false);
 
 /// Pour les horaires en frequences
@@ -84,5 +84,11 @@ inline uint32_t compute_gap(const uint32_t hour, const uint32_t start_time, cons
     } else {
         return 0;
     }
+}
+inline bool bound_predicate_earliest(const uint32_t departure_time, const uint32_t hour) {
+    return departure_time < hour;
+}
+inline bool bound_predicate_tardiest(const uint32_t arrival_time, const uint32_t hour) {
+    return arrival_time > hour;
 }
 }}

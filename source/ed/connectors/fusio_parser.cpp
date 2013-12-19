@@ -388,7 +388,7 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
 
 void FusioParser::parse_files(Data& data) {
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
-    parse<ContributorFusioHandler>(data, "contributor.txt");
+    parse<ContributorFusioHandler>(data, "contributors.txt");
     parse<CompanyFusioHandler>(data, "company.txt");
     parse<PhysicalModeFusioHandler>(data, "physical_mode.txt");
     parse<CommercialModeFusioHandler>(data, "commercial_mode.txt");

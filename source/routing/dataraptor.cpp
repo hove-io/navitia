@@ -1,13 +1,18 @@
 #include "dataraptor.h"
 #include "routing.h"
+#include "routing/raptor_utils.h"
 
 namespace navitia { namespace routing {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    labels_const.assign(data.journey_pattern_points.size(), DateTimeUtils::inf);
-    labels_const_reverse.assign(data.journey_pattern_points.size(), DateTimeUtils::min);
-    boardings_const.assign(data.journey_pattern_points.size(), type::invalid_idx);
+    Label label;
+    label.dt = DateTimeUtils::inf;
+    label.boarding = nullptr;
+    label.type = boarding_type::uninitialized;
+    labels_const.assign(data.journey_pattern_points.size(), label);
+    label.dt = DateTimeUtils::min;
+    labels_const_reverse.assign(data.journey_pattern_points.size(), label);
     
     foot_path_forward.clear();
     foot_path_backward.clear();

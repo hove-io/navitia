@@ -22,11 +22,9 @@ struct RAPTOR
 
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
     std::vector<label_vector_t> labels;
-    std::vector<std::vector<const type::JourneyPatternPoint*> > boardings;
-    std::vector<std::vector<boarding_type> > boarding_types;
 
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
-    label_vector_t best_labels;
+    std::vector<DateTime> best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
     best_dest b_dest;
     ///Nombre de correspondances effectuées jusqu'à présent
@@ -105,7 +103,7 @@ struct RAPTOR
     void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden);
 
     ///Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(/*const type::Properties &required_properties*/const type::AccessibiliteParams & accessibilite_params, bool clockwise,
+    void boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params, bool clockwise,
                       bool global_pruning = true,
                       const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
@@ -128,17 +126,12 @@ struct RAPTOR
     /// Retourne -1 s'il n'existe pas de meilleure solution
     int best_round(type::idx_t journey_pattern_point_idx);
 
-    inline boarding_type get_type(size_t count, type::idx_t journey_pattern_point) const {
-        return navitia::routing::get_type(count, journey_pattern_point, boarding_types, data);
+    inline boarding_type get_type(size_t count, type::idx_t jpp_idx) const {
+        return labels[count][jpp_idx].type;
     }
 
-    inline const type::JourneyPatternPoint* get_boarding_jpp(size_t count, type::idx_t journey_pattern_point) const {
-        return navitia::routing::get_boarding_jpp(count, journey_pattern_point, boardings);
-    }
-
-    inline std::pair<const navitia::type::StopTime*, unsigned int> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point,
-                                                                                         const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, bool clockwise) const {
-        return navitia::routing::get_current_stidx_gap(count, journey_pattern_point, labels, boarding_types, accessibilite_params/*required_properties*/, clockwise, data);
+    inline const type::JourneyPatternPoint* get_boarding_jpp(size_t count, type::idx_t jpp_idx) const {
+        return labels[count][jpp_idx].boarding;
     }
 
     ~RAPTOR() {}

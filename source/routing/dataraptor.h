@@ -1,6 +1,7 @@
 #pragma once
 #include "type/pt_data.h"
 #include "type/datetime.h"
+#include "routing/raptor_utils.h"
 
 #include <boost/foreach.hpp>
 #include <boost/dynamic_bitset.hpp>
@@ -10,9 +11,7 @@ namespace navitia { namespace routing {
 struct dataRAPTOR {
 
     typedef std::pair<int, int> pair_int;
-    typedef std::vector<DateTime> label_vector_t;
     typedef std::vector<navitia::type::idx_t> vector_idx;
-
 
     std::vector<const navitia::type::StopPointConnection*> foot_path_forward;
     std::vector<pair_int> footpath_index_forward;

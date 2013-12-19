@@ -9,7 +9,7 @@ INSTANCES_DIR = '/etc/jormungandr.d'
 PG_CONNECTION_STRING = 'postgresql://navitia:navitia@localhost/jormun'
 
 # désactivation de l'authentification
-PUBLIC = False
+PUBLIC = True
 
 REDIS_HOST = 'localhost'
 

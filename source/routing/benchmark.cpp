@@ -6,7 +6,7 @@
 #include <random>
 #include <fstream>
 #include "utils/init.h"
-//#include <valgrind/callgrind.h>
+#include <valgrind/callgrind.h>
 
 using namespace navitia;
 using namespace routing;
@@ -112,10 +112,10 @@ int main(int argc, char** argv){
     for(auto demand : demands){
         ++show_progress;
         Timer t2;
-        //            CALLGRIND_START_INSTRUMENTATION;
+                    CALLGRIND_START_INSTRUMENTATION;
 
         auto res = router.compute(data.pt_data.stop_areas[demand.start], data.pt_data.stop_areas[demand.target], demand.hour, demand.date, navitia::DateTimeUtils::inf);
-        //            CALLGRIND_STOP_INSTRUMENTATION;
+                    CALLGRIND_STOP_INSTRUMENTATION;
 
         Path path;
         if(res.size() > 0) {

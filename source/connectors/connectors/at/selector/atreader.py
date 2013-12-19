@@ -5,9 +5,9 @@ import datetime
 import time
 from sqlalchemy import Column, Table, MetaData, select, create_engine, \
     ForeignKey, bindparam, and_, or_, exc
-import connectors.at.task_pb2
-import connectors.at.realtime_pb2
-import connectors.at.type_pb2
+import connectors.task_pb2
+import connectors.realtime_pb2
+import connectors.type_pb2
 import google
 import os
 #
@@ -296,16 +296,16 @@ class AtRealtimeReader(object):
                           'media_media'),
                           self.event_table.c.Event_PublicationEndDate
                           >= bindparam('event_publicationenddate'),
-                          or_(not self.event_table.c.Event_CloseDate,
+                          or_(self.event_table.c.Event_CloseDate == None,
                               self.event_table.c.Event_CloseDate > bindparam(
                                   'event_closedate'),
                               self.impact_table.c
-                              .Impact_SelfModificationDate is None,
+                              .Impact_SelfModificationDate == None,
                               self.impact_table.c
                               .Impact_SelfModificationDate > bindparam(
                                   'impact_modification_date'),
                               self.impact_table.c
-                              .Impact_ChildrenModificationDate is None,
+                              .Impact_ChildrenModificationDate == None,
                               self.impact_table.c
                               .Impact_ChildrenModificationDate > bindparam(
                                   'impact_modification_date'),

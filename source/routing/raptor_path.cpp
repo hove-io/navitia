@@ -17,7 +17,7 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
             for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first]->journey_pattern_point_list) {
                 type::idx_t dest_idx = dest->idx;
                 if(raptor_.get_type(i, dest_idx) != boarding_type::uninitialized) {
-                    DateTime current_dt = raptor_.labels[i][dest_idx];
+                    DateTime current_dt = raptor_.labels[i][dest_idx].dt;
                     if(clockwise)
                         current_dt = current_dt + std::ceil(spid_dist.second/walking_speed);
                     else
@@ -37,6 +37,17 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
     return result;
 }
 
+std::pair<const type::StopTime*, uint32_t>
+get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels,
+                      const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data) {
+    const auto& label = labels[count][journey_pattern_point];
+    if(label.type == boarding_type::vj) {
+        const type::JourneyPatternPoint* jpp = data.pt_data.journey_pattern_points[journey_pattern_point];
+        return best_stop_time(jpp, label.dt, accessibilite_params.vehicle_properties, clockwise, data, true);
+    }
+    return std::make_pair(nullptr, std::numeric_limits<uint32_t>::max());
+}
+
 
 Path
 makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
@@ -44,7 +55,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
          const RAPTOR &raptor_) {
     Path result;
     unsigned int current_jpp_idx = destination_idx;
-    DateTime l = raptor_.labels[countb][current_jpp_idx],
+    DateTime l = raptor_.labels[countb][current_jpp_idx].dt,
                    workingDate = l;
 
     const type::StopTime* current_st;
@@ -63,7 +74,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             auto destination_jpp = raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
             auto destination = destination_jpp->stop_point;
             auto connections = departure->stop_point_connection_list;
-            l = raptor_.labels[countb][current_jpp_idx];
+            l = raptor_.labels[countb][current_jpp_idx].dt;
             auto find_predicate = [&](type::StopPointConnection* connection)->bool {
                 return departure == connection->departure && destination == connection->destination;
             };
@@ -72,9 +83,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             if(it == connections.end()) {
                 auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
                 if(clockwise) {
-                   item = PathItem(r2, l);
+                   item = PathItem(r2.dt, l);
                 } else {
-                   item = PathItem(l, r2);
+                   item = PathItem(l, r2.dt);
                 }
             } else {
                 const auto stop_point_connection = *it;
@@ -93,19 +104,21 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee)
                 item.type = guarantee;
 
-            BOOST_ASSERT(item.arrival >= item.departure);
-            BOOST_ASSERT(result.items.empty() || !clockwise || (result.items.back().arrival >= item.departure));
-            BOOST_ASSERT(result.items.empty() || clockwise ||  (result.items.back().arrival <= item.departure));
+            //BOOST_ASSERT(item.arrival >= item.departure);
+            //BOOST_ASSERT(result.items.empty() || !clockwise && (result.items.back().arrival >= item.departure));
+            //BOOST_ASSERT(result.items.empty() || clockwise &&  (result.items.back().arrival <= item.departure));
             result.items.push_back(item);
             boarding_jpp = type::invalid_idx;
             current_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
         } else { // Sinon c'est un trajet TC
             // Est-ce que qu'on a à faire à un nouveau trajet ?
             if(boarding_jpp == type::invalid_idx) {
-                l = raptor_.labels[countb][current_jpp_idx];
-                BOOST_ASSERT(result.items.empty() || l >= result.items.back().arrival);
+                l = raptor_.labels[countb][current_jpp_idx].dt;
+                //BOOST_ASSERT(result.items.empty() || !clockwise && (l <= result.items.back().arrival));
+                //BOOST_ASSERT(result.items.empty() || clockwise &&  (l >= result.items.back().arrival));
                 boarding_jpp = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
-                std::tie(current_st, workingDate) = raptor_.get_current_stidx_gap(countb, current_jpp_idx, accessibilite_params/*required_properties*/, clockwise);
+
+                std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_jpp_idx, raptor_.labels, accessibilite_params, clockwise,  raptor_.data) ;
                 item = PathItem();
                 item.type = public_transport;
                 item.vj_idx = current_st->vehicle_journey->idx;

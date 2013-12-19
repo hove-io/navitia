@@ -3,7 +3,7 @@ from connectors.config import Config
 from selector.atreader import AtRealtimeReader
 import logging
 import pika
-import connectors.at.task_pb2
+import connectors.task_pb2
 from connectors.redis_helper import RedisHelper
 
 

@@ -37,7 +37,7 @@ public:
     navitia::georef::GeoRef geo_ref;
 
     /// Données précalculées pour le raptor
-    routing::dataRAPTOR dataRaptor;
+    navitia::routing::dataRAPTOR dataRaptor;
 
     /** Retourne la structure de données associée au type */
     /// TODO : attention aux perfs à faire la copie

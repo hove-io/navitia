@@ -7,7 +7,7 @@ server='localhost'
 username='navitia'
 
 #nom de la base de données
-dbname='navitia'
+dbname='navitia-dev'
 
 # http://www.postgresql.org/docs/9.1/static/libpq-envars.html
 export PGPASSWORD='navitia'
@@ -16,4 +16,4 @@ export PGPASSWORD='navitia'
 sql_dir=../sql/ed
 
 #emplacement où sont installé les fichier SQL pour postgis
-postgis_dir='/usr/share/postgresql/9.1/contrib/postgis-1.5'
+postgis_dir='/usr/share/postgresql/9.1/contrib/postgis-2.0'
