@@ -11,7 +11,8 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
     pbnavitia::Response pb_response;
     try{
         auto now = boost::posix_time::from_iso_string(str_dt);
-        boost::posix_time::time_period action_period(now, now);
+        auto end = boost::posix_time::from_iso_string("20141212T120000");
+        boost::posix_time::time_period action_period(now, end);
         const std::vector<std::string> forbidden_uris;
         auto line_idx = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
 
@@ -33,10 +34,13 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
 
     } catch(const ptref::parsing_error &parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime" + parse_error.more,pb_response.mutable_error());
+        return pb_response;
     } catch(const ptref::ptref_error &ptref_error){
         fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more,pb_response.mutable_error());
+        return pb_response;
     } catch(...) {
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime",pb_response.mutable_error());
+        return pb_response;
     }
     if (pb_response.disruptions_size() == 0) {
         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this disruption",
