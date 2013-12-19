@@ -113,7 +113,12 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
 
 pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &request){
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
-    return navitia::disruption_api::disruptions(*(*this->data));
+    return navitia::disruption_api::disruptions(*(*this->data),
+                                                request.from_datetime(),
+                                                request.depth(),
+                                                request.count(),
+                                                request.start_page(),
+                                                request.uri_filter());
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,

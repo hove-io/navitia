@@ -8,7 +8,8 @@ typedef std::vector<const navitia::type::Line*> lines;
 typedef std::pair<const navitia::type::Network*, lines> pair_ntw_ln;
 typedef std::vector<pair_ntw_ln> ntw_ln;
 
-ntw_ln disruptions_list(const type::PT_Data &d,
+ntw_ln disruptions_list(const std::vector<type::idx_t>& line_idx,
+                        const type::PT_Data &d,
                         const boost::posix_time::time_period action_period,
                         const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
 }}

@@ -7,7 +7,9 @@
 namespace navitia { namespace disruption_api {
 
 pbnavitia::Response disruptions(const navitia::type::Data &d,
-                            const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time(),
-                            uint32_t depth = 1);
+                                const std::string &str_dt,
+                                const uint32_t depth,
+                                uint32_t count,
+                                uint32_t start_page, const std::string &filter);
 }}
 

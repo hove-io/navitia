@@ -66,6 +66,12 @@ class Script(object):
     def disruptions(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.disruptions
+        req.disruptions.depth = request['depth']
+        req.disruptions.uri_filter = request['uri_filter']
+        req.disruptions.count = request['count']
+        req.disruptions.start_page = request['start_page']
+        req.disruptions.from_datetime = request['from_datetime']
+
         resp = instance.send_and_receive(req)
         return resp
 
