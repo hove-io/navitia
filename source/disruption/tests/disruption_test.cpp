@@ -93,6 +93,10 @@ BOOST_FIXTURE_TEST_CASE(network_filter, Params) {
     BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
     pbnavitia::Message message = line.messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess1");
+    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131219T123200");
+    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131221T123200");
+    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
+    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235900");
 
     line = disruption.lines(1);
     BOOST_REQUIRE_EQUAL(line.uri(), "line:S");
@@ -100,6 +104,10 @@ BOOST_FIXTURE_TEST_CASE(network_filter, Params) {
     BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
     message = line.messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess0");
+    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131219T123200");
+    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131221T123200");
+    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
+    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235900");
 }
 
 BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
@@ -117,4 +125,8 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
     pbnavitia::Message message = line.messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess0");
+    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131219T123200");
+    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131221T123200");
+    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
+    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235900");
 }

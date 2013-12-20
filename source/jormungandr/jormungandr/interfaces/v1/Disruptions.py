@@ -1,7 +1,8 @@
 # coding=utf-8
 from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
-from fields import PbField, error, network, line, NonNullList, NonNullNested, pagination
+from fields import PbField, error, network, line,\
+    NonNullList, NonNullNested, pagination
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from errors import ManageError
@@ -36,6 +37,7 @@ class Disruptions(ResourceUri):
                                 the disruption")
         parser_get.add_argument("uri_filter", type=str, default="",
                                 description="The filter parameter")
+
     @marshal_with(disruptions)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
@@ -60,5 +62,5 @@ class Disruptions(ResourceUri):
             collection.append("line")
             uri_split = items.split(":")
             if uri_split[0] in collection:
-                filter = ".uri=" . join([uri_split[0],items])
+                filter = ".uri=" . join([uri_split[0], items])
             return filter
