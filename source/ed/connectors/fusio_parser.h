@@ -136,7 +136,7 @@ struct CommercialModeFusioHandler : public GenericHandler {
  */
 struct FusioParser : public GenericGtfsParser {
     void parse_files(Data&);
-    FusioParser(const std::string & path) : GenericGtfsParser(path, false) {}
+    FusioParser(const std::string & path) : GenericGtfsParser(path) {}
 };
 }
 }

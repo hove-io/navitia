@@ -237,7 +237,6 @@ class GenericGtfsParser {
 protected:
     std::string path;///< Chemin vers les fichiers
     log4cplus::Logger logger;
-    bool load_default_modes;
     template <typename Handler>
     void parse(Data&, std::string file_name, bool = false);
     template <typename Handler>
@@ -248,7 +247,7 @@ public:
     GtfsData gtfs_data;
 
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
-    GenericGtfsParser(const std::string & path, const bool _load_default_mode = true);
+    GenericGtfsParser(const std::string & path);
 
     /// Remplit la structure passée en paramètre
     void fill(ed::Data& data, const std::string beginning_date = "");

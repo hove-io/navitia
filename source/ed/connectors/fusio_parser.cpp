@@ -409,6 +409,8 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
 }
 
 void FusioParser::parse_files(Data& data) {
+
+    fill_default_company(data);
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<ContributorFusioHandler>(data, "contributor.txt");
     parse<CompanyFusioHandler>(data, "company.txt");

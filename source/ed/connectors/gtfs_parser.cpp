@@ -620,9 +620,7 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
     }
 }
 
-GenericGtfsParser::GenericGtfsParser(const std::string & path, const bool _load_default_mode) :
-                                                                path(path),
-                                                                load_default_modes(_load_default_mode) {
+GenericGtfsParser::GenericGtfsParser(const std::string & path) : path(path){
     logger = log4cplus::Logger::getInstance("log");
 }
 
@@ -636,11 +634,6 @@ void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
             return;
         }
     }
-    if (load_default_modes){
-        fill_default_modes(data);
-    }
-
-    fill_default_company(data);
 
     parse_files(data);
 
@@ -874,6 +867,9 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
 }
 
 void GtfsParser::parse_files(Data& data) {
+    fill_default_modes(data);
+    fill_default_company(data);
+
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<DefaultContributorHandler>(data);
     parse<StopsGtfsHandler>(data, "stops.txt", true);
