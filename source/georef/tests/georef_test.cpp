@@ -14,6 +14,28 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
+/**
+ * just to ease the test writing
+ * enable the creation of duration just by writing 123_s => creates a boost::time_duration of 123 seconds
+ * Note: I had to create a new class since boost does not define the constructors constexpr
+ */
+struct custom_seconds
+{
+    int dur;
+    constexpr custom_seconds(int s) : dur(s) {}
+    custom_seconds(const custom_seconds&) = default;
+    custom_seconds& operator=(const custom_seconds&) = default;
+    operator bt::time_duration() const { return bt::seconds(dur); }
+};
+std::ostream & operator<<(std::ostream& os, custom_seconds s) {
+    os << s.dur << " seconds";
+    return os;
+}
+
+inline constexpr custom_seconds operator"" _s(unsigned long long v) {
+    return custom_seconds(v);
+}
+
 using namespace navitia::georef;
 using namespace navitia::streetnetwork;
 using namespace boost;
@@ -47,7 +69,7 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
     BOOST_CHECK_EQUAL(num_edges(g), 0);
 
     // Construction de deux nœuds et d'un arc
-    builder("a",0, 0)("b",1,2)("a", "b", 10);
+    builder("a",0, 0)("b",1,2)("a", "b", 10_s);
     BOOST_CHECK_EQUAL(num_vertices(g), 2);
     BOOST_CHECK_EQUAL(num_edges(g), 1);
 
@@ -62,10 +84,10 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
     BOOST_CHECK_EQUAL(g[b].coord, expected);
 
     edge_t e = edge(a, b, g).first;
-    BOOST_CHECK_EQUAL(g[e].length, 10);
+    BOOST_CHECK_EQUAL(g[e].duration, bt::seconds(10));
 
     // Construction implicite de nœuds
-    builder("c", "d", 42);
+    builder("c", "d", bt::seconds(42));
     BOOST_CHECK_EQUAL(num_vertices(g), 4);
     BOOST_CHECK_EQUAL(num_edges(g), 2);
 
@@ -195,8 +217,10 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
     sn.graph[b.get("d","e")].way_idx = 1;
     sn.graph[b.get("e","d")].way_idx = 1;
 
+    sn.init_offset(0);
+
     GeoRefPathFinder path_finder(sn);
-    path_finder.init({0, 0, true}, Mode_e::Walking); //starting from a
+    path_finder.init({0, 0, true}, Mode_e::Walking, 1); //starting from a
     Path p = path_finder.compute_path({4, 4, true}); //going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
@@ -206,7 +230,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 //    BOOST_CHECK(p.path_items[1].segments[0] == b.get("c", "d"));
 //    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
 
-    path_finder.init({3, 3, true}, Mode_e::Walking); //starting from d
+    path_finder.init({3, 3, true}, Mode_e::Walking, 1); //starting from d
     p = path_finder.compute_path({4, 4, true}); //going to e
     BOOST_CHECK_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
@@ -227,7 +251,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
      */
 
     b("a",0,0)("b",10,0)("c",0,10)("d",10,10);
-    b("a","b", 10)("b","a",10)("a","c",10)("c","a",10)("b","d",10)("d","b",10)("c","d",10)("d","c",10);
+    b("a","b", 10_s)("b","a",10_s)("a","c",10_s)("c","a",10_s)("b","d",10_s)("d","b",10_s)("c","d",10_s)("d","c",10_s);
 
     Way w;
     w.name = "BobAB"; sn.add_way(w);
@@ -247,7 +271,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     start.set_xy(3, -1);
     GeographicalCoord destination;
     destination.set_xy(4, 11);
-    path_finder.init(start, Mode_e::Walking);
+    path_finder.init(start, Mode_e::Walking, 1);
     Path p = path_finder.compute_path(destination);
     auto coords = get_coords_from_path(p);
     print_coord(coords);
@@ -265,7 +289,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
 
     // Trajet partiel : on ne parcourt pas un arc en entier, mais on passe par un nœud
     start.set_xy(7,6);
-    path_finder.init(start, Mode_e::Walking);
+    path_finder.init(start, Mode_e::Walking, 1);
     p = path_finder.compute_path(destination);
     coords = get_coords_from_path(p);
     print_coord(coords);
@@ -275,6 +299,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     BOOST_CHECK_EQUAL(coords[1], GeographicalCoord(10,10, false) );
     BOOST_CHECK_EQUAL(coords[2], GeographicalCoord(4,10, false) );
 }
+
 
 BOOST_AUTO_TEST_CASE(compute_nearest){
     using namespace navitia::type;
@@ -289,7 +314,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
      */
 
     b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
-    b("a","b",100)("b","a",100)("b","c",100)("c","b",100)("c","d",100)("d","c",100)("d","e",100)("e","d",100);
+    b("a","b",100_s)("b","a",100_s)("b","c",100_s)("c","b",100_s)("c","d",100_s)("d","c",100_s)("d","e",100_s)("e","d",100_s);
 
     GeographicalCoord c1(50,10, false);
     GeographicalCoord c2(350,20, false);
@@ -297,6 +322,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     pl.add(c1, 0);
     pl.add(c2, 1);
     pl.build();
+    sn.init_offset(0);
 
     StopPoint* sp1 = new StopPoint();
     sp1->coord = c1;
@@ -313,24 +339,25 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     EntryPoint starting_point;
     starting_point.coordinates = o;
     starting_point.streetnetwork_params.mode = Mode_e::Walking;
+    starting_point.streetnetwork_params.speed_factor = 2; //to have a speed different from the default one (and greater not to have projection problems)
     w.init(starting_point);
-    auto res = w.find_nearest_stop_points(10.0, pl, false);
+    auto res = w.find_nearest_stop_points(10_s, pl, false);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
     w.init(starting_point);//not mandatory, but reinit to clean the distance table to get fresh dijsktra
-    res = w.find_nearest_stop_points(100.0, pl, false);
+    res = w.find_nearest_stop_points(100_s, pl, false);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_CLOSE(res[0].second, 50, 1);
+    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / default_speed[Mode_e::Walking])); //the projection is always done with the walking default speed regardless of the mean of transport
 
     w.init(starting_point);
-    res = w.find_nearest_stop_points(1000.0, pl, false);
+    res = w.find_nearest_stop_points(1000_s, pl, false);
     std::sort(res.begin(), res.end());
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_CLOSE(res[0].second, 50, 1);
+    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / default_speed[Mode_e::Walking]));
     BOOST_CHECK_EQUAL(res[1].first , 1);
-    BOOST_CHECK_CLOSE(res[1].second, 350, 1);
+    BOOST_CHECK_EQUAL(res[1].second, bt::seconds(50 / default_speed[Mode_e::Walking]) + 150_s); //travel (300 at 2m/s) + projection
 }
 
 // Récupérer les cordonnées d'un numéro impair :
@@ -693,7 +720,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
      */
 
     b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
-    b("a","b",100)("b","a",100)("c","d",100)("d","c",100)("d","e",100)("e","d",100);
+    b("a","b",bt::seconds(100))("b","a",bt::seconds(100))("c","d",bt::seconds(100))("d","c",bt::seconds(100))("d","e",bt::seconds(100))("e","d",bt::seconds(100));
 
     GeographicalCoord c1(50,10, false);
     GeographicalCoord c2(350,20, false);
@@ -701,6 +728,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     pl.add(c1, 0);
     pl.add(c2, 1);
     pl.build();
+    sn.init_offset(0);
 
     StopPoint* sp1 = new StopPoint();
     sp1->coord = c1;
@@ -719,7 +747,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     w.init(starting_point);
 
     auto max = w.get_distance(1, false);
-    BOOST_CHECK_EQUAL(max, std::numeric_limits<float>::max());
+    BOOST_CHECK_EQUAL(max, bt::pos_infin);
 }
 
 BOOST_AUTO_TEST_CASE(angle_computation) {
@@ -779,4 +807,27 @@ BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
     angle = compute_directions(p2, a);
 
     BOOST_CHECK_CLOSE(1.0 * angle, -1 * val, 1.0);
+}
+
+//small test to make sure the time manipulation works in the SpeedDistanceCombiner
+BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
+    bt::time_duration dur = 10_s;
+
+    SpeedDistanceCombiner comb(2);
+
+    BOOST_CHECK_EQUAL(comb.divide_by_speed(dur), 5_s);
+
+    bt::time_duration dur2 = 60_s;
+    BOOST_CHECK_EQUAL(comb(dur, dur2), bt::seconds(10+60/2));
+}
+
+BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
+    bt::time_duration dur = 10_s;
+
+    SpeedDistanceCombiner comb(0.5);
+
+    BOOST_CHECK_EQUAL(comb.divide_by_speed(dur), 20_s);
+
+    bt::time_duration dur2 = 60_s;
+    BOOST_CHECK_EQUAL(comb(dur, dur2), 130_s);
 }

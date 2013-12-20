@@ -10,7 +10,6 @@
 #include <array>
 #include <boost/math/constants/constants.hpp>
 
-
 using navitia::type::idx_t;
 
 namespace navitia{ namespace georef{
@@ -239,21 +238,18 @@ int compute_directions(const navitia::georef::Path& path, const nt::Geographical
     return rounded_angle;
 }
 
+GeoRef::GeoRef(): word_weight(0)
+{
+}
 
-Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds, bool add_one_elt) const {
+Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const {
     Path p;
-    std::vector<vertex_t> reverse_path;
-    while (best_destination != preds[best_destination]){
-        reverse_path.push_back(best_destination);
-        best_destination = preds[best_destination];
-    }
-    reverse_path.push_back(best_destination);
 
     // On reparcourt tout dans le bon ordre
     nt::idx_t last_way = type::invalid_idx;
     PathItem path_item;
     path_item.coordinates.push_back(graph[reverse_path.back()].coord);
-    p.length = 0;
+//    p.length = {};
     for (size_t i = reverse_path.size(); i > 1; --i) {
         bool path_item_changed = false;
         vertex_t v = reverse_path[i-2];
@@ -272,8 +268,8 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds, 
         last_way = edge.way_idx;
         path_item.way_idx = edge.way_idx;
 //        path_item.segments.push_back(e);
-        path_item.length += edge.length;
-        p.length += edge.length;
+        path_item.length += edge.duration;
+        p.length += edge.duration;
         if (path_item_changed) {
             //we update the last path item
             p.path_items.back().angle = compute_directions(p, coord);
@@ -285,6 +281,41 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds, 
         p.path_items.push_back(path_item);
 
     return p;
+}
+
+Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) const {
+    std::vector<vertex_t> reverse_path;
+    while (best_destination != preds[best_destination]){
+        reverse_path.push_back(best_destination);
+        best_destination = preds[best_destination];
+    }
+    reverse_path.push_back(best_destination);
+
+    return build_path(reverse_path, true);
+}
+
+Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
+    //used for the direct path, we need to reverse the second part and concatenate the 2 'predecessors' list
+    //to get the path
+    std::vector<vertex_t> reverse_path;
+
+    vertex_t current = best_destination;
+    while (current != successors[current]) {
+        reverse_path.push_back(current);
+        current = successors[current];
+    }
+    reverse_path.push_back(current);
+    std::reverse(reverse_path.begin(), reverse_path.end());
+
+    current = preds[best_destination]; //we skip the middle point since it has already been added
+    while (current != preds[current]) {
+        reverse_path.push_back(current);
+        current = preds[current];
+    }
+    reverse_path.push_back(current);
+
+
+    return build_path(reverse_path, false);
 }
 
 

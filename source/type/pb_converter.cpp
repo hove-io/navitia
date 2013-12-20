@@ -583,7 +583,7 @@ void fill_street_section(const type::EntryPoint& ori_dest,
         section->set_type(pbnavitia::STREET_NETWORK);
         pbnavitia::StreetNetwork* sn = section->mutable_street_network();
         create_pb(ori_dest, path, data, sn);
-        section->set_duration(sn->length() / ori_dest.streetnetwork_params.speed);
+        section->set_duration(sn->length() / ori_dest.streetnetwork_params.speed_factor);
         section->set_length(sn->length());
         navitia::georef::Way* way;
         type::GeographicalCoord coord;
@@ -657,8 +657,8 @@ void create_pb(const type::EntryPoint &ori_dest,
         if(item.way_idx < data.geo_ref.ways.size()) {
             pbnavitia::PathItem * path_item = sn->add_path_items();
             path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
-            path_item->set_length(item.length);
-            length += item.length;
+            path_item->set_length(item.length.total_seconds() / ori_dest.streetnetwork_params.speed_factor);
+            length += path_item->length();
             path_item->set_direction(item.angle);
         } else {
             throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));

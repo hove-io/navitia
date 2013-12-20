@@ -23,6 +23,16 @@ namespace nf = navitia::autocomplete;
 
 namespace navitia { namespace georef {
 
+/// default speed by transportation mode, defined at compile time
+const flat_enum_map<nt::Mode_e, float> default_speed {
+                                                    {{
+                                                        1.38f, //nt::Mode_e::Walking
+                                                        1.38f * 3, //nt::Mode_e::Bike
+                                                        1.38f * 5, //nt::Mode_e::Car
+                                                        1.38f * 3 //nt::Mode_e::Vls
+                                                    }}
+                                                    };
+
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
     nt::GeographicalCoord coord;
@@ -44,15 +54,16 @@ struct Vertex {
 /** Propriétés des arcs : (anciennement "segment")*/
 
 struct Edge {
-    nt::idx_t way_idx; //< indexe vers le nom de rue
-    float length; //< longeur en mètres de l'arc
-    float time; /// temps en second utilisé pour le VLS
+    nt::idx_t way_idx = 0; //< indexe vers le nom de rue
+//    float length; //< longeur en mètres de l'arc
+//    float time; /// temps en second utilisé pour le VLS
+    boost::posix_time::time_duration duration = {};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & way_idx & length & time;
+        ar & way_idx & duration;
     }
-    Edge(nt::idx_t wid, float len) : way_idx(wid), length(len), time(std::numeric_limits<int>::max()){}
-    Edge() : way_idx(0), length(0),time(std::numeric_limits<int>::max()){}
+    Edge(nt::idx_t wid, boost::posix_time::time_duration dur) : way_idx(wid), duration(dur) {}
+    Edge() {}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -125,14 +136,14 @@ private:
         un nom de voie et une liste de segments */
 struct PathItem{
     nt::idx_t way_idx = nt::invalid_idx; //< Way of this path item
-    float length = 0.; //< Length of the journey on this item
+    boost::posix_time::time_duration length = {}; //< Length of the journey on this item
     std::deque<nt::GeographicalCoord> coordinates;//< path item coordinates
     int angle = 0; //< Angle with the next PathItem (needed to give direction)
 };
 
 /** Itinéraire complet */
 struct Path {
-    float length = 0.; //< Longueur totale du parcours
+    boost::posix_time::time_duration length = {}; //< Longueur totale du parcours
     std::deque<PathItem> path_items = {}; //< Liste des voies parcourues
 };
 
@@ -196,7 +207,7 @@ struct GeoRef {
 
     /// for all stop_point, we store it's projection on each graph
     typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
-    std::vector<ProjectionByMode> projected_stop_points;
+    std::vector<ProjectionByMode> projected_stop_points = {};
 
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
@@ -215,7 +226,7 @@ struct GeoRef {
     std::map<std::string, std::string> synonymes;
     int word_weight; //Pas serialisé : lu dans le fichier ini
 
-    GeoRef(): word_weight(0){}
+    GeoRef();
 
     void init_offset(nt::idx_t);
 
@@ -282,7 +293,13 @@ struct GeoRef {
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
-    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds, bool add_in_only_one = false) const;
+    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
+
+    /// Combine 2 pathes
+    Path combine_path(vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const;
+    /// Build a path from a reverse path list
+    Path build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const;
+
     void add_way(const Way& w);
 
     ///Add the projected start and end to the path

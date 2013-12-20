@@ -6,8 +6,8 @@ namespace navitia { namespace routing {
 
 
 std::vector<Path>
-makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-           DateTime dt, const float walking_speed,
+makePathes(std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > destinations,
+           DateTime dt,
            const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const RAPTOR &raptor_, bool clockwise) {
     std::vector<Path> result;
     DateTime best_dt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
@@ -19,9 +19,9 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
                 if(raptor_.get_type(i, dest_idx) != boarding_type::uninitialized) {
                     DateTime current_dt = raptor_.labels[i][dest_idx].dt;
                     if(clockwise)
-                        current_dt = current_dt + std::ceil(spid_dist.second/walking_speed);
+                        current_dt = current_dt + spid_dist.second.total_seconds();
                     else
-                        current_dt = current_dt - std::floor(spid_dist.second/walking_speed);
+                        current_dt = current_dt - spid_dist.second.total_seconds();
                     if((clockwise && ((best_dt == DateTimeUtils::inf && current_dt <= dt) || (best_dt != DateTimeUtils::inf && current_dt < best_dt)))
                        ||(!clockwise && ((best_dt == DateTimeUtils::min && current_dt >= dt) || (best_dt != DateTimeUtils::min && current_dt > best_dt))) ){
                         best_dt = current_dt ;

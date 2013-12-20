@@ -22,16 +22,17 @@ struct GraphBuilder{
 
     /// Ajoute un arc. Si un nœud n'existe pas, il est créé automatiquement
     /// Si la longueur n'est pas précisée, il s'agit de la longueur à vol d'oiseau
-    GraphBuilder & add_edge(std::string source_name, std::string target_name, float length = -1, bool bidirectionnal = false);
+    GraphBuilder & add_edge(std::string source_name, std::string target_name, boost::posix_time::time_duration dur = {}, bool bidirectionnal = false);
 
     /// Surchage de la création de nœud pour plus de confort
     GraphBuilder & operator()(std::string node_name, float x, float y){ return add_vertex(node_name, x, y);}
 
 
     /// Surchage de la création d'arc pour plus de confort
-    GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1, bool bidirectionnal = false){
-        return add_edge(source_name, target_name, length, bidirectionnal);
+    GraphBuilder & operator()(std::string source_name, std::string target_name, boost::posix_time::time_duration dur = {}, bool bidirectionnal = false){
+        return add_edge(source_name, target_name, dur, bidirectionnal);
     }
+
 
     /// Retourne le nœud demandé, jette une exception si on ne trouve pas
     vertex_t get(const std::string & node_name);

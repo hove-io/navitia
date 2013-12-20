@@ -2,8 +2,27 @@
 #include "georef.h"
 
 namespace ng = navitia::georef;
+namespace bt = boost::posix_time;
 
 namespace navitia { namespace streetnetwork {
+
+
+struct SpeedDistanceCombiner : public std::binary_function<bt::time_duration, bt::time_duration, bt::time_duration> {
+    /// speed factor compared to the default speed of the transportation mode
+    /// speed_factor = 2 means the speed is twice the default speed of the given transportation mode
+    float speed_factor;
+    SpeedDistanceCombiner(float speed_) : speed_factor(speed_) {}
+    inline bt::time_duration operator()(bt::time_duration a, bt::time_duration b) const {
+        if (a == bt::pos_infin || b == bt::pos_infin)
+            return bt::pos_infin;
+        return a + divide_by_speed(b);
+    }
+
+    //needs to redefine the / operator since boost only define integer division
+    inline bt::time_duration divide_by_speed(bt::time_duration t) const {
+        return bt::milliseconds(t.total_milliseconds() / speed_factor);
+    }
+};
 
 struct GeoRefPathFinder {
     const ng::GeoRef & geo_ref;
@@ -16,9 +35,10 @@ struct GeoRefPathFinder {
 
     /// Transportation mode
     nt::Mode_e mode;
+    float speed_factor = 0.;
 
     /// Distance array for the Dijkstra
-    std::vector<float> distances;
+    std::vector<bt::time_duration> distances;
 
     /// Predecessors array for the Dijkstra
     std::vector<ng::vertex_t> predecessors;
@@ -29,23 +49,23 @@ struct GeoRefPathFinder {
      *  Update the structure for a given starting point and transportation mode
      *  The init HAS to be called before any other methods
      */
-    void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode);
+    void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
     /// compute the reachable stop points within the radius
-    std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(double radius,
+    std::vector<std::pair<type::idx_t, bt::time_duration>> find_nearest_stop_points(bt::time_duration radius,
                                                                          const proximitylist::ProximityList<type::idx_t>& pl);
 
     /// Compute the path from the starting point to the the target geographical coord
     ng::Path compute_path(const type::GeographicalCoord& target_coord);
 
     /// compute the distance from the starting point to the target stop point
-    double get_distance(type::idx_t target_idx);
+    bt::time_duration get_distance(type::idx_t target_idx);
 
     /// return the path from the starting point to the target. the target has to have been previously visited.
     ng::Path get_path(type::idx_t idx);
 
     /// Add the starting point projection the the path. Add a new way if needed
-    void add_projections_to_path(ng::Path& p) const;
+    void add_projections_to_path(ng::Path& p, bool append_to_begin) const;
 
     /**
      * Launch a dijkstra without initializing the data structure
@@ -53,27 +73,28 @@ struct GeoRefPathFinder {
      **/
     template<class Visitor>
     void dijkstra(ng::vertex_t start, Visitor visitor) {
-        predecessors[start] = start;
+        // Note: the predecessors have been updated in init
         boost::two_bit_color_map<> color(boost::num_vertices(geo_ref.graph));
         boost::dijkstra_shortest_paths_no_init(geo_ref.graph, start, &predecessors[0], &distances[0],
-                                               boost::get(&ng::Edge::length, geo_ref.graph), // weigth map
+                                               boost::get(&ng::Edge::duration, geo_ref.graph), // weigth map
                                                boost::identity_property_map(),
-                                               std::less<float>(), boost::closed_plus<float>(),
-                                               0,
+                                               std::less<bt::time_duration>(),
+                                               SpeedDistanceCombiner(speed_factor), //we multiply the edge duration by a speed factor
+                                               bt::seconds(0),
                                                visitor,
                                                color
                                                );
     }
 private:
-    ng::Path get_path(const ng::ProjectionData& target, std::pair<double, ng::vertex_t> nearest_edge);
+    ng::Path get_path(const ng::ProjectionData& target, std::pair<bt::time_duration, ng::vertex_t> nearest_edge);
 
     /** compute the path to the target and update the distances/pred
      *  return a pair with the edge corresponding to the target and the distance
      */
-    std::pair<double, ng::vertex_t> update_path(const ng::ProjectionData& target);
+    std::pair<bt::time_duration, ng::vertex_t> update_path(const ng::ProjectionData& target);
 
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
-    std::pair<double, ng::vertex_t> find_nearest_vertex(const ng::ProjectionData& target) const;
+    std::pair<bt::time_duration, ng::vertex_t> find_nearest_vertex(const ng::ProjectionData& target) const;
 
 };
 
@@ -86,12 +107,12 @@ public:
 
     bool departure_launched() const;
     bool arrival_launched() const;
-    std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(
-                                                    double radius,
+    std::vector<std::pair<type::idx_t, bt::time_duration>> find_nearest_stop_points(
+                                                    bt::time_duration radius,
                                                     const proximitylist::ProximityList<type::idx_t>& pl,
                                                     bool use_second);
 
-    double get_distance(type::idx_t target_idx, bool use_second = false);
+    bt::time_duration get_distance(type::idx_t target_idx, bool use_second = false);
 
     ng::Path get_path(type::idx_t idx, bool use_second = false);
 
@@ -123,13 +144,13 @@ struct target_visitor : public boost::dijkstra_visitor<> {
 
 // Visiteur qui s'arrête au bout d'une certaine distance
 struct distance_visitor : public boost::dijkstra_visitor<> {
-    double max_distance;
-    const std::vector<float>& distances;
-    distance_visitor(float max_distance, const std::vector<float> & distances) :
-        max_distance(max_distance), distances(distances){}
+    boost::posix_time::time_duration max_duration;
+    const std::vector<bt::time_duration>& durations;
+    distance_visitor(bt::time_duration max_dur, const std::vector<bt::time_duration> & dur) :
+        max_duration(max_dur), durations(dur){}
 
     void finish_vertex(ng::vertex_t u, const ng::Graph&){
-        if(distances[u] > max_distance)
+        if(durations[u] > max_duration)
             throw DestinationFound();
     }
 };
