@@ -11,8 +11,7 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
     pbnavitia::Response pb_response;
     try{
         auto now = boost::posix_time::from_iso_string(str_dt);
-        auto end = boost::posix_time::from_iso_string("20141212T120000");
-        boost::posix_time::time_period action_period(now, end);
+        boost::posix_time::time_period action_period(now, now);
         const std::vector<std::string> forbidden_uris;
         auto line_idx = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
 

@@ -24,7 +24,7 @@ ntw_ln disruptions_list(const std::vector<type::idx_t>& line_idx, const type::PT
             }else{
                     it->second.push_back(line);
                 }
-            }
+        }
     }
     return response;
 }
