@@ -14,31 +14,32 @@ using namespace navitia::georef;
 using namespace navitia::streetnetwork;
 
 using namespace navitia;
+namespace bt = boost::posix_time;
 
 struct computation_results {
-    double distance; //asked distance
-    std::vector<float> distances_matrix; //distances matrix
+    bt::time_duration duration; //asked duration
+    std::vector<bt::time_duration> durations_matrix; //duration matrix
     std::vector<vertex_t> predecessor;
 
-    computation_results(double d, const GeoRefPathFinder& worker) : distance(d), distances_matrix(worker.distances), predecessor(worker.predecessors) {}
+    computation_results(bt::time_duration d, const GeoRefPathFinder& worker) : duration(d), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
 
     bool operator ==(const computation_results& other) {
 
-        BOOST_REQUIRE_CLOSE(other.distance, distance, 0.001);
+        BOOST_CHECK_EQUAL(other.duration, duration);
 
-        BOOST_REQUIRE_EQUAL(other.distances_matrix.size(), distances_matrix.size());
+        BOOST_REQUIRE_EQUAL(other.durations_matrix.size(), durations_matrix.size());
 
-        for (size_t i = 0 ; i < distances_matrix.size() ; ++i) {
-            BOOST_REQUIRE_CLOSE(other.distances_matrix.at(i), distances_matrix.at(i), 0.001);
+        for (size_t i = 0 ; i < durations_matrix.size() ; ++i) {
+            BOOST_CHECK_EQUAL(other.durations_matrix.at(i), durations_matrix.at(i));
         }
 
-        BOOST_REQUIRE(predecessor == other.predecessor);
+        BOOST_CHECK(predecessor == other.predecessor);
 
         return true;
     }
 };
 
-std::string get_name(int i, int j) { return std::string(i + "_" + j); }
+std::string get_name(int i, int j) { std::stringstream ss; ss << i << "_" << j; return ss.str(); }
 bool almost_equal(float a, float b) {
     return fabs(a - b) < 0.00001;
 }
@@ -67,8 +68,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
             std::string name(get_name(i, j));
 
             //we add edge to the next vertex (the value is not important)
-            b.add_edge(name, get_name(i, j + 1), (i + j) * j);
-            b.add_edge(name, get_name(i + 1, j), (i + j) * i);
+            b.add_edge(name, get_name(i, j + 1), bt::seconds((i + j) * j));
+            b.add_edge(name, get_name(i + 1, j), bt::seconds((i + j) * i));
         }
     }
 
@@ -94,12 +95,12 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     type::idx_t target_idx(sp->idx);
 
     const bool use_second = false;
-    worker.init(start, type::Mode_e::Walking);
+    worker.init(start, type::Mode_e::Walking, ng::default_speed[type::Mode_e::Walking]);
 
-    double distance = worker.get_distance(target_idx);
+    auto distance = worker.get_distance(target_idx);
 
     //we have to find a way to get there
-    BOOST_REQUIRE_NE(distance, std::numeric_limits<float>::max());
+    BOOST_REQUIRE_NE(distance, bt::pos_infin);
 
     std::cout << "distance " << distance
               << " proj distance to source " << proj.source_distance
@@ -108,37 +109,37 @@ BOOST_AUTO_TEST_CASE(idempotence) {
               << " distance to target " << worker.distances[proj.target] << std::endl;
 
     // the distance matrix also has to be updated
-    BOOST_REQUIRE(almost_equal(worker.distances[proj.source] + proj.source_distance, distance) //we have to take into account the projection distance
-            || almost_equal(worker.distances[proj.target] + proj.target_distance, distance));
+    BOOST_CHECK(worker.distances[proj.source] + bt::seconds(proj.source_distance / default_speed[type::Mode_e::Walking]) == distance//we have to take into account the projection distance
+                    || worker.distances[proj.target] + bt::seconds(proj.target_distance / default_speed[type::Mode_e::Walking]) == distance);
 
     computation_results first_res {distance, worker};
 
     //we ask again with the init again
     {
-        worker.init(start, type::Mode_e::Walking);
-        double other_distance = worker.get_distance(target_idx);
+        worker.init(start, type::Mode_e::Walking, ng::default_speed[type::Mode_e::Walking]);
+        auto other_distance = worker.get_distance(target_idx);
 
         computation_results other_res {other_distance, worker};
 
         //we have to find a way to get there
-        BOOST_REQUIRE_NE(other_distance, std::numeric_limits<float>::max());
+        BOOST_REQUIRE_NE(other_distance, bt::pos_infin);
         // the distance matrix  also has to be updated
-        BOOST_REQUIRE(almost_equal(worker.distances[proj.source] + proj.source_distance, other_distance)
-                || almost_equal(worker.distances[proj.target] + proj.target_distance, other_distance));
+        BOOST_CHECK(worker.distances[proj.source] + bt::seconds(proj.source_distance / default_speed[type::Mode_e::Walking]) == other_distance
+                        || worker.distances[proj.target] + bt::seconds(proj.target_distance / default_speed[type::Mode_e::Walking]) == other_distance);
 
         BOOST_REQUIRE(first_res == other_res);
     }
 
     //we ask again without a init
     {
-        double other_distance = worker.get_distance(target_idx);
+        auto other_distance = worker.get_distance(target_idx);
 
         computation_results other_res {other_distance, worker};
         //we have to find a way to get there
-        BOOST_CHECK_NE(other_distance, std::numeric_limits<float>::max());
+        BOOST_CHECK_NE(other_distance, bt::pos_infin);
 
-        BOOST_REQUIRE(almost_equal(worker.distances[proj.source] + proj.source_distance, other_distance)
-                || almost_equal(worker.distances[proj.target] + proj.target_distance, other_distance));
+        BOOST_CHECK(worker.distances[proj.source] + bt::seconds(proj.source_distance / default_speed[type::Mode_e::Walking]) == other_distance
+                        || worker.distances[proj.target] + bt::seconds(proj.target_distance / default_speed[type::Mode_e::Walking]) == other_distance);
 
         BOOST_CHECK(first_res == other_res);
     }

@@ -42,19 +42,18 @@ inline void memset32(T*buf, uint n, T c)
 
 
 struct best_dest {
-    std::vector<u_int32_t> jpp_idx_duration;
+    std::vector<boost::posix_time::time_duration> jpp_idx_duration;
     DateTime best_now;
-    unsigned int best_now_jpp_idx;
+    type::idx_t best_now_jpp_idx;
     size_t count;
-    float max_walking;
 
-    void add_destination(type::idx_t jpp_idx, const float duration_to_dest, bool clockwise) {
-        jpp_idx_duration[jpp_idx] = clockwise ? std::ceil(duration_to_dest) : std::floor(duration_to_dest);
+    void add_destination(type::idx_t jpp_idx, const boost::posix_time::time_duration duration_to_dest, bool /*clockwise*/) {
+        jpp_idx_duration[jpp_idx] = duration_to_dest; //AD, check if there are some rounding problems
     }
 
 
     inline bool is_eligible_solution(type::idx_t jpp_idx) {
-        return jpp_idx_duration[jpp_idx] != std::numeric_limits<u_int32_t>::max();
+        return jpp_idx_duration[jpp_idx] != boost::posix_time::pos_infin;
     }
 
 
@@ -99,17 +98,16 @@ struct best_dest {
         return false;
     }
 
-    void reinit(const size_t nb_jpp_idx, const float max_walking_ = 0) {
+    void reinit(const size_t nb_jpp_idx) {
         jpp_idx_duration.resize(nb_jpp_idx);
-        memset32<u_int32_t>(&jpp_idx_duration[0], nb_jpp_idx, std::numeric_limits<u_int32_t>::max());
+        memset32<boost::posix_time::time_duration>(&jpp_idx_duration[0], nb_jpp_idx, boost::posix_time::pos_infin);
         best_now = DateTimeUtils::inf;
         best_now_jpp_idx = type::invalid_idx;
         count = std::numeric_limits<size_t>::max();
-        max_walking = max_walking_;
     }
 
-    void reinit(size_t nb_jpp_idx, const DateTime &borne, const float max_walking = 0) {
-        reinit(nb_jpp_idx, max_walking);
+    void reinit(size_t nb_jpp_idx, const DateTime &borne) {
+        reinit(nb_jpp_idx);
         best_now = borne;
     }
 

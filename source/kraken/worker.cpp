@@ -237,26 +237,24 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
     }
     switch(result.mode){
         case type::Mode_e::Bike:
-            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Bike];
-            result.distance = request.bike_distance();
-            result.speed = request.bike_speed();
+            result.offset = (*data)->geo_ref.offsets[type::Mode_e::Bike];
+            result.speed_factor = request.bike_speed() / georef::default_speed[type::Mode_e::Bike];
             break;
         case type::Mode_e::Car:
-            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Car];
-            result.distance = request.car_distance();
-            result.speed = request.car_speed();
+            result.offset = (*data)->geo_ref.offsets[type::Mode_e::Car];
+            result.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
             break;
         case type::Mode_e::Vls:
-            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Vls];
-            result.distance = request.vls_distance();
-            result.speed = request.vls_speed();
+            result.offset = (*data)->geo_ref.offsets[type::Mode_e::Vls];
+            result.speed_factor = request.vls_speed() / georef::default_speed[type::Mode_e::Vls];
             break;
         default:
             result.offset = 0;
-            result.distance = request.walking_distance();
-            result.speed = request.walking_speed();
+            result.speed_factor = request.walking_speed() / georef::default_speed[type::Mode_e::Walking];
             break;
     }
+    int max_non_TC = request.max_non_tc_duration();
+    result.max_duration = boost::posix_time::seconds(max_non_TC);
     return result;
 }
 
@@ -364,14 +362,12 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
     if(api != pbnavitia::ISOCHRONE){
         return routing::make_response(*planner, origin, destination, datetimes,
-                request.clockwise(), request.streetnetwork_params().walking_speed(),
-                request.streetnetwork_params().walking_distance(), accessibilite_params,
+                request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker, request.max_duration(),
                 request.max_transfers());
     } else {
         return navitia::routing::make_isochrone(*planner, origin, request.datetimes(0),
-                request.clockwise(), request.streetnetwork_params().walking_speed(),
-                request.streetnetwork_params().walking_distance(), accessibilite_params,
+                request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker, request.max_duration(),
                 request.max_transfers());
     }

@@ -167,22 +167,27 @@ void Visitor::edges(){
                     if(current_node.uses > 1){
                         navitia::type::idx_t target = current_node.idx;
                         navitia::georef::Edge e;
-                        e.length = length;
                         e.way_idx = w.second.idx;
+                        e.duration = boost::posix_time::seconds(length / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
                         boost::add_edge(source, target, e, geo_ref.graph);
                         if(w.second.properties[CYCLE_FWD]){ // arc cyclable
+                            e.duration = boost::posix_time::seconds(length / navitia::georef::default_speed[navitia::type::Mode_e::Bike]);
                             boost::add_edge(source + geo_ref.offsets[navitia::type::Mode_e::Bike], target + geo_ref.offsets[navitia::type::Mode_e::Bike], e, geo_ref.graph);
                         }
                         if(w.second.properties[CAR_FWD]){ // arc accessible en voiture
+                            e.duration = boost::posix_time::seconds(length / navitia::georef::default_speed[navitia::type::Mode_e::Car]);
                             boost::add_edge(source + geo_ref.offsets[navitia::type::Mode_e::Car], target + geo_ref.offsets[navitia::type::Mode_e::Car], e, geo_ref.graph);
                         }
                         geo_ref.ways[e.way_idx]->edges.push_back(std::make_pair(source, target));
 
+                        e.duration = boost::posix_time::seconds(length / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
                         boost::add_edge(target, source, e, geo_ref.graph);
                         if(w.second.properties[CYCLE_BWD]){ // arc cyclable
+                            e.duration = boost::posix_time::seconds(length / navitia::georef::default_speed[navitia::type::Mode_e::Bike]);
                             boost::add_edge(target + geo_ref.offsets[navitia::type::Mode_e::Bike], source + geo_ref.offsets[navitia::type::Mode_e::Bike], e, geo_ref.graph);
                         }
                         if(w.second.properties[CAR_BWD]){ // arc accessible en voiture
+                            e.duration = boost::posix_time::seconds(length / navitia::georef::default_speed[navitia::type::Mode_e::Car]);
                             boost::add_edge(target + geo_ref.offsets[navitia::type::Mode_e::Car], source + geo_ref.offsets[navitia::type::Mode_e::Car], e, geo_ref.graph);
                         }
                         geo_ref.ways[e.way_idx]->edges.push_back(std::make_pair(target, source));
@@ -207,10 +212,9 @@ void Visitor::build_vls_edges(){
                 navitia::georef::edge_t e = geo_ref.nearest_edge(poi->coord, u);
                 navitia::georef::Edge edge;
                 edge.way_idx = geo_ref.graph[e].way_idx;
-                edge.length = 0;
-                edge.time = 120; // le temps nécessaire pour prendre le vélo
+                edge.duration = boost::posix_time::seconds(120); // le temps nécessaire pour prendre le vélo
                 boost::add_edge(u + geo_ref.offsets[navitia::type::Mode_e::Vls], u + geo_ref.offsets[navitia::type::Mode_e::Bike], edge, geo_ref.graph);
-                edge.time = 180; // le temps nécessaire pour déposer le vélo
+                edge.duration = boost::posix_time::seconds(180); // le temps nécessaire pour déposer le vélo
                 boost::add_edge(u + geo_ref.offsets[navitia::type::Mode_e::Bike], u + geo_ref.offsets[navitia::type::Mode_e::Vls], edge, geo_ref.graph);
                 ++total_vls_stations;
             }

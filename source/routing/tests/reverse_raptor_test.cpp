@@ -8,7 +8,7 @@
 
 using namespace navitia;
 using namespace routing;
-
+namespace bt = boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(direct){
     ed::builder b("20120614");
@@ -362,9 +362,9 @@ BOOST_AUTO_TEST_CASE(sn_fin) {
     b.vj("A")("stop1", 8*3600)("stop2", 8*3600 + 20*60);
     b.vj("B")("stop1", 9*3600)("stop2", 9*3600 + 20*60);
 
-    std::vector<std::pair<navitia::type::idx_t, double>> departs, destinations;
-    departs.push_back(std::make_pair(0, 0));
-    destinations.push_back(std::make_pair(1, 10 * 60));
+    std::vector<std::pair<navitia::type::idx_t, bt::time_duration>> departs, destinations;
+    departs.push_back(std::make_pair(0, bt::seconds(0)));
+    destinations.push_back(std::make_pair(1, bt::seconds(10 * 60)));
     b.data.pt_data.index();
     b.data.build_raptor();
     b.data.build_uri();
