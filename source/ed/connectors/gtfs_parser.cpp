@@ -288,10 +288,6 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         delete line;
         return nullptr;
     }
-    auto it_physical_mode = gtfs_data.physical_mode_map.find(row[type_c]);
-    if (it_physical_mode != gtfs_data.physical_mode_map.end()){
-        line->physical_mode = it_physical_mode->second;
-    }
 
     if(has_col(agency_c, row)) {
         auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
@@ -531,15 +527,10 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
     if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
 
-    auto itm = gtfs_data.physical_mode_map.find(line->physical_mode->uri);
-    if (itm == gtfs_data.physical_mode_map.end()) {
-        LOG4CPLUS_WARN(logger, "TripsGtfsHandler : Impossible to find the Gtfs mode " << line->physical_mode->uri
-                       << " referenced by trip " << row[trip_c]);
-        ignored++;
-        delete vj;
-        return nullptr;
+    auto itm = gtfs_data.physical_mode_map.find(line->commercial_mode->uri);
+    if (itm != gtfs_data.physical_mode_map.end()){
+        vj->physical_mode = itm->second;
     }
-    vj->physical_mode = itm->second;
 
     auto company_it = gtfs_data.company_map.find("default_company");
     if (company_it != gtfs_data.company_map.end()){
@@ -629,11 +620,14 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
     }
 }
 
-GenericGtfsParser::GenericGtfsParser(const std::string & path) : path(path) {
+GenericGtfsParser::GenericGtfsParser(const std::string & path, const bool _load_default_mode) :
+                                                                path(path),
+                                                                load_default_modes(_load_default_mode) {
     logger = log4cplus::Logger::getInstance("log");
 }
 
 void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
+
     try {
         gtfs_data.production_date = find_production_date(beginning_date);
     } catch (...) {
@@ -642,21 +636,26 @@ void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
             return;
         }
     }
+    if (load_default_modes){
+        fill_default_modes(data);
+    }
 
-    fill_default_objects(data);
+    fill_default_company(data);
 
     parse_files(data);
 
     normalize_extcodes(data);
 }
-
-void GenericGtfsParser::fill_default_objects(Data& data){
+void GenericGtfsParser::fill_default_company(Data & data){
     // création d'une compagnie par defaut
     nm::Company * company = new nm::Company();
     company->uri = "default_company";
     company->name = "compagnie par défaut";
     data.companies.push_back(company);
     gtfs_data.company_map[company->uri] = company;
+}
+
+void GenericGtfsParser::fill_default_modes(Data& data){
 
     // commercial_mode et physical_mode : par défaut
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();

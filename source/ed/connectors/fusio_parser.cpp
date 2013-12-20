@@ -95,16 +95,27 @@ void RouteFusioHandler::init(Data& data) {
 }
 
 ed::types::Line* RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    auto ed_line = RouteGtfsHandler::handle_line(data, row, is_first_line);
+    if(gtfs_data.line_map.find(row[id_c]) != gtfs_data.line_map.end()) {
+            ignored++;
+            LOG4CPLUS_WARN(logger, "dupplicate on route line " + row[id_c]);
+            return nullptr;
+     }
 
-    if (! ed_line) {
-        return nullptr;
-    }
+    ed::types::Line* ed_line = new ed::types::Line();
+    ed_line->uri = row[id_c];
+    ed_line->external_code = ed_line->uri;
+    ed_line->name = row[long_name_c];
+    ed_line->code = row[short_name_c];
+    if ( has_col(desc_c, row) )
+        ed_line->comment = row[desc_c];
+
+    if(has_col(color_c, row))
+        ed_line->color = row[color_c];
+    ed_line->additional_data = row[long_name_c];
 
     if (has_col(ext_code_c, row))
         ed_line->external_code = row[ext_code_c];
 
-    //if we have a commercial_mode column we update the value
     if(has_col(commercial_mode_c, row)) {
         std::unordered_map<std::string, ed::types::CommercialMode*>::iterator it;
         it = gtfs_data.commercial_mode_map.find(row[commercial_mode_c]);
@@ -112,7 +123,18 @@ ed::types::Line* RouteFusioHandler::handle_line(Data& data, const csv_row& row, 
         if(it != gtfs_data.commercial_mode_map.end())
             ed_line->commercial_mode = it->second;
     }
-
+    if(has_col(agency_c, row)) {
+        auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
+        if(agency_it != gtfs_data.agency_map.end())
+            ed_line->network = agency_it->second;
+    }
+    else {
+        auto agency_it = gtfs_data.agency_map.find("default_agency");
+        if(agency_it != gtfs_data.agency_map.end())
+            ed_line->network = agency_it->second;
+    }
+    gtfs_data.line_map[row[id_c]] = ed_line;
+    data.lines.push_back(ed_line);
     return ed_line;
 }
 void TransfersFusioHandler::init(Data& d) {

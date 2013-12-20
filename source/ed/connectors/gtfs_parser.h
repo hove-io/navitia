@@ -237,6 +237,7 @@ class GenericGtfsParser {
 protected:
     std::string path;///< Chemin vers les fichiers
     log4cplus::Logger logger;
+    bool load_default_modes;
     template <typename Handler>
     void parse(Data&, std::string file_name, bool = false);
     template <typename Handler>
@@ -247,13 +248,15 @@ public:
     GtfsData gtfs_data;
 
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
-    GenericGtfsParser(const std::string & path);
+    GenericGtfsParser(const std::string & path, const bool _load_default_mode = true);
 
     /// Remplit la structure passée en paramètre
     void fill(ed::Data& data, const std::string beginning_date = "");
 
     /// Ajout des objets par défaut
-    void fill_default_objects(Data & data);
+    void fill_default_modes(Data & data);
+    /// Ajout des companies
+    void fill_default_company(Data & data);
 
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string &beginning_date);
