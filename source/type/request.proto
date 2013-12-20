@@ -2,7 +2,7 @@ import "type.proto";
 package pbnavitia;
 
 message DisruptionsRequest {
-    optional string from_datetime	= 1;
+    optional string datetime	= 1;
     optional int32 depth        	= 2;
     optional int32 start_page       = 3;
     optional int32 count        	= 4;

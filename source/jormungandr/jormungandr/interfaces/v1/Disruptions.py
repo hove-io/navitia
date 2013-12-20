@@ -32,7 +32,7 @@ class Disruptions(ResourceUri):
                                 description="Number of distruption per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("from_datetime", type=str,
+        parser_get.add_argument("datetime", type=str,
                                 description="The datetime from which you want\
                                 the disruption")
         parser_get.add_argument("uri_filter", type=str, default="",
@@ -44,8 +44,8 @@ class Disruptions(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
 
-        if not args["from_datetime"]:
-            args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
+        if not args["datetime"]:
+            args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
         args["uri_filter"] = self.get_filter(uri)
 

@@ -70,7 +70,7 @@ class Script(object):
         req.disruptions.uri_filter = request['uri_filter']
         req.disruptions.count = request['count']
         req.disruptions.start_page = request['start_page']
-        req.disruptions.from_datetime = request['from_datetime']
+        req.disruptions.datetime = request['datetime']
 
         resp = instance.send_and_receive(req)
         return resp

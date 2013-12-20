@@ -114,7 +114,7 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
 pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &request){
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     return navitia::disruption_api::disruptions(*(*this->data),
-                                                request.from_datetime(),
+                                                request.datetime(),
                                                 request.depth(),
                                                 request.count(),
                                                 request.start_page(),

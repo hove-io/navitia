@@ -251,6 +251,10 @@ struct HasMessages{
             const boost::posix_time::ptime& current_time,
             const boost::posix_time::time_period& action_period)const;
 
+    bool has_applicable_message(
+            const boost::posix_time::ptime& current_time,
+            const boost::posix_time::time_period& action_period) const;
+
 };
 
 /** Coordonnées géographiques en WGS84
