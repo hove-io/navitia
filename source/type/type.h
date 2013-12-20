@@ -416,7 +416,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages{
     bool operator<(const StopArea & other) const { return this < &other; }
 };
 
-struct Network : public Header, Nameable{
+struct Network : public Header, Nameable, HasMessages{
     const static Type_e type = Type_e::Network;
     std::string address_name;
     std::string address_number;
@@ -430,7 +430,7 @@ struct Network : public Header, Nameable{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & id & name & uri & address_name & address_number & address_type_name
-            & mail & website & fax & line_list;
+            & mail & website & fax & line_list & messages;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
