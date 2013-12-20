@@ -210,14 +210,18 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 }
 
 
-void fill_pb_object(const nt::Network* n, const nt::Data&,
-                    pbnavitia::Network* network, int,
-                    const pt::ptime&, const pt::time_period&){
+void fill_pb_object(const nt::Network* n, const nt::Data& data,
+                    pbnavitia::Network* network, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period){
     if(n == nullptr)
         return ;
 
     network->set_name(n->name);
     network->set_uri(n->uri);
+
+    for(const auto& message : n->get_applicable_messages(now, action_period)){
+        fill_message(message, data, network->add_messages(), max_depth-1, now, action_period);
+    }
 }
 
 

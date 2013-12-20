@@ -256,9 +256,10 @@ message Poi {
 }
 
 message Network {
-    optional string uri = 3;
-    optional string name = 4;
-    repeated Line lines = 5;
+    optional string uri 		= 3;
+    optional string name 		= 4;
+    repeated Line lines 		= 5;
+    repeated Message messages 	= 6;
 }
 
 message PhysicalMode {

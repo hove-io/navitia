@@ -208,7 +208,7 @@ line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
-route["network"] = NonNullList(NonNullNested(generic_message))
+network["messages"] = NonNullList(NonNullNested(generic_message))
 network["lines"] = NonNullList(NonNullNested(line))
 line["network"] = PbField(network)
 

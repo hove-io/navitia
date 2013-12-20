@@ -20,7 +20,7 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
         for(auto pair_ntw_line : list){
             pbnavitia::Disruption* pb_disruption = pb_response.add_disruptions();
             pbnavitia::Network* pb_network = pb_disruption->mutable_network();
-            navitia::fill_pb_object(pair_ntw_line.first, d, pb_network, depth, now,action_period);
+            navitia::fill_pb_object(pair_ntw_line.first, d, pb_network, depth, now, action_period);
             for(auto line : pair_ntw_line.second){
                 pbnavitia::Line* pb_line = pb_disruption->add_lines();
                 navitia::fill_pb_object(line, d, pb_line, depth-1, now,action_period);
