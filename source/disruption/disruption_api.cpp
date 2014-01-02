@@ -15,14 +15,14 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
         const std::vector<std::string> forbidden_uris;
         auto line_idx = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
 
-        navitia::disruption::ntw_ln list = navitia::disruption::disruptions_list(line_idx, d.pt_data, action_period, now);
-        for(auto pair_ntw_line : list){
+        navitia::disruption::network_line list = navitia::disruption::disruptions_list(line_idx, d.pt_data, action_period, now);
+        for(auto pair_network_line : list){
             pbnavitia::Disruption* pb_disruption = pb_response.add_disruptions();
             pbnavitia::Network* pb_network = pb_disruption->mutable_network();
-            navitia::fill_pb_object(pair_ntw_line.first, d, pb_network, depth, now, action_period);
-            for(auto line : pair_ntw_line.second){
+            navitia::fill_pb_object(pair_network_line.first, d, pb_network, depth, now, action_period);
+            for(auto line : pair_network_line.second){
                 pbnavitia::Line* pb_line = pb_disruption->add_lines();
-                navitia::fill_pb_object(line, d, pb_line, depth-1, now,action_period);
+                navitia::fill_pb_object(line, d, pb_line, depth-1, now, action_period);
             }
         }
         auto pagination = pb_response.mutable_pagination();
@@ -32,13 +32,13 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
         pagination->set_itemsonpage(pb_response.disruptions_size());
 
     } catch(const ptref::parsing_error &parse_error) {
-        fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime" + parse_error.more,pb_response.mutable_error());
+        fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime" + parse_error.more, pb_response.mutable_error());
         return pb_response;
     } catch(const ptref::ptref_error &ptref_error){
-        fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more,pb_response.mutable_error());
+        fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more, pb_response.mutable_error());
         return pb_response;
     } catch(...) {
-        fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime",pb_response.mutable_error());
+        fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime", pb_response.mutable_error());
         return pb_response;
     }
     if (pb_response.disruptions_size() == 0) {
