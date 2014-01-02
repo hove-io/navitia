@@ -53,24 +53,18 @@ class Journeys(Resource):
                                 action="append",
                                 description="The list of modes you want at the\
                                 end of your journey")
+        parser_get.add_argument("max_non_TC_duration", type=int, default=10*60,
+                                description="maximal duration of non public \
+                                transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.68,
                                 description="Walking speed in meter/second")
-        parser_get.add_argument("walking_distance", type=int, default=1000,
-                                description="Maximum walking distance")
         parser_get.add_argument("bike_speed", type=float, default=8.8,
                                 description="Bike speed in meter/second")
-        parser_get.add_argument("bike_distance", type=int, default=5000,
-                                description="Maximum bike distance")
         parser_get.add_argument("br_speed", type=float, default=8.8,
                                 description="Bike rental speed in\
                                 meter/second")
-        parser_get.add_argument("br_distance", type=int, default=5000,
-                                description="Maximum distance for bike\
-                                rental mode")
         parser_get.add_argument("car_speed", type=float, default=16.8,
                                 description="Car speed in meter/second")
-        parser_get.add_argument("car_distance", type=int, default=15000,
-                                description="Maximum car distance")
         parser_get.add_argument("forbidden_uris[]", type=str, action="append",
                                 description="Uri you want to forbid")
         parser_get.add_argument("type", type=option_value(types),
@@ -111,14 +105,13 @@ class Isochrone(Resource):
                                 type=option_value(["walking", "car", "bike",
                                                    "br"]),
                                 action="append", default=["walking"])
+        parser_get.add_argument("max_non_TC_duration", type=int, default=10*60,
+                                description="maximal duration of non public \
+                                transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.68)
-        parser_get.add_argument("walking_distance", type=int, default=1000)
         parser_get.add_argument("bike_speed", type=float, default=8.8)
-        parser_get.add_argument("bike_distance", type=int, default=5000)
         parser_get.add_argument("br_speed", type=float, default=8.8)
-        parser_get.add_argument("br_distance", type=int, default=5000)
         parser_get.add_argument("car_speed", type=float, default=16.8)
-        parser_get.add_argument("car_distance", type=int, default=15000)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("wheelchair", type=boolean, default=False)
 
