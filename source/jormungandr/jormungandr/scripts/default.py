@@ -306,14 +306,17 @@ class Script(object):
         req.journeys.datetimes.append(request["datetime"])
         req.journeys.clockwise = request["clockwise"]
         sn_params = req.journeys.streetnetwork_params
+        if "max_non_TC_duration" in request:
+            sn_params.max_non_TC_duration = request["max_non_TC_duration"]
+        else:
+            # for the moment we compute the non_TC duration
+            # with the walking_distance
+            max_duration = request["walking_distance"] / request["walking_speed"]
+            sn_params.max_non_TC_duration = max_duration
         sn_params.walking_speed = request["walking_speed"]
-        sn_params.walking_distance = request["walking_distance"]
         sn_params.bike_speed = request["bike_speed"]
-        sn_params.bike_distance = request["bike_distance"]
         sn_params.car_speed = request["car_speed"]
-        sn_params.car_distance = request["car_distance"]
         sn_params.vls_speed = request["br_speed"]
-        sn_params.vls_distance = request["br_distance"]
         if "origin_filter" in request:
             sn_params.origin_filter = request["origin_filter"]
         else:
