@@ -168,9 +168,9 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         fill_pb_object(l->commercial_mode, data,
                 line->mutable_commercial_mode(), depth-1);
         fill_pb_object(l->network, data, line->mutable_network(), depth-1);
-        for(const auto message : l->get_applicable_messages(now, action_period)){
-            fill_message(message, data, line->add_messages(), depth-1, now, action_period);
-        }
+    }
+    for(const auto message : l->get_applicable_messages(now, action_period)){
+        fill_message(message, data, line->add_messages(), depth-1, now, action_period);
     }
 }
 
@@ -210,14 +210,18 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 }
 
 
-void fill_pb_object(const nt::Network* n, const nt::Data&,
-                    pbnavitia::Network* network, int,
-                    const pt::ptime&, const pt::time_period&){
+void fill_pb_object(const nt::Network* n, const nt::Data& data,
+                    pbnavitia::Network* network, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period){
     if(n == nullptr)
         return ;
 
     network->set_name(n->name);
     network->set_uri(n->uri);
+
+    for(const auto& message : n->get_applicable_messages(now, action_period)){
+        fill_message(message, data, network->add_messages(), max_depth-1, now, action_period);
+    }
 }
 
 
@@ -620,6 +624,12 @@ void fill_message(const boost::shared_ptr<type::Message> message,
         pb_message->set_message(it->second.body);
         pb_message->set_title(it->second.title);
     }
+
+    pb_message->set_start_application_date(boost::posix_time::to_iso_string((message->application_period).begin()));
+    pb_message->set_end_application_date(boost::posix_time::to_iso_string((message->application_period).end()));
+
+    pb_message->set_start_application_daily_hour(boost::posix_time::to_iso_string(message->application_daily_start_hour));
+    pb_message->set_end_application_daily_hour(boost::posix_time::to_iso_string(message->application_daily_end_hour));
 }
 
 

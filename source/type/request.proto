@@ -1,6 +1,14 @@
 import "type.proto";
 package pbnavitia;
 
+message DisruptionsRequest {
+    optional string datetime	= 1;
+    optional int32 depth        	= 2;
+    optional int32 start_page       = 3;
+    optional int32 count        	= 4;
+    optional string uri_filter		= 5;
+}
+
 message PlacesRequest {
     required string q           = 1;
     repeated NavitiaType types  = 2;
@@ -84,4 +92,5 @@ message Request {
     optional JourneysRequest journeys               = 5;
     optional PTRefRequest ptref                     = 6;
     optional PlaceUriRequest place_uri              = 7;
+    optional DisruptionsRequest	disruptions			= 8;
 }

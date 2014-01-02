@@ -5,6 +5,7 @@ from v1 import Journeys
 from v1 import Schedules
 from v1 import Places
 from v1 import Coord
+from v1 import Disruptions
 from v1 import converters_collection_type
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter,\
     ValidationError
@@ -157,4 +158,10 @@ def v1_routing(api):
                      coord + '<uri:uri>/stop_schedules',
                      '/v1/stop_schedules',
                      endpoint='v1.stop_schedules',
+                     )
+
+    api.add_resource(Disruptions.Disruptions,
+                     region + 'disruptions',
+                     region + '<uri:uri>/disruptions',
+                     endpoint='v1/disruptions'
                      )

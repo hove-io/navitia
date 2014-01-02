@@ -29,6 +29,18 @@ std::vector<boost::shared_ptr<Message>> HasMessages::get_applicable_messages(
 
 }
 
+bool HasMessages::has_applicable_message(
+        const boost::posix_time::ptime& current_time,
+        const boost::posix_time::time_period& action_period) const {
+    bool result = false;
+    for(auto message : this->messages){
+        if(message->is_valid(current_time, action_period)){
+            result = true;
+            break;
+        }
+    }
+    return result;
+}
 
 bool VehicleJourney::has_date_time_estimated() const{
     bool to_return = false;

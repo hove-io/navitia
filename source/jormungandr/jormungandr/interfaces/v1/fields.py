@@ -135,7 +135,11 @@ class get_label(fields.Raw):
 
 generic_message = {
     "level": enum_type(attribute="message_status"),
-    "value": fields.String(attribute="message")
+    "value": fields.String(attribute="message"),
+    "start_application_date": fields.String(),
+    "end_application_date": fields.String(),
+    "start_application_daily_hour": fields.String(),
+    "end_application_daily_hour": fields.String(),
 }
 
 display_informations_route = {
@@ -204,7 +208,7 @@ line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
-route["network"] = NonNullList(NonNullNested(generic_message))
+network["messages"] = NonNullList(NonNullNested(generic_message))
 network["lines"] = NonNullList(NonNullNested(line))
 line["network"] = PbField(network)
 

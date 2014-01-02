@@ -111,6 +111,15 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
             vector_of_admins(request), request.search_type(), *(*this->data));
 }
 
+pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &request){
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    return navitia::disruption_api::disruptions(*(*this->data),
+                                                request.datetime(),
+                                                request.depth(),
+                                                request.count(),
+                                                request.start_page(),
+                                                request.uri_filter());
+}
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
         pbnavitia::API api) {
@@ -402,6 +411,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::places_nearby: return proximity_list(request.places_nearby()); break;
         case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
         case pbnavitia::METADATAS : return metadatas(); break;
+        case pbnavitia::disruptions : return disruptions(request.disruptions()); break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", result.mutable_error());
