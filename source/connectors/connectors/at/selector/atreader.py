@@ -65,19 +65,19 @@ def get_datetime_to_second(sql_time):
 
 def get_navitia_type(object_type):
     if object_type == 'StopPoint':
-        return connectors.at.type_pb2.STOP_POINT
+        return connectors.type_pb2.STOP_POINT
     elif object_type == 'VehicleJourney':
-        return connectors.at.type_pb2.VEHICLE_JOURNEY
+        return connectors.type_pb2.VEHICLE_JOURNEY
     elif object_type == 'Line':
-        return connectors.at.type_pb2.LINE
+        return connectors.type_pb2.LINE
     elif object_type == 'Network':
-        return connectors.at.type_pb2.NETWORK
+        return connectors.type_pb2.NETWORK
     elif object_type == 'Route':
-        return connectors.at.type_pb2.JOURNEY_PATTERN
+        return connectors.type_pb2.JOURNEY_PATTERN
     elif object_type == 'StopArea':
-        return connectors.at.type_pb2.STOP_AREA
+        return connectors.type_pb2.STOP_AREA
     elif object_type == 'RoutePoint':
-        return connectors.at.type_pb2.JOURNEY_PATTERN_POINT
+        return connectors.type_pb2.JOURNEY_PATTERN_POINT
     else:
         return -1
 
@@ -165,7 +165,7 @@ class AtRealtimeReader(object):
         return uri
 
     def create_pertubation(self, message):
-        pertubation = connectors.at.realtime_pb2.AtPerturbation()
+        pertubation = connectors.realtime_pb2.AtPerturbation()
         pertubation.uri = message.uri
         pertubation.object.object_uri = message.object.object_uri
         pertubation.object.object_type = message.object.object_type
@@ -208,7 +208,7 @@ class AtRealtimeReader(object):
                 else:
                     if last_impact_id != row[self.label_impact_id]:
                         last_impact_id = row[self.label_impact_id]
-                        message = connectors.at.realtime_pb2.Message()
+                        message = connectors.realtime_pb2.Message()
                         self.message_list.append(message)
 
                         message.uri = str(row[self.label_impact_id]) + '-' + \

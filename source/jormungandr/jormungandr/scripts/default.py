@@ -9,8 +9,7 @@ import itertools
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
-    'stop_point': type_pb2.STOP_POINT,
-    'city': type_pb2.CITY,
+    'stop_point':  type_pb2.STOP_POINT,
     'address': type_pb2.ADDRESS,
     'poi': type_pb2.POI,
     'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
@@ -100,7 +99,7 @@ class Script(object):
         resp = instance.send_and_receive(req)
         if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
-            return self.places(request, instance)
+            return self.places(request, region)
         self.__pagination(request, "places", resp)
 
         return resp
@@ -383,7 +382,7 @@ class Script(object):
         return self.__on_ptref("lines", type_pb2.LINE, request, instance)
 
     def routes(self, request, instance):
-        return self.__on_ptref("routes", type_pb2.ROUTE, request, instance)
+        return self.__on_ptref("routes", type_pb2.ROUTE, request,  instance)
 
     def networks(self, request, instance):
         return self.__on_ptref("networks", type_pb2.NETWORK, request, instance)
