@@ -293,16 +293,16 @@ class AtRealtimeReader(object):
                           'media_media'),
                           self.event_table.c.Event_PublicationEndDate
                           >= bindparam('event_publicationenddate'),
-                          or_(self.event_table.c.Event_CloseDate == None,
+                          or_(not self.event_table.c.Event_CloseDate,
                               self.event_table.c.Event_CloseDate > bindparam(
                                   'event_closedate'),
                               self.impact_table.c
-                              .Impact_SelfModificationDate == None,
+                              .Impact_SelfModificationDate is None,
                               self.impact_table.c
                               .Impact_SelfModificationDate > bindparam(
                                   'impact_modification_date'),
                               self.impact_table.c
-                              .Impact_ChildrenModificationDate == None,
+                              .Impact_ChildrenModificationDate is None,
                               self.impact_table.c
                               .Impact_ChildrenModificationDate > bindparam(
                                   'impact_modification_date'))
