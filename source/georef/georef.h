@@ -17,7 +17,6 @@
 #include "utils/logger.h"
 #include "utils/flat_enum_map.h"
 
-
 namespace nt = navitia::type;
 namespace nf = navitia::autocomplete;
 
@@ -55,9 +54,7 @@ struct Vertex {
 
 struct Edge {
     nt::idx_t way_idx = 0; //< indexe vers le nom de rue
-//    float length; //< longeur en mètres de l'arc
-//    float time; /// temps en second utilisé pour le VLS
-    boost::posix_time::time_duration duration = {};
+    boost::posix_time::time_duration duration = {}; // duration of the edge
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & way_idx & duration;
@@ -228,7 +225,7 @@ struct GeoRef {
 
     GeoRef();
 
-    void init_offset(nt::idx_t);
+    void init();
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
