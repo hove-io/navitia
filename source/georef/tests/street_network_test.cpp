@@ -83,6 +83,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     sp->coord.set_xy(8., 8.);
     sp->idx = 0;
     data.pt_data.stop_points.push_back(sp);
+    geo_ref.init();
     geo_ref.project_stop_points(data.pt_data.stop_points);
 
     const GeoRef::ProjectionByMode& projections = geo_ref.projected_stop_points[sp->idx];
