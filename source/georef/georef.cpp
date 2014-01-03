@@ -389,39 +389,35 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
     return to_return;
 }
 
-void GeoRef::init_offset(nt::idx_t value){
-    //TODO ? with something like boost::enum we could even handle loops and only define the different transport modes in the enum
-    offsets[nt::Mode_e::Walking] = 0;
-    offsets[nt::Mode_e::Vls] = value;
-    offsets[nt::Mode_e::Bike] = 2 * value;
-    offsets[nt::Mode_e::Car] = 3 * value;
+void GeoRef::init() {
+    nt::idx_t nb_vertex = boost::num_vertices(graph);
 
-    /// Pour la gestion du vls
-    for(vertex_t v = 0; v<value; ++v){
-        boost::add_vertex(graph[v], graph);
+    int cpt(0);
+    for (auto& offset_val : offsets.array) {
+        //offsets initialisation
+        offset_val = cpt * nb_vertex;
+        cpt++;
+
+        if (cpt > 1) {
+            //we dupplicate the graph for each transportation mode save the first one
+            for (vertex_t v = 0; v < nb_vertex; ++v){
+                boost::add_vertex(graph[v], graph);
+            }
+        }
     }
 
-    /// Pour la gestion du vélo
-    for(vertex_t v = 0; v<value; ++v){
-        boost::add_vertex(graph[v], graph);
-    }
-
-    /// Pour la gestion du voiture
-    for(vertex_t v = 0; v<value; ++v){
-        boost::add_vertex(graph[v], graph);
-    }
 }
 
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
 
-    if(this->offsets[navitia::type::Mode_e::Vls] == 0){
-        BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
+    if (this->offsets[1] == 0) { //if we only have one mean of transport
+        BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)) {
             pl.add(graph[u].coord, u);
         }
-    }else{
-        // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo, voiture
-        for(vertex_t v = 0; v < this->offsets[navitia::type::Mode_e::Vls]; ++v){
+    } else {
+        //do not build the proximitylist with the edge of other transportation mode than walking (and walking HAS to be the first transportation mode in the offset array)
+        for(vertex_t v = 0; v < this->offsets[1]; ++v){
             pl.add(graph[v].coord, v);
         }
     }

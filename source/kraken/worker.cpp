@@ -249,7 +249,7 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             result.speed_factor = request.vls_speed() / georef::default_speed[type::Mode_e::Vls];
             break;
         default:
-            result.offset = 0;
+            result.offset = (*data)->geo_ref.offsets[type::Mode_e::Walking];
             result.speed_factor = request.walking_speed() / georef::default_speed[type::Mode_e::Walking];
             break;
     }

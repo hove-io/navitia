@@ -69,8 +69,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     b.data.pt_data.index();
     b.data.build_raptor();
     b.data.build_uri();
-    ng::vertex_t nb_vertex = boost::num_vertices(b.data.geo_ref.graph);
-    b.data.geo_ref.init_offset(nb_vertex);
+    b.data.geo_ref.init();
     b.data.build_proximity_list();
     b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     RAPTOR raptor(b.data);
@@ -246,9 +245,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     type::GeographicalCoord V(5, 10, false);
     type::GeographicalCoord Q(180, 100, false);
 
-
-    ng::vertex_t Conunt_v = boost::num_vertices(b.data.geo_ref.graph);
-    b.data.geo_ref.init_offset(Conunt_v);
+    b.data.geo_ref.init();
     ng::Way* way;
 
     way = new ng::Way();

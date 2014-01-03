@@ -145,8 +145,7 @@ void Visitor::count_nodes_uses() {
             }
         }
     }
-    navitia::georef::vertex_t Conunt_v = boost::num_vertices(geo_ref.graph);
-    geo_ref.init_offset(Conunt_v);
+    geo_ref.init();
     std::cout << "On a : " << boost::num_vertices(geo_ref.graph) << " nœuds" << std::endl;
 }
 

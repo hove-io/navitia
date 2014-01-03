@@ -848,8 +848,7 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
             idx++;
         }
     }
-    navitia::georef::vertex_t Conunt_v = boost::num_vertices(data.geo_ref.graph);
-    data.geo_ref.init_offset(Conunt_v);
+    data.geo_ref.init();
 }
 
 void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
