@@ -125,73 +125,303 @@ void add_edges(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to, 
     add_edges(edge_idx, geo_ref, idx_from, idx_to, a.distance_to(b), mode);
 }
 
-BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
+namespace ng = navitia::georef;
+struct streetnetworkmode_fixture {
+    streetnetworkmode_fixture() {
 
-/*
+        /*
 
-   K  ------------------------------ J
-      |                             |
-      |                             |
-      |                             |  I
-      |                             ---------------- H
-      |                                             |
-      |                                             |
-      |                                             |
-      |                                             |
-      |                                             | g
-      |                                             ---------------------- A ------------R
-      |                                                               /  |
-      |                                                             /    |
-      |                                                           /      |
-      |                                                         /        |
-      |                                                       /          |
-      |                                                     /            |
-      |                                                   /              | E
-      |                                                 /                ------------------------- F
-      |                                              /                                           |
-      |                                          /                                               |
-      |                                       /                                                  |
-      |                                    /                                                     |
-      |                                 /                                                        |
-      |                             /                                                            |
-      |                          /                                                               |
-      |                      /                                                                   |
-      |                  /                                                                       |
-      |             /                                                                            |
-      B------------------------------------------------------------------------------------------- C
-      |
-      |
-      |
-      S
+           K  ------------------------------ J
+              |                             |
+              |                             |
+              |                             |  I
+              |                             ---------------- H
+              |                                             |
+              |                                             |
+              |                                             |
+              |                                             |
+              |                                             | g
+              |                                             ---------------------- A ------------R
+              |                                                               /  |
+              |                                                             /    |
+              |                                                           /      |
+              |                                                         /        |
+              |                                                       /          |
+              |                                                     /            |
+              |                                                   /              | E
+              |                                                 /                ------------------------- F
+              |                                              /                                           |
+              |                                          /                                               |
+              |                                       /                                                  |
+              |                                    /                                                     |
+              |                                 /                                                        |
+              |                             /                                                            |
+              |                          /                                                               |
+              |                      /                                                                   |
+              |                  /                                                                       |
+              |             /                                                                            |
+              B------------------------------------------------------------------------------------------- C
+              |
+              |
+              |
+              S
 
-        On veut aller de S vers R :
-            *) la voie cyclable est : A->G->H->I->J->K->B
-            *) la voie rÃ©servÃ©e Ã  la voiture est : A->E->F->C->B
-            *) la voie MAP est : A->B
-            *) la voie cyclable, voiture et MAP : S->B
-            *) entre A et B que le transport en commun
-            *) entre A et R que la marche a pied
-
-
-
-            CoordonÃ©es :
-                        A(12, 8)    0
-                        G(10, 8)    1
-                        H(10, 10)   2
-                        I(7, 10)    3
-                        J(7, 12)    4
-                        K(1, 12)    5
-                        B(1, 3)     6
-                        C(15, 3)    7
-                        F(15, 5)    8
-                        E(12, 5)    9
-                        R(21, 8)    10
-                        S(1, 1)     11
+                On veut aller de S vers R :
+                    *) la voie cyclable est : A->G->H->I->J->K->B
+                    *) la voie rÃ©servÃ©e Ã  la voiture est : A->E->F->C->B
+                    *) la voie MAP est : A->B
+                    *) la voie cyclable, voiture et MAP : S->B
+                    *) entre A et B que le transport en commun
+                    *) entre A et R que la marche a pied
 
 
 
-*/
-    namespace ng = navitia::georef;
+                    CoordonÃ©es :
+                                A(12, 8)    0
+                                G(10, 8)    1
+                                H(10, 10)   2
+                                I(7, 10)    3
+                                J(7, 12)    4
+                                K(1, 12)    5
+                                B(1, 3)     6
+                                C(15, 3)    7
+                                F(15, 5)    8
+                                E(12, 5)    9
+                                R(21, 8)    10
+                                S(1, 1)     11
+
+
+
+        */
+
+
+        type::GeographicalCoord A(120, 80, false);
+        boost::add_vertex(ng::Vertex(A),b.data.geo_ref.graph);
+
+        type::GeographicalCoord G(100, 80, false);
+        boost::add_vertex(ng::Vertex(G),b.data.geo_ref.graph);
+
+        type::GeographicalCoord H(100, 100, false);
+        boost::add_vertex(ng::Vertex(H),b.data.geo_ref.graph);
+
+        type::GeographicalCoord I(70, 100, false);
+        boost::add_vertex(ng::Vertex(I),b.data.geo_ref.graph);
+
+        type::GeographicalCoord J(70, 120, false);
+        boost::add_vertex(ng::Vertex(J),b.data.geo_ref.graph);
+
+        type::GeographicalCoord K(10, 120, false);
+        boost::add_vertex(ng::Vertex(K),b.data.geo_ref.graph);
+
+        type::GeographicalCoord B(10, 30, false);
+        boost::add_vertex(ng::Vertex(B),b.data.geo_ref.graph);
+
+        type::GeographicalCoord C(220, 30, false);
+        boost::add_vertex(ng::Vertex(C),b.data.geo_ref.graph);
+
+        type::GeographicalCoord F(220, 50, false);
+        boost::add_vertex(ng::Vertex(F),b.data.geo_ref.graph);
+
+        type::GeographicalCoord E(120, 50, false);
+        boost::add_vertex(ng::Vertex(E),b.data.geo_ref.graph);
+
+        type::GeographicalCoord R(210, 80, false);
+        boost::add_vertex(ng::Vertex(R),b.data.geo_ref.graph);
+
+        type::GeographicalCoord S(10, 10, false);
+        boost::add_vertex(ng::Vertex(S),b.data.geo_ref.graph);
+        // Pour le vls
+        type::GeographicalCoord V(5, 10, false);
+        type::GeographicalCoord Q(180, 100, false);
+
+        b.data.geo_ref.init();
+        ng::Way* way;
+
+        way = new ng::Way();
+        way->name = "rue ab"; // A->B
+        way->idx = 0;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue ae"; // A->E
+        way->idx = 1;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue ef"; // E->F
+        way->idx = 2;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue fc"; // F->C
+        way->idx = 3;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue cb"; // C->B
+        way->idx = 4;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue ag"; // A->G
+        way->idx = 5;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue gh"; // G->H
+        way->idx = 6;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue hi"; // H->I
+        way->idx = 7;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue ij"; // I->J
+        way->idx = 8;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue jk"; // J->K
+        way->idx = 9;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue kb"; // K->B
+        way->idx = 10;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue ar"; // A->R
+        way->idx = 11;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        way = new ng::Way();
+        way->name = "rue bs"; // B->S
+        way->idx = 12;
+        way->way_type = "rue";
+        b.data.geo_ref.ways.push_back(way);
+
+        // A->B
+        add_edges(0, b.data.geo_ref, AA, BB, 100, type::Mode_e::Walking);
+        b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
+        b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
+
+        // A->E
+        add_edges(1, b.data.geo_ref, AA, EE, A, E, type::Mode_e::Walking);
+        add_edges(1, b.data.geo_ref, AA, EE, A, E, type::Mode_e::Car);
+        b.data.geo_ref.ways[1]->edges.push_back(std::make_pair(AA, EE));
+        b.data.geo_ref.ways[1]->edges.push_back(std::make_pair(EE, AA));
+
+        // E->F
+        add_edges(2, b.data.geo_ref, FF, EE, F, E, type::Mode_e::Car);
+        add_edges(2, b.data.geo_ref, FF, EE, F, E, type::Mode_e::Walking);
+        b.data.geo_ref.ways[2]->edges.push_back(std::make_pair(EE , FF));
+        b.data.geo_ref.ways[2]->edges.push_back(std::make_pair(FF , EE));
+
+        // F->C
+        add_edges(3, b.data.geo_ref, FF, CC, F, C, type::Mode_e::Walking);
+        add_edges(3, b.data.geo_ref, FF, CC, F, C, type::Mode_e::Car);
+        b.data.geo_ref.ways[3]->edges.push_back(std::make_pair(FF , CC));
+        b.data.geo_ref.ways[3]->edges.push_back(std::make_pair(CC , FF));
+
+        // C->B
+        add_edges(4, b.data.geo_ref, BB, CC, B, C, type::Mode_e::Walking);
+        add_edges(4, b.data.geo_ref, BB, CC, 50, type::Mode_e::Car);
+        b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(CC , BB));
+        b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(BB , CC));
+
+        // A->G
+        double distance_ag = A.distance_to(G) - .5;//the cost of the edge is a bit less than the distance not to get a conflict with the projection
+        add_edges(5, b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Walking);
+        add_edges(5, b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Bike);
+        b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(AA , GG));
+        b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(GG , AA));
+
+        // G->H
+        add_edges(6, b.data.geo_ref, HH, GG, G, H, type::Mode_e::Walking);
+        add_edges(6, b.data.geo_ref, HH, GG, G, H, type::Mode_e::Bike);
+        b.data.geo_ref.ways[6]->edges.push_back(std::make_pair(GG , HH));
+        b.data.geo_ref.ways[6]->edges.push_back(std::make_pair(HH , GG));
+
+        // H->I
+        add_edges(7, b.data.geo_ref, HH, II, H, I, type::Mode_e::Walking);
+        add_edges(7, b.data.geo_ref, HH, II, H, I, type::Mode_e::Bike);
+        b.data.geo_ref.ways[7]->edges.push_back(std::make_pair(HH , II));
+        b.data.geo_ref.ways[7]->edges.push_back(std::make_pair(II , HH));
+
+        // I->J
+        add_edges(8, b.data.geo_ref, II, JJ, I, J, type::Mode_e::Walking);
+        add_edges(8, b.data.geo_ref, II, JJ, I, J, type::Mode_e::Bike);
+        b.data.geo_ref.ways[8]->edges.push_back(std::make_pair(II , JJ));
+        b.data.geo_ref.ways[8]->edges.push_back(std::make_pair(JJ , II));
+
+        // J->K
+        add_edges(9, b.data.geo_ref, KK, JJ, K, J, type::Mode_e::Walking);
+        add_edges(9, b.data.geo_ref, KK, JJ, K, J, type::Mode_e::Bike);
+        b.data.geo_ref.ways[9]->edges.push_back(std::make_pair(JJ , KK));
+        b.data.geo_ref.ways[9]->edges.push_back(std::make_pair(KK , JJ));
+
+        // K->B
+        add_edges(10, b.data.geo_ref, KK, BB, K, B, type::Mode_e::Walking);
+        add_edges(10, b.data.geo_ref, KK, BB, K, B, type::Mode_e::Bike);
+        b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(KK , BB));
+        b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(BB , KK));
+
+        // A->R
+        add_edges(11, b.data.geo_ref, AA, RR, A, R, type::Mode_e::Walking);
+        b.data.geo_ref.ways[11]->edges.push_back(std::make_pair(AA, RR));
+        b.data.geo_ref.ways[11]->edges.push_back(std::make_pair(RR, AA));
+
+        // B->S
+        add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Walking);
+        add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Bike);
+        add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Car);
+        b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(BB, SS));
+        b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(SS, BB));
+
+        b.sa("stopA", A.lon(), A.lat());
+        b.sa("stopR", R.lon(), R.lat());
+        b.vj("A")("stopA", 8*3600 +10*60, 8*3600 + 11 * 60)("stopR", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+        b.generate_dummy_basis();
+        b.data.pt_data.index();
+        b.data.build_raptor();
+        b.data.build_uri();
+        b.data.build_proximity_list();
+        b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+
+        std::string origin_lon = boost::lexical_cast<std::string>(S.lon()),
+                origin_lat = boost::lexical_cast<std::string>(S.lat()),
+                origin_uri = "coord:"+origin_lon+":"+origin_lat;
+        type::Type_e origin_type = b.data.get_type_of_id(origin_uri);
+        origin = {origin_type, origin_uri};
+
+        std::string destination_lon = boost::lexical_cast<std::string>(R.lon()),
+                destination_lat = boost::lexical_cast<std::string>(R.lat()),
+                destination_uri = "coord:"+destination_lon+":"+destination_lat;
+        type::Type_e destination_type = b.data.get_type_of_id(destination_uri);
+        destination = {destination_type, destination_uri};
+        // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
+    }
+
+    pbnavitia::Response make_response() {
+        streetnetwork::StreetNetwork sn_worker(b.data.geo_ref);
+        RAPTOR raptor(b.data);
+        return ::make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams(), forbidden, sn_worker);
+    }
     int AA = 0;
     int GG = 1;
     int HH = 2;
@@ -204,244 +434,45 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     int EE = 9;
     int RR = 10;
     int SS = 11;
-    ed::builder b("20120614");
 
-    type::GeographicalCoord A(120, 80, false);
-    boost::add_vertex(ng::Vertex(A),b.data.geo_ref.graph);
+    type::GeographicalCoord A = {120, 80, false};
+    type::GeographicalCoord G = {100, 80, false};
+    type::GeographicalCoord H = {100, 100, false};
+    type::GeographicalCoord I = {70, 100, false};
+    type::GeographicalCoord J = {70, 120, false};
+    type::GeographicalCoord K = {10, 120, false};
+    type::GeographicalCoord B = {10, 30, false};
+    type::GeographicalCoord C = {220, 30, false};
+    type::GeographicalCoord F = {220, 50, false};
+    type::GeographicalCoord E = {120, 50, false};
+    type::GeographicalCoord R = {210, 80, false};
+    type::GeographicalCoord S = {10, 10, false};
 
-    type::GeographicalCoord G(100, 80, false);
-    boost::add_vertex(ng::Vertex(G),b.data.geo_ref.graph);
-
-    type::GeographicalCoord H(100, 100, false);
-    boost::add_vertex(ng::Vertex(H),b.data.geo_ref.graph);
-
-    type::GeographicalCoord I(70, 100, false);
-    boost::add_vertex(ng::Vertex(I),b.data.geo_ref.graph);
-
-    type::GeographicalCoord J(70, 120, false);
-    boost::add_vertex(ng::Vertex(J),b.data.geo_ref.graph);
-
-    type::GeographicalCoord K(10, 120, false);
-    boost::add_vertex(ng::Vertex(K),b.data.geo_ref.graph);
-
-    type::GeographicalCoord B(10, 30, false);
-    boost::add_vertex(ng::Vertex(B),b.data.geo_ref.graph);
-
-    type::GeographicalCoord C(220, 30, false);
-    boost::add_vertex(ng::Vertex(C),b.data.geo_ref.graph);
-
-    type::GeographicalCoord F(220, 50, false);
-    boost::add_vertex(ng::Vertex(F),b.data.geo_ref.graph);
-
-    type::GeographicalCoord E(120, 50, false);
-    boost::add_vertex(ng::Vertex(E),b.data.geo_ref.graph);
-
-    type::GeographicalCoord R(210, 80, false);
-    boost::add_vertex(ng::Vertex(R),b.data.geo_ref.graph);
-
-    type::GeographicalCoord S(10, 10, false);
-    boost::add_vertex(ng::Vertex(S),b.data.geo_ref.graph);
     // Pour le vls
-    type::GeographicalCoord V(5, 10, false);
-    type::GeographicalCoord Q(180, 100, false);
+    type::GeographicalCoord V = {5, 10, false};
+    type::GeographicalCoord Q = {180, 100, false};
 
-    b.data.geo_ref.init();
-    ng::Way* way;
+    ed::builder b = {"20120614"};
+    type::EntryPoint origin;
+    type::EntryPoint destination;
+    std::vector<std::string> datetimes = {"20120614T080000", "20120614T090000"};
+    std::vector<std::string> forbidden;
+};
 
-    way = new ng::Way();
-    way->name = "rue ab"; // A->B
-    way->idx = 0;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue ae"; // A->E
-    way->idx = 1;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue ef"; // E->F
-    way->idx = 2;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue fc"; // F->C
-    way->idx = 3;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue cb"; // C->B
-    way->idx = 4;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue ag"; // A->G
-    way->idx = 5;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue gh"; // G->H
-    way->idx = 6;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue hi"; // H->I
-    way->idx = 7;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue ij"; // I->J
-    way->idx = 8;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue jk"; // J->K
-    way->idx = 9;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue kb"; // K->B
-    way->idx = 10;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue ar"; // A->R
-    way->idx = 11;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-    way = new ng::Way();
-    way->name = "rue bs"; // B->S
-    way->idx = 12;
-    way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
-
-// A->B
-    add_edges(0, b.data.geo_ref, AA, BB, 100, type::Mode_e::Walking);
-    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
-    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
-
-// A->E
-    add_edges(1, b.data.geo_ref, AA, EE, A, E, type::Mode_e::Walking);
-    add_edges(1, b.data.geo_ref, AA, EE, A, E, type::Mode_e::Car);
-    b.data.geo_ref.ways[1]->edges.push_back(std::make_pair(AA, EE));
-    b.data.geo_ref.ways[1]->edges.push_back(std::make_pair(EE, AA));
-
-// E->F
-    add_edges(2, b.data.geo_ref, FF, EE, F, E, type::Mode_e::Car);
-    add_edges(2, b.data.geo_ref, FF, EE, F, E, type::Mode_e::Walking);
-    b.data.geo_ref.ways[2]->edges.push_back(std::make_pair(EE , FF));
-    b.data.geo_ref.ways[2]->edges.push_back(std::make_pair(FF , EE));
-
-// F->C
-    add_edges(3, b.data.geo_ref, FF, CC, F, C, type::Mode_e::Walking);
-    add_edges(3, b.data.geo_ref, FF, CC, F, C, type::Mode_e::Car);
-    b.data.geo_ref.ways[3]->edges.push_back(std::make_pair(FF , CC));
-    b.data.geo_ref.ways[3]->edges.push_back(std::make_pair(CC , FF));
-
-// C->B
-    add_edges(4, b.data.geo_ref, BB, CC, B, C, type::Mode_e::Walking);
-    add_edges(4, b.data.geo_ref, BB, CC, 50, type::Mode_e::Car);
-    b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(CC , BB));
-    b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(BB , CC));
-
-// A->G
-    double distance_ag = A.distance_to(G) - .5;//the cost of the edge is a bit less than the distance not to get a conflict with the projection
-    add_edges(5, b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Walking);
-    add_edges(5, b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Bike);
-    b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(AA , GG));
-    b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(GG , AA));
-
-// G->H
-    add_edges(6, b.data.geo_ref, HH, GG, G, H, type::Mode_e::Walking);
-    add_edges(6, b.data.geo_ref, HH, GG, G, H, type::Mode_e::Bike);
-    b.data.geo_ref.ways[6]->edges.push_back(std::make_pair(GG , HH));
-    b.data.geo_ref.ways[6]->edges.push_back(std::make_pair(HH , GG));
-
-// H->I
-    add_edges(7, b.data.geo_ref, HH, II, H, I, type::Mode_e::Walking);
-    add_edges(7, b.data.geo_ref, HH, II, H, I, type::Mode_e::Bike);
-    b.data.geo_ref.ways[7]->edges.push_back(std::make_pair(HH , II));
-    b.data.geo_ref.ways[7]->edges.push_back(std::make_pair(II , HH));
-
-// I->J
-    add_edges(8, b.data.geo_ref, II, JJ, I, J, type::Mode_e::Walking);
-    add_edges(8, b.data.geo_ref, II, JJ, I, J, type::Mode_e::Bike);
-    b.data.geo_ref.ways[8]->edges.push_back(std::make_pair(II , JJ));
-    b.data.geo_ref.ways[8]->edges.push_back(std::make_pair(JJ , II));
-
-// J->K
-    add_edges(9, b.data.geo_ref, KK, JJ, K, J, type::Mode_e::Walking);
-    add_edges(9, b.data.geo_ref, KK, JJ, K, J, type::Mode_e::Bike);
-    b.data.geo_ref.ways[9]->edges.push_back(std::make_pair(JJ , KK));
-    b.data.geo_ref.ways[9]->edges.push_back(std::make_pair(KK , JJ));
-
-// K->B
-    add_edges(10, b.data.geo_ref, KK, BB, K, B, type::Mode_e::Walking);
-    add_edges(10, b.data.geo_ref, KK, BB, K, B, type::Mode_e::Bike);
-    b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(KK , BB));
-    b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(BB , KK));
-
-// A->R
-    add_edges(11, b.data.geo_ref, AA, RR, A, R, type::Mode_e::Walking);
-    b.data.geo_ref.ways[11]->edges.push_back(std::make_pair(AA, RR));
-    b.data.geo_ref.ways[11]->edges.push_back(std::make_pair(RR, AA));
-
-// B->S
-    add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Walking);
-    add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Bike);
-    add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Car);
-    b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(BB, SS));
-    b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(SS, BB));
-
-    b.sa("stopA", A.lon(), A.lat());
-    b.sa("stopR", R.lon(), R.lat());
-    b.vj("A")("stopA", 8*3600 +10*60, 8*3600 + 11 * 60)("stopR", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-    b.generate_dummy_basis();
-    b.data.pt_data.index();
-    b.data.build_raptor();
-    b.data.build_uri();
-    b.data.build_proximity_list();
-    b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
-    streetnetwork::StreetNetwork sn_worker(b.data.geo_ref);
-
-    RAPTOR raptor(b.data);
-
-    std::string origin_lon = boost::lexical_cast<std::string>(S.lon()),
-                origin_lat = boost::lexical_cast<std::string>(S.lat()),
-                origin_uri = "coord:"+origin_lon+":"+origin_lat;
-    type::Type_e origin_type = b.data.get_type_of_id(origin_uri);
-    type::EntryPoint origin(origin_type, origin_uri);
+// Walking
+BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     origin.streetnetwork_params.offset = 0;
     origin.streetnetwork_params.max_duration = seconds(150 / test_default_speed[type::Mode_e::Walking]);
     origin.streetnetwork_params.speed_factor = 1;
-    std::string destination_lon = boost::lexical_cast<std::string>(R.lon()),
-                destination_lat = boost::lexical_cast<std::string>(R.lat()),
-                destination_uri = "coord:"+destination_lon+":"+destination_lat;
-    type::Type_e destination_type = b.data.get_type_of_id(destination_uri);
-    type::EntryPoint destination(destination_type, destination_uri);
+
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     destination.streetnetwork_params.offset = 0;
     destination.streetnetwork_params.speed_factor = 1;
     destination.streetnetwork_params.max_duration = seconds(50 / test_default_speed[type::Mode_e::Walking]);
-    // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
-    std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
-    std::vector<std::string> forbidden;
 
-    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
+    pbnavitia::Response resp = make_response();
 
-    // Walking
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
     pbnavitia::Journey journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
@@ -462,8 +493,10 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_CHECK_EQUAL(section.street_network().path_items(1).name(), "rue ab");
     BOOST_CHECK_EQUAL(section.street_network().path_items(1).length(), 100);
     BOOST_CHECK_EQUAL(section.street_network().path_items(2).name(), "rue ar");
+}
 
-    // Biking
+//biking
+BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bike];
     double total_distance = S.distance_to(B) + B.distance_to(K) + K.distance_to(J) + J.distance_to(I)
@@ -475,13 +508,13 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     destination.streetnetwork_params.max_duration = seconds(total_distance / test_default_speed[type::Mode_e::Bike]);
     destination.streetnetwork_params.speed_factor = 1;
 
-    resp = make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
+    auto resp = make_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
-    journey = resp.journeys(0);
+    auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    section = journey.sections(0);
+    auto section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
@@ -512,20 +545,26 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     pathitem = section.street_network().path_items(6);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
     BOOST_CHECK_EQUAL(pathitem.length(), 10);
+}
 
-    // Biking with a different speed
+// Biking with a different speed
+BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture) {
+    origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
+    origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bike];
     origin.streetnetwork_params.max_duration = bt::pos_infin;
     origin.streetnetwork_params.speed_factor = .5;
+    destination.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
+    destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bike];
     destination.streetnetwork_params.max_duration = bt::pos_infin;
     destination.streetnetwork_params.speed_factor = .5;
 
-    resp = make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
+    auto resp = make_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
-    journey = resp.journeys(0);
+    auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    section = journey.sections(0);
+    auto section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
@@ -536,7 +575,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
 //    BOOST_CHECK_EQUAL(section.street_network().duration(), 130*2);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 7);
 
-    pathitem = section.street_network().path_items(0);
+    auto pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
     BOOST_CHECK_EQUAL(pathitem.length(), 0); //since the biker si slower than usual, the projection of the starting point is done on B
     pathitem = section.street_network().path_items(1);
@@ -557,25 +596,29 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     pathitem = section.street_network().path_items(6);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
     BOOST_CHECK_EQUAL(pathitem.length(), 0); //same here the projection is done on G
+}
 
+// Car
+BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture) {
+    auto total_distance = S.distance_to(B) + B.distance_to(C) + C.distance_to(F) + F.distance_to(E) + E.distance_to(A) + 1;
 
-    // Car
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Car];
-    total_distance = S.distance_to(B) + B.distance_to(C) + C.distance_to(F) + F.distance_to(E) + E.distance_to(A) + 1;
     origin.streetnetwork_params.max_duration = seconds(total_distance / test_default_speed[type::Mode_e::Car]);
     origin.streetnetwork_params.speed_factor = 1;
+
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Car];
     destination.streetnetwork_params.max_duration = seconds(total_distance / test_default_speed[type::Mode_e::Car]);
     destination.streetnetwork_params.speed_factor = 1;
-    resp = make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
+
+    auto resp = make_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
-    journey = resp.journeys(0);
+    auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    section = journey.sections(0);
+    auto section = journey.sections(0);
     BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ef");
@@ -585,7 +628,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 4);
     //since R is not accessible by car, we project R in the closest edge in the car graph
     //this edge is F-C, so this is the end of the journey (the rest of it is as the crow flies)
-    pathitem = section.street_network().path_items(0);
+    auto pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
     BOOST_CHECK_EQUAL(pathitem.length(), 20 / 5);
     pathitem = section.street_network().path_items(1);
