@@ -23,6 +23,24 @@ using namespace navitia;
 using namespace routing;
 using namespace boost::posix_time;
 
+void dump_response(pbnavitia::Response resp, std::string test_name) {
+    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Section section = journey.sections(0);
+
+    std::cout << test_name << ": dump coordinates :" << std::endl;
+    for (int i = 0; i < section.street_network().coordinates_size(); ++i)
+        std::cout << "coord: " << section.street_network().coordinates(i).lon() / type::GeographicalCoord::M_TO_DEG
+                  << ", " << section.street_network().coordinates(i).lat() / type::GeographicalCoord::M_TO_DEG
+                  <<std::endl;
+
+    std::cout << "dump item : " << std::endl;
+    for (int i = 0; i < section.street_network().path_items_size(); ++i)
+        std::cout << "- " << section.street_network().path_items(i).name()
+                  << " with " << section.street_network().path_items(i).length()
+                  <<std::endl;
+
+}
+
 BOOST_AUTO_TEST_CASE(simple_journey){
     std::vector<std::string> forbidden;
     ed::builder b("20120614");
@@ -125,6 +143,20 @@ void add_edges(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to, 
     add_edges(edge_idx, geo_ref, idx_from, idx_to, a.distance_to(b), mode);
 }
 
+const bt::time_duration bike_sharing_pickup = seconds(30);
+const bt::time_duration bike_sharing_return = seconds(45);
+
+void add_bike_sharing_edge(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to) {
+    boost::add_edge(idx_from + geo_ref.offsets[type::Mode_e::Walking],
+                    idx_to + geo_ref.offsets[type::Mode_e::Bike],
+                    ng::Edge(edge_idx, bike_sharing_pickup),
+                    geo_ref.graph);
+    boost::add_edge(idx_to + geo_ref.offsets[type::Mode_e::Bike],
+                    idx_from + geo_ref.offsets[type::Mode_e::Walking],
+                    ng::Edge(edge_idx, bike_sharing_return),
+                    geo_ref.graph);
+}
+
 namespace ng = navitia::georef;
 struct streetnetworkmode_fixture {
     streetnetworkmode_fixture() {
@@ -194,49 +226,22 @@ struct streetnetworkmode_fixture {
 
         */
 
-
-        type::GeographicalCoord A(120, 80, false);
         boost::add_vertex(ng::Vertex(A),b.data.geo_ref.graph);
-
-        type::GeographicalCoord G(100, 80, false);
         boost::add_vertex(ng::Vertex(G),b.data.geo_ref.graph);
-
-        type::GeographicalCoord H(100, 100, false);
         boost::add_vertex(ng::Vertex(H),b.data.geo_ref.graph);
-
-        type::GeographicalCoord I(70, 100, false);
         boost::add_vertex(ng::Vertex(I),b.data.geo_ref.graph);
-
-        type::GeographicalCoord J(70, 120, false);
         boost::add_vertex(ng::Vertex(J),b.data.geo_ref.graph);
-
-        type::GeographicalCoord K(10, 120, false);
         boost::add_vertex(ng::Vertex(K),b.data.geo_ref.graph);
-
-        type::GeographicalCoord B(10, 30, false);
         boost::add_vertex(ng::Vertex(B),b.data.geo_ref.graph);
-
-        type::GeographicalCoord C(220, 30, false);
         boost::add_vertex(ng::Vertex(C),b.data.geo_ref.graph);
-
-        type::GeographicalCoord F(220, 50, false);
         boost::add_vertex(ng::Vertex(F),b.data.geo_ref.graph);
-
-        type::GeographicalCoord E(120, 50, false);
         boost::add_vertex(ng::Vertex(E),b.data.geo_ref.graph);
-
-        type::GeographicalCoord R(210, 80, false);
         boost::add_vertex(ng::Vertex(R),b.data.geo_ref.graph);
-
-        type::GeographicalCoord S(10, 10, false);
         boost::add_vertex(ng::Vertex(S),b.data.geo_ref.graph);
-        // Pour le vls
-        type::GeographicalCoord V(5, 10, false);
-        type::GeographicalCoord Q(180, 100, false);
 
         b.data.geo_ref.init();
-        ng::Way* way;
 
+        ng::Way* way;
         way = new ng::Way();
         way->name = "rue ab"; // A->B
         way->idx = 0;
@@ -316,7 +321,7 @@ struct streetnetworkmode_fixture {
         b.data.geo_ref.ways.push_back(way);
 
         // A->B
-        add_edges(0, b.data.geo_ref, AA, BB, 100, type::Mode_e::Walking);
+        add_edges(0, b.data.geo_ref, AA, BB, 200, type::Mode_e::Walking);
         b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
         b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
 
@@ -345,7 +350,7 @@ struct streetnetworkmode_fixture {
         b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(BB , CC));
 
         // A->G
-        double distance_ag = A.distance_to(G) - .5;//the cost of the edge is a bit less than the distance not to get a conflict with the projection
+        distance_ag = A.distance_to(G) - .5;//the cost of the edge is a bit less than the distance not to get a conflict with the projection
         add_edges(5, b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Walking);
         add_edges(5, b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Bike);
         b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(AA , GG));
@@ -392,6 +397,12 @@ struct streetnetworkmode_fixture {
         add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Car);
         b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(BB, SS));
         b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(SS, BB));
+
+        //add bike sharing edges
+        add_bike_sharing_edge(10, b.data.geo_ref, BB, BB);
+        b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(BB, BB)); //on way BK
+        add_bike_sharing_edge(5, b.data.geo_ref, GG, GG);
+        b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(GG, GG)); //on way AG
 
         b.sa("stopA", A.lon(), A.lat());
         b.sa("stopR", R.lon(), R.lat());
@@ -448,7 +459,7 @@ struct streetnetworkmode_fixture {
     type::GeographicalCoord R = {210, 80, false};
     type::GeographicalCoord S = {10, 10, false};
 
-    // Pour le vls
+    // for bike sharing
     type::GeographicalCoord V = {5, 10, false};
     type::GeographicalCoord Q = {180, 100, false};
 
@@ -457,13 +468,15 @@ struct streetnetworkmode_fixture {
     type::EntryPoint destination;
     std::vector<std::string> datetimes = {"20120614T080000", "20120614T090000"};
     std::vector<std::string> forbidden;
+
+    double distance_ag;
 };
 
 // Walking
 BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     origin.streetnetwork_params.offset = 0;
-    origin.streetnetwork_params.max_duration = seconds(150 / test_default_speed[type::Mode_e::Walking]);
+    origin.streetnetwork_params.max_duration = seconds(200 / test_default_speed[type::Mode_e::Walking]);
     origin.streetnetwork_params.speed_factor = 1;
 
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
@@ -479,19 +492,15 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture) {
     pbnavitia::Section section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
 
-    std::cout << "dump coordinates :" << std::endl;
-    for (int i = 0; i < section.street_network().coordinates_size(); ++i)
-        std::cout << "coord: " << section.street_network().coordinates(i).lon() / type::GeographicalCoord::M_TO_DEG
-                  << ", " << section.street_network().coordinates(i).lat() / type::GeographicalCoord::M_TO_DEG
-                  <<std::endl;
+    dump_response(resp, "walking");
 
     BOOST_CHECK_EQUAL(section.street_network().coordinates_size(), 4);
-    BOOST_CHECK_EQUAL(section.street_network().length(), 100);
+    BOOST_CHECK_EQUAL(section.street_network().length(), 200);
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 3);
     BOOST_CHECK_EQUAL(section.street_network().path_items(0).name(), "rue bs");
     BOOST_CHECK_EQUAL(section.street_network().path_items(1).name(), "rue ab");
-    BOOST_CHECK_EQUAL(section.street_network().path_items(1).length(), 100);
+    BOOST_CHECK_EQUAL(section.street_network().path_items(1).length(), 200);
     BOOST_CHECK_EQUAL(section.street_network().path_items(2).name(), "rue ar");
 }
 
@@ -515,6 +524,8 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture) {
     auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
+
+    dump_response(resp, "biking");
 
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
@@ -565,6 +576,8 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture) 
     auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
+
+    dump_response(resp, "biking with different speed");
 
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
@@ -619,6 +632,9 @@ BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture) {
     auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
+
+    dump_response(resp, "car");
+
     BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ef");
@@ -642,6 +658,69 @@ BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture) {
     BOOST_CHECK_EQUAL(pathitem.length(), 0);
 }
 
+// VLS test
+BOOST_FIXTURE_TEST_CASE(vls_test, streetnetworkmode_fixture) {
+
+    origin.streetnetwork_params.mode = navitia::type::Mode_e::Vls;
+    origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Vls];
+    origin.streetnetwork_params.max_duration = bt::pos_infin;
+    origin.streetnetwork_params.speed_factor = 1;
+    destination.streetnetwork_params.mode = navitia::type::Mode_e::Vls;
+    destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Vls];
+    destination.streetnetwork_params.max_duration = bt::pos_infin;
+    destination.streetnetwork_params.speed_factor = 1;
+
+    auto resp = make_response();
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+    auto journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    auto section = journey.sections(0);
+
+    dump_response(resp, "vls");
+
+    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
+    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ar");
+    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 11);
+    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Vls);
+    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 8);
+
+    auto pathitem = section.street_network().path_items(0);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
+    BOOST_CHECK_EQUAL(pathitem.length(), 0); //projection
+    pathitem = section.street_network().path_items(1);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
+    BOOST_CHECK_EQUAL(pathitem.length(), 45 + bike_sharing_pickup.total_seconds()); //time to take the bike
+    pathitem = section.street_network().path_items(2);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue jk");
+    BOOST_CHECK_EQUAL(pathitem.length(), 30);
+    pathitem = section.street_network().path_items(3);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ij");
+    BOOST_CHECK_EQUAL(pathitem.length(), 10);
+    pathitem = section.street_network().path_items(4);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue hi");
+    BOOST_CHECK_EQUAL(pathitem.length(), 15);
+    pathitem = section.street_network().path_items(5);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
+    BOOST_CHECK_EQUAL(pathitem.length(), 10);
+    pathitem = section.street_network().path_items(6);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
+    BOOST_CHECK_EQUAL(pathitem.length(), std::round(bike_sharing_return.total_seconds() + distance_ag)); //time to put the bike back and to walk to G
+    pathitem = section.street_network().path_items(7);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ar");
+    BOOST_CHECK_EQUAL(pathitem.length(), 0); //projection
+
+//    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
+//    BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
+//    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ag");
+//    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 8);
+//    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Vls);
+//    BOOST_CHECK_EQUAL(section.street_network().length(), 130*2 - 20 - 20);
+////    BOOST_CHECK_EQUAL(section.street_network().duration(), 130*2);
+//    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 7);
+}
 
 /*
  *     A(0,0)             B(0,0.01)                       C(0,0.020)           D(0,0.03)

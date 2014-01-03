@@ -389,20 +389,29 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
     return to_return;
 }
 
+/**
+ * there are 3 graphs:
+ *  - one for the walk
+ *  - one for the bike
+ *  - one for the car
+ *
+ *  since some transportation modes mixes the differents graphs (ie for bike sharing you use the walking and biking graph)
+ *  there are some edges between the 3 graphs
+ *
+ *  the Vls has thus not it's own graph and all projections are done on the walking graph (hence its offset is the walking graph offset)
+ */
 void GeoRef::init() {
-    nt::idx_t nb_vertex = boost::num_vertices(graph);
+    offsets[nt::Mode_e::Walking] = 0;
+    offsets[nt::Mode_e::Vls] = 0;
 
-    int cpt(0);
-    for (auto& offset_val : offsets.array) {
-        //offsets initialisation
-        offset_val = cpt * nb_vertex;
-        cpt++;
+    //each graph has the same number of vertex
+    nb_vertex_by_mode = boost::num_vertices(graph);
 
-        if (cpt > 1) {
-            //we dupplicate the graph for each transportation mode save the first one
-            for (vertex_t v = 0; v < nb_vertex; ++v){
-                boost::add_vertex(graph[v], graph);
-            }
+    //we dupplicate the graph for the bike and the car
+    for (nt::Mode_e mode : {nt::Mode_e::Bike, nt::Mode_e::Car}) {
+        offsets[mode] = boost::num_vertices(graph);
+        for (vertex_t v = 0; v < nb_vertex_by_mode; ++v){
+            boost::add_vertex(graph[v], graph);
         }
     }
 
@@ -411,16 +420,11 @@ void GeoRef::init() {
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
 
-    if (this->offsets[1] == 0) { //if we only have one mean of transport
-        BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)) {
-            pl.add(graph[u].coord, u);
-        }
-    } else {
-        //do not build the proximitylist with the edge of other transportation mode than walking (and walking HAS to be the first transportation mode in the offset array)
-        for(vertex_t v = 0; v < this->offsets[1]; ++v){
-            pl.add(graph[v].coord, v);
-        }
+    //do not build the proximitylist with the edge of other transportation mode than walking (and walking HAS to be the first graph)
+    for(vertex_t v = 0; v < nb_vertex_by_mode; ++v){
+        pl.add(graph[v].coord, v);
     }
+
     pl.build();
 
     poi_proximity_list.clear();
