@@ -302,6 +302,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     start.set_xy(3, -1);
     GeographicalCoord destination;
     destination.set_xy(4, 11);
+    sn.init();
     path_finder.init(start, Mode_e::Walking, 1);
     Path p = path_finder.compute_path(destination);
     auto coords = get_coords_from_path(p);
@@ -877,3 +878,26 @@ BOOST_AUTO_TEST_CASE(offsets_init) {
     BOOST_CHECK_EQUAL(offsets[nt::Mode_e::Car], 2 * value);
     BOOST_CHECK_EQUAL(offsets[nt::Mode_e::Vls], 3 * value);
 }
+
+//test allowed mode creation
+BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
+
+    const auto allowed_transportation_mode = create_from_allowedlist({{{
+                                                                    {nt::Mode_e::Walking},
+                                                                    {},
+                                                                    {nt::Mode_e::Walking, nt::Mode_e::Car},
+                                                                    {nt::Mode_e::Walking, nt::Mode_e::Vls}
+                                                              }}});
+
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Walking], true);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Car], false);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Vls], false);
+
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Vls][nt::Mode_e::Walking], true);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Vls][nt::Mode_e::Vls], true);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Vls][nt::Mode_e::Car], false);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Vls][nt::Mode_e::Bike], false);
+}
+
+
+
