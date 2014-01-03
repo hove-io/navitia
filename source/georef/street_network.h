@@ -32,7 +32,7 @@ using map_by_mode = flat_enum_map<type::Mode_e, T>;
 inline map_by_mode<map_by_mode<bool>> create_from_allowedlist(map_by_mode<std::vector<nt::Mode_e>> allowed_modes) {
     map_by_mode<map_by_mode<bool>> res;
     for (auto modes_pair : allowed_modes) {
-        res[modes_pair.first] = {}; //force false initialization of all members
+        res[modes_pair.first] = {{{}}}; //force false initialization of all members
         for (auto mode : modes_pair.second) {
             res[modes_pair.first][mode] = true;
         }
@@ -43,25 +43,26 @@ inline map_by_mode<map_by_mode<bool>> create_from_allowedlist(map_by_mode<std::v
 const auto allowed_transportation_mode = create_from_allowedlist({{{
                                                                 {type::Mode_e::Walking}, //for walking, only walking is allowed
                                                                 {type::Mode_e::Bike}, //for biking, only bike
-                                                                {type::Mode_e::Walking, type::Mode_e::Car}, //for car, walking and car is allowed
-                                                                {type::Mode_e::Walking, type::Mode_e::Vls} //for vls, walking and vls is allowed
+                                                                {type::Mode_e::Car}, //for car, only car is allowed (for the moment, to handle parking we could allow walking)
+                                                                {type::Mode_e::Walking, type::Mode_e::Bike} //for vls, walking and bike is allowed
                                                           }}});
 
 struct TransportationModeFilter {
     flat_enum_map<type::Mode_e, bool> acceptable_modes; //map associating a boolean to a mode,
-    type::idx_t nb_edge_by_mode;
+    type::idx_t nb_vertex_by_mode;
     TransportationModeFilter() = default;
     TransportationModeFilter(type::Mode_e mode, const georef::GeoRef& geo_ref) :
         acceptable_modes(allowed_transportation_mode[mode]),
-        nb_edge_by_mode(geo_ref.offsets[1]) //the second elt in the offset array is the number of edge by mode
+        nb_vertex_by_mode(geo_ref.nb_vertex_by_mode) //the second elt in the offset array is the number of edge by mode
     {
-        BOOST_ASSERT_MSG(nb_edge_by_mode != 0, "there should be edges in the graph");
+        BOOST_ASSERT_MSG(nb_vertex_by_mode != 0, "there should be vertexes in the graph");
     }
 
     template <typename vertex_t>
     bool operator()(const vertex_t& e) const {
-        int graph_number = e / nb_edge_by_mode;
+        int graph_number = e / nb_vertex_by_mode;
 
+//        std::cout << "for node " << e << " in graph " << graph_number << " we can " << (acceptable_modes[graph_number] ? " " : "not ") << "go" << std::endl;
         return acceptable_modes[graph_number];
     }
 };

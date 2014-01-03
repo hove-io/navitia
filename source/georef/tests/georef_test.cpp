@@ -82,12 +82,12 @@ BOOST_AUTO_TEST_CASE(init_test) {
 
     sn.init();
 
-    BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 20); //one graph for each transportation mode
+    BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 15); //one graph for each transportation mode save VLS
 
     BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Walking], 0);
     BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Bike], 5);
     BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Car], 10);
-    BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Vls], 15);
+    BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Vls], 0);
 }
 
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
@@ -862,21 +862,6 @@ BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
 
     bt::time_duration dur2 = 60_s;
     BOOST_CHECK_EQUAL(comb(dur, dur2), 130_s);
-}
-
-//test the offset init by loop because some stuff depends on that
-BOOST_AUTO_TEST_CASE(offsets_init) {
-    navitia::flat_enum_map<nt::Mode_e, nt::idx_t> offsets;
-    int cpt(0);
-    int value = 1234;
-    for (std::pair<nt::Mode_e, nt::idx_t&> offset_val : offsets) {
-        offset_val.second = cpt * value;
-        cpt++;
-    }
-    BOOST_CHECK_EQUAL(offsets[nt::Mode_e::Walking], 0);
-    BOOST_CHECK_EQUAL(offsets[nt::Mode_e::Bike], 1 * value);
-    BOOST_CHECK_EQUAL(offsets[nt::Mode_e::Car], 2 * value);
-    BOOST_CHECK_EQUAL(offsets[nt::Mode_e::Vls], 3 * value);
 }
 
 //test allowed mode creation

@@ -95,7 +95,6 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     type::idx_t target_idx(sp->idx);
 
-    const bool use_second = false;
     worker.init(start, type::Mode_e::Walking, ng::default_speed[type::Mode_e::Walking]);
 
     auto distance = worker.get_distance(target_idx);
