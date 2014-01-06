@@ -7,8 +7,8 @@ collections_to_resource_type = {
     "stop_areas": "stop_area", "lines": "line",
     "addresses": "address", "coords": "coord"}
 
-resource_type_to_collection = dict((resource_type, collection)\
-                                   for (collection, resource_type)\
+resource_type_to_collection = dict((resource_type, collection)
+                                   for (collection, resource_type)
                                    in collections_to_resource_type.iteritems())
 
 types_not_ptrefable = ["addresses", "administrative_regions"]

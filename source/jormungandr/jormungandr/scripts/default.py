@@ -9,7 +9,7 @@ import itertools
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
-    'stop_point':  type_pb2.STOP_POINT,
+    'stop_point': type_pb2.STOP_POINT,
     'city': type_pb2.CITY,
     'address': type_pb2.ADDRESS,
     'poi': type_pb2.POI,
@@ -383,7 +383,7 @@ class Script(object):
         return self.__on_ptref("lines", type_pb2.LINE, request, instance)
 
     def routes(self, request, instance):
-        return self.__on_ptref("routes", type_pb2.ROUTE, request,  instance)
+        return self.__on_ptref("routes", type_pb2.ROUTE, request, instance)
 
     def networks(self, request, instance):
         return self.__on_ptref("networks", type_pb2.NETWORK, request, instance)

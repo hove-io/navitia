@@ -18,11 +18,12 @@ cache = Cache(host=app.config['REDIS_HOST'],
               password=app.config['REDIS_PASSWORD'],
               disabled=app.config['CACHE_DISABLED'])
 
+
 def syncdb():
     from jormungandr import models
-    q = exists(select([("schema_name")])\
-                .select_from("information_schema.schemata")\
-                .where("schema_name = 'jormungandr'"))
+    q = exists(select([("schema_name")])
+               .select_from("information_schema.schemata")
+               .where("schema_name = 'jormungandr'"))
     if not db.session.query(q).scalar():
         db.engine.execute(CreateSchema('jormungandr'))
     db.create_all()

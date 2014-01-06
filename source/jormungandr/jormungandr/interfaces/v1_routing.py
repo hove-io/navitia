@@ -163,5 +163,4 @@ def v1_routing(api):
     api.add_resource(Disruptions.Disruptions,
                      region + 'disruptions',
                      region + '<uri:uri>/disruptions',
-                     endpoint='v1/disruptions'
-                     )
+                     endpoint='v1/disruptions')

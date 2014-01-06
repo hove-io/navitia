@@ -48,6 +48,6 @@ class Instance(object):
             else:
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
-                logging.error(u"La requête : " + unicode(request)
-                              + u" a echoue " + self.socket_path)
+                logging.error("La requete : " + request.SerializeToString()
+                              + " a echoue " + self.socket_path)
                 raise DeadSocketException(self.name, self.socket_path)

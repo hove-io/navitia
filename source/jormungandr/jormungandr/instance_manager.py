@@ -15,6 +15,7 @@ from jormungandr import app
 from jormungandr.instance import Instance
 import traceback
 
+
 @singleton
 class InstanceManager(object):
 

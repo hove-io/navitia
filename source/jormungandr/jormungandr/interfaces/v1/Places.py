@@ -140,5 +140,5 @@ class PlacesNearby(ResourceUri):
             abort(404)
         args["filter"] = args["filter"].replace(".id", ".uri")
         response = i_manager.dispatch(args, self.region,
-                                              "places_nearby")
+                                      "places_nearby")
         return response, 200

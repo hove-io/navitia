@@ -4,7 +4,6 @@ from jormungandr import app
 import uuid
 
 
-
 class User(db.Model):
     __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)

@@ -26,7 +26,7 @@ def authentification_required(func):
         elif 'lon' in kwargs and 'lat' in kwargs:
             try:
                 region = i_manager.key_of_coord(lon=kwargs['lon'],
-                                                        lat=kwargs['lat'])
+                                                lat=kwargs['lat'])
             except RegionNotFound:
                 pass
 

@@ -1,20 +1,12 @@
 # coding=utf-8
-from flask import Flask
-from flask.ext.restful import Resource, fields, marshal_with, reqparse
+from flask.ext.restful import fields, marshal_with, reqparse
 from jormungandr import i_manager
-from converters_collection_type import collections_to_resource_type
-from fields import stop_point, stop_area, route, line, physical_mode,\
-    commercial_mode, company, network, pagination, PbField,\
-    stop_date_time, enum_type, NonNullList, NonNullNested,\
-    additional_informations,  notes, notes_links,\
-    get_label, display_informations_vj, display_informations_route,\
-    additional_informations_vj, UrisToLinks, error
-from make_links import add_collection_links, add_id_links
-from collections import OrderedDict
+from fields import stop_point, route, pagination, PbField, stop_date_time, \
+    additional_informations, notes_links, display_informations_vj, \
+    display_informations_route, additional_informations_vj, UrisToLinks, error
 from ResourceUri import ResourceUri, add_notes, manage_response_status
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument
 from errors import ManageError
 from flask.ext.restful.types import natural
 
