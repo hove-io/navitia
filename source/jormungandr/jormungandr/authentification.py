@@ -1,7 +1,7 @@
 # encoding: utf-8
 from flask_restful import reqparse
 import flask_restful
-from flask import current_app
+from flask import current_app, request
 from functools import wraps
 from jormungandr import db
 from jormungandr.exceptions import RegionNotFound
@@ -26,6 +26,11 @@ def authentification_required(func):
             try:
                 region = i_manager.key_of_coord(lon=kwargs['lon'],
                                                 lat=kwargs['lat'])
+            except RegionNotFound:
+                pass
+        elif 'from' in request.args:
+            try:
+                region = i_manager.key_of_id(request.args['from'])
             except RegionNotFound:
                 pass
 
