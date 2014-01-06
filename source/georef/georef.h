@@ -131,11 +131,12 @@ private:
 
 /** Un bout d'itinéraire :
         un nom de voie et une liste de segments */
-struct PathItem{
+struct PathItem {
     nt::idx_t way_idx = nt::invalid_idx; //< Way of this path item
     boost::posix_time::time_duration length = {}; //< Length of the journey on this item
     std::deque<nt::GeographicalCoord> coordinates;//< path item coordinates
     int angle = 0; //< Angle with the next PathItem (needed to give direction)
+
 };
 
 /** Itinéraire complet */
@@ -290,12 +291,16 @@ struct GeoRef {
       * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
      */
 
+    vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates, type::idx_t offset, const proximitylist::ProximityList<vertex_t>& prox) const;
-    vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
+
+    edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode, const proximitylist::ProximityList<vertex_t>& prox) const {
+        return nearest_edge(coordinates, offsets[mode], prox);
+    }
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
     Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
@@ -310,6 +315,8 @@ struct GeoRef {
     ///Add the projected start and end to the path
     void add_projections(Path& p, const ProjectionData& start, const ProjectionData& end) const;
 
+    ///get the transportation mode of the vertex
+    type::Mode_e get_mode(vertex_t vertex) const;
     ~GeoRef();
 };
 
