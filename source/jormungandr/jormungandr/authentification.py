@@ -1,7 +1,6 @@
 # encoding: utf-8
 from flask_restful import reqparse
 import flask_restful
-
 from flask import current_app
 from functools import wraps
 from jormungandr import db
@@ -9,7 +8,7 @@ from jormungandr.exceptions import RegionNotFound
 from jormungandr import i_manager
 import datetime
 import base64
-from models import User
+from models import User, Instance
 
 
 def authentification_required(func):
@@ -68,7 +67,10 @@ def authenticate(region, api, abort=False):
         if abort:
             flask_restful.abort(401)
         else:
-            return False
+            instance = Instance.query.filter_by(name=region)
+            if instance:
+                return instance.is_free
+            flask_restful.abort(404)
 
     user = User.get_from_token(token, datetime.datetime.now())
 
