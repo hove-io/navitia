@@ -1,3 +1,9 @@
+navitia2 (0.78.2) unstable; urgency=low
+
+  * No more pep8
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 06 Jan 2014 18:52:55 +0100
+
 navitia2 (0.78.1) unstable; urgency=low
 
   * Fix pep8 compliance of connectors
