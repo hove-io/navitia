@@ -29,7 +29,7 @@ class Script(object):
                      "connections", "journey_pattern_points",
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load", "networks", "place_uri"]
+                     "status", "load", "networks", "place_uri", "disruptions"]
 
     def __pagination(self, request, ressource_name, resp):
         pagination = resp.pagination
@@ -60,6 +60,18 @@ class Script(object):
     def metadatas(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
+        resp = instance.send_and_receive(req)
+        return resp
+
+    def disruptions(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.disruptions
+        req.disruptions.depth = request['depth']
+        req.disruptions.uri_filter = request['uri_filter']
+        req.disruptions.count = request['count']
+        req.disruptions.start_page = request['start_page']
+        req.disruptions.datetime = request['datetime']
+
         resp = instance.send_and_receive(req)
         return resp
 
