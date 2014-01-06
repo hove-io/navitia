@@ -255,7 +255,15 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
         vertex_t v = reverse_path[i-2];
         vertex_t u = reverse_path[i-1];
 
-        edge_t e = boost::edge(u, v, graph).first;
+        auto edge_pair = boost::edge(u, v, graph);
+        //patch temporaire, A VIRER en refactorant toute la notion de direct_path!
+        if (! edge_pair.second) {
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find edge, we try the reverse one");
+            //if it still not work we cannot do anything
+            edge_pair = boost::edge(v, u, graph);
+        }
+        edge_t e = edge_pair.first;
+
         Edge edge = graph[e];
         if (edge.way_idx != last_way && last_way != type::invalid_idx) {
             p.path_items.push_back(path_item);
@@ -294,6 +302,10 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) 
     return build_path(reverse_path, true);
 }
 
+type::Mode_e GeoRef::get_mode(vertex_t vertex) const {
+    return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
+}
+
 Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
     //used for the direct path, we need to reverse the second part and concatenate the 2 'predecessors' list
     //to get the path
@@ -314,6 +326,10 @@ Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds
     }
     reverse_path.push_back(current);
 
+//    std::cout << "to go to " << best_destination << "[" << (int)(get_mode(best_destination)) << "] we pass through :" << std::endl;
+//    for (auto v : reverse_path) {
+//        std::cout << v << "[" << (int)(get_mode(v)) << "] " << std::endl;
+//    }
 
     return build_path(reverse_path, false);
 }
@@ -628,6 +644,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, type::i
     }
     throw proximitylist::NotFound();
 }
+
 
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const{
