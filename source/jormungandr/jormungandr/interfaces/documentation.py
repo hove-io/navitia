@@ -140,13 +140,13 @@ class Documentation(Resource):
             if rule.rule[:len(request.url_rule.rule)] != request.url_rule.rule:
                 splitted_endpoint = rule.endpoint.split(".")
                 if not self.prefix or(
-                   splitted_endpoint[0] == self.prefix) and\
+                    splitted_endpoint[0] == self.prefix) and\
                         not api_name in apis_names:
                     apis_names.append(api_name)
                     func = current_app.view_functions[rule.endpoint]
                     description = None
                     if "view_class" in func.func_dict.keys() and\
-                       func.func_dict['view_class'].__doc__ is not None:
+                            func.func_dict['view_class'].__doc__ is not None:
                         description = func.func_dict['view_class'].__doc__
                         description = description.splitlines()[0]
                     url = "/" + splitted_endpoint[1]
