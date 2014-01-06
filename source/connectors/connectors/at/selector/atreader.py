@@ -214,17 +214,15 @@ class AtRealtimeReader(object):
                         message.uri = str(row[self.label_impact_id]) + '-' + \
                             row[self.label_message_lang]
 
-                        message.start_publication_date = \
-                            get_pos_time(
-                                row[self.label_publication_start_date])
+                        message.start_publication_date = get_pos_time(
+                            row[self.label_publication_start_date])
 
-                        message.end_publication_date = \
-                            get_pos_time(row[self.label_publication_end_date])
-                        message.start_application_date = \
-                            get_pos_time(
-                                row[self.label_application_start_date])
-                        message.end_application_date = \
-                            get_pos_time(row[self.label_application_end_date])
+                        message.end_publication_date = get_pos_time(
+                            row[self.label_publication_end_date])
+                        message.start_application_date = get_pos_time(
+                            row[self.label_application_start_date])
+                        message.end_application_date = get_pos_time(
+                            row[self.label_application_end_date])
                         # number of seconds since midnigth
                         message.start_application_daily_hour = \
                             get_datetime_to_second(
@@ -240,9 +238,8 @@ class AtRealtimeReader(object):
                         message.object.object_type = \
                             get_navitia_type(row[self.label_object_type])
 
-                        message.message_status =\
-                            self.get_status_message(
-                                row[self.label_impact_state])
+                        message.message_status = self.get_status_message(
+                            row[self.label_impact_state])
 
                     localized_message = message.localized_messages.add()
                     localized_message.language = row[self.label_message_lang]
@@ -308,14 +305,13 @@ class AtRealtimeReader(object):
                               .Impact_ChildrenModificationDate == None,
                               self.impact_table.c
                               .Impact_ChildrenModificationDate > bindparam(
-                                  'impact_modification_date'),
-                              )
+                                  'impact_modification_date'))
                       ),
                       # jointure
                       from_obj=[self.event_table.join(self.impact_table).join(
                           self.tcobjectref_table).join(
-                          self.impactbroadcast_table).join(self
-                                                           .msgmedia_table)]
+                          self.impactbroadcast_table).join(
+                          self.msgmedia_table)]
                       ).order_by(self.impact_table.c.Impact_ID)
 
     # impact_SelfModificationDate, impact_ChildrenModificationDate
