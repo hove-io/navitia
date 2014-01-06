@@ -258,13 +258,12 @@ class add_journey_pagination(object):
                                key=itemgetter('arrival_date_time'))
         except:
             return (None, None)
-        if asap_journey['arrival_date_time']\
-           and asap_journey['departure_date_time']:
+        if asap_journey['arrival_date_time'] \
+                and asap_journey['departure_date_time']:
             minute = timedelta(minutes=1)
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             datetime_after = f_departure + minute
-            s_arrival = asap_journey['departure_date_time']
             f_arrival = datetime.strptime(s_departure, f_datetime)
             datetime_before = f_arrival - minute
 
@@ -285,8 +284,7 @@ class add_journey_pagination(object):
                            key=itemgetter('arrival_date_time'))
         except:
             return (None, None)
-        if asap_min['departure_date_time']\
-           and asap_max['arrival_date_time']:
+        if asap_min['departure_date_time'] and asap_max['arrival_date_time']:
             departure = asap_min['departure_date_time']
             departure_date = datetime.strptime(departure, f_datetime).date()
             midnight = datetime.strptime('0000', '%H%M').time()

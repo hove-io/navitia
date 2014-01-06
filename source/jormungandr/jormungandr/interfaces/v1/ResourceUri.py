@@ -134,7 +134,7 @@ class add_address_poi_id(object):
                         old_id = objects['id']
                         objects['id'] = 'poi:' + region + ':' + old_id
                     if type_ == 'administrative_region' or\
-                       type_ == 'administrative_regions':
+                            type_ == 'administrative_regions':
                         old_id = objects['id']
                         objects['id'] = 'admin:' + region + old_id[5:]
                     if 'embedded_type' in objects.keys() and\
