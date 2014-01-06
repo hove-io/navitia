@@ -211,14 +211,15 @@ void Visitor::build_vls_edges(){
                 navitia::georef::edge_t e = geo_ref.nearest_edge(poi->coord, u);
                 navitia::georef::Edge edge;
                 edge.way_idx = geo_ref.graph[e].way_idx;
-                edge.duration = boost::posix_time::seconds(120); // le temps nécessaire pour prendre le vélo
-                boost::add_edge(u + geo_ref.offsets[navitia::type::Mode_e::Vls], u + geo_ref.offsets[navitia::type::Mode_e::Bike], edge, geo_ref.graph);
-                edge.duration = boost::posix_time::seconds(180); // le temps nécessaire pour déposer le vélo
-                boost::add_edge(u + geo_ref.offsets[navitia::type::Mode_e::Bike], u + geo_ref.offsets[navitia::type::Mode_e::Vls], edge, geo_ref.graph);
+                edge.duration = boost::posix_time::seconds(120); // time needed to take the bike
+                boost::add_edge(u + geo_ref.offsets[navitia::type::Mode_e::Walking], u + geo_ref.offsets[navitia::type::Mode_e::Bike], edge, geo_ref.graph);
+                edge.duration = boost::posix_time::seconds(180); // time needed to hang the bike back
+                boost::add_edge(u + geo_ref.offsets[navitia::type::Mode_e::Bike], u + geo_ref.offsets[navitia::type::Mode_e::Walking], edge, geo_ref.graph);
                 ++total_vls_stations;
             }
         }
     }
+    LOG4CPLUS_INFO(logger, "nb added VLS stations : " << total_vls_stations);
 }
 
 void Visitor::HouseNumbers(){

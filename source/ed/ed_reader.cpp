@@ -893,22 +893,26 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
                 request += " and poi_type.uri = 'bicycle_rental'";
 
     pqxx::result result = work.exec(request);
+    size_t cpt_bike_sharing(0);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::type::GeographicalCoord coord;
         coord.set_lon(const_it["lon"].as<double>());
         coord.set_lat(const_it["lat"].as<double>());
-        try{
+        try {
             navitia::georef::vertex_t v = data.geo_ref.nearest_vertex(coord, data.geo_ref.pl);
             navitia::georef::edge_t e = data.geo_ref.nearest_edge(coord, v);
             navitia::georef::Edge edge;
-            edge.duration = {};
             edge.way_idx = data.geo_ref.graph[e].way_idx;
-            boost::add_edge(v + data.geo_ref.offsets[navitia::type::Mode_e::Vls], v + data.geo_ref.offsets[navitia::type::Mode_e::Bike], edge, data.geo_ref.graph);
-            boost::add_edge(v + data.geo_ref.offsets[navitia::type::Mode_e::Bike], v + data.geo_ref.offsets[navitia::type::Mode_e::Vls], edge, data.geo_ref.graph);
+            edge.duration = boost::posix_time::seconds(120); // time needed to take the bike
+            boost::add_edge(v + data.geo_ref.offsets[navitia::type::Mode_e::Walking], v + data.geo_ref.offsets[navitia::type::Mode_e::Bike], edge, data.geo_ref.graph);
+            edge.duration = boost::posix_time::seconds(180); // time needed to hang the bike back
+            boost::add_edge(v + data.geo_ref.offsets[navitia::type::Mode_e::Bike], v + data.geo_ref.offsets[navitia::type::Mode_e::Walking], edge, data.geo_ref.graph);
+            cpt_bike_sharing++;
         }catch(...){
             std::cout<<"Impossible de trouver le noued le plus proche à la station vls poi_id = "<<const_it["id"].as<std::string>()<<std::endl;
         }
     }
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_bike_sharing << " bike sharing stations added");
 }
 
 void EdReader::fill_alias(navitia::type::Data& data, pqxx::work& work){

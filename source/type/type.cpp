@@ -240,7 +240,7 @@ static_data * static_data::get() {
                 (Mode_e::Walking, "walking")
                 (Mode_e::Bike, "bike")
                 (Mode_e::Car, "car")
-                (Mode_e::Vls, "vls");
+                (Mode_e::Bss, "bss");
         instance = temp;
 
     }

@@ -79,7 +79,7 @@ enum class Mode_e{
     Walking = 0,    // Marche à pied
     Bike = 1,       // Vélo
     Car = 2,        // Voiture
-    Vls = 3         // Vls
+    Bss = 3         // Vls
     //Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
 };
 

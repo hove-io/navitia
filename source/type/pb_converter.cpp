@@ -644,8 +644,8 @@ void create_pb(const type::EntryPoint &ori_dest,
         case type::Mode_e::Car:
             sn->set_mode(pbnavitia::Car);
             break;
-    case type::Mode_e::Vls:
-        sn->set_mode(pbnavitia::Vls);
+    case type::Mode_e::Bss:
+        sn->set_mode(pbnavitia::Bss);
         break;
         default :
             sn->set_mode(pbnavitia::Walking);

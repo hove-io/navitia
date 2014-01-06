@@ -39,7 +39,7 @@ message StreetNetworkParams{
     optional double walking_speed       = 3;
     optional double bike_speed          = 5;
     optional double car_speed           = 7;
-    optional double vls_speed           = 9;
+    optional double bss_speed           = 9;
     optional string origin_filter       = 11;
     optional string destination_filter  = 12;
 }

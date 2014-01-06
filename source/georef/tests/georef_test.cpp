@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(init_test) {
     BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Walking], 0);
     BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Bike], 5);
     BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Car], 10);
-    BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Vls], 0);
+    BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Bss], 0);
 }
 
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
@@ -871,17 +871,17 @@ BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
                                                                     {nt::Mode_e::Walking},
                                                                     {},
                                                                     {nt::Mode_e::Walking, nt::Mode_e::Car},
-                                                                    {nt::Mode_e::Walking, nt::Mode_e::Vls}
+                                                                    {nt::Mode_e::Walking, nt::Mode_e::Bss}
                                                               }}});
 
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Walking], true);
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Car], false);
-    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Vls], false);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Bss], false);
 
-    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Vls][nt::Mode_e::Walking], true);
-    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Vls][nt::Mode_e::Vls], true);
-    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Vls][nt::Mode_e::Car], false);
-    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Vls][nt::Mode_e::Bike], false);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Walking], true);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bss], true);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Car], false);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bike], false);
 }
 
 
