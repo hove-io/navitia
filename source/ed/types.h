@@ -152,6 +152,7 @@ struct Line : public Header, Nameable {
 
 struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
+    std::string external_code;
     Line * line;
 
     navitia::type::Route* get_navitia_type() const;
@@ -180,6 +181,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     Company* company;
     PhysicalMode* physical_mode; // Normalement on va lire cette info dans JourneyPattern
     Line * tmp_line; // N'est pas à remplir obligatoirement
+    Route* tmp_route;
     //Vehicle* vehicle;
     bool wheelchair_boarding;
     navitia::type::VehicleJourneyType vehicle_journey_type;
