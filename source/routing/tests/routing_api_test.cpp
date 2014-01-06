@@ -661,12 +661,12 @@ BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture) {
 // VLS test
 BOOST_FIXTURE_TEST_CASE(vls_test, streetnetworkmode_fixture) {
 
-    origin.streetnetwork_params.mode = navitia::type::Mode_e::Vls;
-    origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Vls];
+    origin.streetnetwork_params.mode = navitia::type::Mode_e::Bss;
+    origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bss];
     origin.streetnetwork_params.max_duration = bt::pos_infin;
     origin.streetnetwork_params.speed_factor = 1;
-    destination.streetnetwork_params.mode = navitia::type::Mode_e::Vls;
-    destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Vls];
+    destination.streetnetwork_params.mode = navitia::type::Mode_e::Bss;
+    destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bss];
     destination.streetnetwork_params.max_duration = bt::pos_infin;
     destination.streetnetwork_params.speed_factor = 1;
 
@@ -684,7 +684,7 @@ BOOST_FIXTURE_TEST_CASE(vls_test, streetnetworkmode_fixture) {
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ar");
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 11);
-    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Vls);
+    BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bss);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 8);
 
     auto pathitem = section.street_network().path_items(0);

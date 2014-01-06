@@ -125,7 +125,7 @@ def has_car_test():
     foot_journey.sections.add()
     foot_journey.sections[0].street_network.mode = response_pb2.Walking
     foot_journey.sections[1].street_network.mode = response_pb2.Bike
-    foot_journey.sections[2].street_network.mode = response_pb2.Vls
+    foot_journey.sections[2].street_network.mode = response_pb2.Bss
     assert(not qualifier.has_car(foot_journey))
 
     foot_journey.sections.add()

@@ -316,7 +316,7 @@ class Script(object):
         sn_params.walking_speed = request["walking_speed"]
         sn_params.bike_speed = request["bike_speed"]
         sn_params.car_speed = request["car_speed"]
-        sn_params.vls_speed = request["br_speed"]
+        sn_params.bss_speed = request["bss_speed"]
         if "origin_filter" in request:
             sn_params.origin_filter = request["origin_filter"]
         else:
@@ -332,9 +332,9 @@ class Script(object):
         self.origin_modes = request["origin_mode"]
 
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
-            req.journeys.streetnetwork_params.origin_mode = "vls"
+            req.journeys.streetnetwork_params.origin_mode = "bss"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
-            req.journeys.streetnetwork_params.destination_mode = "vls"
+            req.journeys.streetnetwork_params.destination_mode = "bss"
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)

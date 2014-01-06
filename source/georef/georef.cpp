@@ -402,7 +402,7 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
  */
 void GeoRef::init() {
     offsets[nt::Mode_e::Walking] = 0;
-    offsets[nt::Mode_e::Vls] = 0;
+    offsets[nt::Mode_e::Bss] = 0;
 
     //each graph has the same number of vertex
     nb_vertex_by_mode = boost::num_vertices(graph);

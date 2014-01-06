@@ -244,9 +244,9 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             result.offset = (*data)->geo_ref.offsets[type::Mode_e::Car];
             result.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
             break;
-        case type::Mode_e::Vls:
-            result.offset = (*data)->geo_ref.offsets[type::Mode_e::Vls];
-            result.speed_factor = request.vls_speed() / georef::default_speed[type::Mode_e::Vls];
+        case type::Mode_e::Bss:
+            result.offset = (*data)->geo_ref.offsets[type::Mode_e::Bss];
+            result.speed_factor = request.bss_speed() / georef::default_speed[type::Mode_e::Bss];
             break;
         default:
             result.offset = (*data)->geo_ref.offsets[type::Mode_e::Walking];

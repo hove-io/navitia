@@ -301,7 +301,7 @@ class Journeys(ResourceUri):
 
     def __init__(self):
         ResourceUri.__init__(self)
-        modes = ["walking", "car", "bike", "br"]
+        modes = ["walking", "car", "bike", "bss"]
         types = ["all", "rapid"]
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
@@ -327,7 +327,7 @@ class Journeys(ResourceUri):
                                 transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.68)
         parser_get.add_argument("bike_speed", type=float, default=8.8)
-        parser_get.add_argument("br_speed", type=float, default=8.8,)
+        parser_get.add_argument("bss_speed", type=float, default=8.8,)
         parser_get.add_argument("car_speed", type=float, default=16.8)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
@@ -350,10 +350,10 @@ class Journeys(ResourceUri):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
         # TODO : Changer le protobuff pour que ce soit propre
-        if args['destination_mode'] == 'br':
-            args['destination_mode'] = 'vls'
-        if args['origin_mode'] == 'br':
-            args['origin_mode'] = 'vls'
+        if args['destination_mode'] == 'vls':
+            args['destination_mode'] = 'bss'
+        if args['origin_mode'] == 'vls':
+            args['origin_mode'] = 'bss'
         if region or (lon and lat):
             self.region = i_manager.get_region(region, lon, lat)
             if uri:
