@@ -93,7 +93,7 @@ void RouteFusioHandler::init(Data& ) {
     ignored = 0;
 }
 
-void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(gtfs_data.route_map.find(row[route_id_c]) != gtfs_data.route_map.end()) {
             ignored++;
             LOG4CPLUS_WARN(logger, "dupplicate on route line " + row[route_id_c]);
@@ -229,7 +229,7 @@ void TripsFusioHandler::clean_and_delete(Data& data, ed::types::VehicleJourney* 
     delete vj;
 }
 
-ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& row, bool is_first_line){
+ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& row, bool){
     auto it = gtfs_data.route_map.find(row[id_c]);
     if (it == gtfs_data.route_map.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the route " + row[id_c]
