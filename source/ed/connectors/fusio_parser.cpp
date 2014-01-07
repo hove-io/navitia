@@ -127,6 +127,11 @@ ed::types::Line* RouteFusioHandler::handle_line(Data& data, const csv_row& row, 
         auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
         if(agency_it != gtfs_data.agency_map.end())
             ed_line->network = agency_it->second;
+        else {
+            auto agency_it = gtfs_data.agency_map.find("default_agency");
+            if(agency_it != gtfs_data.agency_map.end())
+                ed_line->network = agency_it->second;
+        }
     }
     else {
         auto agency_it = gtfs_data.agency_map.find("default_agency");
@@ -409,8 +414,8 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
 }
 
 void FusioParser::parse_files(Data& data) {
-
     fill_default_company(data);
+    fill_default_network(data);
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<ContributorFusioHandler>(data, "contributors.txt");
     parse<CompanyFusioHandler>(data, "company.txt");

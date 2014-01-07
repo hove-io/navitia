@@ -28,7 +28,7 @@ def authentification_required(func):
                                                 lat=kwargs['lat'])
             except RegionNotFound:
                 pass
-        elif 'from' in request.args:
+        elif 'from' in request.args: #used for journeys api
             try:
                 region = i_manager.key_of_id(request.args['from'])
             except RegionNotFound:
@@ -69,16 +69,16 @@ def authenticate(region, api, abort=False):
     token = get_token()
 
     if not token:
+        instance = Instance.query.filter_by(name=region)
         if abort:
-            flask_restful.abort(401)
+            if instance and instance.first().is_free:
+                return True
+            else:
+                flask_restful.abort(401)
         else:
-            instance = Instance.query.filter_by(name=region)
-            if instance:
-                return instance.is_free
-            flask_restful.abort(404)
+            return False if not instance else instance.first().is_free
 
     user = User.get_from_token(token, datetime.datetime.now())
-
     if user:
         if user.has_access(region, api):
             return True

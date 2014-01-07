@@ -65,7 +65,7 @@ void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
 
     //Ajuster le score de chaque admin an utilisant le max_score.
     for (auto it = georef.fl_admin.word_quality_list.begin(); it != georef.fl_admin.word_quality_list.end(); ++it){
-        (it->second).score = ((it->second).score * 100)/max_score;
+        (it->second).score = max_score == 0 ? 0 : ((it->second).score * 100)/max_score;
     }
 }
 

@@ -100,7 +100,7 @@ class Script(object):
         resp = instance.send_and_receive(req)
         if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
-            return self.places(request, region)
+            return self.places(request, instance)
         self.__pagination(request, "places", resp)
 
         return resp
