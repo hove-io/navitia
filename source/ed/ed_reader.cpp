@@ -7,7 +7,7 @@ namespace bg = boost::gregorian;
 namespace nt = navitia::type;
 namespace nf = navitia::fare;
 
-void EdReader::fill(navitia::type::Data& data, const double min_non_connected_graph_ratio) {
+void EdReader::fill(navitia::type::Data& data, const double percent_delete){
 
     pqxx::work work(*conn, "loading ED");
 
@@ -113,7 +113,7 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment FROM navitia.network";
+    std::string request = "SELECT id, name, uri, original_uri, comment FROM navitia.network";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -130,7 +130,7 @@ void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.commercial_mode";
+    std::string request = "SELECT id, name, uri, original_uri FROM navitia.commercial_mode";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -146,7 +146,7 @@ void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.physical_mode";
+    std::string request = "SELECT id, name, uri, original_uri FROM navitia.physical_mode";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -162,7 +162,7 @@ void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.contributor";
+    std::string request = "SELECT id, name, uri, original_uri FROM navitia.contributor";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -195,7 +195,7 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, sa.comment as comment,";
+    std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, sa.original_uri as original_uri, sa.comment as comment,";
     request += "ST_X(sa.coord::geometry) as lon,";
     request += "ST_Y(sa.coord::geometry) as lat,";
     request += "pr.wheelchair_boarding as wheelchair_boarding,";
@@ -258,7 +258,7 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT sp.id as id, sp.name as name, sp.uri as uri,";
+    std::string request = "SELECT sp.id as id, sp.name as name, sp.uri as uri, sp.original_uri as original_uri,";
     request += "sp.comment as comment, ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,";
     request += "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,";
     request += "pr.wheelchair_boarding as wheelchair_boarding,";
@@ -322,7 +322,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, code, color, network_id, commercial_mode_id "
+    std::string request = "SELECT id, name, uri, original_uri, comment, code, color, network_id, commercial_mode_id "
         "FROM navitia.line";
 
     pqxx::result result = work.exec(request);
@@ -346,7 +346,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, line_id "
+    std::string request = "SELECT id, name, uri, original_uri, comment, line_id "
         "FROM navitia.route";
 
     pqxx::result result = work.exec(request);
@@ -365,7 +365,7 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, route_id, is_frequence, physical_mode_id "
+    std::string request = "SELECT id, name, uri, original_uri, comment, route_id, is_frequence, physical_mode_id "
         "FROM navitia.journey_pattern";
 
     pqxx::result result = work.exec(request);
@@ -393,7 +393,7 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
 
 
 void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, \"order\", stop_point_id, journey_pattern_id FROM navitia.journey_pattern_point";
+    std::string request = "SELECT id, name, uri, original_uri, comment, \"order\", stop_point_id, journey_pattern_id FROM navitia.journey_pattern_point";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -529,7 +529,8 @@ void EdReader::fill_journey_pattern_point_connections(nt::Data& data, pqxx::work
 
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri, vj.comment as comment,";
+    std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,";
+                request += "vj.original_uri as original_uri, vj.comment as comment,";
                 request += "vj.company_id as company_id, ";
                 request += "vj.journey_pattern_id as journey_pattern_id, vj.validity_pattern_id as validity_pattern_id,";
                 request += "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,";
@@ -882,8 +883,6 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Car] + source, data.geo_ref.offsets[navitia::type::Mode_e::Car] + target, e, data.geo_ref.graph);
         }
     }
-
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref.graph) << " edges added");
 }
 
 //get the minimum distance and the vertex to start from between 2 edges
