@@ -25,7 +25,7 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, date, connection_string, aliases_file,
-                synonyms_file, redis_string, fare_dir;
+                synonyms_file;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -34,10 +34,9 @@ int main(int argc, char * argv[])
         ("aliases,a", po::value<std::string>(&aliases_file), "Fichier aliases")
         ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
+		        ("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare");
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
-        ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379 timeout=2")
-        ("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare");
+        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -91,21 +90,8 @@ int main(int argc, char * argv[])
 
     data.normalize_uri();
 
-    // Ajout dans la table des correspondances
-    if(vm.count("redis-string")){
-        LOG4CPLUS_INFO(logger, "Alimentation de redis");
-        try{
-            ed::connectors::ExtCode2Uri ext_code_2_uri(redis_string);
-            ext_code_2_uri.to_redis(data);
-        }catch(const navitia::exception& ne){
-            LOG4CPLUS_INFO(logger, "Impossible d'alimenter redis");
-            LOG4CPLUS_INFO(logger, ne.what());
-            return 1;
-        }
-    }
-
     ed::connectors::ExternalParser extConnecteur;
-    if(vm.count("synonyms")){        
+    if(vm.count("synonyms")){
         extConnecteur.fill_synonyms(synonyms_file, data);
     }
 
@@ -139,13 +125,6 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "alias : " <<data.alias.size());
     LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonymes.size());
 
-    // Ajout dans la table des correspondances
-    if (vm.count("redis-string")) {
-        LOG4CPLUS_INFO(logger, "Alimentation de redis");
-        ed::connectors::ExtCode2Uri ext_code_2_uri(redis_string);
-        ext_code_2_uri.to_redis(data);
-    }
-
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);
     p.persist(data, meta);
@@ -156,9 +135,6 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "\t completion des données " << complete << "ms");
     LOG4CPLUS_INFO(logger, "\t netoyage des données " << clean << "ms");
     LOG4CPLUS_INFO(logger, "\t trie des données " << sort << "ms");
-    if (vm.count("fare")) {
-        LOG4CPLUS_INFO(logger, "\t fares loaded in : " << fare << "ms");
-    }
     LOG4CPLUS_INFO(logger, "\t enregistrement des données " << save << "ms");
 
     return 0;
