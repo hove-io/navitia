@@ -36,6 +36,7 @@ message PathItem {
     optional string name = 1;
     optional double length = 2;
     optional int32 direction = 3;
+    optional double duration = 4;
 }
 
 enum StreetNetworkMode {

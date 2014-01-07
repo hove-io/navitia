@@ -178,8 +178,9 @@ getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt:
                     bt::time_duration walking_time = getWalkingTime(i, jppidx, departs, destinations, clockwise, labels, data);
 
                     //Si je gagne 5 minutes de marche a pied, je suis pret à perdre jusqu'à 10 minutes.
-                    if (walking_time < best.walking_time) {
-                        float ratio = lost_time / (best.walking_time.total_seconds() - walking_time.total_seconds());
+                    int walking_time_diff_in_s = (best.walking_time - walking_time).total_seconds();
+                    if (walking_time_diff_in_s) {
+                        float ratio = lost_time / walking_time_diff_in_s;
                         if( ratio < best_departure.ratio) {
                             Departure_Type s;
                             s.rpidx = jppidx;

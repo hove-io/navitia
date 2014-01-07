@@ -12,7 +12,7 @@ struct Departure_Type {
     uint32_t count;
     DateTime arrival, upper_bound;
     float ratio;
-    boost::posix_time::time_duration walking_time;
+    boost::posix_time::time_duration walking_time = {};
 
     Departure_Type() : rpidx(type::invalid_idx), count(0),
                        arrival(DateTimeUtils::inf), upper_bound(DateTimeUtils::inf),
