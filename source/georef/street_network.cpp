@@ -137,36 +137,30 @@ double StreetNetwork::get_distance(const ng::ProjectionData& start,
     }
     auto logger = log4cplus::Logger::getInstance("Logger");
 
-    if(dist[target.source] == max) {
-        bool found = false;
-        try {
-            geo_ref.dijkstra(start.source, dist, preds,
-                             ng::target_unique_visitor(target.source));
-        } catch(ng::DestinationFound) { found = true; }
-
-        //if no way has been found, we can stop the search
-        if ( ! found ) {
-            LOG4CPLUS_WARN(logger, "unable to find a way from start edge [" << start.source << "-" << start.target
+    bool found = false;
+    try {
+        geo_ref.dijkstra(start.source, dist, preds,
+        ng::target_unique_visitor(target.source));
+    } catch(ng::DestinationFound) { found = true; }
+    //if no way has been found, we can stop the search
+    if ( ! found ) {
+        LOG4CPLUS_WARN(logger, "unable to find a way from start edge [" << start.source << "-" << start.target
                            << "] to [" << target.source << "-" << target.target << "]");
 
-            return max;
-        }
-        try {
-            geo_ref.dijkstra(start.target, dist, preds,
-                             ng::target_unique_visitor(target.source));
-        } catch(ng::DestinationFound) { found = true; }
+        return max;
     }
-
-    if(dist[target.target] == max) {
-        try {
-            geo_ref.dijkstra(start.source, dist, preds,
-                             ng::target_unique_visitor(target.target));
-        } catch(ng::DestinationFound) {}
-        try {
-            geo_ref.dijkstra(start.target, dist, preds,
-                             ng::target_unique_visitor(target.target));
-         } catch(ng::DestinationFound) {}
-    }
+    try {
+        geo_ref.dijkstra(start.target, dist, preds,
+        ng::target_unique_visitor(target.source));
+    } catch(ng::DestinationFound) { found = true; }
+    try {
+        geo_ref.dijkstra(start.source, dist, preds,
+        ng::target_unique_visitor(target.target));
+    } catch(ng::DestinationFound) {}
+    try {
+        geo_ref.dijkstra(start.target, dist, preds,
+        ng::target_unique_visitor(target.target));
+    } catch(ng::DestinationFound) {}
 
     assert(dist[target.source] != max && dist[target.target] != max); //if we succeded in the first search, we must have found the other distances
 
