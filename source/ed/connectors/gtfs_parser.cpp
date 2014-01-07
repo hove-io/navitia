@@ -568,7 +568,7 @@ nm::StopTime* StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, b
     }
     auto stop_it = gtfs_data.stop_map.find(row[stop_c]);
     if(stop_it == gtfs_data.stop_map.end()){
-        LOG4CPLUS_WARN(logger, "Impossible the find the stop_point " + row[stop_c] + "!");
+        LOG4CPLUS_WARN(logger, "Impossible to find the stop_point " + row[stop_c] + "!");
         return nullptr;
     }
     nm::StopTime* stop_time = new nm::StopTime();
