@@ -6,33 +6,24 @@ namespace bg = boost::gregorian;
 namespace nt = navitia::type;
 
 void EdReader::fill(navitia::type::Data& data){
-
     pqxx::work work(*conn, "loading ED");
 
     this->fill_vector_to_ignore(data, work);
     this->fill_meta(data, work);
-
     this->fill_networks(data, work);
     this->fill_commercial_modes(data, work);
     this->fill_physical_modes(data, work);
     this->fill_companies(data, work);
     this->fill_contributors(data, work);
-
     this->fill_stop_areas(data, work);
     this->fill_stop_points(data, work);
-
     this->fill_lines(data, work);
     this->fill_routes(data, work);
-
     this->fill_journey_patterns(data, work);
     this->fill_journey_pattern_points(data, work);
-
     this->fill_validity_patterns(data, work);
     this->fill_vehicle_journeys(data, work);
-
-
     this->fill_stop_times(data, work);
-
     this->fill_admins(data, work);
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
@@ -107,7 +98,7 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment FROM navitia.network";
+    std::string request = "SELECT id, name, uri, original_uri, comment FROM navitia.network";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -124,7 +115,7 @@ void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.commercial_mode";
+    std::string request = "SELECT id, name, uri, original_uri FROM navitia.commercial_mode";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -140,7 +131,7 @@ void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.physical_mode";
+    std::string request = "SELECT id, name, uri, original_uri FROM navitia.physical_mode";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -156,7 +147,7 @@ void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.contributor";
+    std::string request = "SELECT id, name, uri, original_uri FROM navitia.contributor";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -189,7 +180,7 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, sa.comment as comment,";
+    std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, sa.original_uri as original_uri, sa.comment as comment,";
     request += "ST_X(sa.coord::geometry) as lon,";
     request += "ST_Y(sa.coord::geometry) as lat,";
     request += "pr.wheelchair_boarding as wheelchair_boarding,";
@@ -252,7 +243,7 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT sp.id as id, sp.name as name, sp.uri as uri,";
+    std::string request = "SELECT sp.id as id, sp.name as name, sp.uri as uri, sp.original_uri as original_uri,";
     request += "sp.comment as comment, ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,";
     request += "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,";
     request += "pr.wheelchair_boarding as wheelchair_boarding,";
@@ -316,7 +307,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, code, color, network_id, commercial_mode_id "
+    std::string request = "SELECT id, name, uri, original_uri, comment, code, color, network_id, commercial_mode_id "
         "FROM navitia.line";
 
     pqxx::result result = work.exec(request);
@@ -340,7 +331,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, line_id "
+    std::string request = "SELECT id, name, uri, original_uri, comment, line_id "
         "FROM navitia.route";
 
     pqxx::result result = work.exec(request);
@@ -359,7 +350,7 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, route_id, is_frequence, physical_mode_id "
+    std::string request = "SELECT id, name, uri, original_uri, comment, route_id, is_frequence, physical_mode_id "
         "FROM navitia.journey_pattern";
 
     pqxx::result result = work.exec(request);
@@ -387,7 +378,7 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
 
 
 void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, \"order\", stop_point_id, journey_pattern_id FROM navitia.journey_pattern_point";
+    std::string request = "SELECT id, name, uri, original_uri, comment, \"order\", stop_point_id, journey_pattern_id FROM navitia.journey_pattern_point";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -523,7 +514,8 @@ void EdReader::fill_journey_pattern_point_connections(nt::Data& data, pqxx::work
 
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri, vj.comment as comment,";
+    std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,";
+                request += "vj.original_uri as original_uri, vj.comment as comment,";
                 request += "vj.company_id as company_id, ";
                 request += "vj.journey_pattern_id as journey_pattern_id, vj.validity_pattern_id as validity_pattern_id,";
                 request += "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,";
@@ -601,7 +593,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){       
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::StopTime* stop = new nt::StopTime();
         const_it["arrival_time"].to(stop->arrival_time);
         const_it["departure_time"].to(stop->departure_time);
@@ -706,7 +698,7 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, type FROM georef.way;";
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         if(binary_search(this->way_no_ignore.begin(), this->way_no_ignore.end(), const_it["id"].as<idx_t>())){
             navitia::georef::Way* way = new navitia::georef::Way;
             const_it["uri"].to(way->uri);
@@ -718,13 +710,13 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
             data.geo_ref.ways.push_back(way);
             this->way_map[const_it["id"].as<idx_t>()] = way;
         }
-    }    
+    }
 }
 
 void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
     std::string request = "SELECT way_id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, number, left_side FROM georef.house_number where way_id IS NOT NULL;";
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::HouseNumber hn;
         const_it["number"].to(hn.number);
         hn.coord.set_lon(const_it["lon"].as<double>());
@@ -992,6 +984,5 @@ void EdReader::build_rel_admin_admin(navitia::type::Data&, pqxx::work& work){
         }
     }
 }
-
 }//namespace
 

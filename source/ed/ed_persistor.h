@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/lotus.h"
+#include "utils/base64_encode.h"
 #include "data.h"
 #include "type/meta_data.h"
 
