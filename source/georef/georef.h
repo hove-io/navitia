@@ -15,6 +15,7 @@
 #include <map>
 #include "adminref.h"
 #include "utils/logger.h"
+#include "utils/exception.h"
 #include "utils/flat_enum_map.h"
 
 namespace nt = navitia::type;
@@ -133,15 +134,38 @@ private:
         un nom de voie et une liste de segments */
 struct PathItem {
     nt::idx_t way_idx = nt::invalid_idx; //< Way of this path item
-    boost::posix_time::time_duration length = {}; //< Length of the journey on this item
+    boost::posix_time::time_duration duration = {}; //< Length of the journey on this item
     std::deque<nt::GeographicalCoord> coordinates;//< path item coordinates
     int angle = 0; //< Angle with the next PathItem (needed to give direction)
 
+    enum class TransportCaracteristic {
+        Walk,
+        Bike,
+        Car,
+        BssTake, //when a bike is taken
+        BssPutBack //we a bike is put back
+    };
+    TransportCaracteristic transportation = TransportCaracteristic::Walk;
+    double get_length(double speed_factor) const {
+        switch (transportation) {
+        case TransportCaracteristic::BssPutBack:
+        case TransportCaracteristic::BssTake:
+            return 0;
+        case TransportCaracteristic::Walk:
+            return duration.total_seconds() / (default_speed[type::Mode_e::Walking] * speed_factor);
+        case TransportCaracteristic::Bike:
+            return duration.total_seconds() / (default_speed[type::Mode_e::Bike] * speed_factor);
+        case TransportCaracteristic::Car:
+            return duration.total_seconds() / (default_speed[type::Mode_e::Car] * speed_factor);
+        default:
+            throw navitia::exception("unhandled transportation case");
+        }
+    }
 };
 
 /** Itinéraire complet */
 struct Path {
-    boost::posix_time::time_duration length = {}; //< Longueur totale du parcours
+    boost::posix_time::time_duration duration = {}; //< Longueur totale du parcours
     std::deque<PathItem> path_items = {}; //< Liste des voies parcourues
 };
 
@@ -317,6 +341,7 @@ struct GeoRef {
 
     ///get the transportation mode of the vertex
     type::Mode_e get_mode(vertex_t vertex) const;
+    PathItem::TransportCaracteristic get_caracteristic(edge_t edge) const;
     ~GeoRef();
 };
 

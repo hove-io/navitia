@@ -247,9 +247,10 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
 
     // On reparcourt tout dans le bon ordre
     nt::idx_t last_way = type::invalid_idx;
+    boost::optional<PathItem::TransportCaracteristic> last_transport_carac{};
     PathItem path_item;
     path_item.coordinates.push_back(graph[reverse_path.back()].coord);
-//    p.length = {};
+
     for (size_t i = reverse_path.size(); i > 1; --i) {
         bool path_item_changed = false;
         vertex_t v = reverse_path[i-2];
@@ -258,6 +259,7 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
         auto edge_pair = boost::edge(u, v, graph);
         //patch temporaire, A VIRER en refactorant toute la notion de direct_path!
         if (! edge_pair.second) {
+            //for one way way, the reverse path obviously cannot work
             LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find edge, we try the reverse one");
             //if it still not work we cannot do anything
             edge_pair = boost::edge(v, u, graph);
@@ -265,7 +267,8 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
         edge_t e = edge_pair.first;
 
         Edge edge = graph[e];
-        if (edge.way_idx != last_way && last_way != type::invalid_idx) {
+        PathItem::TransportCaracteristic transport_carac = get_caracteristic(e);
+        if ((edge.way_idx != last_way && last_way != type::invalid_idx) || (last_transport_carac && transport_carac != *last_transport_carac)) {
             p.path_items.push_back(path_item);
             path_item = PathItem();
             path_item_changed = true;
@@ -274,10 +277,11 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
         nt::GeographicalCoord coord = graph[v].coord;
         path_item.coordinates.push_back(coord);
         last_way = edge.way_idx;
+        last_transport_carac = {transport_carac};
         path_item.way_idx = edge.way_idx;
-//        path_item.segments.push_back(e);
-        path_item.length += edge.duration;
-        p.length += edge.duration;
+        path_item.transportation = transport_carac;
+        path_item.duration += edge.duration;
+        p.duration += edge.duration;
         if (path_item_changed) {
             //we update the last path item
             p.path_items.back().angle = compute_directions(p, coord);
@@ -304,6 +308,30 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) 
 
 type::Mode_e GeoRef::get_mode(vertex_t vertex) const {
     return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
+}
+
+PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
+    auto source_mode = get_mode(boost::source(edge, graph));
+    auto target_mode = get_mode(boost::target(edge, graph));
+
+    if (source_mode == target_mode && source_mode == type::Mode_e::Walking) {
+        return PathItem::TransportCaracteristic::Walk;
+    }
+    if (source_mode == target_mode && source_mode == type::Mode_e::Bike) {
+        return PathItem::TransportCaracteristic::Bike;
+    }
+    if (source_mode == target_mode && source_mode == type::Mode_e::Car) {
+        return PathItem::TransportCaracteristic::Car;
+    }
+
+    if (source_mode == type::Mode_e::Walking && target_mode == type::Mode_e::Bike) {
+        return PathItem::TransportCaracteristic::BssTake;
+    }
+    if (source_mode == type::Mode_e::Bike && target_mode == type::Mode_e::Walking) {
+        return PathItem::TransportCaracteristic::BssPutBack;
+    }
+
+    throw navitia::exception("unhandled path item caracteristic");
 }
 
 Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {

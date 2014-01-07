@@ -216,7 +216,7 @@ ng::Path GeoRefPathFinder::get_path(const ng::ProjectionData& target, std::pair<
     auto result = this->geo_ref.build_path(nearest_edge.second, this->predecessors);
     add_projections_to_path(result, true);
 
-    result.length = nearest_edge.first;
+    result.duration = nearest_edge.first;
 
     //we need to put the end projections too
     ng::edge_t end_e = boost::edge(target.source, target.target, geo_ref.graph).first;
@@ -260,6 +260,29 @@ void GeoRefPathFinder::add_projections_to_path(ng::Path& p, bool append_to_begin
         else {
             ng::PathItem item;
             item.way_idx = start_edge.way_idx;
+            if (!p.path_items.empty()) {
+                //still complexifying stuff... TODO: simplify this
+                //we want the projection to be done with the previous transportation mode
+                switch (item_to_update(p).transportation) {
+                case georef::PathItem::TransportCaracteristic::Walk:
+                case georef::PathItem::TransportCaracteristic::Car:
+                case georef::PathItem::TransportCaracteristic::Bike:
+                    item.transportation = item_to_update(p).transportation;
+                    break;
+                    //if we were switching between walking and biking, we need to take either
+                    //the previous or the next transportation mode depending on 'append_to_begin'
+                case georef::PathItem::TransportCaracteristic::BssTake:
+                    item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
+                                                           : georef::PathItem::TransportCaracteristic::Bike);
+                    break;
+                case georef::PathItem::TransportCaracteristic::BssPutBack:
+                    item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Bike
+                                                           : georef::PathItem::TransportCaracteristic::Walk);
+                    break;
+                default:
+                    throw navitia::exception("unhandled transportation carac case");
+                }
+            }
             add_in_path(p, item);
         }
     }

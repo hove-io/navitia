@@ -573,34 +573,104 @@ void fill_pb_placemark(navitia::georef::Way* way,
 }
 
 
-void fill_street_section(const type::EntryPoint& ori_dest,
-                         const georef::Path& path, const type::Data& data,
-                         pbnavitia::Section* section, int max_depth,
-                         const pt::ptime& now,
-                         const pt::time_period& action_period){
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    if(path.path_items.size() > 0) {
-        section->set_type(pbnavitia::STREET_NETWORK);
-        pbnavitia::StreetNetwork* sn = section->mutable_street_network();
-        create_pb(ori_dest, path, data, sn);
-        section->set_duration(sn->length() / ori_dest.streetnetwork_params.speed_factor);
-        section->set_length(sn->length());
-        navitia::georef::Way* way;
-        type::GeographicalCoord coord;
-        if(path.path_items.size() > 0) {
-            pbnavitia::Place* orig_place = section->mutable_origin();
-            way = data.geo_ref.ways[path.path_items.front().way_idx];
-            coord = path.path_items.front().coordinates.front();
-            fill_pb_placemark(way, data, orig_place, way->nearest_number(coord), coord,
-                              depth,  now, action_period);
+void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,
+                      const navitia::type::Data& data, const boost::posix_time::ptime departure,
+                      int depth, const pt::ptime& now, const pt::time_period& action_period) {
 
-            pbnavitia::Place* dest_place = section->mutable_destination();
-            way = data.geo_ref.ways[path.path_items.back().way_idx];
-            coord = path.path_items.back().coordinates.back();
-            fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
-                                    depth,  now, action_period);
-        }
+    double total_duration = 0;
+    double total_length = 0;
+    for (int pb_item_idx = 0 ; pb_item_idx < section->mutable_street_network()->path_items_size() ; ++pb_item_idx) {
+        const pbnavitia::PathItem& pb_item = section->mutable_street_network()->path_items(pb_item_idx);
+        total_length += pb_item.length();
+        total_duration += pb_item.duration();
     }
+    section->mutable_street_network()->set_duration(total_duration);
+    section->mutable_street_network()->set_length(total_length);
+    section->set_duration(total_duration);
+    section->set_length(total_length);
+
+    section->set_begin_date_time(bt::to_iso_string(departure));
+    section->set_begin_date_time(bt::to_iso_string(departure + bt::seconds(total_duration)));
+
+    //add the destination as a placemark
+    pbnavitia::Place* dest_place = section->mutable_destination();
+    auto way = data.geo_ref.ways[last_item.way_idx];
+    type::GeographicalCoord coord = last_item.coordinates.back();
+    fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
+                            depth, now, action_period);
+
+    switch (last_item.transportation) {
+    case georef::PathItem::TransportCaracteristic::Walk:
+        section->mutable_street_network()->set_mode(pbnavitia::Walking);
+        break;
+    case georef::PathItem::TransportCaracteristic::Bike:
+        section->mutable_street_network()->set_mode(pbnavitia::Bike);
+        break;
+    case georef::PathItem::TransportCaracteristic::Car:
+        section->mutable_street_network()->set_mode(pbnavitia::Car);
+        break;
+    case georef::PathItem::TransportCaracteristic::BssTake:
+        section->set_type(pbnavitia::boarding);
+        break;
+    case georef::PathItem::TransportCaracteristic::BssPutBack:
+        section->set_type(pbnavitia::landing);
+        break;
+    default:
+        throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
+    }
+}
+
+pbnavitia::Section* create_session(pbnavitia::Journey* pb_journey, const navitia::georef::PathItem& first_item,
+                                           const navitia::type::Data& data,
+                                           int depth, const pt::ptime& now, const pt::time_period& action_period) {
+
+    auto section = pb_journey->add_sections();
+    section->set_type(pbnavitia::STREET_NETWORK);
+
+    pbnavitia::Place* orig_place = section->mutable_origin();
+    auto way = data.geo_ref.ways[first_item.way_idx];
+    type::GeographicalCoord departure_coord = first_item.coordinates.front();
+    fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
+                      depth, now, action_period);
+
+    return section;
+}
+
+void fill_street_sections(const type::EntryPoint& ori_dest,
+                            const georef::Path& path, const type::Data& data,
+                            pbnavitia::Journey* pb_journey, const boost::posix_time::ptime departure,
+                            int max_depth, const pt::ptime& now,
+                            const pt::time_period& action_period) {
+    int depth = std::min(max_depth, 3);
+    if (path.path_items.empty())
+        return;
+
+    auto session_departure = departure;
+
+    boost::optional<georef::PathItem::TransportCaracteristic> last_transportation_carac;
+    auto section = create_session(pb_journey, path.path_items.front(), data, depth, now, action_period);
+    georef::PathItem last_item;
+
+    //we create 1 section by mean of transport
+    for (auto item : path.path_items) {
+        auto transport_carac = item.transportation;
+
+        if (last_transportation_carac && transport_carac != last_transportation_carac) {
+            //we end the last section
+            finalize_section(section, last_item, data, session_departure, depth, now, action_period);
+            session_departure += bt::seconds(section->duration());
+
+            //and be create a new one
+            section = create_session(pb_journey, item, data, depth, now, action_period);
+        }
+
+        add_path_item(section->mutable_street_network(), item, ori_dest, data);
+
+        last_transportation_carac = transport_carac;
+        last_item = item;
+    }
+
+    finalize_section(section, path.path_items.back(), data, session_departure, depth, now, action_period);
 }
 
 
@@ -633,46 +703,25 @@ void fill_message(const boost::shared_ptr<type::Message> message,
 }
 
 
-void create_pb(const type::EntryPoint &ori_dest,
-               const navitia::georef::Path& path,
-               const navitia::type::Data& data, pbnavitia::StreetNetwork* sn,
-               const pt::ptime&, const pt::time_period&){
-    switch(ori_dest.streetnetwork_params.mode){
-        case type::Mode_e::Bike:
-            sn->set_mode(pbnavitia::Bike);
-            break;
-        case type::Mode_e::Car:
-            sn->set_mode(pbnavitia::Car);
-            break;
-    case type::Mode_e::Bss:
-        sn->set_mode(pbnavitia::Bss);
-        break;
-        default :
-            sn->set_mode(pbnavitia::Walking);
-    }
+void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item,
+                    const type::EntryPoint &ori_dest, const navitia::type::Data& data) {
+    if(item.way_idx >= data.geo_ref.ways.size())
+        throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
 
-    uint32_t length = 0;
+    pbnavitia::PathItem* path_item = sn->add_path_items();
+    path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
+    path_item->set_length(item.get_length(ori_dest.streetnetwork_params.speed_factor));
+    path_item->set_duration(item.duration.total_seconds() / ori_dest.streetnetwork_params.speed_factor);
+    path_item->set_direction(item.angle);
 
-    for(auto item : path.path_items) {
-        if(item.way_idx < data.geo_ref.ways.size()) {
-            pbnavitia::PathItem * path_item = sn->add_path_items();
-            path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
-            path_item->set_length(item.length.total_seconds() / ori_dest.streetnetwork_params.speed_factor);
-            length += path_item->length();
-            path_item->set_direction(item.angle);
-        } else {
-            throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
-        }
-        //we add each path item coordinate to the global coordinate liste
-        for(auto coord : item.coordinates) {
-            if(coord.is_initialized()) {
-                pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
-                pb_coord->set_lon(coord.lon());
-                pb_coord->set_lat(coord.lat());
-            }
+    //we add each path item coordinate to the global coordinate list
+    for(auto coord : item.coordinates) {
+        if(coord.is_initialized()) {
+            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+            pb_coord->set_lon(coord.lon());
+            pb_coord->set_lat(coord.lat());
         }
     }
-    sn->set_length(length);
 }
 
 void fill_pb_object(const georef::POIType* geo_poi_type, const type::Data &,

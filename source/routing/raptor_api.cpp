@@ -43,22 +43,15 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         //for each date time we add a direct street journey
         for(boost::posix_time::ptime datetime : datetimes) {
             pbnavitia::Journey* pb_journey = pb_response.add_journeys();
-            pb_journey->set_duration(temp.length.total_seconds());
+            pb_journey->set_duration(temp.duration.total_seconds());
 
-            boost::posix_time::ptime departure, arrival;
-            auto duration (temp.length);
+            boost::posix_time::ptime departure;
             if (clockwise) {
                 departure = datetime;
-                arrival = departure + duration;
             } else {
-                arrival = datetime;
-                departure = arrival - duration;
+                departure = datetime - temp.duration;
             }
-            const auto str_departure = boost::posix_time::to_iso_string(departure);
-            const auto str_arrival = boost::posix_time::to_iso_string(arrival);
-            pb_journey->set_departure_date_time(str_departure);
-            pb_journey->set_arrival_date_time(str_arrival);
-            fill_street_section(origin, temp, d, pb_journey->add_sections(), 1);
+            fill_street_sections(origin, temp, d, pb_journey, departure);
         }
     }
 
@@ -83,16 +76,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     temp.path_items.back().coordinates.push_back(routing_first_coord);
                 }
 
-                pbnavitia::Section* pb_section = pb_journey->add_sections();
-                fill_street_section(origin, temp, d, pb_section, 1);
-                const auto walking_time = temp.length;
+                const auto walking_time = temp.duration;
                 departure_time = path.items.front().departure - walking_time;
-                auto arr_time = path.items.front().departure;
-                const auto end_date_time = iso_string(arr_time, d);
-                const auto begin_date_time = iso_string(departure_time, d);
-                pb_section->set_end_date_time(end_date_time);
-                pb_section->set_begin_date_time(begin_date_time);
-                pb_section->set_duration(arr_time - departure_time);
+                fill_street_sections(origin, temp, d, pb_journey, to_posix_time(departure_time, d));
             }
         }
 
@@ -183,16 +169,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     temp.path_items.front().coordinates.push_front(routing_last_coord);
                 }
 
-                pbnavitia::Section* pb_section = pb_journey->add_sections();
-                fill_street_section(destination, temp, d, pb_section, 1);
                 auto begin_section_time = arrival_time;
-                const auto str_begin = iso_string(begin_section_time, d);
-                pb_section->set_begin_date_time(str_begin);
-                const auto walking_time = temp.length;
-                arrival_time = arrival_time + walking_time;
-                const auto str_end = iso_string(arrival_time, d);
-                pb_section->set_end_date_time(str_end);
-                pb_section->set_duration(arrival_time - begin_section_time);
+                fill_street_sections(destination, temp, d, pb_journey, to_posix_time(begin_section_time, d));
             }
         }
         const auto str_departure = iso_string(departure_time, d);
