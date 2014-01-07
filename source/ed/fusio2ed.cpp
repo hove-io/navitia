@@ -136,6 +136,9 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "\t completion des données " << complete << "ms");
     LOG4CPLUS_INFO(logger, "\t netoyage des données " << clean << "ms");
     LOG4CPLUS_INFO(logger, "\t trie des données " << sort << "ms");
+    if (vm.count("fare")) {
+        LOG4CPLUS_INFO(logger, "\t fares loaded in : " << fare << "ms");
+    }
     LOG4CPLUS_INFO(logger, "\t enregistrement des données " << save << "ms");
 
     return 0;
