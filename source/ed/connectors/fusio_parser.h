@@ -44,6 +44,7 @@ struct RouteFusioHandler : public GenericHandler {
     int ignored;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"route_id", "route_name"}; }
 };
 
 struct TransfersFusioHandler : public TransfersGtfsHandler {
@@ -67,6 +68,7 @@ struct TripsFusioHandler : public TripsGtfsHandler {
     void clean_and_delete(Data&, ed::types::VehicleJourney*);
     ed::types::VehicleJourney* get_vj(Data& data, const csv_row& row, bool is_first_line);
     ed::types::VehicleJourney* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"route_id", "service_id","trip_id",}; }
 };
 
 struct StopTimeFusioHandler : public StopTimeGtfsHandler {
@@ -124,9 +126,7 @@ struct PhysicalModeFusioHandler : public GenericHandler {
     int id_c, name_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const {
-        return {"physical_mode_id", "physical_mode_name"};
-    }
+    const std::vector<std::string> required_headers() const { return {"physical_mode_id", "physical_mode_name"}; }
 };
 
 struct CommercialModeFusioHandler : public GenericHandler {
@@ -134,9 +134,7 @@ struct CommercialModeFusioHandler : public GenericHandler {
     int id_c, name_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const {
-        return {"commercial_mode_id", "commercial_mode_name"};
-    }
+    const std::vector<std::string> required_headers() const { return {"commercial_mode_id", "commercial_mode_name"}; }
 };
 
 struct CommentFusioHandler: public GenericHandler{
@@ -144,9 +142,7 @@ struct CommentFusioHandler: public GenericHandler{
     int id_c, comment_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const {
-        return {"comment_id", "comment_name"};
-    }
+    const std::vector<std::string> required_headers() const { return {"comment_id", "comment_name"}; }
 };
 
 struct OdtConditionsFusioHandler: public GenericHandler{
@@ -154,6 +150,7 @@ struct OdtConditionsFusioHandler: public GenericHandler{
     int odt_condition_id_c,odt_condition_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"odt_condition_id", "odt_condition"}; }
 };
 
 struct StopPropertiesFusioHandler: public GenericHandler{
@@ -171,6 +168,7 @@ struct StopPropertiesFusioHandler: public GenericHandler{
     appropriate_signage_c;
     void init(Data&);
     void handle_line(Data&, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"property_id"}; }
 };
 
 struct TripPropertiesFusioHandler: public GenericHandler{
@@ -186,6 +184,7 @@ struct TripPropertiesFusioHandler: public GenericHandler{
     school_vehicle_c;
     void init(Data&);
     void handle_line(Data&, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"trip_property_id"}; }
 };
 
 /**

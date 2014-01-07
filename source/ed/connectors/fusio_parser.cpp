@@ -108,7 +108,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
     }
     if( ed_line == nullptr){
         ignored++;
-        LOG4CPLUS_WARN(logger, "Route orpholine " + row[route_id_c]);
+        LOG4CPLUS_WARN(logger, "Route orphan " + row[route_id_c]);
         return;
     }
     ed::types::Route* ed_route = new ed::types::Route();
