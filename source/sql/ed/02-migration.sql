@@ -84,3 +84,4 @@ BEGIN
         RAISE NOTICE 'column boundary already type MULTIPOLYGON, skipping';
     END CASE;
 END$$;
+
