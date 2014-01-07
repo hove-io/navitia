@@ -108,7 +108,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
     }
     if( ed_line == nullptr){
         ignored++;
-        LOG4CPLUS_WARN(logger, "error line " + row[route_id_c]);
+        LOG4CPLUS_WARN(logger, "Route orpholine " + row[route_id_c]);
         return;
     }
     ed::types::Route* ed_route = new ed::types::Route();
@@ -232,7 +232,7 @@ void TripsFusioHandler::clean_and_delete(Data& data, ed::types::VehicleJourney* 
 ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& row, bool is_first_line){
     auto it = gtfs_data.route_map.find(row[id_c]);
     if (it == gtfs_data.route_map.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs route " + row[id_c]
+        LOG4CPLUS_WARN(logger, "Impossible to find the route " + row[id_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
         return nullptr;
@@ -242,7 +242,7 @@ ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& 
 
     auto vp_it = gtfs_data.vp_map.find(row[service_c]);
     if(vp_it == gtfs_data.vp_map.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs service " + row[service_c]
+        LOG4CPLUS_WARN(logger, "Impossible to find the service " + row[service_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
         return nullptr;
@@ -292,7 +292,7 @@ ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_
         auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
 
         if (itm == gtfs_data.physical_mode_map.end()) {
-            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the Gtfs mode " << row[physical_mode_c]
+            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
                            << " referenced by trip " << row[trip_c]);
             ignored++;
             clean_and_delete(data, vj);
