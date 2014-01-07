@@ -66,6 +66,7 @@ struct dataRAPTOR {
             if(conn.second->destination->idx == jpp_idx_destination)
                 return conn.second->idx;
         }
+        return type::invalid_idx;
     }
 
     inline type::idx_t get_stop_point_connection_idx(type::idx_t stop_point_idx_origin, type::idx_t stop_point_idx_destination, bool clockwise,const navitia::type::PT_Data &/*data*/)  const {
