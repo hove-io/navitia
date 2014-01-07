@@ -11,41 +11,82 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     std::cout << "début : vider toutes les tables (TRUNCATE)!" << std::endl;
     this->clean_db();
 
-    std::cout << "début : block insert!" << std::endl;
+    std::cout << "Begin of block insert" << std::endl;
+    std::cout << "Inserting metadata" << std::endl;
     this->insert_metadata(meta);
+    std::cout << "Finished to insert metadata" << std::endl;
+    std::cout << "Inserting networks" << std::endl;
     this->insert_networks(data.networks);
+    std::cout << "Finished to insert networks" << std::endl;
+    std::cout << "Inserting commercial_modes" << std::endl;
     this->insert_commercial_modes(data.commercial_modes);
+    std::cout << "Finished to insert commercial_modes" << std::endl;
+    std::cout << "Inserting physical_modes" << std::endl;
     this->insert_physical_modes(data.physical_modes);
+    std::cout << "Finished to insert physical_modes" << std::endl;
+    std::cout << "Inserting companies" << std::endl;
     this->insert_companies(data.companies);
+    std::cout << "Finished to insert companies" << std::endl;
+    std::cout << "Inserting contributors" << std::endl;
     this->insert_contributors(data.contributors);
+    std::cout << "Finished to insert contributors" << std::endl;
 
+    std::cout << "Inserting sa_sp_properties" << std::endl;
     this->insert_sa_sp_properties(data);
+    std::cout << "Finished to insert sa_sp_properties" << std::endl;
+    std::cout << "Inserting stop_areas" << std::endl;
     this->insert_stop_areas(data.stop_areas);
+    std::cout << "Finished to insert stop_areas" << std::endl;
+    std::cout << "Inserting stop_points" << std::endl;
     this->insert_stop_points(data.stop_points);
+    std::cout << "Finished to insert stop_points" << std::endl;
 
+    std::cout << "Inserting lines" << std::endl;
     this->insert_lines(data.lines);
+    std::cout << "Finished to insert lines" << std::endl;
+    std::cout << "Inserting routes" << std::endl;
     this->insert_routes(data.routes);
+    std::cout << "Finished to insert routes" << std::endl;
+    std::cout << "Inserting journey_patterns" << std::endl;
     this->insert_journey_patterns(data.journey_patterns);
+    std::cout << "Finished to insert journey_patterns" << std::endl;
 
+    std::cout << "Inserting validity_patterns" << std::endl;
     this->insert_validity_patterns(data.validity_patterns);
+    std::cout << "Finished to insert validity_patterns" << std::endl;
+    std::cout << "Inserting vehicle_properties" << std::endl;
     this->insert_vehicle_properties(data.vehicle_journeys);
+    std::cout << "Finished to insert vehicle_properties" << std::endl;
+    std::cout << "Inserting vehicle_journeys" << std::endl;
     this->insert_vehicle_journeys(data.vehicle_journeys);
+    std::cout << "Finished to insert vehicle_journeys" << std::endl;
 
+    std::cout << "Inserting journey_pattern_point" << std::endl;
     this->insert_journey_pattern_point(data.journey_pattern_points);
+    std::cout << "Finished to insert journey_pattern_point" << std::endl;
 
+    std::cout << "Inserting stop_times" << std::endl;
     this->insert_stop_times(data.stops);
+    std::cout << "Finished to insert stop_times" << std::endl;
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
+    std::cout << "Inserting stop_point_connections" << std::endl;
     this->insert_stop_point_connections(data.stop_point_connections);
+    std::cout << "Finished to insert stop_point_connections" << std::endl;
+    std::cout << "Inserting journey_pattern_point_connections" << std::endl;
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
+    std::cout << "Finished to insert journey_pattern_point_connections" << std::endl;
+    std::cout << "Inserting aliases" << std::endl;
     this->insert_alias(data.alias);
+    std::cout << "Finished to insert aliases" << std::endl;
+    std::cout << "Inserting synonyms" << std::endl;
     this->insert_synonyms(data.synonymes);
-    std::cout << "fin : block insert!" << std::endl;
+    std::cout << "Finished to insert synonyms" << std::endl;
+    std::cout << "End of block insert" << std::endl;
     this->build_relation();
+    std::cout << "Start commit" << std::endl;
     this->lotus.commit();
-    std::cout << "fin : commit!" << std::endl;
-
-
+    std::cout << "End of commit" << std::endl;
 }
 
 void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
