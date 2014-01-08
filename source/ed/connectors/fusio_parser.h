@@ -44,7 +44,7 @@ struct RouteFusioHandler : public GenericHandler {
     int ignored;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"route_id", "route_name"}; }
+    const std::vector<std::string> required_headers() const { return {"route_id", "route_name", "line_id"}; }
 };
 
 struct TransfersFusioHandler : public TransfersGtfsHandler {
@@ -55,20 +55,28 @@ struct TransfersFusioHandler : public TransfersGtfsHandler {
     virtual void fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const;
 };
 
-struct TripsFusioHandler : public TripsGtfsHandler {
-    TripsFusioHandler(GtfsData& gdata, CsvReader& reader) : TripsGtfsHandler(gdata, reader) {}
-    int comment_id_c,
-    trip_propertie_id_c,
-    odt_type_c,
-    company_id_c,
-    odt_condition_id_c,
-    physical_mode_c,
-    ext_code_c;
+struct TripsFusioHandler : public GenericHandler {
+    TripsFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int route_id_c,
+        service_c,
+        trip_c,
+        headsign_c,
+        block_id_c,
+        comment_id_c,
+        trip_propertie_id_c,
+        odt_type_c,
+        company_id_c,
+        odt_condition_id_c,
+        physical_mode_c,
+        ext_code_c;
+
+    int ignored = 0;
+    int ignored_vj = 0;
     void init(Data&);
     void clean_and_delete(Data&, ed::types::VehicleJourney*);
     ed::types::VehicleJourney* get_vj(Data& data, const csv_row& row, bool is_first_line);
     ed::types::VehicleJourney* handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"route_id", "service_id","trip_id",}; }
+    const std::vector<std::string> required_headers() const { return {"route_id", "service_id", "trip_id", "physical_mode_id", "company_id"}; }
 };
 
 struct StopTimeFusioHandler : public StopTimeGtfsHandler {
@@ -102,7 +110,7 @@ struct LineFusioHandler : public GenericHandler{
     contributor_c;
     void init(Data &);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"line_id", "line_name"}; }
+    const std::vector<std::string> required_headers() const { return {"line_id", "line_name", "commercial_mode_c"}; }
 };
 
 struct CompanyFusioHandler : public GenericHandler {

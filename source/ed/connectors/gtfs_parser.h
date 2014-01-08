@@ -45,6 +45,15 @@ inline bool has_col(int col_idx, const std::vector<std::string>& row) {
     return col_idx >= 0 && static_cast<size_t>(col_idx) < row.size();
 }
 
+inline bool is_active(int col_idx, const std::vector<std::string>& row){
+    return (has_col(col_idx, row) && row[col_idx] == "1");
+}
+
+inline bool is_valide(int col_idx, const std::vector<std::string>& row){
+    return (has_col(col_idx, row) && (!row[col_idx].empty()));
+}
+
+
 /**
  * Parser used to parse one kind of file
  * The actual parsing is handed to the Handler who need to have 4 methods
