@@ -50,7 +50,7 @@ inline bool is_active(int col_idx, const std::vector<std::string>& row){
     return (has_col(col_idx, row) && row[col_idx] == "1");
 }
 
-inline bool is_valide(int col_idx, const std::vector<std::string>& row){
+inline bool is_valid(int col_idx, const std::vector<std::string>& row){
     return (has_col(col_idx, row) && (!row[col_idx].empty()));
 }
 

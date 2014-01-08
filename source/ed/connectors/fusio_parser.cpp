@@ -10,15 +10,15 @@ void AgencyFusioHandler::init(Data& ) {
 
 void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
 
-    if(! is_valide(id_c, row)){
-        LOG4CPLUS_WARN(logger, "AgencyFusioHandler : Invalide agency id " << row[id_c]);
+    if(! is_valid(id_c, row)){
+        LOG4CPLUS_WARN(logger, "AgencyFusioHandler : Invalid agency id " << row[id_c]);
         return;
     }
 
     ed::types::Network * network = new ed::types::Network();
     network->uri = row[id_c];
 
-    if (is_valide(ext_code_c, row)) {
+    if (is_valid(ext_code_c, row)) {
         network->external_code = row[ext_code_c];
     }
 
@@ -57,14 +57,14 @@ void StopsFusioHandler::handle_stop_point_without_area(Data& data) {
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     auto return_wrapper = StopsGtfsHandler::handle_line(data, row, is_first_line);
 
-    if (is_valide(ext_code_c, row)) {
+    if (is_valid(ext_code_c, row)) {
         if ( return_wrapper.second != nullptr )
             return_wrapper.second->external_code = row[ext_code_c];
         else if ( return_wrapper.first != nullptr )
                 return_wrapper.first->external_code = row[ext_code_c];
     }
 
-    if (is_valide(property_id_c, row)) {
+    if (is_valid(property_id_c, row)) {
         auto it_property = gtfs_data.hasProperties_map.find(row[property_id_c]);
         if(it_property != gtfs_data.hasProperties_map.end()){
             if( return_wrapper.first != nullptr){
@@ -76,7 +76,7 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         }
     }
 
-    if (is_valide(comment_id_c, row)) {
+    if (is_valid(comment_id_c, row)) {
         auto it_comment = gtfs_data.comment_map.find(row[comment_id_c]);
         if(it_comment != gtfs_data.comment_map.end()){
             if( return_wrapper.first != nullptr){
@@ -121,13 +121,13 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     ed_route->line = ed_line;
     ed_route->uri = row[route_id_c];
 
-    if ( is_valide(ext_code_c, row) ){
+    if ( is_valid(ext_code_c, row) ){
         ed_route->external_code = row[ext_code_c];
     }
 
     ed_route->name = row[route_name_c];
 
-    if ( is_valide(comment_id_c, row) ){
+    if ( is_valid(comment_id_c, row) ){
         auto it_comment = gtfs_data.comment_map.find(row[comment_id_c]);
         if(it_comment != gtfs_data.comment_map.end()){
             ed_route->comment = it_comment->second;
@@ -147,14 +147,14 @@ void TransfersFusioHandler::init(Data& d) {
 void TransfersFusioHandler::fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const {
     TransfersGtfsHandler::fill_stop_point_connection(connection, row);
 
-    if(is_valide(property_id_c, row)) {
+    if(is_valid(property_id_c, row)) {
         auto it_property = gtfs_data.hasProperties_map.find(row[property_id_c]);
         if(it_property != gtfs_data.hasProperties_map.end()){
             connection->set_properties(it_property->second.properties());
         }
     }
 
-    if(is_valide(real_time_c, row)) {
+    if(is_valid(real_time_c, row)) {
         try{
             connection->duration = boost::lexical_cast<int>(row[real_time_c]);
         } catch (...) {
@@ -178,15 +178,15 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     if (! stop_time) {
         return nullptr;
     }
-    if (is_valide(date_time_estimated_c, row))
+    if (is_valid(date_time_estimated_c, row))
         stop_time->date_time_estimated = (row[date_time_estimated_c] == "1");
     else
         stop_time->date_time_estimated = false;
 
-    if (is_valide(desc_c, row))
+    if (is_valid(desc_c, row))
         stop_time->comment = row[desc_c];
 
-    if(is_valide(itl_c, row)){
+    if(is_valid(itl_c, row)){
         int local_traffic_zone = str_to_int(row[itl_c]);
         if (local_traffic_zone > 0)
             stop_time->local_traffic_zone = local_traffic_zone;
@@ -250,10 +250,10 @@ ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& 
     }
     ed::types::VehicleJourney* vj = new ed::types::VehicleJourney();
     vj->uri = row[trip_c];
-    if(is_valide(ext_code_c, row)){
+    if(is_valid(ext_code_c, row)){
         vj->external_code = row[ext_code_c];
     }
-    if(is_valide(headsign_c, row))
+    if(is_valid(headsign_c, row))
         vj->name = row[headsign_c];
     else
         vj->name = vj->uri;
@@ -263,7 +263,7 @@ ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& 
     vj->journey_pattern = 0;
     vj->tmp_route = route;
     vj->tmp_line = vj->tmp_route->line;
-    if(is_valide(block_id_c, row))
+    if(is_valid(block_id_c, row))
         vj->block_id = row[block_id_c];
     else
         vj->block_id = "";
@@ -280,12 +280,12 @@ ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_
     if (! vj)
         return nullptr;
 
-    if (is_valide(ext_code_c, row))
+    if (is_valid(ext_code_c, row))
         vj->external_code = row[ext_code_c];
 
     //if a physical_mode is given we override the value
     vj->physical_mode = nullptr;
-    if (is_valide(physical_mode_c, row)){
+    if (is_valid(physical_mode_c, row)){
         auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
         if (itm == gtfs_data.physical_mode_map.end()) {
             LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
@@ -300,33 +300,33 @@ ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_
         vj->physical_mode = itm->second;
     }
 
-    if (is_valide(odt_condition_id_c, row)){
+    if (is_valid(odt_condition_id_c, row)){
         auto it_odt_condition = gtfs_data.odt_conditions_map.find(row[odt_condition_id_c]);
         if(it_odt_condition != gtfs_data.odt_conditions_map.end()){
             vj->odt_message = it_odt_condition->second;
         }
     }
 
-    if (is_valide(trip_propertie_id_c, row)) {
+    if (is_valid(trip_propertie_id_c, row)) {
         auto it_property = gtfs_data.hasVehicleProperties_map.find(row[trip_propertie_id_c]);
         if(it_property != gtfs_data.hasVehicleProperties_map.end()){
             vj->set_vehicles(it_property->second.vehicles());
         }
     }
 
-    if (is_valide(comment_id_c, row)) {
+    if (is_valid(comment_id_c, row)) {
         auto it_comment = gtfs_data.comment_map.find(row[comment_id_c]);
         if(it_comment != gtfs_data.comment_map.end()){
             vj->comment = it_comment->second;
         }
     }
 
-    if(is_valide(odt_type_c, row)){
+    if(is_valid(odt_type_c, row)){
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
     }
 
     vj->company = nullptr;
-    if(is_valide(company_id_c, row)){
+    if(is_valid(company_id_c, row)){
         auto it_company = gtfs_data.company_map.find(row[company_id_c]);
         if(it_company == gtfs_data.company_map.end()){
             LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the company " << row[company_id_c]
@@ -355,7 +355,7 @@ void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool i
         throw InvalidHeaders(csv.filename);
     }
     ed::types::Contributor * contributor = new ed::types::Contributor();
-    if (is_valide(id_c, row)) {
+    if (is_valid(id_c, row)) {
         contributor->uri = row[id_c];
     } else {
         contributor->uri = "default_contributor";
@@ -388,24 +388,24 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     line->uri = row[id_c];
     line->name = row[name_c];
 
-    if (is_valide(external_code_c, row)) {
+    if (is_valid(external_code_c, row)) {
         line->external_code = row[external_code_c];
     }
-    if (is_valide(code_c, row)) {
+    if (is_valid(code_c, row)) {
         line->code = row[code_c];
     }
-    if (is_valide(forward_name_c, row)) {
+    if (is_valid(forward_name_c, row)) {
         line->forward_name = row[forward_name_c];
     }
-    if (is_valide(backward_name_c, row)) {
+    if (is_valid(backward_name_c, row)) {
         line->backward_name = row[backward_name_c];
     }
-    if (is_valide(color_c, row)) {
+    if (is_valid(color_c, row)) {
         line->color = row[color_c];
     }
 
     line->network = nullptr;
-    if (is_valide(network_c, row)) {
+    if (is_valid(network_c, row)) {
         auto itm = gtfs_data.agency_map.find(row[network_c]);
         if(itm == gtfs_data.agency_map.end()){
             line->network = nullptr;
@@ -421,7 +421,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
         line->network = itm->second;
     }
 
-    if (is_valide(comment_c, row)) {
+    if (is_valid(comment_c, row)) {
         auto itm = gtfs_data.comment_map.find(row[commercial_mode_c]);
         if(itm != gtfs_data.comment_map.end()){
             line->comment = itm->second;
@@ -429,7 +429,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     }
 
     line->commercial_mode = nullptr;
-    if (is_valide(comment_c, row)) {
+    if (is_valid(comment_c, row)) {
         auto itm = gtfs_data.commercial_mode_map.find(row[commercial_mode_c]);
         if(itm == gtfs_data.commercial_mode_map.end()){
             LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the commercial_mode " << row[commercial_mode_c]
@@ -466,25 +466,25 @@ void CompanyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
         throw InvalidHeaders(csv.filename);
     }
     ed::types::Company * company = new ed::types::Company();
-    if(! is_valide(id_c, row)){
-        LOG4CPLUS_WARN(logger, "CompanyFusioHandler : Invalide company id " << row[id_c]);
+    if(! is_valid(id_c, row)){
+        LOG4CPLUS_WARN(logger, "CompanyFusioHandler : Invalid company id " << row[id_c]);
         return;
     }
     company->uri = row[id_c];
     company->name = row[name_c];
-    if (is_valide(company_address_name_c, row))
+    if (is_valid(company_address_name_c, row))
         company->address_name = row[company_address_name_c];
-    if (is_valide(company_address_number_c, row))
+    if (is_valid(company_address_number_c, row))
         company->address_number = row[company_address_number_c];
-    if (is_valide(company_address_type_c, row))
+    if (is_valid(company_address_type_c, row))
         company->address_type_name = row[company_address_type_c];
-    if (is_valide(company_url_c, row))
+    if (is_valid(company_url_c, row))
         company->website = row[company_url_c];
-    if (is_valide(company_mail_c, row))
+    if (is_valid(company_mail_c, row))
         company->mail = row[company_mail_c];
-    if (is_valide(company_phone_c, row))
+    if (is_valid(company_phone_c, row))
         company->phone_number = row[company_phone_c];
-    if (is_valide(company_fax_c, row))
+    if (is_valid(company_fax_c, row))
         company->fax = row[company_fax_c];
     data.companies.push_back(company);
     gtfs_data.company_map[company->uri] = company;
