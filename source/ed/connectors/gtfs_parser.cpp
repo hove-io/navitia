@@ -639,38 +639,14 @@ void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
 
     normalize_extcodes(data);
 }
+
 void GenericGtfsParser::fill_default_company(Data & data){
     // création d'une compagnie par defaut
-    nm::Company * company = new nm::Company();
+    ed::types::Company * company = new ed::types::Company();
     company->uri = "default_company";
     company->name = "compagnie par défaut";
     data.companies.push_back(company);
     gtfs_data.company_map[company->uri] = company;
-}
-
-void GenericGtfsParser::fill_default_agency(Data & data){
-    // création d'un réseau par defaut
-    nm::Network * network = new nm::Network();
-    network->uri = "default_network";
-    network->name = "réseau par défaut";
-    data.networks.push_back(network);
-    gtfs_data.agency_map[network->uri] = network;
-}
-
-void GenericGtfsParser::fill_default_commercial_mode(Data & data){
-    ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->name = "mode commercial par défaut";
-    commercial_mode->uri = "default_commercial_mode";
-    data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
-}
-
-void GenericGtfsParser::fill_default_physical_mode(Data & data){
-    ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
-    mode->name = "mode phyisique par défaut";
-    mode->uri = "default_physical_mode";
-    data.physical_modes.push_back(mode);
-    gtfs_data.physical_mode_map[mode->uri] = mode;
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data){

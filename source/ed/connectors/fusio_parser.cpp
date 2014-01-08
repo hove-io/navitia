@@ -643,6 +643,30 @@ void TripPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
         gtfs_data.hasVehicleProperties_map[row[id_c]] = has_properties;
     }
 }
+void FusioParser::fill_default_agency(Data & data){
+    // création d'un réseau par defaut
+    ed::types::Network * network = new ed::types::Network();
+    network->uri = "default_network";
+    network->name = "réseau par défaut";
+    data.networks.push_back(network);
+    gtfs_data.agency_map[network->uri] = network;
+}
+
+void FusioParser::fill_default_commercial_mode(Data & data){
+    ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
+    commercial_mode->name = "mode commercial par défaut";
+    commercial_mode->uri = "default_commercial_mode";
+    data.commercial_modes.push_back(commercial_mode);
+    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
+}
+
+void FusioParser::fill_default_physical_mode(Data & data){
+    ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
+    mode->name = "mode physique par défaut";
+    mode->uri = "default_physical_mode";
+    data.physical_modes.push_back(mode);
+    gtfs_data.physical_mode_map[mode->uri] = mode;
+}
 
 void FusioParser::parse_files(Data& data) {
 

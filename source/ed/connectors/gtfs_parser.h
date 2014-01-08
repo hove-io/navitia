@@ -270,16 +270,9 @@ public:
 
     /// Ajout des objets par défaut
     void fill_default_modes(Data & data);
+
     /// Ajout des companies
     void fill_default_company(Data & data);
-    /// Ajout du network par defaut
-    void fill_default_network(Data & data);
-    /// Add default Agency
-    void fill_default_Agency(Data & data);
-    /// Add default Commercial_mode
-    void fill_default_Commercial_mode(Data & data);
-    /// Add default Physical_mode
-    void fill_default_Physical_mode(Data & data);
 
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string &beginning_date);
