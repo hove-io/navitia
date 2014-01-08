@@ -253,8 +253,8 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             result.speed_factor = request.walking_speed() / georef::default_speed[type::Mode_e::Walking];
             break;
     }
-    int max_non_TC = request.max_non_tc_duration();
-    result.max_duration = boost::posix_time::seconds(max_non_TC);
+    int max_non_pt = request.max_duration_to_pt();
+    result.max_duration = boost::posix_time::seconds(max_non_pt);
     return result;
 }
 
