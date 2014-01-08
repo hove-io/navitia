@@ -252,6 +252,7 @@ place = {
     "administrative_region": PbField(admin),
     "embedded_type": enum_type(),
     "name": fields.String(),
+    "quality" : fields.Integer(),
     "id": fields.String(attribute='uri')
 }
 
