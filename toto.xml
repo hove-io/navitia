@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestLog>
+    <TestSuite name="test_ed">
+        <TestCase name="simple_journey">
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="37"><![CDATA[check resp.response_type() == pbnavitia::ITINERARY_FOUND passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="38"><![CDATA[check resp.journeys_size() == 1 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="41"><![CDATA[check journey.sections_size() == 1 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="44"><![CDATA[check section.stop_date_times_size() == 2 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="47"><![CDATA[check st1.stop_point().uri() == "stop_area:stop1" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="48"><![CDATA[check st2.stop_point().uri() == "stop_area:stop2" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="49"><![CDATA[check st1.departure_date_time() == "20120614T081100" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="50"><![CDATA[check st2.arrival_date_time() == "20120614T082000" passed]]></Info>
+            <TestingTime>0</TestingTime>
+        </TestCase>
+        <TestCase name="journey_array">
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="77"><![CDATA[check resp.response_type() == pbnavitia::ITINERARY_FOUND passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="78"><![CDATA[check resp.journeys_size() == 2 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="81"><![CDATA[check journey.sections_size() == 1 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="83"><![CDATA[check section.stop_date_times_size() == 2 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="86"><![CDATA[check st1.stop_point().uri() == "stop_area:stop1" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="87"><![CDATA[check st2.stop_point().uri() == "stop_area:stop2" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="88"><![CDATA[check st1.departure_date_time() == "20120614T081100" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="89"><![CDATA[check st2.arrival_date_time() == "20120614T082000" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="92"><![CDATA[check journey.sections_size() == 1 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="94"><![CDATA[check section.stop_date_times_size() == 2 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="97"><![CDATA[check st1.stop_point().uri() == "stop_area:stop1" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="98"><![CDATA[check st2.stop_point().uri() == "stop_area:stop2" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="99"><![CDATA[check st1.departure_date_time() == "20120614T091100" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="100"><![CDATA[check st2.arrival_date_time() == "20120614T092000" passed]]></Info>
+            <TestingTime>0</TestingTime>
+        </TestCase>
+        <TestCase name="journey_streetnetworkmode">
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="445"><![CDATA[check resp.journeys_size() == 4 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="447"><![CDATA[check journey.sections_size() == 1 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="449"><![CDATA[check section.type() == pbnavitia::SectionType::STREET_NETWORK passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="450"><![CDATA[check section.street_network().coordinates_size() == 4 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="451"><![CDATA[check section.street_network().length() == 10 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="452"><![CDATA[check section.street_network().mode() == pbnavitia::StreetNetworkMode::Walking passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="453"><![CDATA[check section.street_network().path_items_size() == 1 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="455"><![CDATA[check pathitem.name() == "rue ab" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="456"><![CDATA[check pathitem.length() == 10 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="469"><![CDATA[check resp.response_type() == pbnavitia::ITINERARY_FOUND passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="470"><![CDATA[check resp.journeys_size() == 4 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="472"><![CDATA[check journey.sections_size() == 1 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="474"><![CDATA[check section.type() == pbnavitia::SectionType::STREET_NETWORK passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="475"><![CDATA[check section.origin().address().name() == "rue kb" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="476"><![CDATA[check section.destination().address().name() == "rue ag" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="477"><![CDATA[check section.street_network().coordinates_size() == 9 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="478"><![CDATA[check section.street_network().mode() == pbnavitia::StreetNetworkMode::Bike passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="479"><![CDATA[check section.street_network().length() == 19 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="480"><![CDATA[check section.street_network().path_items_size() == 6 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="483"><![CDATA[check pathitem.name() == "rue kb" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="485"><![CDATA[check pathitem.name() == "rue jk" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="487"><![CDATA[check pathitem.name() == "rue ij" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="489"><![CDATA[check pathitem.name() == "rue hi" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="491"><![CDATA[check pathitem.name() == "rue gh" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="493"><![CDATA[check pathitem.name() == "rue ag" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="505"><![CDATA[check resp.response_type() == pbnavitia::ITINERARY_FOUND passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="506"><![CDATA[check resp.journeys_size() == 4 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="508"><![CDATA[check journey.sections_size() == 1 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="510"><![CDATA[check section.type() == pbnavitia::SectionType::STREET_NETWORK passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="511"><![CDATA[check section.origin().address().name() == "rue cb" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="512"><![CDATA[check section.destination().address().name() == "rue fc" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="513"><![CDATA[check section.street_network().coordinates_size() == 5 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="514"><![CDATA[check section.street_network().mode() == pbnavitia::StreetNetworkMode::Car passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="515"><![CDATA[check section.street_network().length() == 7 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="516"><![CDATA[check section.street_network().path_items_size() == 2 passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="520"><![CDATA[check pathitem.name() == "rue cb" passed]]></Info>
+            <Info file="/home/antoine/dev/kraken/source/routing/tests/routing_api_test.cpp" line="522"><![CDATA[check pathitem.name() == "rue fc" passed]]></Info>
+            <TestingTime>0</TestingTime>
+        </TestCase>
+    </TestSuite>
+</TestLog>
