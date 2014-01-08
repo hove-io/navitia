@@ -3,22 +3,20 @@ package pbnavitia;
 enum NavitiaType {
     LINE = 1;
     JOURNEY_PATTERN = 2;
+    VEHICLE_JOURNEY = 3;
     STOP_POINT = 4;
     STOP_AREA = 5;
-    NETWORK = 7;
-    PHYSICAL_MODE = 8;
-    COMMERCIAL_MODE = 9;
-    CITY = 10;
-    CONNECTION = 11;
-    JOURNEY_PATTERN_POINT = 12;
-    VEHICLE_JOURNEY = 13;
-    COMPANY = 15;
-    COUNTRY = 17;
-    ADDRESS = 22;
-    ROUTE = 23;
-    POI = 24;
-    POITYPE = 25;
-    ADMINISTRATIVE_REGION = 26;
+    NETWORK = 6;
+    PHYSICAL_MODE = 7;
+    COMMERCIAL_MODE = 8;
+    CONNECTION = 9;
+    JOURNEY_PATTERN_POINT = 10;
+    COMPANY = 11;
+    ROUTE = 12;
+    POI = 13;
+    ADDRESS = 18;
+    POITYPE = 23;
+    ADMINISTRATIVE_REGION = 22;
 }
 
 
