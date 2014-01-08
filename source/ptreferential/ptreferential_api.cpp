@@ -91,8 +91,6 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
     int total_result;
     try {
         final_indexes = make_query(requested_type, request, forbidden_uris, data);
-        total_result = final_indexes.size();
-        final_indexes = paginate(final_indexes, count, startPage);
     } catch(const parsing_error &parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse :" + parse_error.more, pb_response.mutable_error());
         return pb_response;
@@ -100,6 +98,8 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
         fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + pt_error.more, pb_response.mutable_error());
         return pb_response;
     }
+    total_result = final_indexes.size();
+    final_indexes = paginate(final_indexes, count, startPage);
 
     pb_response = extract_data(data, requested_type, final_indexes, depth);
     auto pagination = pb_response.mutable_pagination();
