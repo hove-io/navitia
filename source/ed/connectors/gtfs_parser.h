@@ -23,6 +23,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
+    std::unordered_map<std::string, ed::types::Route*> route_map;
     std::unordered_map<std::string, ed::types::ValidityPattern*> vp_map;
     std::unordered_map<std::string, ed::types::VehicleJourney*> vj_map;
     std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;
@@ -32,12 +33,27 @@ struct GtfsData {
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
 
+    // used only by fusio2ed
+    std::unordered_map<std::string, std::string> comment_map;
+    std::unordered_map<std::string, std::string> odt_conditions_map;
+    std::unordered_map<std::string, navitia::type::hasProperties> hasProperties_map;
+    std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
+
     boost::gregorian::date_period production_date;///<Période de validité des données
 };
 
 inline bool has_col(int col_idx, const std::vector<std::string>& row) {
     return col_idx >= 0 && static_cast<size_t>(col_idx) < row.size();
 }
+
+inline bool is_active(int col_idx, const std::vector<std::string>& row){
+    return (has_col(col_idx, row) && row[col_idx] == "1");
+}
+
+inline bool is_valid(int col_idx, const std::vector<std::string>& row){
+    return (has_col(col_idx, row) && (!row[col_idx].empty()));
+}
+
 
 /**
  * Parser used to parse one kind of file
@@ -254,11 +270,9 @@ public:
 
     /// Ajout des objets par défaut
     void fill_default_modes(Data & data);
+
     /// Ajout des companies
     void fill_default_company(Data & data);
-    /// Ajout du network par defaut
-    void fill_default_network(Data & data);
-
 
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string &beginning_date);
