@@ -40,15 +40,20 @@ class User(db.Model):
 
     @classmethod
     def get_from_token(cls, token, valid_until):
-        res = cache.get(token)
-        if res is None:
-            user = cls.query.join(Key).filter(Key.token == token,
+        cache_res = cache.get(token)
+        if cache_res is None: # we store a tuple to be able to distinguish
+        #  if we have already look for this element
+            res = cls.query.join(Key).filter(Key.token == token,
                                               (Key.valid_until > valid_until)
-                                              | (Key.valid_until == None))\
-                .first()
-            cache.set(token, user, app.config['AUTH_CACHE_TTL'])
+                                              | (Key.valid_until == None))
+            if res:
+                cache.set(token, (res.first(),), app.config['AUTH_CACHE_TTL'])
+                return res.first()
+            else:
+                cache.set(token, (None,), app.config['AUTH_CACHE_TTL'])
+                return None
         else:
-            return res
+            return cache_res[0]
 
     def _has_access(self, instance_name, api_name):
         q1 = Instance.query.filter(Instance.name == instance_name,
@@ -63,7 +68,7 @@ class User(db.Model):
     def has_access(self, instance_name, api_name):
         key = '%d_%s_%s' % (self.id, instance_name, api_name)
         res = cache.get(key)
-        if not res:
+        if res is None:
             res = self._has_access(instance_name, api_name)
             cache.set(key, res, app.config['AUTH_CACHE_TTL'])
         return res
