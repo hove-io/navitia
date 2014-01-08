@@ -323,7 +323,7 @@ class Journeys(ResourceUri):
                                 type=option_value(modes),
                                 default=["walking", "bike", "car"],
                                 dest="destination_mode", action="append")
-        parser_get.add_argument("max_non_TC_duration", type=int, default=10*60,
+        parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
                                 description="maximal duration of non public \
                                 transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.68)

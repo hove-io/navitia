@@ -53,7 +53,7 @@ class Journeys(Resource):
                                 action="append",
                                 description="The list of modes you want at the\
                                 end of your journey")
-        parser_get.add_argument("max_non_TC_duration", type=int, default=10*60,
+        parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
                                 description="maximal duration of non public \
                                 transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.68,
@@ -105,7 +105,7 @@ class Isochrone(Resource):
                                 type=option_value(["walking", "car", "bike",
                                                    "bss"]),
                                 action="append", default=["walking"])
-        parser_get.add_argument("max_non_TC_duration", type=int, default=10*60,
+        parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
                                 description="maximal duration of non public \
                                 transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.68)
