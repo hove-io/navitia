@@ -66,10 +66,13 @@ class Script(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.disruptions
         req.disruptions.depth = request['depth']
-        req.disruptions.uri_filter = request['uri_filter']
+        req.disruptions.filter = request['filter']
         req.disruptions.count = request['count']
         req.disruptions.start_page = request['start_page']
         req.disruptions.datetime = request['datetime']
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.ptref.forbidden_uri.append(forbidden_uri)
 
         resp = instance.send_and_receive(req)
         return resp
