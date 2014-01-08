@@ -76,7 +76,6 @@ struct TripsFusioHandler : public GenericHandler {
     int ignored = 0;
     int ignored_vj = 0;
     void init(Data&);
-    void clean_and_delete(Data&, ed::types::VehicleJourney*);
     ed::types::VehicleJourney* get_vj(Data& data, const csv_row& row, bool is_first_line);
     ed::types::VehicleJourney* handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"route_id", "service_id", "trip_id", "physical_mode_id", "company_id"}; }

@@ -216,13 +216,6 @@ void TripsFusioHandler::init(Data& d) {
     ext_code_c = csv.get_pos_col("external_code");
 }
 
-void TripsFusioHandler::clean_and_delete(Data& data, ed::types::VehicleJourney* vj) {
-    gtfs_data.vj_map.erase(vj->uri);
-
-    data.vehicle_journeys.pop_back();
-    delete vj;
-}
-
 ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& row, bool){
     auto it = gtfs_data.route_map.find(row[route_id_c]);
     if (it == gtfs_data.route_map.end()) {
