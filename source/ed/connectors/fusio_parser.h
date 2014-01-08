@@ -13,11 +13,14 @@
   */
 namespace ed { namespace connectors {
 
-struct AgencyFusioHandler : public AgencyGtfsHandler {
-    AgencyFusioHandler(GtfsData& gdata, CsvReader& reader) : AgencyGtfsHandler(gdata, reader) {}
-    int ext_code_c;
+struct AgencyFusioHandler : public GenericHandler {
+    AgencyFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int id_c,
+        name_c,
+        ext_code_c;
     void init(Data& data);
-    ed::types::Network* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"agency_id", "agency_name", "agency_url", "agency_timezone"}; }
 };
 
 struct StopsFusioHandler : public StopsGtfsHandler {
@@ -110,7 +113,7 @@ struct LineFusioHandler : public GenericHandler{
     contributor_c;
     void init(Data &);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"line_id", "line_name", "commercial_mode_c"}; }
+    const std::vector<std::string> required_headers() const { return {"line_id", "line_name", "commercial_mode_id"}; }
 };
 
 struct CompanyFusioHandler : public GenericHandler {

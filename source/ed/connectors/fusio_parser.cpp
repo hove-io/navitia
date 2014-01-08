@@ -2,21 +2,29 @@
 
 namespace ed { namespace connectors {
 
-void AgencyFusioHandler::init(Data& data) {
-    AgencyGtfsHandler::init(data); //don't forget to call the parent init
+void AgencyFusioHandler::init(Data& ) {
+    id_c = csv.get_pos_col("agency_id");
+    name_c = csv.get_pos_col("agency_name");
     ext_code_c = csv.get_pos_col("external_code");
 }
 
-ed::types::Network* AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    auto network = AgencyGtfsHandler::handle_line(data, row, is_first_line);
+void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
 
-    if (! network)
-        return nullptr;
+    if(! is_valide(id_c, row)){
+        LOG4CPLUS_WARN(logger, "AgencyFusioHandler : Invalide agency id " << row[id_c]);
+        return;
+    }
+
+    ed::types::Network * network = new ed::types::Network();
+    network->uri = row[id_c];
 
     if (is_valide(ext_code_c, row)) {
         network->external_code = row[ext_code_c];
     }
-    return network;
+
+    network->name = row[name_c];
+    data.networks.push_back(network);
+    gtfs_data.agency_map[network->uri] = network;
 }
 
 void StopsFusioHandler::init(Data& data) {
@@ -272,19 +280,25 @@ ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_
     if (! vj)
         return nullptr;
 
-    if (has_col(ext_code_c, row))
+    if (is_valide(ext_code_c, row))
         vj->external_code = row[ext_code_c];
 
     //if a physical_mode is given we override the value
-    auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
-    if (itm == gtfs_data.physical_mode_map.end()) {
-        LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
-                       << " referenced by trip " << row[trip_c]);
-        ignored++;
-        clean_and_delete(data, vj);
-        return nullptr;
+    vj->physical_mode = nullptr;
+    if (is_valide(physical_mode_c, row)){
+        auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
+        if (itm == gtfs_data.physical_mode_map.end()) {
+            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
+                           << " referenced by trip " << row[trip_c]);
+        }else{
+            vj->physical_mode = itm->second;
+        }
     }
-    vj->physical_mode = itm->second;
+
+    if(vj->physical_mode == nullptr){
+        auto itm = gtfs_data.physical_mode_map.find("default_physical_mode");
+        vj->physical_mode = itm->second;
+    }
 
     if (is_valide(odt_condition_id_c, row)){
         auto it_odt_condition = gtfs_data.odt_conditions_map.find(row[odt_condition_id_c]);
@@ -311,16 +325,20 @@ ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
     }
 
+    vj->company = nullptr;
     if(is_valide(company_id_c, row)){
         auto it_company = gtfs_data.company_map.find(row[company_id_c]);
-        if(it_company != gtfs_data.company_map.end()){
+        if(it_company == gtfs_data.company_map.end()){
+            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the company " << row[company_id_c]
+                           << " referenced by trip " << row[trip_c]);
+        }else{
             vj->company = it_company->second;
         }
-    }else{
+    }
+
+    if(vj->company == nullptr){
         auto it_company = gtfs_data.company_map.find("default_company");
-        if(it_company != gtfs_data.company_map.end()){
-            vj->company = it_company->second;
-        }
+        vj->company = it_company->second;
     }
     return vj;
 }
@@ -385,16 +403,24 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if (is_valide(color_c, row)) {
         line->color = row[color_c];
     }
-    if (has_col(network_c, row)) {
+
+    line->network = nullptr;
+    if (is_valide(network_c, row)) {
         auto itm = gtfs_data.agency_map.find(row[network_c]);
-        if(itm != gtfs_data.agency_map.end()){
-            line->network = itm->second;
-        }else{
+        if(itm == gtfs_data.agency_map.end()){
             line->network = nullptr;
             LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the network " << row[network_c]
                            << " referenced by line " << row[id_c]);
+        }else{
+            line->network = itm->second;
         }
     }
+
+    if(line->network == nullptr){
+        auto itm = gtfs_data.agency_map.find("default_network");
+        line->network = itm->second;
+    }
+
     if (is_valide(comment_c, row)) {
         auto itm = gtfs_data.comment_map.find(row[commercial_mode_c]);
         if(itm != gtfs_data.comment_map.end()){
@@ -405,14 +431,17 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     line->commercial_mode = nullptr;
     if (is_valide(comment_c, row)) {
         auto itm = gtfs_data.commercial_mode_map.find(row[commercial_mode_c]);
-        if(itm != gtfs_data.commercial_mode_map.end()){
+        if(itm == gtfs_data.commercial_mode_map.end()){
+            LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the commercial_mode " << row[commercial_mode_c]
+                           << " referenced by line " << row[id_c]);
+        }else{
             line->commercial_mode = itm->second;
         }
     }
 
     if(line->commercial_mode == nullptr){
-        LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the commercial_mode " << row[commercial_mode_c]
-                       << " referenced by line " << row[id_c]);
+        auto itm = gtfs_data.commercial_mode_map.find("default_commercial_mode");
+        line->commercial_mode = itm->second;
     }
 
     data.lines.push_back(line);
@@ -437,11 +466,11 @@ void CompanyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
         throw InvalidHeaders(csv.filename);
     }
     ed::types::Company * company = new ed::types::Company();
-    if(is_valide(id_c, row)){
-        company->uri = row[id_c];
-    }else{
-        company->uri = "default_company";
+    if(! is_valide(id_c, row)){
+        LOG4CPLUS_WARN(logger, "CompanyFusioHandler : Invalide company id " << row[id_c]);
+        return;
     }
+    company->uri = row[id_c];
     company->name = row[name_c];
     if (is_valide(company_address_name_c, row))
         company->address_name = row[company_address_name_c];
@@ -618,6 +647,9 @@ void TripPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
 void FusioParser::parse_files(Data& data) {
 
     fill_default_company(data);
+    fill_default_agency(data);
+    fill_default_commercial_mode(data);
+    fill_default_physical_mode(data);
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<ContributorFusioHandler>(data, "contributors.txt");
     parse<CompanyFusioHandler>(data, "company.txt");
