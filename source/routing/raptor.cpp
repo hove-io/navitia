@@ -126,7 +126,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
     }
 }
 
-void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne, int walking_duration) {
+void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
     if(clockwise) {
         //Q.assign(data.pt_data.journey_patterns.size(), std::numeric_limits<int>::max());
         memset32<int>(&Q[0], data.pt_data.journey_patterns.size(), std::numeric_limits<int>::max());
@@ -139,7 +139,7 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne, int 
         labels[0] = data.dataRaptor.labels_const_reverse;
     }
 
-    b_dest.reinit(data.pt_data.journey_pattern_points.size(), borne, walking_duration);
+    b_dest.reinit(data.pt_data.journey_pattern_points.size(), borne);
     this->make_queue();
     if(clockwise)
         best_labels.assign(data.pt_data.journey_pattern_points.size(), DateTimeUtils::inf);
@@ -150,7 +150,6 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne, int 
 void RAPTOR::clear_and_init(std::vector<Departure_Type> departs,
                   std::vector<std::pair<type::idx_t, bt::time_duration> > destinations,
                   DateTime bound,  const bool clockwise,
-                  const float walking_speed, const int walking_distance,
                   const type::Properties &required_properties) {
 
     this->clear(data, clockwise, bound);
