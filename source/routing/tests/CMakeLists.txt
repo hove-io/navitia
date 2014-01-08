@@ -10,10 +10,12 @@ target_link_libraries(reverse_raptor_test ed data routing georef autocomplete
     utils ${BOOST_LIBS} log4cplus)
 ADD_TEST(reverse_raptor ${EXECUTABLE_OUTPUT_PATH}/reverse_raptor_test --report_level=no)
 
+set(CTEST_OUTPUT_ON_FAILURE ON)
+
 add_executable(routing_api_test routing_api_test.cpp)
 target_link_libraries(routing_api_test ed data types routing pb_lib georef
     autocomplete utils  ${BOOST_LIBS} log4cplus)
-ADD_TEST(routing_api_test ${EXECUTABLE_OUTPUT_PATH}/routing_api_test --report_level=no)
+ADD_TEST(routing_api_test ${EXECUTABLE_OUTPUT_PATH}/routing_api_test  --log_format=XML --log_sink=results.xml --log_level=all --report_level=no)
 
 add_executable(best_stoptime_test best_stoptime.cpp)
 target_link_libraries(best_stoptime_test ed connectors data types routing

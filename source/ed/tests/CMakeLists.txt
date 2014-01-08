@@ -7,7 +7,7 @@ SET(SOURCE
 
 add_executable(gtfs_parser_test gtfsparser_test.cpp)
 target_link_libraries(gtfs_parser_test ed connectors types utils ${BOOST_LIBS} log4cplus)
-ADD_TEST(gtfs_parser_test ${EXECUTABLE_OUTPUT_PATH}/gtfs_parser_test --report_level=no)
+ADD_TEST(gtfs_parser_test ${EXECUTABLE_OUTPUT_PATH}/gtfs_parser_test --log_format=XML --log_sink=results.xml --log_level=all --report_level=no)
 
 add_executable(adapted_test adapted_test.cpp)
 target_link_libraries(adapted_test ed types connectors pq pqxx data georef
