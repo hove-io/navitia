@@ -1,3 +1,9 @@
+navitia2 (0.78.6) unstable; urgency=low
+
+  * Ed fixes
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 09 Jan 2014 14:41:28 +0100
+
 navitia2 (0.78.5) unstable; urgency=low
 
   * Improve of auth caching
