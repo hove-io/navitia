@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     type::EntryPoint origin(origin_type, "stop_area:stop1");
     type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    streetnetwork::StreetNetwork sn_worker(data.geo_ref);
+    georef::StreetNetwork sn_worker(data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     type::EntryPoint origin(origin_type, "stop_area:stop1");
     type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    streetnetwork::StreetNetwork sn_worker(data.geo_ref);
+    georef::StreetNetwork sn_worker(data.geo_ref);
 
     // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
     std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
@@ -140,11 +140,11 @@ BOOST_AUTO_TEST_CASE(journey_array){
 void add_edges(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to, double dist, type::Mode_e mode) {
     boost::add_edge(idx_from + geo_ref.offsets[mode],
                     idx_to + geo_ref.offsets[mode],
-                    ng::Edge(edge_idx, seconds(std::round(dist / test_default_speed[mode]))),
+                    georef::Edge(edge_idx, seconds(std::round(dist / test_default_speed[mode]))),
                     geo_ref.graph);
     boost::add_edge(idx_to + geo_ref.offsets[mode],
                     idx_from + geo_ref.offsets[mode],
-                    ng::Edge(edge_idx, seconds(std::round(dist / test_default_speed[mode]))),
+                    georef::Edge(edge_idx, seconds(std::round(dist / test_default_speed[mode]))),
                     geo_ref.graph);
 }
 void add_edges(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to, const type::GeographicalCoord& a, const type::GeographicalCoord& b, type::Mode_e mode) {
@@ -157,11 +157,11 @@ const bt::time_duration bike_sharing_return = seconds(45);
 void add_bike_sharing_edge(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to) {
     boost::add_edge(idx_from + geo_ref.offsets[type::Mode_e::Walking],
                     idx_to + geo_ref.offsets[type::Mode_e::Bike],
-                    ng::Edge(edge_idx, bike_sharing_pickup),
+                    georef::Edge(edge_idx, bike_sharing_pickup),
                     geo_ref.graph);
     boost::add_edge(idx_to + geo_ref.offsets[type::Mode_e::Bike],
                     idx_from + geo_ref.offsets[type::Mode_e::Walking],
-                    ng::Edge(edge_idx, bike_sharing_return),
+                    georef::Edge(edge_idx, bike_sharing_return),
                     geo_ref.graph);
 }
 
@@ -234,95 +234,95 @@ struct streetnetworkmode_fixture {
 
         */
 
-        boost::add_vertex(ng::Vertex(A),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(G),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(H),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(I),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(J),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(K),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(B),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(C),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(F),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(E),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(R),b.data.geo_ref.graph);
-        boost::add_vertex(ng::Vertex(S),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(A),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(G),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(H),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(I),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(J),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(K),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(B),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(C),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(F),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(E),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(R),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(S),b.data.geo_ref.graph);
 
         b.data.geo_ref.init();
 
-        ng::Way* way;
-        way = new ng::Way();
+        georef::Way* way;
+        way = new georef::Way();
         way->name = "rue ab"; // A->B
         way->idx = 0;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue ae"; // A->E
         way->idx = 1;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue ef"; // E->F
         way->idx = 2;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue fc"; // F->C
         way->idx = 3;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue cb"; // C->B
         way->idx = 4;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue ag"; // A->G
         way->idx = 5;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue gh"; // G->H
         way->idx = 6;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue hi"; // H->I
         way->idx = 7;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue ij"; // I->J
         way->idx = 8;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue jk"; // J->K
         way->idx = 9;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue kb"; // K->B
         way->idx = 10;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue ar"; // A->R
         way->idx = 11;
         way->way_type = "rue";
         b.data.geo_ref.ways.push_back(way);
 
-        way = new ng::Way();
+        way = new georef::Way();
         way->name = "rue bs"; // B->S
         way->idx = 12;
         way->way_type = "rue";
@@ -437,7 +437,7 @@ struct streetnetworkmode_fixture {
     }
 
     pbnavitia::Response make_response() {
-        streetnetwork::StreetNetwork sn_worker(b.data.geo_ref);
+        georef::StreetNetwork sn_worker(b.data.geo_ref);
         RAPTOR raptor(b.data);
         return ::make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams(), forbidden, sn_worker);
     }
@@ -767,28 +767,28 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture) {
     type::GeographicalCoord SP4(0, 0.025, false);
 
     b.data.geo_ref.init_offset(0);
-    ng::Way* way;
+    georef::Way* way;
 
-    way = new ng::Way();
+    way = new georef::Way();
     way->name = "rue ab"; // A->B
     way->idx = 0;
     way->way_type = "rue";
     b.data.geo_ref.ways.push_back(way);
 
-    way = new ng::Way();
+    way = new georef::Way();
     way->name = "rue cd"; // C->D
     way->idx = 1;
     way->way_type = "rue";
     b.data.geo_ref.ways.push_back(way);
 
 
-    boost::add_edge(AA, BB, ng::Edge(0,10), b.data.geo_ref.graph);
-    boost::add_edge(BB, AA, ng::Edge(0,10), b.data.geo_ref.graph);
+    boost::add_edge(AA, BB, georef::Edge(0,10), b.data.geo_ref.graph);
+    boost::add_edge(BB, AA, georef::Edge(0,10), b.data.geo_ref.graph);
     b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
     b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
 
-    boost::add_edge(CC, DD, ng::Edge(0,50), b.data.geo_ref.graph);
-    boost::add_edge(DD, CC, ng::Edge(0,50), b.data.geo_ref.graph);
+    boost::add_edge(CC, DD, georef::Edge(0,50), b.data.geo_ref.graph);
+    boost::add_edge(DD, CC, georef::Edge(0,50), b.data.geo_ref.graph);
     b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
     b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
 
@@ -809,7 +809,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture) {
     b.data.build_uri();
     b.data.build_proximity_list();
     b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
-    streetnetwork::StreetNetwork sn_worker(b.data.geo_ref);
+    georef::StreetNetwork sn_worker(b.data.geo_ref);
 
     RAPTOR raptor(b.data);
 

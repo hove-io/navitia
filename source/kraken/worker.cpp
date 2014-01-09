@@ -96,7 +96,7 @@ pbnavitia::Response Worker::metadatas() {
 void Worker::init_worker_data(){
     if((*this->data)->last_load_at != this->last_load_at || !planner){
         planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*(*this->data)));
-        street_network_worker = std::unique_ptr<streetnetwork::StreetNetwork>(new streetnetwork::StreetNetwork((*this->data)->geo_ref));
+        street_network_worker = std::unique_ptr<georef::StreetNetwork>(new georef::StreetNetwork((*this->data)->geo_ref));
         this->last_load_at = (*this->data)->last_load_at;
 
         LOG4CPLUS_INFO(logger, "instanciation du planner");

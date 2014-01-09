@@ -11,7 +11,6 @@
 #undef private
 
 using namespace navitia::georef;
-using namespace navitia::streetnetwork;
 
 using namespace navitia;
 namespace bt = boost::posix_time;
@@ -21,7 +20,7 @@ struct computation_results {
     std::vector<bt::time_duration> durations_matrix; //duration matrix
     std::vector<vertex_t> predecessor;
 
-    computation_results(bt::time_duration d, const GeoRefPathFinder& worker) : duration(d), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
+    computation_results(bt::time_duration d, const PathFinder& worker) : duration(d), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
 
     bool operator ==(const computation_results& other) {
 
@@ -73,7 +72,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         }
     }
 
-    GeoRefPathFinder worker(geo_ref);
+    PathFinder worker(geo_ref);
 
     //we project 2 stations
     type::GeographicalCoord start;
@@ -95,7 +94,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     type::idx_t target_idx(sp->idx);
 
-    worker.init(start, type::Mode_e::Walking, ng::default_speed[type::Mode_e::Walking]);
+    worker.init(start, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking]);
 
     auto distance = worker.get_distance(target_idx);
 
@@ -116,7 +115,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     //we ask again with the init again
     {
-        worker.init(start, type::Mode_e::Walking, ng::default_speed[type::Mode_e::Walking]);
+        worker.init(start, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking]);
         auto other_distance = worker.get_distance(target_idx);
 
         computation_results other_res {other_distance, worker};
