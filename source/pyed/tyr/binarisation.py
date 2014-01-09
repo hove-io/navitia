@@ -49,7 +49,6 @@ def fusio2ed(instance, filename):
         bnanme = os.path.basename(filename)
         working_directory = os.path.dirname(filename)
 
-        os.rename(filename, filename)
         zip_file = zipfile.ZipFile(filename);
         zip_file.extractall(path=working_directory)
 
@@ -86,7 +85,6 @@ def gtfs2ed(instance, gtfs_filename):
         gtfs_logger = logging.getLogger('gtfs2ed')
         working_directory = os.path.dirname(gtfs_filename)
 
-        os.rename(gtfs_filename, gtfs_filename)
         zip_file = zipfile.ZipFile(gtfs_filename)
         zip_file.extractall(path=working_directory)
 

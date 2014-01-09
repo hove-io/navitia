@@ -1,41 +1,62 @@
 from celery import chain
 from celery.signals import task_postrun
-from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt
+from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from flask import current_app
 import glob
 from tyr.app import celery, db
 from tyr import models
 import os
+import zipfile
+
+def type_of_data(filename):
+    """
+    return the type of data contains in a file
+    this type can be one  in:
+     - 'gtfs'
+     - 'fusio'
+     - 'osm'
+    """
+    if filename.endswith('.pbf'):
+        return 'osm'
+    if filename.endswith('.zip'):
+        zipf = zipfile.ZipFile(filename)
+        if "contributors.txt" in zipf.namelist():
+            return 'fusio'
+        else:
+            return 'gtfs'
+    raise ValueError('Type Unknown')
 
 
 @celery.task()
 def update_data():
     for instance in models.Instance.query.all():
         instance.load_technical_config()
-        osm_files = glob.glob(instance.source_directory + "/*.pbf")
-        gtfs_files = glob.glob(instance.source_directory + "/*.zip")
+        files = glob.glob(instance.source_directory + "/*")
         actions = []
         job = models.Job()
-        job.instance = instance
         #we only handle one datatype in a task
         #so if we depose two files at the same time, two task would be created
-        if gtfs_files:
-            filename = move_to_backupdirectory(gtfs_files[0], instance)
-            actions.append(gtfs2ed.si(instance, filename))
-            job.type = 'gtfs'
-            job.filename = filename
-        elif osm_files:
-            filename = move_to_backupdirectory(osm_files[0], instance)
-            actions.append(osm2ed.si(instance, filename))
-            job.type = 'osm'
-            job.filename = filename
+        for _file in files:
+            #TODO: job must be split in two, first the job/task for monitoring
+            # its progress and a second entities with the datas processed by
+            # this task
+            filename = move_to_backupdirectory(_file, instance)
+            job.instance = instance
+            job.type = type_of_data(job.filename)
+            if job.type == 'gtfs':
+                actions.append(gtfs2ed.si(instance, filename))
+            elif job.type == 'fusio':
+                actions.append(fusio2ed.si(instance, filename))
+            elif job.type == 'osm':
+                actions.append(osm2ed.si(instance, filename))
 
         if actions:
             actions.append(ed2nav.si(instance))
             actions.append(nav2rt.si(instance))
             actions.append(reload_data.si(instance))
             #We start the task in one seconds so we can save the job in db
+            # it will be better to pass the job to the task
             task = chain(*actions).delay(countdown=1)
             job.task_uuid = task.id
             db.session.add(job)
