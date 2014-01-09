@@ -639,25 +639,15 @@ void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
 
     normalize_extcodes(data);
 }
+
 void GenericGtfsParser::fill_default_company(Data & data){
     // création d'une compagnie par defaut
-    nm::Company * company = new nm::Company();
+    ed::types::Company * company = new ed::types::Company();
     company->uri = "default_company";
-    company->name = "Default company";
+    company->name = "compagnie par défaut";
     data.companies.push_back(company);
     gtfs_data.company_map[company->uri] = company;
 }
-
-void GenericGtfsParser::fill_default_network(Data & data){
-    // création d'une compagnie par defaut
-    nm::Network * network = new nm::Network();
-    network->uri = "default_agency";
-    network->name = "Default network";
-    data.networks.push_back(network);
-    gtfs_data.agency_map[network->uri] = network;
-}
-
-
 
 void GenericGtfsParser::fill_default_modes(Data& data){
 
