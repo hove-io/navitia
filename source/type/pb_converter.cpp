@@ -620,7 +620,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     }
 }
 
-pbnavitia::Section* create_session(pbnavitia::Journey* pb_journey, const navitia::georef::PathItem& first_item,
+pbnavitia::Section* create_section(pbnavitia::Journey* pb_journey, const navitia::georef::PathItem& first_item,
                                            const navitia::type::Data& data,
                                            int depth, const pt::ptime& now, const pt::time_period& action_period) {
 
@@ -647,21 +647,21 @@ void fill_street_sections(const type::EntryPoint& ori_dest,
 
     auto session_departure = departure;
 
-    boost::optional<georef::PathItem::TransportCaracteristic> last_transportation_carac;
-    auto section = create_session(pb_journey, path.path_items.front(), data, depth, now, action_period);
+    boost::optional<georef::PathItem::TransportCaracteristic> last_transportation_carac = {};
+    auto section = create_section(pb_journey, path.path_items.front(), data, depth, now, action_period);
     georef::PathItem last_item;
 
     //we create 1 section by mean of transport
     for (auto item : path.path_items) {
         auto transport_carac = item.transportation;
 
-        if (last_transportation_carac && transport_carac != last_transportation_carac) {
+        if (last_transportation_carac && transport_carac != *last_transportation_carac) {
             //we end the last section
             finalize_section(section, last_item, data, session_departure, depth, now, action_period);
             session_departure += bt::seconds(section->duration());
 
             //and be create a new one
-            section = create_session(pb_journey, item, data, depth, now, action_period);
+            section = create_section(pb_journey, item, data, depth, now, action_period);
         }
 
         add_path_item(section->mutable_street_network(), item, ori_dest, data);

@@ -14,7 +14,7 @@ namespace navitia {
 class Worker {
     private:
         std::unique_ptr<navitia::routing::RAPTOR> planner;
-        std::unique_ptr<navitia::streetnetwork::StreetNetwork> street_network_worker;
+        std::unique_ptr<navitia::georef::StreetNetwork> street_network_worker;
         navitia::type::Data** data;
 
         log4cplus::Logger logger;

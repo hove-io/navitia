@@ -38,7 +38,6 @@ inline constexpr custom_seconds operator"" _s(unsigned long long v) {
 }
 
 using namespace navitia::georef;
-using namespace navitia::streetnetwork;
 using namespace boost;
 
 std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& path) {
@@ -250,7 +249,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 
     sn.init();
 
-    GeoRefPathFinder path_finder(sn);
+    PathFinder path_finder(sn);
     path_finder.init({0, 0, true}, Mode_e::Walking, 1); //starting from a
     Path p = path_finder.compute_path({4, 4, true}); //going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
@@ -273,7 +272,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     //StreetNetwork sn;
     GeoRef sn;
     GraphBuilder b(sn);
-    GeoRefPathFinder path_finder(sn);
+    PathFinder path_finder(sn);
 
     /*           a+------+b
      *            |      |
