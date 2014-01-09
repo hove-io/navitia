@@ -20,7 +20,7 @@ GraphBuilder & GraphBuilder::add_vertex(std::string node_name, float x, float y)
     return *this;
 }
 
-GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string target_name, float length, bool bidirectionnal){
+GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string target_name, boost::posix_time::time_duration dur, bool bidirectionnal){
     vertex_t source, target;
     auto it = this->vertex_map.find(source_name);
     if(it == this->vertex_map.end())
@@ -33,7 +33,7 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     target= this->vertex_map[target_name];
 
     Edge edge;
-    edge.length = length >= 0? length : 0;
+    edge.duration = dur.is_negative() ? boost::posix_time::seconds(0) : dur;
 
     boost::add_edge(source, target, edge, this->geo_ref.graph);
     if(bidirectionnal)

@@ -49,7 +49,8 @@ void fill_pb_placemark(navitia::georef::POI* poi, const type::Data &data, pbnavi
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path & path, const type::Data &data, pbnavitia::Section* section, int max_depth = 0,
+void fill_street_sections(const type::EntryPoint &ori_dest, const georef::Path & path, const type::Data &data, pbnavitia::Journey* pb_journey,
+        const boost::posix_time::ptime departure, int max_depth = 1,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
@@ -57,9 +58,8 @@ void fill_message(const boost::shared_ptr<type::Message> message, const type::Da
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork* sn,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
+void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item, const type::EntryPoint &ori_dest,
+                   const navitia::type::Data& data);
 
 void fill_pb_object(const georef::POI*, const type::Data &data, pbnavitia::Poi* poi, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,

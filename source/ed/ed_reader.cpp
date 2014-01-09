@@ -759,7 +759,9 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work){
     result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
             navitia::georef::Edge e;
-            const_it["leng"].to(e.length);
+            float len;
+            const_it["leng"].to(len);
+            e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
             e.way_idx = const_it["way_id"].as<idx_t>();
             uint64_t source = node_map_temp[const_it["source_node_id"].as<uint64_t>()];
             uint64_t target = node_map_temp[const_it["target_node_id"].as<uint64_t>()];
@@ -846,8 +848,7 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
             idx++;
         }
     }
-    navitia::georef::vertex_t Conunt_v = boost::num_vertices(data.geo_ref.graph);
-    data.geo_ref.init_offset(Conunt_v);
+    data.geo_ref.init();
 }
 
 void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
@@ -861,22 +862,57 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
         const_it["target_node_id"].to(target);
         if ((way != NULL) && (! binary_search(this->edge_to_ignore.begin(), this->edge_to_ignore.end(), source+target))){
             navitia::georef::Edge e;
-            const_it["leng"].to(e.length);
+            float len;
+            const_it["leng"].to(len);
             e.way_idx = way->idx;
             uint64_t source = this->node_map[const_it["source_node_id"].as<uint64_t>()];
             uint64_t target = this->node_map[const_it["target_node_id"].as<uint64_t>()];
             if ((source != std::numeric_limits<uint64_t>::max()) && (target != std::numeric_limits<uint64_t>::max())){
                 data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
+                e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
                 boost::add_edge(source, target, e, data.geo_ref.graph);
                 if (const_it["bike"].as<bool>()){
+                    e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Bike]);
                     boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Bike] + source, data.geo_ref.offsets[navitia::type::Mode_e::Bike] + target, e, data.geo_ref.graph);
                 }
                 if (const_it["car"].as<bool>()){
+                    e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Car]);
                     boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Car] + source, data.geo_ref.offsets[navitia::type::Mode_e::Car] + target, e, data.geo_ref.graph);
                 }
             }
         }
     }
+}
+
+//get the minimum distance and the vertex to start from between 2 edges
+std::tuple<float, navitia::georef::vertex_t, navitia::georef::vertex_t>
+get_min_distance(navitia::type::Data& data, navitia::georef::edge_t walking_e, navitia::georef::edge_t biking_e) {
+    navitia::georef::vertex_t source_a_idx = boost::source(walking_e, data.geo_ref.graph);
+    navitia::georef::Vertex source_a = data.geo_ref.graph[source_a_idx];
+
+    navitia::georef::vertex_t target_a_idx = boost::target(walking_e, data.geo_ref.graph);
+    navitia::georef::Vertex target_a = data.geo_ref.graph[target_a_idx];
+
+    navitia::georef::vertex_t source_b_idx = boost::source(biking_e, data.geo_ref.graph);
+    navitia::georef::Vertex source_b = data.geo_ref.graph[source_b_idx];
+
+    navitia::georef::vertex_t target_b_idx = boost::target(biking_e, data.geo_ref.graph);
+    navitia::georef::Vertex target_b = data.geo_ref.graph[target_b_idx];
+
+    auto res = std::make_tuple(source_a.coord.distance_to(source_b.coord), source_a_idx, source_b_idx);
+    auto tmp = std::make_tuple(target_a.coord.distance_to(target_b.coord), target_a_idx, target_b_idx);
+    if (std::get<0>(tmp) < std::get<0>(res))
+        res = tmp;
+
+    tmp = std::make_tuple(target_a.coord.distance_to(source_b.coord), target_a_idx, source_b_idx);
+    if (std::get<0>(tmp) < std::get<0>(res))
+        res = tmp;
+
+    tmp = std::make_tuple(source_a.coord.distance_to(target_b.coord), source_a_idx, target_b_idx);
+    if (std::get<0>(tmp) < std::get<0>(res))
+        res = tmp;
+
+    return res;
 }
 
 void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
@@ -888,22 +924,40 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
                 request += " and poi_type.uri = 'bicycle_rental'";
 
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+    size_t cpt_bike_sharing(0);
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::type::GeographicalCoord coord;
         coord.set_lon(const_it["lon"].as<double>());
         coord.set_lat(const_it["lat"].as<double>());
-        try{
-            navitia::georef::vertex_t v = data.geo_ref.nearest_vertex(coord, data.geo_ref.pl);
-            navitia::georef::edge_t e = data.geo_ref.nearest_edge(coord, v);
-            navitia::georef::Edge edge;
-            edge.length = 0;
-            edge.way_idx = data.geo_ref.graph[e].way_idx;
-            boost::add_edge(v + data.geo_ref.offsets[navitia::type::Mode_e::Vls], v + data.geo_ref.offsets[navitia::type::Mode_e::Bike], edge, data.geo_ref.graph);
-            boost::add_edge(v + data.geo_ref.offsets[navitia::type::Mode_e::Bike], v + data.geo_ref.offsets[navitia::type::Mode_e::Vls], edge, data.geo_ref.graph);
-        }catch(...){
-            std::cout<<"Impossible de trouver le noued le plus proche à la station vls poi_id = "<<const_it["id"].as<std::string>()<<std::endl;
+        navitia::georef::edge_t nearest_biking_edge, nearest_walking_edge;
+        try {
+            //we need to find the nearest edge in the walking graph and the nearest edge in the biking graph
+            nearest_biking_edge = data.geo_ref.nearest_edge(coord, navitia::type::Mode_e::Bike, data.geo_ref.pl);
+            nearest_walking_edge = data.geo_ref.nearest_edge(coord, navitia::type::Mode_e::Walking, data.geo_ref.pl);
+        } catch(navitia::proximitylist::NotFound) {
+             LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "Impossible to find the nearest edge for the bike sharing station poi_id = " << const_it["id"].as<std::string>());
+            continue;
         }
+
+        //we add a new edge linking those 2 edges, with the walking distance between the 2 edges + the time to take of hang the bike back
+        auto min_dist = get_min_distance(data, nearest_walking_edge, nearest_biking_edge);
+        navitia::georef::vertex_t walking_v = std::get<1>(min_dist);
+        navitia::georef::vertex_t biking_v = std::get<2>(min_dist);
+        boost::posix_time::time_duration dur_between_edges = boost::posix_time::seconds(std::get<0>(min_dist) / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
+
+        navitia::georef::Edge edge;
+        edge.way_idx = data.geo_ref.graph[nearest_walking_edge].way_idx; //arbitrarily we assume the way is the walking way
+
+        // time needed to take the bike + time to walk between the edges
+        edge.duration = dur_between_edges + boost::posix_time::seconds(120);
+        boost::add_edge(walking_v, biking_v, edge, data.geo_ref.graph);
+
+        // time needed to hang the bike back + time to walk between the edges
+        edge.duration = dur_between_edges + boost::posix_time::seconds(180);
+        boost::add_edge(biking_v, walking_v, edge, data.geo_ref.graph);
+        cpt_bike_sharing++;
     }
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_bike_sharing << " bike sharing stations added");
 }
 
 void EdReader::fill_alias(navitia::type::Data& data, pqxx::work& work){

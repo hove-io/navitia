@@ -7,12 +7,35 @@
 #include "georef/georef.h"
 #include "type/data.h"
 #include "builder.h"
-#include"georef/street_network.h"
+#include "georef/street_network.h"
+#include <boost/graph/detail/adjacency_list.hpp>
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
+
+/**
+ * just to ease the test writing
+ * enable the creation of duration just by writing 123_s => creates a boost::time_duration of 123 seconds
+ * Note: I had to create a new class since boost does not define the constructors constexpr
+ */
+struct custom_seconds
+{
+    int dur;
+    constexpr custom_seconds(int s) : dur(s) {}
+    custom_seconds(const custom_seconds&) = default;
+    custom_seconds& operator=(const custom_seconds&) = default;
+    operator bt::time_duration() const { return bt::seconds(dur); }
+};
+std::ostream & operator<<(std::ostream& os, custom_seconds s) {
+    os << s.dur << " seconds";
+    return os;
+}
+
+inline constexpr custom_seconds operator"" _s(unsigned long long v) {
+    return custom_seconds(v);
+}
 
 using namespace navitia::georef;
 using namespace navitia::streetnetwork;
@@ -28,6 +51,45 @@ std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& p
     return res;
 }
 
+void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
+    std::cout << " coord : " << std::endl;
+    for (auto c : coord) {
+        std::cout << " -- " << c.lon() / navitia::type::GeographicalCoord::M_TO_DEG
+                  << ", " << c.lat() / navitia::type::GeographicalCoord::M_TO_DEG
+                     << std::endl;
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(init_test) {
+    using namespace navitia::type;
+    //StreetNetwork sn;
+    GeoRef sn;
+    GraphBuilder b(sn);
+    Way w;
+    w.name = "Jaures"; sn.add_way(w);
+    w.name = "Hugo"; sn.add_way(w);
+
+    b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
+    b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
+    sn.graph[b.get("a","b")].way_idx = 0;
+    sn.graph[b.get("b","c")].way_idx = 0;
+    sn.graph[b.get("c","d")].way_idx = 1;
+    sn.graph[b.get("d","e")].way_idx = 1;
+    sn.graph[b.get("e","d")].way_idx = 1;
+
+    BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 5);
+
+    sn.init();
+
+    BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 15); //one graph for each transportation mode save VLS
+
+    BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Walking], 0);
+    BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Bike], 5);
+    BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Car], 10);
+    BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Bss], 0);
+}
+
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
     //StreetNetwork sn;
     GeoRef sn;
@@ -38,7 +100,7 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
     BOOST_CHECK_EQUAL(num_edges(g), 0);
 
     // Construction de deux nœuds et d'un arc
-    builder("a",0, 0)("b",1,2)("a", "b", 10);
+    builder("a",0, 0)("b",1,2)("a", "b", 10_s);
     BOOST_CHECK_EQUAL(num_vertices(g), 2);
     BOOST_CHECK_EQUAL(num_edges(g), 1);
 
@@ -53,10 +115,10 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
     BOOST_CHECK_EQUAL(g[b].coord, expected);
 
     edge_t e = edge(a, b, g).first;
-    BOOST_CHECK_EQUAL(g[e].length, 10);
+    BOOST_CHECK_EQUAL(g[e].duration, bt::seconds(10));
 
     // Construction implicite de nœuds
-    builder("c", "d", 42);
+    builder("c", "d", bt::seconds(42));
     BOOST_CHECK_EQUAL(num_vertices(g), 4);
     BOOST_CHECK_EQUAL(num_edges(g), 2);
 
@@ -93,76 +155,83 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
     BOOST_CHECK_THROW(sn.nearest_edge(c), navitia::proximitylist::NotFound);
 }
 
+//not used for the moment so it is not possible anymore (but it would not be difficult to do again)
 // Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
-BOOST_AUTO_TEST_CASE(compute_route_n_n){
-    using namespace navitia::type;
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder b(sn);
+//BOOST_AUTO_TEST_CASE(compute_route_n_n){
+//    using namespace navitia::type;
+//    //StreetNetwork sn;
+//    GeoRef sn;
+//    GraphBuilder b(sn);
 
-    /*               a           e
-                     |
-                  b—–o––c
-                     |
-                     d             */
-    b("e", 0,0)("a",0,1)("b",0,2)("c",0,3)("d",0,4)("o",0,5);
-    b("a", "o", 1)("b","o",2)("o","c", 3)("o","d", 4);
+//    /*               a           e
+//                     |
+//                  b—–o––c
+//                     |
+//                     d             */
+//    b("e", 0,0)("a",0,1)("b",0,2)("c",0,3)("d",0,4)("o",0,5);
+//    b("a", "o", 1)("b","o",2)("o","c", 3)("o","d", 4);
 
-    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
-    std::vector<vertex_t> dests = {b.get("c"), b.get("d")};
-    Path p = sn.compute(starts, dests);
+//    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
+//    std::vector<vertex_t> dests = {b.get("c"), b.get("d")};
 
-    auto coords = get_coords_from_path(p);
-    BOOST_CHECK_EQUAL(coords.size(), 3);
-    GeographicalCoord expected;
-    expected.set_xy(0,1);
-    BOOST_CHECK_EQUAL(coords[0], expected); // a
-    expected.set_xy(0,5);
-    BOOST_CHECK_EQUAL(coords[1], expected); // o
-    expected.set_xy(0,3);
-    BOOST_CHECK_EQUAL(coords[2], expected); // c
+//    GeoRefPathFinder path_finder(sn);
+//    path_finder.init(starts, Mode_e::Walking);
+//    Path p = path_finder.compute_path(dests);
 
-    // On lève une exception s'il n'y a pas d'itinéraire
-    starts = {b.get("e")};
-    dests = {b.get("a")};
-    BOOST_CHECK_THROW(sn.compute(starts, dests), navitia::proximitylist::NotFound);
+//    auto coords = get_coords_from_path(p);
+//    BOOST_CHECK_EQUAL(coords.size(), 3);
+//    GeographicalCoord expected;
+//    expected.set_xy(0,1);
+//    BOOST_CHECK_EQUAL(coords[0], expected); // a
+//    expected.set_xy(0,5);
+//    BOOST_CHECK_EQUAL(coords[1], expected); // o
+//    expected.set_xy(0,3);
+//    BOOST_CHECK_EQUAL(coords[2], expected); // c
 
-    //we add a way to a, otherwise 2 path item will be created
-    Way w;
-    w.name = "Bob"; sn.add_way(w);
-    sn.graph[b.get("a","o")].way_idx = 0;
+//    starts = {b.get("e")};
+//    dests = {b.get("a")};
+//    path_finder.init(starts, Mode_e::Walking);
+//    p = path_finder.compute_path(dests);
+//    // no throw in no itineraryn but the path should be empty
+//    BOOST_CHECK(p.path_items.empty());
 
-    // If the departure and arrival nodes are the same one
-    GeographicalCoord projected_start(0,1,true);
-    p = sn.compute(projected_start, projected_start);
-    coords = get_coords_from_path(p);
-    BOOST_REQUIRE_EQUAL(coords.size(), 1); //only one coord
-    BOOST_CHECK_EQUAL(p.path_items.size(), 1); //there is 2 default item
-    BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(0,1, true)); // a
-}
+
+//    //we add a way to a, otherwise 2 path item will be created
+//    Way w;
+//    w.name = "Bob"; sn.add_way(w);
+//    sn.graph[b.get("a","o")].way_idx = 0;
+
+//    // If the departure and arrival nodes are the same one
+//    GeographicalCoord projected_start(0,1,true);
+//    p = sn.compute(projected_start, projected_start);
+//    coords = get_coords_from_path(p);
+//    BOOST_REQUIRE_EQUAL(coords.size(), 1); //only one coord
+//    BOOST_CHECK_EQUAL(p.path_items.size(), 1); //there is 2 default item
+//    BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(0,1, true)); // a
+//}
 
 // On teste la prise en compte de la distance initiale au nœud
-BOOST_AUTO_TEST_CASE(compute_zeros){
-    //StreetNetwork sn;
-    GeoRef sn;
-    GraphBuilder b(sn);
-    b("a", "o", 1)("b", "o",2);
-    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
-    std::vector<vertex_t> dests = {b.get("o")};
+//BOOST_AUTO_TEST_CASE(compute_zeros){
+//    //StreetNetwork sn;
+//    GeoRef sn;
+//    GraphBuilder b(sn);
+//    b("a", "o", 1)("b", "o",2);
+//    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
+//    std::vector<vertex_t> dests = {b.get("o")};
 
-    Path p = sn.compute(starts, dests);
-    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
-//    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
+//    Path p = sn.compute(starts, dests);
+//    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
+////    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
 
-    p = sn.compute(starts, dests, {3,1});
-//    BOOST_CHECK(p.path_items[0].segments[0] == b.get("b","o"));
+//    p = sn.compute(starts, dests, {3,1});
+////    BOOST_CHECK(p.path_items[0].segments[0] == b.get("b","o"));
 
-    p = sn.compute(starts, dests, {2,2});
-//    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
-}
+//    p = sn.compute(starts, dests, {2,2});
+////    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
+//}
 
 // Est-ce que les indications retournées sont bonnes
-BOOST_AUTO_TEST_CASE(compute_directions_test){
+BOOST_AUTO_TEST_CASE(compute_directions_test) {
     using namespace navitia::type;
     //StreetNetwork sn;
     GeoRef sn;
@@ -171,16 +240,20 @@ BOOST_AUTO_TEST_CASE(compute_directions_test){
     w.name = "Jaures"; sn.add_way(w);
     w.name = "Hugo"; sn.add_way(w);
 
-    b("a", "b")("b","c")("c","d")("d","e");
+    b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
+    b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
     sn.graph[b.get("a","b")].way_idx = 0;
     sn.graph[b.get("b","c")].way_idx = 0;
     sn.graph[b.get("c","d")].way_idx = 1;
     sn.graph[b.get("d","e")].way_idx = 1;
+    sn.graph[b.get("e","d")].way_idx = 1;
 
-    std::vector<vertex_t> starts = {b.get("a")};
-    std::vector<vertex_t> dests = {b.get("e")};
-    Path p = sn.compute(starts, dests);
-    BOOST_CHECK_EQUAL(p.path_items.size(), 2);
+    sn.init();
+
+    GeoRefPathFinder path_finder(sn);
+    path_finder.init({0, 0, true}, Mode_e::Walking, 1); //starting from a
+    Path p = path_finder.compute_path({4, 4, true}); //going to e
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
     BOOST_CHECK_EQUAL(p.path_items[1].way_idx, 1);
 //    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a", "b"));
@@ -188,9 +261,8 @@ BOOST_AUTO_TEST_CASE(compute_directions_test){
 //    BOOST_CHECK(p.path_items[1].segments[0] == b.get("c", "d"));
 //    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
 
-    starts = {b.get("d")};
-    dests = {b.get("e")};
-    p = sn.compute(starts, dests);
+    path_finder.init({3, 3, true}, Mode_e::Walking, 1); //starting from d
+    p = path_finder.compute_path({4, 4, true}); //going to e
     BOOST_CHECK_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
 }
@@ -201,6 +273,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     //StreetNetwork sn;
     GeoRef sn;
     GraphBuilder b(sn);
+    GeoRefPathFinder path_finder(sn);
 
     /*           a+------+b
      *            |      |
@@ -209,7 +282,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
      */
 
     b("a",0,0)("b",10,0)("c",0,10)("d",10,10);
-    b("a","b", 10)("b","a",10)("a","c",10)("c","a",10)("b","d",10)("d","b",10)("c","d",10)("d","c",10);
+    b("a","b", 10_s)("b","a",10_s)("a","c",10_s)("c","a",10_s)("b","d",10_s)("d","b",10_s)("c","d",10_s)("d","c",10_s);
 
     Way w;
     w.name = "BobAB"; sn.add_way(w);
@@ -229,8 +302,11 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     start.set_xy(3, -1);
     GeographicalCoord destination;
     destination.set_xy(4, 11);
-    Path p = sn.compute(start, destination);
+    sn.init();
+    path_finder.init(start, Mode_e::Walking, 1);
+    Path p = path_finder.compute_path(destination);
     auto coords = get_coords_from_path(p);
+    print_coord(coords);
     BOOST_REQUIRE_EQUAL(coords.size(), 4);
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
     GeographicalCoord expected;
@@ -245,14 +321,17 @@ BOOST_AUTO_TEST_CASE(compute_coord){
 
     // Trajet partiel : on ne parcourt pas un arc en entier, mais on passe par un nœud
     start.set_xy(7,6);
-    p = sn.compute(start, destination);
+    path_finder.init(start, Mode_e::Walking, 1);
+    p = path_finder.compute_path(destination);
     coords = get_coords_from_path(p);
+    print_coord(coords);
     BOOST_CHECK_EQUAL(p.path_items.size(), 2);
     BOOST_REQUIRE_EQUAL(coords.size(), 3);
     BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(10,6, false) );
     BOOST_CHECK_EQUAL(coords[1], GeographicalCoord(10,10, false) );
     BOOST_CHECK_EQUAL(coords[2], GeographicalCoord(4,10, false) );
 }
+
 
 BOOST_AUTO_TEST_CASE(compute_nearest){
     using namespace navitia::type;
@@ -267,7 +346,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
      */
 
     b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
-    b("a","b",100)("b","a",100)("b","c",100)("c","b",100)("c","d",100)("d","c",100)("d","e",100)("e","d",100);
+    b("a","b",100_s)("b","a",100_s)("b","c",100_s)("c","b",100_s)("c","d",100_s)("d","c",100_s)("d","e",100_s)("e","d",100_s);
 
     GeographicalCoord c1(50,10, false);
     GeographicalCoord c2(350,20, false);
@@ -275,6 +354,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     pl.add(c1, 0);
     pl.add(c2, 1);
     pl.build();
+    sn.init();
 
     StopPoint* sp1 = new StopPoint();
     sp1->coord = c1;
@@ -288,21 +368,28 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     GeographicalCoord o(0,0);
 
     StreetNetwork w(sn);
-    auto res = w.find_nearest_stop_points(o, pl, 10, false, Mode_e::Walking);
+    EntryPoint starting_point;
+    starting_point.coordinates = o;
+    starting_point.streetnetwork_params.mode = Mode_e::Walking;
+    starting_point.streetnetwork_params.speed_factor = 2; //to have a speed different from the default one (and greater not to have projection problems)
+    w.init(starting_point);
+    auto res = w.find_nearest_stop_points(10_s, pl, false);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    res = w.find_nearest_stop_points(o, pl, 100, false, Mode_e::Walking);
+    w.init(starting_point);//not mandatory, but reinit to clean the distance table to get fresh dijsktra
+    res = w.find_nearest_stop_points(100_s, pl, false);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_CLOSE(res[0].second, 50, 1);
+    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / default_speed[Mode_e::Walking])); //the projection is always done with the walking default speed regardless of the mean of transport
 
-    res = w.find_nearest_stop_points(o, pl, 1000, false, Mode_e::Walking);
+    w.init(starting_point);
+    res = w.find_nearest_stop_points(1000_s, pl, false);
     std::sort(res.begin(), res.end());
-    BOOST_CHECK_EQUAL(res.size(), 2);
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_CLOSE(res[0].second, 50, 1);
+    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / default_speed[Mode_e::Walking]));
     BOOST_CHECK_EQUAL(res[1].first , 1);
-    BOOST_CHECK_CLOSE(res[1].second, 350, 1);
+    BOOST_CHECK_EQUAL(res[1].second, bt::seconds(50 / default_speed[Mode_e::Walking]) + 150_s); //travel (300 at 2m/s) + projection
 }
 
 // Récupérer les cordonnées d'un numéro impair :
@@ -665,7 +752,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
      */
 
     b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
-    b("a","b",100)("b","a",100)("c","d",100)("d","c",100)("d","e",100)("e","d",100);
+    b("a","b",bt::seconds(100))("b","a",bt::seconds(100))("c","d",bt::seconds(100))("d","c",bt::seconds(100))("d","e",bt::seconds(100))("e","d",bt::seconds(100));
 
     GeographicalCoord c1(50,10, false);
     GeographicalCoord c2(350,20, false);
@@ -673,6 +760,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     pl.add(c1, 0);
     pl.add(c2, 1);
     pl.build();
+    sn.init();
 
     StopPoint* sp1 = new StopPoint();
     sp1->coord = c1;
@@ -683,12 +771,15 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     stop_points.push_back(sp2);
     sn.project_stop_points(stop_points);
 
-    GeographicalCoord o(0,0);
-
     StreetNetwork w(sn);
 
-    auto max = w.get_distance(c1, 1, false, Mode_e::Walking, false);
-    BOOST_CHECK_EQUAL(max, std::numeric_limits<float>::max());
+    EntryPoint starting_point;
+    starting_point.coordinates = c1;
+    starting_point.streetnetwork_params.mode = Mode_e::Walking;
+    w.init(starting_point);
+
+    auto max = w.get_distance(1, false);
+    BOOST_CHECK_EQUAL(max, bt::pos_infin);
 }
 
 BOOST_AUTO_TEST_CASE(angle_computation) {
@@ -749,3 +840,49 @@ BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
 
     BOOST_CHECK_CLOSE(1.0 * angle, -1 * val, 1.0);
 }
+
+//small test to make sure the time manipulation works in the SpeedDistanceCombiner
+BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
+    bt::time_duration dur = 10_s;
+
+    SpeedDistanceCombiner comb(2);
+
+    BOOST_CHECK_EQUAL(comb.divide_by_speed(dur), 5_s);
+
+    bt::time_duration dur2 = 60_s;
+    BOOST_CHECK_EQUAL(comb(dur, dur2), bt::seconds(10+60/2));
+}
+
+BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
+    bt::time_duration dur = 10_s;
+
+    SpeedDistanceCombiner comb(0.5);
+
+    BOOST_CHECK_EQUAL(comb.divide_by_speed(dur), 20_s);
+
+    bt::time_duration dur2 = 60_s;
+    BOOST_CHECK_EQUAL(comb(dur, dur2), 130_s);
+}
+
+//test allowed mode creation
+BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
+
+    const auto allowed_transportation_mode = create_from_allowedlist({{{
+                                                                    {nt::Mode_e::Walking},
+                                                                    {},
+                                                                    {nt::Mode_e::Walking, nt::Mode_e::Car},
+                                                                    {nt::Mode_e::Walking, nt::Mode_e::Bss}
+                                                              }}});
+
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Walking], true);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Car], false);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Bss], false);
+
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Walking], true);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bss], true);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Car], false);
+    BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bike], false);
+}
+
+
+

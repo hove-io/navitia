@@ -9,8 +9,7 @@ import itertools
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
-    'stop_point': type_pb2.STOP_POINT,
-    'city': type_pb2.CITY,
+    'stop_point':  type_pb2.STOP_POINT,
     'address': type_pb2.ADDRESS,
     'poi': type_pb2.POI,
     'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
@@ -100,7 +99,7 @@ class Script(object):
         resp = instance.send_and_receive(req)
         if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
-            return self.places(request, instance)
+            return self.places(request, region)
         self.__pagination(request, "places", resp)
 
         return resp
@@ -306,14 +305,17 @@ class Script(object):
         req.journeys.datetimes.append(request["datetime"])
         req.journeys.clockwise = request["clockwise"]
         sn_params = req.journeys.streetnetwork_params
+        if "max_duration_to_pt" in request:
+            sn_params.max_duration_to_pt = request["max_duration_to_pt"]
+        else:
+            # for the moment we compute the non_TC duration
+            # with the walking_distance
+            max_duration = request["walking_distance"] / request["walking_speed"]
+            sn_params.max_duration_to_pt = max_duration
         sn_params.walking_speed = request["walking_speed"]
-        sn_params.walking_distance = request["walking_distance"]
         sn_params.bike_speed = request["bike_speed"]
-        sn_params.bike_distance = request["bike_distance"]
         sn_params.car_speed = request["car_speed"]
-        sn_params.car_distance = request["car_distance"]
-        sn_params.vls_speed = request["br_speed"]
-        sn_params.vls_distance = request["br_distance"]
+        sn_params.bss_speed = request["bss_speed"]
         if "origin_filter" in request:
             sn_params.origin_filter = request["origin_filter"]
         else:
@@ -329,9 +331,9 @@ class Script(object):
         self.origin_modes = request["origin_mode"]
 
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
-            req.journeys.streetnetwork_params.origin_mode = "vls"
+            req.journeys.streetnetwork_params.origin_mode = "bss"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
-            req.journeys.streetnetwork_params.destination_mode = "vls"
+            req.journeys.streetnetwork_params.destination_mode = "bss"
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
@@ -383,7 +385,7 @@ class Script(object):
         return self.__on_ptref("lines", type_pb2.LINE, request, instance)
 
     def routes(self, request, instance):
-        return self.__on_ptref("routes", type_pb2.ROUTE, request, instance)
+        return self.__on_ptref("routes", type_pb2.ROUTE, request,  instance)
 
     def networks(self, request, instance):
         return self.__on_ptref("networks", type_pb2.NETWORK, request, instance)

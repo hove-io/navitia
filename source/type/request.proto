@@ -35,14 +35,11 @@ message NextStopTimeRequest {
 message StreetNetworkParams{
     optional string origin_mode         = 1;
     optional string destination_mode    = 2;
+    optional int32 max_duration_to_pt   = 4;
     optional double walking_speed       = 3;
-    optional int32 walking_distance     = 4;
     optional double bike_speed          = 5;
-    optional int32 bike_distance        = 6;
     optional double car_speed           = 7;
-    optional int32 car_distance         = 8;
-    optional double vls_speed           = 9;
-    optional int32 vls_distance         = 10;
+    optional double bss_speed           = 9;
     optional string origin_filter       = 11;
     optional string destination_filter  = 12;
 }
