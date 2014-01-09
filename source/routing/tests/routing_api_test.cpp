@@ -50,6 +50,11 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
 
     BOOST_CHECK_EQUAL(true, false); //teamcity test
+
+    //test pour feinter teamcityls
+    std::ifstream  src("/home/antoine/tmp/toto.xml", std::ios::binary);
+    std::ofstream  dst("/home/antoine/dev/kraken/release/toto.xml",   std::ios::binary);
+    dst << src.rdbuf();
 }
 
 BOOST_AUTO_TEST_CASE(journey_array){
