@@ -49,13 +49,6 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
-
-    BOOST_CHECK_EQUAL(true, false); //teamcity test
-
-    //test pour feinter teamcityls
-    std::ifstream  src("/home/antoine/tmp/toto.xml", std::ios::binary);
-    std::ofstream  dst("toto.xml",   std::ios::binary);
-    dst << src.rdbuf();
 }
 
 BOOST_AUTO_TEST_CASE(journey_array){
