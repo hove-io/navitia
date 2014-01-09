@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include "routing/raptor_api.h"
 #include "ed/build_helper.h"
+#include "teamcity_messages.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }

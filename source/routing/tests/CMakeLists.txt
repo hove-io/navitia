@@ -12,7 +12,7 @@ ADD_TEST(reverse_raptor ${EXECUTABLE_OUTPUT_PATH}/reverse_raptor_test --report_l
 
 set(CTEST_OUTPUT_ON_FAILURE ON)
 
-add_executable(routing_api_test routing_api_test.cpp)
+add_executable(routing_api_test routing_api_test.cpp teamcity_boost.cpp teamcity_messages.cpp)
 target_link_libraries(routing_api_test ed data types routing pb_lib georef
     autocomplete utils  ${BOOST_LIBS} log4cplus)
 ADD_TEST(routing_api_test ${EXECUTABLE_OUTPUT_PATH}/routing_api_test  --log_format=XML --log_sink=results.xml --log_level=all --report_level=no)
