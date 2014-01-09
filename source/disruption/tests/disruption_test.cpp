@@ -5,7 +5,28 @@
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
 #include <boost/make_shared.hpp>
+/*
 
+publicationDate    |------------------------------------------------------------------------------------------------|
+ApplicationDate                            |--------------------------------------------|
+
+Test1       * 20140101T0900
+Test2                   * 20140103T0900
+Test3                                           *20140113T0900
+Test4                                                                                               *20140203T0900
+Test5                                                                                                                   *20140212T0900
+
+
+start_publication_date  = 2014-01-02 08:32:00
+end_publication_date    = 2014-02-10 12:32:00
+
+start_application_date  = 2014-01-12 08:32:00
+end_application_date    = 2014-02-02 18:32:00
+
+start_application_daily_hour = 08h40
+end_application_daily_hour = 18h00
+active_days = 11111111
+*/
 namespace pt = boost::posix_time;
 class Params{
 public:
@@ -18,6 +39,7 @@ public:
         b.vj("network:R","line:S","11111111","",true, "")("stop_area:stop5", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop6", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.vj("network:K","line:B","11111111","",true, "")("stop_area:stop3", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop4", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.vj("network:M","line:M","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+        b.vj("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.generate_dummy_basis();
         b.data.pt_data.index();
         for(navitia::type::Line *line : b.data.pt_data.lines){
@@ -78,6 +100,22 @@ public:
         message->active_days = std::bitset<8>("11111111");;
         message->application_daily_start_hour = pt::duration_from_string("00:00");
         message->application_daily_end_hour = pt::duration_from_string("23:59");
+        line->network->messages.push_back(message);
+
+        /// Cette ligne est pour effectuer les tests : Test1, ..., test5
+
+        line =  b.data.pt_data.lines[4];
+        message = boost::make_shared<navitia::type::Message>();
+        message->uri = "mess4";
+        message->object_uri="network:Test";
+        message->object_type = navitia::type::Type_e::Network;
+        message->application_period = pt::time_period(pt::time_from_string("2014-01-12 08:32:00"),
+                                                      pt::time_from_string("2014-02-02 18:32:00"));
+        message->publication_period = pt::time_period(pt::time_from_string("2014-01-02 08:32:00"),
+                                                     pt::time_from_string("2014-02-10 12:32:00"));
+        message->active_days = std::bitset<8>("11111111");;
+        message->application_daily_start_hour = pt::duration_from_string("08:40");
+        message->application_daily_end_hour = pt::duration_from_string("18:00");
         line->network->messages.push_back(message);
     }
 };
@@ -158,3 +196,60 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
     BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235900");
 }
+
+BOOST_FIXTURE_TEST_CASE(Test1, Params) {
+    pbnavitia::Response resp = navitia::disruption_api::disruptions(b.data,"20140101T0900",1,10,0,"");
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
+}
+
+BOOST_FIXTURE_TEST_CASE(Test2, Params) {
+    pbnavitia::Response resp = navitia::disruption_api::disruptions(b.data,"20140103T0900",1,10,0,"");
+    BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
+
+    pbnavitia::Disruption disruption = resp.disruptions(0);
+    BOOST_REQUIRE_EQUAL(disruption.lines_size(), 0);
+    BOOST_REQUIRE_EQUAL(disruption.network().uri(), "network:Test");
+
+    BOOST_REQUIRE_EQUAL(disruption.network().messages_size(), 1);
+
+    pbnavitia::Message message = disruption.network().messages(0);
+    BOOST_REQUIRE_EQUAL(message.uri(), "mess4");
+    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20140112T083200");
+    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20140202T183200");
+    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "084000");
+    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "180000");
+}
+
+BOOST_FIXTURE_TEST_CASE(Test3, Params) {
+    pbnavitia::Response resp = navitia::disruption_api::disruptions(b.data,"20140113T0900",1,10,0,"");
+    BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
+
+    pbnavitia::Disruption disruption = resp.disruptions(0);
+    BOOST_REQUIRE_EQUAL(disruption.lines_size(), 0);
+    BOOST_REQUIRE_EQUAL(disruption.network().uri(), "network:Test");
+
+    BOOST_REQUIRE_EQUAL(disruption.network().messages_size(), 1);
+
+    pbnavitia::Message message = disruption.network().messages(0);
+    BOOST_REQUIRE_EQUAL(message.uri(), "mess4");
+    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20140112T083200");
+    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20140202T183200");
+    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "084000");
+    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "180000");
+}
+
+BOOST_FIXTURE_TEST_CASE(Test4, Params) {
+    pbnavitia::Response resp = navitia::disruption_api::disruptions(b.data,"20140203T0900",1,10,0,"");
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
+}
+
+BOOST_FIXTURE_TEST_CASE(Test5, Params) {
+    pbnavitia::Response resp = navitia::disruption_api::disruptions(b.data,"20140212T0900",1,10,0,"");
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
+}
+
+BOOST_FIXTURE_TEST_CASE(Test7, Params) {
+    pbnavitia::Response resp = navitia::disruption_api::disruptions(b.data,"20140113T1801",1,10,0,"");
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
+}
+
