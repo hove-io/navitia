@@ -29,7 +29,7 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
 
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths,
-        const nt::Data& d, streetnetwork::StreetNetwork& worker,
+        const nt::Data& d, georef::StreetNetwork& worker,
         const type::EntryPoint& origin, const type::EntryPoint& destination,
         const std::vector<boost::posix_time::ptime>& datetimes,
                                 bool clockwise) {
@@ -192,7 +192,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
 std::vector<std::pair<type::idx_t, bt::time_duration> >
 get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
-        streetnetwork::StreetNetwork & worker, bool use_second = false){
+        georef::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, bt::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
@@ -291,7 +291,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const type::AccessibiliteParams & accessibilite_params,
               std::vector<std::string> forbidden,
-              streetnetwork::StreetNetwork & worker, uint32_t max_duration, uint32_t max_transfers) {
+              georef::StreetNetwork & worker, uint32_t max_duration, uint32_t max_transfers) {
 
     pbnavitia::Response response;
 
@@ -362,7 +362,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const std::string &datetime_str,bool clockwise,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
-                                   streetnetwork::StreetNetwork & worker, int max_duration, uint32_t max_transfers) {
+                                   georef::StreetNetwork & worker, int max_duration, uint32_t max_transfers) {
     pbnavitia::Response response;
 
     boost::posix_time::ptime datetime;

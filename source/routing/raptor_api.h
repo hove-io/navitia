@@ -15,7 +15,7 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   bool clockwise,
                                   const type::AccessibiliteParams & accessibilite_params,
                                   std::vector<std::string> forbidden,
-                                  streetnetwork::StreetNetwork & worker,
+                                  georef::StreetNetwork & worker,
                                   uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
@@ -24,7 +24,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const std::string &datetime, bool clockwise,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
-                                   streetnetwork::StreetNetwork & worker, int max_duration = 3600,
+                                   georef::StreetNetwork & worker, int max_duration = 3600,
                                    uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
 

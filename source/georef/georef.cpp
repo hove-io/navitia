@@ -277,7 +277,7 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
         nt::GeographicalCoord coord = graph[v].coord;
         path_item.coordinates.push_back(coord);
         last_way = edge.way_idx;
-        last_transport_carac = {transport_carac};
+        last_transport_carac = transport_carac;
         path_item.way_idx = edge.way_idx;
         path_item.transportation = transport_carac;
         path_item.duration += edge.duration;
@@ -314,16 +314,18 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     auto source_mode = get_mode(boost::source(edge, graph));
     auto target_mode = get_mode(boost::target(edge, graph));
 
-    if (source_mode == target_mode && source_mode == type::Mode_e::Walking) {
-        return PathItem::TransportCaracteristic::Walk;
+    if (source_mode == target_mode) {
+        switch (source_mode) {
+        case type::Mode_e::Walking:
+            return PathItem::TransportCaracteristic::Walk;
+        case type::Mode_e::Bike:
+            return PathItem::TransportCaracteristic::Bike;
+        case type::Mode_e::Car:
+            return PathItem::TransportCaracteristic::Car;
+        default:
+            throw navitia::exception("unhandled path item caracteristic");
+        }
     }
-    if (source_mode == target_mode && source_mode == type::Mode_e::Bike) {
-        return PathItem::TransportCaracteristic::Bike;
-    }
-    if (source_mode == target_mode && source_mode == type::Mode_e::Car) {
-        return PathItem::TransportCaracteristic::Car;
-    }
-
     if (source_mode == type::Mode_e::Walking && target_mode == type::Mode_e::Bike) {
         return PathItem::TransportCaracteristic::BssTake;
     }
@@ -354,18 +356,13 @@ Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds
     }
     reverse_path.push_back(current);
 
-//    std::cout << "to go to " << best_destination << "[" << (int)(get_mode(best_destination)) << "] we pass through :" << std::endl;
-//    for (auto v : reverse_path) {
-//        std::cout << v << "[" << (int)(get_mode(v)) << "] " << std::endl;
-//    }
-
     return build_path(reverse_path, false);
 }
 
 
 void GeoRef::add_way(const Way& w){
     Way* to_add = new Way;
-    to_add->name =w.name;
+    to_add->name = w.name;
     to_add->idx = w.idx;
     to_add->id = w.id;
     to_add->uri = w.uri;

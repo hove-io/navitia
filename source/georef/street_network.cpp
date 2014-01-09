@@ -3,16 +3,13 @@
 #include "georef.h"
 #include <chrono>
 
-namespace ng = navitia::georef;
-namespace bp = boost::posix_time;
-
-namespace navitia { namespace streetnetwork {
+namespace navitia { namespace georef {
 
 bt::time_duration get_walking_duration(const double val) {
-    return bt::seconds(val / ng::default_speed[type::Mode_e::Walking]);
+    return bt::seconds(val / default_speed[type::Mode_e::Walking]);
 }
 
-StreetNetwork::StreetNetwork(const ng::GeoRef &geo_ref) :
+StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
     geo_ref(geo_ref),
     departure_path_finder(geo_ref),
     arrival_path_finder(geo_ref)
@@ -40,8 +37,8 @@ bt::time_duration StreetNetwork::get_distance(type::idx_t target_idx, bool use_s
     return (use_second ? arrival_path_finder : departure_path_finder).get_distance(target_idx);
 }
 
-ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
-    ng::Path result;
+Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
+    Path result;
     if (! use_second) {
         result = departure_path_finder.get_path(idx);
 
@@ -68,15 +65,15 @@ ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
     return result;
 }
 
-ng::Path StreetNetwork::get_direct_path() {
+Path StreetNetwork::get_direct_path() {
     if(!departure_launched() || !arrival_launched())
         return {};
     //Cherche s'il y a des nœuds en commun, et retient le chemin le plus court
     size_t num_vertices = boost::num_vertices(geo_ref.graph);
 
     bt::time_duration min_dist = bt::pos_infin;
-    ng::vertex_t target = std::numeric_limits<size_t>::max();
-    for(ng::vertex_t u = 0; u != num_vertices; ++u) {
+    vertex_t target = std::numeric_limits<size_t>::max();
+    for(vertex_t u = 0; u != num_vertices; ++u) {
         if((departure_path_finder.distances[u] != bt::pos_infin)
                 && (arrival_path_finder.distances[u] != bt::pos_infin)
                 && ((departure_path_finder.distances[u] + arrival_path_finder.distances[u]) < min_dist)) {
@@ -89,7 +86,7 @@ ng::Path StreetNetwork::get_direct_path() {
     if(min_dist == bt::pos_infin)
         return {};
 
-    ng::Path result = this->geo_ref.combine_path(target, departure_path_finder.predecessors, arrival_path_finder.predecessors);
+    Path result = this->geo_ref.combine_path(target, departure_path_finder.predecessors, arrival_path_finder.predecessors);
     departure_path_finder.add_projections_to_path(result, true);
     arrival_path_finder.add_projections_to_path(result, false);
 
@@ -98,16 +95,16 @@ ng::Path StreetNetwork::get_direct_path() {
     return result;
 }
 
-GeoRefPathFinder::GeoRefPathFinder(const ng::GeoRef& gref) : geo_ref(gref) {}
+PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref) {}
 
-void GeoRefPathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
+void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
     computation_launch = false;
     // we look for the nearest edge from the start coorinate in the right transport mode (walk, bike, car, ...) (ie offset)
     this->mode = mode;
     this->speed_factor = speed_factor; //the speed factor is the factor we have to multiply the edge cost with
     nt::idx_t offset = this->geo_ref.offsets[mode];
     this->start_coord = start_coord;
-    starting_edge = ng::ProjectionData(start_coord, this->geo_ref, offset, this->geo_ref.pl);
+    starting_edge = ProjectionData(start_coord, this->geo_ref, offset, this->geo_ref.pl);
 
     //we initialize the distances to the maximum value
     size_t n = boost::num_vertices(geo_ref.graph);
@@ -125,7 +122,7 @@ void GeoRefPathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode
 }
 
 std::vector<std::pair<type::idx_t, bt::time_duration>>
-GeoRefPathFinder::find_nearest_stop_points(bt::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl) {
+PathFinder::find_nearest_stop_points(bt::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl) {
     if (! starting_edge.found)
         return {};
 
@@ -150,7 +147,7 @@ GeoRefPathFinder::find_nearest_stop_points(bt::time_duration radius, const proxi
     const auto max = bt::pos_infin;
 
     for (auto element: elements) {
-        ng::ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
+        ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
         // Est-ce que le stop point a pu être raccroché au street network
         if(projection.found){
             bt::time_duration best_dist = max;
@@ -168,21 +165,21 @@ GeoRefPathFinder::find_nearest_stop_points(bt::time_duration radius, const proxi
     return result;
 }
 
-bt::time_duration GeoRefPathFinder::get_distance(type::idx_t target_idx) {
+bt::time_duration PathFinder::get_distance(type::idx_t target_idx) {
     constexpr auto max = bt::pos_infin;
 
     if (! starting_edge.found)
         return max;
     assert(boost::edge(starting_edge.source, starting_edge.target, geo_ref.graph).second);
 
-    ng::ProjectionData target = this->geo_ref.projected_stop_points[target_idx][mode];
+    ProjectionData target = this->geo_ref.projected_stop_points[target_idx][mode];
 
     auto nearest_edge = update_path(target);
 
     return nearest_edge.first;
 }
 
-std::pair<bt::time_duration, ng::vertex_t> GeoRefPathFinder::find_nearest_vertex(const ng::ProjectionData& target) const {
+std::pair<bt::time_duration, vertex_t> PathFinder::find_nearest_vertex(const ProjectionData& target) const {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
         return {max, {}};
@@ -199,17 +196,17 @@ std::pair<bt::time_duration, ng::vertex_t> GeoRefPathFinder::find_nearest_vertex
     return {source_dist, target.source};
 }
 
-ng::Path GeoRefPathFinder::get_path(type::idx_t idx) {
+Path PathFinder::get_path(type::idx_t idx) {
     if (! computation_launch)
         return {};
-    ng::ProjectionData projection = this->geo_ref.projected_stop_points[idx][mode];
+    ProjectionData projection = this->geo_ref.projected_stop_points[idx][mode];
 
     auto nearest_edge = find_nearest_vertex(projection);
 
     return get_path(projection, nearest_edge);
 }
 
-ng::Path GeoRefPathFinder::get_path(const ng::ProjectionData& target, std::pair<bt::time_duration, ng::vertex_t> nearest_edge) {
+Path PathFinder::get_path(const ProjectionData& target, std::pair<bt::time_duration, vertex_t> nearest_edge) {
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
         return {};
 
@@ -219,11 +216,11 @@ ng::Path GeoRefPathFinder::get_path(const ng::ProjectionData& target, std::pair<
     result.duration = nearest_edge.first;
 
     //we need to put the end projections too
-    ng::edge_t end_e = boost::edge(target.source, target.target, geo_ref.graph).first;
-    ng::Edge end_edge = geo_ref.graph[end_e];
+    edge_t end_e = boost::edge(target.source, target.target, geo_ref.graph).first;
+    Edge end_edge = geo_ref.graph[end_e];
     nt::idx_t last_way_idx = result.path_items.back().way_idx;
     if (end_edge.way_idx != last_way_idx) {
-        ng::PathItem item;
+        PathItem item;
         item.way_idx = end_edge.way_idx;
         result.path_items.push_back(item);
     }
@@ -234,22 +231,22 @@ ng::Path GeoRefPathFinder::get_path(const ng::ProjectionData& target, std::pair<
     return result;
 }
 
-ng::Path GeoRefPathFinder::compute_path(const type::GeographicalCoord& target_coord) {
-    ng::ProjectionData dest(target_coord, geo_ref, geo_ref.pl);
+Path PathFinder::compute_path(const type::GeographicalCoord& target_coord) {
+    ProjectionData dest(target_coord, geo_ref, geo_ref.pl);
 
     auto best_pair = update_path(dest);
 
     return get_path(dest, best_pair);
 }
 
-void GeoRefPathFinder::add_projections_to_path(ng::Path& p, bool append_to_begin) const {
-    auto item_to_update = [append_to_begin](ng::Path& p) -> ng::PathItem& { return (append_to_begin ? p.path_items.front() : p.path_items.back()); };
-    auto add_in_path = [append_to_begin](ng::Path& p, const ng::PathItem& item) {
+void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
+    auto item_to_update = [append_to_begin](Path& p) -> PathItem& { return (append_to_begin ? p.path_items.front() : p.path_items.back()); };
+    auto add_in_path = [append_to_begin](Path& p, const PathItem& item) {
         return (append_to_begin ? p.path_items.push_front(item) : p.path_items.push_back(item));
     };
 
-    ng::edge_t start_e = boost::edge(starting_edge.source, starting_edge.target, geo_ref.graph).first;
-    ng::Edge start_edge = geo_ref.graph[start_e];
+    edge_t start_e = boost::edge(starting_edge.source, starting_edge.target, geo_ref.graph).first;
+    Edge start_edge = geo_ref.graph[start_e];
 
     //we aither add the starting coordinate to the first path item or create a new path item if it was another way
     nt::idx_t first_way_idx = (p.path_items.empty() ? type::invalid_idx : item_to_update(p).way_idx);
@@ -258,7 +255,7 @@ void GeoRefPathFinder::add_projections_to_path(ng::Path& p, bool append_to_begin
             item_to_update(p).way_idx = start_edge.way_idx;
         }
         else {
-            ng::PathItem item;
+            PathItem item;
             item.way_idx = start_edge.way_idx;
             if (!p.path_items.empty()) {
                 //still complexifying stuff... TODO: simplify this
@@ -297,7 +294,7 @@ void GeoRefPathFinder::add_projections_to_path(ng::Path& p, bool append_to_begin
     }
 }
 
-std::pair<bt::time_duration, ng::vertex_t> GeoRefPathFinder::update_path(const ng::ProjectionData& target) {
+std::pair<bt::time_duration, vertex_t> PathFinder::update_path(const ProjectionData& target) {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
         return {max, {}};

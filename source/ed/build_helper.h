@@ -55,7 +55,6 @@ struct builder{
     boost::gregorian::date begin;
 
     navitia::type::Data data;
-    //navitia::streetnetwork::StreetNetwork street_network;
     navitia::georef::GeoRef street_network;
 
 
