@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(simple_journey){
 
     //test pour feinter teamcityls
     std::ifstream  src("/home/antoine/tmp/toto.xml", std::ios::binary);
-    std::ofstream  dst("/home/antoine/dev/kraken/release/toto.xml",   std::ios::binary);
+    std::ofstream  dst("toto.xml",   std::ios::binary);
     dst << src.rdbuf();
 }
 
