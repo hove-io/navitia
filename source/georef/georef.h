@@ -23,7 +23,7 @@ namespace nf = navitia::autocomplete;
 
 namespace navitia { namespace georef {
 
-/// default speed by transportation mode, defined at compile time
+/// default speed (in m/s) by transportation mode, defined at compile time
 const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     {{
                                                         1.38f, //nt::Mode_e::Walking
@@ -32,6 +32,9 @@ const flat_enum_map<nt::Mode_e, float> default_speed {
                                                         8.8f //nt::Mode_e::Vls
                                                     }}
                                                     };
+
+const boost::posix_time::seconds default_time_bss_pickup(120);
+const boost::posix_time::seconds default_time_bss_putback(180);
 
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
@@ -413,4 +416,4 @@ struct POI : public nt::Nameable, nt::Header{
 
 int compute_directions(const navitia::georef::Path& path, const nt::GeographicalCoord& c_coord);
 
-}} //namespace navitia::streetnetwork
+}} //namespace navitia::georef

@@ -123,6 +123,7 @@ section = {
     "geojson": GeoJson(),
     "path": NonNullList(NonNullNested({"length": fields.Integer(),
                                        "name": fields.String(),
+                                       "duration": fields.Integer(),
                                        "direction": fields.Integer()}),
                         attribute="street_network.path_items"),
     "transfer_type": enum_type(),

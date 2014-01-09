@@ -267,7 +267,7 @@ boost::posix_time::time_duration getWalkingTime(int count, type::idx_t jpp_idx, 
     bt::time_duration walking_time = {};
 
     //Marche à la fin
-    for(auto dest_dist : destinations) {//TODO remplacer par un find
+    for(auto dest_dist : destinations) {
         if(dest_dist.first == current_jpp->stop_point->idx) {
             walking_time = dest_dist.second;
             break;
@@ -296,7 +296,7 @@ boost::posix_time::time_duration getWalkingTime(int count, type::idx_t jpp_idx, 
     }
     //Marche au départ
     for(auto dep_dist : departs) {
-        if(dep_dist.first == current_jpp->stop_point->idx) {//TODO remplacer par un find
+        if(dep_dist.first == current_jpp->stop_point->idx) {
             walking_time += dep_dist.second;
             break;
         }

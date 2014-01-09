@@ -949,11 +949,11 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
         edge.way_idx = data.geo_ref.graph[nearest_walking_edge].way_idx; //arbitrarily we assume the way is the walking way
 
         // time needed to take the bike + time to walk between the edges
-        edge.duration = dur_between_edges + boost::posix_time::seconds(120);
+        edge.duration = dur_between_edges + navitia::georef::default_time_bss_pickup;
         boost::add_edge(walking_v, biking_v, edge, data.geo_ref.graph);
 
         // time needed to hang the bike back + time to walk between the edges
-        edge.duration = dur_between_edges + boost::posix_time::seconds(180);
+        edge.duration = dur_between_edges + navitia::georef::default_time_bss_putback;
         boost::add_edge(biking_v, walking_v, edge, data.geo_ref.graph);
         cpt_bike_sharing++;
     }
