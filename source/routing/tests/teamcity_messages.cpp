@@ -30,7 +30,8 @@ std::string getFlowIdFromEnvironment() {
 }
 
 bool underTeamcity() {
-    return getenv("TEAMCITY_PROJECT_NAME") != NULL;
+    return true;
+//    return getenv("TEAMCITY_PROJECT_NAME") != NULL;
 }
 
 TeamcityMessages::TeamcityMessages()
