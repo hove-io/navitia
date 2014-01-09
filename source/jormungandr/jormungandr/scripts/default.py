@@ -305,14 +305,17 @@ class Script(object):
         req.journeys.datetimes.append(request["datetime"])
         req.journeys.clockwise = request["clockwise"]
         sn_params = req.journeys.streetnetwork_params
+        if "max_duration_to_pt" in request:
+            sn_params.max_duration_to_pt = request["max_duration_to_pt"]
+        else:
+            # for the moment we compute the non_TC duration
+            # with the walking_distance
+            max_duration = request["walking_distance"] / request["walking_speed"]
+            sn_params.max_duration_to_pt = max_duration
         sn_params.walking_speed = request["walking_speed"]
-        sn_params.walking_distance = request["walking_distance"]
         sn_params.bike_speed = request["bike_speed"]
-        sn_params.bike_distance = request["bike_distance"]
         sn_params.car_speed = request["car_speed"]
-        sn_params.car_distance = request["car_distance"]
-        sn_params.vls_speed = request["br_speed"]
-        sn_params.vls_distance = request["br_distance"]
+        sn_params.bss_speed = request["bss_speed"]
         if "origin_filter" in request:
             sn_params.origin_filter = request["origin_filter"]
         else:
@@ -328,9 +331,9 @@ class Script(object):
         self.origin_modes = request["origin_mode"]
 
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
-            req.journeys.streetnetwork_params.origin_mode = "vls"
+            req.journeys.streetnetwork_params.origin_mode = "bss"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
-            req.journeys.streetnetwork_params.destination_mode = "vls"
+            req.journeys.streetnetwork_params.destination_mode = "bss"
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)

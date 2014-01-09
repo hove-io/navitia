@@ -32,7 +32,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         const nt::Data& d, streetnetwork::StreetNetwork& worker,
         const type::EntryPoint& origin, const type::EntryPoint& destination,
         const std::vector<boost::posix_time::ptime>& datetimes,
-                                bool clockwise, float walking_speed) {
+                                bool clockwise) {
     pbnavitia::Response pb_response;
     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
@@ -43,22 +43,15 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         //for each date time we add a direct street journey
         for(boost::posix_time::ptime datetime : datetimes) {
             pbnavitia::Journey* pb_journey = pb_response.add_journeys();
-            pb_journey->set_duration(temp.length);
+            pb_journey->set_duration(temp.duration.total_seconds());
 
-            boost::posix_time::ptime departure, arrival;
-            auto duration (boost::posix_time::seconds(temp.length / walking_speed));
+            boost::posix_time::ptime departure;
             if (clockwise) {
                 departure = datetime;
-                arrival = departure + duration;
             } else {
-                arrival = datetime;
-                departure = arrival - duration;
+                departure = datetime - temp.duration;
             }
-            const auto str_departure = boost::posix_time::to_iso_string(departure);
-            const auto str_arrival = boost::posix_time::to_iso_string(arrival);
-            pb_journey->set_departure_date_time(str_departure);
-            pb_journey->set_arrival_date_time(str_arrival);
-            fill_street_section(origin, temp, d, pb_journey->add_sections(), 1);
+            fill_street_sections(origin, temp, d, pb_journey, departure);
         }
     }
 
@@ -83,16 +76,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     temp.path_items.back().coordinates.push_back(routing_first_coord);
                 }
 
-                pbnavitia::Section* pb_section = pb_journey->add_sections();
-                fill_street_section(origin, temp, d, pb_section, 1);
-                const auto walking_time = temp.length / origin.streetnetwork_params.speed;
+                const auto walking_time = temp.duration;
                 departure_time = path.items.front().departure - walking_time;
-                auto arr_time = path.items.front().departure;
-                const auto end_date_time = iso_string(arr_time, d);
-                const auto begin_date_time = iso_string(departure_time, d);
-                pb_section->set_end_date_time(end_date_time);
-                pb_section->set_begin_date_time(begin_date_time);
-                pb_section->set_duration(arr_time - departure_time);
+                fill_street_sections(origin, temp, d, pb_journey, to_posix_time(departure_time, d));
             }
         }
 
@@ -183,16 +169,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     temp.path_items.front().coordinates.push_front(routing_last_coord);
                 }
 
-                pbnavitia::Section* pb_section = pb_journey->add_sections();
-                fill_street_section(destination, temp, d, pb_section, 1);
                 auto begin_section_time = arrival_time;
-                const auto str_begin = iso_string(begin_section_time, d);
-                pb_section->set_begin_date_time(str_begin);
-                const auto walking_time = temp.length / destination.streetnetwork_params.speed;
-                arrival_time = arrival_time + walking_time;
-                const auto str_end = iso_string(arrival_time, d);
-                pb_section->set_end_date_time(str_end);
-                pb_section->set_duration(arrival_time - begin_section_time);
+                fill_street_sections(destination, temp, d, pb_journey, to_posix_time(begin_section_time, d));
             }
         }
         const auto str_departure = iso_string(departure_time, d);
@@ -212,37 +190,35 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 }
 
 
-std::vector<std::pair<type::idx_t, double> >
+std::vector<std::pair<type::idx_t, bt::time_duration> >
 get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         streetnetwork::StreetNetwork & worker, bool use_second = false){
-    std::vector<std::pair<type::idx_t, double> > result;
+    std::vector<std::pair<type::idx_t, bt::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
-    bool init_done = false;
     if(ep.type == type::Type_e::StopArea){
         auto it = pt_data.stop_areas_map.find(ep.uri);
         if(it!= pt_data.stop_areas_map.end()) {
             for(auto stop_point : it->second->stop_point_list) {
-                result.push_back(std::make_pair(stop_point->idx, 0));
+                result.push_back({stop_point->idx, {}});
             }
         }
     }else if(ep.type == type::Type_e::StopPoint){
         auto it = pt_data.stop_points_map.find(ep.uri);
         if(it != pt_data.stop_points_map.end()){
-            result.push_back(std::make_pair(it->second->idx, 0));
+            result.push_back({it->second->idx, {}});
         }
     }else if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
-        init_done = true;
-        result = worker.find_nearest_stop_points(ep.coordinates,
-                pt_data.stop_point_proximity_list,
-                ep.streetnetwork_params.distance, use_second,
-                ep.streetnetwork_params.mode);
+        result = worker.find_nearest_stop_points(
+                    ep.streetnetwork_params.max_duration,
+                    pt_data.stop_point_proximity_list,
+                    use_second);
     }
     //On va chercher tous les stop_points en correspondance
     //avec ceux déjà trouvés.
-    std::vector<std::pair<type::idx_t, double> > tmp_result;
+    std::vector<std::pair<type::idx_t, bt::time_duration> > tmp_result;
     std::unordered_set<type::idx_t> visited_stop_points;
     for (const auto & sp_idx_distance : result) { visited_stop_points.insert(sp_idx_distance.first); }
 
@@ -259,9 +235,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             }
             visited_stop_points.insert(destination->idx);
 
-            auto distance = worker.get_distance(ep.coordinates, destination->idx,
-                                        use_second, ep.streetnetwork_params.mode,
-                                        init_done);
+            auto duration = worker.get_distance(destination->idx, use_second);
             /*
              * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
              * if(distance == std::numeric_limits<double>::max()) {
@@ -270,8 +244,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
                 distance = connection.duration * 1.68
             }*/
 
-            tmp_result.push_back({destination->idx, distance});
-            init_done = true;
+            tmp_result.push_back({destination->idx, duration});
         }
     }
 
@@ -316,7 +289,6 @@ pbnavitia::Response
 make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination,
               const std::vector<std::string> &datetimes_str, bool clockwise,
-              const float walking_speed, const int walking_distance, /*const bool wheelchair*/
               const type::AccessibiliteParams & accessibilite_params,
               std::vector<std::string> forbidden,
               streetnetwork::StreetNetwork & worker, uint32_t max_duration, uint32_t max_transfers) {
@@ -328,7 +300,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     if(response.has_error() || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
-    worker.init();
+    worker.init(origin, {destination});
     auto departures = get_stop_points(origin, raptor.data.pt_data, worker);
     auto destinations = get_stop_points(destination, raptor.data.pt_data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
@@ -362,7 +334,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, bound, max_transfers, walking_speed, walking_distance, accessibilite_params/*wheelchair*/, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, bound, max_transfers, accessibilite_params/*wheelchair*/, forbidden, clockwise);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1) {
@@ -381,14 +353,13 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     if(clockwise)
         std::reverse(result.begin(), result.end());
 
-    return make_pathes(result, raptor.data, worker, origin, destination, datetimes, clockwise, walking_speed);
+    return make_pathes(result, raptor.data, worker, origin, destination, datetimes, clockwise);
 }
 
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
                                    const std::string &datetime_str,bool clockwise,
-                                   float walking_speed, int walking_distance,  /*bool wheelchair*/
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    streetnetwork::StreetNetwork & worker, int max_duration, uint32_t max_transfers) {
@@ -401,7 +372,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         return response;
     }
     datetime = tmp_datetime.front();
-    worker.init();
+    worker.init(origin);
     auto departures = get_stop_points(origin, raptor.data.pt_data, worker);
 
     if(departures.size() == 0){
@@ -409,14 +380,13 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         return response;
     }
 
-    std::vector<idx_label> tmp;
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     DateTime init_dt = DateTimeUtils::set(day, time);
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                           walking_speed, walking_distance, accessibilite_params/*wheelchair*/, forbidden, clockwise);
+                           accessibilite_params/*wheelchair*/, forbidden, clockwise);
 
 
     for(const type::StopPoint* sp : raptor.data.pt_data.stop_points) {

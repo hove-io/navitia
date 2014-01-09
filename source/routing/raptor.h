@@ -50,13 +50,12 @@ struct RAPTOR
 
 
 
-    void clear(const type::Data & data, bool clockwise, DateTime borne, int walking_duration);
+    void clear(const type::Data & data, bool clockwise, DateTime borne);
 
     ///Initialise les structure retour et b_dest
     void clear_and_init(std::vector<Departure_Type> departures,
-              std::vector<std::pair<type::idx_t, double> > destinations,
+              std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > destinations,
               navitia::DateTime bound, const bool clockwise,
-              const float walking_speed, const int walking_distance,
               const type::Properties &properties = 0);
 
 
@@ -75,11 +74,10 @@ struct RAPTOR
      *  à une heure donnée.
      */
     std::vector<Path> 
-    compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                const std::vector<std::pair<type::idx_t, double> > &destinations,
+    compute_all(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration>> &departs,
+                const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration>> &destinations,
                 const DateTime &departure_datetime, const DateTime &bound=DateTimeUtils::inf,
                 const uint32_t max_transfers=std::numeric_limits<int>::max(),
-                const float walking_speed=1.38, const int walking_distance = 1000, /*const type::Properties &required_properties=0*/
                 const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
                 const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
 
@@ -90,9 +88,9 @@ struct RAPTOR
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
     void
-    isochrone(const std::vector<std::pair<type::idx_t, double> > &departures_,
-              const DateTime &departure_datetime, const DateTime &bound = DateTimeUtils::min, uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
-              float walking_speed=1.38, int walking_distance = 1000, /*const type::Properties &required_properties = 0*/
+    isochrone(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration>> &departures_,
+              const DateTime &departure_datetime, const DateTime &bound = DateTimeUtils::min,
+              uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
               bool clockwise = true);
