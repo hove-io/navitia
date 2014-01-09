@@ -250,6 +250,19 @@ BOOST_FIXTURE_TEST_CASE(Test5, Params) {
 
 BOOST_FIXTURE_TEST_CASE(Test7, Params) {
     pbnavitia::Response resp = navitia::disruption_api::disruptions(b.data,"20140113T1801",1,10,0,"");
-    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
+    BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
+
+    pbnavitia::Disruption disruption = resp.disruptions(0);
+    BOOST_REQUIRE_EQUAL(disruption.lines_size(), 0);
+    BOOST_REQUIRE_EQUAL(disruption.network().uri(), "network:Test");
+
+    BOOST_REQUIRE_EQUAL(disruption.network().messages_size(), 1);
+
+    pbnavitia::Message message = disruption.network().messages(0);
+    BOOST_REQUIRE_EQUAL(message.uri(), "mess4");
+    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20140112T083200");
+    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20140202T183200");
+    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "084000");
+    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "180000");
 }
 
