@@ -152,6 +152,7 @@ struct Line : public Header, Nameable {
 
 struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
+    std::string external_code;
     Line * line;
 
     navitia::type::Route* get_navitia_type() const;
@@ -180,6 +181,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     Company* company;
     PhysicalMode* physical_mode; // Normalement on va lire cette info dans JourneyPattern
     Line * tmp_line; // N'est pas à remplir obligatoirement
+    Route* tmp_route;
     //Vehicle* vehicle;
     bool wheelchair_boarding;
     navitia::type::VehicleJourneyType vehicle_journey_type;
@@ -194,7 +196,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey;
 
-    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL), wheelchair_boarding(false),
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL), tmp_route(NULL), wheelchair_boarding(false),
      vehicle_journey_type(navitia::type::VehicleJourneyType::regular), validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
 
     navitia::type::VehicleJourney* get_navitia_type() const;

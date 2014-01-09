@@ -9,7 +9,8 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
                                 uint32_t ,
                                 uint32_t , const std::string &filter){
     pbnavitia::Response pb_response;
-    boost::posix_time::ptime now ;
+    boost::posix_time::ptime now;
+    boost::posix_time::time_period action_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0));
     std::vector<navitia::type::idx_t> line_idx;
     try{
         now = boost::posix_time::from_iso_string(str_dt);
@@ -18,7 +19,8 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
            return pb_response;
        }
 
-    boost::posix_time::time_period action_period(now, now);
+    action_period = boost::posix_time::time_period(now,
+                        boost::posix_time::ptime(now.date() + boost::gregorian::years(1), boost::posix_time::time_duration(23,59,59)));
     const std::vector<std::string> forbidden_uris;
     try{
         line_idx = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);

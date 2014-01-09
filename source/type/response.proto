@@ -36,13 +36,14 @@ message PathItem {
     optional string name = 1;
     optional double length = 2;
     optional int32 direction = 3;
+    optional double duration = 4;
 }
 
 enum StreetNetworkMode {
     Walking = 0;
     Bike = 1;
     Car = 3;
-    Vls = 4;
+    Bss = 4;
 }
 
 message StreetNetwork {

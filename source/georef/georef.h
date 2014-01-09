@@ -15,13 +15,23 @@
 #include <map>
 #include "adminref.h"
 #include "utils/logger.h"
+#include "utils/exception.h"
 #include "utils/flat_enum_map.h"
-
 
 namespace nt = navitia::type;
 namespace nf = navitia::autocomplete;
 
 namespace navitia { namespace georef {
+
+/// default speed by transportation mode, defined at compile time
+const flat_enum_map<nt::Mode_e, float> default_speed {
+                                                    {{
+                                                        1.38f, //nt::Mode_e::Walking
+                                                        8.8f, //nt::Mode_e::Bike
+                                                        16.8, //nt::Mode_e::Car
+                                                        8.8f //nt::Mode_e::Vls
+                                                    }}
+                                                    };
 
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
@@ -44,15 +54,14 @@ struct Vertex {
 /** Propriétés des arcs : (anciennement "segment")*/
 
 struct Edge {
-    nt::idx_t way_idx; //< indexe vers le nom de rue
-    float length; //< longeur en mètres de l'arc
-    float time; /// temps en second utilisé pour le VLS
+    nt::idx_t way_idx = 0; //< indexe vers le nom de rue
+    boost::posix_time::time_duration duration = {}; // duration of the edge
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & way_idx & length & time;
+        ar & way_idx & duration;
     }
-    Edge(nt::idx_t wid, float len) : way_idx(wid), length(len), time(std::numeric_limits<int>::max()){}
-    Edge() : way_idx(0), length(0),time(std::numeric_limits<int>::max()){}
+    Edge(nt::idx_t wid, boost::posix_time::time_duration dur) : way_idx(wid), duration(dur) {}
+    Edge() {}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -123,17 +132,41 @@ private:
 
 /** Un bout d'itinéraire :
         un nom de voie et une liste de segments */
-struct PathItem{
+struct PathItem {
     nt::idx_t way_idx = nt::invalid_idx; //< Way of this path item
-    float length = 0.; //< Length of the journey on this item
+    boost::posix_time::time_duration duration = {}; //< Length of the journey on this item
     std::deque<nt::GeographicalCoord> coordinates;//< path item coordinates
     int angle = 0; //< Angle with the next PathItem (needed to give direction)
+
+    enum class TransportCaracteristic {
+        Walk,
+        Bike,
+        Car,
+        BssTake, //when a bike is taken
+        BssPutBack //we a bike is put back
+    };
+    TransportCaracteristic transportation = TransportCaracteristic::Walk;
+    double get_length(double speed_factor) const {
+        switch (transportation) {
+        case TransportCaracteristic::BssPutBack:
+        case TransportCaracteristic::BssTake:
+            return 0;
+        case TransportCaracteristic::Walk:
+            return duration.total_seconds() / (default_speed[type::Mode_e::Walking] * speed_factor);
+        case TransportCaracteristic::Bike:
+            return duration.total_seconds() / (default_speed[type::Mode_e::Bike] * speed_factor);
+        case TransportCaracteristic::Car:
+            return duration.total_seconds() / (default_speed[type::Mode_e::Car] * speed_factor);
+        default:
+            throw navitia::exception("unhandled transportation case");
+        }
+    }
 };
 
 /** Itinéraire complet */
 struct Path {
-    float length; //< Longueur totale du parcours
-    std::deque<PathItem> path_items; //< Liste des voies parcourues
+    boost::posix_time::time_duration duration = {}; //< Longueur totale du parcours
+    std::deque<PathItem> path_items = {}; //< Liste des voies parcourues
 };
 
 class ProjectionData;
@@ -196,38 +229,46 @@ struct GeoRef {
 
     /// for all stop_point, we store it's projection on each graph
     typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
-    std::vector<ProjectionByMode> projected_stop_points;
+    std::vector<ProjectionByMode> projected_stop_points = {};
 
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
     /*
-    Nous avons 4 graphes :
-        1) pour la gestion de la MAP
-        2) pour la gestion de VLS
-        3) pour la gestion du vélo
-        4) pour la gestion de la voiture
-    */
+     * We have 3 graphs :
+     *  1/ for walking
+     *  2/ for biking
+     *  3/ for driving
+     *
+     *  But 4 transportation mode cf explanation in init()
+     */
     flat_enum_map<nt::Mode_e, nt::idx_t> offsets;
+
+    /// number of vertex by transportation mode
+    nt::idx_t nb_vertex_by_mode;
 
     /// Liste des alias
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
     int word_weight; //Pas serialisé : lu dans le fichier ini
 
-    GeoRef(): word_weight(0){}
+    GeoRef();
 
-    void init_offset(nt::idx_t);
+    void init();
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
+                & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list
+                & nb_vertex_by_mode;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
+                & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list
+                & nb_vertex_by_mode;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -257,9 +298,8 @@ struct GeoRef {
 
 
     /** Projete chaque stop_point sur le filaire de voirie
-
-        Retourne le nombre de stop_points effectivement accrochés
-    */
+     *  Retourne le nombre de stop_points effectivement accrochés
+     */
     int project_stop_points(const std::vector<type::StopPoint*> & stop_points);
 
     /** project the stop point on all transportation mode
@@ -269,88 +309,40 @@ struct GeoRef {
     */
     std::pair<ProjectionByMode, bool> project_stop_point(const type::StopPoint* stop_point) const;
 
-    /** Calcule le meilleur itinéraire entre deux listes de nœuds
-     *
-     * Le paramètre zeros indique la distances (en mètres) de chaque nœud de départ. Il faut qu'il y ait autant d'éléments que dans starts
-     * Si la taille ne correspond pas, on considère une distance de 0
-     */
-    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros = std::vector<double>(), std::vector<double> dest_zeros = std::vector<double>()) const;
-
-    /// Calcule le meilleur itinéraire entre deux coordonnées
-    Path compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const;
-
     /** Retourne l'arc (segment) le plus proche
       *
       * Pour le trouver, on cherche le nœud le plus proche, puis pour chaque arc adjacent, on garde le plus proche
       * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
      */
 
+    vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates, type::idx_t offset, const proximitylist::ProximityList<vertex_t>& prox) const;
-    vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
-    /** Initialise les structures nécessaires à dijkstra
-     *
-     * Attention !!! Modifie distances et predecessors
-     **/
-    void init(std::vector<float> & distances, std::vector<vertex_t> & predecessors) const;
 
-    /** Lance un calcul de dijkstra sans initaliser de structure de données
-     *
-     * Attention !!! Modifie distances et predecessors
-     **/
-    template<class Visitor>
-    void dijkstra(vertex_t start, std::vector<float> & distances, std::vector<vertex_t> & predecessors, Visitor visitor) const{
-        predecessors[start] = start;
-        boost::two_bit_color_map<> color(boost::num_vertices(this->graph));
-        boost::dijkstra_shortest_paths_no_init(this->graph, start, &predecessors[0], &distances[0],
-
-                                               boost::get(&Edge::length, this->graph), // weigth map
-                                               boost::identity_property_map(),
-                                               std::less<float>(), boost::closed_plus<float>(),
-                                               0,
-                                               visitor,
-                                               color
-                                               );
+    edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode, const proximitylist::ProximityList<vertex_t>& prox) const {
+        return nearest_edge(coordinates, offsets[mode], prox);
     }
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
-    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds, bool add_in_only_one = false) const;
+    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
+
+    /// Combine 2 pathes
+    Path combine_path(vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const;
+    /// Build a path from a reverse path list
+    Path build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const;
+
     void add_way(const Way& w);
 
     ///Add the projected start and end to the path
     void add_projections(Path& p, const ProjectionData& start, const ProjectionData& end) const;
 
+    ///get the transportation mode of the vertex
+    type::Mode_e get_mode(vertex_t vertex) const;
+    PathItem::TransportCaracteristic get_caracteristic(edge_t edge) const;
     ~GeoRef();
-};
-
-// Exception levée dès que l'on trouve une destination
-struct DestinationFound{};
-struct DestinationNotFound{};
-
-// Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
-struct target_visitor : public boost::dijkstra_visitor<> {
-    const std::vector<vertex_t> & destinations;
-    target_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
-    void finish_vertex(vertex_t u, const Graph&){
-        if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
-            throw DestinationFound();
-    }
-};
-
-// Visiteur qui lève une exception dès que la cible souhaitée est atteinte
-struct target_unique_visitor : public boost::dijkstra_visitor<> {
-    const vertex_t & destination;
-
-    target_unique_visitor(const vertex_t & destination) :
-        destination(destination){}
-
-    void finish_vertex(vertex_t u, const Graph&){
-        if(u == destination)
-            throw DestinationFound();
-    }
 };
 
 /** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche

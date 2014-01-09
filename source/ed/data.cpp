@@ -339,6 +339,7 @@ void Data::build_journey_patterns(){
     // Associe à chaque line uri le nombre de journey_pattern trouvées jusqu'à present
     for(auto it1 = this->vehicle_journeys.begin(); it1 != this->vehicle_journeys.end(); ++it1){
         types::VehicleJourney * vj1 = *it1;
+        ed::types::Route* route = vj1->tmp_route;
         // Si le vj n'appartient encore à aucune journey_pattern
         if(vj1->journey_pattern == 0) {
             std::string journey_pattern_uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(this->journey_patterns.size());
@@ -346,18 +347,19 @@ void Data::build_journey_patterns(){
                 journey_pattern_uri += "-" + vj1->block_id;
             }
 
-            types::Route * route = new types::Route();
             types::JourneyPattern * journey_pattern = new types::JourneyPattern();
             journey_pattern->uri = journey_pattern_uri;
+            if(route == nullptr){
+                route = new types::Route();
+                route->line = vj1->tmp_line;
+                route->uri = journey_pattern->uri;
+                route->name = journey_pattern->name;
+                this->routes.push_back(route);
+            }
             journey_pattern->route = route;
             journey_pattern->physical_mode = vj1->physical_mode;
             vj1->journey_pattern = journey_pattern;
             this->journey_patterns.push_back(journey_pattern);
-
-            route->line = vj1->tmp_line;
-            route->uri = journey_pattern->uri;
-            route->name = journey_pattern->name;
-            this->routes.push_back(route);
 
             for(auto it2 = it1 + 1; it1 != this->vehicle_journeys.end() && it2 != this->vehicle_journeys.end(); ++it2){
                 types::VehicleJourney * vj2 = *it2;
@@ -369,7 +371,6 @@ void Data::build_journey_patterns(){
     }
     LOG4CPLUS_TRACE(logger, "Nombre de journey_patterns : " +boost::lexical_cast<std::string>(this->journey_patterns.size()));
 }
-
 
 void Data::build_journey_pattern_points(){
     auto logger = log4cplus::Logger::getInstance("log");

@@ -69,8 +69,8 @@ class ConnectorAT(object):
         logging.getLogger('connector').info("put message to following topics: "
                                             "%s", self.config.rt_topics)
         for message in self.at_realtime_reader.message_list:
-            task = connectors.at.task_pb2.Task()
-            task.action = connectors.at.task_pb2.MESSAGE
+            task = connectors.task_pb2.Task()
+            task.action = connectors.task_pb2.MESSAGE
             task.message.MergeFrom(message)
             for routing_key in self.config.rt_topics:
                 exchange_name = self.config.exchange_name
@@ -78,8 +78,8 @@ class ConnectorAT(object):
                                            routing_key=routing_key,
                                            body=task.SerializeToString())
         for perturbation in self.at_realtime_reader.perturbation_list:
-            task = connectors.at.task_pb2.Task()
-            task.action = connectors.at.task_pb2.AT_PERTURBATION
+            task = connectors.task_pb2.Task()
+            task.action = connectors.task_pb2.AT_PERTURBATION
             task.at_perturbation.MergeFrom(perturbation)
             for routing_key in self.config.rt_topics:
                 exchange_name = self.config.exchange_name

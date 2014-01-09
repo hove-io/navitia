@@ -5,8 +5,9 @@
 #include <fstream>
 
 //#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_config.hpp>
 
-namespace boost{ namespace posix_time{ class ptime; }}
+namespace boost{ namespace posix_time{ class ptime; class time_duration; }}
 
 namespace navitia{
 typedef uint32_t DateTime;
@@ -58,5 +59,12 @@ class Data;
 std::string str(const DateTime &dt);
 std::string iso_string(const DateTime dt, const type::Data &d);
 boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data &d);
+
+inline DateTime operator-(DateTime time, boost::posix_time::time_duration dur) {
+    return time - dur.total_seconds();
+}
+inline DateTime operator+(DateTime time, boost::posix_time::time_duration dur) {
+    return time + dur.total_seconds();
+}
 
 }

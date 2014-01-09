@@ -151,6 +151,7 @@ BOOST_AUTO_TEST_CASE(test_api) {
     sa->coord.set_lat(47.217804);
     sa->idx = 1;
     data.pt_data.stop_areas.push_back(sa);
+    data.geo_ref.init();
     data.build_proximity_list();
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
@@ -186,6 +187,7 @@ BOOST_AUTO_TEST_CASE(test_api_type) {
     poi->coord.set_lon(-1.554514);
     poi->coord.set_lat(47.218515);
     data.geo_ref.pois.push_back(poi);
+    data.geo_ref.init();
     data.build_proximity_list();
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
