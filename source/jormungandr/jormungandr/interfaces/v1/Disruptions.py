@@ -29,14 +29,16 @@ class Disruptions(ResourceUri):
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1)
         parser_get.add_argument("count", type=int, default=10,
-                                description="Number of distruption per page")
+                                description="Number of distruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
         parser_get.add_argument("datetime", type=str,
                                 description="The datetime from which you want\
                                 the disruption")
-        parser_get.add_argument("uri_filter", type=str, default="",
-                                description="The filter parameter")
+        parser_get.add_argument("forbidden_id[]", type=unicode,
+                                description="forbidden ids",
+                                dest="forbidden_uris[]",
+                                action="append")
 
     @marshal_with(disruptions)
     @ManageError()
@@ -46,21 +48,13 @@ class Disruptions(ResourceUri):
 
         if not args["datetime"]:
             args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
-
-        args["uri_filter"] = self.get_filter(uri)
+        if(uri):
+            if uri[-1] == "/":
+                uri = uri[:-1]
+            uris = uri.split("/")
+            args["filter"] = self.get_filter(uris)
+        else:
+            args["filter"] = ""
 
         response = i_manager.dispatch(args, self.region, "disruptions")
         return response
-
-    def get_filter(self, items):
-        if items is None:
-            return ""
-        else:
-            filter = ""
-            collection = []
-            collection.append("network")
-            collection.append("line")
-            uri_split = items.split(":")
-            if uri_split[0] in collection:
-                filter = ".uri=" . join([uri_split[0], items])
-            return filter
