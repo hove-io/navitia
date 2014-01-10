@@ -4,6 +4,7 @@ from celery import Celery
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 from flask import current_app
+from collections import namedtuple
 
 def configure_logger(app):
     """
@@ -47,6 +48,21 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
+class InstanceConfig(object):
+    def __init__(self):
+        self.source_directory = None
+        self.backup_directory = None
+        self.tmp_file = None
+        self.target_file = None
+        self.rt_topics = None
+        self.exchange = None
+        self.synonyms_file = None
+        self.aliases_file = None
+        self.pg_host = None
+        self.pg_dbname = None
+        self.pg_username = None
+        self.pg_password = None
+
 
 def load_instance_config(instance_name):
     confspec = []
@@ -77,8 +93,21 @@ def load_instance_config(instance_name):
         error = build_error(config, res)
         raise ValueError("Config is not valid: %s in %s" \
                 % (error, ini_file))
+    instance = InstanceConfig()
+    instance.source_directory = config['instance']['source-directory']
+    instance.backup_directory = config['instance']['backup-directory']
+    instance.tmp_file = config['instance']['tmp-file']
+    instance.target_file = config['instance']['target-file']
+    instance.rt_topics = config['instance']['rt-topics']
+    instance.exchange = config['instance']['exchange']
+    instance.synonyms_file = config['instance']['synonyms_file']
+    instance.aliases_file = config['instance']['aliases_file']
 
-    return config
+    instance.pg_host = config['database']['host']
+    instance.pg_dbname = config['database']['dbname']
+    instance.pg_username = config['database']['username']
+    instance.pg_password = config['database']['password']
+    return instance
 
 
 def build_error(config, validate_result):

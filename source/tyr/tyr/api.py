@@ -3,7 +3,7 @@
 
 from tyr import resources
 
-from tyr.app import app, api
+from tyr import app, api
 
 api.add_resource(resources.Instance, '/v0/instances/')
 api.add_resource(resources.Api, '/v0/api/')
@@ -16,10 +16,6 @@ api.add_resource(resources.Key, '/v0/user/<int:user_id>/key/',
 
 api.add_resource(resources.Authorization,
         '/v0/user/<int:user_id>/authorization/')
-
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
 
 
 @app.errorhandler(Exception)
