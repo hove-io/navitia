@@ -7,7 +7,7 @@ from collections import OrderedDict
 from flask import url_for
 from flask.ext.restful.utils import unpack
 from jormungandr.authentification import authentification_required
-import jormungandr.type_pb2 as type_pb2
+import navitiacommon.type_pb2 as type_pb2
 
 
 class ResourceUri(Resource):
