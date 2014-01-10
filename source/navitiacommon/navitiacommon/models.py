@@ -111,40 +111,6 @@ class Instance(db.Model):
         if authorizations:
             self.authorizations = authorizations
 
-#TODO load them but only for Tyr
-
-#        self.source_directory = None
-#        self.backup_directory = None
-#        self.tmp_file = None
-#        self.target_file = None
-#        self.rt_topics = None
-#        self.exchange = None
-#        self.synonyms_file = None
-#        self.aliases_file = None
-#
-#        self.pg_host = None
-#        self.pg_dbname = None
-#        self.pg_username = None
-#        self.pg_password = None
-
-
-#    def load_technical_config(self):
-#        config = load_instance_config(self.name)
-#        self.source_directory = config['instance']['source-directory']
-#        self.backup_directory = config['instance']['backup-directory']
-#        self.tmp_file = config['instance']['tmp-file']
-#        self.target_file = config['instance']['target-file']
-#        self.rt_topics = config['instance']['rt-topics']
-#        self.exchange = config['instance']['exchange']
-#        self.synonyms_file = config['instance']['synonyms_file']
-#        self.aliases_file = config['instance']['aliases_file']
-#
-#        self.pg_host = config['database']['host']
-#        self.pg_dbname = config['database']['dbname']
-#        self.pg_username = config['database']['username']
-#        self.pg_password = config['database']['password']
-
-
     def __repr__(self):
         return '<Instance %r>' % self.name
 

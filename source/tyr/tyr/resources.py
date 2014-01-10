@@ -7,8 +7,8 @@ import sqlalchemy
 
 import logging
 
-from tyr import models
-from tyr.app import db
+from navitiacommon import models
+from navitiacommon.models import db
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 

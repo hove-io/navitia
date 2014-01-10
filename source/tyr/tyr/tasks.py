@@ -4,10 +4,11 @@ from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from flask import current_app
 import glob
-from tyr.app import celery, db
-from tyr import models
+from tyr import celery
+from navitiacommon import models
 import os
 import zipfile
+from tyr.helper import load_instance_config
 
 def type_of_data(filename):
     """
@@ -25,14 +26,13 @@ def type_of_data(filename):
             return 'fusio'
         else:
             return 'gtfs'
-    raise ValueError('Type Unknown')
-
+    return None
 
 @celery.task()
 def update_data():
     for instance in models.Instance.query.all():
-        instance.load_technical_config()
-        files = glob.glob(instance.source_directory + "/*")
+        instance_config = load_instance_config(instance.name)
+        files = glob.glob(instance_config.source_directory + "/*")
         actions = []
         job = models.Job()
         #we only handle one datatype in a task
@@ -41,26 +41,29 @@ def update_data():
             #TODO: job must be split in two, first the job/task for monitoring
             # its progress and a second entities with the datas processed by
             # this task
-            filename = move_to_backupdirectory(_file, instance)
+            filename = move_to_backupdirectory(_file,
+                    instance_config.backup_directory)
+            job.filename = filename
             job.instance = instance
             job.type = type_of_data(job.filename)
             if job.type == 'gtfs':
-                actions.append(gtfs2ed.si(instance, filename))
+                actions.append(gtfs2ed.si(instance, instance_config, filename))
             elif job.type == 'fusio':
-                actions.append(fusio2ed.si(instance, filename))
+                actions.append(fusio2ed.si(instance, instance_config,
+                                           filename))
             elif job.type == 'osm':
-                actions.append(osm2ed.si(instance, filename))
+                actions.append(osm2ed.si(instance, instance_config, filename))
 
         if actions:
-            actions.append(ed2nav.si(instance))
-            actions.append(nav2rt.si(instance))
-            actions.append(reload_data.si(instance))
+            actions.append(ed2nav.si(instance, instance_config))
+            actions.append(nav2rt.si(instance, instance_config))
+            actions.append(reload_data.si(instance, instance_config))
             #We start the task in one seconds so we can save the job in db
             # it will be better to pass the job to the task
             task = chain(*actions).delay(countdown=1)
             job.task_uuid = task.id
-            db.session.add(job)
-            db.session.commit()
+            models.db.session.add(job)
+            models.db.session.commit()
 
 
 @celery.task()
@@ -73,8 +76,8 @@ def scan_instances():
             current_app.logger.info('new instances detected: %s',
                     instance_name)
             instance = models.Instance(name=instance_name)
-            db.session.add(instance)
-            db.session.commit()
+            models.db.session.add(instance)
+            models.db.session.commit()
 
 @task_postrun.connect
 def close_session(*args, **kwargs):
@@ -82,4 +85,4 @@ def close_session(*args, **kwargs):
     # a scoped session factory, given that we are maintaining the same app
     # context, this ensures tasks have a fresh session (e.g. session errors
     # won't propagate across tasks)
-    db.session.remove()
+    models.db.session.remove()
