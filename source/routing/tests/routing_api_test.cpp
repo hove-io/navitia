@@ -492,6 +492,9 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture) {
 
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
     pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20120614T090000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20120614T090320");
+
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
