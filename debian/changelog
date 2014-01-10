@@ -1,3 +1,9 @@
+navitia2 (0.78.8) unstable; urgency=low
+
+  * Fix arrival date time in kraken
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 10 Jan 2014 10:14:45 +0100
+
 navitia2 (0.78.7) unstable; urgency=low
 
   * We now have bike sharing
