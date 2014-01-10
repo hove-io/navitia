@@ -1,5 +1,5 @@
 from ...scripts import qualifier
-import jormungandr.response_pb2 as response_pb2
+import navitiacommon.response_pb2 as response_pb2
 from nose.tools import eq_
 
 

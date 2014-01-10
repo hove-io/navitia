@@ -3,8 +3,8 @@ from shapely import geometry, geos, wkt
 import ConfigParser
 import zmq
 from threading import Thread, Event
-from jormungandr import type_pb2
-from jormungandr import request_pb2
+from navitiacommon import type_pb2
+from navitiacommon import request_pb2
 import glob
 from jormungandr.singleton import singleton
 from importlib import import_module

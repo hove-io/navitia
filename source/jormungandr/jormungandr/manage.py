@@ -2,7 +2,6 @@
 # coding=utf-8
 from jormungandr import app
 from jormungandr import i_manager
-from jormungandr import commands
 import signal
 from werkzeug.serving import run_simple
 import sys
@@ -14,7 +13,6 @@ def kill_thread(signal, frame):
     sys.exit(0)
 
 manager = Manager(app)
-manager.add_command('syncdb', commands.CreateDb())
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)

@@ -1,7 +1,10 @@
 # encoding: utf-8
-from jormungandr.db import db, cache
-from jormungandr import app
 import uuid
+from flask_sqlalchemy import SQLAlchemy
+from navitiacommon.cache import cache
+
+
+db = SQLAlchemy()
 
 
 class User(db.Model):
@@ -98,13 +101,49 @@ class Instance(db.Model):
     is_free = db.Column(db.Boolean, default=False, nullable=False)
 
     authorizations = db.relationship('Authorization', backref='instance',
-                                     lazy='dynamic')
+            lazy='dynamic')
+
+    jobs = db.relationship('Job', backref='instance', lazy='dynamic')
 
     def __init__(self, name=None, is_free=False, authorizations=None):
         self.name = name
         self.is_free = is_free
         if authorizations:
             self.authorizations = authorizations
+
+#TODO load them but only for Tyr
+
+#        self.source_directory = None
+#        self.backup_directory = None
+#        self.tmp_file = None
+#        self.target_file = None
+#        self.rt_topics = None
+#        self.exchange = None
+#        self.synonyms_file = None
+#        self.aliases_file = None
+#
+#        self.pg_host = None
+#        self.pg_dbname = None
+#        self.pg_username = None
+#        self.pg_password = None
+
+
+#    def load_technical_config(self):
+#        config = load_instance_config(self.name)
+#        self.source_directory = config['instance']['source-directory']
+#        self.backup_directory = config['instance']['backup-directory']
+#        self.tmp_file = config['instance']['tmp-file']
+#        self.target_file = config['instance']['target-file']
+#        self.rt_topics = config['instance']['rt-topics']
+#        self.exchange = config['instance']['exchange']
+#        self.synonyms_file = config['instance']['synonyms_file']
+#        self.aliases_file = config['instance']['aliases_file']
+#
+#        self.pg_host = config['database']['host']
+#        self.pg_dbname = config['database']['dbname']
+#        self.pg_username = config['database']['username']
+#        self.pg_password = config['database']['password']
+
 
     def __repr__(self):
         return '<Instance %r>' % self.name
@@ -143,4 +182,16 @@ class Authorization(db.Model):
 
     def __repr__(self):
         return '<Authorization %r-%r-%r>' \
-            % (self.user_id, self.instance_id, self.api_id)
+                % (self.user_id, self.instance_id, self.api_id)
+
+
+class Job(db.Model):
+    __table_args__ = {"schema": "tyr"}
+    id = db.Column(db.Integer, primary_key=True)
+    task_uuid = db.Column(db.Text)
+    filename = db.Column(db.Text)
+    type = db.Column(db.Text)
+    instance_id = db.Column(db.Integer,
+                            db.ForeignKey('jormungandr.instance.id'))
+
+

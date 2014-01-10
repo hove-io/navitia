@@ -2,7 +2,7 @@ from flask.ext.restful import marshal_with, abort, marshal
 from jormungandr import i_manager
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.fields import address
-from jormungandr.type_pb2 import _NAVITIATYPE
+from navitiacommon.type_pb2 import _NAVITIATYPE
 from collections import OrderedDict
 #from exceptions import RegionNotFound
 
