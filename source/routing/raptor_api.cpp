@@ -52,6 +52,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 departure = datetime - temp.duration;
             }
             fill_street_sections(origin, temp, d, pb_journey, departure);
+
+            const auto str_departure = boost::posix_time::to_iso_string(departure);
+            const auto str_arrival = boost::posix_time::to_iso_string(departure + temp.duration);
+            pb_journey->set_departure_date_time(str_departure);
+            pb_journey->set_arrival_date_time(str_arrival);
         }
     }
 
