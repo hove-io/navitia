@@ -8,7 +8,6 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.Text, unique=True, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
@@ -78,9 +77,8 @@ class User(db.Model):
 
 
 class Key(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('jormungandr.user.id'),
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                         nullable=False)
     token = db.Column(db.Text, unique=True, nullable=False)
     valid_until = db.Column(db.Date)
@@ -95,7 +93,6 @@ class Key(db.Model):
 
 
 class Instance(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     is_free = db.Column(db.Boolean, default=False, nullable=False)
@@ -116,7 +113,6 @@ class Instance(db.Model):
 
 
 class Api(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
 
@@ -131,14 +127,13 @@ class Api(db.Model):
 
 
 class Authorization(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
-    user_id = db.Column(db.Integer, db.ForeignKey('jormungandr.user.id'),
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                         primary_key=True, nullable=False)
     instance_id = db.Column(db.Integer,
-                            db.ForeignKey('jormungandr.instance.id'),
+                            db.ForeignKey('instance.id'),
                             primary_key=True, nullable=False)
     api_id = db.Column(db.Integer,
-                       db.ForeignKey('jormungandr.api.id'), primary_key=True,
+                       db.ForeignKey('api.id'), primary_key=True,
                        nullable=False)
 
     def __init__(self, user_id=None, instance_id=None, api_id=None):
@@ -152,12 +147,11 @@ class Authorization(db.Model):
 
 
 class Job(db.Model):
-    __table_args__ = {"schema": "tyr"}
     id = db.Column(db.Integer, primary_key=True)
     task_uuid = db.Column(db.Text)
     filename = db.Column(db.Text)
     type = db.Column(db.Text)
     instance_id = db.Column(db.Integer,
-                            db.ForeignKey('jormungandr.instance.id'))
+                            db.ForeignKey('instance.id'))
 
 
