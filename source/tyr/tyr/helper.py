@@ -6,6 +6,7 @@ from validate import Validator
 from flask import current_app
 from collections import namedtuple
 
+
 def configure_logger(app):
     """
     configuration du logging
@@ -47,6 +48,7 @@ def make_celery(app):
 
     celery.Task = ContextTask
     return celery
+
 
 class InstanceConfig(object):
     def __init__(self):

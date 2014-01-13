@@ -22,8 +22,6 @@ def move_to_backupdirectory(filename, working_directory):
     working_directory += "/" + now.strftime("%Y%m%d-%H%M%S%f")
     os.mkdir(working_directory)
     destination = working_directory + '/' + os.path.basename(filename)
-    print filename
-    print destination
     os.rename(filename, destination)
     return destination
 
@@ -36,21 +34,22 @@ def make_connection_string(instance_config):
     connection_string += ' password=' + instance_config.pg_password
     return connection_string
 
+
+#TODO bind task
 @celery.task()
 def fusio2ed(instance, instance_config, filename):
-    """ Unzip gtfs file, remove the file, launch gtfs2ed """
+    """ Unzip fusio file, remove the file, launch fusio2ed """
 
     lock = redis.lock('pyed.lock|' + instance.name)
     if not lock.acquire(blocking=False):
-        gtfs2ed.retry(countdown=300, max_retries=10)
+        fusio2ed.retry(countdown=300, max_retries=10)
 
     try:
-        pyed_logger = logging.getLogger('pyed')
+        pyed_logger = logging.getLogger('tyr')
         fusio_logger = logging.getLogger('fusio2ed')
-        bnanme = os.path.basename(filename)
         working_directory = os.path.dirname(filename)
 
-        zip_file = zipfile.ZipFile(filename);
+        zip_file = zipfile.ZipFile(filename)
         zip_file.extractall(path=working_directory)
 
         params = ["-i", working_directory]

@@ -81,7 +81,7 @@ set_tests_properties(connectors PROPERTIES ENVIRONMENT
     PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/connectors)
 
 #ADD_TEST(jormungandr_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/jormungandr/)
-ADD_TEST(pyed_pep8 pep8 --repeat --exclude=*_pb2.py ${CMAKE_SOURCE_DIR}/pyed/pyed)
+ADD_TEST(tyr_pep8 pep8 --repeat --exclude=*_pb2.py ${CMAKE_SOURCE_DIR}/tyr/tyr)
 
 #ADD_TEST(sindri_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/sindri/sindri)
 #ADD_TEST(tyr_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/tyr/tyr)
