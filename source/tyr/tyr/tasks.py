@@ -31,41 +31,56 @@ def type_of_data(filename):
 
 
 @celery.task()
+def finish_job(job_id):
+    """
+    use for mark a job as done after all the required task has been executed
+    """
+    job = models.job.query.get(job_id)
+    job.state = 'done'
+    models.db.session.commit()
+
+@celery.task()
 def update_data():
     for instance in models.Instance.query.all():
         instance_config = load_instance_config(instance.name)
         files = glob.glob(instance_config.source_directory + "/*")
         actions = []
         job = models.Job()
-        #we only handle one datatype in a task
-        #so if we depose two files at the same time, two task would be created
+        job.instance = instance
         for _file in files:
-            #TODO: job must be split in two, first the job/task for monitoring
-            # its progress and a second entities with the datas processed by
-            # this task
+            dataset = models.DataSet()
             filename = move_to_backupdirectory(_file,
                     instance_config.backup_directory)
-            job.filename = filename
-            job.instance = instance
-            job.type = type_of_data(job.filename)
-            if job.type == 'gtfs':
-                actions.append(gtfs2ed.si(instance, instance_config, filename))
-            elif job.type == 'fusio':
-                actions.append(fusio2ed.si(instance, instance_config,
+            #currently the name of a dataset is the path to it
+            dataset.name = filename
+
+            dataset.type = type_of_data(filename)
+            if dataset.type == 'gtfs':
+                actions.append(gtfs2ed.si(instance_config, filename))
+            elif dataset.type == 'fusio':
+                actions.append(fusio2ed.si(instance_config,
                                            filename))
-            elif job.type == 'osm':
-                actions.append(osm2ed.si(instance, instance_config, filename))
+            elif dataset.type == 'osm':
+                actions.append(osm2ed.si(instance_config, filename))
+            else:
+                #unknow type, we skip it
+                continue
+            models.db.session.add(dataset)
+            job.data_sets.append(dataset)
 
         if actions:
-            actions.append(ed2nav.si(instance, instance_config))
-            actions.append(nav2rt.si(instance, instance_config))
-            actions.append(reload_data.si(instance, instance_config))
-            #We start the task in one seconds so we can save the job in db
-            # it will be better to pass the job to the task
-            task = chain(*actions).delay(countdown=1)
-            job.task_uuid = task.id
+            actions.append(ed2nav.si(instance_config))
+            actions.append(nav2rt.si(instance_config))
+            actions.append(reload_data.si(instance_config))
+            actions.append(finish_job.si())
+            job.state = 'pending'
             models.db.session.add(job)
             models.db.session.commit()
+            #We pass the job id to each tasks, but job need to be commited for
+            #having an id
+            for action in actions:
+                action.kwargs['job_id'] = job.id
+            task = chain(*actions).delay()
 
 
 @celery.task()

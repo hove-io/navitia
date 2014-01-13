@@ -102,11 +102,14 @@ class Instance(db.Model):
 
     jobs = db.relationship('Job', backref='instance', lazy='dynamic')
 
-    def __init__(self, name=None, is_free=False, authorizations=None):
+    def __init__(self, name=None, is_free=False, authorizations=None,
+                 jobs=None):
         self.name = name
         self.is_free = is_free
         if authorizations:
             self.authorizations = authorizations
+        if jobs:
+            self.jobs = jobs
 
     def __repr__(self):
         return '<Instance %r>' % self.name
@@ -149,9 +152,26 @@ class Authorization(db.Model):
 class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     task_uuid = db.Column(db.Text)
-    filename = db.Column(db.Text)
-    type = db.Column(db.Text)
     instance_id = db.Column(db.Integer,
                             db.ForeignKey('instance.id'))
 
+    #name is used for the ENUM name in postgreSQL
+    state = db.Column(db.Enum('pending', 'running', 'done', 'failed',
+                              name='job_state'))
+
+    data_sets = db.relationship('DataSet', backref='job', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Job %r>' % self.id
+
+class DataSet(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.Text, nullable=False)
+    name = db.Column(db.Text, nullable=False)
+
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'))
+
+
+    def __repr__(self):
+        return '<DataSet %r>' % self.id
 

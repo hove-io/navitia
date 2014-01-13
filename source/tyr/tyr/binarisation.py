@@ -10,6 +10,7 @@ from tyr import celery, redis
 import datetime
 from flask import current_app
 import kombu
+from navitiacommon import models
 
 
 def move_to_backupdirectory(filename, working_directory):
@@ -37,9 +38,11 @@ def make_connection_string(instance_config):
 
 #TODO bind task
 @celery.task()
-def fusio2ed(instance, instance_config, filename):
+def fusio2ed(instance_config, filename, job_id):
     """ Unzip fusio file, remove the file, launch fusio2ed """
 
+    job = models.Job.query.get(job_id)
+    instance = job.instance
     lock = redis.lock('pyed.lock|' + instance.name)
     if not lock.acquire(blocking=False):
         fusio2ed.retry(countdown=300, max_retries=10)
@@ -68,14 +71,20 @@ def fusio2ed(instance, instance_config, filename):
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
     finally:
         lock.release()
 
 
 @celery.task()
-def gtfs2ed(instance, instance_config, gtfs_filename):
+def gtfs2ed(instance_config, gtfs_filename,  job_id):
     """ Unzip gtfs file, remove the file, launch gtfs2ed """
 
+    job = models.Job.query.get(job_id)
+    instance = job.instance
     lock = redis.lock('tyr.lock|' + instance.name)
     if not lock.acquire(blocking=False):
         gtfs2ed.retry(countdown=300, max_retries=10)
@@ -104,14 +113,20 @@ def gtfs2ed(instance, instance_config, gtfs_filename):
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
     finally:
         lock.release()
 
 
 @celery.task()
-def osm2ed(instance, instance_config, osm_filename):
+def osm2ed(instance_config, osm_filename, job_id):
     """ Move osm file to backup directory, launch osm2ed """
 
+    job = models.Job.query.get(job_id)
+    instance = job.instance
     lock = redis.lock('tyr.lock|' + instance.name)
     if not lock.acquire(blocking=False):
         osm2ed.retry(countdown=300, max_retries=10)
@@ -127,31 +142,44 @@ def osm2ed(instance, instance_config, osm_filename):
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
     finally:
         lock.release()
 
 
 @celery.task()
-def reload_data(instance, instance_config):
+def reload_data(instance_config, job_id):
     """ reload data on all kraken"""
-    task = tyr.task_pb2.Task()
-    task.action = tyr.task_pb2.RELOAD
-    tyr_logger = logging.getLogger('tyr')
+    job = models.Job.query.get(job_id)
+    instance = job.instance
+    try:
+        task = navitiacommon.task_pb2.Task()
+        task.action = navitiacommon.task_pb2.RELOAD
+        tyr_logger = logging.getLogger('tyr')
 
-    connection = kombu.Connection(current_app.config['CELERY_BROKER_URL'])
-    exchange = kombu.Exchange(instance_config.exchange, 'topic',
-                              durable=True)
-    producer = connection.Producer(exchange=exchange)
+        connection = kombu.Connection(current_app.config['CELERY_BROKER_URL'])
+        exchange = kombu.Exchange(instance_config.exchange, 'topic',
+                                  durable=True)
+        producer = connection.Producer(exchange=exchange)
 
-    tyr_logger.info("reload kraken")
-    producer.publish(task.SerializeToString(),
-            routing_key=instance.name + '.task.reload')
-    connection.release()
+        tyr_logger.info("reload kraken")
+        producer.publish(task.SerializeToString(),
+                routing_key=instance.name + '.task.reload')
+        connection.release()
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
 
 
 @celery.task()
-def ed2nav(instance, instance_config):
+def ed2nav(instance_config, job_id):
     """ Launch ed2nav"""
+    job = models.Job.query.get(job_id)
+    instance = job.instance
     lock = redis.lock('tyr.lock|' + instance.name)
     if not lock.acquire(blocking=False):
         ed2nav.retry(countdown=300, max_retries=10)
@@ -166,13 +194,19 @@ def ed2nav(instance, instance_config):
                     ed2nav_logger, tyr_logger)
         if res != 0:
             raise ValueError('todo: exception')
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
     finally:
         lock.release()
 
 
 @celery.task()
-def nav2rt(instance, instance_config):
+def nav2rt(instance_config, job_id):
     """ Launch nav2rt"""
+    job = models.Job.query.get(job_id)
+    instance = job.instance
     lock = redis.lock('tyr.lock|' + instance.name)
     if not lock.acquire(blocking=False):
         nav2rt.retry(countdown=300, max_retries=10)
@@ -189,5 +223,9 @@ def nav2rt(instance, instance_config):
                     nav2rt_logger, tyr_logger)
         if res != 0:
             raise ValueError('todo: exception')
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
     finally:
         lock.release()
