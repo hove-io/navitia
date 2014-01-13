@@ -668,6 +668,9 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
             stop->arrival_validity_pattern = vj->validity_pattern;
         }
 
+        stop->departure_adapted_validity_pattern = stop->departure_validity_pattern;
+        stop->arrival_adapted_validity_pattern = stop->arrival_validity_pattern;
+
         data.pt_data.stop_times.push_back(stop);
     }
 
