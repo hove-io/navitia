@@ -62,7 +62,7 @@ struct RAPTOR
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path>
     compute(const type::StopArea* departure, const type::StopArea* destination,
-            int departure_hour, int departure_day, DateTime bound,
+            int departure_hour, int departure_day, DateTime bound, bool without_disrupt,
             bool clockwise = true,
             /*const type::Properties &required_properties = 0*/
             const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
@@ -76,7 +76,7 @@ struct RAPTOR
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration>> &departs,
                 const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration>> &destinations,
-                const DateTime &departure_datetime, const DateTime &bound=DateTimeUtils::inf,
+                const DateTime &departure_datetime, bool without_disrupt, const DateTime &bound=DateTimeUtils::inf,
                 const uint32_t max_transfers=std::numeric_limits<int>::max(),
                 const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
                 const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
@@ -93,15 +93,15 @@ struct RAPTOR
               uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
-              bool clockwise = true);
+              bool clockwise = true, bool without_disrupt = false);
 
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
-    void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden);
+    void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden, bool without_disrupt);
 
     ///Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params, bool clockwise,
+    void boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params, bool clockwise, bool without_disrupt,
                       bool global_pruning = true,
                       const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
@@ -117,7 +117,7 @@ struct RAPTOR
 
     ///Boucle principale
     template<typename Visitor>
-    void raptor_loop(Visitor visitor, /*const type::Properties &required_properties*/const type::AccessibiliteParams & accessibilite_params, bool global_pruning = true, uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
+    void raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool without_disrupt, bool global_pruning = true, uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
 
     /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint

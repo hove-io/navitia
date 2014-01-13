@@ -14,7 +14,7 @@ pbnavitia::Response departure_board(const std::string &filter,
                                     const std::string &date,
                                     uint32_t duration, int32_t max_date_times,
                                     int interface_version,
-                                    int count, int start_page, const type::Data &data);
+                                    int count, int start_page, const type::Data &data, bool without_disrupt);
 }
 
 }

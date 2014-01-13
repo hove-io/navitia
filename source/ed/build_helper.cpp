@@ -163,6 +163,8 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
     vj->stop_time_list.push_back(st);
     st->arrival_validity_pattern = vj->validity_pattern;
     st->departure_validity_pattern = vj->validity_pattern;
+    st->arrival_adapted_validity_pattern = vj->validity_pattern;
+    st->departure_adapted_validity_pattern = vj->validity_pattern;
     b.data.pt_data.stop_times.push_back(st);
     return *this;
 }
