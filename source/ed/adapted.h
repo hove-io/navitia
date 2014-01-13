@@ -5,6 +5,10 @@
 
 namespace ed{
 
+nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
+                          const nt::AtPerturbation& pert,
+                          nt::PT_Data& data, uint32_t time);
+void update_stop_times(nt::VehicleJourney* vehicle_journey, const nt::AtPerturbation& pert, nt::PT_Data& data);
 void delete_vj(nt::VehicleJourney* vehicle_journey, const nt::AtPerturbation& perturbation, nt::PT_Data& data);
 std::vector<nt::StopTime*> get_stop_from_impact(const nt::AtPerturbation& perturbation, boost::gregorian::date current_date, std::vector<nt::StopTime*> stoplist);
 
