@@ -71,6 +71,10 @@ void dataRAPTOR::load(const type::PT_Data &data)
         jp_validity_patterns.push_back(boost::dynamic_bitset<>(data.journey_patterns.size()));
     }
 
+    for(int i=0; i<=365; ++i) {
+        jp_adapted_validity_pattern.push_back(boost::dynamic_bitset<>(data.journey_patterns.size()));
+    }
+
     for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
         first_stop_time.push_back(arrival_times.size());
         nb_trips.push_back(journey_pattern->vehicle_journey_list.size());
@@ -150,6 +154,16 @@ void dataRAPTOR::load(const type::PT_Data &data)
             for(auto vj : journey_pattern->vehicle_journey_list) {
                 if(vj->validity_pattern->check2(i)) {
                     jp_validity_patterns[i].set(journey_pattern->idx);
+                    break;
+                }
+            }
+        }
+
+        // On dit que le journey pattern est valide en date j s'il y a au moins une circulation à j-1/j+1
+        for(int i=0; i<=365; ++i) {
+            for(auto vj : journey_pattern->vehicle_journey_list) {
+                if(vj->adapted_validity_pattern->check2(i)) {
+                    jp_adapted_validity_pattern[i].set(journey_pattern->idx);
                     break;
                 }
             }
