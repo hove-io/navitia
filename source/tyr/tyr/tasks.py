@@ -10,6 +10,7 @@ import os
 import zipfile
 from tyr.helper import load_instance_config
 
+
 def type_of_data(filename):
     """
     return the type of data contains in a file
@@ -27,6 +28,7 @@ def type_of_data(filename):
         else:
             return 'gtfs'
     return None
+
 
 @celery.task()
 def update_data():
@@ -78,6 +80,7 @@ def scan_instances():
             instance = models.Instance(name=instance_name)
             models.db.session.add(instance)
             models.db.session.commit()
+
 
 @task_postrun.connect
 def close_session(*args, **kwargs):

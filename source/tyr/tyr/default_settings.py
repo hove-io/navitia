@@ -20,12 +20,9 @@ CELERYBEAT_SCHEDULE = {
     },
 }
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun'
+SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun2'
 
 CELERY_TIMEZONE = 'UTC'
-
-#chaine de connnection à postgresql pour la base jormungandr
-#PG_CONNECTION_STRING = 'postgresql://navitia:navitia@localhost/jormun'
 
 INSTANCES_DIR = '..'
 
