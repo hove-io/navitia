@@ -260,9 +260,13 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
         //patch temporaire, A VIRER en refactorant toute la notion de direct_path!
         if (! edge_pair.second) {
             //for one way way, the reverse path obviously cannot work
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find edge, we try the reverse one");
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find edge between "
+                           << u << " -> " << v << ", we try the reverse one");
             //if it still not work we cannot do anything
             edge_pair = boost::edge(v, u, graph);
+            if (! edge_pair.second) {
+                throw navitia::exception("impossible to find reverse edge");
+            }
         }
         edge_t e = edge_pair.first;
 
@@ -336,7 +340,7 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     throw navitia::exception("unhandled path item caracteristic");
 }
 
-Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
+Path GeoRef::combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
     //used for the direct path, we need to reverse the second part and concatenate the 2 'predecessors' list
     //to get the path
     std::vector<vertex_t> reverse_path;
@@ -350,11 +354,14 @@ Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds
     std::reverse(reverse_path.begin(), reverse_path.end());
 
     current = preds[best_destination]; //we skip the middle point since it has already been added
+    bool at_least_one_added = false;
     while (current != preds[current]) {
         reverse_path.push_back(current);
         current = preds[current];
+        at_least_one_added = true;
     }
-    reverse_path.push_back(current);
+    if (at_least_one_added)
+        reverse_path.push_back(current);
 
     return build_path(reverse_path, false);
 }
