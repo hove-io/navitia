@@ -44,6 +44,7 @@ class Schedules(ResourceUri):
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
         args["nb_stoptimes"] = args["count"]
+        args["interface_version"] = 1
         if uri is None:
             first_filter = args["filter"].lower().split("and")[0].strip()
             parts = first_filter.lower().split("=")
@@ -100,8 +101,6 @@ class RouteSchedules(Schedules):
 
     def __init__(self):
         super(RouteSchedules, self).__init__("route_schedules")
-        self.parsers["get"].add_argument("interface_version", type=int,
-                                         default=1, hidden=True)
 
     @marshal_with(route_schedules)
     @ManageError()
