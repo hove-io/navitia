@@ -353,15 +353,15 @@ Path GeoRef::combine_path(const vertex_t best_destination, std::vector<vertex_t>
     reverse_path.push_back(current);
     std::reverse(reverse_path.begin(), reverse_path.end());
 
+    if (best_destination == preds[best_destination])
+        return build_path(reverse_path, false);
+
     current = preds[best_destination]; //we skip the middle point since it has already been added
-    bool at_least_one_added = false;
     while (current != preds[current]) {
         reverse_path.push_back(current);
         current = preds[current];
-        at_least_one_added = true;
     }
-    if (at_least_one_added)
-        reverse_path.push_back(current);
+    reverse_path.push_back(current);
 
     return build_path(reverse_path, false);
 }
