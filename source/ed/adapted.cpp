@@ -31,12 +31,33 @@ nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
                         data.validity_patterns.end(), find_vp_predicate);
     if(it != data.validity_patterns.end()) {
         delete vp;
-         return *(it);
+        return *(it);
     } else {
          data.validity_patterns.push_back(vp);
          return vp;
     }
 
+}
+
+nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
+                          nt::PT_Data& data, boost::gregorian::date day, bool add){
+    nt::ValidityPattern* vp = new nt::ValidityPattern(*validity_pattern);
+    if(add){
+        vp->add(day);
+    }else{
+        vp->remove(day);
+    }
+
+    auto find_vp_predicate = [&](nt::ValidityPattern* vp1) { return vp->days == vp1->days;};
+    auto it = std::find_if(data.validity_patterns.begin(),
+                        data.validity_patterns.end(), find_vp_predicate);
+    if(it != data.validity_patterns.end()) {
+        delete vp;
+        return *(it);
+    } else {
+         data.validity_patterns.push_back(vp);
+         return vp;
+    }
 }
 
 void update_stop_times(nt::VehicleJourney* vehicle_journey, const nt::AtPerturbation& pert, nt::PT_Data& data){
@@ -167,6 +188,10 @@ nt::VehicleJourney* create_adapted_vj(
         nt::StopTime* new_stop = new nt::StopTime(*stop);
         new_stop->vehicle_journey = vj_adapted;
         new_stop->journey_pattern_point = jp->journey_pattern_point_list[i];
+        new_stop->arrival_validity_pattern = stop->arrival_validity_pattern;
+        new_stop->departure_validity_pattern = stop->departure_validity_pattern;
+        new_stop->arrival_adapted_validity_pattern = stop->arrival_adapted_validity_pattern;
+        new_stop->departure_adapted_validity_pattern = stop->departure_adapted_validity_pattern;
         vj_adapted->stop_time_list.push_back(new_stop);
         data.stop_times.push_back(new_stop);
     }
@@ -266,8 +291,15 @@ std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey,
         }
 
         vj_adapted->adapted_validity_pattern->add(current_period.begin().date());
+        for(navitia::type::StopTime* st : vj_adapted->stop_time_list){
+            st->arrival_adapted_validity_pattern = get_validity_pattern(st->arrival_adapted_validity_pattern, data, current_period.begin().date(), true);
+            st->departure_adapted_validity_pattern = get_validity_pattern(st->departure_adapted_validity_pattern, data, current_period.begin().date(), true);
+        }
         current_vj->adapted_validity_pattern->remove(current_period.begin().date());
-
+        for(navitia::type::StopTime* st : current_vj->stop_time_list){
+            st->arrival_adapted_validity_pattern = get_validity_pattern(st->arrival_adapted_validity_pattern, data, current_period.begin().date(), false);
+            st->departure_adapted_validity_pattern = get_validity_pattern(st->departure_adapted_validity_pattern, data, current_period.begin().date(), false);
+        }
         prec_vjs[current_vj] = vj_adapted;
     }
 
