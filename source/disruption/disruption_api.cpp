@@ -1,38 +1,42 @@
 #include "disruption_api.h"
 #include "type/pb_converter.h"
 #include "ptreferential/ptreferential.h"
+#include "disruption.h"
 
-namespace navitia { namespace disruption_api {
+namespace navitia { namespace disruption {
 
 pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string &str_dt,
                                 const uint32_t depth,
-                                uint32_t ,
-                                uint32_t , const std::string &filter){
+                                uint32_t count,
+                                uint32_t start_page, const std::string &filter,
+                                const std::vector<std::string>& forbidden_uris){
     pbnavitia::Response pb_response;
     boost::posix_time::ptime now;
-    boost::posix_time::time_period action_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0));
-    std::vector<navitia::type::idx_t> line_idx;
     try{
         now = boost::posix_time::from_iso_string(str_dt);
     }catch(boost::bad_lexical_cast){
-           fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime", pb_response.mutable_error());
+           fill_pb_error(pbnavitia::Error::unable_to_parse,
+                   "Unable to parse Datetime", pb_response.mutable_error());
            return pb_response;
-       }
-
-    action_period = boost::posix_time::time_period(now,
-                        boost::posix_time::ptime(now.date() + boost::gregorian::years(1), boost::posix_time::time_duration(23,59,59)));
-    const std::vector<std::string> forbidden_uris;
-    try{
-        line_idx = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
-    } catch(const ptref::parsing_error &parse_error) {
-        fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime" + parse_error.more, pb_response.mutable_error());
-        return pb_response;
-    } catch(const ptref::ptref_error &ptref_error){
-        fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more, pb_response.mutable_error());
-        return pb_response;
     }
 
-    navitia::disruption::network_line list = navitia::disruption::disruptions_list(line_idx, d.pt_data, action_period, now);
+    auto period_end = boost::posix_time::ptime(now.date() + boost::gregorian::years(1),
+            boost::posix_time::time_duration(23,59,59));
+    auto action_period = boost::posix_time::time_period(now, period_end);
+    network_line_list list;
+    try {
+        list = disruptions_list(filter, forbidden_uris, d, action_period, now);
+    } catch(const ptref::parsing_error &parse_error) {
+        fill_pb_error(pbnavitia::Error::unable_to_parse,
+                "Unable to parse filter" + parse_error.more, pb_response.mutable_error());
+        return pb_response;
+    } catch(const ptref::ptref_error &ptref_error){
+        fill_pb_error(pbnavitia::Error::bad_filter,
+                "ptref : "  + ptref_error.more, pb_response.mutable_error());
+        return pb_response;
+    }
+    size_t total_result = list.size();
+    list = paginate(list, count, start_page);
     for(auto pair_network_line : list){
         pbnavitia::Disruption* pb_disruption = pb_response.add_disruptions();
         pbnavitia::Network* pb_network = pb_disruption->mutable_network();
@@ -43,9 +47,9 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
         }
     }
     auto pagination = pb_response.mutable_pagination();
-    pagination->set_totalresult(list.size());
-    pagination->set_startpage(0);
-    pagination->set_itemsperpage(list.size());
+    pagination->set_totalresult(total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(count);
     pagination->set_itemsonpage(pb_response.disruptions_size());
 
     if (pb_response.disruptions_size() == 0) {

@@ -32,16 +32,15 @@ class Documentation(Resource):
             "apis": []
         }
         rule_list = []
-        rules = current_app.url_map._rules_by_endpoint
-        for endpoint, rules in rules.iteritems():
-            splitted_endpoint = endpoint.split(".")
-            if (not self.prefix or
-                    (splitted_endpoint[0] == self.prefix)) and\
-                    splitted_endpoint[1] == str(api) and\
-                    (len(splitted_endpoint) < 3 or
-                     splitted_endpoint[2] != 'redirect'):
-                for rule in rules:
-                    rule_list.append((rule, endpoint))
+        all_rules = current_app.url_map._rules_by_endpoint
+        endpoint = "v"+str(self.api_version)+"."+api
+        if endpoint in all_rules:
+            for rule in all_rules[endpoint]:
+                rule_list.append((rule, endpoint))
+        endpoint += ".collection"
+        if endpoint in all_rules:
+            for rule in all_rules[endpoint]:
+                rule_list.append((rule, endpoint))
         if len(rule_list) == 0:
             abort(404, {"message": "api not found"})
         response["apis"] = self.get_endpoint(rule_list)
