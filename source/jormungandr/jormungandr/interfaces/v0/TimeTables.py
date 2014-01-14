@@ -19,21 +19,21 @@ class TimeTables(Resource):
         parser_get = self.parsers["get"]
         parser_get.add_argument("from_datetime", type=str,
                                 required=True,
-                                description=" The date from which you\
-                                want the times")
+                                description=
+                                " The date from which you "\
+                                "want the times")
         parser_get.add_argument("duration", type=int, default=86400,
-                                description="Maximum duration between\
-                                the datetime and the\
-                                last retrieved stop time")
+                                description=
+                                "Maximum duration between "\
+                                "the datetime and the "\
+                                "last retrieved stop time")
         parser_get.add_argument("nb_stoptimes", type=int, default=100,
-                                description="Maximum number of stop\
-                                times")
+                                description=
+                                "Maximum number of stop times",
+                                dest="max_date_times")
         parser_get.add_argument("depth", type=depth_argument, default=1,
-                                description="Maximal depth of the\
-                                returned objects")
-        parser_get.add_argument("interface_version",
-                                type=depth_argument,
-                                default=0, hidden=True)
+                                description=
+                                "Maximal depth of the returned objects")
         parser_get.add_argument("forbidden_uris[]", type=unicode,
                                 action="append",
                                 description="Uri to forbid")
@@ -87,8 +87,8 @@ class RouteSchedules(TimeTables):
     def __init__(self):
         super(RouteSchedules, self).__init__()
         self.parsers["get"].add_argument("filter", "", type=str,
-                                         description="Filter to have the times\
-                                         you want")
+                                         description=
+                                         "Filter to have the times you want")
         self.api = "route_schedules"
 
 
@@ -100,10 +100,10 @@ class StopsSchedules(TimeTables):
         super(StopsSchedules, self).__init__()
         self.parsers["get"].add_argument("departure_filter", "", type=str,
                                          required=True,
-                                         description="The filter of your\
-                                         departure point")
+                                         description="The filter of your "\
+                                         "departure point")
         self.parsers["get"].add_argument("arrival_filter", "", type=str,
                                          required=True,
-                                         description="The filter of your\
-                                         departure point")
+                                         description="The filter of your "\
+                                         "departure point")
         self.api = "stops_schedules"
