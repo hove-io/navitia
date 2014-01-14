@@ -393,7 +393,15 @@ Parameters
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-
+| nop      | first_section_mode  | String    | Force the first section mode if the first |                 |
+|          |                     |           | section is not a public transport one.    |                 |
+|          |                     |           | It takes one the following values :       |                 |
+|          |                     |           | `walking`, `car`, `bike`, `bss`           |                 |
+|          |                     |           | bss stands for bike sharing system        |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | last_section_mode   | String    | Same as first_section_mode but for the    |                 |
+|          |                     |           | last section.                             |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
 
 Objects
 #######
