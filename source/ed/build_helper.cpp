@@ -65,20 +65,21 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
     vj->journey_pattern->vehicle_journey_list.push_back(vj);
 
-//    auto vp_it = b.vps.find(validity_pattern);
-//    if(vp_it == b.vps.end()){
-        vj->validity_pattern = new navitia::type::ValidityPattern(b.begin, validity_pattern);
-        b.vps[validity_pattern] = vj->validity_pattern;
-        b.data.pt_data.validity_patterns.push_back(vj->validity_pattern);
+    nt::ValidityPattern* vp = new nt::ValidityPattern(b.begin, validity_pattern);
+    auto find_vp_predicate = [&](nt::ValidityPattern* vp1) { return vp->days == vp1->days;};
+    auto it_vp = std::find_if(b.data.pt_data.validity_patterns.begin(),
+                        b.data.pt_data.validity_patterns.end(), find_vp_predicate);
+    if(it_vp != b.data.pt_data.validity_patterns.end()) {
+        delete vp;
+        vj->validity_pattern = *(it_vp);
+    } else {
+         b.data.pt_data.validity_patterns.push_back(vp);
+         vj->validity_pattern = vp;
+    }
+    b.vps[validity_pattern] = vj->validity_pattern;
+    vj->adapted_validity_pattern = vj->validity_pattern;
 
-        vj->adapted_validity_pattern = new navitia::type::ValidityPattern(b.begin, validity_pattern);
-        b.vps[validity_pattern] = vj->adapted_validity_pattern;
-        b.data.pt_data.validity_patterns.push_back(vj->adapted_validity_pattern);
 
-//    } else {
-//        vj->validity_pattern = vp_it->second;
-//    }
-//    vj->wheelchair_boarding = wheelchair_boarding;
         if(wheelchair_boarding){
             vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
         }
