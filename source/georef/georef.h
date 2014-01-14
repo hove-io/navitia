@@ -333,7 +333,7 @@ struct GeoRef {
     Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
 
     /// Combine 2 pathes
-    Path combine_path(vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const;
+    Path combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const;
     /// Build a path from a reverse path list
     Path build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const;
 
