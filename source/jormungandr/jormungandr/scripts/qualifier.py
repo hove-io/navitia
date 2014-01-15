@@ -1,5 +1,5 @@
 # coding=utf-8
-import jormungandr.response_pb2 as response_pb2
+import navitiacommon.response_pb2 as response_pb2
 from functools import partial
 from datetime import datetime, timedelta
 import logging

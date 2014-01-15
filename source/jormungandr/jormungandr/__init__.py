@@ -3,6 +3,7 @@ from flask import Flask, got_request_exception
 from flask.ext.restful import Api
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from jormungandr.exceptions import log_exception
+
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')
 app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
@@ -29,6 +30,15 @@ app.logger.setLevel(app.config['LOG_LEVEL'])
 got_request_exception.connect(log_exception, app)
 
 rest_api = Api(app, catch_all_404s=True)
+
+from navitiacommon.models import db
+db.init_app(app)
+if not app.config['CACHE_DISABLED']:
+    from navitiacommon.cache import init_cache
+    init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
+               db=app.config['REDIS_DB'],
+               password=app.config['REDIS_PASSWORD'])
+
 
 from jormungandr.instance_manager import InstanceManager
 i_manager = InstanceManager()
