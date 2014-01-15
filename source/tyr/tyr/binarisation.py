@@ -39,7 +39,7 @@ def make_connection_string(instance_config):
 #TODO bind task
 @celery.task()
 def fusio2ed(instance_config, filename, job_id):
-    """ Unzip fusio file, remove the file, launch fusio2ed """
+    """ Unzip fusio file and launch fusio2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -81,7 +81,7 @@ def fusio2ed(instance_config, filename, job_id):
 
 @celery.task()
 def gtfs2ed(instance_config, gtfs_filename,  job_id):
-    """ Unzip gtfs file, remove the file, launch gtfs2ed """
+    """ Unzip gtfs file launch gtfs2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -123,7 +123,7 @@ def gtfs2ed(instance_config, gtfs_filename,  job_id):
 
 @celery.task()
 def osm2ed(instance_config, osm_filename, job_id):
-    """ Move osm file to backup directory, launch osm2ed """
+    """ launch osm2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -152,7 +152,7 @@ def osm2ed(instance_config, osm_filename, job_id):
 
 @celery.task()
 def reload_data(instance_config, job_id):
-    """ reload data on all kraken"""
+    """ reload data on all kraken of this instance"""
     job = models.Job.query.get(job_id)
     instance = job.instance
     try:
