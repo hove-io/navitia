@@ -2,8 +2,47 @@
 import logging
 from datetime import timedelta
 
+#URL for the brokker, by default it's the local rabbitmq
+#For amqp (rabbitMQ) the syntax is: 
+#amqp://<user>:<password>@<host>:<port>/<vhost>
+#the default vhost is "/" so the URL end with *two* slash
+#http://docs.celeryproject.org/en/latest/configuration.html#std:setting-BROKER_URL
 CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
+#URI for postgresql
+# postgresql://<user>:<password>@<host>:<port>/<dbname>
+#http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
+SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun2'
+
+#Path to the directory where the configuration file of each instance of ed are defined
+INSTANCES_DIR = '..'
+
+#Log Level available
+# - DEBUG
+# - INFO
+# - WARN
+# - ERROR
+
+#log level for the app
+LOG_LEVEL = logging.INFO
+#where are writen the log
+LOG_FILENAME = "/tmp/tyr.log"
+
+#log level of the orm
+#INFO => log all request executed
+#DEBUG => log all request executed and the result
+LOG_LEVEL_SQLALCHEMY = logging.WARN
+
+REDIS_HOST = 'localhost'
+
+REDIS_PORT = 6379
+
+#index of the database use in redis, between 0 and 15 by default
+REDIS_DB = 0
+
+REDIS_PASSWORD = None
+
+#configuration of celery, don't edit
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
 
@@ -19,34 +58,4 @@ CELERYBEAT_SCHEDULE = {
         'options': {'expires': 50}
     },
 }
-
-SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun2'
-
 CELERY_TIMEZONE = 'UTC'
-
-INSTANCES_DIR = '..'
-
-#les niveau de log possibles sont:
-# - DEBUG
-# - INFO
-# - WARN
-# - ERROR
-
-#niveau de log de l'application
-LOG_LEVEL = logging.INFO
-#ou sont écrit les logs de l'application
-LOG_FILENAME = "/tmp/tyr.log"
-
-#nivrau de log de l'orm
-#INFO => requete executé
-#DEBUG => requete executé + résultat
-LOG_LEVEL_SQLALCHEMY = logging.WARN
-
-REDIS_HOST = 'localhost'
-
-REDIS_PORT = 6379
-
-#indice de la base de données redis utilisé, entier de 0 à 15 par défaut
-REDIS_DB = 0
-
-REDIS_PASSWORD = None
