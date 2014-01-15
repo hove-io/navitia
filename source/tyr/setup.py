@@ -10,5 +10,5 @@ setup(name='tyr',
         url='www.navitia.io',
         packages=['tyr'],
         requires=['configobj'],
-        scripts=['tyr_service.py']
+        scripts=['manage.py']
 )

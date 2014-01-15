@@ -3,7 +3,7 @@ import logging
 from datetime import timedelta
 
 #URL for the brokker, by default it's the local rabbitmq
-#For amqp (rabbitMQ) the syntax is: 
+#For amqp (rabbitMQ) the syntax is:
 #amqp://<user>:<password>@<host>:<port>/<vhost>
 #the default vhost is "/" so the URL end with *two* slash
 #http://docs.celeryproject.org/en/latest/configuration.html#std:setting-BROKER_URL

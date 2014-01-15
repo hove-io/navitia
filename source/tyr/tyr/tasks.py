@@ -39,6 +39,7 @@ def finish_job(job_id):
     job.state = 'done'
     models.db.session.commit()
 
+
 @celery.task()
 def update_data():
     for instance in models.Instance.query.all():
