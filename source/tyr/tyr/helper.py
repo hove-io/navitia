@@ -1,15 +1,15 @@
 import logging
-from celery import Celery
+import celery
+
 
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 from flask import current_app
-from collections import namedtuple
 
 
 def configure_logger(app):
     """
-    configuration du logging
+    initialize logging
     """
     filename = app.config["LOG_FILENAME"]
     handler = logging.FileHandler(filename)
@@ -30,11 +30,13 @@ def configure_logger(app):
     logging.getLogger('sqlalchemy.pool').addHandler(handler)
     logging.getLogger('sqlalchemy.dialects.postgresql').addHandler(handler)
 
+    celery.log.setup(loglevel=app.config["LOG_LEVEL"], logfile=filename)
+
 
 def make_celery(app):
-    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
-    celery.conf.update(app.config)
-    TaskBase = celery.Task
+    celery_app = celery.Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery_app.conf.update(app.config)
+    TaskBase = celery_app.Task
 
     class ContextTask(TaskBase):
         abstract = True
@@ -46,8 +48,8 @@ def make_celery(app):
             with app.app_context():
                 return TaskBase.__call__(self, *args, **kwargs)
 
-    celery.Task = ContextTask
-    return celery
+    celery_app.Task = ContextTask
+    return celery_app
 
 
 class InstanceConfig(object):
