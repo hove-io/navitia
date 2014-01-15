@@ -1,3 +1,10 @@
+navitia2 (0.78.9) unstable; urgency=low
+
+  * Fix in streetnetwork
+  * Fixes in Jormungandr
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 15 Jan 2014 10:05:30 +0100
+
 navitia2 (0.78.8) unstable; urgency=low
 
   * Fix arrival date time in kraken
