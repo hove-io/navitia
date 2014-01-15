@@ -3,7 +3,7 @@ from contextlib import contextmanager
 import Queue
 from threading import Lock
 import zmq
-from . import response_pb2
+from navitiacommon import response_pb2
 import logging
 from .exceptions import DeadSocketException
 

@@ -3,12 +3,11 @@ from flask_restful import reqparse
 import flask_restful
 from flask import current_app, request
 from functools import wraps
-from jormungandr import db
 from jormungandr.exceptions import RegionNotFound
 from jormungandr import i_manager
 import datetime
 import base64
-from models import User, Instance
+from navitiacommon.models import User, Instance, db
 
 
 def authentification_required(func):

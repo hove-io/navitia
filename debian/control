@@ -17,16 +17,25 @@ Description: Navitia Kraken
 Package: navitia-ed
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: ${shlibs:Depends}, ${misc:Depends}, python-protobuf, python-configobj
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Section: devel
 Priority: optional
 Description: Navitia-Ed
 
 
+Package: navitia-common
+Architecture: all
+Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
+Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-protobuf
+Section: devel
+Priority: optional
+Description: navitia-common
+    python module shared within module of navitia, mostlu navitia-jormungandr and navitia-tyr
+
 Package: navitia-jormungandr
-Architecture: amd64
+Architecture: all
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-redis, python2.7
+Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-redis, python2.7, navita-common
 Section: devel
 Priority: optional
 Description: Navitia-Jormungandr
@@ -62,8 +71,8 @@ Description: debugging symbols for ed
 Package: navitia-tyr
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
-Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext
+Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, navitia-common
 Section: devel
 Priority: optional
 Description: Navitia-Tyr
-    Tyr is a web service for managing account used on jormungandr
+    Tyr is a web service for managing ed and account used on jormungandr

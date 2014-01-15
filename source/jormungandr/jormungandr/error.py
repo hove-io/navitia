@@ -1,4 +1,4 @@
-from jormungandr.response_pb2 import Response
+from navitiacommon.response_pb2 import Response
 
 
 def generate_error(str_, status=400):

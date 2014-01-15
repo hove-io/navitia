@@ -19,9 +19,8 @@ class TimeTables(Resource):
         parser_get = self.parsers["get"]
         parser_get.add_argument("from_datetime", type=str,
                                 required=True,
-                                description=
-                                " The date from which you "\
-                                "want the times")
+                                description=" The date from which you\
+                                want the times")
         parser_get.add_argument("duration", type=int, default=86400,
                                 description=
                                 "Maximum duration between "\
@@ -40,6 +39,7 @@ class TimeTables(Resource):
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
+        args["interface_version"] = 0
         response = i_manager.dispatch(args, region, self.api)
         return protobuf_to_dict(response, use_enum_labels=True), 200
 
