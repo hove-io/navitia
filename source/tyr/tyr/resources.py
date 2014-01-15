@@ -136,7 +136,7 @@ class Key(flask_restful.Resource):
     def post(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
-                case_sensitive=False, help='date de fin de validité de la clé')
+                case_sensitive=False, help='end validity date of the key')
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
@@ -165,7 +165,7 @@ class Key(flask_restful.Resource):
     def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=True,
-                case_sensitive=False, help='date de fin de validité de la clé')
+                case_sensitive=False, help='end validity date of the key')
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
