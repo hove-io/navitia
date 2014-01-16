@@ -40,4 +40,6 @@ class Coord(ResourceUri):
                     new_address = marshal(pb_result.places_nearby[0].address,
                                           address)
                     result.update(address=new_address)
+            else:
+                abort(404, message="No address for these coords")
         return result, 200
