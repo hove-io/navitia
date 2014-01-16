@@ -89,10 +89,10 @@ All the resources return a response containing a links object, a paging object, 
 | ``get`` /coverage/*lon;lat*/places_nearby                     | List of objects near the resource   |
 +---------------------------------------------------------------+-------------------------------------+
 
-Authentification
+Authentication
 ================
 
-You must authentificate to use **navitia.io**. When you register we give you a authentification key to the API.
+You must authenticate to use **navitia.io**. When you register we give you a authentication key to the API.
 
 There is two ways for authentification, you can use a `Basic HTTP authentification`_, where the username is the key, and without password.
 
