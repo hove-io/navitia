@@ -14,7 +14,7 @@ We provide:
 * journeys computation
 * line schedules
 * next departures
-* explore public transport data
+* exploration of public transport data
 * sexy things such as isochrones
 
 .. note::
@@ -37,13 +37,9 @@ At some point you will want to read:
     details
     API Reference <http://doc.navitia.io>
 
-Our APIs are available at the following url: http://api.navitia.io.
+Our APIs are available at the following url: http://api.navitia.io/.
 
-Requests have the following structure :  ``http://api.navitia.io/v0/[region/]api.format?arg=val``.
-
-Have a look at the examples below to learn what API we provide and how to use them.
-
-The region can be left out for requests that are based on coordinates. The format is one of json, xml or pb (for a result in Protocol Buffers).
+The first parameter of the api has to be the api version number. The current api version is v1 so the api url is http://api.navitia.io/v1.
 
 There are no restriction in using our API. However, please don't make more than one request per second.
 
@@ -52,8 +48,24 @@ There are no restriction in using our API. However, please don't make more than 
 
     If you plan to build something successful, contact us to get an access with more vitamines and even more support.
 
-Let us know if you build something with our API. We will be happy hilight it on this page. The more feedback we get, the more cities you will get
+Let us know if you build something with our API, we will be happy to highlight it on this page. The more feedback we get, the more cities you will get
 and the more effort we will put to make the API durable.
+
+HATEOAS
+*******
+
+The api has been build on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_ so the api should be quite self explinatory since the possible interactions are defined in hypermedia.
+
+
+
+
+To provide additional arguments to the API, add them at the end of the query with the following syntax:  ``?arg1=val1&arg2=val2``.
+
+Have a look at the examples below to learn what API we provide and how to use them.
+
+.. note::
+    The results are paginated to avoid crashing your parser. The parameters to get the next page are within the result.
+
 
 Examples
 --------
@@ -63,22 +75,21 @@ This chapter shows some usages with the minimal required arguments. However, thi
 A simple route computation
 **************************
 
-Let's find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco the 18th of April at 08:00 AM.
+Let's find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco the 18th of January at 08:00 AM.
 We need to use the ``journeys`` API.
 
 
-The coordinates of the view point are ``lon=-122.4752``, ``lat=37.80826`` and the coordinates of the Transamercia Pyramid are ``lon=-122.402770``, ``lat=37.794682``.
-The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates).
+The coordinates of the view point are ``longitude = -122.4752``, ``latitude = 37.80826`` and the coordinates of the Transamercia Pyramid are ``longitude = -122.402770``, ``latitude = 37.794682``.
+The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the api with the following format : ``longitute;latitude``.
 
 The arguments are the following:
 
 
-* ``origin=coord:-122.4752:37.80826``
-* ``destination=coord:-122.402770:37.794682``
+* ``from=-122.4752;37.80826``
+* ``to=-122.402770;37.794682``
 * ``datetime=20130418T0800``
 
-Hence, the complete URL : http://api.navitia.io/v0/journeys.json?origin=coord:-122.4752:37.80826&destination=coord:-122.402770:37.794682&datetime=20130418T0800.
-
+Hence, the complete URL : http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140118T0800.
 
 
 A ``journeys`` request might return multiple journeys. Those journeys are said to be *equivalent*. For instance
@@ -94,12 +105,58 @@ If you are wondering why the origin and destination have such a syntax, it's bec
 to provide an address or a specific station as input. But we will see more about that later in the
 section about entry points.
 
+A quick journey in the API
+**************************
+
+*navitia* allows to dive into the public transport data.
+
+To better understand how the API works let's ask the api the different main possibilities by simply quering the api endpoint: 
+    ``http://api.navitia.io/v1/``
+
+The ``links`` section of the answer contains the different possible interactions with the API.
+
+As you can see there are several possibilities like for example ``coverage`` to navigate through the covered regions data or ``journeys`` to compute a journey.
+
+
+Now let's see what interactions are possible with ``coverage``:
+    ``http://api.navitia.io/v1/coverage``
+
+This will give you in the ``regions`` section the list of covered regions and the list of possible interactions with them in the ``links`` section.
+
+
+In the ``links`` section there is for example this link:
+    ``"href": "http://api.navitia.io/v1/coverage/{regions.id}/lines"``
+
+
+This link is templated which means that it needs additional parameters. The parameters are identifed with the ``{`` ``}`` syntax. 
+In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region: ::
+
+    "start_production_date": "20140105",
+    "status": "running",
+    "shape": "POLYGON((-74.500997 40.344999,-74.500997 41.096999,-73.226 41.096999,-73.226 40.344999,-74.500997 40.344999))",
+    "id": "ny",
+    "end_production_date": "20140406"
+
+
+To query for the public transport lines of new york we thus have to call:
+    ``http://api.navitia.io/v1/coverage/ny/lines``
+
+
+Easy isn't it ?
+
+We could push the exploration further and: 
+
+* Get all the stop_points of the line with the uri ``line:BCO:Q10`` : http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_points 
+* Get all the lines that go through the first stop point found with the last request (uri of the stop point ``stop_point:BCO:SP:550123``):
+  http://api.navitia.io/v1/coverage/ny/stop_points/stop_point:BCO:SP:550123/lines 
+
+TODO a last complex example
+
 What places have a name that start with 'trans'
 ***********************************************
 
 The ``places`` API finds any object whose name matches the first letters of the query.
-
-http://api.navitia.io/v0/sf/places.json?q=trans
+    ``http://api.navitia.io/v1/coverage/ny/places?q=tran``
 
 This API is fast enough to use it for autocompleting an user request.
 
@@ -107,42 +164,26 @@ What places are within 1000 meters
 **********************************
 
 The ``nearby_places`` API finds any object within a certain radius as a crow flies.
+This API is not accessible from the main endpoint but has to be applied on a stop point, an address, a coordinate, ...
 
-Only the coordinates an ``uri`` is mandatory. Optionally you can select what object types to
-return and change the radius. The URI must be a geographical coord or a stop point. Asking the stations arround
-a network doesnot make much sense. Does it?
+All stations arround the Transamerica Pyramid can be fetched with the following request : http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/places_nearby
 
-All stations arround the Transamerica Pyramid can be fetched with the following request : http://api.navitia.io/v0/places_nearby.json?uri=coord:-122.402770:37.794682.
-
+Optionally you can select what object types to return and change the radius. 
 
 
 What stations can be reached in the next 60 minutes
 ***************************************************
 
-The ``isochrone`` API computes all routes from an origin to *all* stop points.
-Only the ``origin`` and ``datetime`` must be given.
+The API can computes *all* the reachable stop points from an origin within a given maximum travel duration.
 
+All the stop points that can be reached from the Transamerica Pyramid can be fetched with the following request: 
+http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/journeys
 
-Compared to the ``journeys`` API, only one result is returned for every stop point: the earliest arrival.
+It returns for each destination stop point the earliest arrival and a link to the journey detail.
 
-Here is an example url :
-
-http://api.navitia.io/v0/isochrone.json?origin=coord:-122.4752:37.80826&datetime=20130418T0800
 
 Exploring the public transport objects
-**************************************
-
-*navitia* allows to request the objects and filter them by an other object. Every object has his own API,
-but they all share the same filter argument. It is a very powerful requesting tool and its grammar is detailed in the :ref:`filter` section.
-
-
-* Get all the stop_points of San Francisco : http://api.navitia.io/v0/sf/stop_points.json
-* Get all the lines that go through the stop point with the uri ``stop_point:6526`` http://api.navitia.io/v0/sf/lines.json?filter=stop_point.uri=stop_point:6526
-* Get all the routes that belong to the stop point with the uri ``stop_point:6526`` and to the line with the uri ``line:1045`` http://api.navitia.io/v0/sf/routes.json?filter=stop_point.uri=stop_point:6526+and+line.uri=line:1045
-
-.. note::
-    The results are paginated to avoid crashing your parser. The parameters to get the next page are within the result.
-
+**
 Getting help
 ------------
 
