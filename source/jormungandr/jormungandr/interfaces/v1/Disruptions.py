@@ -29,7 +29,7 @@ class Disruptions(ResourceUri):
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1)
         parser_get.add_argument("count", type=int, default=10,
-                                description="Number of disruption per page")
+                                description="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
         parser_get.add_argument("datetime", type=str,
