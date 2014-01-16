@@ -19,9 +19,8 @@ class TimeTables(Resource):
         parser_get = self.parsers["get"]
         parser_get.add_argument("from_datetime", type=str,
                                 required=True,
-                                description=
-                                " The date from which you "\
-                                "want the times")
+                                description=" The date from which you\
+                                want the times")
         parser_get.add_argument("duration", type=int, default=86400,
                                 description=
                                 "Maximum duration between "\

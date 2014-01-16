@@ -25,14 +25,14 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
 
-    #enum are not automatically created, so we create it 
+    #enum are not automatically created, so we create it
     #workaround from: https://bitbucket.org/zzzeek/alembic/issue/89/opadd_column-and-opdrop_column-should
     enum = sa.Enum('pending', 'running', 'done', 'failed', name='job_state')
     bind = op.get_bind()
     impl = enum.dialect_impl(bind.dialect)
     impl.create(bind, checkfirst=True)
 
-    op.add_column('job', 
+    op.add_column('job',
         sa.Column('state', enum)
     )
     op.drop_column(u'job', 'type')
