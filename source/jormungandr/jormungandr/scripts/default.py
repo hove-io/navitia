@@ -1,7 +1,7 @@
 # coding=utf-8
-import jormungandr.type_pb2 as type_pb2
-import jormungandr.request_pb2 as request_pb2
-import jormungandr.response_pb2 as response_pb2
+import navitiacommon.type_pb2 as type_pb2
+import navitiacommon.request_pb2 as request_pb2
+import navitiacommon.response_pb2 as response_pb2
 from jormungandr.renderers import render_from_protobuf
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
@@ -102,7 +102,7 @@ class Script(object):
         resp = instance.send_and_receive(req)
         if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
-            return self.places(request, region)
+            return self.places(request, instance)
         self.__pagination(request, "places", resp)
 
         return resp

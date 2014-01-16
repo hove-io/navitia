@@ -260,9 +260,13 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
         //patch temporaire, A VIRER en refactorant toute la notion de direct_path!
         if (! edge_pair.second) {
             //for one way way, the reverse path obviously cannot work
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find edge, we try the reverse one");
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find edge between "
+                           << u << " -> " << v << ", we try the reverse one");
             //if it still not work we cannot do anything
             edge_pair = boost::edge(v, u, graph);
+            if (! edge_pair.second) {
+                throw navitia::exception("impossible to find reverse edge");
+            }
         }
         edge_t e = edge_pair.first;
 
@@ -336,7 +340,7 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     throw navitia::exception("unhandled path item caracteristic");
 }
 
-Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
+Path GeoRef::combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
     //used for the direct path, we need to reverse the second part and concatenate the 2 'predecessors' list
     //to get the path
     std::vector<vertex_t> reverse_path;
@@ -348,6 +352,9 @@ Path GeoRef::combine_path(vertex_t best_destination, std::vector<vertex_t> preds
     }
     reverse_path.push_back(current);
     std::reverse(reverse_path.begin(), reverse_path.end());
+
+    if (best_destination == preds[best_destination])
+        return build_path(reverse_path, false);
 
     current = preds[best_destination]; //we skip the middle point since it has already been added
     while (current != preds[current]) {

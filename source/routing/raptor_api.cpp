@@ -248,6 +248,8 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             //On recalcule une distance en pensant qu'on marche à 1.68 m/s
                 distance = connection.duration * 1.68
             }*/
+            if (duration == bt::pos_infin)
+                continue;
 
             tmp_result.push_back({destination->idx, duration});
         }
