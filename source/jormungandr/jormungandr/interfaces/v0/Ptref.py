@@ -20,17 +20,17 @@ class Ptref(Resource):
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("start_page", type=int, default=0,
-                                         description="The page where you\
-                                         want to start")
+                                         description=
+                                         "The page where want to start")
         self.parsers["get"].add_argument("count", type=int, default=25,
-                                         description="The number of objects\
-                                         you want on the page")
+                                         description=
+                                         "The number of objects you want on the page")
         self.parsers["get"].add_argument("filter", type=str, default="",
                                          description="The filter parameter")
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
-                                         description="The depth of your\
-                                         object")
+                                         description=
+                                         "The depth of object")
         self.parsers["get"].add_argument("forbidden_uris[]", type=unicode,
                                          action="append",
                                          description="Uri to forbid")

@@ -26,45 +26,52 @@ class Journeys(Resource):
         parser_get.add_argument("origin", type=str, required=True,
                                 description="Origin's uri of your journey")
         parser_get.add_argument("destination", type=str, required=True,
-                                description="Destination's uri of your\
-                                journey")
+                                description=
+                                "Destination's uri of your journey")
         parser_get.add_argument("datetime", type=str, required=True,
-                                description="Datetime's uri of your journey")
+                                description=
+                                "Datetime's uri of your journey")
         parser_get.add_argument("clockwise", type=true_false, default=True,
-                                description="Whether you want your journey to\
-                                start after datetime or to end before\
-                                datetime")
+                                description=
+                                "Whether you want your journey to start"\
+                                "after datetime or to end before datetime")
         parser_get.add_argument("max_duration", type=int, default=36000,
                                 description="Maximum duration of your journey")
         parser_get.add_argument("max_transfers", type=int, default=10,
-                                description="Maximum transfers you want in\
-                                your journey")
+                                description=
+                                "Maximum transfers you want in "\
+                                "your journey")
         parser_get.add_argument("origin_mode",
                                 type=option_value(["walking", "car", "bike",
                                                    "bss"]),
                                 action="append", default=['walking', 'bike',
                                                           'car'],
-                                description="The list of modes you want at the\
-                                beggining of your journey")
+                                description=
+                                "The list of modes you want at the "\
+                                "beggining of your journey")
         parser_get.add_argument("destination_mode",
                                 type=option_value(["walking", "car", "bike",
                                                    "bss"]),
                                 default=['walking', 'bike', 'car'],
                                 action="append",
-                                description="The list of modes you want at the\
-                                end of your journey")
+                                description=
+                                "The list of modes you want at the"\
+                                " end of your journey")
         parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
-                                description="maximal duration of non public \
-                                transport in second")
+                                description=
+                                "maximal duration of non public "\
+                                "transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.68,
-                                description="Walking speed in meter/second")
+                                description=
+                                "Walking speed in meter/second")
         parser_get.add_argument("bike_speed", type=float, default=8.8,
                                 description="Bike speed in meter/second")
         parser_get.add_argument("bss_speed", type=float, default=8.8,
-                                description="Bike rental speed in\
-                                meter/second")
+                                description="Bike rental speed in "\
+                                "meter/second")
         parser_get.add_argument("car_speed", type=float, default=16.8,
-                                description="Car speed in meter/second")
+                                description=
+                                "Car speed in meter/second")
         parser_get.add_argument("forbidden_uris[]", type=str, action="append",
                                 description="Uri you want to forbid")
         parser_get.add_argument("type", type=option_value(types),

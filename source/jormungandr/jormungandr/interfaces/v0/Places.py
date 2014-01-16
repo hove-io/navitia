@@ -24,23 +24,22 @@ class Places(Resource):
                                          default=["stop_area", "address",
                                                   "poi",
                                                   "administrative_region"],
-                                         description="The type of data to\
-                                         search")
+                                         description=
+                                         "The type of data to search")
         self.parsers["get"].add_argument("count", type=int, default=10,
-                                         description="The maximum number of\
-                                         places returned")
+                                         description=
+                                         "The maximum number of places returned")
         self.parsers["get"].add_argument("search_type", type=int, default=0,
-                                         description="Type of search:\
-                                         firstletter or typeerror")
+                                         description=
+                                         "Type of search: firstletter or typeerror")
         self.parsers["get"].add_argument("admin_uri[]", type=str,
                                          action="append",
-                                         description="""If filled, will\
-                                         restrained the search within the
-                    ²           given admin uris""")
+                                         description=
+                                         "Restraine the search to the given admin uris")
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
-                                         description="The depth of the\
-                                         objects")
+                                         description=
+                                         "The depth of the objects")
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
