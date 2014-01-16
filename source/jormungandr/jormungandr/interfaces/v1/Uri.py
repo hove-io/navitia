@@ -346,9 +346,7 @@ def addresses(is_collection):
     class Addresses(Coord):
 
         """ Not implemented yet"""
-
-        def __init__(self, *args, **kwargs):
-            Coord.__init__(self, *args, **kwargs)
+        pass
 
     return Addresses
 
@@ -357,12 +355,7 @@ def coords(is_collection):
     class Coords(Coord):
 
         """ Not implemented yet"""
-
-        def __init__(self, *args, **kwargs):
-            Uri.__init__(self, is_collection, "coords")
-
-        def get(self, *args, **kwargs):
-            abort(500, message="Not implemented yet")
+        pass
     return Coords
 
 
