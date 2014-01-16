@@ -415,14 +415,14 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     }
 
     if (is_valid(comment_c, row)) {
-        auto itm = gtfs_data.comment_map.find(row[commercial_mode_c]);
+        auto itm = gtfs_data.comment_map.find(row[comment_c]);
         if(itm != gtfs_data.comment_map.end()){
             line->comment = itm->second;
         }
     }
 
     line->commercial_mode = nullptr;
-    if (is_valid(comment_c, row)) {
+    if (is_valid(commercial_mode_c, row)) {
         auto itm = gtfs_data.commercial_mode_map.find(row[commercial_mode_c]);
         if(itm == gtfs_data.commercial_mode_map.end()){
             LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the commercial_mode " << row[commercial_mode_c]
