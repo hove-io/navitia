@@ -89,10 +89,10 @@ All the resources return a response containing a links object, a paging object, 
 | ``get`` /coverage/*lon;lat*/places_nearby                     | List of objects near the resource   |
 +---------------------------------------------------------------+-------------------------------------+
 
-Authentification
+Authentication
 ================
 
-You must authentificate to use **navitia.io**. When you register we give you a authentification key to the API.
+You must authenticate to use **navitia.io**. When you register we give you a authentication key to the API.
 
 There is two ways for authentification, you can use a `Basic HTTP authentification`_, where the username is the key, and without password.
 
@@ -393,7 +393,15 @@ Parameters
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-
+| nop      | first_section_mode  | String    | Force the first section mode if the first |                 |
+|          |                     |           | section is not a public transport one.    |                 |
+|          |                     |           | It takes one the following values :       |                 |
+|          |                     |           | `walking`, `car`, `bike`, `bss`           |                 |
+|          |                     |           | bss stands for bike sharing system        |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | last_section_mode   | String    | Same as first_section_mode but for the    |                 |
+|          |                     |           | last section.                             |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
 
 Objects
 #######

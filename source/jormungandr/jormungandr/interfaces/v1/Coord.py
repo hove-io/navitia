@@ -2,7 +2,7 @@ from flask.ext.restful import marshal_with, abort, marshal
 from jormungandr import i_manager
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.fields import address
-from jormungandr.type_pb2 import _NAVITIATYPE
+from navitiacommon.type_pb2 import _NAVITIATYPE
 from collections import OrderedDict
 #from exceptions import RegionNotFound
 
@@ -40,4 +40,6 @@ class Coord(ResourceUri):
                     new_address = marshal(pb_result.places_nearby[0].address,
                                           address)
                     result.update(address=new_address)
+            else:
+                abort(404, message="No address for these coords")
         return result, 200

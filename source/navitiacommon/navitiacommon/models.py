@@ -1,11 +1,13 @@
 # encoding: utf-8
-from jormungandr.db import db, cache
-from jormungandr import app
 import uuid
+from flask_sqlalchemy import SQLAlchemy
+from navitiacommon.cache import cache
+
+
+db = SQLAlchemy()
 
 
 class User(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.Text, unique=True, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
@@ -75,9 +77,8 @@ class User(db.Model):
 
 
 class Key(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('jormungandr.user.id'),
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                         nullable=False)
     token = db.Column(db.Text, unique=True, nullable=False)
     valid_until = db.Column(db.Date)
@@ -92,26 +93,29 @@ class Key(db.Model):
 
 
 class Instance(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     is_free = db.Column(db.Boolean, default=False, nullable=False)
 
     authorizations = db.relationship('Authorization', backref='instance',
-                                     lazy='dynamic')
+            lazy='dynamic')
 
-    def __init__(self, name=None, is_free=False, authorizations=None):
+    jobs = db.relationship('Job', backref='instance', lazy='dynamic')
+
+    def __init__(self, name=None, is_free=False, authorizations=None,
+                 jobs=None):
         self.name = name
         self.is_free = is_free
         if authorizations:
             self.authorizations = authorizations
+        if jobs:
+            self.jobs = jobs
 
     def __repr__(self):
         return '<Instance %r>' % self.name
 
 
 class Api(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
 
@@ -126,14 +130,13 @@ class Api(db.Model):
 
 
 class Authorization(db.Model):
-    __table_args__ = {"schema": "jormungandr"}
-    user_id = db.Column(db.Integer, db.ForeignKey('jormungandr.user.id'),
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                         primary_key=True, nullable=False)
     instance_id = db.Column(db.Integer,
-                            db.ForeignKey('jormungandr.instance.id'),
+                            db.ForeignKey('instance.id'),
                             primary_key=True, nullable=False)
     api_id = db.Column(db.Integer,
-                       db.ForeignKey('jormungandr.api.id'), primary_key=True,
+                       db.ForeignKey('api.id'), primary_key=True,
                        nullable=False)
 
     def __init__(self, user_id=None, instance_id=None, api_id=None):
@@ -143,4 +146,32 @@ class Authorization(db.Model):
 
     def __repr__(self):
         return '<Authorization %r-%r-%r>' \
-            % (self.user_id, self.instance_id, self.api_id)
+                % (self.user_id, self.instance_id, self.api_id)
+
+
+class Job(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    task_uuid = db.Column(db.Text)
+    instance_id = db.Column(db.Integer,
+                            db.ForeignKey('instance.id'))
+
+    #name is used for the ENUM name in postgreSQL
+    state = db.Column(db.Enum('pending', 'running', 'done', 'failed',
+                              name='job_state'))
+
+    data_sets = db.relationship('DataSet', backref='job', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Job %r>' % self.id
+
+class DataSet(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.Text, nullable=False)
+    name = db.Column(db.Text, nullable=False)
+
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'))
+
+
+    def __repr__(self):
+        return '<DataSet %r>' % self.id
+
