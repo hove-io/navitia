@@ -176,6 +176,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
                 auto begin_section_time = arrival_time;
                 fill_street_sections(destination, temp, d, pb_journey, to_posix_time(begin_section_time, d));
+                arrival_time = arrival_time + temp.duration;
             }
         }
         const auto str_departure = iso_string(departure_time, d);

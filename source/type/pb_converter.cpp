@@ -590,7 +590,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     section->set_length(total_length);
 
     section->set_begin_date_time(bt::to_iso_string(departure));
-    section->set_begin_date_time(bt::to_iso_string(departure + bt::seconds(total_duration)));
+    section->set_end_date_time(bt::to_iso_string(departure + bt::seconds(total_duration)));
 
     //add the destination as a placemark
     pbnavitia::Place* dest_place = section->mutable_destination();
