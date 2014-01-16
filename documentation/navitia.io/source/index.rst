@@ -34,7 +34,6 @@ At some point you will want to read:
     :maxdepth: 1
 
     public_transport
-    details
     API Reference <http://doc.navitia.io>
 
 Our APIs are available at the following url: http://api.navitia.io/.
@@ -56,7 +55,7 @@ HATEOAS
 
 The api has been build on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_ so the api should be quite self explinatory since the possible interactions are defined in hypermedia.
 
-
+The different possible actions on a given API level are given in the ``links`` section of the response.
 
 
 To provide additional arguments to the API, add them at the end of the query with the following syntax:  ``?arg1=val1&arg2=val2``.
@@ -81,6 +80,7 @@ We need to use the ``journeys`` API.
 
 The coordinates of the view point are ``longitude = -122.4752``, ``latitude = 37.80826`` and the coordinates of the Transamercia Pyramid are ``longitude = -122.402770``, ``latitude = 37.794682``.
 The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the api with the following format : ``longitute;latitude``.
+The dates are given in the format ``YYYYMMDDTHHMM``.
 
 The arguments are the following:
 
@@ -99,33 +99,27 @@ This API has more options explained in the reference as :
 
 * Forbid certain lines, routes or modes
 * Latest departure
+* Enable biking, drinving or use of bike sharing system
 
-
-If you are wondering why the origin and destination have such a syntax, it's because we allow
-to provide an address or a specific station as input. But we will see more about that later in the
-section about entry points.
 
 A quick journey in the API
 **************************
 
 *navitia* allows to dive into the public transport data.
 
-To better understand how the API works let's ask the api the different main possibilities by simply quering the api endpoint: 
-    ``http://api.navitia.io/v1/``
+To better understand how the API works let's ask the api the different main possibilities by simply quering the api endpoint: http://api.navitia.io/v1/
 
 The ``links`` section of the answer contains the different possible interactions with the API.
 
 As you can see there are several possibilities like for example ``coverage`` to navigate through the covered regions data or ``journeys`` to compute a journey.
 
 
-Now let's see what interactions are possible with ``coverage``:
-    ``http://api.navitia.io/v1/coverage``
+Now let's see what interactions are possible with ``coverage``: http://api.navitia.io/v1/coverage
 
 This will give you in the ``regions`` section the list of covered regions and the list of possible interactions with them in the ``links`` section.
 
 
-In the ``links`` section there is for example this link:
-    ``"href": "http://api.navitia.io/v1/coverage/{regions.id}/lines"``
+In the ``links`` section there is for example this link: ``"href": "http://api.navitia.io/v1/coverage/{regions.id}/lines"``
 
 
 This link is templated which means that it needs additional parameters. The parameters are identifed with the ``{`` ``}`` syntax. 
@@ -138,25 +132,26 @@ In this case it needs a region id. This id can the found in the ``regions`` sect
     "end_production_date": "20140406"
 
 
-To query for the public transport lines of new york we thus have to call:
-    ``http://api.navitia.io/v1/coverage/ny/lines``
+To query for the public transport lines of new york we thus have to call: http://api.navitia.io/v1/coverage/ny/lines
 
 
 Easy isn't it ?
 
 We could push the exploration further and: 
 
-* Get all the stop_points of the line with the uri ``line:BCO:Q10`` : http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_points 
-* Get all the lines that go through the first stop point found with the last request (uri of the stop point ``stop_point:BCO:SP:550123``):
-  http://api.navitia.io/v1/coverage/ny/stop_points/stop_point:BCO:SP:550123/lines 
+* Get all the stop areas of the line with the uri ``line:BCO:Q10`` (the first line of the last request): http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_areas/ 
+* Get the next departures in the first stop area found with the last request (uri of the stop area ``stop_area:BCO:SA:CTP-BCO550123``):
+  http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/departures/
+* Get all the next departure in the first stop area found in the last request, for the network mta:
+  http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/networks/network:mta/departures/
 
-TODO a last complex example
 
 What places have a name that start with 'trans'
 ***********************************************
 
 The ``places`` API finds any object whose name matches the first letters of the query.
-    ``http://api.navitia.io/v1/coverage/ny/places?q=tran``
+
+To find the objets that start with "trans" the request should be: http://api.navitia.io/v1/coverage/ny/places?q=tran
 
 This API is fast enough to use it for autocompleting an user request.
 
@@ -182,8 +177,6 @@ http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/journeys
 It returns for each destination stop point the earliest arrival and a link to the journey detail.
 
 
-Exploring the public transport objects
-**
 Getting help
 ------------
 
