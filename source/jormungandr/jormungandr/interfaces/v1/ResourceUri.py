@@ -183,7 +183,7 @@ class add_notes(object):
                     data["notes"] = []
                     res = []
                     note = add_note(data)
-                    [res.append(item) for item in note if not item in result]
+                    [res.append(item) for item in note if not item in res]
                     data["notes"].extend(res)
 
             if isinstance(objects, tuple):
