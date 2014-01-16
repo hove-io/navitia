@@ -4,7 +4,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
 SET(KRAKEN_VERSION_MAJOR 0)
 SET(KRAKEN_VERSION_MINOR 78)
-SET(KRAKEN_VERSION_PATCH 10)
+SET(KRAKEN_VERSION_PATCH 11)
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
@@ -65,7 +65,6 @@ add_subdirectory(jormungandr)
 add_subdirectory(pyed)
 add_subdirectory(sql)
 add_subdirectory(disruption)
-
 add_subdirectory(scripts)
 
 INCLUDE (CheckIncludeFiles)

@@ -1,3 +1,9 @@
+navitia2 (0.78.11) unstable; urgency=low
+
+  * Fix CMakeLists
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 16 Jan 2014 12:38:34 +0100
+
 navitia2 (0.78.10) unstable; urgency=low
 
   * Fix build path of georef
