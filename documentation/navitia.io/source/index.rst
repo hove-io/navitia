@@ -38,11 +38,6 @@ At some point you will want to read:
 
 There are no restrictions in using our API. However, please don't make more than one request per second.
 
-.. warning::
-    This API is experimental. The parameters and responses are not definite as we will listen to your feedbacks to improve it.
-
-    If you plan to build something successful, contact us to get an access with more vitamins and even more support.
-
 Let us know if you build something with our API, we will be happy to highlight it on this page. The more feedback we get, the more cities you will get
 and the more effort we will put to make the API durable.
 
@@ -145,9 +140,9 @@ Easy isn't it?
 We could push the exploration further and: 
 
 * get all the stop areas of the line with the uri ``line:BCO:Q10`` (the first line of the last request): http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_areas/ 
-* get the next departures in the first stop area found with the last request (uri of the stop area ``stop_area:BCO:SA:CTP-BCO550123``):
+* get the upcoming departures in the first stop area found with the last request (uri of the stop area ``stop_area:BCO:SA:CTP-BCO550123``):
   http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/departures/
-* get all the next departure in the first stop area found in the last request, for the network mta:
+* get all the upcoming departures in the first stop area found in the last request, for the network mta:
   http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/networks/network:mta/departures/
 
 
@@ -163,7 +158,7 @@ This API is fast enough to use it for autocompleting a user request.
 What places are within 1000 meters
 **********************************
 
-The ``nearby_places`` API finds any object within a certain radius as a crow flies.
+The ``places_nearby`` API finds any object within a certain radius as a crow flies.
 This API is not accessible from the main endpoint but has to be applied on a stop point, an address, a coordinate,...
 
 All objects around the coordinates of the Transamerica Pyramid can be fetched with the following request: http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/places_nearby
@@ -198,12 +193,27 @@ At last, we are present on IRC on the network Freenode, channel #navitia.
 About…
 ------
 
+About the service
+*****************
+This API is experimental. The parameters and responses are not definite as we will listen to your feedbacks to improve it.
+
+If you plan to build something successful, contact us to get an access with more vitamins and even more support.
+
+.. warning::
+  Authentication is not required now, but will soon become (within april 2014). 
+  Please contact us for details.
+  And remember that there are no restrictions in using our API :)
+    
+
+
 About the data
 **************
 
 The street network is extracted from `OpenStreetMap <http://www.openstreetmap.org>`_ .
 
 The public transport data are provided by networks that provide their timetables as open data.
+
+Some data upgrade are achieved by Canal TP.
 
 About Canal TP
 **************
