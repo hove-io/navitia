@@ -49,12 +49,7 @@ and the more effort we will put to make the API durable.
 Overview
 ********
 
-*navitia*  
-
-* is a RESTful API 
-* build on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_ 
-* TODO VL authentification ?
-* returns `JSON <http://en.wikipedia.org/wiki/Json>`_
+*navitia* is a RESTful API build on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_. It returns `JSON <http://en.wikipedia.org/wiki/Json>`_ formated results.
 
 Our APIs are available at the following url: http://api.navitia.io/.
 
@@ -69,7 +64,7 @@ To provide additional arguments to the API, add them at the end of the query wit
 Have a look at the examples below to learn what API we provide and how to use them.
 
 .. note::
-    The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the result.
+    The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the ``links`` section of the result.
 
 
 Examples
