@@ -95,7 +95,7 @@ class Params{
 public:
     std::vector<std::string> forbidden;
     ed::builder b;
-    std::vector<navitia::type::AtPerturbation> perturbations;    
+    std::vector<navitia::type::AtPerturbation> perturbations;
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;
     std::unique_ptr<navitia::routing::RAPTOR> raptor;
@@ -114,6 +114,29 @@ public:
     };
 
     Params():b("20140113") {
+        /*
+VP
+Validity_pattern principale :
+                    di lu ma me je ve sa
+                       13 14 15 16 17 18
+                    19 20 21 22 23 24 25
+                    26 27 28 29 30 31
+Impact-1
+                    di lu ma me je ve sa
+                       13 ** 15 16 17 18
+                    19 20 21 22 23 24 25
+                    26 27 28 29 30 31
+impact-2
+                    di lu ma me je ve sa
+                       13 14 15 ** ** 18
+                    19 20 21 22 23 24 25
+                    26 27 28 29 30 31
+impact-3
+                    di lu ma me je ve sa
+                       13 14 15 16 17 **
+                    19 20 21 22 23 24 25
+                    26 27 28 29 30 31
+          */
         b.vj("network:R", "line:A", "11111111", "", true, "vj1")("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
         b.vj("network:R", "line:A", "11111111", "", true, "vj2")("stop_area:stop1", 10 * 3600 + 30 * 60, 10 * 3600 + 30 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
         b.generate_dummy_basis();
@@ -158,7 +181,7 @@ public:
 
         add_perturbation(message1);
 
-        //Impact-3 on vj2 from 2014-01-17 00:00:00 à 11h00 to 2014-01-17 23:59:59 à 14h00
+        //Impact-3 on vj2 from 2014-01-18 00:00:00 à 11h00 to 2014-01-18 23:59:59 à 14h00
         boost::shared_ptr<navitia::type::Message> message2;
         message2 = boost::make_shared<navitia::type::Message>();
         message2->uri = "mess3";
@@ -178,9 +201,8 @@ public:
         ed::AtAdaptedLoader adapter;
         adapter.apply(perturbations, b.data.pt_data);
 
-
-        origin = navitia::type::EntryPoint(b.data.get_type_of_id("stop_area:stop1"), "stop_area:stop1");
-        destination = navitia::type::EntryPoint (b.data.get_type_of_id("stop_area:stop2"), "stop_area:stop2");
+        origin = navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop1");
+        destination = navitia::type::EntryPoint (navitia::type::Type_e::StopPoint, "stop_area:stop2");
         street_network = std::make_unique<navitia::georef::StreetNetwork>(b.data.geo_ref);
     }
     pbnavitia::Response make_response(const std::vector<std::string> &datetimes_str, bool without_disrupt) {
@@ -188,7 +210,9 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(Test_without_disrupt_false, Params) {
+BOOST_FIXTURE_TEST_SUITE( without_disrupt, Params)
+
+BOOST_AUTO_TEST_CASE(Test_without_disrupt_false) {
     pbnavitia::Response resp = make_response({"20140114T101000"}, false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
@@ -199,7 +223,7 @@ BOOST_FIXTURE_TEST_CASE(Test_without_disrupt_false, Params) {
     BOOST_CHECK_EQUAL(journey.duration(), 2400);
 }
 
-BOOST_FIXTURE_TEST_CASE(Test_without_disrupt_true, Params) {
+BOOST_AUTO_TEST_CASE(Test_without_disrupt_true) {
 
     //vehiclejourney vj2 impacted (impact-1) from 08h40 to 18h00 for the day of travel
     //We must get vehiclejourney=vj1 in the result.
@@ -246,3 +270,5 @@ BOOST_FIXTURE_TEST_CASE(Test_without_disrupt_true, Params) {
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
     BOOST_CHECK_EQUAL(journey.duration(), 2400);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
