@@ -6,7 +6,7 @@
 Welcome to navitia.io
 =====================
 
-an API to build cool stuff with public transport
+An API to build cool stuff with public transport
 -------------------------------------------------
 
 We provide:
@@ -34,36 +34,42 @@ At some point you will want to read:
     :maxdepth: 1
 
     public_transport
-    API Reference <http://doc.navitia.io>
+    API Reference <http://navitia.io/docv1>
 
-Our APIs are available at the following url: http://api.navitia.io/.
-
-The first parameter of the api has to be the api version number. The current api version is v1 so the api url is http://api.navitia.io/v1.
-
-There are no restriction in using our API. However, please don't make more than one request per second.
+There are no restrictions in using our API. However, please don't make more than one request per second.
 
 .. warning::
     This API is experimental. The parameters and responses are not definite as we will listen to your feedbacks to improve it.
 
-    If you plan to build something successful, contact us to get an access with more vitamines and even more support.
+    If you plan to build something successful, contact us to get an access with more vitamins and even more support.
 
 Let us know if you build something with our API, we will be happy to highlight it on this page. The more feedback we get, the more cities you will get
 and the more effort we will put to make the API durable.
 
-HATEOAS
-*******
+Overview
+********
 
-The api has been build on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_ so the api should be quite self explinatory since the possible interactions are defined in hypermedia.
+*navitia*  
+
+* is a RESTful API 
+* build on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_ 
+* TODO VL authentification ?
+* returns `JSON <http://en.wikipedia.org/wiki/Json>`_
+
+Our APIs are available at the following url: http://api.navitia.io/.
+
+The latest API version is ``v1`` so the API url is http://api.navitia.io/v1.
+
+The API has been built on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_ so the API should be quite self explanatory since the possible interactions are defined in hypermedia.
 
 The different possible actions on a given API level are given in the ``links`` section of the response.
-
 
 To provide additional arguments to the API, add them at the end of the query with the following syntax:  ``?arg1=val1&arg2=val2``.
 
 Have a look at the examples below to learn what API we provide and how to use them.
 
 .. note::
-    The results are paginated to avoid crashing your parser. The parameters to get the next page are within the result.
+    The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the result.
 
 
 Examples
@@ -79,8 +85,9 @@ We need to use the ``journeys`` API.
 
 
 The coordinates of the view point are ``longitude = -122.4752``, ``latitude = 37.80826`` and the coordinates of the Transamercia Pyramid are ``longitude = -122.402770``, ``latitude = 37.794682``.
-The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the api with the following format : ``longitute;latitude``.
-The dates are given in the format ``YYYYMMDDTHHMM``.
+The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the API with the following format: ``longitute;latitude``.
+
+The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``.
 
 The arguments are the following:
 
@@ -89,17 +96,17 @@ The arguments are the following:
 * ``to=-122.402770;37.794682``
 * ``datetime=20130418T0800``
 
-Hence, the complete URL : http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140118T0800.
+Hence, the complete URL: http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140118T0800.
 
 
 A ``journeys`` request might return multiple journeys. Those journeys are said to be *equivalent*. For instance
 a journey can be faster than an other but requires more changes or more walking.
 
-This API has more options explained in the reference as :
+This API has more options explained in the reference as:
 
 * Forbid certain lines, routes or modes
 * Latest departure
-* Enable biking, drinving or use of bike sharing system
+* Enable biking, driving or use of bike sharing system
 
 
 A quick journey in the API
@@ -107,7 +114,7 @@ A quick journey in the API
 
 *navitia* allows to dive into the public transport data.
 
-To better understand how the API works let's ask the api the different main possibilities by simply quering the api endpoint: http://api.navitia.io/v1/
+To better understand how the API works let's ask the API the different main possibilities by simply querying the API endpoint: http://api.navitia.io/v1/
 
 The ``links`` section of the answer contains the different possible interactions with the API.
 
@@ -116,13 +123,16 @@ As you can see there are several possibilities like for example ``coverage`` to 
 
 Now let's see what interactions are possible with ``coverage``: http://api.navitia.io/v1/coverage
 
-This will give you in the ``regions`` section the list of covered regions and the list of possible interactions with them in the ``links`` section.
+This request will give you:
+
+* in the ``regions`` section the list of covered regions 
+* in the ``links`` section the list of possible interactions with them 
 
 
 In the ``links`` section there is for example this link: ``"href": "http://api.navitia.io/v1/coverage/{regions.id}/lines"``
 
 
-This link is templated which means that it needs additional parameters. The parameters are identifed with the ``{`` ``}`` syntax. 
+This link is templated which means that it needs additional parameters. The parameters are identified with the ``{`` ``}`` syntax. 
 In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region: ::
 
     "start_production_date": "20140105",
@@ -132,17 +142,17 @@ In this case it needs a region id. This id can the found in the ``regions`` sect
     "end_production_date": "20140406"
 
 
-To query for the public transport lines of new york we thus have to call: http://api.navitia.io/v1/coverage/ny/lines
+To query for the public transport lines of New York we thus have to call: http://api.navitia.io/v1/coverage/ny/lines
 
 
-Easy isn't it ?
+Easy isn't it?
 
 We could push the exploration further and: 
 
-* Get all the stop areas of the line with the uri ``line:BCO:Q10`` (the first line of the last request): http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_areas/ 
-* Get the next departures in the first stop area found with the last request (uri of the stop area ``stop_area:BCO:SA:CTP-BCO550123``):
+* get all the stop areas of the line with the uri ``line:BCO:Q10`` (the first line of the last request): http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_areas/ 
+* get the next departures in the first stop area found with the last request (uri of the stop area ``stop_area:BCO:SA:CTP-BCO550123``):
   http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/departures/
-* Get all the next departure in the first stop area found in the last request, for the network mta:
+* get all the next departure in the first stop area found in the last request, for the network mta:
   http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/networks/network:mta/departures/
 
 
@@ -151,17 +161,19 @@ What places have a name that start with 'trans'
 
 The ``places`` API finds any object whose name matches the first letters of the query.
 
-To find the objets that start with "trans" the request should be: http://api.navitia.io/v1/coverage/ny/places?q=tran
+To find the objects that start with "trans" the request should be: http://api.navitia.io/v1/coverage/ny/places?q=tran
 
-This API is fast enough to use it for autocompleting an user request.
+This API is fast enough to use it for autocompleting a user request.
 
 What places are within 1000 meters
 **********************************
 
 The ``nearby_places`` API finds any object within a certain radius as a crow flies.
-This API is not accessible from the main endpoint but has to be applied on a stop point, an address, a coordinate, ...
+This API is not accessible from the main endpoint but has to be applied on a stop point, an address, a coordinate,...
 
-All stations arround the Transamerica Pyramid can be fetched with the following request : http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/places_nearby
+All objects around the coordinates of the Transamerica Pyramid can be fetched with the following request: http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/places_nearby
+
+We could, in the same fashion, ask for the objects around a particuliar stop area (``stop_area:BCO:SA:CTP-BCO550123`` for example): http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/places_nearby
 
 Optionally you can select what object types to return and change the radius. 
 
@@ -180,9 +192,9 @@ It returns for each destination stop point the earliest arrival and a link to th
 Getting help
 ------------
 
-All available functions are documented on http://doc.navitia.io.
+All available functions are documented on http://navitia.io/docv1.
 
-A mailing list is available to ask question : navitia@googlegroups.com
+A mailing list is available to ask question: navitia@googlegroups.com
 
 In order to report bug and make requests we created a `github navitia project <https://github.com/CanalTP/navitia/issues>`_ .
 
