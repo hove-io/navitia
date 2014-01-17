@@ -92,7 +92,15 @@ void dataRAPTOR::load(const type::PT_Data &data)
                             time2 = DateTimeUtils::hour(st2->departure_time);
                         else
                             time2 = DateTimeUtils::hour(st2->end_time);
-                        return (time1 == time2 && st1 < st2) || (time1 < time2);});
+                        if(time1 == time2) {
+                            auto st1_first = st1->vehicle_journey->stop_time_list.front();
+                            auto st2_first = st2->vehicle_journey->stop_time_list.front();
+                            if(st1_first->departure_time == st2_first->departure_time) {
+                                return st1_first->vehicle_journey->idx < st2_first->vehicle_journey->idx;
+                            }
+                            return st1_first->departure_time < st2_first->departure_time;
+                        }
+                        return time1 < time2;});
 
             st_idx_forward.insert(st_idx_forward.end(), vec_st.begin(), vec_st.end());
 
@@ -116,7 +124,15 @@ void dataRAPTOR::load(const type::PT_Data &data)
                           time2 = DateTimeUtils::hour(st2->arrival_time);
                       else
                           time2 = DateTimeUtils::hour(st2->start_time);
-                      return (time1 == time2 && st1 > st2) || (time1 > time2);});
+                      if(time1 == time2) {
+                          auto st1_first = st1->vehicle_journey->stop_time_list.front();
+                          auto st2_first = st2->vehicle_journey->stop_time_list.front();
+                          if(st1_first->arrival_time == st2_first->arrival_time) {
+                              return st1_first->vehicle_journey->idx > st2_first->vehicle_journey->idx;
+                          }
+                          return st1_first->arrival_time > st2_first->arrival_time;
+                      }
+                      return time1 > time2;});
 
             st_idx_backward.insert(st_idx_backward.end(), vec_st.begin(), vec_st.end());
             for(auto st : vec_st) {
