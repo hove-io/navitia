@@ -5,11 +5,14 @@ import logging
 # emplacement ou charger les fichier de configuration par instances
 INSTANCES_DIR = '/etc/jormungandr.d'
 
+# Start the thread at startup, True in production, False for test environments
+START_MONITORING_THREAD = False
+
 # chaine de connnection à postgresql pour la base jormungandr
-PG_CONNECTION_STRING = 'postgresql://navitia:navitia@localhost/jormun_test'
+PG_CONNECTION_STRING = 'postgresql://navitia:navitia@localhost/jormun'
 
 # désactivation de l'authentification
-PUBLIC = False
+PUBLIC = True
 
 REDIS_HOST = 'localhost'
 
