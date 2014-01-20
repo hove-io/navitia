@@ -34,7 +34,7 @@ At some point you will want to read:
     :maxdepth: 1
 
     public_transport
-    API Reference <http://navitia.io/docv1>
+    integration
 
 There are no restrictions in using our API. However, please don't make more than one request per second.
 
@@ -44,13 +44,11 @@ and the more effort we will put to make the API durable.
 Overview
 ********
 
-*navitia* is a RESTful API build on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_. It returns `JSON <http://en.wikipedia.org/wiki/Json>`_ formated results.
+*navitia* is a RESTful API that returns `JSON <http://en.wikipedia.org/wiki/Json>`_ formated results.
 
-Our APIs are available at the following url: http://api.navitia.io/.
+Our APIs are available at the following url: http://api.navitia.io/v1 (the latest API version is ``v1``).
 
-The latest API version is ``v1`` so the API url is http://api.navitia.io/v1.
-
-The API has been built on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_ so the API should be quite self explanatory since the possible interactions are defined in hypermedia.
+The API has been built on the `HATEOAS model <http://en.wikipedia.org/wiki/HATEOAS>`_ so the API should be quite self explanatory since the interactions are defined in hypermedia.
 
 The different possible actions on a given API level are given in the ``links`` section of the response.
 
@@ -84,7 +82,7 @@ The arguments are the following:
 
 * ``from=-122.4752;37.80826``
 * ``to=-122.402770;37.794682``
-* ``datetime=20130418T0800``
+* ``datetime=20140118T0800``
 
 Hence, the complete URL: http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140118T0800.
 
@@ -122,7 +120,7 @@ This request will give you:
 In the ``links`` section there is for example this link: ``"href": "http://api.navitia.io/v1/coverage/{regions.id}/lines"``
 
 
-This link is templated which means that it needs additional parameters. The parameters are identified with the ``{`` ``}`` syntax. 
+This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters. The parameters are identified with the ``{`` ``}`` syntax. 
 In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region: ::
 
     "start_production_date": "20140105",
@@ -159,7 +157,7 @@ What places are within 1000 meters
 **********************************
 
 The ``places_nearby`` API finds any object within a certain radius as a crow flies.
-This API is not accessible from the main endpoint but has to be applied on a stop point, an address, a coordinate,...
+This API is not accessible from the main endpoint but has to be applied on a stop point, an address, some coordinates,...
 
 All objects around the coordinates of the Transamerica Pyramid can be fetched with the following request: http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/places_nearby
 
@@ -195,14 +193,13 @@ About…
 
 About the service
 *****************
-This API is experimental. The parameters and responses are not definite as we will listen to your feedbacks to improve it.
-
 If you plan to build something successful, contact us to get an access with more vitamins and even more support.
+
+For the moment, the service is not hosted on a powerful server, so please don't make more than one request per second.
 
 .. warning::
   Authentication is not required now, but will soon become (within april 2014). 
   Please contact us for details.
-  And remember that there are no restrictions in using our API :)
     
 
 
@@ -213,7 +210,7 @@ The street network is extracted from `OpenStreetMap <http://www.openstreetmap.or
 
 The public transport data are provided by networks that provide their timetables as open data.
 
-Some data upgrade are achieved by Canal TP.
+Some data improvement are achieved by Canal TP.
 
 About Canal TP
 **************
