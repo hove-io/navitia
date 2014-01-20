@@ -30,7 +30,7 @@ def configure_logger(app):
     logging.getLogger('sqlalchemy.pool').addHandler(handler)
     logging.getLogger('sqlalchemy.dialects.postgresql').addHandler(handler)
 
-    celery.log.setup(loglevel=app.config["LOG_LEVEL"], logfile=filename)
+    celery.log.setup_logger(loglevel=app.config["LOG_LEVEL"], logfile=filename)
 
 
 def make_celery(app):
