@@ -7,7 +7,7 @@ from redis import Redis
 
 app = Flask(__name__)
 app.config.from_object('tyr.default_settings')
-#app.config.from_envvar('PYED_CONFIG_FILE')
+app.config.from_envvar('TYR_CONFIG_FILE')
 
 configure_logger(app)
 
