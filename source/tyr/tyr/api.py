@@ -9,7 +9,7 @@ api.add_resource(resources.Instance, '/v0/instances/')
 api.add_resource(resources.Api, '/v0/api/')
 
 api.add_resource(resources.User, '/v0/users/',
-        '/v0/users/<int:user_id>/', '/v0/users/<string:login>/')
+        '/v0/users/<int:user_id>/')
 
 api.add_resource(resources.Key, '/v0/users/<int:user_id>/keys/',
         '/v0/users/<int:user_id>/keys/<int:key_id>/')
