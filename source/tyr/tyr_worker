@@ -1,0 +1,90 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          tyr_worker
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: start tyr workers
+# Description:       tyr workers do binarisation of data for kraken
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME=tyr_worker
+DAEMON="/usr/local/bin/celery"
+DAEMON_OPTS="-A tyr.tasks --detach --events worker"
+USER=www-data
+GROUP=www-data
+PID=/var/run/tyr_worker.pid
+#path to settings.py for tyr
+TYR_CONFIG_FILE=""
+
+
+test -x $DAEMON || exit 1
+
+funcstatus(){
+    ps p `cat $PID 2>/dev/null` 2>/dev/null | grep -q $DAEMON
+    if [ $? -eq 0 ]
+    then
+        STATUS=0
+    else
+        STATUS=3
+    fi
+}
+
+funcstart(){
+    funcstatus
+    if [ $STATUS -ne 0 ]
+    then
+        echo "Starting $NAME: "
+        export TYR_CONFIG_FILE
+        start-stop-daemon --start --exec $DAEMON -- --uid=$USER --gid=$GROUP --pidfile=$PID $DAEMON_OPTS
+        echo "done."
+    else
+        echo "$NAME already running"
+    fi
+}
+
+funcstop(){
+    echo "Stopping $NAME: "
+    start-stop-daemon --start --exec $DAEMON -- --uid=$USER --gid=$GROUP --pidfile=$PID $DAEMON_OPTS
+    start-stop-daemon --stop --pidfile $PID --retry forever
+    if [ $? -eq 0 ]
+    then
+        rm $PID
+        echo "done."
+    else
+        echo "failed"
+        exit 1
+    fi
+}
+
+
+case "$1" in
+  start)
+        funcstart
+        ;;
+  stop)
+      funcstop
+        ;;
+  restart)
+        funcstop
+        funcstart
+        ;;
+  status)
+        funcstatus
+        if [ $STATUS -eq 0 ]
+        then
+            echo $NAME is running
+        else
+            echo $NAME is NOT running
+        fi
+        exit $STATUS
+        ;;
+  *)
+        echo "Usage: /etc/init.d/$NAME {start|stop|restart|status}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
