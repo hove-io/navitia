@@ -13,11 +13,11 @@ from kombu.mixins import ConsumerMixin
 class Sindri(ConsumerMixin):
 
     """
-    Classe gérant le service de persitances des événements temps réel envoyés
-    sur rabbitmq.
-    Sindri et Brokk sont des fréres nains forgerons de la mythologie nordique
+    this is the service who handle the persistence of realtime events send to
+    rabbitmq
+    Sindri and Brokk are smiths dwarfs brothers in the nordic mythology
 
-    l'utilisation est la suivante:
+    usage:
     sindri = Sindri()
     sindri.init(conf_filename)
     sindri.run()
@@ -33,7 +33,7 @@ class Sindri(ConsumerMixin):
 
     def init(self, filename):
         """
-        initialise le service via le fichier de conf passer en paramétre
+        init the service with the configuration file taken in parameter
         """
         self.config.load(filename)
         self.ed_realtime_saver = EdRealtimeSaver(self.config)
@@ -42,15 +42,13 @@ class Sindri(ConsumerMixin):
 
     def _init_logger(self, filename='', level='debug'):
         """
-        initialise le logger, par défaut level=Debug
-        et affichage sur la sortie standard
+        initialise loggers, by default to debug level and with output on stdout
         """
         level = getattr(logging, level.upper(), logging.DEBUG)
         logging.basicConfig(filename=filename, level=level)
 
         if level == logging.DEBUG:
-            # on active les logs de sqlalchemy si on est en debug:
-            # log des requetes et des resultats
+            # if we are in debug we log all sql request and results
             logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
             logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
             logging.getLogger('sqlalchemy.dialects.postgresql')\
@@ -58,7 +56,7 @@ class Sindri(ConsumerMixin):
 
     def _init_rabbitmq(self):
         """
-        initialise les queue rabbitmq
+        connect to rabbitmq and init the queues
         """
         self.connection = kombu.Connection(self.config.broker_url)
         instance_name = self.config.instance_name
@@ -76,8 +74,6 @@ class Sindri(ConsumerMixin):
 
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=self.queues, callbacks=[self.process_task])]
-
-
 
     def handle_message(self, task):
         if task.message.IsInitialized():
@@ -120,8 +116,8 @@ class Sindri(ConsumerMixin):
 
             message.ack()
         except TechnicalError:
-            # en cas d'erreur technique (DB KO) on acknoledge pas la tache
-            # et on attend 10sec
+            # on technical error (like a database KO) we retry this task later
+            # and we sleep 10 seconds
             message.requeue()
             time.sleep(10)
         except:
