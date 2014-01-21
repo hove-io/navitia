@@ -4,6 +4,9 @@
 #include "utils/timer.h"
 #include "utils/functions.h"
 #include <boost/geometry.hpp>
+#include <boost/geometry/geometry.hpp>
+
+
 
 namespace nt = navitia::type;
 namespace ed{
@@ -316,16 +319,20 @@ std::string Data::compute_bounding_box(navitia::type::PT_Data &data) {
     for(const navitia::type::StopPoint* sp : data.stop_points) {
         bag.push_back(sp->coord);
     }
-    boost::geometry::model::box<navitia::type::GeographicalCoord> envelope, buffer;
+    using coord_box = boost::geometry::model::box<navitia::type::GeographicalCoord>;
+    coord_box envelope, buffer;
     boost::geometry::envelope(bag, envelope);
     boost::geometry::buffer(envelope, buffer, 0.01);
 
     std::ostringstream os;
     os << "{\"type\": \"Polygon\", \"coordinates\": [[";
-    typedef boost::geometry::box_view<decltype(buffer)> box_view;
     std::string sep = "";
-    auto functor = [&os, &sep](navitia::type::GeographicalCoord coord){os << sep << "[" << coord.lon() << ", " << coord.lat() << "]"; sep = ",";};
-    boost::geometry::for_each_point(box_view(buffer), functor);
+
+    boost::geometry::box_view<coord_box> view {buffer};
+    for (auto coord : view) {
+        os << sep << "[" << coord.lon() << ", " << coord.lat() << "]";
+        sep = ",";
+    }
     os << "]]}";
     return os.str();
 }
