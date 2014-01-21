@@ -1,5 +1,5 @@
-Interface V1's documentation!
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Interface V1's documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Contents:
 
 .. toctree::
@@ -454,7 +454,7 @@ type                *enum* string      Use to qualified a journey can be ``comfo
 +--------------------------+------------------------------------+--------------------------------------------------------+
 | geojson                  | `GeoJson <http://www.geojson.org>` |                                                        |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| path                     | Array of path                     | The path of this section                               |
+| path                     | Array of path                      | The path of this section                               |
 +--------------------------+------------------------------------+--------------------------------------------------------+
 | transfer_type            | *enum* string                      | The type of this transfer it can be : ``WALKING``,     |
 |                          |                                    | ``GUARANTEED``, ``EXTENSION``                          |
@@ -527,7 +527,7 @@ Rows    Array of row_     A row of the schedule
 | display_informations     | :ref:`display_informations` | Usefull informations about the    |
 |                          |                             | the vehicle journey to display    |
 +--------------------------+-----------------------------+-----------------------------------+
-| links                    | Array of link_              | Links to line_, vehicle_journey, |
+| links                    | Array of link_              | Links to line_, vehicle_journey,  |
 |                          |                             | route_, commercial_mode_,         |
 |                          |                             | physical_mode_, network_          |
 +--------------------------+-----------------------------+-----------------------------------+

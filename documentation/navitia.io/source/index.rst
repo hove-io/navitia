@@ -144,12 +144,12 @@ We could push the exploration further and:
   http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/networks/network:mta/departures/
 
 
-What places have a name that start with 'trans'
-***********************************************
+What places have a name that start with 'tran'
+**********************************************
 
 The ``places`` API finds any object whose name matches the first letters of the query.
 
-To find the objects that start with "trans" the request should be: http://api.navitia.io/v1/coverage/ny/places?q=tran
+To find the objects that start with "tran" the request should be: http://api.navitia.io/v1/coverage/ny/places?q=tran
 
 This API is fast enough to use it for autocompleting a user request.
 
