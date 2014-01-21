@@ -10,12 +10,12 @@
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-NAME=tyr_worker
+NAME=tyr_beat
 DAEMON="/usr/local/bin/celery"
-DAEMON_OPTS="-A tyr.tasks --detach --events beat"
+DAEMON_OPTS="-A tyr.tasks --detach beat"
 USER=www-data
-GROUP=www-data
-PID=/var/run/tyr_beat.pid
+GROUP=www-dat
+PID=/tmp/tyr_beat.pid
 #path to settings.py for tyr
 TYR_CONFIG_FILE=""
 
@@ -38,7 +38,7 @@ funcstart(){
     then
         echo "Starting $NAME: "
         export TYR_CONFIG_FILE
-        start-stop-daemon --start --exec $DAEMON -- --uid=$USER --gid=$GROUP --pidfile=$PID $DAEMON_OPTS
+        start-stop-daemon --start --chdir /tmp --exec $DAEMON -- --uid=$USER --gid=$GROUP --pidfile=$PID  $DAEMON_OPTS
         echo "done."
     else
         echo "$NAME already running"
@@ -48,7 +48,7 @@ funcstart(){
 funcstop(){
     echo "Stopping $NAME: "
     export TYR_CONFIG_FILE
-    start-stop-daemon --stop  --pidfile $PID --retry forever
+    start-stop-daemon --stop --pidfile $PID
     if [ $? -eq 0 ]
     then
         rm $PID
