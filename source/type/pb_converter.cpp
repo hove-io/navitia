@@ -821,6 +821,9 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         if (r->line->network != nullptr){
             pt_display_info->set_network(r->line->network->name);
             uris->set_network(r->line->network->uri);
+            for(auto message : r->line->network->get_applicable_messages(now, action_period)){
+                fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
+            }
         }
         if (r->line->commercial_mode != nullptr){
             pt_display_info->set_commercial_mode(r->line->commercial_mode->name);
