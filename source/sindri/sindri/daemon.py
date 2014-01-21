@@ -1,14 +1,16 @@
 # encoding: utf-8
 from sindri.config import Config
-import pika
 import logging
 import sindri.task_pb2
 import google
 from sindri.saver import EdRealtimeSaver, TechnicalError, FunctionalError
 import sys
+import time
+import kombu
+from kombu.mixins import ConsumerMixin
 
 
-class Sindri(object):
+class Sindri(ConsumerMixin):
 
     """
     Classe gérant le service de persitances des événements temps réel envoyés
@@ -23,7 +25,8 @@ class Sindri(object):
 
     def __init__(self):
         self.connection = None
-        self.channel = None
+        self.exchange = None
+        self.queues = []
         self.ed_realtime_saver = None
         self._init_logger()
         self.config = Config()
@@ -33,17 +36,9 @@ class Sindri(object):
         initialise le service via le fichier de conf passer en paramétre
         """
         self.config.load(filename)
-# la DB doit etre prete avant d'initialiser rabbitmq, on peut recevoir des
-# tache avant d'avoir lancer la boucle d'evenement
         self.ed_realtime_saver = EdRealtimeSaver(self.config)
         self._init_rabbitmq()
 
-    def run(self):
-        """
-        lance la boucle de traitement
-        """
-        logging.getLogger('sindri').info("start consuming")
-        self.channel.start_consuming()
 
     def _init_logger(self, filename='', level='debug'):
         """
@@ -65,30 +60,24 @@ class Sindri(object):
         """
         initialise les queue rabbitmq
         """
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host=self.config.rabbitmq_host,
-            port=self.config.rabbitmq_port,
-            virtual_host=self.config.rabbitmq_vhost,
-            credentials=pika.credentials.PlainCredentials(
-                self.config.rabbitmq_username, self.config.rabbitmq_password)
-        ))
-        self.channel = self.connection.channel()
+        self.connection = kombu.Connection(self.config.broker_url)
         instance_name = self.config.instance_name
         exchange_name = self.config.exchange_name
-        self.channel.exchange_declare(exchange=exchange_name, type='topic',
-                                      durable=True)
-        # la queue pour sindri doit etre persistante
-        # on veux pouvoir gérer la reprise sur incident
-        queue_name = instance_name + '_sindri'
-        self.channel.queue_declare(queue=queue_name, durable=True)
+        exchange = kombu.Exchange(exchange_name, 'topic', durable=True)
+
         logging.getLogger('sindri').info("listen following topics: %s",
                                          self.config.rt_topics)
-        # on bind notre queue pour les différent topics spécifiés
-        for binding_key in self.config.rt_topics:
-            self.channel.queue_bind(exchange=exchange_name,
-                                    queue=queue_name, routing_key=binding_key)
 
-        self.channel.basic_consume(self.callback, queue=queue_name)
+        for topic in self.config.rt_topics:
+            queue_name = instance_name + '_sindri_' + topic
+            queue = kombu.Queue(queue_name, exchange=exchange, durable=True,
+                                routing_key=topic)
+            self.queues.append(queue)
+
+    def get_consumers(self, Consumer, channel):
+        return [Consumer(queues=self.queues, callbacks=[self.process_task])]
+
+
 
     def handle_message(self, task):
         if task.message.IsInitialized():
@@ -111,7 +100,7 @@ class Sindri(object):
             logging.getLogger('sindri').warn("at perturbation task whitout "
                                              "payload")
 
-    def callback(self, ch, method, properties, body):
+    def process_task(self, body, message):
         logging.getLogger('sindri').debug("Message received")
         task = sindri.task_pb2.Task()
         try:
@@ -120,7 +109,7 @@ class Sindri(object):
         except google.protobuf.message.DecodeError as e:
             logging.getLogger('sindri').warn("message is not a valid "
                                              "protobuf task: %s", str(e))
-            ch.basic_ack(delivery_tag=method.delivery_tag)
+            message.ack()
             return
 
         try:
@@ -129,12 +118,12 @@ class Sindri(object):
             elif(task.action == sindri.task_pb2.AT_PERTURBATION):
                 self.handle_at_perturbation(task)
 
-            ch.basic_ack(delivery_tag=method.delivery_tag)
+            message.ack()
         except TechnicalError:
             # en cas d'erreur technique (DB KO) on acknoledge pas la tache
             # et on attend 10sec
-            ch.basic_nack(delivery_tag=method.delivery_tag)
-            self.connection.sleep(10)
+            message.requeue()
+            time.sleep(10)
         except:
             logging.exception('fatal')
             sys.exit(1)
@@ -143,5 +132,5 @@ class Sindri(object):
         self.close()
 
     def close(self):
-        if self.connection:
-            self.connection.close()
+        if self.connection and self.connection.connected:
+            self.connection.release()

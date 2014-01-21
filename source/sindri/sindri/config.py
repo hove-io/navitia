@@ -9,12 +9,7 @@ class Config(object):
 
     """
     def __init__(self):
-        self.rabbitmq_host = None
-        self.rabbitmq_port = None
-        self.rabbitmq_username = None
-        self.rabbitmq_password = None
-        self.rabbitmq_vhost = None
-
+        self.broker_url = None
         self.ed_connection_string = None
 
         self.exchange_name = None
@@ -45,13 +40,6 @@ class Config(object):
         si elle n'est pas valide une ValueError est levé
         """
         confspec = []
-        confspec.append('[rabbitmq]')
-        confspec.append('host = string(default="localhost")')
-        confspec.append('port = integer(0, 65535, default=5672)')
-        confspec.append('username = string(default="guest")')
-        confspec.append('password = string(default="guest")')
-        confspec.append('vhost = string(default="/")')
-
         confspec.append('[ed]')
         confspec.append('connection-string = string()')
 
@@ -59,22 +47,18 @@ class Config(object):
         confspec.append('exchange-name = string(default="navitia")')
         confspec.append('instance-name = string()')
         confspec.append('rt-topics = string_list()')
+        confspec.append('broker_url = string(default="amqp://guest:guest@localhost:5672//")')
 
         config = ConfigObj(config_file, configspec=confspec, stringify=True)
 
         val = Validator()
         res = config.validate(val, preserve_errors=True)
         #validate retourne true, ou un dictionaire  ...
-        if type(res) is bool and res:
+        if type(res) is dict:
             error = self.build_error(config, res)
             raise ValueError("Config is not valid: " + error)
 
-        self.rabbitmq_host = config['rabbitmq']['host']
-        self.rabbitmq_port = config['rabbitmq']['port']
-        self.rabbitmq_username = config['rabbitmq']['username']
-        self.rabbitmq_password = config['rabbitmq']['password']
-        self.rabbitmq_vhost = config['rabbitmq']['vhost']
-        self.rabbitmq_vhost = config['rabbitmq']['vhost']
+        self.broker_url = config['sindri']['broker_url']
         self.ed_connection_string = config['ed']['connection-string']
         self.instance_name = config['sindri']['instance-name']
         self.rt_topics = config['sindri']['rt-topics']
