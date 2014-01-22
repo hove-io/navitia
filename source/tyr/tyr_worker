@@ -15,7 +15,7 @@ DAEMON="/usr/local/bin/celery"
 DAEMON_OPTS="-A tyr.tasks --detach --events worker"
 USER=www-data
 GROUP=www-data
-PID=/var/run/tyr_worker.pid
+PID=/tmp/tyr_worker.pid
 #path to settings.py for tyr
 TYR_CONFIG_FILE=""
 
@@ -23,7 +23,7 @@ TYR_CONFIG_FILE=""
 test -x $DAEMON || exit 1
 
 funcstatus(){
-    ps p `cat $PID 2>/dev/null` 2>/dev/null | grep -q $DAEMON
+    ps p `cat $PID 2>/dev/null` 2>/dev/null | grep -q celery
     if [ $? -eq 0 ]
     then
         STATUS=0
@@ -47,8 +47,7 @@ funcstart(){
 
 funcstop(){
     echo "Stopping $NAME: "
-    start-stop-daemon --start --exec $DAEMON -- --uid=$USER --gid=$GROUP --pidfile=$PID $DAEMON_OPTS
-    start-stop-daemon --stop --pidfile $PID --retry forever
+    start-stop-daemon --stop --pidfile $PID
     if [ $? -eq 0 ]
     then
         rm $PID
