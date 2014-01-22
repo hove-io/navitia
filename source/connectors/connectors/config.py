@@ -5,7 +5,7 @@ from validate import Validator
 
 class Config(object):
     """
-    class de configuration de at_connector
+    class de configuration of at_connector
 
     """
     def __init__(self):
@@ -23,7 +23,7 @@ class Config(object):
 
     def build_error(self, config, validate_result):
         """
-        construit la chaine d'erreur si la config n'est pas valide
+        build error messages with the return of validate
         """
         result = ""
         for entry in flatten_errors(config, validate_result):
@@ -41,8 +41,8 @@ class Config(object):
 
     def load(self, config_file):
         """
-        charge la configuration depuis le fichier de conf et la valide
-        si elle n'est pas valide une ValueError est levé
+        load and validate the configuration from the file.
+        if she is not valid an ValueError is raise
         """
         confspec = []
         confspec.append('[connector-at]')

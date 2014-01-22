@@ -47,16 +47,14 @@ def get_navitia_type(object_type):
 class AtRealtimeReader(object):
 
     """
-    Classe responsable de la lecture en base de donnee des evenements
-    temps reel.
+    This class load messages and perturbation from the "alerte trafic" database
     """
 
     def __init__(self, config, redis_helper):
         self.message_list = []
         self.perturbation_list = []
         self.__engine = create_engine(
-            config.at_connection_string + '?charset=utf8',
-            echo=False)
+            config.at_connection_string + '?charset=utf8', echo=False)
         self._redis_helper = redis_helper
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)

@@ -47,7 +47,7 @@ class Config(object):
         confspec.append('exchange-name = string(default="navitia")')
         confspec.append('instance-name = string()')
         confspec.append('rt-topics = string_list()')
-        confspec.append('broker_url = string(default="amqp://guest:guest@localhost:5672//")')
+        confspec.append('broker-url = string(default="amqp://guest:guest@localhost:5672//")')
 
         config = ConfigObj(config_file, configspec=confspec, stringify=True)
 
@@ -58,7 +58,7 @@ class Config(object):
             error = self.build_error(config, res)
             raise ValueError("Config is not valid: " + error)
 
-        self.broker_url = config['sindri']['broker_url']
+        self.broker_url = config['sindri']['broker-url']
         self.ed_connection_string = config['ed']['connection-string']
         self.instance_name = config['sindri']['instance-name']
         self.rt_topics = config['sindri']['rt-topics']

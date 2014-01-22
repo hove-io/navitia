@@ -18,7 +18,7 @@ class ConnectorAT(object):
 
     def init(self, filename):
         """
-        initialise le service via le fichier de conf passer en paramétre
+        initialize the service with the configuration file taken in parameters
         """
         self.config.load(filename)
         self._init_redishelper()
@@ -28,8 +28,7 @@ class ConnectorAT(object):
 
     def _init_logger(self, filename='', level='debug'):
         """
-        initialise le logger, par défaut level=Debug
-        et affichage sur la sortie standard
+        initialise loggers, by default to debug level and with output on stdout
         """
         level = getattr(logging, level.upper(), logging.DEBUG)
         logging.basicConfig(filename=filename, level=level)
@@ -50,7 +49,7 @@ class ConnectorAT(object):
 
     def _init_rabbitmq(self):
         """
-        initialise les queue rabbitmq
+        initialize the rabbitmq connection and setup the producer
         """
         self.connection = kombu.Connection(self.config.broker_url)
         exchange_name = self.config.exchange_name
