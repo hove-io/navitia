@@ -10,44 +10,6 @@ import connectors.realtime_pb2
 import connectors.type_pb2
 import google
 import os
-#
-# SELECT "
-#             "event.event_id AS event_id, " //0
-#             "impact.impact_id AS impact_id, " //1
-#             "convert(varchar, event.event_publicationstartdate, 121)
-# AS  publication_start_date, "//2
-#             "convert(varchar, event.event_publicationenddate, 121)
-# AS  publication_end_date, "//3
-#             "convert(varchar, impact.impact_eventstartdate, 121)
-# AS application_start_date, "//4
-#             "convert(varchar, impact.impact_eventenddate, 121)
-# AS application_end_date, "//5
-#             "convert(varchar, impact.impact_dailystartdate, 108)
-# AS application_daily_start_hour, "//6
-#             "convert(varchar, impact.impact_dailyenddate, 108)
-# AS application_daily_end_hour, "//7
-#             "impact.impact_activedays AS active_days, "//8
-#             "tcobjectref.tcobjectcodeext AS object_external_code, "//9
-#             "tcobjectref.tcobjecttype AS object_type, "//10
-#             "impactBroadcast.impact_title AS title, "//11
-#             "ImpactBroadcast.impact_msg AS message "//12
-#         "FROM "
-#             "event "
-#             "INNER JOIN impact ON (event.event_id = impact.event_id) "
-#             "INNER JOIN tcobjectref ON (impact.tcobjectref_id =
-# tcobjectref.tcobjectref_id) "
-#             "INNER JOIN impactbroadcast ON
-# (impactbroadcast.Impact_ID = impact.Impact_ID) "
-#             "INNER JOIN msgmedia ON
-# (impactbroadcast.msgmedia_id = msgmedia.msgmedia_id) "
-#         "WHERE "
-#             "event.event_publicationenddate >=
-# CONVERT(DATETIME, :date_pub, 126) "
-#             "AND (event.event_closedate IS NULL OR
-# event.event_closedate > CONVERT(DATETIME, :date_clo, 126)) "
-#             "AND msgmedia.msgmedia_lang = :media_lang "
-#             "AND msgmedia.msgmedia_media = :media_media"
-#     );
 
 
 def int_to_bitset(s):
