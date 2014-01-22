@@ -102,6 +102,9 @@ SIZE_EXT_CODE(CLEAR_EXT_CODE)
     start = pt::microsec_clock::local_time();
     ed::AtAdaptedLoader adapter;
     adapter.apply(perturbations, data.pt_data);
+    if (perturbations.size() > 0){
+        data.build_midnight_interchange();
+    }
     //aprés avoir modifié les graphs; on retrie
     data.pt_data.sort();
 #define COMP_SIZE1(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
