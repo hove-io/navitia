@@ -149,8 +149,9 @@ impact-3
                                                                 ("stop_area:stop03", 17 * 3600 + 10 * 60 ,17 * 3600 + 10 * 60);
 
         b.vj("network:PASS", "line:PASS", "11111", "", true, "vj4")("stop_area:stopP1", 22 * 3600 + 30 * 60, 22 * 3600 + 30 * 60)
-                                                                ("stop_area:stopP2", 23 * 3600 + 10 * 60 ,23 * 3600 + 10 * 60)
-                                                                ("stop_area:stopP3", 24 * 3600 + 10 * 60 ,24 * 3600 + 10 * 60);
+                                                                   ("stop_area:stopP2", 23 * 3600 + 10 * 60 ,23 * 3600 + 10 * 60)
+                                                                   ("stop_area:stopP3", 24 * 3600 + 10 * 60 ,24 * 3600 + 10 * 60);
+
         navitia::type::VehicleJourney* vj2 =  b.data.pt_data.vehicle_journeys[1];
         //Impact-1 on vj2 from 2014-01-14 08:32:00 à 08h40 to 2014-01-14 18:32:00 à 18h00
         boost::shared_ptr<navitia::type::Message> message;
@@ -220,8 +221,8 @@ impact-3
         message->uri = "mess5";
         message->object_uri="stop_area:stopP3";
         message->object_type = navitia::type::Type_e::StopPoint;
-        message->application_period = pt::time_period(pt::time_from_string("2014-01-15 00:00:00"),
-                                                      pt::time_from_string("2014-01-15 23:59:59"));
+        message->application_period = pt::time_period(pt::time_from_string("2014-01-16 00:00:00"),
+                                                      pt::time_from_string("2014-01-16 23:59:59"));
         message->publication_period = pt::time_period(pt::time_from_string("2014-01-14 00:00:00"),
                                                       pt::time_from_string("2014-01-30 23:59:00"));
         message->active_days = std::bitset<8>("11111111");
@@ -232,6 +233,8 @@ impact-3
 
         ed::AtAdaptedLoader adapter;
         adapter.apply(perturbations, b.data.pt_data);
+        b.data.build_midnight_interchange();
+        b.build_relations(b.data.pt_data);
         b.generate_dummy_basis();
         b.data.pt_data.index();
         b.data.pt_data.sort();
@@ -350,7 +353,91 @@ BOOST_AUTO_TEST_CASE(Test_without_disrupt_false) {
     // Tests passe-minuit
     origin = navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stopP1");
     destination = navitia::type::EntryPoint (navitia::type::Type_e::StopPoint, "stop_area:stopP3");
-    pbnavitia::Response resp = make_response({"20140113T210000"}, true);
+    pbnavitia::Response resp = make_response({"20140114T210000"}, true);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Section section = journey.sections(0);
+    pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
+    BOOST_CHECK_EQUAL(journey.duration(), 6000);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T223000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140115T001000");
+}
+{
+    // Tests passe-minuit
+    origin = navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stopP1");
+    destination = navitia::type::EntryPoint (navitia::type::Type_e::StopPoint, "stop_area:stopP3");
+    pbnavitia::Response resp = make_response({"20140114T210000"}, false);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Section section = journey.sections(0);
+    pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
+    BOOST_CHECK_EQUAL(journey.duration(), 6000);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T223000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140115T001000");
+}
+{
+    // Tests passe-minuit
+    origin = navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stopP1");
+    destination = navitia::type::EntryPoint (navitia::type::Type_e::StopPoint, "stop_area:stopP3");
+    pbnavitia::Response resp = make_response({"20140115T210000"}, false);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Section section = journey.sections(0);
+    pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
+    BOOST_CHECK_EQUAL(journey.duration(), 6000);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140115T223000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140116T001000");
+}
+{
+    // Tests passe-minuit
+    origin = navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stopP1");
+    destination = navitia::type::EntryPoint (navitia::type::Type_e::StopPoint, "stop_area:stopP3");
+    pbnavitia::Response resp = make_response({"20140115T210000"}, true);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Section section = journey.sections(0);
+    pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
+    BOOST_CHECK_EQUAL(journey.duration(), 6000);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140116T223000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140117T001000");
+}
+{
+    // Tests passe-minuit
+    origin = navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stopP1");
+    destination = navitia::type::EntryPoint (navitia::type::Type_e::StopPoint, "stop_area:stopP2");
+    pbnavitia::Response resp = make_response({"20140115T210000"}, true);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Section section = journey.sections(0);
+    pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4:adapted:0");
+    BOOST_CHECK_EQUAL(journey.duration(), 2400);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140115T223000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140115T231000");
+}
+{
+    // Tests passe-minuit
+    origin = navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stopP1");
+    destination = navitia::type::EntryPoint (navitia::type::Type_e::StopPoint, "stop_area:stopP2");
+    pbnavitia::Response resp = make_response({"20140115T210000"}, false);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Section section = journey.sections(0);
+    pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
+    BOOST_CHECK_EQUAL(journey.duration(), 2400);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140115T223000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140115T231000");
 }
 }
 
