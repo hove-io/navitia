@@ -161,6 +161,10 @@ nt::VehicleJourney* create_adapted_vj(
     nt::JourneyPattern* jp = new nt::JourneyPattern(*vj_adapted->journey_pattern);
     data.journey_patterns.push_back(jp);
     vj_adapted->journey_pattern = jp;
+    auto it = std::find(jp->vehicle_journey_list.begin(), jp->vehicle_journey_list.end(), current_vj);
+    if(it != jp->vehicle_journey_list.end()){
+        jp->vehicle_journey_list.erase(it);
+    }
     jp->vehicle_journey_list.push_back(vj_adapted);
     jp->uri = vj_adapted->journey_pattern->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_patterns.size());
     //@TODO changer l'uri
