@@ -36,7 +36,7 @@ typedef std::vector<idx_distance> vec_idx_distance;
 template<typename T>
 inline void memset32(T*buf, uint n, T c)
 {
-    for(register uint i = 0; i < n; i++) *buf++ = c;
+    for(uint i = 0; i < n; i++) *buf++ = c;
 }
 
 
