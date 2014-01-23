@@ -142,7 +142,7 @@ ValidityPattern* Data::find_validity_pattern(ValidityPattern* ref_validity_patte
     if(time > 24*3600) {
         std::bitset<366> tmp_days = ref_validity_pattern->days;
         tmp_days <<= 1;
-        auto find_vp_predicate = [&](ValidityPattern* vp1) { return tmp_days == vp1->days;};
+        auto find_vp_predicate = [&](ValidityPattern* vp1) { return ((tmp_days == vp1->days) && (ref_validity_pattern->beginning_date == vp1->beginning_date));};
         auto it = std::find_if(this->pt_data.validity_patterns.begin(),
                             this->pt_data.validity_patterns.end(), find_vp_predicate);
         if(it != this->pt_data.validity_patterns.end()) {
