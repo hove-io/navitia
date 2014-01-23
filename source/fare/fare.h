@@ -3,6 +3,9 @@
 #include "config.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include "routing/routing.h"
+
+namespace navitia { namespace fare {
 
 /// Définit un billet : libellé et tarif
 struct SectionKey;
@@ -28,13 +31,13 @@ struct DateTicket {
     std::vector<date_ticket_t> tickets;
 
     /// Retourne le tarif à une date données
-    Ticket get_fare(boost::gregorian::date date);
+    Ticket get_fare(boost::gregorian::date date) const;
 
     /// Ajoute une nouvelle période
     void add(std::string begin_date, std::string end_date, Ticket ticket);
 
     /// Somme deux tickets, suppose qu'il y a le même nombre de billet et que les dates sont compatibles
-    DateTicket operator+(DateTicket & other);
+    DateTicket operator+(const DateTicket & other) const;
 };
 
 struct no_ticket{};
@@ -77,7 +80,7 @@ struct State {
 
 
 /// Type de comparaison possible entre un arc et une valeur
-enum Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True};
+enum class Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True};
 
 /// Définit un arc et les conditions pour l'emprunter
 /// Les conditions peuvent être : prendre u
@@ -96,7 +99,7 @@ struct Condition {
     /// Valeur à comparer
     std::string value;
 
-    Condition() : comparaison(True) {}
+    Condition() : comparaison(Comp_e::True) {}
 };
 
 
@@ -155,26 +158,6 @@ struct Transition {
     bool valid(const SectionKey & section, const Label & label) const;
 };
 
-/// Exception levée si on utilise une clef inconnue
-struct invalid_key : std::exception{};
-
-/// Parse un état
-State parse_state(const std::string & state);
-
-/// Parse une condition de passage
-Condition parse_condition(const std::string & condition);
-
-/// Exception levée si on n'arrive pas à parser une condition
-struct invalid_condition : std::exception {};
-
-/// Parse une liste de conditions séparés par des &
-std::vector<Condition> parse_conditions(const std::string & conditions);
-
-/// Parse l'heure au format hh|mm
-int parse_time(const std::string & time_str);
-
-/// Parse la date au format AAAA|MM|JJ
-boost::gregorian::date parse_nav_date(const std::string & date_str);
 
 struct OD_key{
     enum od_type {Zone, StopArea, Mode};
@@ -191,18 +174,16 @@ struct OD_key{
     }
 };
 
+struct results {
+    std::vector<Ticket> tickets;
+};
+
 /// Contient l'ensemble du système tarifaire
 struct Fare {
     /// Map qui associe les clefs de tarifs aux tarifs
     std::map<std::string, DateTicket> fare_map;
 
     std::map< OD_key, std::map<OD_key, std::vector<std::string> > > od_tickets;
-
-    /// Charge les deux fichiers obligatoires
-    void init(const std::string & filename, const std::string & prices_filename);
-
-    /// Charge les tarifs
-    void load_fares(const std::string & filename);
 
     /// Contient le graph des transitions
     typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, State, Transition > Graph;
@@ -212,16 +193,14 @@ struct Fare {
 
     /// Effectue la recherche du meilleur tarif
     /// Retourne une liste de billets à acheter
-    std::vector<Ticket> compute(const std::vector<std::string> & section_keys);
+    results compute_fare(const std::vector<std::string>& path) const;
 
-    /// Charge le fichier d'OD générique
-    void load_od(const std::string & filename);
-
-    /// Charge le fichier d'OD du stif
-    void load_od_stif(const std::string & filename);
-
+private:
     /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
-    DateTicket get_od(Label label, SectionKey section);
+    DateTicket get_od(Label label, SectionKey section) const;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 };
 
 
+}
+}
