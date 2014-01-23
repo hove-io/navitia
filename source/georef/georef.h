@@ -299,7 +299,7 @@ struct GeoRef {
     /** Projete chaque stop_point sur le filaire de voirie
      *  Retourne le nombre de stop_points effectivement accrochés
      */
-    int project_stop_points(const std::vector<type::StopPoint*> & stop_points);
+    std::map<std::string, int> project_stop_points(const std::vector<type::StopPoint*> & stop_points);
 
     /** project the stop point on all transportation mode
       * return a pair with :

@@ -622,20 +622,35 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
     return to_return;
 }
 
-int GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points){
-    int matched = 0;
-    this->projected_stop_points.clear();
-    this->projected_stop_points.reserve(stop_points.size());
+                   std::map<std::string, int> GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points){
+                       std::map<std::string, int> messages;
+                       messages["matched"] = 0;
+                       messages["notinitialized"] = 0;
+                       messages["notvalid"] = 0;
+                       messages["outside"] = 0;
+                       this->projected_stop_points.clear();
+                       this->projected_stop_points.reserve(stop_points.size());
 
-    for(const type::StopPoint* stop_point : stop_points) {
-        std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
+                       for(const type::StopPoint* stop_point : stop_points) {
+                           std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
 
-        this->projected_stop_points.push_back(pair.first);
-        if(pair.second)
-            matched++;
-    }
-    return matched;
-}
+                           this->projected_stop_points.push_back(pair.first);
+                           if(pair.second){
+                               messages["matched"]=messages.find("matched")->second + 1;
+                           }else{
+                               //verify if coordinate is not valid:
+                               if (! stop_point->coord.is_initialized()){
+                                   messages["notinitialized"]=messages.find("notinitialized")->second + 1;
+                               }else if (!stop_point->coord.is_valid()){
+                                   messages["notvalid"]=messages.find("notvalid")->second + 1;
+
+                               }else{
+                                   messages["outside"]=messages.find("outside")->second + 1;
+                               }
+                           }
+                       }
+                       return messages;
+                   }
 
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
     bool one_proj_found = false;
