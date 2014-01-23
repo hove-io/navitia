@@ -35,7 +35,7 @@ def finish_job(job_id):
     """
     use for mark a job as done after all the required task has been executed
     """
-    job = models.job.query.get(job_id)
+    job = models.Job.query.get(job_id)
     job.state = 'done'
     models.db.session.commit()
 
