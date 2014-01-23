@@ -5,6 +5,7 @@ import datetime
 import time
 from sqlalchemy import Column, Table, MetaData, select, create_engine, \
     ForeignKey, bindparam, and_, or_, exc
+from sqlalchemy.engine import url
 import connectors.task_pb2
 import connectors.realtime_pb2
 import connectors.type_pb2
@@ -49,12 +50,32 @@ class AtRealtimeReader(object):
     """
     This class load messages and perturbation from the "alerte trafic" database
     """
+    def url_valide(self, config):
+        u = url.make_url(config.at_connection_string)
+        if u.drivername is None:
+            return False
+        if u.username is None:
+            return False
+        if u.password is None:
+            return False
+        if u.host is None:
+            return False
+        if u.database is None:
+            return False
+        return True
 
     def __init__(self, config, redis_helper):
         self.message_list = []
         self.perturbation_list = []
-        self.__engine = create_engine(
-            config.at_connection_string + '?charset=utf8', echo=False)
+        if not self.url_valide(config):
+            raise ValueError("at-connection-string is not valid: " +
+                             config.at_connection_string)
+        try:
+            self.__engine = create_engine(
+                config.at_connection_string + '?charset=utf8')
+        except:
+            raise ValueError("AT : Connecting at server failed")
+
         self._redis_helper = redis_helper
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
