@@ -10,6 +10,8 @@
 
 #include <boost/fusion/include/adapt_struct.hpp>
 
+#include "type/datetime.h"
+
 namespace greg = boost::gregorian;
 namespace qi = boost::spirit::qi;
 namespace ph = boost::phoenix;
@@ -62,29 +64,34 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section) {
 
 bool valid(const State & state, SectionKey section){
     if((state.mode != "" && !boost::iequals(state.mode, section.mode)) ||
-       (state.network != "" && !boost::iequals(state.network, section.network)) ||
-       (state.line != "" && !boost::iequals(state.line, section.line)) )
+            (state.network != "" && !boost::iequals(state.network, section.network)) ||
+            (state.line != "" && !boost::iequals(state.line, section.line)) )
         return false;
     return true;
 }
 
 bool valid(const State & state, Label label){
     if((state.mode != "" && !boost::iequals(state.mode, label.mode)) ||
-       (state.network != "" && !boost::iequals(state.network, label.network)) ||
-       (state.line != "" && !boost::iequals(state.line, label.line))  ||
-       (state.ticket != "" && !boost::iequals(state.ticket, label.tickets.back().caption)) )
+            (state.network != "" && !boost::iequals(state.network, label.network)) ||
+            (state.line != "" && !boost::iequals(state.line, label.line))  ||
+            (state.ticket != "" && !boost::iequals(state.ticket, label.tickets.back().caption)) )
         return false;
     return true;
 }
 
-results Fare::compute_fare(const std::vector<std::string>& path) const {
+results Fare::compute_fare(const routing::Path& path) const {
     results res;
-	int nb_nodes = boost::num_vertices(g);
+    int nb_nodes = boost::num_vertices(g);
     std::vector< std::vector<Label> > labels(nb_nodes);
     // Étiquette de départ
     labels[0].push_back(Label());
-    BOOST_FOREACH(const std::string & section_key, path){
-        LOG4CPLUS_INFO(logger, "Nouvelle section à étudier : " << section_key);
+    for (auto item : path.items) {
+        if (item.type != routing::ItemType::public_transport)
+            continue;
+
+        SectionKey section_key(item);
+
+        LOG4CPLUS_INFO(logger, "Nouvelle section à étudier : " /*<< item */);
         std::vector< std::vector<Label> > new_labels(nb_nodes);
         SectionKey section(section_key);
         try {
@@ -96,7 +103,7 @@ results Fare::compute_fare(const std::vector<std::string>& path) const {
                         Ticket ticket;
                         Transition transition = g[e];
                         if (valid(g[u], label) &&  transition.valid(section_key, label)){
-                            LOG4CPLUS_INFO(logger, "\tTransition valide : " << transition.csv_string);
+//                            LOG4CPLUS_INFO(logger, "\tTransition valide : " << transition.dump());
                             if(transition.ticket_key != "") {
                                 bool ticket_found = false; //TODO refactor this, optional is way better
                                 auto it = fare_map.find(transition.ticket_key);
@@ -129,7 +136,7 @@ results Fare::compute_fare(const std::vector<std::string>& path) const {
                                     ticket_od = get_od(next, section).get_fare(section.date);
                                     if(label.tickets.size() > 0 && label.current_type == Ticket::ODFare)
                                         ticket_od.sections = label.tickets.back().sections;
-                                        
+
                                     ticket_od.sections.push_back(section);
                                     Label n = next;
                                     n.cost += ticket_od.value;
@@ -139,10 +146,10 @@ results Fare::compute_fare(const std::vector<std::string>& path) const {
                                     new_labels.at(0).push_back(n);
                                     LOG4CPLUS_INFO(logger, "\t\tOn résoud un ticket OD : " << ticket_od.value);
                                 } catch (no_ticket) {
-                                    LOG4CPLUS_INFO(logger, "\t\tOn a pas réussi à résoudre le ticket OD; SA=" << next.stop_area << " zone=" << next.zone
-                                             << ", section start_zone=" << section.start_zone << ", dest_zone=" << section.start_zone
-                                             << " start_sa=" << section.start_stop_area << " dest_sa=" << section.dest_stop_area
-                                             << " mode=" << section.mode);
+                                    LOG4CPLUS_WARN(logger, "\t\tOn a pas réussi à résoudre le ticket OD; SA=" << next.stop_area << " zone=" << next.zone
+                                                   << ", section start_zone=" << section.start_zone << ", dest_zone=" << section.start_zone
+                                                   << " start_sa=" << section.start_stop_area << " dest_sa=" << section.dest_stop_area
+                                                   << " mode=" << section.mode);
                                 }
 
                             } else {
@@ -171,8 +178,8 @@ results Fare::compute_fare(const std::vector<std::string>& path) const {
     size_t best_num_tickets = std::numeric_limits<size_t>::max();
     int best_cost = std::numeric_limits<int>::max();
     BOOST_FOREACH(Label label, labels.at(0)){
-        LOG4CPLUS_INFO(logger, "prix : " << label.cost);
         if(label.cost < best_cost || (label.cost == best_cost && label.tickets.size() < best_num_tickets)){
+            LOG4CPLUS_INFO(logger, "prix : " << label.cost);
             res.tickets = label.tickets;
             best_cost = label.cost;
             best_num_tickets = label.tickets.size();
@@ -184,61 +191,30 @@ results Fare::compute_fare(const std::vector<std::string>& path) const {
 }
 
 
- void DateTicket::add(std::string begin_date, std::string end_date, Ticket ticket){
-     greg::date begin(greg::from_undelimited_string(begin_date));
-     greg::date end(greg::from_undelimited_string(end_date));
-     tickets.push_back(date_ticket_t(greg::date_period(begin, end), ticket));
- }
-
- struct invalid_condition : public std::exception {};
-
- int parse_time(const std::string & time_str){
-     // Règle permettant de parser une heure au format HH|MM
-     qi::rule<std::string::const_iterator, int()> time_r = (qi::int_ >> '|' >> qi::int_)[qi::_val = qi::_1 * 3600 + qi::_2 * 60];
-     int time;
-     std::string::const_iterator begin = time_str.begin();
-     std::string::const_iterator end = time_str.end();
-     if(!qi::phrase_parse(begin, end, time_r, boost::spirit::ascii::space, time) || begin != end) {
-         throw invalid_condition();
-     }
-     return time;
- }
-
- boost::gregorian::date parse_nav_date(const std::string & date_str){
-      std::vector< std::string > res;
-    boost::algorithm::split(res, date_str, boost::algorithm::is_any_of("|"));
-    if(res.size() != 3)
-        throw std::string("Date dans un format non parsable : " + date_str);
-    boost::gregorian::date date;
-    try{
-        date = boost::gregorian::date(boost::lexical_cast<int>(res.at(0)),
-                                      boost::lexical_cast<int>(res.at(1)),
-                                      boost::lexical_cast<int>(res.at(2)));
-    } catch (boost::bad_lexical_cast e){
-        throw std::string("Conversion des chiffres dans la date impossible " + date_str);
-    }
-    return date;
+void DateTicket::add(std::string begin_date, std::string end_date, Ticket ticket){
+    greg::date begin(greg::from_undelimited_string(begin_date));
+    greg::date end(greg::from_undelimited_string(end_date));
+    tickets.push_back(date_ticket_t(greg::date_period(begin, end), ticket));
 }
 
-SectionKey::SectionKey(const std::string & key) : section(key) {
-    std::string lower_key = boost::algorithm::to_lower_copy(key);
-    std::vector<std::string> string_vec;
-    boost::algorithm::split(string_vec, lower_key , boost::algorithm::is_any_of(";"));
-    if (string_vec.size() != 10)
-        throw std::string("Nombre incorrect d'éléments dans une section :" + boost::lexical_cast<std::string>(string_vec.size()) + " sur 10 attendus. " + key);
-    network = string_vec.at(0);
-    start_stop_area = string_vec.at(1);
-    dest_stop_area = string_vec.at(3);
-    line = string_vec.at(2);
-    date = parse_nav_date(string_vec.at(4));//TODO virer
-    start_time = parse_time(string_vec.at(5));
-    dest_time = parse_time(string_vec.at(6));
-    start_zone = string_vec.at(7);
-    dest_zone = string_vec.at(8);
-    mode = string_vec.at(9);
+SectionKey::SectionKey(const routing::PathItem& path_item) {
+    const navitia::type::StopPoint* first_sp = path_item.stop_points.front();
+    const navitia::type::StopPoint* last_sp = path_item.stop_points.back();
+    const navitia::type::JourneyPattern* jp = path_item.get_vj()->journey_pattern;
+
+    network = jp->route->line->network->uri; //uri ?
+    start_stop_area = first_sp->stop_area->uri;
+    dest_stop_area = last_sp->stop_area->uri;
+    line = jp->route->line->uri;
+    date = path_item.date;
+    start_time = path_item.arrival;
+    dest_time = path_item.departure;
+    start_zone = boost::lexical_cast<std::string>(first_sp->fare_zone); //TODO: check this, i don't beleive it's the right way to get the start_zone
+    dest_zone = boost::lexical_cast<std::string>(last_sp->fare_zone); //and if it is, change to int
+    mode = jp->physical_mode->uri; //CHECK
 }
 
-template<class T> bool compare(T a, T b, Comp_e comp){
+template<class T> bool compare(T a, T b, Comp_e comp) {
     switch(comp) {
     case Comp_e::LT: return a < b; break;
     case Comp_e::GT: return a > b; break;
@@ -265,8 +241,8 @@ int SectionKey::duration_at_end(int ticket_start_time) const {
 }
 
 Ticket DateTicket::get_fare(boost::gregorian::date date) const {
-    BOOST_FOREACH(date_ticket_t dticket, tickets){
-        if(dticket.first.contains(date))
+    for (date_ticket_t dticket : tickets) {
+        if (dticket.first.contains(date))
             return dticket.second;
     }
 
@@ -375,4 +351,4 @@ DateTicket Fare::get_od(Label label, SectionKey section) const {
 }
 
 }
-}
+                  }

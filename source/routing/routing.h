@@ -38,26 +38,44 @@ enum ItemType {
 };
 
 /** Étape d'un itinéraire*/
-struct PathItem{
+struct PathItem {
     navitia::DateTime arrival;
     navitia::DateTime departure;
     std::vector<navitia::DateTime> arrivals;
     std::vector<navitia::DateTime> departures;
-    std::vector<size_t> orders;
-    type::idx_t vj_idx;
-    std::vector<type::idx_t> stop_points;
+    std::vector<const nt::StopTime*> stop_times; //empty if not public transport
+
+    /**
+     * if public transport, contains the list of visited stop_point
+     * for transfers, contains the departure and arrival stop points
+     */
+    std::vector<const navitia::type::StopPoint*> stop_points;
+
+    const navitia::type::StopPointConnection* connection;
+
     ItemType type;
 
-    PathItem(navitia::DateTime departure = navitia::DateTimeUtils::inf, navitia::DateTime arrival = navitia::DateTimeUtils::inf,
-            type::idx_t vj_idx = type::invalid_idx) :
-        arrival(arrival), departure(departure), vj_idx(vj_idx), type(public_transport) {
-            if(departure != navitia::DateTimeUtils::inf)
-                departures.push_back(departure);
-            if(arrival != navitia::DateTimeUtils::inf)
-                arrivals.push_back(arrival);
-        }
+    boost::gregorian::date date; //TODO a virer, et remplacer DateTime par des boost::date pour avoir cette date.
 
-    std::string print(const navitia::type::PT_Data & data) const;
+    PathItem(navitia::DateTime departure = navitia::DateTimeUtils::inf,
+             navitia::DateTime arrival = navitia::DateTimeUtils::inf) :
+        arrival(arrival), departure(departure), type(public_transport) {
+    }
+
+    //VIRER ce constructeur des qu'on a vire date
+    PathItem(navitia::DateTime departure,
+             navitia::DateTime arrival, const nt::Data& d) :
+        arrival(arrival), departure(departure), type(public_transport) {
+        date = navitia::to_posix_time(departure, d).date();
+    }
+
+    std::string print() const;
+
+    const navitia::type::VehicleJourney* get_vj() const {
+        if (stop_times.empty())
+            return nullptr;
+        return stop_times.front()->vehicle_journey;
+    }
 };
 
 /** Un itinéraire complet */
@@ -69,28 +87,14 @@ struct Path {
 
     Path() : duration(std::numeric_limits<uint32_t>::max()), nb_changes(std::numeric_limits<uint32_t>::max()) {}
 
-    void print(const navitia::type::PT_Data & data) const {
+    void print() const {
         for(auto item : items)
-            std::cout << item.print(data) << std::endl;
+            std::cout << item.print() << std::endl;
     }
 
 };
 
 bool operator==(const PathItem & a, const PathItem & b);
-
-class Verification {
-
-public :
-    const navitia::type::PT_Data & data;
-    Verification(const navitia::type::PT_Data & data) : data(data) {}
-
-    bool verif(Path path);
-    bool croissance(Path path);
-    bool vj_valides(Path path);
-    bool appartenance_rp(Path path);
-    bool check_correspondances(Path path);
-
-};
 
 
 }}

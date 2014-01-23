@@ -23,7 +23,7 @@ std::vector<navitia::fare::Condition> parse_conditions(const std::string & condi
 boost::gregorian::date parse_nav_date(const std::string & date_str);
 
 struct fare_parser {
-    navitia::fare::Fare data;
+    navitia::fare::Fare& data;
 
     const std::string state_transition_filename;
     const std::string prices_filename;
@@ -31,7 +31,8 @@ struct fare_parser {
 
     bool use_stif_format = false;
 
-    fare_parser(const std::string& state, const std::string& prices, const std::string od) :
+    fare_parser(navitia::fare::Fare& data_, const std::string& state, const std::string& prices, const std::string od) :
+        data(data_),
         state_transition_filename(state),
         prices_filename(prices),
         od_filename(od) {}

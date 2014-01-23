@@ -26,8 +26,8 @@ BOOST_AUTO_TEST_CASE(direct){
     auto res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].departure), 8050);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].arrival), 9100);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
@@ -40,8 +40,8 @@ BOOST_AUTO_TEST_CASE(direct){
     res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].departure), 8050);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].arrival), 9100);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(direct){
     res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].departure), 8050);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].arrival), 9100);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
@@ -81,11 +81,11 @@ BOOST_AUTO_TEST_CASE(change){
 
     auto res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop5"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop5"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].departure), 8050);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].arrival), 8200);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].departure), 8200);
@@ -100,11 +100,11 @@ BOOST_AUTO_TEST_CASE(change){
 
     res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop5"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop5"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].departure), 8050);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].arrival), 8200);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].departure), 8200);
@@ -119,11 +119,11 @@ BOOST_AUTO_TEST_CASE(change){
 
     res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop5"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop5"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].departure), 8050);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[0].arrival), 8200);
     BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].departure), 8200);
@@ -153,11 +153,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     auto res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[1].arrival), 1);
 
@@ -167,11 +167,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
 
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[1].arrival), 1);
 
@@ -180,11 +180,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
 
     res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[1].arrival), 1);
 
@@ -209,11 +209,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     auto res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[2].arrival), 1);
 
@@ -224,11 +224,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[2].arrival), 1);
 
@@ -239,11 +239,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[2].arrival), 1);
 
@@ -267,9 +267,9 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     auto res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[2], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[2]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].arrival), 1);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
 
@@ -279,9 +279,9 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[2], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[2]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].arrival), 1);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
 
@@ -291,9 +291,9 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], d.stop_areas_map["stop1"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], d.stop_areas_map["stop2"]->idx);
-    BOOST_CHECK_EQUAL(res.items[0].stop_points[2], d.stop_areas_map["stop3"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[2]->idx, d.stop_areas_map["stop3"]->idx);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].arrival), 1);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[0].departure), 0);
 

@@ -3,6 +3,10 @@
 #include "config.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/date_time/gregorian/greg_serialize.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
 #include "routing/routing.h"
 
 namespace navitia { namespace fare {
@@ -21,6 +25,10 @@ struct Ticket {
     Ticket() : value(0), type(None) {}
     Ticket(const std::string & key, const std::string & caption, int value, const std::string & comment, ticket_type type = FlatFare) :
         key(key), caption(caption), value(value), comment(comment), type(type){}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & key & caption & value & comment & type /*& sections*/; //CHECK, il me semble qu'on a pas besoin de serializer les sections car le ticket est forcement vide dans le graph
+    }
 };
 
 /// Définit un billet pour une période données
@@ -38,6 +46,10 @@ struct DateTicket {
 
     /// Somme deux tickets, suppose qu'il y a le même nombre de billet et que les dates sont compatibles
     DateTicket operator+(const DateTicket & other) const;
+
+    template<class Archive> void serialize(Archive & /*ar*/, const unsigned int) {
+//        ar & tickets; TODO,pas le temps de regarder pourquoi les boost::period ralent
+    }
 };
 
 struct no_ticket{};
@@ -76,6 +88,10 @@ struct State {
     std::string concat() const {
         return mode + zone + stop_area + line + network + ticket;
     }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & mode & zone & stop_area & line & network & ticket;
+    }
 };
 
 
@@ -100,6 +116,10 @@ struct Condition {
     std::string value;
 
     Condition() : comparaison(Comp_e::True) {}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & key & ticket & comparaison & value;
+    }
 };
 
 
@@ -126,6 +146,10 @@ struct Label {
                 stop_area==l.stop_area && zone==l.zone && mode == l.mode &&
                 line == l.line && network == l.network;
     }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & cost & start_time & nb_changes & stop_area & zone & mode & line & network & current_type & tickets;
+    }
 };
 
 /// Contient les données retournées par navitia
@@ -134,15 +158,14 @@ struct SectionKey {
     std::string start_stop_area;
     std::string dest_stop_area;
     std::string line;
-    int start_time;
-    int dest_time;
+    uint32_t start_time;
+    uint32_t dest_time;
     std::string start_zone;
     std::string dest_zone;
     std::string mode;
     boost::gregorian::date date;
-    std::string section;
 
-    SectionKey(const std::string & key);
+    SectionKey(const routing::PathItem& path_item);
     int duration_at_begin(int ticket_start_time) const;
     int duration_at_end(int ticket_start_time) const;
 };
@@ -154,8 +177,14 @@ struct Transition {
     std::string ticket_key; //< clef vers le tarif correspondant
     std::string global_condition; //< condition telle que exclusivité ou OD
 
-    std::string csv_string; //< Ligne brute dans le CSV
+    std::string dump() const {
+        return ticket_key + "_" + global_condition;
+    }
     bool valid(const SectionKey & section, const Label & label) const;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & start_conditions & end_conditions & ticket_key & global_condition;
+    }
 };
 
 
@@ -171,6 +200,9 @@ struct OD_key{
             return value < other.value ;
         else
             return type < other.type;
+    }
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & type & value;
     }
 };
 
@@ -193,11 +225,22 @@ struct Fare {
 
     /// Effectue la recherche du meilleur tarif
     /// Retourne une liste de billets à acheter
-    results compute_fare(const std::vector<std::string>& path) const;
+    results compute_fare(const routing::Path& path) const;
 
+    template<class Archive> void save(Archive & ar, const unsigned int) const {
+        ar & fare_map & od_tickets & g;
+    }
+
+    template<class Archive> void load(Archive & ar, const unsigned int) {
+        // boost adjacency load does not seems to empty the graph, hence there was a memory leak
+        g.clear();
+        ar & fare_map & od_tickets & g;
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 private:
     /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
     DateTicket get_od(Label label, SectionKey section) const;
+
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 };
 

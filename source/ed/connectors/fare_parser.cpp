@@ -136,7 +136,6 @@ void fare_parser::load_transitions() {
         fa::State end = parse_state(row.at(1));
 
         fa::Transition transition;
-        transition.csv_string = boost::algorithm::join(row, "; ");
         transition.start_conditions = parse_conditions(row.at(2));
         transition.end_conditions = parse_conditions(row.at(3));
         std::vector<std::string> global_conditions;
@@ -278,35 +277,5 @@ void fare_parser::load_od_stif() {
     LOG4CPLUS_INFO(logger, "Nombre de tarifs OD Île-de-France : " << count);
 }
 
-/*
-
-
-
-boost::gregorian::date parse_nav_date(const std::string & date_str){
-     std::vector< std::string > res;
-   boost::algorithm::split(res, date_str, boost::algorithm::is_any_of("|"));
-   if(res.size() != 3)
-       throw std::string("Date dans un format non parsable : " + date_str);
-   boost::gregorian::date date;
-   try{
-       date = boost::gregorian::date(boost::lexical_cast<int>(res.at(0)),
-                                     boost::lexical_cast<int>(res.at(1)),
-                                     boost::lexical_cast<int>(res.at(2)));
-   } catch (boost::bad_lexical_cast e){
-       throw std::string("Conversion des chiffres dans la date impossible " + date_str);
-   }
-   return date;
-}
-void Fare::load_fares(const std::string & filename){
-    CsvReader reader(filename);
-    std::vector<std::string> row;
-    for(row=reader.next();  !reader.eof(); row = reader.next()) {
-        // La structure du csv est : clef;date_debut;date_fin;prix;libellé
-        fare_map[row.at(0)].add(row.at(1), row.at(2),
-                             Ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5)) );
-    }
-}
-
-*/
 }
 }
