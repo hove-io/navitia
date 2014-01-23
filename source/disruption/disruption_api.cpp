@@ -6,9 +6,10 @@
 namespace navitia { namespace disruption {
 
 pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string &str_dt,
-                                const uint32_t depth,
-                                uint32_t count,
-                                uint32_t start_page, const std::string &filter,
+                                const size_t period,
+                                const size_t depth,
+                                size_t count,
+                                size_t start_page, const std::string &filter,
                                 const std::vector<std::string>& forbidden_uris){
     pbnavitia::Response pb_response;
     boost::posix_time::ptime now;
@@ -20,8 +21,8 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
            return pb_response;
     }
 
-    auto period_end = boost::posix_time::ptime(now.date() + boost::gregorian::years(1),
-            boost::posix_time::time_duration(23,59,59));
+    auto period_end = boost::posix_time::ptime(now.date() + boost::gregorian::days(period),
+                                               boost::posix_time::time_duration(23,59,59));
     auto action_period = boost::posix_time::time_period(now, period_end);
     network_line_list list;
     try {

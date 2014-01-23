@@ -70,6 +70,7 @@ class Script(object):
         req.disruptions.count = request['count']
         req.disruptions.start_page = request['start_page']
         req.disruptions.datetime = request['datetime']
+        req.disruptions.period = request['period']
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)

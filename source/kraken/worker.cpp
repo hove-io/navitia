@@ -118,6 +118,7 @@ pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &req
         forbidden_uris.push_back(request.forbidden_uris(i));
     return navitia::disruption::disruptions(*(*this->data),
                                                 request.datetime(),
+                                                request.period(),
                                                 request.depth(),
                                                 request.count(),
                                                 request.start_page(),
