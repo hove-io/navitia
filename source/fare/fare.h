@@ -47,8 +47,9 @@ struct DateTicket {
     /// Somme deux tickets, suppose qu'il y a le même nombre de billet et que les dates sont compatibles
     DateTicket operator+(const DateTicket & other) const;
 
-    template<class Archive> void serialize(Archive & /*ar*/, const unsigned int) {
-//        ar & tickets; TODO,pas le temps de regarder pourquoi les boost::period ralent
+    template<class Archive> void serialize(Archive& ar, const unsigned int) {
+        for (auto t: tickets) //boost seems to have probleme with vector<pair<period>>
+            ar & t; //CHECK if that works
     }
 };
 
@@ -131,7 +132,7 @@ struct Label {
     int nb_changes;//< nombre de changement effectués depuis le dernier ticket
     std::string stop_area; //< stop_area d'achat du billet
    // std::string dest_stop_area; //< on est obligé de descendre à ce stop_area
-    std::string zone;
+    int zone;
     std::string mode;
     std::string line;
     std::string network;
@@ -160,8 +161,8 @@ struct SectionKey {
     std::string line;
     uint32_t start_time;
     uint32_t dest_time;
-    std::string start_zone;
-    std::string dest_zone;
+    int start_zone;
+    int dest_zone;
     std::string mode;
     boost::gregorian::date date;
 
@@ -208,6 +209,7 @@ struct OD_key{
 
 struct results {
     std::vector<Ticket> tickets;
+    //TODO: link to pathitem
 };
 
 /// Contient l'ensemble du système tarifaire

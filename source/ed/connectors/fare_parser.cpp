@@ -46,9 +46,9 @@ std::vector<fa::Condition> parse_conditions(const std::string & conditions){
 
 fa::State parse_state(const std::string & state_str){
     fa::State state;
-    if(state_str == "" || state_str == "*")
+    if (state_str == "" || state_str == "*")
         return state;
-    BOOST_FOREACH(fa::Condition cond, parse_conditions(state_str)){
+    for (fa::Condition cond : parse_conditions(state_str)) {
         if(cond.comparaison != fa::Comp_e::EQ) throw invalid_key();
         if(cond.key == "line"){
             if(state.line != "") throw invalid_key();
@@ -127,10 +127,13 @@ void fare_parser::load_transitions() {
     state_map[begin] = begin_v;
     reader.next(); //en-tête
 
-    for(row=reader.next(); !reader.eof(); row = reader.next()) {
+    for (row = reader.next(); !reader.eof(); row = reader.next()) {
         bool symetric = false;
 
-        if(row.size() != 6) std::cout << "Ligne sans le bon nombre d'items : " << row.size() << std::endl;
+        if (row.size() != 6) {
+            LOG4CPLUS_ERROR(logger, "Wrongly formated line " << row.size() << " columns, we skip the line");
+            continue;
+        }
 
         fa::State start = parse_state(row.at(0));
         fa::State end = parse_state(row.at(1));
@@ -142,7 +145,7 @@ void fare_parser::load_transitions() {
         std::string str_condition = boost::algorithm::trim_copy(row.at(4));
         boost::algorithm::split(global_conditions, str_condition, boost::algorithm::is_any_of("&"));
 
-        BOOST_FOREACH(std::string cond, global_conditions){
+        for (std::string cond : global_conditions) {
            if(cond == "symetric"){
                symetric = true;
            }else{
@@ -165,7 +168,7 @@ void fare_parser::load_transitions() {
         else end_v = state_map[end];
 
         boost::add_edge(start_v, end_v, transition, data.g);
-        if(symetric){
+        if (symetric) {
            fa::Transition sym_transition = transition;
            sym_transition.start_conditions = transition.end_conditions;
            sym_transition.end_conditions = transition.start_conditions;
@@ -185,28 +188,25 @@ void fare_parser::load_prices() {
 
 void fare_parser::load_od() {
     if (use_stif_format)
-        load_od_stif();
+        load_od_stif(); //TODO delete that, only one format, this has to be done in fusio
     else
         load_od_classic();
 }
 
 void fare_parser::load_od_classic() {
     CsvReader reader(od_filename);
-    std::vector<std::string> row;
     reader.next(); //en-tête
 
     int count = 0;
-    for(row=reader.next(); !reader.eof(); row = reader.next()) {
+    for (auto row = reader.next(); !reader.eof(); row = reader.next()) {
         std::string start_saec = boost::algorithm::trim_copy(row[0]);
         boost::algorithm::to_lower(start_saec);
         std::string dest_saec = boost::algorithm::trim_copy(row[2]);
         boost::algorithm::to_lower(dest_saec);
 
-
         std::vector<std::string> price_keys;
         std::string price_key = boost::algorithm::trim_copy(row[4]);
         price_keys.push_back(price_key);
-
 
         fa::OD_key start = fa::OD_key(fa::OD_key::StopArea, start_saec);
         fa::OD_key dest = fa::OD_key(fa::OD_key::StopArea, dest_saec);
@@ -273,7 +273,6 @@ void fare_parser::load_od_stif() {
 
         count++;
     }
-  //  std::cout << "Nombre de tarifs OD Île-de-France : " << count << std::endl;
     LOG4CPLUS_INFO(logger, "Nombre de tarifs OD Île-de-France : " << count);
 }
 

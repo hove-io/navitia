@@ -202,6 +202,7 @@ SectionKey::SectionKey(const routing::PathItem& path_item) {
     const navitia::type::StopPoint* last_sp = path_item.stop_points.back();
     const navitia::type::JourneyPattern* jp = path_item.get_vj()->journey_pattern;
 
+    //TODO, original uri for all
     network = jp->route->line->network->uri; //uri ?
     start_stop_area = first_sp->stop_area->uri;
     dest_stop_area = last_sp->stop_area->uri;
@@ -209,8 +210,8 @@ SectionKey::SectionKey(const routing::PathItem& path_item) {
     date = path_item.date;
     start_time = path_item.departure;
     dest_time = path_item.arrival;
-    start_zone = boost::lexical_cast<std::string>(first_sp->fare_zone); //TODO: check this, i don't beleive it's the right way to get the start_zone
-    dest_zone = boost::lexical_cast<std::string>(last_sp->fare_zone); //and if it is, change to int
+    start_zone = first_sp->fare_zone;
+    dest_zone = last_sp->fare_zone;
     mode = jp->physical_mode->uri; //CHECK
 }
 
@@ -269,7 +270,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
         result = false;
     BOOST_FOREACH(Condition cond, this->start_conditions)
     {
-        if(cond.key == "zone" && cond.value != section.start_zone)
+        if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.start_zone)
             result = false;
         else if(cond.key == "stoparea" && cond.value != section.start_stop_area)
             result = false;
@@ -290,7 +291,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
     }
     BOOST_FOREACH(Condition cond, this->end_conditions)
     {
-        if(cond.key == "zone" && cond.value != section.dest_zone)
+        if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.dest_zone)
             result = false;
         else if(cond.key == "stoparea" && cond.value != section.dest_stop_area)
             result = false;
@@ -308,11 +309,11 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
 DateTicket Fare::get_od(Label label, SectionKey section) const {
     OD_key sa(OD_key::StopArea, label.stop_area);
     OD_key sb(OD_key::Mode, label.mode);
-    OD_key sc(OD_key::Zone, label.zone);
+    OD_key sc(OD_key::Zone, boost::lexical_cast<std::string>(label.zone));
 
     OD_key da(OD_key::StopArea, section.dest_stop_area);
     OD_key db(OD_key::Mode, section.mode);
-    OD_key dc(OD_key::Zone, section.dest_zone);
+    OD_key dc(OD_key::Zone, boost::lexical_cast<std::string>(section.dest_zone));
 
 
     auto start_map = od_tickets.find(sa);
@@ -338,7 +339,7 @@ DateTicket Fare::get_od(Label label, SectionKey section) const {
     if (it != fare_map.end()) {
         ticket = it->second;
     }
-    for(size_t i = 1; i < end->second.size(); ++i){
+    for (size_t i = 1; i < end->second.size(); ++i) {
         it = fare_map.find(end->second.at(i));
         if (it != fare_map.end()) {
             ticket = ticket + it->second;
@@ -351,4 +352,4 @@ DateTicket Fare::get_od(Label label, SectionKey section) const {
 }
 
 }
-                  }
+}
