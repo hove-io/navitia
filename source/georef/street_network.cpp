@@ -5,8 +5,9 @@
 
 namespace navitia { namespace georef {
 
-bt::time_duration get_walking_duration(const double val) {
-    return bt::seconds(val / default_speed[type::Mode_e::Walking]);
+
+bt::time_duration PathFinder::distance_to_duration(const double val) const {
+    return bt::seconds(val / (default_speed[mode] * speed_factor));
 }
 
 StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
@@ -114,8 +115,8 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
 
     if (starting_edge.found) {
         //durations initializations
-        distances[starting_edge.source] = get_walking_duration(starting_edge.source_distance); //for the projection, we use the default walking speed.
-        distances[starting_edge.target] = get_walking_duration(starting_edge.target_distance);
+        distances[starting_edge.source] = distance_to_duration(starting_edge.source_distance); //for the projection, we use the default walking speed.
+        distances[starting_edge.target] = distance_to_duration(starting_edge.target_distance);
         predecessors[starting_edge.source] = starting_edge.source;
         predecessors[starting_edge.target] = starting_edge.target;
     }
@@ -152,10 +153,9 @@ PathFinder::find_nearest_stop_points(bt::time_duration radius, const proximityli
         if(projection.found){
             bt::time_duration best_dist = max;
             if (distances[projection.source] < max) {
-                best_dist = distances[projection.source] + get_walking_duration(projection.source_distance);
-            }
+                best_dist = distances[projection.source] + distance_to_duration(projection.source_distance); }
             if (distances[projection.target] < max) {
-                best_dist = std::min(best_dist, distances[projection.target] + get_walking_duration(projection.target_distance));
+                best_dist = std::min(best_dist, distances[projection.target] + distance_to_duration(projection.target_distance));
             }
             if (best_dist < radius) {
                 result.push_back(std::make_pair(element.first, best_dist));
@@ -187,8 +187,8 @@ std::pair<bt::time_duration, vertex_t> PathFinder::find_nearest_vertex(const Pro
     if (distances[target.source] == max) //if one distance has not been reached, both have not been reached
         return {max, {}};
 
-    auto source_dist = distances[target.source] + get_walking_duration(target.source_distance);
-    auto target_dist = distances[target.target] + get_walking_duration(target.target_distance);
+    auto source_dist = distances[target.source] + distance_to_duration(target.source_distance);
+    auto target_dist = distances[target.target] + distance_to_duration(target.target_distance);
 
     if (target_dist < source_dist)
         return {target_dist, target.target};
@@ -206,7 +206,7 @@ Path PathFinder::get_path(type::idx_t idx) {
     return get_path(projection, nearest_edge);
 }
 
-void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection, const GeoRef& geo_ref) {
+void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection) const {
     auto item_to_update = [append_to_begin](Path& p) -> PathItem& { return (append_to_begin ? p.path_items.front() : p.path_items.back()); };
     auto add_in_path = [append_to_begin](Path& p, const PathItem& item) {
         return (append_to_begin ? p.path_items.push_front(item) : p.path_items.push_back(item));
@@ -224,6 +224,7 @@ void add_custom_projections_to_path(Path& p, bool append_to_begin, const Project
         else {
             PathItem item;
             item.way_idx = start_edge.way_idx;
+
             if (!p.path_items.empty()) {
                 //still complexifying stuff... TODO: simplify this
                 //we want the projection to be done with the previous transportation mode
@@ -252,12 +253,14 @@ void add_custom_projections_to_path(Path& p, bool append_to_begin, const Project
     }
     auto& coord_list = item_to_update(p).coordinates;
     if (append_to_begin) {
-        if (coord_list.empty() || coord_list.front() != projection.projected)
+        if (coord_list.empty() || coord_list.front() != projection.projected) {
             coord_list.push_front(projection.projected);
+        }
     }
     else {
-        if (coord_list.empty() || coord_list.back() != projection.projected)
+        if (coord_list.empty() || coord_list.back() != projection.projected) {
             coord_list.push_back(projection.projected);
+        }
     }
 }
 
@@ -271,7 +274,7 @@ Path PathFinder::get_path(const ProjectionData& target, std::pair<bt::time_durat
     result.duration = nearest_edge.first;
 
     //we need to put the end projections too
-    add_custom_projections_to_path(result, false, target, geo_ref);
+    add_custom_projections_to_path(result, false, target);
 
 
     return result;
@@ -288,7 +291,7 @@ Path PathFinder::compute_path(const type::GeographicalCoord& target_coord) {
 
 
 void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
-    add_custom_projections_to_path(p, append_to_begin, starting_edge, geo_ref);
+    add_custom_projections_to_path(p, append_to_begin, starting_edge);
 }
 
 std::pair<bt::time_duration, vertex_t> PathFinder::update_path(const ProjectionData& target) {
