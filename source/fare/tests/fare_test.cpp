@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|35;02|40;1;1;rapidtransit");
     res = f.compute_fare(string_to_path(keys, navitia_data));
     BOOST_CHECK_EQUAL(res.tickets.size() , 1);
-/*
+
     // Correspondance BUS, donc nouveau billet
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|35;02|40;1;1;bus");
     res = f.compute_fare(string_to_path(keys, navitia_data));
@@ -434,6 +434,5 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute_fare(string_to_path(keys, navitia_data));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
-    */
 }
 

@@ -207,8 +207,8 @@ SectionKey::SectionKey(const routing::PathItem& path_item) {
     dest_stop_area = last_sp->stop_area->uri;
     line = jp->route->line->uri;
     date = path_item.date;
-    start_time = path_item.arrival;
-    dest_time = path_item.departure;
+    start_time = path_item.departure;
+    dest_time = path_item.arrival;
     start_zone = boost::lexical_cast<std::string>(first_sp->fare_zone); //TODO: check this, i don't beleive it's the right way to get the start_zone
     dest_zone = boost::lexical_cast<std::string>(last_sp->fare_zone); //and if it is, change to int
     mode = jp->physical_mode->uri; //CHECK
