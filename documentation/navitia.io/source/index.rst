@@ -180,7 +180,11 @@ It returns for each destination stop point the earliest arrival and a link to th
 Getting help
 ------------
 
-All available functions are documented on http://navitia.io/docv1.
+All available functions are documented on 
+.. toctree::
+    :maxdepth: 1
+
+    integration
 
 A mailing list is available to ask question: navitia@googlegroups.com
 
