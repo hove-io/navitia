@@ -91,18 +91,13 @@ class additional_informations_vj(fields.Raw):
         return result
 
 
-class has_equipments():
-
+class equipments(fields.Raw):
     def output(self, key, obj):
-        if obj.HasField("has_equipments"):
-            properties = obj.has_equipments
-            enum = properties.DESCRIPTOR.enum_types_by_name["Equipment"]
-            equipments = properties.has_equipments
-            values = enum.values_by_number
-            return [str.lower(values[v].name) for v in equipments]
-        else:
-            return []
-
+        equipments = obj.has_equipments
+        descriptor = equipments.DESCRIPTOR
+        enum = descriptor.enum_types_by_name["Equipment"]
+        return [str.lower(enum.values_by_number[v].name) for v
+                in equipments.has_equipments]
 
 class notes(fields.Raw):
 
@@ -161,7 +156,7 @@ display_informations_vj = {
     "label": get_label(attribute="display_information"),
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
-    "equipments": fields.List(fields.Nested(has_equipments())),
+    "equipments":equipments(attribute="has_equipments"),
     "messages": NonNullList(NonNullNested(generic_message))
 }
 
@@ -223,7 +218,7 @@ poi = deepcopy(generic_type)
 poi["poi_type"] = PbField(poi_type)
 
 company = deepcopy(generic_type)
-stop_point["equipments"] = has_equipments()
+stop_point["equipments"] = equipments(attribute="has_equipments")
 stop_point["stop_area"] = PbField(deepcopy(stop_area))
 stop_area["stop_point"] = PbField(deepcopy(stop_point))
 journey_pattern_point["stop_point"] = PbField(deepcopy(stop_point))

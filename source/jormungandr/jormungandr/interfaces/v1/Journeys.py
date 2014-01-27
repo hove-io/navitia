@@ -8,7 +8,7 @@ from fields import stop_point, stop_area, line, physical_mode,\
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
-    has_equipments, generic_message
+    generic_message
 
 from jormungandr.interfaces.parsers import option_value
 #from exceptions import RegionNotFound
