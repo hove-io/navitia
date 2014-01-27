@@ -184,6 +184,7 @@ generic_type_admin = deepcopy(generic_type)
 admins = NonNullList(NonNullNested(admin))
 generic_type_admin["administrative_regions"] = admins
 
+
 stop_point = deepcopy(generic_type_admin)
 stop_point["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area = deepcopy(generic_type_admin)
@@ -192,9 +193,15 @@ journey_pattern_point = deepcopy(generic_type)
 journey_pattern = deepcopy(generic_type)
 jpps = NonNullList(NonNullNested(journey_pattern_point))
 journey_pattern["journey_pattern_points"] = jpps
+stop_time = {
+    "arrival_time" : fields.String(),
+    "departure_time" : fields.String(),
+    "journey_pattern_point" : NonNullNested(journey_pattern_point)
+}
 vehicle_journey = deepcopy(generic_type)
 vehicle_journey["messages"] = NonNullList(NonNullNested(generic_message))
 vehicle_journey["journey_pattern"] = PbField(journey_pattern)
+vehicle_journey["stop_times"] = NonNullList(NonNullNested(stop_time))
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
 line["code"] = fields.String()
