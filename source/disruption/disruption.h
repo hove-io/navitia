@@ -4,14 +4,44 @@
 #include "type/pt_data.h"
 
 namespace navitia { namespace disruption {
-typedef std::vector<const navitia::type::Line*> lines;
-typedef std::pair<const navitia::type::Network*, lines> pair_network_line;
-typedef std::vector<pair_network_line> network_line_list;
 
-network_line_list disruptions_list(const std::string& filter,
+
+struct disrupt{
+    type::idx_t idx;
+    type::idx_t network_idx;
+    std::vector<type::idx_t> line_idx;
+    std::vector<type::idx_t> stop_area_idx;
+};
+
+struct Disruption{
+    std::vector<disrupt> disrupts;
+    std::vector<type::idx_t> temp_network; // Temporaire pour reconstruire la réponse
+    log4cplus::Logger logger;
+
+    Disruption();
+    type::idx_t find_disrupt(const type::Network* network);
+    void add_stop_areas(const std::string& filter,
+                      const std::vector<std::string>& forbidden_uris,
+                      const type::Data &d,
+                      const boost::posix_time::time_period action_period,
+                      const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+
+    void add_networks(const std::string& filter,
+                                  const std::vector<std::string>& forbidden_uris,
+                                  const type::Data &d,
+                                  const boost::posix_time::time_period action_period,
+                                  const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+    void add_lines(const std::string& filter,
+                                  const std::vector<std::string>& forbidden_uris,
+                                  const type::Data &d,
+                                  const boost::posix_time::time_period action_period,
+                                  const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+    void disruptions_list(const std::string& filter,
                         const std::vector<std::string>& forbidden_uris,
                         const type::Data &d,
                         const boost::posix_time::time_period action_period,
                         const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+
+};
 }}
 
