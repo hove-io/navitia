@@ -259,6 +259,7 @@ class Script(object):
                     r_datetime_f = datetime.strptime(r_datetime, f_date_time)
                     temp_datetime = r_datetime_f + timedelta(seconds=duration)
             else:
+                last_journey = resp.journeys[0]
                 if resp.journeys[-1].HasField("arrival_date_time"):
                     l_date_time = last_journey.arrival_date_time
                     l_date_time_f = datetime.strptime(l_date_time, f_date_time)
