@@ -20,13 +20,14 @@ type::idx_t Disruption::find_or_create(const type::Network* network){
     return it->idx;
 }
 
-void Disruption::add_stop_areas(const std::string& filter,
+void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
+                      const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
                       const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now){
 
-    for(auto idx : this->temp_network){
+    for(auto idx : network_idx){
         const auto* network = d.pt_data.networks[idx];
         std::string new_filter = "network.uri=" + network->uri;
         if(!filter.empty()){
@@ -61,15 +62,12 @@ void Disruption::add_stop_areas(const std::string& filter,
     }
 }
 
-void Disruption::add_networks(const std::string& filter,
-                      const std::vector<std::string>& forbidden_uris,
+void Disruption::add_networks(const std::vector<type::idx_t>& network_idx,
                       const type::Data &d,
                       const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now){
 
-    this->temp_network = ptref::make_query(type::Type_e::Network, filter,
-            forbidden_uris, d);
-    for(auto idx : this->temp_network){
+    for(auto idx : network_idx){
         const auto* network = d.pt_data.networks[idx];
         if (network->has_applicable_message(now, action_period)){
             this->disrupts[this->find_or_create(network)];
@@ -113,9 +111,20 @@ void Disruption::disruptions_list(const std::string& filter,
                         const std::vector<std::string>& forbidden_uris,
                         const type::Data &d,
                         const boost::posix_time::time_period action_period,
-                        const boost::posix_time::ptime now){    
-    add_networks(filter, forbidden_uris, d, action_period, now);
+                        const boost::posix_time::ptime now){
+
+    std::vector<type::idx_t> network_idx = ptref::make_query(type::Type_e::Network, filter,
+                                                                                      forbidden_uris, d);
+    add_networks(network_idx, d, action_period, now);
     add_lines(filter, forbidden_uris, d, action_period, now);
-    add_stop_areas(filter, forbidden_uris, d, action_period, now);
+    add_stop_areas(network_idx, filter, forbidden_uris, d, action_period, now);
 }
+std::vector<disrupt> Disruption::get_disrupts(){
+    return this->disrupts;
+}
+
+size_t Disruption::get_disrupts_size(){
+    return this->disrupts.size();
+}
+
 }}

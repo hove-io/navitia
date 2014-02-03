@@ -37,9 +37,10 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
         return pb_response;
     }
 
-    size_t total_result = result.disrupts.size();
-    result.disrupts = paginate(result.disrupts, count, start_page);
-    for(disrupt dist: result.disrupts){
+    size_t total_result = result.get_disrupts_size();
+    std::vector<disrupt> disrupts = result.get_disrupts();
+    disrupts = paginate(disrupts, count, start_page);
+    for(disrupt dist: disrupts){
         pbnavitia::Disruption* pb_disruption = pb_response.add_disruptions();
         pbnavitia::Network* pb_network = pb_disruption->mutable_network();
         navitia::fill_pb_object(d.pt_data.networks[dist.network_idx], d, pb_network, depth, now, action_period);
