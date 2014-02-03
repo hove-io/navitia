@@ -482,4 +482,36 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+CREATE TABLE IF NOT EXISTS navitia.price(
+	id BIGINT PRIMARY KEY,
+	cle_ticket TEXT NOT NULL,
+	valid_from DATE NOT NULL,
+	valid_to DATE NOT NULL,
+	ticket_price INT NOT NULL,
+	ticket_title TEXT	
+);
+
+CREATE TABLE IF NOT EXISTS navitia.transition(
+	id BIGINT PRIMARY KEY,
+	before_change TEXT NOT NULL,
+	after_change TEXT NOT NULL,
+	start_trip TEXT NOT NULL,
+	end_trip TEXT NOT NULL,
+	global_condition TEXT NOT NULL,
+	price_id BIGINT NULL
+);
+
+CREATE TABLE IF NOT EXISTS navitia.origin_destination(
+	id BIGINT PRIMARY KEY,
+	code_uic_depart TEXT NOT NULL,
+	gare_depart TEXT NOT NULL,
+	code_uic_arrival TEXT NOT NULL,
+	gare_arrival TEXT NOT NULL,
+	price_id1 BIGINT NULL, 
+	price_id2 BIGINT NULL,
+	price_id3 BIGINT NULL,
+	price_id4 BIGINT NULL,
+	delta_zone TEXT NOT NULL
+);
+
 
