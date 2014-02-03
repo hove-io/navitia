@@ -3,11 +3,7 @@
 
 namespace navitia { namespace disruption {
 
-Disruption::Disruption(){
-    this->logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-}
-
-type::idx_t Disruption::find_disrupt(const type::Network* network){
+type::idx_t Disruption::find_or_create(const type::Network* network){
     auto find_predicate = [&](disrupt network_disrupt) {
         return network->idx == network_disrupt.network_idx;
     };
@@ -50,7 +46,7 @@ void Disruption::add_stop_areas(const std::string& filter,
         for(auto stop_area_idx : line_list){
             const auto* stop_area = d.pt_data.stop_areas[stop_area_idx];
             if (stop_area->has_applicable_message(now, action_period)){
-                disrupt& dist = this->disrupts[this->find_disrupt(network)];
+                disrupt& dist = this->disrupts[this->find_or_create(network)];
                 auto find_predicate = [&](type::idx_t idx ) {
                     return stop_area->idx == idx;
                 };
@@ -76,7 +72,7 @@ void Disruption::add_networks(const std::string& filter,
     for(auto idx : this->temp_network){
         const auto* network = d.pt_data.networks[idx];
         if (network->has_applicable_message(now, action_period)){
-            this->disrupts[this->find_disrupt(network)];
+            this->disrupts[this->find_or_create(network)];
         }
     }
 }
@@ -99,7 +95,7 @@ void Disruption::add_lines(const std::string& filter,
     for(auto idx : line_list){
         const auto* line = d.pt_data.lines[idx];
         if (line->has_applicable_message(now, action_period)){
-            disrupt& dist = this->disrupts[this->find_disrupt(line->network)];
+            disrupt& dist = this->disrupts[this->find_or_create(line->network)];
             auto find_predicate = [&](type::idx_t idx ) {
                 return line->idx == idx;
             };

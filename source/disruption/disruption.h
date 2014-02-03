@@ -18,8 +18,9 @@ struct Disruption{
     std::vector<type::idx_t> temp_network; // Temporaire pour reconstruire la réponse
     log4cplus::Logger logger;
 
-    Disruption();
-    type::idx_t find_disrupt(const type::Network* network);
+    Disruption():logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){};
+
+    type::idx_t find_or_create(const type::Network* network);
     void add_stop_areas(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
