@@ -45,7 +45,7 @@ public:
                     const boost::posix_time::time_period action_period,
                     const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
 
-    std::vector<disrupt> get_disrupts();
+    const std::vector<disrupt>& get_disrupts() const;
     size_t get_disrupts_size();
 };
 }}

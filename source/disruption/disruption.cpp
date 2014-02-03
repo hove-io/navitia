@@ -119,7 +119,7 @@ void Disruption::disruptions_list(const std::string& filter,
     add_lines(filter, forbidden_uris, d, action_period, now);
     add_stop_areas(network_idx, filter, forbidden_uris, d, action_period, now);
 }
-std::vector<disrupt> Disruption::get_disrupts(){
+const std::vector<disrupt>& Disruption::get_disrupts() const{
     return this->disrupts;
 }
 
