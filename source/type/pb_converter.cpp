@@ -425,9 +425,8 @@ void fill_pb_object(const nt::StopTime* st, const type::Data&,
     }
     if(!st->comment.empty()){
         pbnavitia::Note* note = hp->add_notes();
-        auto note_str = std::to_string(st->journey_pattern_point->idx)
-                      + std::to_string(st->vehicle_journey->idx);
-        note->set_uri("note:"+note_str);
+        std::hash<std::string> hash_fn;
+        note->set_uri("note:"+std::to_string(hash_fn(st->comment)));
         note->set_note(st->comment);
     }
 }

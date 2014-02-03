@@ -247,7 +247,8 @@ stop_date_time = {
     "departure_date_time": fields.String(),
     "arrival_date_time": fields.String(),
     "stop_point": PbField(stop_point),
-    "additional_informations": additional_informations
+    "additional_informations": additional_informations,
+    "links": notes_links
 }
 
 
