@@ -50,22 +50,28 @@ def update_data():
         job.instance = instance
         for _file in files:
             dataset = models.DataSet()
-            filename = move_to_backupdirectory(_file,
-                    instance_config.backup_directory)
-            #currently the name of a dataset is the path to it
-            dataset.name = filename
+            filename = None
 
-            dataset.type = type_of_data(filename)
+            dataset.type = type_of_data(_file)
             if dataset.type == 'gtfs':
+                filename = move_to_backupdirectory(_file,
+                        instance_config.backup_directory)
                 actions.append(gtfs2ed.si(instance_config, filename))
             elif dataset.type == 'fusio':
+                filename = move_to_backupdirectory(_file,
+                        instance_config.backup_directory)
                 actions.append(fusio2ed.si(instance_config,
                                            filename))
             elif dataset.type == 'osm':
+                filename = move_to_backupdirectory(_file,
+                        instance_config.backup_directory)
                 actions.append(osm2ed.si(instance_config, filename))
             else:
                 #unknow type, we skip it
                 continue
+
+            #currently the name of a dataset is the path to it
+            dataset.name = filename
             models.db.session.add(dataset)
             job.data_sets.append(dataset)
 
