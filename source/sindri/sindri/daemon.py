@@ -28,7 +28,6 @@ class Sindri(ConsumerMixin):
         self.exchange = None
         self.queues = []
         self.ed_realtime_saver = None
-        self._init_logger()
         self.config = Config()
 
     def init(self, filename):
@@ -36,6 +35,7 @@ class Sindri(ConsumerMixin):
         init the service with the configuration file taken in parameter
         """
         self.config.load(filename)
+        self._init_logger(self.config.log_file, self.config.log_level)
         self.ed_realtime_saver = EdRealtimeSaver(self.config)
         self._init_rabbitmq()
 

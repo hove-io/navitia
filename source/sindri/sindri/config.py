@@ -16,6 +16,9 @@ class Config(object):
         self.instance_name = None
         self.rt_topics = []
 
+        self.log_file = None
+        self.log_level = None
+
     def build_error(self, config, validate_result):
         """
         construit la chaine d'erreur si la config n'est pas valide
@@ -48,6 +51,9 @@ class Config(object):
         confspec.append('instance-name = string()')
         confspec.append('rt-topics = string_list()')
         confspec.append('broker-url = string(default="amqp://guest:guest@localhost:5672//")')
+        confspec.append('log-file = string(default=None)')
+        confspec.append('log-level = string(default="debug")')
+
 
         config = ConfigObj(config_file, configspec=confspec, stringify=True)
 
@@ -63,3 +69,6 @@ class Config(object):
         self.instance_name = config['sindri']['instance-name']
         self.rt_topics = config['sindri']['rt-topics']
         self.exchange_name = config['sindri']['exchange-name']
+
+        self.log_level = config['sindri']['log-level']
+        self.log_file = config['sindri']['log-file']
