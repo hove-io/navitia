@@ -42,6 +42,12 @@ private:
     void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
     void insert_alias(const std::map<std::string, std::string>& alias);
     void insert_synonyms(const std::map<std::string, std::string>& synonyms);
+
+    /// Inserer les données fare
+    void insert_transitions(const std::vector<types::Transition*>&);
+    void insert_prices(const std::vector<types::Price*>&);
+    void insert_origin_destination(const std::vector<types::Origin_Destination*>&);
+
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
     void build_relation();

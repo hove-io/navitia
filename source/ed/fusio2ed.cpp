@@ -1,6 +1,7 @@
 #include "config.h"
 #include <iostream>
 #include "ed/connectors/fusio_parser.h"
+#include "ed/connectors/fare_parser.h"
 #include "external_parser.h"
 
 #include "utils/timer.h"
@@ -13,6 +14,9 @@
 #include "utils/exception.h"
 #include "ed_persistor.h"
 #include "connectors/extcode2uri.h"
+#include "fare/fare.h"
+
+
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -23,7 +27,7 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, date, connection_string, aliases_file,
-                synonyms_file, redis_string;
+                synonyms_file, redis_string, fare_file;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -34,7 +38,8 @@ int main(int argc, char * argv[])
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
-        ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379 timeout=2");
+        ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379 timeout=2")
+        ("fare,f", po::value<std::string>(&fare_file), "Repertoire des fichiers fare");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -102,13 +107,24 @@ int main(int argc, char * argv[])
     }
 
     ed::connectors::ExternalParser extConnecteur;
-    if(vm.count("synonyms")){
+    if(vm.count("synonyms")){        
         extConnecteur.fill_synonyms(synonyms_file, data);
     }
 
     if(vm.count("aliases")){
         extConnecteur.fill_aliases(aliases_file, data);
     }
+
+    if(vm.count("fare")){
+        LOG4CPLUS_INFO(logger, "Alimentation de fare");
+        navitia::fare::Fare fare;
+        ed::connectors::fare_parser fareParser(fare, fare_file + "idf.fares",
+                                           fare_file + "prix.csv",
+                                           fare_file + "tarifs_od.csv");
+        fareParser.use_stif_format = true;
+        fareParser.parse_files(data);
+    }
+
 
     LOG4CPLUS_INFO(logger, "line: " << data.lines.size());
     LOG4CPLUS_INFO(logger, "route: " << data.routes.size());

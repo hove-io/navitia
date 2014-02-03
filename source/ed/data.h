@@ -43,6 +43,12 @@ public:
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
 
+    //fare:
+    std::vector<types::Transition*> transitions;
+    std::vector<types::Price*> prices;
+    std::vector<types::Origin_Destination*> origin_destinations;
+    std::map<std::string, nt::idx_t> price_map;
+
     /**
          * trie les différentes donnée et affecte l'idx
          *

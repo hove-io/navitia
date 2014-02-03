@@ -57,6 +57,12 @@ private:
     std::vector<std::string> edge_to_ignore;
     std::vector<uint64_t> node_to_ignore;
 
+    //vectors qui servent pour charger les tarif
+    std::vector<types::Transition*> transitions;
+    std::vector<types::Price*> prices;
+    std::vector<types::Origin_Destination*> origin_destinations;
+
+
     void fill_meta(navitia::type::Data& data, pqxx::work& work);
     void fill_networks(navitia::type::Data& data, pqxx::work& work);
     void fill_commercial_modes(navitia::type::Data& data, pqxx::work& work);
@@ -92,6 +98,11 @@ private:
     //les alias et synonymes:
     void fill_alias(navitia::type::Data& data, pqxx::work& work);
     void fill_synonyms(navitia::type::Data& data, pqxx::work& work);
+
+    //les tarifs:
+    void fill_prices(navitia::type::Data& data, pqxx::work& work);
+    void fill_transitions(navitia::type::Data& data, pqxx::work& work);
+    void fill_origin_destinations(navitia::type::Data& data, pqxx::work& work);
 
     /// les relations admin et les autres objets
     void build_rel_stop_point_admin(navitia::type::Data& data, pqxx::work& work);

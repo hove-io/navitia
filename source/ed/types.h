@@ -292,4 +292,43 @@ struct StopTime : public Nameable {
     bool operator<(const StopTime& other) const;
 };
 
+struct Transition{
+    uint32_t idx;
+    std::string before_change;
+    std::string after_change;
+    std::string start_trip;
+    std::string end_trip;
+    std::string global_condition;
+    uint32_t price_idx;
+    Transition():idx(0), before_change(""), after_change(""), start_trip(""), end_trip(""), global_condition(""),price_idx(0){}
+};
+
+struct Price{
+    uint32_t idx;
+    std::string cle_ticket;
+    boost::gregorian::date valid_from;
+    boost::gregorian::date valid_to;
+    int ticket_price;
+    std::string ticket_title;
+
+    Price():idx(0), cle_ticket(""), valid_from(0), valid_to(0), ticket_price(0), ticket_title(""){}
+};
+
+struct Origin_Destination{
+    uint32_t idx;
+    std::string code_uic_depart;
+    std::string gare_depart;
+    std::string code_uic_arrival;
+    std::string gare_arrival;
+    uint32_t price_idx1;
+    uint32_t price_idx2;
+    uint32_t price_idx3;
+    uint32_t price_idx4;
+    std::string delta_zone;
+
+
+    Origin_Destination():idx(0), code_uic_depart(""), gare_depart(""), code_uic_arrival(""), gare_arrival(""), price_idx1(0), price_idx2(0),
+        price_idx3(0), price_idx4(0), delta_zone(""){}
+};
+
 }}//end namespace ed::types

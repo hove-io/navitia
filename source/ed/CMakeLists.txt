@@ -26,10 +26,10 @@ add_subdirectory(tests)
 add_library(transportation_data_import ed_persistor.cpp)
 
 add_executable(gtfs2ed gtfs2ed.cpp)
-target_link_libraries(gtfs2ed transportation_data_import ed connectors types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
+target_link_libraries(gtfs2ed transportation_data_import ed connectors types  fare pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
 
 add_executable(fusio2ed fusio2ed.cpp)
-target_link_libraries(fusio2ed transportation_data_import ed connectors types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
+target_link_libraries(fusio2ed transportation_data_import ed connectors fare types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
 target_link_libraries(ed2nav types connectors pq pqxx data georef routing

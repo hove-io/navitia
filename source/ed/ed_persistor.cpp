@@ -40,12 +40,13 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
     this->insert_alias(data.alias);
     this->insert_synonyms(data.synonymes);
+    this->insert_prices(data.prices);
+    this->insert_transitions(data.transitions);
+    this->insert_origin_destination(data.origin_destinations);
     std::cout << "fin : block insert!" << std::endl;
     this->build_relation();
     this->lotus.commit();
     std::cout << "fin : commit!" << std::endl;
-
-
 }
 
 void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
@@ -61,7 +62,8 @@ void EdPersistor::build_relation(){
 
 void EdPersistor::clean_db(){
     PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, navitia.alias,navitia.synonym,"
-                "navitia.commercial_mode, navitia.vehicle_properties, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));
+                            "navitia.commercial_mode, navitia.vehicle_properties, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection,"
+                            "navitia.origin_destination, navitia.transition, navitia.price CASCADE"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -541,6 +543,57 @@ void EdPersistor::insert_synonyms(const std::map<std::string, std::string>& syno
         this->lotus.insert(values);
         count++;
         ++it;
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_transitions(const std::vector<types::Transition*>& transitions){
+    this->lotus.prepare_bulk_insert("navitia.transition", {"id","before_change","after_change","start_trip","end_trip","global_condition","price_id"});
+    for (types::Transition* transition: transitions ){
+        std::vector<std::string> values;
+        values.push_back(std::to_string(transition->idx));
+        values.push_back(transition->before_change);
+        values.push_back(transition->after_change);
+        values.push_back(transition->start_trip);
+        values.push_back(transition->end_trip);
+        values.push_back(transition->global_condition);
+        values.push_back(std::to_string(transition->price_idx));
+        this->lotus.insert(values);
+    }
+     this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_prices(const std::vector<types::Price*>& prices){
+    this->lotus.prepare_bulk_insert("navitia.price", {"id", "cle_ticket", "valid_from", "valid_to", "ticket_price", "ticket_title"});
+    for (types::Price* price : prices){
+        std::vector<std::string> values;
+        values.push_back(std::to_string(price->idx));
+        values.push_back(price->cle_ticket);
+        values.push_back(bg::to_iso_extended_string(price->valid_from));
+        values.push_back(bg::to_iso_extended_string(price->valid_to));
+        values.push_back(std::to_string(price->ticket_price));
+        values.push_back(price->ticket_title);
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_origin_destination(const std::vector<types::Origin_Destination*>& ods){
+    this->lotus.prepare_bulk_insert("navitia.origin_destination", {"id", "code_uic_depart", "gare_depart", "code_uic_arrival", "gare_arrival", "price_id1",
+                                    "price_id2","price_id3","price_id4", "delta_zone"});
+    for (types::Origin_Destination* od: ods){
+        std::vector<std::string> values;
+        values.push_back(std::to_string(od->idx));
+        values.push_back(od->code_uic_depart);
+        values.push_back(od->gare_depart);
+        values.push_back(od->code_uic_arrival);
+        values.push_back(od->gare_arrival);
+        values.push_back(std::to_string(od->price_idx1));
+        values.push_back(std::to_string(od->price_idx2));
+        values.push_back(std::to_string(od->price_idx3));
+        values.push_back(std::to_string(od->price_idx4));
+        values.push_back(od->delta_zone);
+        this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
 }

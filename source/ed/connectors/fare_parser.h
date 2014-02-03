@@ -1,5 +1,6 @@
 #pragma once
 #include "fare/fare.h"
+#include "ed/data.h"
 
 namespace ed { namespace connectors {
 
@@ -28,7 +29,6 @@ struct fare_parser {
     const std::string state_transition_filename;
     const std::string prices_filename;
     const std::string od_filename;
-
     bool use_stif_format = false;
 
     fare_parser(navitia::fare::Fare& data_, const std::string& state, const std::string& prices, const std::string od) :
@@ -38,7 +38,13 @@ struct fare_parser {
         od_filename(od) {}
 
     void load();
-private:
+    void parse_files(Data&);
+private:       
+    ///
+    void parse_trasitions(Data&);
+    void parse_prices(Data&);
+    void parse_origin_destinations(Data&);
+
     /// Charge les deux fichiers obligatoires
     void load_transitions();
     void load_prices();
