@@ -101,6 +101,12 @@ class add_computed_resources(object):
                     "rel": "journeys",
                     "templated": templated
                 })
+            if collection in ['stop_areas', 'lines', 'networks']:
+                data['links'].append({
+                    "href": url_for("v1/disruptions", **kwargs),
+                    "rel": "disruptions",
+                    "templated": templated
+                })
             if isinstance(response, tuple):
                 return data, code, header
             else:

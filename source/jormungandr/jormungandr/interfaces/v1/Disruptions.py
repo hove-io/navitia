@@ -2,7 +2,7 @@
 from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
 from fields import PbField, error, network, line,\
-    NonNullList, NonNullNested, pagination
+    NonNullList, NonNullNested, pagination, stop_area
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from errors import ManageError
@@ -10,7 +10,8 @@ from datetime import datetime
 
 disruption = {
     "network": PbField(network, attribute='network'),
-    "lines": NonNullList(NonNullNested(line))
+    "lines": NonNullList(NonNullNested(line)),
+    "stop_areas": NonNullList(NonNullNested(stop_area))
 }
 
 disruptions = {
@@ -32,6 +33,8 @@ class Disruptions(ResourceUri):
                                 description="Number of disruption per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
+        parser_get.add_argument("period", type=int, default=365,
+                                description="Period from datetime")
         parser_get.add_argument("datetime", type=str,
                                 description="The datetime from which you want\
                                 the disruption")
@@ -48,6 +51,7 @@ class Disruptions(ResourceUri):
 
         if not args["datetime"]:
             args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
+
         if(uri):
             if uri[-1] == "/":
                 uri = uri[:-1]
