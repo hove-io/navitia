@@ -39,10 +39,10 @@ enum ItemType {
 
 /** Étape d'un itinéraire*/
 struct PathItem {
-    navitia::DateTime arrival;
-    navitia::DateTime departure;
-    std::vector<navitia::DateTime> arrivals;
-    std::vector<navitia::DateTime> departures;
+    boost::posix_time::ptime arrival;
+    boost::posix_time::ptime departure;
+    std::vector<boost::posix_time::ptime> arrivals;
+    std::vector<boost::posix_time::ptime> departures;
     std::vector<const nt::StopTime*> stop_times; //empty if not public transport
 
     /**
@@ -55,18 +55,9 @@ struct PathItem {
 
     ItemType type;
 
-    boost::gregorian::date date; //TODO a virer, et remplacer DateTime par des boost::date pour avoir cette date.
-
-    PathItem(navitia::DateTime departure = navitia::DateTimeUtils::inf,
-             navitia::DateTime arrival = navitia::DateTimeUtils::inf) :
+    PathItem(boost::posix_time::ptime departure = boost::posix_time::pos_infin,
+             boost::posix_time::ptime arrival = boost::posix_time::pos_infin) :
         arrival(arrival), departure(departure), type(public_transport) {
-    }
-
-    //VIRER ce constructeur des qu'on a vire date
-    PathItem(navitia::DateTime departure,
-             navitia::DateTime arrival, const nt::Data& d) :
-        arrival(arrival), departure(departure), type(public_transport) {
-        date = navitia::to_posix_time(departure, d).date();
     }
 
     std::string print() const;
@@ -80,12 +71,12 @@ struct PathItem {
 
 /** Un itinéraire complet */
 struct Path {
-    uint32_t duration;
+    boost::posix_time::time_duration duration;
     uint32_t nb_changes;
     boost::posix_time::ptime request_time;
     std::vector<PathItem> items;
 
-    Path() : duration(std::numeric_limits<uint32_t>::max()), nb_changes(std::numeric_limits<uint32_t>::max()) {}
+    Path() : duration(boost::posix_time::pos_infin), nb_changes(std::numeric_limits<uint32_t>::max()) {}
 
     void print() const {
         for(auto item : items)

@@ -1,6 +1,4 @@
-#ifndef WIN32
 #define BOOST_TEST_DYN_LINK
-#endif
 #define BOOST_TEST_MODULE test_fares
 #include <boost/test/unit_test.hpp>
 #include "fare/fare.h"
@@ -22,7 +20,7 @@ namespace ph = boost::phoenix;
 
 struct invalid_condition : public std::exception {};
 
-int parse_time(const std::string & time_str){
+boost::posix_time::time_duration parse_time(const std::string & time_str){
     // Règle permettant de parser une heure au format HH|MM
     qi::rule<std::string::const_iterator, int()> time_r = (qi::int_ >> '|' >> qi::int_)[qi::_val = qi::_1 * 3600 + qi::_2 * 60];
     int time;
@@ -31,7 +29,7 @@ int parse_time(const std::string & time_str){
     if(!qi::phrase_parse(begin, end, time_r, boost::spirit::ascii::space, time) || begin != end) {
         throw invalid_condition();
     }
-    return time;
+    return boost::posix_time::seconds(time);
 }
 
 boost::gregorian::date parse_nav_date(const std::string & date_str){
@@ -72,7 +70,7 @@ const navitia::routing::Path string_to_path(const std::vector<std::string>& keys
 
         //construction of a mock item
         //will leak from everywhere :)
-        navitia::routing::PathItem item(start_time, dest_time);
+        navitia::routing::PathItem item(boost::posix_time::ptime(date, start_time), boost::posix_time::ptime(date, dest_time));
         nt::StopPoint* first_sp = new nt::StopPoint();
         first_sp->stop_area = new nt::StopArea();
         first_sp->stop_area->uri = start_stop_area;
@@ -97,7 +95,6 @@ const navitia::routing::Path string_to_path(const std::vector<std::string>& keys
         item.stop_times.push_back(first_st);
         item.stop_times.push_back(last_st);
 
-        item.date = date;
         first_sp->fare_zone = boost::lexical_cast<int>(start_zone);
         last_sp->fare_zone = boost::lexical_cast<int>(dest_zone);
 

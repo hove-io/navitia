@@ -62,9 +62,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
     pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
 
     for(Path path : paths) {
-        navitia::DateTime departure_time = DateTimeUtils::inf,
-                          arrival_time = DateTimeUtils::inf;
+        bt::ptime departure_time = bt::pos_infin,
+                          arrival_time = bt::pos_infin;
         pbnavitia::Journey* pb_journey = pb_response.add_journeys();
+
         pb_journey->set_nb_transfers(path.nb_changes);
         pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
@@ -81,7 +82,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
                 const auto walking_time = temp.duration;
                 departure_time = path.items.front().departure - walking_time;
-                fill_street_sections(origin, temp, d, pb_journey, to_posix_time(departure_time, d));
+                fill_street_sections(origin, temp, d, pb_journey, departure_time);
             }
         }
 
@@ -98,12 +99,12 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 for(size_t i=0;i<item.stop_points.size();++i) {
                     if ((!vj->has_boarding()) && (!vj->has_landing())) {
                         pbnavitia::StopDateTime* stop_time = pb_section->add_stop_date_times();
-                        auto arr_time = iso_string(item.arrivals[i], d);
+                        auto arr_time = bt::to_iso_string(item.arrivals[i]);
                         stop_time->set_arrival_date_time(arr_time);
-                        auto dep_time = iso_string(item.departures[i], d);
+                        auto dep_time = bt::to_iso_string(item.departures[i]);
                         stop_time->set_departure_date_time(dep_time);
-                        const auto p_deptime = navitia::to_posix_time(item.departures[i], d);
-                        const auto p_arrtime = navitia::to_posix_time(item.arrivals[i], d);
+                        const auto p_deptime = item.departures[i];
+                        const auto p_arrtime = item.arrivals[i];
                         boost::posix_time::time_period action_period(p_deptime, p_arrtime);
                         fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 0, now, action_period);
 
@@ -127,7 +128,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 if (item.stop_points.size() > 1) {
                     auto arr_time = item.arrivals[0];
                     auto dep_time = item.departures[0];
-                    boost::posix_time::time_period action_period(navitia::to_posix_time(dep_time, d), navitia::to_posix_time(arr_time, d));
+                    boost::posix_time::time_period action_period(dep_time, arr_time);
                     fill_pb_placemark(item.stop_points.front(), d, pb_section->mutable_origin(), 1, now, action_period);
                     fill_pb_placemark(item.stop_points.back(), d, pb_section->mutable_destination(), 1, now, action_period);
                 }
@@ -145,22 +146,22 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     default : pb_section->set_transfer_type(pbnavitia::walking); break;
                 }
 
-                boost::posix_time::time_period action_period(navitia::to_posix_time(item.departure, d), navitia::to_posix_time(item.arrival, d));
+                boost::posix_time::time_period action_period(item.departure, item.arrival);
                 const auto origin_sp = item.stop_points.front();
                 const auto destination_sp = item.stop_points.back();
                 fill_pb_placemark(origin_sp, d, pb_section->mutable_origin(), 1, now, action_period);
                 fill_pb_placemark(destination_sp, d, pb_section->mutable_destination(), 1, now, action_period);
                 pb_section->set_length(origin_sp->coord.distance_to(destination_sp->coord));
             }
-            auto dep_time = iso_string(item.departure, d);
+            auto dep_time = bt::to_iso_string(item.departure);
             pb_section->set_begin_date_time(dep_time);
-            auto arr_time = iso_string(item.arrival, d);
+            auto arr_time = bt::to_iso_string(item.arrival);
             pb_section->set_end_date_time(arr_time);
 
-            if(departure_time == DateTimeUtils::inf)
+            if(departure_time == bt::pos_infin)
                 departure_time = item.departure;
             arrival_time = item.arrival;
-            pb_section->set_duration(item.arrival - item.departure);
+            pb_section->set_duration((item.arrival - item.departure).total_seconds());
         }
         // La marche à pied finale si on avait donné une coordonnée
         if(path.items.size() > 0 && ! path.items.back().stop_points.empty()) {
@@ -173,15 +174,15 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 }
 
                 auto begin_section_time = arrival_time;
-                fill_street_sections(destination, temp, d, pb_journey, to_posix_time(begin_section_time, d));
+                fill_street_sections(destination, temp, d, pb_journey, begin_section_time);
                 arrival_time = arrival_time + temp.duration;
             }
         }
-        const auto str_departure = iso_string(departure_time, d);
-        const auto str_arrival = iso_string(arrival_time, d);
+        const auto str_departure = bt::to_iso_string(departure_time);
+        const auto str_arrival = bt::to_iso_string(arrival_time);
         pb_journey->set_departure_date_time(str_departure);
         pb_journey->set_arrival_date_time(str_arrival);
-        pb_journey->set_duration(arrival_time - departure_time);
+        pb_journey->set_duration((arrival_time - departure_time).total_seconds());
     }
 
 	if (pb_response.journeys().size() == 0) {
@@ -290,7 +291,6 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
     return datetimes;
 }
 
-
 pbnavitia::Response
 make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination,
@@ -352,7 +352,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
             // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
             tmp.back().request_time = datetime;
             result.push_back(tmp.back());
-            bound = tmp.back().items.back().arrival;
+            bound = to_datetime(tmp.back().items.back().arrival, raptor.data);
         } else // Lorsqu'on demande plusieurs horaires, et qu'il n'y a pas de résultat, on retourne un itinéraire vide
             result.push_back(Path());
     }

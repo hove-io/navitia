@@ -25,9 +25,9 @@ struct Result {
     int arrival;
     int nb_changes;
 
-    Result(Path path) : duration(path.duration), time(-1), arrival(-1), nb_changes(path.nb_changes) {
+    Result(Path path) : duration(path.duration.total_seconds()), time(-1), arrival(-1), nb_changes(path.nb_changes) {
         if(!path.items.empty())
-            arrival = DateTimeUtils::hour(path.items.back().arrival);
+            arrival = path.items.back().arrival.time_of_day().total_seconds();
     }
 };
 

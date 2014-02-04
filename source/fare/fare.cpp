@@ -210,6 +210,9 @@ SectionKey::SectionKey(const routing::PathItem& path_item) {
     date = path_item.date;
     start_time = path_item.departure;
     dest_time = path_item.arrival;
+    date = path_item.departure.date();
+    start_time = path_item.departure.time_of_day().total_seconds();
+    dest_time = path_item.arrival.time_of_day().total_seconds();
     start_zone = first_sp->fare_zone;
     dest_zone = last_sp->fare_zone;
     mode = jp->physical_mode->uri; //CHECK
