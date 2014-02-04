@@ -27,6 +27,8 @@ def type_of_data(filename):
             return 'fusio'
         else:
             return 'gtfs'
+    if filename.endswith('.geopal'):
+        return 'geopal'
     return None
 
 
@@ -66,8 +68,12 @@ def update_data():
                 filename = move_to_backupdirectory(_file,
                         instance_config.backup_directory)
                 actions.append(osm2ed.si(instance_config, filename))
+            elif dataset.type == 'geopal':
+                filename = move_to_backupdirectory(_file,
+                        instance_config.backup_directory)
+                actions.append(geopal2ed.si(instance_config, filename))
             else:
-                #unknow type, we skip it
+                #unknown type, we skip it
                 continue
 
             #currently the name of a dataset is the path to it
