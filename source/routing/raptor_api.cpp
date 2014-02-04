@@ -183,6 +183,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_journey->set_departure_date_time(str_departure);
         pb_journey->set_arrival_date_time(str_arrival);
         pb_journey->set_duration((arrival_time - departure_time).total_seconds());
+
+        //fare computation, done at the end for the journey to be complete
+        auto fare = d.fare.compute_fare(path);
+        fill_fare_section(pb_response, pb_journey, fare);
     }
 
 	if (pb_response.journeys().size() == 0) {

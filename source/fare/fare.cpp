@@ -55,7 +55,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section) {
             label.stop_area = section.start_stop_area;
         }
         if(label.tickets.size() == 0)
-            throw("Problème interne");
+            throw navitia::exception("Problème interne");
         label.tickets.back().sections.push_back(section);
     }
     label.current_type = ticket.type;
@@ -82,6 +82,11 @@ bool valid(const State & state, Label label){
 results Fare::compute_fare(const routing::Path& path) const {
     results res;
     int nb_nodes = boost::num_vertices(g);
+
+    if (! nb_nodes) {
+        LOG4CPLUS_WARN(logger, "no fare data loaded, cannot compute fare");
+        return res;
+    }
     std::vector< std::vector<Label> > labels(nb_nodes);
     // Étiquette de départ
     labels[0].push_back(Label());
@@ -92,73 +97,75 @@ results Fare::compute_fare(const routing::Path& path) const {
         SectionKey section_key(item);
 
         LOG4CPLUS_INFO(logger, "Nouvelle section à étudier : " /*<< item */);
-        std::vector< std::vector<Label> > new_labels(nb_nodes);
+        std::vector<std::vector<Label>> new_labels(nb_nodes);
         SectionKey section(section_key);
         try {
-            BOOST_FOREACH(edge_t e, boost::edges(g)){
+            BOOST_FOREACH(edge_t e, boost::edges(g)) {
                 vertex_t u = boost::source(e,g);
                 vertex_t v = boost::target(e,g);
-                if(valid(g[v], section)){
-                    BOOST_FOREACH(Label label, labels[u]){
-                        Ticket ticket;
-                        Transition transition = g[e];
-                        if (valid(g[u], label) &&  transition.valid(section_key, label)){
-//                            LOG4CPLUS_INFO(logger, "\tTransition valide : " << transition.dump());
-                            if(transition.ticket_key != "") {
-                                bool ticket_found = false; //TODO refactor this, optional is way better
-                                auto it = fare_map.find(transition.ticket_key);
-                                try {
-                                    if (it != fare_map.end()) {
-                                        ticket = it->second.get_fare(section.date);
-                                        ticket_found = true;
-                                    }
-                                }
-                                catch(no_ticket) { //the ticket_found bool is still false
-                                }
-                                if (! ticket_found) {
-                                    ticket.type = Ticket::None;
-                                    ticket.key = transition.ticket_key;
-                                    ticket.value = -100; // no price
-                                    ticket.comment = "no price found";
+                if (! valid(g[v], section))
+                    continue;
+
+                for (Label label: labels[u]) {
+                    Ticket ticket;
+                    Transition transition = g[e];
+                    if (valid(g[u], label) && transition.valid(section_key, label)){
+                        //                            LOG4CPLUS_INFO(logger, "\tTransition valide : " << transition.dump());
+                        if(transition.ticket_key != "") {
+                            bool ticket_found = false; //TODO refactor this, optional is way better
+                            auto it = fare_map.find(transition.ticket_key);
+                            try {
+                                if (it != fare_map.end()) {
+                                    ticket = it->second.get_fare(section.date);
+                                    ticket_found = true;
                                 }
                             }
-                            if(transition.global_condition == "exclusive")
-                                throw ticket;
-                            else if(transition.global_condition == "with_changes"){
-                                ticket.type = Ticket::ODFare;
+                            catch(no_ticket) { //the ticket_found bool is still false
                             }
-                            Label next = next_label(label, ticket, section);
-
-                            // On résoud le ticket OD : cas où on ne se servira plus de ce ticket
-                            if(label.current_type == Ticket::ODFare || ticket.type == Ticket::ODFare){
-                                try {
-                                    Ticket ticket_od;
-                                    ticket_od = get_od(next, section).get_fare(section.date);
-                                    if(label.tickets.size() > 0 && label.current_type == Ticket::ODFare)
-                                        ticket_od.sections = label.tickets.back().sections;
-
-                                    ticket_od.sections.push_back(section);
-                                    Label n = next;
-                                    n.cost += ticket_od.value;
-                                    n.tickets.back() = ticket_od;
-                                    n.current_type = Ticket::FlatFare;
-
-                                    new_labels.at(0).push_back(n);
-                                    LOG4CPLUS_INFO(logger, "\t\tOn résoud un ticket OD : " << ticket_od.value);
-                                } catch (no_ticket) {
-                                    LOG4CPLUS_WARN(logger, "\t\tOn a pas réussi à résoudre le ticket OD; SA=" << next.stop_area << " zone=" << next.zone
-                                                   << ", section start_zone=" << section.start_zone << ", dest_zone=" << section.start_zone
-                                                   << " start_sa=" << section.start_stop_area << " dest_sa=" << section.dest_stop_area
-                                                   << " mode=" << section.mode);
-                                }
-
-                            } else {
-                                new_labels.at(0).push_back(next);
+                            if (! ticket_found) {
+                                ticket.type = Ticket::None;
+                                ticket.key = transition.ticket_key;
+                                ticket.value = -100; // no price
+                                ticket.comment = "no price found";
                             }
-                            new_labels[v].push_back(next);
                         }
+                        if (transition.global_condition == "exclusive")
+                            throw ticket;
+                        else if(transition.global_condition == "with_changes") {
+                            ticket.type = Ticket::ODFare;
+                        }
+                        Label next = next_label(label, ticket, section);
+
+                        // On résoud le ticket OD : cas où on ne se servira plus de ce ticket
+                        if (label.current_type == Ticket::ODFare || ticket.type == Ticket::ODFare) {
+                            try {
+                                Ticket ticket_od;
+                                ticket_od = get_od(next, section).get_fare(section.date);
+                                if(label.tickets.size() > 0 && label.current_type == Ticket::ODFare)
+                                    ticket_od.sections = label.tickets.back().sections;
+
+                                ticket_od.sections.push_back(section);
+                                Label n = next;
+                                n.cost += ticket_od.value;
+                                n.tickets.back() = ticket_od;
+                                n.current_type = Ticket::FlatFare;
+
+                                new_labels.at(0).push_back(n);
+                                LOG4CPLUS_INFO(logger, "\t\tOn résoud un ticket OD : " << ticket_od.value);
+                            } catch (no_ticket) {
+                                LOG4CPLUS_WARN(logger, "\t\tOn a pas réussi à résoudre le ticket OD; SA=" << next.stop_area << " zone=" << next.zone
+                                               << ", section start_zone=" << section.start_zone << ", dest_zone=" << section.start_zone
+                                               << " start_sa=" << section.start_stop_area << " dest_sa=" << section.dest_stop_area
+                                               << " mode=" << section.mode);
+                            }
+
+                        } else {
+                            new_labels.at(0).push_back(next);
+                        }
+                        new_labels[v].push_back(next);
                     }
                 }
+
             }
         }
         // On est tombé sur un segment exclusif : on est obligé d'utilisé ce ticket
@@ -181,6 +188,7 @@ results Fare::compute_fare(const routing::Path& path) const {
         if(label.cost < best_cost || (label.cost == best_cost && label.tickets.size() < best_num_tickets)){
             LOG4CPLUS_INFO(logger, "prix : " << label.cost);
             res.tickets = label.tickets;
+            res.not_found = false;
             best_cost = label.cost;
             best_num_tickets = label.tickets.size();
         }
@@ -207,9 +215,6 @@ SectionKey::SectionKey(const routing::PathItem& path_item) {
     start_stop_area = first_sp->stop_area->uri;
     dest_stop_area = last_sp->stop_area->uri;
     line = jp->route->line->uri;
-    date = path_item.date;
-    start_time = path_item.departure;
-    dest_time = path_item.arrival;
     date = path_item.departure.date();
     start_time = path_item.departure.time_of_day().total_seconds();
     dest_time = path_item.arrival.time_of_day().total_seconds();

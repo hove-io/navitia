@@ -153,9 +153,9 @@ void fare_parser::load_transitions() {
         boost::algorithm::split(global_conditions, str_condition, boost::algorithm::is_any_of("&"));
 
         for (std::string cond : global_conditions) {
-           if(cond == "symetric"){
+           if (cond == "symetric") {
                symetric = true;
-           }else{
+           } else {
                transition.global_condition = cond;
            }
         }

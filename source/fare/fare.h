@@ -18,6 +18,7 @@ struct Ticket {
     std::string key;
     std::string caption;
     int value;
+    std::string currency = "euro";
     std::string comment;
     ticket_type type;
     std::vector<SectionKey> sections;
@@ -209,7 +210,9 @@ struct OD_key{
 
 struct results {
     std::vector<Ticket> tickets;
+    bool not_found = true;
     //TODO: link to pathitem
+
 };
 
 //Structure des données brut fare
@@ -230,6 +233,7 @@ struct Data_Price{
     boost::gregorian::date valid_from;
     boost::gregorian::date valid_to;
     int ticket_price;
+    std::string currency = "euro";
     std::string ticket_title;
 
     Data_Price():idx(0), cle_ticket(""), valid_from(0), valid_to(0), ticket_price(0), ticket_title(""){}
@@ -263,7 +267,7 @@ struct Fare {
     /// Map qui associe les clefs de tarifs aux tarifs
     std::map<std::string, DateTicket> fare_map;
 
-    std::map< OD_key, std::map<OD_key, std::vector<std::string> > > od_tickets;
+    std::map<OD_key, std::map<OD_key, std::vector<std::string>>> od_tickets;
 
     /// Contient le graph des transitions
     typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, State, Transition > Graph;

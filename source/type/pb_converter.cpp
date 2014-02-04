@@ -572,6 +572,38 @@ void fill_pb_placemark(navitia::georef::Way* way,
 }
 
 
+void fill_fare_section(pbnavitia::Response& pb_response, pbnavitia::Journey* pb_journey, const fare::results& fare) {
+    auto pb_fare = pb_journey->mutable_fare();
+
+    double total(0.);
+    size_t cpt_ticket = pb_response.tickets_size();
+
+    if (fare.not_found) {
+        pb_fare->set_found(false);
+        return;
+    }
+
+    boost::optional<std::string> currency;
+    for (const auto& ticket : fare.tickets) {
+        if (! currency)
+            currency = ticket.currency;
+        if (ticket.currency != *currency)
+            throw navitia::exception("cannot have different currencies for tickets"); //if we really had to handle different currencies it could be done, but I don't see the point
+
+        total += ticket.value;
+        auto pb_ticket = pb_response.add_tickets();
+        pb_ticket->set_name(ticket.key);
+        pb_ticket->set_id("ticket_" + boost::lexical_cast<std::string>(++cpt_ticket));
+        pb_ticket->mutable_cost()->set_currency(*currency);
+        pb_ticket->mutable_cost()->set_value(ticket.value);
+
+        pb_fare->add_ticket_id(pb_ticket->id());
+    }
+    pb_fare->mutable_total()->set_value(total);
+    pb_fare->mutable_total()->set_currency(*currency);
+    pb_fare->set_found(true);
+}
+
 void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,
                       const navitia::type::Data& data, const boost::posix_time::ptime departure,
                       int depth, const pt::ptime& now, const pt::time_period& action_period) {

@@ -49,6 +49,8 @@ void fill_pb_placemark(navitia::georef::POI* poi, const type::Data &data, pbnavi
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
+void fill_fare_section(pbnavitia::Response& pb_response, pbnavitia::Journey* pb_journey, const fare::results& fare);
+
 void fill_street_sections(const type::EntryPoint &ori_dest, const georef::Path & path, const type::Data &data, pbnavitia::Journey* pb_journey,
         const boost::posix_time::ptime departure, int max_depth = 1,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
