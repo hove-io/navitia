@@ -528,6 +528,7 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     dump_response(resp, "walking");
 
     BOOST_CHECK_EQUAL(section.street_network().coordinates_size(), 4);
+    BOOST_CHECK(! section.id().empty());
     BOOST_CHECK_EQUAL(section.street_network().duration(), 200);
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 3);
@@ -708,6 +709,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     auto section = journey.sections(0);
 
     //walk
+    BOOST_CHECK(! section.id().empty());
     BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
@@ -718,6 +720,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     //boarding
     section = journey.sections(1);
+    BOOST_CHECK(! section.id().empty());
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::boarding);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
     pathitem = section.street_network().path_items(0);
@@ -727,6 +730,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     //bike
     section = journey.sections(2);
+    BOOST_CHECK(! section.id().empty());
     BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue kb");
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue gh");
@@ -751,6 +755,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     //landing
     section = journey.sections(3);
+    BOOST_CHECK(! section.id().empty());
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::landing);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
     pathitem = section.street_network().path_items(0);
@@ -760,6 +765,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     //walking
     section = journey.sections(4);
+    BOOST_CHECK(! section.id().empty());
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue ag");
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ar");

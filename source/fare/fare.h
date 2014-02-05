@@ -166,8 +166,9 @@ struct SectionKey {
     int dest_zone;
     std::string mode;
     boost::gregorian::date date;
+    size_t path_item_idx;
 
-    SectionKey(const routing::PathItem& path_item);
+    SectionKey(const routing::PathItem& path_item, const size_t idx);
     int duration_at_begin(int ticket_start_time) const;
     int duration_at_end(int ticket_start_time) const;
 };

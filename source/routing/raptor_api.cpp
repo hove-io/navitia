@@ -32,7 +32,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         const type::EntryPoint& origin, const type::EntryPoint& destination,
         const std::vector<boost::posix_time::ptime>& datetimes,
                                 bool clockwise) {
-    pbnavitia::Response pb_response;
+    EnhancedResponse enhanced_response; //wrapper around raw protobuff response to handle ids
+    pbnavitia::Response& pb_response = enhanced_response.response;
+
     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
     auto temp = worker.get_direct_path();
@@ -50,7 +52,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             } else {
                 departure = datetime - temp.duration;
             }
-            fill_street_sections(origin, temp, d, pb_journey, departure);
+            fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
 
             const auto str_departure = boost::posix_time::to_iso_string(departure);
             const auto str_arrival = boost::posix_time::to_iso_string(departure + temp.duration);
@@ -82,15 +84,18 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
                 const auto walking_time = temp.duration;
                 departure_time = path.items.front().departure - walking_time;
-                fill_street_sections(origin, temp, d, pb_journey, departure_time);
+                fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure_time);
             }
         }
 
         const type::VehicleJourney* vj = nullptr;
+        size_t item_idx(0);
         // La partie TC et correspondances
         for(PathItem & item : path.items) {
 
             pbnavitia::Section* pb_section = pb_journey->add_sections();
+            pb_section->set_id(enhanced_response.register_section(pb_journey, item, item_idx++));
+
             if(item.type == public_transport) {
                 pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
                 boost::posix_time::ptime departure_ptime , arrival_ptime;
@@ -174,7 +179,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 }
 
                 auto begin_section_time = arrival_time;
-                fill_street_sections(destination, temp, d, pb_journey, begin_section_time);
+                fill_street_sections(enhanced_response, destination, temp, d, pb_journey, begin_section_time);
                 arrival_time = arrival_time + temp.duration;
             }
         }
@@ -186,7 +191,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
         //fare computation, done at the end for the journey to be complete
         auto fare = d.fare.compute_fare(path);
-        fill_fare_section(pb_response, pb_journey, fare);
+        fill_fare_section(enhanced_response, pb_journey, fare);
     }
 
 	if (pb_response.journeys().size() == 0) {

@@ -90,11 +90,14 @@ results Fare::compute_fare(const routing::Path& path) const {
     std::vector< std::vector<Label> > labels(nb_nodes);
     // Étiquette de départ
     labels[0].push_back(Label());
+    size_t section_idx(0);
     for (auto item : path.items) {
-        if (item.type != routing::ItemType::public_transport)
+        if (item.type != routing::ItemType::public_transport) {
+            section_idx++;
             continue;
+        }
 
-        SectionKey section_key(item);
+        SectionKey section_key(item, section_idx++);
 
         LOG4CPLUS_INFO(logger, "Nouvelle section à étudier : " /*<< item */);
         std::vector<std::vector<Label>> new_labels(nb_nodes);
@@ -205,7 +208,7 @@ void DateTicket::add(std::string begin_date, std::string end_date, Ticket ticket
     tickets.push_back(date_ticket_t(greg::date_period(begin, end), ticket));
 }
 
-SectionKey::SectionKey(const routing::PathItem& path_item) {
+SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : path_item_idx(idx) {
     const navitia::type::StopPoint* first_sp = path_item.stop_points.front();
     const navitia::type::StopPoint* last_sp = path_item.stop_points.back();
     const navitia::type::JourneyPattern* jp = path_item.get_vj()->journey_pattern;

@@ -143,7 +143,7 @@ message Section {
     optional string end_date_time = 17;
     optional addInfoVehicleJourney add_info_vehicle_journey = 18;
     optional int32 length = 19;
-    optional string section_id = 20;
+    optional string id = 20;
 }
 
 message Journey {
