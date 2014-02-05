@@ -29,7 +29,6 @@ struct fare_parser {
     const std::string state_transition_filename;
     const std::string prices_filename;
     const std::string od_filename;
-    bool use_stif_format = false;
 
     fare_parser(navitia::fare::Fare& data_, const std::string& state, const std::string& prices, const std::string od) :
         data(data_),
@@ -52,13 +51,9 @@ private:
     /// Charge les tarifs
     void load_fares();
 
-    /// Charge le fichier d'OD générique
-    void load_od_classic();
+    /// Charge le fichier d'OD
+    void load_od();
 
-    /// Charge le fichier d'OD du stif
-    void load_od_stif();
-
-    void load_od(); //refacto ca
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 };
 

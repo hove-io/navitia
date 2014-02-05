@@ -114,7 +114,6 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     ed::connectors::fare_parser parser(navitia_data.fare , std::string(FIXTURES_DIR) + "/fare/idf.fares",
                                        std::string(FIXTURES_DIR) + "/fare/prix.csv",
                                        std::string(FIXTURES_DIR) + "/fare/tarifs_od.csv");
-    parser.use_stif_format = true;
 
     parser.load();
 

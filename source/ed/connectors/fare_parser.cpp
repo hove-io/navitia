@@ -193,95 +193,56 @@ void fare_parser::load_prices() {
     }
 }
 
+fa::OD_key::od_type to_od(const std::string& key) {
+    std::string lower_key = boost::algorithm::to_lower_copy(key);
+    if (lower_key == "mode")
+        return fa::OD_key::Mode;
+    if (lower_key == "zone")
+        return fa::OD_key::Zone;
+    if (lower_key == "stop" || lower_key == "stoparea")
+        return fa::OD_key::StopArea;
+    throw navitia::exception("Unable to parse " + key + " as Od_Key");
+}
+
 void fare_parser::load_od() {
-    if (use_stif_format)
-        load_od_stif(); //TODO delete that, only one format, this has to be done in fusio
-    else
-        load_od_classic();
-}
-
-void fare_parser::load_od_classic() {
-    CsvReader reader(od_filename);
-    reader.next(); //en-tête
-
-    int count = 0;
-    for (auto row = reader.next(); !reader.eof(); row = reader.next()) {
-        std::string start_saec = boost::algorithm::trim_copy(row[0]);
-        boost::algorithm::to_lower(start_saec);
-        std::string dest_saec = boost::algorithm::trim_copy(row[2]);
-        boost::algorithm::to_lower(dest_saec);
-
-        std::vector<std::string> price_keys;
-        std::string price_key = boost::algorithm::trim_copy(row[4]);
-        price_keys.push_back(price_key);
-
-        fa::OD_key start = fa::OD_key(fa::OD_key::StopArea, start_saec);
-        fa::OD_key dest = fa::OD_key(fa::OD_key::StopArea, dest_saec);
-        data.od_tickets[start][dest] = price_keys;
-        count++;
-    }
-    LOG4CPLUS_INFO(logger, "Nombre de tarifs OD : " << count);
-}
-
-void fare_parser::load_od_stif() {
     CsvReader reader(od_filename);
     std::vector<std::string> row;
     reader.next(); //en-tête
 
-    int count = 0;
-    for(row=reader.next(); !reader.eof(); row = reader.next()) {
-        std::string start_saec = boost::algorithm::trim_copy(row[0]);
-        std::string dest_saec = boost::algorithm::trim_copy(row[2]);
+    // file format is :
+    // Origin ID, Origin name, Origin mode, Destination ID, Destination name, Destination mode, ticket_id, ticket id, .... (with any number of ticket)
 
+    int count = 0;
+    for (row=reader.next(); !reader.eof(); row = reader.next()) {
+
+        if (row.size() < 7) {
+            LOG4CPLUS_WARN(logger, "wrongly formated OD line : " << boost::algorithm::join(row, ", "));
+            continue;
+        }
+        std::string start_saec = boost::algorithm::trim_copy(row[0]);
+        std::string dest_saec = boost::algorithm::trim_copy(row[3]);
+        //col 1 and 3 are the human readable name of the start/end, and are not used
+
+        std::string start_mode = boost::algorithm::trim_copy(row[2]);
+        std::string dest_mode = boost::algorithm::trim_copy(row[5]);
 
         std::vector<std::string> price_keys;
-        std::string price_key = boost::algorithm::trim_copy(row[4]);
-        price_keys.push_back(price_key);
+        for (int i = 6; i < row.size(); ++i) {
+            std::string price_key = boost::algorithm::trim_copy(row[i]);
 
-        price_key = boost::algorithm::trim_copy(row[5]);
-        if(price_key != "")
+            if (price_key.empty())
+                continue;
             price_keys.push_back(price_key);
-
-        price_key = boost::algorithm::trim_copy(row[6]);
-        if(price_key != "")
-            price_keys.push_back(price_key);
-
-        price_key = boost::algorithm::trim_copy(row[7]);
-        if(price_key != "")
-            price_keys.push_back(price_key);
-
-        fa::OD_key start, dest;
-        if(start_saec != "8775890")
-        {
-            start = fa::OD_key(fa::OD_key::StopArea, start_saec);
-            if(dest_saec != "8775890")
-            {
-                data.od_tickets[start][fa::OD_key(fa::OD_key::StopArea, dest_saec)] = price_keys;
-            }
-            else
-            {
-                data.od_tickets[start][fa::OD_key(fa::OD_key::Mode, "metro")] = price_keys;
-                data.od_tickets[start][fa::OD_key(fa::OD_key::Zone, "1")] = price_keys;
-            }
         }
-        else
-        {
-            dest = fa::OD_key(fa::OD_key::StopArea, dest_saec);
-            if(start_saec != "8775890")
-            {
-                data.od_tickets[fa::OD_key(fa::OD_key::StopArea, start_saec)][dest] = price_keys;
-            }
-            else
-            {
-                data.od_tickets[fa::OD_key(fa::OD_key::Mode, "metro")][dest] = price_keys;
-                data.od_tickets[fa::OD_key(fa::OD_key::Zone, "1")][dest] = price_keys;
-            }
-        }
+
+        fa::OD_key start(to_od(start_mode), start_saec), dest(to_od(dest_mode), dest_saec);
+        data.od_tickets[start][dest] = price_keys;
 
         count++;
     }
     LOG4CPLUS_INFO(logger, "Nombre de tarifs OD Île-de-France : " << count);
 }
+
 
 void fare_parser::parse_trasitions(Data& data){
     CsvReader reader(state_transition_filename);

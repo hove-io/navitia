@@ -121,7 +121,6 @@ int main(int argc, char * argv[])
         ed::connectors::fare_parser fareParser(fare, fare_file + "idf.fares",
                                            fare_file + "prix.csv",
                                            fare_file + "tarifs_od.csv");
-        fareParser.use_stif_format = true;
         fareParser.parse_files(data);
     }
 
