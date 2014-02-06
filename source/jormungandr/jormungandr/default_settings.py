@@ -5,8 +5,13 @@ import logging
 # emplacement ou charger les fichier de configuration par instances
 INSTANCES_DIR = '/etc/jormungandr.d'
 
-# chaine de connnection à postgresql pour la base jormungandr
-PG_CONNECTION_STRING = 'postgresql://navitia:navitia@localhost/jormun'
+# Start the thread at startup, True in production, False for test environments
+START_MONITORING_THREAD = True
+
+#URI for postgresql
+# postgresql://<user>:<password>@<host>:<port>/<dbname>
+#http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
+SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun'
 
 # désactivation de l'authentification
 PUBLIC = True

@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
         if(prev_journey_pattern_idx == invalid_idx || prev_journey_pattern_idx != jpp->journey_pattern->idx) {
             prev_journey_pattern_idx = jpp->journey_pattern->idx;
         } else {
-            if(jpp->order+1 != prev_journey_pattern_idx) {
+            if(jpp->order+1 != static_cast<int>(prev_journey_pattern_idx)) {
                 std::cout << "Probleme de tri du tableau des journey pattern points " << jpp->idx << std::endl;
             }
         }

@@ -101,6 +101,12 @@ class add_computed_resources(object):
                     "rel": "journeys",
                     "templated": templated
                 })
+            if collection in ['stop_areas', 'lines', 'networks']:
+                data['links'].append({
+                    "href": url_for("v1/disruptions", **kwargs),
+                    "rel": "disruptions",
+                    "templated": templated
+                })
             if isinstance(response, tuple):
                 return data, code, header
             else:
@@ -183,7 +189,7 @@ class add_notes(object):
                     data["notes"] = []
                     res = []
                     note = add_note(data)
-                    [res.append(item) for item in note if not item in result]
+                    [res.append(item) for item in note if not item in res]
                     data["notes"].extend(res)
 
             if isinstance(objects, tuple):

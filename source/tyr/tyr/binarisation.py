@@ -11,6 +11,7 @@ import datetime
 from flask import current_app
 import kombu
 from navitiacommon import models
+import shutil
 
 
 def move_to_backupdirectory(filename, working_directory):
@@ -23,7 +24,7 @@ def move_to_backupdirectory(filename, working_directory):
     working_directory += "/" + now.strftime("%Y%m%d-%H%M%S%f")
     os.mkdir(working_directory)
     destination = working_directory + '/' + os.path.basename(filename)
-    os.rename(filename, destination)
+    shutil.move(filename, destination)
     return destination
 
 

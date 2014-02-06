@@ -1,5 +1,8 @@
 {% extends "!layout.html" %}
 
+{# Custom CSS overrides #}
+{% set bootswatch_css_custom = ['_static/navitia-io-styles.css'] %}
+
 {% block extrahead %}
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
 <script src="_static/raptor/jquery.raptorize.1.0.js"></script>

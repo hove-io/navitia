@@ -63,13 +63,9 @@ class User(flask_restful.Resource):
     def __init__(self):
         pass
 
-    def get(self, user_id=None, login=None):
+    def get(self, user_id=None):
         if user_id:
             return marshal(models.User.query.get_or_404(user_id),
-                    user_fields_full)
-        elif login:
-            return marshal(
-                    models.User.query.filter_by(login=login).first_or_404(),
                     user_fields_full)
         else:
             return marshal(models.User.query.all(), user_fields)

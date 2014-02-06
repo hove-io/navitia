@@ -59,3 +59,6 @@ CELERYBEAT_SCHEDULE = {
     },
 }
 CELERY_TIMEZONE = 'UTC'
+
+#http://docs.celeryproject.org/en/master/configuration.html#std:setting-CELERYBEAT_SCHEDULE_FILENAME
+CELERYBEAT_SCHEDULE_FILENAME='/tmp/celerybeat-schedule'
