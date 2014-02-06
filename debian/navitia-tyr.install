@@ -1,1 +1,5 @@
 usr/lib/python*/dist-packages/tyr
+/usr/share/tyr/*
+/etc/init.d/tyr_worker
+/etc/init.d/tyr_beat
+/usr/bin/manage_tyr.py

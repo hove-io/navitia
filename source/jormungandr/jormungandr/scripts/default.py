@@ -70,6 +70,7 @@ class Script(object):
         req.disruptions.count = request['count']
         req.disruptions.start_page = request['start_page']
         req.disruptions.datetime = request['datetime']
+        req.disruptions.period = request['period']
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
@@ -210,24 +211,22 @@ class Script(object):
                     qualifier_one(resp.journeys)
                 break  # result found, no need to inspect other fallback mode
 
-        if resp and not resp.HasField("error") and trip_type == "rapid":
+        if not debug and resp and not resp.HasField("error") and\
+                trip_type == "rapid":
             #We are looking for the asap result
-            earliest_dt = None
-            earliest_i = None
+            rapid_index = None
             for i in range(0, len(resp.journeys)):
-                if not earliest_dt\
-                        or earliest_dt > resp.journeys[i].arrival_date_time:
-                    earliest_dt = resp.journeys[i].arrival_date_time
-                    earliest_i = i
+                if resp.journeys[i].type == "rapid":
+                    rapid_index = i
 
-            if earliest_dt and not debug:
-                #We list the journeys to delete
-                to_delete = range(0, len(resp.journeys))
-                del to_delete[earliest_i]
-                to_delete.sort(reverse=True)
-                #And then we delete it
-                for i in to_delete:
-                    del resp.journeys[i]
+            #We list the journeys to delete
+            to_delete = range(0, len(resp.journeys))
+            if rapid_index:
+                del to_delete[rapid_index]
+            to_delete.sort(reverse=True)
+            #And then we delete it
+            for i in to_delete:
+                del resp.journeys[i]
         self.__fill_uris(resp)
         return resp
 
@@ -259,6 +258,7 @@ class Script(object):
                     r_datetime_f = datetime.strptime(r_datetime, f_date_time)
                     temp_datetime = r_datetime_f + timedelta(seconds=duration)
             else:
+                last_journey = resp.journeys[0]
                 if resp.journeys[-1].HasField("arrival_date_time"):
                     l_date_time = last_journey.arrival_date_time
                     l_date_time_f = datetime.strptime(l_date_time, f_date_time)

@@ -142,6 +142,10 @@ private:
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
     std::pair<bt::time_duration, vertex_t> find_nearest_vertex(const ProjectionData& target) const;
 
+    ///return the time the travel the distance at the current speed (used for projections)
+    bt::time_duration distance_to_duration(const double val) const;
+
+    void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection) const;
 };
 
 /** Structure managing the computation on the streetnetwork */

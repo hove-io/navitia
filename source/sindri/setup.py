@@ -9,6 +9,6 @@ setup(name='sindri',
       author='CanalTP',
       author_email='alexandre.jacquin@canaltp.fr',
       url='www.navitia.io',
-      packages=['sindri'],
-      scripts=['sindri.py']
+      packages=['sindri', 'sindri.saver'],
+      scripts=['sindri_service']
       )
