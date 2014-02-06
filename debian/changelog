@@ -1,3 +1,17 @@
+navitia2 (0.79.0) unstable; urgency=low
+
+  * Fix on journeys duration
+  * Fix on type journey parameter
+  * Documentation update
+  * New Tyr (we deleted pyed)
+  * Fixes in ed
+  * Add vehicle_journeys API
+  * Add comment on stop time
+  * Several improvements in Disruptions(comment, stopAreaList, links)
+  * Several improvements in streetnetwork
+
+ -- Antoine Desbordes <antoine.desbordes@canaltp.fr>  Thu, 06 Feb 2014 14:10:57 +0100
+
 navitia2 (0.77.3) unstable; urgency=low
 
   * Fusio2ed packaging
