@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+import glob
 
 setup(name='tyr',
         version='0.39.0',
-        description="Mange et vomis des donnees dans ed, puis les remange et les revomi dans un .nav",
+        description="Provide an API for managing users and handle data updates",
         author='CanalTP',
-        author_email='vincent.lara@canaltp.fr',
+        author_email='alexandre.jacquin@canaltp.fr',
         url='www.navitia.io',
         packages=['tyr'],
         requires=['configobj'],
-        scripts=['manage.py']
+        scripts=['manage_tyr.py'],
+        data_files=[
+            ('/usr/share/tyr/migrations', ['migrations/alembic.ini', 'migrations/env.py', 'migrations/script.py.mako']),
+            ('/usr/share/tyr/migrations/versions', glob.glob('migrations/versions/*.py')),
+            ('/etc/init.d', ['tyr_beat', 'tyr_worker'])
+        ],
 )

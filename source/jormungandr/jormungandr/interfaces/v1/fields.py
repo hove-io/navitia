@@ -91,18 +91,13 @@ class additional_informations_vj(fields.Raw):
         return result
 
 
-class has_equipments():
-
+class equipments(fields.Raw):
     def output(self, key, obj):
-        if obj.HasField("has_equipments"):
-            properties = obj.has_equipments
-            enum = properties.DESCRIPTOR.enum_types_by_name["Equipment"]
-            equipments = properties.has_equipments
-            values = enum.values_by_number
-            return [str.lower(values[v].name) for v in equipments]
-        else:
-            return []
-
+        equipments = obj.has_equipments
+        descriptor = equipments.DESCRIPTOR
+        enum = descriptor.enum_types_by_name["Equipment"]
+        return [str.lower(enum.values_by_number[v].name) for v
+                in equipments.has_equipments]
 
 class notes(fields.Raw):
 
@@ -161,7 +156,7 @@ display_informations_vj = {
     "label": get_label(attribute="display_information"),
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
-    "equipments": fields.List(fields.Nested(has_equipments())),
+    "equipments":equipments(attribute="has_equipments"),
     "messages": NonNullList(NonNullNested(generic_message))
 }
 
@@ -184,6 +179,7 @@ generic_type_admin = deepcopy(generic_type)
 admins = NonNullList(NonNullNested(admin))
 generic_type_admin["administrative_regions"] = admins
 
+
 stop_point = deepcopy(generic_type_admin)
 stop_point["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area = deepcopy(generic_type_admin)
@@ -192,9 +188,15 @@ journey_pattern_point = deepcopy(generic_type)
 journey_pattern = deepcopy(generic_type)
 jpps = NonNullList(NonNullNested(journey_pattern_point))
 journey_pattern["journey_pattern_points"] = jpps
+stop_time = {
+    "arrival_time" : fields.String(),
+    "departure_time" : fields.String(),
+    "journey_pattern_point" : NonNullNested(journey_pattern_point)
+}
 vehicle_journey = deepcopy(generic_type)
 vehicle_journey["messages"] = NonNullList(NonNullNested(generic_message))
 vehicle_journey["journey_pattern"] = PbField(journey_pattern)
+vehicle_journey["stop_times"] = NonNullList(NonNullNested(stop_time))
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
 line["code"] = fields.String()
@@ -223,7 +225,7 @@ poi = deepcopy(generic_type)
 poi["poi_type"] = PbField(poi_type)
 
 company = deepcopy(generic_type)
-stop_point["equipments"] = has_equipments()
+stop_point["equipments"] = equipments(attribute="has_equipments")
 stop_point["stop_area"] = PbField(deepcopy(stop_area))
 stop_area["stop_point"] = PbField(deepcopy(stop_point))
 journey_pattern_point["stop_point"] = PbField(deepcopy(stop_point))
@@ -240,7 +242,8 @@ stop_date_time = {
     "departure_date_time": fields.String(),
     "arrival_date_time": fields.String(),
     "stop_point": PbField(stop_point),
-    "additional_informations": additional_informations
+    "additional_informations": additional_informations,
+    "links": notes_links
 }
 
 

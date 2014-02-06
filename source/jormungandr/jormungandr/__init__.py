@@ -42,7 +42,7 @@ if not app.config['CACHE_DISABLED']:
 
 from jormungandr.instance_manager import InstanceManager
 i_manager = InstanceManager()
-i_manager.initialisation()
+i_manager.initialisation(start_ping = app.config['START_MONITORING_THREAD'])
 
 from jormungandr import api
 

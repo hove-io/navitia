@@ -544,15 +544,19 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture) {
 
     auto pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
+    BOOST_CHECK_EQUAL(pathitem.direction(), 0); //first direction is always 0°
     pathitem = section.street_network().path_items(1);
-    BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
-    BOOST_CHECK_EQUAL(pathitem.direction(), 90); //one random direction check to ensure it has been computed
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue kb"); //after that we went strait so still 0°
+    BOOST_CHECK_EQUAL(pathitem.direction(), 0);
     pathitem = section.street_network().path_items(2);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue jk");
+    BOOST_CHECK_EQUAL(pathitem.direction(), 90); //then we turned right
     pathitem = section.street_network().path_items(3);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ij");
+    BOOST_CHECK_EQUAL(pathitem.direction(), 90); //then we turned right
     pathitem = section.street_network().path_items(4);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue hi");
+    BOOST_CHECK_EQUAL(pathitem.direction(), -90); //then we turned left
     pathitem = section.street_network().path_items(5);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
     pathitem = section.street_network().path_items(6);

@@ -810,7 +810,7 @@ BOOST_AUTO_TEST_CASE(angle_computation_2) {
 
     int angle = compute_directions(p, {-1, 4});
 
-    BOOST_CHECK_CLOSE(1.0 * angle, 112 - 180, 1);
+    BOOST_CHECK_EQUAL(1.0 * angle, 113 - 180);
 }
 
 

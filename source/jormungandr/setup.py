@@ -10,4 +10,4 @@ setup(name='jormungandr',
       author_email='vincent.lara@canaltp.fr',
       url='www.navitia.io',
       packages=find_packages()
-      )
+)
