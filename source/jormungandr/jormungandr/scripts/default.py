@@ -70,6 +70,7 @@ class Script(object):
         req.disruptions.count = request['count']
         req.disruptions.start_page = request['start_page']
         req.disruptions.datetime = request['datetime']
+        req.disruptions.period = request['period']
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
@@ -259,6 +260,7 @@ class Script(object):
                     r_datetime_f = datetime.strptime(r_datetime, f_date_time)
                     temp_datetime = r_datetime_f + timedelta(seconds=duration)
             else:
+                last_journey = resp.journeys[0]
                 if resp.journeys[-1].HasField("arrival_date_time"):
                     l_date_time = last_journey.arrival_date_time
                     l_date_time_f = datetime.strptime(l_date_time, f_date_time)

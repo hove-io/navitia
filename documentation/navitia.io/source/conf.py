@@ -28,7 +28,7 @@ extensions = ['sphinx.ext.todo', 'sphinx.ext.pngmath', 'sphinx.ext.ifconfig', 's
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-
+import sphinx_bootstrap_theme
 # The suffix of source filenames.
 source_suffix = '.rst'
 
@@ -98,6 +98,7 @@ html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+    'bootswatch_theme': "united",
 #        'sidebarbgcolor' : '#ff6600',
 #        'sidebartextcolor' : '#ffffff',
 #        'relbarbgcolor' : '#ff6600',
@@ -127,7 +128,7 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = None
+#html_logo = None
 #html_logo = '_static/logo_ro.png'
 
 # The name of an image file (within the static path) to use as favicon of the
@@ -187,11 +188,16 @@ htmlhelp_basename = 'NAViTiA2doc'
 
 # -- Options for LaTeX output --------------------------------------------------
 
-# The paper size ('letter' or 'a4').
-latex_paper_size = 'a4'
+latex_elements = {
+# The paper size ('letterpaper' or 'a4paper').
+#'papersize': 'letterpaper',
 
 # The font size ('10pt', '11pt' or '12pt').
-#latex_font_size = '10pt'
+#'pointsize': '10pt',
+
+# Additional stuff for the LaTeX preamble.
+#'preamble': '',
+}
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).

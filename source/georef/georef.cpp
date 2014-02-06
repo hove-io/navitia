@@ -227,7 +227,7 @@ int compute_directions(const navitia::georef::Path& path, const nt::Geographical
     //conversion into angle
     raw_angle *= 360 / (2 * boost::math::constants::pi<double>());
 
-    int rounded_angle = static_cast<int>(raw_angle);
+    int rounded_angle = std::round(raw_angle);
 
     rounded_angle = 180 - rounded_angle;
     if ( det < 0 )
@@ -288,7 +288,7 @@ Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) co
         p.duration += edge.duration;
         if (path_item_changed) {
             //we update the last path item
-            p.path_items.back().angle = compute_directions(p, coord);
+            path_item.angle = compute_directions(p, coord);
         }
     }
     //in some case we want to add even if we have only one vertex (which means there is no valid edge)

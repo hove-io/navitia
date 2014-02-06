@@ -56,8 +56,8 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
         }
 
         if (! result.path_items.empty()) {
-            //no direction for the last elt
-            result.path_items.back().angle = 0;
+            //no direction for the first elt
+            result.path_items.front().angle = 0;
             result.path_items.back().coordinates.push_back(arrival_path_finder.starting_edge.projected);
         }
     }
@@ -90,7 +90,7 @@ Path StreetNetwork::get_direct_path() {
     departure_path_finder.add_projections_to_path(result, true);
     arrival_path_finder.add_projections_to_path(result, false);
 
-    result.path_items.back().angle = 0;
+    result.path_items.front().angle = 0;
 
     return result;
 }

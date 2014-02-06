@@ -183,8 +183,12 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     else
         stop_time->date_time_estimated = false;
 
-    if (is_valid(desc_c, row))
-        stop_time->comment = row[desc_c];
+    if ( is_valid(desc_c, row) ){
+        auto it_comment = gtfs_data.comment_map.find(row[desc_c]);
+        if(it_comment != gtfs_data.comment_map.end()){
+            stop_time->comment = it_comment->second;
+        }
+    }
 
     if(is_valid(itl_c, row)){
         int local_traffic_zone = str_to_int(row[itl_c]);

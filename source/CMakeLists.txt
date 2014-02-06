@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
 SET(KRAKEN_VERSION_MAJOR 0)
-SET(KRAKEN_VERSION_MINOR 78)
-SET(KRAKEN_VERSION_PATCH 12)
+SET(KRAKEN_VERSION_MINOR 79)
+SET(KRAKEN_VERSION_PATCH 0)
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
@@ -17,7 +17,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++ -ftemplate-depth=512 -ferror-limit=10 -pthread")
+    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread -ftemplate-depth=512")
     SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
@@ -64,6 +64,7 @@ add_subdirectory(time_tables)
 add_subdirectory(jormungandr)
 add_subdirectory(sql)
 add_subdirectory(disruption)
+
 add_subdirectory(scripts)
 
 INCLUDE (CheckIncludeFiles)

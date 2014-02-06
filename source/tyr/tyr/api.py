@@ -8,14 +8,14 @@ from tyr import app, api
 api.add_resource(resources.Instance, '/v0/instances/')
 api.add_resource(resources.Api, '/v0/api/')
 
-api.add_resource(resources.User, '/v0/user/',
-        '/v0/user/<int:user_id>/', '/v0/user/<string:login>/')
+api.add_resource(resources.User, '/v0/users/',
+        '/v0/users/<int:user_id>/')
 
-api.add_resource(resources.Key, '/v0/user/<int:user_id>/key/',
-        '/v0/user/<int:user_id>/key/<int:key_id>/')
+api.add_resource(resources.Key, '/v0/users/<int:user_id>/keys/',
+        '/v0/users/<int:user_id>/keys/<int:key_id>/')
 
 api.add_resource(resources.Authorization,
-        '/v0/user/<int:user_id>/authorization/')
+        '/v0/users/<int:user_id>/authorizations/')
 
 
 @app.errorhandler(Exception)

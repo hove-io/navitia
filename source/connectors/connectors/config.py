@@ -5,20 +5,16 @@ from validate import Validator
 
 class Config(object):
     """
-    class de configuration de at_connector
+    class de configuration of at_connector
 
     """
     def __init__(self):
-        self.rabbitmq_host = None
-        self.rabbitmq_port = None
-        self.rabbitmq_username = None
-        self.rabbitmq_password = None
-        self.rabbitmq_vhost = None
+        self.broker_url = None
 
         self.at_connection_string = None
 
         self.exchange_name = None
-        self.rt_topics = []
+        self.rt_topic = []
 
         self.redisqueque_host = None
         self.redisqueque_port = None
@@ -27,7 +23,7 @@ class Config(object):
 
     def build_error(self, config, validate_result):
         """
-        construit la chaine d'erreur si la config n'est pas valide
+        build error messages with the return of validate
         """
         result = ""
         for entry in flatten_errors(config, validate_result):
@@ -45,19 +41,15 @@ class Config(object):
 
     def load(self, config_file):
         """
-        charge la configuration depuis le fichier de conf et la valide
-        si elle n'est pas valide une ValueError est levé
+        load and validate the configuration from the file.
+        if she is not valid an ValueError is raise
         """
         confspec = []
-        confspec.append('[rabbitmq]')
-        confspec.append('host = string(default="localhost")')
-        confspec.append('port = integer(0, 65535, default=5672)')
-        confspec.append('username = string(default="guest")')
-        confspec.append('password = string(default="guest")')
-        confspec.append('vhost = string(default="/")')
-
-        confspec.append('[at]')
-        confspec.append('connection-string = string()')
+        confspec.append('[connector-at]')
+        confspec.append('rt-topic = string()')
+        confspec.append('exchange_name = string(default="navitia")')
+        confspec.append('at-connection-string = string()')
+        confspec.append('broker-url = string()')
 
         confspec.append('[redishelper]')
         confspec.append('host = string(default="localhost")')
@@ -69,20 +61,15 @@ class Config(object):
 
         val = Validator()
         res = config.validate(val, preserve_errors=True)
-        #validate retourne true, ou un dictionaire  ...
-        if not res:
+        #validate returns true, or a dict...
+        if type(res) is dict:
             error = self.build_error(config, res)
             raise ValueError("Config is not valid: " + error)
 
-        self.rabbitmq_host = config['rabbitmq']['host']
-        self.rabbitmq_port = config['rabbitmq']['port']
-        self.rabbitmq_username = config['rabbitmq']['username']
-        self.rabbitmq_password = config['rabbitmq']['password']
-        self.rabbitmq_vhost = config['rabbitmq']['vhost']
-        self.rabbitmq_vhost = config['rabbitmq']['vhost']
-        self.at_connection_string = config['at']['connection-string']
-        self.exchange_name = config['connector_at']['exchange-name']
-        self.rt_topics = config['connector_at']['rt-topics']
+        self.broker_url = config['connector-at']['broker-url']
+        self.at_connection_string = config['connector-at']['at-connection-string']
+        self.exchange_name = config['connector-at']['exchange-name']
+        self.rt_topic = config['connector-at']['rt-topic']
 
         self.redishelper_host = config['redishelper']['host']
         self.redishelper_password = config['redishelper']['password']

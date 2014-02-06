@@ -3,7 +3,7 @@
 INSTANCES_DIR = '/etc/jormungandr.d'
 
 # chaine de connnection à postgresql pour la base jormungandr
-PG_CONNECTION_STRING = 'postgresql://navitia:navitia@localhost/jormun'
+SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun'
 
 # désactivation de l'authentification
 PUBLIC = True
