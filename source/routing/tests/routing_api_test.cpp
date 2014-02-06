@@ -813,7 +813,7 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
     BOOST_CHECK_EQUAL(pathitem.duration(), 0);
     BOOST_CHECK_CLOSE(pathitem.length(), 0, 1);
-    //BUG: for the moment the projections are now taken into account, we have to work on that
+    //BUG: for the moment the projections are not taken into account, we have to work on that
 //    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(B.distance_to(S), type::Mode_e::Bike).total_seconds());
 //    BOOST_CHECK_CLOSE(pathitem.length(), B.distance_to(S), 1);
 
@@ -846,7 +846,7 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
     BOOST_CHECK_EQUAL(pathitem.duration(), 0);
     BOOST_CHECK_CLOSE(pathitem.length(), 0, 1);
-    //same than below, it's a bug
+    //same as above, it's a bug
 //    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(distance_ag, type::Mode_e::Bike).total_seconds());
 //    BOOST_CHECK_CLOSE(pathitem.length(), distance_ag, 1);
 }
