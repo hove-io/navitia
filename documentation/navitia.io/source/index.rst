@@ -113,14 +113,14 @@ Now let's see what interactions are possible with ``coverage``: http://api.navit
 
 This request will give you:
 
-* in the ``regions`` section the list of covered regions 
-* in the ``links`` section the list of possible interactions with them 
+* in the ``regions`` section the list of covered regions
+* in the ``links`` section the list of possible interactions with them
 
 
 In the ``links`` section there is for example this link: ``"href": "http://api.navitia.io/v1/coverage/{regions.id}/lines"``
 
 
-This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters. The parameters are identified with the ``{`` ``}`` syntax. 
+This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters. The parameters are identified with the ``{`` ``}`` syntax.
 In this case it needs a region id. This id can the found in the ``regions`` section. For example let's consider this region: ::
 
     "start_production_date": "20140105",
@@ -135,9 +135,9 @@ To query for the public transport lines of New York we thus have to call: http:/
 
 Easy isn't it?
 
-We could push the exploration further and: 
+We could push the exploration further and:
 
-* get all the stop areas of the line with the uri ``line:BCO:Q10`` (the first line of the last request): http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_areas/ 
+* get all the stop areas of the line with the uri ``line:BCO:Q10`` (the first line of the last request): http://api.navitia.io/v1/coverage/ny/lines/line:BCO:Q10/stop_areas/
 * get the upcoming departures in the first stop area found with the last request (uri of the stop area ``stop_area:BCO:SA:CTP-BCO550123``):
   http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/departures/
 * get all the upcoming departures in the first stop area found in the last request, for the network mta:
@@ -163,7 +163,7 @@ All objects around the coordinates of the Transamerica Pyramid can be fetched wi
 
 We could, in the same fashion, ask for the objects around a particuliar stop area (``stop_area:BCO:SA:CTP-BCO550123`` for example): http://api.navitia.io/v1/coverage/ny/stop_areas/stop_area:BCO:SA:CTP-BCO550123/places_nearby
 
-Optionally you can select what object types to return and change the radius. 
+Optionally you can select what object types to return and change the radius.
 
 
 What stations can be reached in the next 60 minutes
@@ -171,7 +171,7 @@ What stations can be reached in the next 60 minutes
 
 The API can computes *all* the reachable stop points from an origin within a given maximum travel duration.
 
-All the stop points that can be reached from the Transamerica Pyramid can be fetched with the following request: 
+All the stop points that can be reached from the Transamerica Pyramid can be fetched with the following request:
 http://api.navitia.io/v1/coverage/sf/coords/-122.402770;37.794682/journeys
 
 It returns for each destination stop point the earliest arrival and a link to the journey detail.
@@ -180,7 +180,7 @@ It returns for each destination stop point the earliest arrival and a link to th
 Getting help
 ------------
 
-All available functions are documented on 
+All available functions are documented on
 .. toctree::
     :maxdepth: 1
 
@@ -202,9 +202,9 @@ If you plan to build something successful, contact us to get an access with more
 For the moment, the service is not hosted on a powerful server, so please don't make more than one request per second.
 
 .. warning::
-  Authentication is not required now, but will soon become (within april 2014). 
+  Authentication is not required now, but will soon become (within april 2014).
   Please contact us for details.
-    
+
 
 
 About the data

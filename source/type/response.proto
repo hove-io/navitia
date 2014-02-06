@@ -289,7 +289,7 @@ message Error{
 message Disruption{
 	optional Network network = 1;
 	repeated Line lines = 2;
-	repeated StopArea stop_areas = 3;	
+	repeated StopArea stop_areas = 3;
 }
 
 message Response{
@@ -338,7 +338,7 @@ message Response{
     optional Load load = 46;
     optional Metadatas metadatas = 48;
     optional Pagination pagination = 49;
-    
+
     //Disruptions
     repeated Disruption disruptions = 50;
 }
