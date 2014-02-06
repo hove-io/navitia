@@ -44,10 +44,9 @@ public:
     std::map<std::string, std::string> synonymes;
 
     //fare:
-    std::vector<types::Transition*> transitions;
-    std::vector<types::Price*> prices;
-    std::vector<types::Origin_Destination*> origin_destinations;
-    std::map<std::string, nt::idx_t> price_map;
+    std::vector<std::tuple<navitia::fare::State, navitia::fare::State, navitia::fare::Transition>> transitions; // transition with state before and after
+    std::map<std::string, navitia::fare::DateTicket> fare_map;
+    std::map<navitia::fare::OD_key, std::map<navitia::fare::OD_key, std::vector<std::string>>> od_tickets;
 
     /**
          * trie les différentes donnée et affecte l'idx

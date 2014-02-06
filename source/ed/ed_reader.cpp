@@ -985,49 +985,49 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
 
 //les tarifs:
 void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "select id, cle_ticket, valid_from, valid_to, ticket_price, ticket_title from navitia.price;";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nf::Data_Price* price = new nf::Data_Price();
+//    std::string request = "select id, cle_ticket, valid_from, valid_to, ticket_price, ticket_title from navitia.price;";
+//    pqxx::result result = work.exec(request);
+//    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+//        nf::Data_Price* price = new nf::Data_Price();
 
-        const_it["id"].to(price->idx);
-        const_it["cle_ticket"].to(price->cle_ticket);
-        bg::date date = bg::from_string(const_it["valid_from"].as<std::string>());
-        price->valid_from = date;
-        date = bg::from_string(const_it["valid_to"].as<std::string>());
-        price->valid_to = date;
-        const_it["ticket_price"].to(price->ticket_price);
-        const_it["ticket_title"].to(price->ticket_title);
-        data.fare.data_prices.push_back(price);
-    }
+//        const_it["id"].to(price->idx);
+//        const_it["cle_ticket"].to(price->cle_ticket);
+//        bg::date date = bg::from_string(const_it["valid_from"].as<std::string>());
+//        price->valid_from = date;
+//        date = bg::from_string(const_it["valid_to"].as<std::string>());
+//        price->valid_to = date;
+//        const_it["ticket_price"].to(price->ticket_price);
+//        const_it["ticket_title"].to(price->ticket_title);
+//        data.fare.data_prices.push_back(price);
+//    }
 }
 
 void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "select id, before_change, after_change, start_trip, end_trip, global_condition, price_id from navitia.transition;";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nf::Data_Transition * trans = new nf::Data_Transition();
+//    std::string request = "select id, before_change, after_change, start_trip, end_trip, global_condition, price_id from navitia.transition;";
+//    pqxx::result result = work.exec(request);
+//    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+//        nf::Data_Transition * trans = new nf::Data_Transition();
 
-        const_it["id"].to(trans->idx);
-        const_it["before_change"].to(trans->before_change);
-        const_it["after_change"].to(trans->after_change);
-        const_it["start_trip"].to(trans->start_trip);
-        const_it["end_trip"].to(trans->end_trip);
-        const_it["global_condition"].to(trans->global_condition);
-        const_it["price_id"].to(trans->price_idx);
+//        const_it["id"].to(trans->idx);
+//        const_it["before_change"].to(trans->before_change);
+//        const_it["after_change"].to(trans->after_change);
+//        const_it["start_trip"].to(trans->start_trip);
+//        const_it["end_trip"].to(trans->end_trip);
+//        const_it["global_condition"].to(trans->global_condition);
+//        const_it["price_id"].to(trans->price_idx);
 
-        data.fare.data_transitions.push_back(trans);
-    }
+//        data.fare.data_transitions.push_back(trans);
+//    }
 }
 
 void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "select id, before_change, after_change, start_trip, end_trip, global_condition, price_id from navitia.transition;";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nf::Data_Origin_Destination * od = new nf::Data_Origin_Destination();
+//    std::string request = "select id, before_change, after_change, start_trip, end_trip, global_condition, price_id from navitia.transition;";
+//    pqxx::result result = work.exec(request);
+//    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+//        nf::Data_Origin_Destination * od = new nf::Data_Origin_Destination();
 
-        data.fare.data_origin_destinations.push_back(od);
-    }
+//        data.fare.data_origin_destinations.push_back(od);
+//    }
 }
 
 void EdReader::build_rel_stop_point_admin(navitia::type::Data& , pqxx::work& work){

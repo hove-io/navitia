@@ -117,11 +117,10 @@ int main(int argc, char * argv[])
 
     if(vm.count("fare")){
         LOG4CPLUS_INFO(logger, "Alimentation de fare");
-        navitia::fare::Fare fare;
-        ed::connectors::fare_parser fareParser(fare, fare_file + "idf.fares",
+        ed::connectors::fare_parser fareParser(data, fare_file + "idf.fares",
                                            fare_file + "prix.csv",
                                            fare_file + "tarifs_od.csv");
-        fareParser.parse_files(data);
+        fareParser.load();
     }
 
 

@@ -24,25 +24,24 @@ std::vector<navitia::fare::Condition> parse_conditions(const std::string & condi
 boost::gregorian::date parse_nav_date(const std::string & date_str);
 
 struct fare_parser {
-    navitia::fare::Fare& data;
+    Data& data;
 
     const std::string state_transition_filename;
     const std::string prices_filename;
     const std::string od_filename;
 
-    fare_parser(navitia::fare::Fare& data_, const std::string& state, const std::string& prices, const std::string od) :
+    fare_parser(Data& data_, const std::string& state, const std::string& prices, const std::string od) :
         data(data_),
         state_transition_filename(state),
         prices_filename(prices),
         od_filename(od) {}
 
     void load();
-    void parse_files(Data&);
+//    void parse_files();
 private:       
-    ///
-    void parse_trasitions(Data&);
-    void parse_prices(Data&);
-    void parse_origin_destinations(Data&);
+//    void parse_trasitions(Data&);
+//    void parse_prices(Data&);
+//    void parse_origin_destinations(Data&);
 
     /// Charge les deux fichiers obligatoires
     void load_transitions();
