@@ -43,7 +43,7 @@ struct DateTicket {
     Ticket get_fare(boost::gregorian::date date) const;
 
     /// Ajoute une nouvelle période
-    void add(std::string begin_date, std::string end_date, Ticket ticket);
+    void add(boost::gregorian::date begin_date, boost::gregorian::date end_date, Ticket ticket);
 
     /// Somme deux tickets, suppose qu'il y a le même nombre de billet et que les dates sont compatibles
     DateTicket operator+(const DateTicket & other) const;
@@ -88,7 +88,7 @@ struct State {
     }
 
     std::string concat() const {
-        return mode + zone + stop_area + line + network + ticket;
+        return mode + "," + zone + "," + stop_area + "," + line + "," + network + "," + ticket;
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
@@ -99,6 +99,27 @@ struct State {
 
 /// Type de comparaison possible entre un arc et une valeur
 enum class Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True};
+
+inline std::string comp_to_string(const Comp_e comp) {
+    switch (comp) {
+    case Comp_e::EQ:
+        return "EQ";
+    case Comp_e::NEQ:
+        return "NEQ";
+    case Comp_e::LT:
+        return "LT";
+    case Comp_e::GT:
+        return "GT";
+    case Comp_e::LTE:
+        return "LTE";
+    case Comp_e::GTE:
+        return "GTE";
+    case Comp_e::True:
+        return "True";
+    default:
+        throw navitia::exception("unhandled Comp case");
+    }
+}
 
 /// Définit un arc et les conditions pour l'emprunter
 /// Les conditions peuvent être : prendre u
@@ -116,6 +137,10 @@ struct Condition {
 
     /// Valeur à comparer
     std::string value;
+
+    std::string to_string() const {
+        return key + comp_to_string(comparaison) + value;
+    }
 
     Condition() : comparaison(Comp_e::True) {}
 
@@ -190,9 +215,8 @@ struct Transition {
     }
 };
 
-
 struct OD_key{
-    enum od_type {Zone, StopArea, Mode};
+    enum od_type {Zone, StopArea, Mode}; //NOTE: don't forget to change the bdd enum if this change
     od_type type;
     std::string value;
     OD_key() {}
@@ -208,6 +232,19 @@ struct OD_key{
         ar & type & value;
     }
 };
+
+inline std::string to_string(OD_key::od_type type) {
+    switch (type) {
+    case OD_key::od_type::Zone:
+        return "Zone";
+    case OD_key::od_type::StopArea:
+        return "StopArea";
+    case OD_key::od_type::Mode:
+        return "Mode";
+    default:
+        throw navitia::exception("unhandled od_type case");
+    }
+}
 
 struct results {
     std::vector<Ticket> tickets;

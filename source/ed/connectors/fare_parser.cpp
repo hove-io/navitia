@@ -28,9 +28,9 @@ namespace ph = boost::phoenix;
 namespace ed { namespace connectors {
 
 void fare_parser::load() {
-    load_transitions();
-
     load_prices();
+
+    load_transitions();
 
     load_od();
 }
@@ -155,6 +155,12 @@ void fare_parser::load_transitions() {
         }
         transition.ticket_key = boost::algorithm::trim_copy(row[5]);
 
+        //coherence check
+        if (data.fare_map.find(transition.ticket_key) == data.fare_map.end()) {
+            LOG4CPLUS_WARN(logger, "impossible to find ticket " << transition.ticket_key << ", transition skipped");
+//            continue;
+        }
+
         data.transitions.push_back(std::make_tuple(start, end, transition));
 
         if (symetric) {
@@ -170,8 +176,10 @@ void fare_parser::load_prices() {
     CsvReader reader(prices_filename);
     for (std::vector<std::string> row = reader.next() ; ! reader.eof() ; row = reader.next()) {
         // La structure du csv est : clef;date_debut;date_fin;prix;libellé
-        data.fare_map[row.at(0)].add(row.at(1), row.at(2),
-                             fa::Ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5)) );
+        greg::date start(greg::from_undelimited_string(row.at(1)));
+        greg::date end(greg::from_undelimited_string(row.at(2)));
+        data.fare_map[row.at(0)].add(start, end,
+                             fa::Ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(4)) );
     }
 }
 
@@ -214,6 +222,13 @@ void fare_parser::load_od() {
 
             if (price_key.empty())
                 continue;
+
+            //coherence check
+            if (data.fare_map.find(price_key) == data.fare_map.end()) {
+                LOG4CPLUS_WARN(logger, "impossible to find ticket " << price_key << ", od ticket skipped");
+//                continue; //do we have to skip the entire OD ?
+            }
+
             price_keys.push_back(price_key);
         }
 
@@ -224,116 +239,6 @@ void fare_parser::load_od() {
     }
     LOG4CPLUS_INFO(logger, "Nombre de tarifs OD Île-de-France : " << count);
 }
-
-
-//void fare_parser::parse_trasitions(Data& data) {
-//    CsvReader reader(state_transition_filename);
-//    std::vector<std::string> row;
-//    int count = 0;
-//    std::string cle_ticket;
-
-//    reader.next(); //en-tête
-
-//    for (row = reader.next(); !reader.eof(); row = reader.next()) {
-
-//        if (row.size() != 6) {
-//            LOG4CPLUS_ERROR(logger, "Wrongly formated line " << row.size() << " columns, we skip the line");
-//            continue;
-//        }
-
-//        ed::types::Transition* trans = new ed::types::Transition();
-//        count++;
-//        trans->idx = count;
-//        trans->before_change = row.at(0);
-//        trans->after_change = row.at(1);
-//        trans->start_trip = row.at(2);
-//        trans->end_trip = row.at(3);
-//        trans->global_condition = row.at(4);
-
-//        cle_ticket = row.at(5);
-//        if (!cle_ticket.empty()){
-//            auto result = data.price_map.find(cle_ticket);
-//            if (result != data.price_map.end()){
-//                trans->price_idx = result->second;
-//            }
-//        }
-//        data.transitions.push_back(trans);
-//    }
-//    LOG4CPLUS_INFO(logger, "Nombre de lignes dans transition : " << count);
-//}
-
-//void fare_parser::parse_prices(Data& data){
-//    CsvReader reader(prices_filename);
-//    std::vector<std::string> row;
-//    int count = 0;
-
-
-//    for (row = reader.next() ; ! reader.eof() ; row = reader.next()) {
-//        ed::types::Price* price = new ed::types::Price();
-//        count++;
-//        price->idx = count;
-//        price->cle_ticket = row.at(0);
-//        price->valid_from = greg::date(greg::from_undelimited_string(row.at(1)));
-//        price->valid_to = greg::date(greg::from_undelimited_string(row.at(2)));
-//        price->ticket_price = boost::lexical_cast<int>(row.at(3));
-//        price->ticket_title = row.at(4);
-//        data.prices.push_back(price);
-//        data.price_map[price->cle_ticket] = price->idx;
-//    }
-//    LOG4CPLUS_INFO(logger, "Nombre de lignes dans prix.esv : " << count);
-//}
-
-//void fare_parser::parse_origin_destinations(Data& data){
-//    CsvReader reader(od_filename);
-//    std::vector<std::string> row;
-//    reader.next(); //en-tête
-//    std::string price_number;
-
-//    int count = 0;
-//    for(row=reader.next(); !reader.eof(); row = reader.next()) {
-//        ed::types::Origin_Destination* od = new ed::types::Origin_Destination();
-//        count++;
-//        od->idx = count;
-//        od->code_uic_depart = row.at(0);
-//        od->gare_depart = row.at(1);
-//        od->code_uic_arrival = row.at(2);
-//        od->gare_arrival = row.at(3);
-
-//        price_number = row.at(4);
-//        if (!price_number.empty()){
-//            auto result = data.price_map.find(price_number);
-//            if (result != data.price_map.end()){
-//                od->price_idx1 = result->second;
-//            }
-//        }
-//        price_number = row.at(5);
-//        if (!price_number.empty()){
-//            auto result = data.price_map.find(price_number);
-//            if (result != data.price_map.end()){
-//                od->price_idx2 = result->second;
-//            }
-//        }
-//        price_number = row.at(6);
-//        if (!price_number.empty()){
-//            auto result = data.price_map.find(price_number);
-//            if (result != data.price_map.end()){
-//                od->price_idx3 = result->second;
-//            }
-//        }
-//        price_number = row.at(7);
-//        if (!price_number.empty()){
-//            auto result = data.price_map.find(price_number);
-//            if (result != data.price_map.end()){
-//                od->price_idx4 = result->second;
-//            }
-//        }
-//        od->delta_zone = row.at(8);
-//        data.origin_destinations.push_back(od);
-//    }
-//    LOG4CPLUS_INFO(logger, "Nombre de tarifs OD Île-de-France : " << count);
-
-//}
-
 
 }
 }

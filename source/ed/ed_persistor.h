@@ -14,6 +14,7 @@ struct EdPersistor{
     EdPersistor(const std::string& connection_string) : lotus(connection_string){}
 
     void persist(const ed::Data& data, const navitia::type::MetaData& meta);
+    void persist_fare(const ed::Data& data, bool empty_table = false);
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);

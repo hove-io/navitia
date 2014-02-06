@@ -31,8 +31,10 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
 
     //fare data initialization
     //lazyness dictates only OD data
-    b.data.fare.fare_map["price1"].add("20110101", "20350101", fare::Ticket("price1", "Ticket vj 1", 100, "125"));
-    b.data.fare.fare_map["price2"].add("20110101", "20350101", fare::Ticket("price2", "Ticket vj 2", 200, "175"));
+    boost::gregorian::date start_date(boost::gregorian::from_undelimited_string("20110101"));
+    boost::gregorian::date end_date(boost::gregorian::from_undelimited_string("20350101"));
+    b.data.fare.fare_map["price1"].add(start_date, end_date, fare::Ticket("price1", "Ticket vj 1", 100, "125"));
+    b.data.fare.fare_map["price2"].add(start_date, end_date, fare::Ticket("price2", "Ticket vj 2", 200, "175"));
 
     std::vector<std::string> price1 {"price1"};
     std::vector<std::string> price2 {"price2"};

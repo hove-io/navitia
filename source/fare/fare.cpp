@@ -202,9 +202,7 @@ results Fare::compute_fare(const routing::Path& path) const {
 }
 
 
-void DateTicket::add(std::string begin_date, std::string end_date, Ticket ticket){
-    greg::date begin(greg::from_undelimited_string(begin_date));
-    greg::date end(greg::from_undelimited_string(end_date));
+void DateTicket::add(boost::gregorian::date begin, boost::gregorian::date end, Ticket ticket){
     tickets.push_back(date_ticket_t(greg::date_period(begin, end), ticket));
 }
 

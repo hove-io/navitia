@@ -482,14 +482,22 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE IF NOT EXISTS navitia.price(
+CREATE TABLE IF NOT EXISTS navitia.ticket(
+	ticket_key TEXT PRIMARY KEY,
+	ticket_title TEXT
+);
+
+CREATE TABLE IF NOT EXISTS navitia.dated_ticket(
 	id BIGINT PRIMARY KEY,
-	cle_ticket TEXT NOT NULL,
+	ticket_id TEXT REFERENCES navitia.ticket,
 	valid_from DATE NOT NULL,
 	valid_to DATE NOT NULL,
 	ticket_price INT NOT NULL,
-	ticket_title TEXT	
+	comments TEXT,
+	currency TEXT
 );
+
+--CREATE TYPE IF NOT EXISTS fare_od_mode AS ENUM ('Zone', 'StopArea', 'Mode');
 
 CREATE TABLE IF NOT EXISTS navitia.transition(
 	id BIGINT PRIMARY KEY,
@@ -498,20 +506,20 @@ CREATE TABLE IF NOT EXISTS navitia.transition(
 	start_trip TEXT NOT NULL,
 	end_trip TEXT NOT NULL,
 	global_condition TEXT NOT NULL,
-	price_id BIGINT NULL
+    FOREIGN KEY (ticket_id) REFERENCES navitia.ticket(id)
 );
 
 CREATE TABLE IF NOT EXISTS navitia.origin_destination(
 	id BIGINT PRIMARY KEY,
-	code_uic_depart TEXT NOT NULL,
-	gare_depart TEXT NOT NULL,
-	code_uic_arrival TEXT NOT NULL,
-	gare_arrival TEXT NOT NULL,
-	price_id1 BIGINT NULL, 
-	price_id2 BIGINT NULL,
-	price_id3 BIGINT NULL,
-	price_id4 BIGINT NULL,
-	delta_zone TEXT NOT NULL
+	origin_id TEXT NOT NULL,
+	origin_mode fare_od_mode NOT NULL,
+	destination_id TEXT NOT NULL,
+	destination_mode fare_od_mode NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS navitia.od_ticket(
+    id BIGINT PRIMARY KEY,
+    od_id BIGINT NOT NULL REFERENCES navitia.origin_destination,
+    ticket_id TEXT NOT NULL REFERENCES navitia.ticket
+);
 
