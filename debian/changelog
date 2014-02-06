@@ -1,3 +1,14 @@
+navitia2 (0.79.0) unstable; urgency=low
+
+  * Documentation update
+  * New Tyr (we deleted pyed)
+  * Fixes in ed
+  * Add vehicle_journeys API
+  * Add comment on stop time
+  * Several improvements in Disruptions(comment, stopAreaList, links)
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Feb 2014 09:08:41 +0100
+
 navitia2 (0.77.3) unstable; urgency=low
 
   * Fusio2ed packaging
