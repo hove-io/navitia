@@ -1,3 +1,112 @@
+navitia2 (0.79.0) unstable; urgency=low
+
+  * Fix on journeys duration
+  * Fix on type journey parameter
+  * Documentation update
+  * New Tyr (we deleted pyed)
+  * Fixes in ed
+  * Add vehicle_journeys API
+  * Add comment on stop time
+  * Several improvements in Disruptions(comment, stopAreaList, links)
+  * Several improvements in streetnetwork
+
+ -- Antoine Desbordes <antoine.desbordes@canaltp.fr>  Thu, 06 Feb 2014 14:10:57 +0100
+
+navitia2 (0.78.12) unstable; urgency=low
+
+  * Fix commercial modes in Fusio2ed
+  * Fix arrival date times
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 16 Jan 2014 17:43:00 +0100
+
+navitia2 (0.78.11) unstable; urgency=low
+
+  * Fix CMakeLists
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 16 Jan 2014 12:38:34 +0100
+
+navitia2 (0.78.10) unstable; urgency=low
+
+  * Fix build path of georef
+  * Small fixes in Jormungandr
+
+ -- Vincent Lara <Vincent Lara>  Thu, 16 Jan 2014 12:19:10 +0100
+
+navitia2 (0.78.9) unstable; urgency=low
+
+  * Fix in streetnetwork
+  * Fixes in Jormungandr
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 15 Jan 2014 10:05:30 +0100
+
+navitia2 (0.78.8) unstable; urgency=low
+
+  * Fix arrival date time in kraken
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 10 Jan 2014 10:14:45 +0100
+
+navitia2 (0.78.7) unstable; urgency=low
+
+  * We now have bike sharing
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 09 Jan 2014 16:15:09 +0100
+
+navitia2 (0.78.6) unstable; urgency=low
+
+  * Ed fixes
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 09 Jan 2014 14:41:28 +0100
+
+navitia2 (0.78.5) unstable; urgency=low
+
+  * Improve of auth caching
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 08 Jan 2014 14:30:30 +0100
+
+navitia2 (0.78.4) unstable; urgency=low
+
+  * Autocomplete fix
+  * Ed fix
+  * Kraken build path fix
+
+ -- Vincent lara <vincent.lara@canaltp.fr>  Tue, 07 Jan 2014 17:50:38 +0100
+
+navitia2 (0.78.3) unstable; urgency=low
+
+  * Better authentication handle
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 06 Jan 2014 19:10:15 +0100
+
+navitia2 (0.78.2) unstable; urgency=low
+
+  * No more pep8
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 06 Jan 2014 18:52:55 +0100
+
+navitia2 (0.78.1) unstable; urgency=low
+
+  * Fix pep8 compliance of connectors
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 06 Jan 2014 16:55:07 +0100
+
+navitia2 (0.78.0) unstable; urgency=low
+
+  * Add disruption_list
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 06 Jan 2014 14:46:32 +0100
+
+navitia2 (0.77.5) unstable; urgency=low
+
+  * Fixed fusio2ed and pyed packaging
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 18 Dec 2013 10:15:25 +0100
+
+navitia2 (0.77.4) unstable; urgency=low
+
+  * Fixed control file
+
+ -- vlara <vincent.lara@canaltp.fr>  Tue, 17 Dec 2013 18:27:34 +0100
+
 navitia2 (0.77.3) unstable; urgency=low
 
   * Fusio2ed packaging
