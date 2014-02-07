@@ -61,9 +61,9 @@ void fare_parser::load_transitions() {
         transition.ticket_key = boost::algorithm::trim_copy(row[5]);
 
         //coherence check
-        if (data.fare_map.find(transition.ticket_key) == data.fare_map.end()) {
+        if (! transition.ticket_key.empty() && data.fare_map.find(transition.ticket_key) == data.fare_map.end()) {
             LOG4CPLUS_WARN(logger, "impossible to find ticket " << transition.ticket_key << ", transition skipped");
-//            continue;
+            continue;
         }
 
         data.transitions.push_back(std::make_tuple(start, end, transition));
@@ -120,10 +120,14 @@ void fare_parser::load_od() {
             //coherence check
             if (data.fare_map.find(price_key) == data.fare_map.end()) {
                 LOG4CPLUS_WARN(logger, "impossible to find ticket " << price_key << ", od ticket skipped");
-//                continue; //do we have to skip the entire OD ?
+                continue; //do we have to skip the entire OD ?
             }
 
             price_keys.push_back(price_key);
+        }
+        if (price_keys.empty()) {
+            LOG4CPLUS_WARN(logger, "no tickets in od, " << start_saec << "->" << dest_saec << ", od ticket skipped");
+            continue;
         }
 
         fa::OD_key start(to_od_type(start_mode), start_saec), dest(to_od_type(dest_mode), dest_saec);

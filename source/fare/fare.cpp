@@ -90,7 +90,7 @@ results Fare::compute_fare(const routing::Path& path) const {
 
         SectionKey section_key(item, section_idx++);
 
-        LOG4CPLUS_INFO(logger, "Nouvelle section à étudier : " /*<< item */);
+//        LOG4CPLUS_INFO(logger, "Nouvelle section à étudier : " /*<< item */);
         std::vector<std::vector<Label>> new_labels(nb_nodes);
         SectionKey section(section_key);
         try {

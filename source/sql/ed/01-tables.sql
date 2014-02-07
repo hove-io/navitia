@@ -498,9 +498,9 @@ CREATE TABLE IF NOT EXISTS navitia.dated_ticket(
 	currency TEXT
 );
 
+-- add enum
 DO $$
 BEGIN
-
     CASE WHEN (SELECT count(*) = 0 FROM pg_type where pg_type.typname='fare_od_mode')
     THEN
         CREATE TYPE fare_od_mode AS ENUM ('Zone', 'StopArea', 'Mode');
@@ -508,8 +508,14 @@ BEGIN
         RAISE NOTICE 'fare_od_mode already exists, skipping';
     END CASE;
 
-END$$;
+    CASE WHEN (SELECT count(*) = 0 FROM pg_type where pg_type.typname='fare_transition_condition')
+    THEN
+        CREATE TYPE fare_transition_condition AS ENUM ('nothing', 'exclusive', 'with_changes');
+    ELSE
+        RAISE NOTICE 'fare_transition_condition already exists, skipping';
+    END CASE;
 
+END$$;
 
 
 CREATE TABLE IF NOT EXISTS navitia.transition(
@@ -518,7 +524,7 @@ CREATE TABLE IF NOT EXISTS navitia.transition(
 	after_change TEXT NOT NULL,
 	start_trip TEXT NOT NULL,
 	end_trip TEXT NOT NULL,
-	global_condition TEXT NOT NULL,
+	global_condition fare_transition_condition NOT NULL,
     ticket_id TEXT,
     FOREIGN KEY (ticket_id) REFERENCES navitia.ticket(ticket_key)
 );
