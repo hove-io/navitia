@@ -123,9 +123,9 @@ results Fare::compute_fare(const routing::Path& path) const {
                                 ticket.comment = "no price found";
                             }
                         }
-                        if (transition.global_condition == "exclusive")
+                        if (transition.global_condition == Transition::GlobalCondition::exclusive)
                             throw ticket;
-                        else if(transition.global_condition == "with_changes") {
+                        else if(transition.global_condition == Transition::GlobalCondition::with_changes) {
                             ticket.type = Ticket::ODFare;
                         }
                         Label next = next_label(label, ticket, section);
@@ -194,7 +194,7 @@ results Fare::compute_fare(const routing::Path& path) const {
 
 
 void DateTicket::add(boost::gregorian::date begin, boost::gregorian::date end, Ticket ticket){
-    tickets.push_back(date_ticket_t(greg::date_period(begin, end), ticket));
+    tickets.push_back(PeriodTicket(greg::date_period(begin, end), ticket));
 }
 
 SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : path_item_idx(idx) {
@@ -242,9 +242,9 @@ int SectionKey::duration_at_end(int ticket_start_time) const {
 }
 
 Ticket DateTicket::get_fare(boost::gregorian::date date) const {
-    for (date_ticket_t dticket : tickets) {
-        if (dticket.first.contains(date))
-            return dticket.second;
+    for (const auto& dticket : tickets) {
+        if (dticket.validity_period.contains(date))
+            return dticket.ticket;
     }
 
     throw no_ticket();
@@ -253,12 +253,13 @@ Ticket DateTicket::get_fare(boost::gregorian::date date) const {
 DateTicket DateTicket::operator +(const DateTicket & other) const{
     DateTicket new_ticket = *this;
     if(this->tickets.size() != other.tickets.size())
-        std::cerr << "Tickets n'ayant pas le même nombre de dates"  << std::endl;
+        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Tickets n'ayant pas le même nombre de dates");
 
     for(size_t i = 0; i < std::min(this->tickets.size(), other.tickets.size()); ++i) {
-        if(this->tickets[i].first != other.tickets[i].first)
-            std::cerr << "Le ticket n° " << i << " n'a pas les même dates; " << this->tickets[i].first << " versus " << other.tickets[i].first << std::endl;
-        new_ticket.tickets[i].second.value = this->tickets[i].second.value + other.tickets[i].second.value;
+        if(this->tickets[i].validity_period != other.tickets[i].validity_period)
+            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+                            "Le ticket n° " << i << " n'a pas les même dates; " << this->tickets[i].validity_period << " versus " << other.tickets[i].validity_period);
+        new_ticket.tickets[i].ticket.value = this->tickets[i].ticket.value + other.tickets[i].ticket.value;
     }
     return new_ticket;
 }
@@ -266,7 +267,7 @@ DateTicket DateTicket::operator +(const DateTicket & other) const{
 bool Transition::valid(const SectionKey & section, const Label & label) const
 {
     bool result = true;
-    if(label.current_type == Ticket::ODFare && this->global_condition!="with_changes")
+    if(label.current_type == Ticket::ODFare && this->global_condition != Transition::GlobalCondition::with_changes)
         result = false;
     BOOST_FOREACH(Condition cond, this->start_conditions)
     {

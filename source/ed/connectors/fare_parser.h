@@ -4,22 +4,6 @@
 
 namespace ed { namespace connectors {
 
-
-/// Exception levée si on utilise une clef inconnue
-//struct invalid_key : std::exception{};
-
-/// Parse un état
-//navitia::fare::State parse_state(const std::string & state);
-
-///// Parse une condition de passage
-//navitia::fare::Condition parse_condition(const std::string & condition);
-
-/// Exception levée si on n'arrive pas à parser une condition
-//struct invalid_condition : std::exception {};
-
-/// Parse une liste de conditions séparés par des &
-//std::vector<navitia::fare::Condition> parse_conditions(const std::string & conditions);
-
 struct fare_parser {
     Data& data;
 

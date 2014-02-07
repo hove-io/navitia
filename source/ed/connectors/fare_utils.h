@@ -15,12 +15,10 @@
  * All kind of elemental utilities to parse fares
  */
 
-namespace fa = navitia::fare;
-
 BOOST_FUSION_ADAPT_STRUCT(
-    fa::Condition,
+    navitia::fare::Condition,
     (std::string, key)
-    (fa::Comp_e, comparaison)
+    (navitia::fare::Comp_e, comparaison)
     (std::string, value)
 )
 
@@ -30,15 +28,15 @@ namespace qi = ::boost::spirit::qi;
 namespace ph = ::boost::phoenix;
 
 /// Exception levée si on utilise une clef inconnue
-struct invalid_key : std::exception{};
+struct invalid_key : navitia::exception{invalid_key(const std::string& s): navitia::exception(s) {}};
 
 /// Exception levée si on n'arrive pas à parser une condition
-struct invalid_condition : std::exception {};
+struct invalid_condition : navitia::exception {invalid_condition(const std::string& s): navitia::exception(s) {}};
 
-inline fa::Condition parse_condition(const std::string & condition_str) {
+inline navitia::fare::Condition parse_condition(const std::string & condition_str) {
     std::string str = boost::algorithm::to_lower_copy(condition_str);
     boost::algorithm::replace_all(str, " ", "");
-    fa::Condition cond;
+    navitia::fare::Condition cond;
 
     if(str.empty() || str == "true")
         return cond;
@@ -47,29 +45,28 @@ inline fa::Condition parse_condition(const std::string & condition_str) {
     qi::rule<std::string::iterator, std::string()> txt = +(qi::alnum|qi::char_("_:-"));
 
     // Tous les opérateurs que l'on veut matcher et leur valeur associée
-    qi::rule<std::string::iterator, fa::Comp_e()> operator_r = qi::string("<=")[qi::_val = fa::Comp_e::LTE]
-                                                         | qi::string(">=")[qi::_val = fa::Comp_e::GTE]
-                                                         | qi::string("!=")[qi::_val = fa::Comp_e::NEQ]
-                                                         | qi::string("<") [qi::_val = fa::Comp_e::LT]
-                                                         | qi::string(">") [qi::_val = fa::Comp_e::GT]
-                                                         | qi::string("=")[qi::_val = fa::Comp_e::EQ];
+    qi::rule<std::string::iterator, navitia::fare::Comp_e()> operator_r = qi::string("<=")[qi::_val = navitia::fare::Comp_e::LTE]
+                                                         | qi::string(">=")[qi::_val = navitia::fare::Comp_e::GTE]
+                                                         | qi::string("!=")[qi::_val = navitia::fare::Comp_e::NEQ]
+                                                         | qi::string("<") [qi::_val = navitia::fare::Comp_e::LT]
+                                                         | qi::string(">") [qi::_val = navitia::fare::Comp_e::GT]
+                                                         | qi::string("=")[qi::_val = navitia::fare::Comp_e::EQ];
 
     // Une condition est de la forme "txt op txt"
-    qi::rule<std::string::iterator, fa::Condition()> condition_r = txt >> operator_r >> txt ;
+    qi::rule<std::string::iterator, navitia::fare::Condition()> condition_r = txt >> operator_r >> txt ;
 
     std::string::iterator begin = str.begin();
     std::string::iterator end = str.end();
 
     // Si on n'arrive pas à tout parser
     if(!qi::phrase_parse(begin, end, condition_r, boost::spirit::ascii::space, cond) || begin != end) {
-        std::cout << "impossible de parser la condition " << condition_str << std::endl;
-        throw invalid_condition();
+        throw invalid_condition("impossible to parse condition " + condition_str);
     }
     return cond;
 }
 
-inline std::vector<fa::Condition> parse_conditions(const std::string & conditions){
-    std::vector<fa::Condition> ret;
+inline std::vector<navitia::fare::Condition> parse_conditions(const std::string & conditions){
+    std::vector<navitia::fare::Condition> ret;
     std::vector<std::string> string_vec;
     boost::algorithm::split(string_vec, conditions, boost::algorithm::is_any_of("&"));
     for (const std::string & cond_str : string_vec) {
@@ -78,38 +75,39 @@ inline std::vector<fa::Condition> parse_conditions(const std::string & condition
     return ret;
 }
 
-inline fa::State parse_state(const std::string & state_str){
-    fa::State state;
+inline navitia::fare::State parse_state(const std::string & state_str){
+    navitia::fare::State state;
     if (state_str == "" || state_str == "*")
         return state;
-    for (fa::Condition cond : parse_conditions(state_str)) {
-        if(cond.comparaison != fa::Comp_e::EQ) throw invalid_key();
+    for (navitia::fare::Condition cond : parse_conditions(state_str)) {
+        if(cond.comparaison != navitia::fare::Comp_e::EQ)
+            throw invalid_key("invalid key, comparator has to be equal and is " + navitia::fare::comp_to_string(cond.comparaison));
         if(cond.key == "line"){
-            if(state.line != "") throw invalid_key();
+            if(state.line != "") throw invalid_key("line already filled");
             state.line = cond.value;
         }
         else if(cond.key == "zone"){
-            if(state.zone != "") throw invalid_key();
+            if(state.zone != "") throw invalid_key("zone already filled");
             state.zone = cond.value;
         }
         else if(cond.key == "mode"){
-            if(state.mode != "") throw invalid_key();
+            if(state.mode != "") throw invalid_key("mode already filled");
             state.mode = cond.value;
         }
         else if(cond.key == "stoparea"){
-            if(state.stop_area != "") throw invalid_key();
+            if(state.stop_area != "") throw invalid_key("stoparea already filled");
             state.stop_area = cond.value;
         }
         else if(cond.key == "network"){
-            if(state.network != "") throw invalid_key();
+            if(state.network != "") throw invalid_key("network already filled");
             state.network = cond.value;
         }
         else if(cond.key == "ticket"){
-            if(state.ticket != "") throw invalid_key();
+            if(state.ticket != "") throw invalid_key("ticket already filled");
             state.ticket = cond.value;
         }
         else{
-            throw invalid_key();
+            throw invalid_key("unhandled condition case");
         }
     }
 
@@ -121,10 +119,10 @@ inline void add_in_state_str(std::string& str, std::string key, const std::strin
         return;
     if (! str.empty())
         str = "&";
-    str += key + fa::comp_to_string(fa::Comp_e::EQ) + val;
+    str += key + navitia::fare::comp_to_string(navitia::fare::Comp_e::EQ) + val;
 }
 
-inline std::string to_string(fa::State state) {
+inline std::string to_string(navitia::fare::State state) {
     std::string str;
 
     add_in_state_str(str, "line", state.line);
@@ -140,30 +138,53 @@ inline std::string to_string(fa::State state) {
     return str;
 }
 
-inline std::string to_string(fa::OD_key::od_type type) {
+inline std::string to_string(navitia::fare::OD_key::od_type type) {
     switch (type) {
-    case fa::OD_key::od_type::Zone:
+    case navitia::fare::OD_key::od_type::Zone:
         return "Zone";
-    case fa::OD_key::od_type::StopArea:
+    case navitia::fare::OD_key::od_type::StopArea:
         return "StopArea";
-    case fa::OD_key::od_type::Mode:
+    case navitia::fare::OD_key::od_type::Mode:
         return "Mode";
     default:
         throw navitia::exception("unhandled od_type case");
     }
 }
 
-inline fa::OD_key::od_type to_od_type(const std::string& key) {
+inline navitia::fare::OD_key::od_type to_od_type(const std::string& key) {
     std::string lower_key = boost::algorithm::to_lower_copy(key);
     if (lower_key == "mode")
-        return fa::OD_key::Mode;
+        return navitia::fare::OD_key::Mode;
     if (lower_key == "zone")
-        return fa::OD_key::Zone;
+        return navitia::fare::OD_key::Zone;
     if (lower_key == "stop" || lower_key == "stoparea")
-        return fa::OD_key::StopArea;
+        return navitia::fare::OD_key::StopArea;
     throw navitia::exception("Unable to parse " + key + " as OD_Key");
 }
 
+inline std::string to_string(navitia::fare::Transition::GlobalCondition cond) {
+    switch (cond) {
+    case navitia::fare::Transition::GlobalCondition::nothing:
+        return "nothing";
+    case navitia::fare::Transition::GlobalCondition::exclusive:
+        return "exclusive";
+    case navitia::fare::Transition::GlobalCondition::with_changes:
+        return "with_changes";
+    default:
+        throw navitia::exception("unhandled GlobalCondition case");
+    }
+}
+
+inline navitia::fare::Transition::GlobalCondition to_global_condition(const std::string& str) {
+    std::string lower_key = boost::algorithm::to_lower_copy(str);
+    if (lower_key == "nothing" || lower_key == "")
+        return navitia::fare::Transition::GlobalCondition::nothing;
+    if (lower_key == "exclusive")
+        return navitia::fare::Transition::GlobalCondition::exclusive;
+    if (lower_key == "with_changes" || lower_key == "stoparea")
+        return navitia::fare::Transition::GlobalCondition::with_changes;
+    throw navitia::exception("Unable to parse " + str + " as global condition");
+}
 
 }
 }

@@ -33,11 +33,20 @@ struct Ticket {
 };
 
 /// Définit un billet pour une période données
-typedef std::pair<boost::gregorian::date_period, Ticket> date_ticket_t;
+struct PeriodTicket {
+    PeriodTicket(){}
+    PeriodTicket(boost::gregorian::date_period p, Ticket t): validity_period(p), ticket(t) {}
+
+    boost::gregorian::date_period validity_period = boost::gregorian::date_period(boost::gregorian::date(boost::gregorian::not_a_date_time), boost::gregorian::date_duration(1));
+    Ticket ticket;
+    template<class Archive> void serialize(Archive& ar, const unsigned int) {
+        ar & validity_period & ticket;
+    }
+};
 
 /// Contient un ensemble de tarif pour toutes les dates de validités
 struct DateTicket {
-    std::vector<date_ticket_t> tickets;
+    std::vector<PeriodTicket> tickets;
 
     /// Retourne le tarif à une date données
     Ticket get_fare(boost::gregorian::date date) const;
@@ -49,9 +58,9 @@ struct DateTicket {
     DateTicket operator+(const DateTicket & other) const;
 
     template<class Archive> void serialize(Archive& ar, const unsigned int) {
-        for (auto t: tickets) //boost seems to have probleme with vector<pair<period>>
-            ar & t; //CHECK if that works
+        ar & tickets;
     }
+
 };
 
 struct no_ticket{};
@@ -200,14 +209,17 @@ struct SectionKey {
 
 /// Représente un transition possible et l'achat éventuel d'un billet
 struct Transition {
+    enum class GlobalCondition {
+        nothing,
+        exclusive,
+        with_changes
+    };
+
     std::vector<Condition> start_conditions; //< condition pour emprunter l'arc
     std::vector<Condition> end_conditions; //< condition à la sortie de l'arc
     std::string ticket_key; //< clef vers le tarif correspondant
-    std::string global_condition; //< condition telle que exclusivité ou OD
+    GlobalCondition global_condition = GlobalCondition::nothing; //< condition telle que exclusivité ou OD
 
-    std::string dump() const {
-        return ticket_key + "_" + global_condition;
-    }
     bool valid(const SectionKey & section, const Label & label) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
@@ -236,8 +248,6 @@ struct OD_key{
 struct results {
     std::vector<Ticket> tickets;
     bool not_found = true;
-    //TODO: link to pathitem
-
 };
 
 /// Contient l'ensemble du système tarifaire

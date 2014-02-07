@@ -585,7 +585,7 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
             sep = "&";
         }
         values.push_back(end_cond);
-        values.push_back(transition.global_condition);
+        values.push_back(ed::connectors::to_string(transition.global_condition));
         if (! transition.ticket_key.empty()) //we do not add empty ticket, to have null in db
             values.push_back(transition.ticket_key);
         else {
@@ -599,11 +599,8 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
     this->lotus.finish_bulk_insert();
 
     //the postgres connector does not handle well null values, so we add the transition without tickets in a separate bulk
-
     this->lotus.prepare_bulk_insert("navitia.transition", {"id", "before_change","after_change","start_trip","end_trip","global_condition",});
     for (const auto& null_ticket: null_ticket_vector) {
-
-
         this->lotus.insert(null_ticket);
     }
     this->lotus.finish_bulk_insert();
@@ -617,8 +614,8 @@ void EdPersistor::insert_prices(const ed::Data& data) {
         assert(! tickets.tickets.empty()); //by construction there has to be at least one ticket
         std::vector<std::string> values {
             ticket_it.first,
-            tickets.tickets.front().second.caption,
-            tickets.tickets.front().second.comment
+            tickets.tickets.front().ticket.caption,
+            tickets.tickets.front().ticket.comment
         };
         std::cout << "ticket : " << boost::algorithm::join(values, ",") << std::endl;
         this->lotus.insert(values);
@@ -633,16 +630,16 @@ void EdPersistor::insert_prices(const ed::Data& data) {
         const navitia::fare::DateTicket& tickets = ticket_it.second;
 
         for (const auto& dated_ticket: tickets.tickets) {
-            const auto& start = dated_ticket.first.begin();
-            const auto& last = dated_ticket.first.end();
+            const auto& start = dated_ticket.validity_period.begin();
+            const auto& last = dated_ticket.validity_period.end();
             std::vector<std::string> values {
                 std::to_string(count++),
-                dated_ticket.second.key,
+                dated_ticket.ticket.key,
                 bg::to_iso_extended_string(start),
                 bg::to_iso_extended_string(last),
-                std::to_string(dated_ticket.second.value),
-                dated_ticket.second.caption,
-                dated_ticket.second.currency
+                std::to_string(dated_ticket.ticket.value),
+                dated_ticket.ticket.caption,
+                dated_ticket.ticket.currency
             };
             this->lotus.insert(values);
         }

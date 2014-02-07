@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     transition.start_conditions = {};
     transition.end_conditions = {};
     transition.ticket_key = "price1";
-    transition.global_condition = "with_changes";
+    transition.global_condition = fare::Transition::GlobalCondition::with_changes;
     fare::State start;
     fare::State end;
     auto start_v = boost::add_vertex(start, b.data.fare.g);

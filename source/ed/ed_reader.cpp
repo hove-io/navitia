@@ -991,7 +991,6 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
 //Fares:
 void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
 
-    std::cout << "fill price" << std::endl;
     std::string request = "select ticket_key, ticket_title, "
             "ticket_id, valid_from, valid_to, ticket_price, comments, currency from navitia.ticket, navitia.dated_ticket "
             "where ticket_id = ticket_key";
@@ -1013,7 +1012,6 @@ void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
 }
 
 void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
-    std::cout << "fill transition" << std::endl;
     //we build the transition graph
     std::map<nf::State, nf::Fare::vertex_t> state_map;
     nf::State begin; // Start is an empty node
@@ -1037,7 +1035,9 @@ void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
         transition.start_conditions = ed::connectors::parse_conditions(start_trip_str);
         transition.end_conditions = ed::connectors::parse_conditions(end_trip_str);
 
-        const_it["global_condition"].to(transition.global_condition);
+        std::string cond_str = const_it["global_condition"].as<std::string>();
+        transition.global_condition = ed::connectors::to_global_condition(cond_str);
+
         const_it["ticket_id"].to(transition.ticket_key);
 
         nf::Fare::vertex_t start_v, end_v;
@@ -1062,10 +1062,8 @@ void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& w
     std::string request = "select od.id, origin_id, origin_mode, destination_id, destination_mode, "
                             "ticket.id, ticket.od_id, ticket_id "
                             "from navitia.origin_destination as od, navitia.od_ticket as ticket where od.id = ticket.od_id;";
-    std::cout << "fill od" << std::endl;
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-//        std::cout << const_it["od.id"].as<std::string>() << std::endl;
         nf::OD_key::od_type origin_mode = ed::connectors::to_od_type(const_it["origin_mode"].as<std::string>());
         nf::OD_key origin(origin_mode, const_it["origin_id"].as<std::string>());
 
