@@ -76,11 +76,11 @@ int main(int argc, char * argv[])
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);
-    p.persist_fare(data, true);
+    p.persist_fare(data);
 
     LOG4CPLUS_INFO(logger, "running time: ");
     LOG4CPLUS_INFO(logger, "fares loaded in : " << (end_load- start).total_milliseconds() << "ms");
-    LOG4CPLUS_INFO(logger, "\t enregistrement des données " << (pt::microsec_clock::local_time() - start).total_milliseconds() << "ms");
+    LOG4CPLUS_INFO(logger, "\t data writen in " << (pt::microsec_clock::local_time() - start).total_milliseconds() << "ms");
 
     return 0;
 }

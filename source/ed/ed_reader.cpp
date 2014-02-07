@@ -1,4 +1,5 @@
 #include "ed_reader.h"
+#include "ed/connectors/fare_utils.h"
 
 namespace ed{
 
@@ -58,6 +59,10 @@ void EdReader::fill(navitia::type::Data& data){
     this->build_rel_way_admin(data, work);
     this->build_rel_poi_admin(data, work);
     this->build_rel_admin_admin(data, work);
+
+    this->fill_prices(data, work);
+    this->fill_transitions(data, work);
+    this->fill_origin_destinations(data, work);
 }
 
 
@@ -983,51 +988,93 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
     }
 }
 
-//les tarifs:
-void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work){
-//    std::string request = "select id, cle_ticket, valid_from, valid_to, ticket_price, ticket_title from navitia.price;";
-//    pqxx::result result = work.exec(request);
-//    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-//        nf::Data_Price* price = new nf::Data_Price();
+//Fares:
+void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
 
-//        const_it["id"].to(price->idx);
-//        const_it["cle_ticket"].to(price->cle_ticket);
-//        bg::date date = bg::from_string(const_it["valid_from"].as<std::string>());
-//        price->valid_from = date;
-//        date = bg::from_string(const_it["valid_to"].as<std::string>());
-//        price->valid_to = date;
-//        const_it["ticket_price"].to(price->ticket_price);
-//        const_it["ticket_title"].to(price->ticket_title);
-//        data.fare.data_prices.push_back(price);
-//    }
+    std::cout << "fill price" << std::endl;
+    std::string request = "select ticket_key, ticket_title, "
+            "ticket_id, valid_from, valid_to, ticket_price, comments, currency from navitia.ticket, navitia.dated_ticket "
+            "where ticket_id = ticket_key";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        nf::Ticket ticket;
+        const_it["ticket_key"].to(ticket.key);
+        const_it["ticket_title"].to(ticket.comment);
+        const_it["currency"].to(ticket.currency);
+        const_it["ticket_price"].to(ticket.value);
+        bg::date start = bg::from_string(const_it["valid_from"].as<std::string>());
+        bg::date end = bg::from_string(const_it["valid_to"].as<std::string>());
+
+        nf::DateTicket& date_ticket = data.fare.fare_map[ticket.key];
+
+        date_ticket.add(start, end, ticket);
+    }
 }
 
-void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work){
-//    std::string request = "select id, before_change, after_change, start_trip, end_trip, global_condition, price_id from navitia.transition;";
-//    pqxx::result result = work.exec(request);
-//    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-//        nf::Data_Transition * trans = new nf::Data_Transition();
+void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
+    std::cout << "fill transition" << std::endl;
+    //we build the transition graph
+    std::map<nf::State, nf::Fare::vertex_t> state_map;
+    nf::State begin; // Start is an empty node
+    nf::Fare::vertex_t begin_v = boost::add_vertex(begin, data.fare.g);
+    state_map[begin] = begin_v;
 
-//        const_it["id"].to(trans->idx);
-//        const_it["before_change"].to(trans->before_change);
-//        const_it["after_change"].to(trans->after_change);
-//        const_it["start_trip"].to(trans->start_trip);
-//        const_it["end_trip"].to(trans->end_trip);
-//        const_it["global_condition"].to(trans->global_condition);
-//        const_it["price_id"].to(trans->price_idx);
+    std::string request = "select id, before_change, after_change, start_trip, end_trip, global_condition, ticket_id from navitia.transition ";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        nf::Transition transition;
 
-//        data.fare.data_transitions.push_back(trans);
-//    }
+        std::string before_str = const_it["before_change"].as<std::string>();
+        std::string after_str = const_it["after_change"].as<std::string>();
+
+        nf::State start = ed::connectors::parse_state(before_str);
+        nf::State end = ed::connectors::parse_state(after_str);
+
+        std::string start_trip_str = const_it["start_trip"].as<std::string>();
+        std::string end_trip_str = const_it["end_trip"].as<std::string>();
+
+        transition.start_conditions = ed::connectors::parse_conditions(start_trip_str);
+        transition.end_conditions = ed::connectors::parse_conditions(end_trip_str);
+
+        const_it["global_condition"].to(transition.global_condition);
+        const_it["ticket_id"].to(transition.ticket_key);
+
+        nf::Fare::vertex_t start_v, end_v;
+        if(state_map.find(start) == state_map.end()){
+            start_v = boost::add_vertex(start, data.fare.g);
+            state_map[start] = start_v;
+        }
+        else start_v = state_map[start];
+
+        if(state_map.find(end) == state_map.end()) {
+            end_v = boost::add_vertex(end, data.fare.g);
+            state_map[end] = end_v;
+        }
+        else end_v = state_map[end];
+
+        //add the edge the the fare graph
+        boost::add_edge(start_v, end_v, transition, data.fare.g);
+    }
 }
 
-void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& work){
-//    std::string request = "select id, before_change, after_change, start_trip, end_trip, global_condition, price_id from navitia.transition;";
-//    pqxx::result result = work.exec(request);
-//    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-//        nf::Data_Origin_Destination * od = new nf::Data_Origin_Destination();
+void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& work) {
+    std::string request = "select od.id, origin_id, origin_mode, destination_id, destination_mode, "
+                            "ticket.id, ticket.od_id, ticket_id "
+                            "from navitia.origin_destination as od, navitia.od_ticket as ticket where od.id = ticket.od_id;";
+    std::cout << "fill od" << std::endl;
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+//        std::cout << const_it["od.id"].as<std::string>() << std::endl;
+        nf::OD_key::od_type origin_mode = ed::connectors::to_od_type(const_it["origin_mode"].as<std::string>());
+        nf::OD_key origin(origin_mode, const_it["origin_id"].as<std::string>());
 
-//        data.fare.data_origin_destinations.push_back(od);
-//    }
+        nf::OD_key::od_type destination_mode = ed::connectors::to_od_type(const_it["destination_mode"].as<std::string>());
+        nf::OD_key destination(destination_mode, const_it["destination_id"].as<std::string>());
+
+        std::string ticket = const_it["ticket_id"].as<std::string>();
+        data.fare.od_tickets[origin][destination].push_back(ticket);
+    }
 }
 
 void EdReader::build_rel_stop_point_admin(navitia::type::Data& , pqxx::work& work){

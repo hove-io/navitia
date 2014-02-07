@@ -2,6 +2,7 @@
 #define BOOST_TEST_MODULE test_fare
 #include <boost/test/unit_test.hpp>
 #include "ed/connectors/fare_parser.h"
+#include "ed/connectors/fare_utils.h"
 #include "utils/logger.h"
 
 struct logger_initialized {

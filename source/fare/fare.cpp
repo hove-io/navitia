@@ -2,20 +2,11 @@
 
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/lexical_cast.hpp>
-
-#include <boost/fusion/include/adapt_struct.hpp>
 
 #include "type/datetime.h"
 
 namespace greg = boost::gregorian;
-namespace qi = boost::spirit::qi;
-namespace ph = boost::phoenix;
-
 
 namespace navitia { namespace fare {
 
@@ -358,6 +349,11 @@ DateTicket Fare::get_od(Label label, SectionKey section) const {
         }
     }
     return ticket;
+}
+
+
+size_t Fare::nb_transitions() const {
+    return boost::num_edges(g);
 }
 
 }

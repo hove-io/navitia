@@ -88,7 +88,7 @@ struct State {
     }
 
     std::string concat() const {
-        return mode + "," + zone + "," + stop_area + "," + line + "," + network + "," + ticket;
+        return mode + zone + stop_area + line + network + ticket;
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
@@ -103,17 +103,17 @@ enum class Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True};
 inline std::string comp_to_string(const Comp_e comp) {
     switch (comp) {
     case Comp_e::EQ:
-        return "EQ";
+        return "=";
     case Comp_e::NEQ:
-        return "NEQ";
+        return "!=";
     case Comp_e::LT:
-        return "LT";
+        return "<";
     case Comp_e::GT:
-        return "GT";
+        return ">";
     case Comp_e::LTE:
-        return "LTE";
+        return "<=";
     case Comp_e::GTE:
-        return "GTE";
+        return ">=";
     case Comp_e::True:
         return "True";
     default:
@@ -233,19 +233,6 @@ struct OD_key{
     }
 };
 
-inline std::string to_string(OD_key::od_type type) {
-    switch (type) {
-    case OD_key::od_type::Zone:
-        return "Zone";
-    case OD_key::od_type::StopArea:
-        return "StopArea";
-    case OD_key::od_type::Mode:
-        return "Mode";
-    default:
-        throw navitia::exception("unhandled od_type case");
-    }
-}
-
 struct results {
     std::vector<Ticket> tickets;
     bool not_found = true;
@@ -255,13 +242,6 @@ struct results {
 
 /// Contient l'ensemble du système tarifaire
 struct Fare {
-    //fare:
-//    std::vector<Data_Transition*> data_transitions;
-//    std::vector<Data_Price*> data_prices;
-//    std::vector<Data_Origin_Destination*> data_origin_destinations;
-//    std::map<std::string, nt::idx_t> data_price_map;
-
-
     /// Map qui associe les clefs de tarifs aux tarifs
     std::map<std::string, DateTicket> fare_map;
 
@@ -287,6 +267,8 @@ struct Fare {
         ar & fare_map & od_tickets & g;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    size_t nb_transitions() const;
 private:
     /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
     DateTicket get_od(Label label, SectionKey section) const;

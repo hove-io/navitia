@@ -6,22 +6,19 @@ namespace ed { namespace connectors {
 
 
 /// Exception levée si on utilise une clef inconnue
-struct invalid_key : std::exception{};
+//struct invalid_key : std::exception{};
 
 /// Parse un état
-navitia::fare::State parse_state(const std::string & state);
+//navitia::fare::State parse_state(const std::string & state);
 
-/// Parse une condition de passage
-navitia::fare::Condition parse_condition(const std::string & condition);
+///// Parse une condition de passage
+//navitia::fare::Condition parse_condition(const std::string & condition);
 
 /// Exception levée si on n'arrive pas à parser une condition
-struct invalid_condition : std::exception {};
+//struct invalid_condition : std::exception {};
 
 /// Parse une liste de conditions séparés par des &
-std::vector<navitia::fare::Condition> parse_conditions(const std::string & conditions);
-
-/// Parse la date au format AAAA|MM|JJ
-boost::gregorian::date parse_nav_date(const std::string & date_str);
+//std::vector<navitia::fare::Condition> parse_conditions(const std::string & conditions);
 
 struct fare_parser {
     Data& data;
@@ -37,12 +34,7 @@ struct fare_parser {
         od_filename(od) {}
 
     void load();
-//    void parse_files();
-private:       
-//    void parse_trasitions(Data&);
-//    void parse_prices(Data&);
-//    void parse_origin_destinations(Data&);
-
+private:
     /// Charge les deux fichiers obligatoires
     void load_transitions();
     void load_prices();

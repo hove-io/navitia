@@ -16,8 +16,6 @@
 #include "connectors/extcode2uri.h"
 #include "fare/fare.h"
 
-
-
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
@@ -27,7 +25,7 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, date, connection_string, aliases_file,
-                synonyms_file, redis_string, fare_file;
+                synonyms_file, redis_string, fare_dir;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -39,7 +37,7 @@ int main(int argc, char * argv[])
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
         ("redis-string,r", po::value<std::string>(&redis_string), "parametres de connexion à redis: host=localhost db=0 password=navitia port=6379 timeout=2")
-        ("fare,f", po::value<std::string>(&fare_file), "Repertoire des fichiers fare");
+        ("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -66,7 +64,7 @@ int main(int argc, char * argv[])
     po::notify(vm);
 
     pt::ptime start;
-    int read, complete, clean, sort, save;
+    int read, complete, clean, sort, save, fare(0);
 
     ed::Data data;
 
@@ -116,11 +114,13 @@ int main(int argc, char * argv[])
     }
 
     if(vm.count("fare")){
+        start = pt::microsec_clock::local_time();
         LOG4CPLUS_INFO(logger, "Alimentation de fare");
-        ed::connectors::fare_parser fareParser(data, fare_file + "idf.fares",
-                                           fare_file + "prix.csv",
-                                           fare_file + "tarifs_od.csv");
+        ed::connectors::fare_parser fareParser(data, fare_dir + "/fares.csv",
+                                           fare_dir + "/prices.csv",
+                                           fare_dir + "/od_fares.csv");
         fareParser.load();
+        fare = (pt::microsec_clock::local_time() - start).total_milliseconds();
     }
 
 
@@ -156,6 +156,9 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "\t completion des données " << complete << "ms");
     LOG4CPLUS_INFO(logger, "\t netoyage des données " << clean << "ms");
     LOG4CPLUS_INFO(logger, "\t trie des données " << sort << "ms");
+    if (vm.count("fare")) {
+        LOG4CPLUS_INFO(logger, "\t fares loaded in : " << fare << "ms");
+    }
     LOG4CPLUS_INFO(logger, "\t enregistrement des données " << save << "ms");
 
     return 0;

@@ -1,6 +1,6 @@
 #include "ed_persistor.h"
+#include "ed/connectors/fare_utils.h"
 
-#include <boost/range/adaptor/transformed.hpp>
 namespace bg = boost::gregorian;
 
 namespace ed{
@@ -51,11 +51,9 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
 }
 
 
-void EdPersistor::persist_fare(const ed::Data& data, bool empty_table) {
-    if (empty_table) {
-        std::cout << "début : vider toutes les tables (TRUNCATE)!" << std::endl;
-        this->clean_db();
-    }
+void EdPersistor::persist_fare(const ed::Data& data) {
+    std::cout << "TRUNCATE fare tables" << std::endl;
+    PQclear(this->lotus.exec("TRUNCATE navitia.origin_destination, navitia.transition, navitia.ticket, navitia.dated_ticket, navitia.od_ticket CASCADE"));
     this->insert_prices(data);
     this->insert_transitions(data);
     this->insert_origin_destination(data);
@@ -74,8 +72,7 @@ void EdPersistor::build_relation(){
 
 void EdPersistor::clean_db(){
     PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, navitia.alias,navitia.synonym,"
-                            "navitia.commercial_mode, navitia.vehicle_properties, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection,"
-                            "navitia.origin_destination, navitia.transition, navitia.ticket, navitia.dated_ticket, navitia.od_ticket CASCADE"));
+                            "navitia.commercial_mode, navitia.vehicle_properties, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -571,8 +568,8 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
 
         std::vector<std::string> values;
         values.push_back(std::to_string(count++));
-        values.push_back(start.concat());
-        values.push_back(end.concat());
+        values.push_back(ed::connectors::to_string(start));
+        values.push_back(ed::connectors::to_string(end));
         std::string start_cond;
         std::string sep = "";
         for (const auto& c: transition.start_conditions) {
@@ -592,7 +589,6 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
         if (! transition.ticket_key.empty()) //we do not add empty ticket, to have null in db
             values.push_back(transition.ticket_key);
         else {
-            std::cout << "on rajoute pas de ticket!" << std::endl;
             null_ticket_vector.push_back(values);
             continue;
         }
@@ -601,6 +597,8 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
+
+    //the postgres connector does not handle well null values, so we add the transition without tickets in a separate bulk
 
     this->lotus.prepare_bulk_insert("navitia.transition", {"id", "before_change","after_change","start_trip","end_trip","global_condition",});
     for (const auto& null_ticket: null_ticket_vector) {
@@ -612,13 +610,14 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
 }
 
 void EdPersistor::insert_prices(const ed::Data& data) {
-    this->lotus.prepare_bulk_insert("navitia.ticket", {"ticket_key", "ticket_title"});
+    this->lotus.prepare_bulk_insert("navitia.ticket", {"ticket_key", "ticket_title", "ticket_comment"});
     for (const auto& ticket_it: data.fare_map) {
         const navitia::fare::DateTicket& tickets = ticket_it.second;
 
         assert(! tickets.tickets.empty()); //by construction there has to be at least one ticket
         std::vector<std::string> values {
             ticket_it.first,
+            tickets.tickets.front().second.caption,
             tickets.tickets.front().second.comment
         };
         std::cout << "ticket : " << boost::algorithm::join(values, ",") << std::endl;
@@ -635,14 +634,14 @@ void EdPersistor::insert_prices(const ed::Data& data) {
 
         for (const auto& dated_ticket: tickets.tickets) {
             const auto& start = dated_ticket.first.begin();
-            const auto& last = dated_ticket.first.last();
+            const auto& last = dated_ticket.first.end();
             std::vector<std::string> values {
                 std::to_string(count++),
                 dated_ticket.second.key,
                 bg::to_iso_extended_string(start),
                 bg::to_iso_extended_string(last),
                 std::to_string(dated_ticket.second.value),
-                dated_ticket.second.comment,
+                dated_ticket.second.caption,
                 dated_ticket.second.currency
             };
             this->lotus.insert(values);
@@ -659,9 +658,9 @@ void EdPersistor::insert_origin_destination(const ed::Data& data) {
             std::vector<std::string> values {
                 std::to_string(cpt++),
                 origin_ticket.first.value, //origin
-                to_string(origin_ticket.first.type), //origin mode
+                ed::connectors::to_string(origin_ticket.first.type), //origin mode
                 destination_ticket.first.value, //destination
-                to_string(destination_ticket.first.type), //destination mode
+                ed::connectors::to_string(destination_ticket.first.type), //destination mode
             };
             std::cout << "origin_destination : " << boost::algorithm::join(values, ",") << std::endl;
             this->lotus.insert(values);

@@ -484,7 +484,8 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
 
 CREATE TABLE IF NOT EXISTS navitia.ticket(
 	ticket_key TEXT PRIMARY KEY,
-	ticket_title TEXT
+	ticket_title TEXT,
+	ticket_comment TEXT
 );
 
 CREATE TABLE IF NOT EXISTS navitia.dated_ticket(
@@ -497,7 +498,19 @@ CREATE TABLE IF NOT EXISTS navitia.dated_ticket(
 	currency TEXT
 );
 
---CREATE TYPE IF NOT EXISTS fare_od_mode AS ENUM ('Zone', 'StopArea', 'Mode');
+DO $$
+BEGIN
+
+    CASE WHEN (SELECT count(*) = 0 FROM pg_type where pg_type.typname='fare_od_mode')
+    THEN
+        CREATE TYPE fare_od_mode AS ENUM ('Zone', 'StopArea', 'Mode');
+    ELSE
+        RAISE NOTICE 'fare_od_mode already exists, skipping';
+    END CASE;
+
+END$$;
+
+
 
 CREATE TABLE IF NOT EXISTS navitia.transition(
 	id BIGINT PRIMARY KEY,
@@ -506,7 +519,8 @@ CREATE TABLE IF NOT EXISTS navitia.transition(
 	start_trip TEXT NOT NULL,
 	end_trip TEXT NOT NULL,
 	global_condition TEXT NOT NULL,
-    FOREIGN KEY (ticket_id) REFERENCES navitia.ticket(id)
+    ticket_id TEXT,
+    FOREIGN KEY (ticket_id) REFERENCES navitia.ticket(ticket_key)
 );
 
 CREATE TABLE IF NOT EXISTS navitia.origin_destination(

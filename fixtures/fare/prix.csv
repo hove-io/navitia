@@ -2,7 +2,7 @@ tickett;20110701;20111231;170;Ticket t+ (*);125;Ticket t+ en carnet (*)
 2tickett;20110701;20111231;340;2 Tickets t+ (*);250;2 Tickets t+ en carnet (*)
 3tickett;20110701;20111231;510;3 Tickets t+ (*);375;3 Tickets t+ en carnet (*)
 4tickett;20110701;20111231;680;4 Tickets t+ (*);500;4 Tickets t+ en carnet (*)
-ntickett;20110701;20111231;170;Au moins un Ticket T+ (se renseigner auprès du conducteur) (*);125;Au moins un Ticket T+ (se renseigner auprès du conducteur) (*)
+ntickett;20110701;20111231;170;Au moins un Ticket T+ (se renseigner auprÃ¨s du conducteur) (*);125;Au moins un Ticket T+ (se renseigner auprÃ¨s du conducteur) (*)
 1;20110701;20111231;170;Ticket Origine-Destination;125;Ticket en carnet
 10;20110701;20111231;170;Ticket Origine-Destination;136;Ticket en carnet
 19;20110701;20111231;170;Ticket Origine-Destination;136;Ticket en carnet
@@ -174,7 +174,7 @@ tickett;20120101;20121231;170;Ticket t+ (*);127;Ticket t+ en carnet (*)
 2tickett;20120101;20121231;340;2 Tickets t+ (*);254;2 Tickets t+ en carnet (*)
 3tickett;20120101;20121231;510;3 Tickets t+ (*);381;3 Tickets t+ en carnet (*)
 4tickett;20120101;20121231;680;4 Tickets t+ (*);508;4 Tickets t+ en carnet (*)
-ntickett;20120101;20121231;170;Au moins un Ticket T+ (se renseigner auprès du conducteur) (*);125;Au moins un Ticket T+ (se renseigner auprès du conducteur) (*)
+ntickett;20120101;20121231;170;Au moins un Ticket T+ (se renseigner auprÃ¨s du conducteur) (*);125;Au moins un Ticket T+ (se renseigner auprÃ¨s du conducteur) (*)
 1;20120101;20121231;175;Ticket Origine-Destination;127;Ticket en carnet
 10;20120101;20121231;175;Ticket Origine-Destination;140;Ticket en carnet
 19;20120101;20121231;175;Ticket Origine-Destination;140;Ticket en carnet
@@ -347,4 +347,4 @@ ntickett;20120101;20121231;170;Au moins un Ticket T+ (se renseigner auprès du co
 098:3;20110701;20120630;1900;Ticket Cars Air France;1900;Ticket Cars Air France
 098:4;20110701;20120630;1650;Ticket Cars Air France;1650;Ticket Cars Air France
 gratuit;20110101;20121231;0;Ligne gratuite;0;Ligne gratuite
-inconnu;20110101;20141231;0;Tarif non disponible. Se renseigner auprès du transporteur.;0;Tarif non disponible. Se renseigner auprès du transporteur.
+inconnu;20110101;20141231;0;Tarif non disponible. Se renseigner auprÃ¨s du transporteur.;0;Tarif non disponible. Se renseigner auprÃ¨s du transporteur.
