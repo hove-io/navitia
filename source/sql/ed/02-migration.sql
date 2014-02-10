@@ -37,3 +37,15 @@ DO $$
         END;
     END;
 $$;
+
+DO $$
+    BEGIN
+        BEGIN
+			ALTER TABLE navitia.admin  
+			ALTER COLUMN boundary TYPE GEOGRAPHY(MULTIPOLYGON, 4326)
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column boundary already exists in navitia.admin.';
+        END;
+    END;
+$$;
+
