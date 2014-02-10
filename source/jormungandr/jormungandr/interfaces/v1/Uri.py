@@ -13,6 +13,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from errors import ManageError
 from Coord import Coord
+from navitiacommon.models import PtObject
 
 
 class Uri(ResourceUri):
@@ -46,7 +47,16 @@ class Uri(ResourceUri):
         if not self.region:
             return {"error": "No region"}, 404
         args = self.parsers["get"].parse_args()
-        if(collection is not None and id is not None):
+
+        if "original_id" in args and args["original_id"]:
+            res = PtObject.get_from_original_uri(args["original_id"])
+            if res:
+                id = res.uri
+            else:
+                abort(404, message="Unable to find an object for the uri %s"%
+                      args["original_id"])
+
+        if(collection and id):
             args["filter"] = collections_to_resource_type[collection] + ".uri="
             if collection != 'pois':
                 args["filter"] += id
@@ -59,7 +69,10 @@ class Uri(ResourceUri):
             if collection is None:
                 collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
             args["filter"] = self.get_filter(uris)
-        response = i_manager.dispatch(args, self.region, collection)
+        #else:
+        #    abort(503, message="Not implemented")
+        response = i_manager.dispatch(args, collection,
+                                      instance_name=self.region)
         return response
 
 
@@ -179,6 +192,9 @@ def stop_points(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return StopPoints
 
 
@@ -199,6 +215,9 @@ def stop_areas(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return StopAreas
 
 
@@ -279,6 +298,9 @@ def routes(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return Routes
 
 
@@ -299,6 +321,9 @@ def lines(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return Lines
 
 
@@ -319,6 +344,9 @@ def pois(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return Pois
 
 
@@ -339,6 +367,9 @@ def networks(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return Networks
 
 
