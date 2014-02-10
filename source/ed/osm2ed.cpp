@@ -212,7 +212,7 @@ std::string Visitor::geometry_of_admin(const CanalTP::References & refs) const{
         vec_id.push_back(vec_id.front());
     }
 
-    std::string geom("POLYGON((");
+    std::string geom("MULTIPOLYGON(((");
     std::string sep = "";
 
     for (auto osm_node_id : vec_id){
@@ -221,7 +221,7 @@ std::string Visitor::geometry_of_admin(const CanalTP::References & refs) const{
         geom += sep + std::to_string(node.lon()) + " " + std::to_string(node.lat());
         sep = ",";
     }
-    geom += "))";
+    geom += ")))";
     return geom;
 }
 
@@ -281,10 +281,10 @@ void Visitor::insert_admin(){
     int ignored = 0;
     for(auto ar : OSMAdminRefs){
         auto admin = ar.second;
-        std::string polygon = this->geometry_of_admin(admin.refs);
-        if(!polygon.empty()){
+        std::string multipolygon = this->geometry_of_admin(admin.refs);
+        if(!multipolygon.empty()){
             std::string coord = "POINT(" + std::to_string(admin.coord.lon()) + " " + std::to_string(admin.coord.lat()) + ")";
-            this->lotus.insert({std::to_string(ar.first), admin.name, admin.postcode, admin.insee, admin.level, coord,polygon , std::to_string(ar.first)});
+            this->lotus.insert({std::to_string(ar.first), admin.name, admin.postcode, admin.insee, admin.level, coord,multipolygon , std::to_string(ar.first)});
         } else {
             ignored++;
         }
