@@ -9,11 +9,13 @@
 namespace ed{
 
 struct EdPersistor{
-
     Lotus lotus;
     Lotus lotus_second;
+    log4cplus::Logger logger;
 
-    EdPersistor(const std::string& connection_string) : lotus(connection_string), lotus_second(connection_string){}
+    EdPersistor(const std::string& connection_string) : lotus(connection_string),
+                        lotus_second(connection_string),
+                        logger(log4cplus::Logger::getInstance("log")){}
 
     void persist(const ed::Data& data, const navitia::type::MetaData& meta);
     void persist_fare(const ed::Data& data);

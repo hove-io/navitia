@@ -8,26 +8,27 @@ namespace ed{
 void EdPersistor::persist(const ed::Georef& data){
 
     this->lotus.start_transaction();
-    std::cout << "début : vider toutes les tables (TRUNCATE)!" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : vider toutes les tables (TRUNCATE)!");
     this->clean_georef();
-    std::cout << "début : ajout des admins" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : ajout des admins");
     this->insert_admins(data);
-    std::cout << "début : ajout des voies" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : ajout des voies");
     this->insert_ways(data);
-    std::cout << "début : ajout des noeuds" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : ajout des noeuds");
     this->insert_nodes(data);
-    std::cout << "début : ajout des adresses" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : ajout des adresses");
     this->insert_house_numbers(data);
-    std::cout << "début : ajout des segments" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : ajout des segments");
     this->insert_edges(data);
-    std::cout << "début : relation admin way" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : relation admin way");
     this->build_relation_way_admin(data);
-    std::cout << "début : mise à jour des limites des régions adminstratives" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : mise à jour des limites des régions adminstratives");
     this->update_boundary();
-    std::cout << "début : Relations stop_area, stop_point et admins" << std::endl;
+    LOG4CPLUS_INFO(logger, "début : Relations stop_area, stop_point et admins");
     this->build_relation();
     this->lotus.commit();
-    std::cout << "fin : commit!" << std::endl;
+    LOG4CPLUS_INFO(logger, "Fin : commit");
+    std::cout << "" << std::endl;
 }
 
 navitia::type::GeographicalCoord EdPersistor::coord2wgs84(const navitia::type::GeographicalCoord& coord, const uint32_t coord_in){
@@ -40,8 +41,8 @@ navitia::type::GeographicalCoord EdPersistor::coord2wgs84(const navitia::type::G
         std::string lat = PQgetvalue(res, 0, 1);
         to_return = navitia::type::GeographicalCoord(str_to_double(lon), str_to_double(lat));
         PQclear(res);
-    }catch(...){
-        // TODO Ajout du message, le type d'exception
+    }catch(const LotusException& e){
+        throw e;
         PQclear(res);
     }
     return to_return;
@@ -51,14 +52,14 @@ void EdPersistor::insert_admins(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("navitia.admin", {"id", "name", "post_code", "insee", "level", "coord", "uri"});
     std::stringstream geog;
     geog << std::cout.precision(10);
-        for(auto itm : data.admins){
-            if(itm.second->is_used){
+    for(const auto& itm : data.admins){
+        if(itm.second->is_used){
             navitia::type::GeographicalCoord coord = this->coord2wgs84(itm.second->coord);
             geog.str("");
             geog <<"POINT("<<coord.lon()<<" "<<coord.lat()<<")";
             this->lotus.insert({std::to_string(itm.second->id), itm.second->name,
-                               itm.second->postcode, itm.second->insee,
-                               itm.second->level, geog.str() , itm.first});
+                                    itm.second->postcode, itm.second->insee,
+                                    itm.second->level, geog.str() , itm.second->insee});
         }
     }
     this->lotus.finish_bulk_insert();
@@ -66,7 +67,7 @@ void EdPersistor::insert_admins(const ed::Georef& data){
 
 void EdPersistor::insert_ways(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type"});
-    for(auto itm : data.ways){
+    for(const auto& itm : data.ways){
         std::vector<std::string> values;
         values.push_back(std::to_string(itm.second->id));
         values.push_back(itm.second->name);
@@ -81,7 +82,7 @@ void EdPersistor::insert_nodes(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.node", {"id","coord"});
     std::stringstream geog;
     geog << std::cout.precision(10);
-    for(auto itm : data.nodes){
+    for(const auto& itm : data.nodes){
         if(itm.second->is_used){
             navitia::type::GeographicalCoord coord = this->coord2wgs84(itm.second->coord);
             geog.str("");
@@ -96,7 +97,7 @@ void EdPersistor::insert_house_numbers(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side"});
     std::stringstream geog;
     geog << std::cout.precision(10);
-    for(auto itm : data.house_numbers) {
+    for(const auto& itm : data.house_numbers) {
         navitia::type::GeographicalCoord coord = this->coord2wgs84(itm.second->coord);
         geog.str("");
         geog <<"POINT("<<coord.lon()<<" "<<coord.lat()<<")";
@@ -110,7 +111,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
                                     "cycles_allowed", "cars_allowed"});
     std::stringstream geog;
     geog << std::cout.precision(10);
-    for(auto edge : data.edges){
+    for(const auto& edge : data.edges){
         geog.str("");
         navitia::type::GeographicalCoord source_coord = this->coord2wgs84(edge.second->source->coord);
         navitia::type::GeographicalCoord target_coord = this->coord2wgs84(edge.second->target->coord);
@@ -125,7 +126,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
 
 void EdPersistor::build_relation_way_admin(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
-    for(auto itm : data.ways){
+    for(const auto& itm : data.ways){
         std::vector<std::string> values;
         values.push_back(std::to_string(itm.second->admin->id));
         values.push_back(std::to_string(itm.second->id));

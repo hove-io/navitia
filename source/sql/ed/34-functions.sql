@@ -189,37 +189,38 @@ LANGUAGE SQL;
  -- Conversion des coordonnées vers wgs84
 CREATE OR REPLACE FUNCTION georef.coord2wgs84(lon real, lat real, coord_in int)
   RETURNS RECORD AS
-$func$
+$$
 DECLARE 
   ret RECORD;
 BEGIN
- SELECT ST_X(aa.new_coord::geometry) as lon, ST_Y(aa.new_coord::geometry) as lat from (
- SELECT ST_Transform(ST_GeomFromText('POINT('||lon||' '||lat||')',coord_in),4326) As new_coord)aa INTO ret;
-RETURN ret;
+	SELECT ST_X(aa.new_coord::geometry) as lon, ST_Y(aa.new_coord::geometry) as lat from (
+	SELECT ST_Transform(ST_GeomFromText('POINT('||lon||' '||lat||')',coord_in),4326) As new_coord)aa INTO ret;
+	RETURN ret;
 END
-$func$ LANGUAGE plpgsql;
+$$ 
+LANGUAGE plpgsql;
 
 -- fonction permettant de mettre à jour les boundary des admins
 CREATE OR REPLACE FUNCTION georef.update_boundary(adminid bigint)
   RETURNS VOID AS
-$func$
+$$
 BEGIN
-
- UPDATE navitia.admin set boundary = ST_Multi(ST_Buffer(ST_Collect(
-	ARRAY(
-select aa.coord::geometry from (
-select n.coord as coord from georef.rel_way_admin rel, 
-georef.edge e, georef.node n  
-where rel.admin_id=adminid
-and rel.way_id=e.way_id
-and e.source_node_id=n.id
-UNION
-select n.coord as coord from georef.rel_way_admin rel, 
-georef.edge e, georef.node n  
-where rel.admin_id=adminid
-and rel.way_id=e.way_id
-and e.target_node_id=n.id)aa)), 0.001))
-where navitia.admin.id=adminid;
+	UPDATE navitia.admin set boundary = ST_Multi(ST_Buffer(ST_Collect(
+		ARRAY(
+				select aa.coord::geometry from (
+					select n.coord as coord from georef.rel_way_admin rel, 
+						georef.edge e, georef.node n  
+					where rel.admin_id=adminid
+					and rel.way_id=e.way_id
+					and e.source_node_id=n.id
+					UNION
+					select n.coord as coord from georef.rel_way_admin rel, 
+						georef.edge e, georef.node n  
+					where rel.admin_id=adminid
+					and rel.way_id=e.way_id
+					and e.target_node_id=n.id)aa)), 0.001))
+	where navitia.admin.id=adminid;
 END
-$func$ LANGUAGE plpgsql;
+$$
+LANGUAGE plpgsql;
 

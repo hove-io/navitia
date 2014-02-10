@@ -19,6 +19,7 @@ namespace pt = boost::posix_time;
 int main(int argc, char * argv[])
 {
     navitia::init_app();
+    auto logger = log4cplus::Logger::getInstance("log");
     std::string output, connection_string;
     po::options_description desc("Allowed options");
     desc.add_options()

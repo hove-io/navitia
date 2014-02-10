@@ -298,7 +298,7 @@ struct Node{
     size_t id;
     bool is_used;
     navitia::type::GeographicalCoord coord;
-    Node():is_used(false){};
+    Node():id(0), is_used(false){};
 };
 
 struct Admin{
@@ -309,7 +309,7 @@ struct Admin{
     std::string name;
     std::string postcode;
     navitia::type::GeographicalCoord coord;
-    Admin():is_used(false), level("8"){};
+    Admin():id(0), is_used(false), level("8"){};
 };
 
 struct Way{
@@ -317,7 +317,7 @@ struct Way{
     Admin* admin;
     std::string name;
     std::string type;
-    Way():admin(nullptr){};
+    Way():id(0), admin(nullptr), name(""), type(""){};
 };
 
 struct Edge{
@@ -325,7 +325,7 @@ struct Edge{
     Node* source;
     Node* target;
     int length;
-    Edge():way(nullptr), source(nullptr), target(nullptr){}
+    Edge():way(nullptr), source(nullptr), target(nullptr), length(0){}
 };
 
 struct HouseNumber{
