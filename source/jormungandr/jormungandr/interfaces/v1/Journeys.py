@@ -3,6 +3,7 @@ from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
+from jormungandr.interfaces.v1.Uri import journey_pattern_points
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode,\
     commercial_mode, company, network, pagination, place,\
@@ -24,14 +25,12 @@ from datetime import datetime, timedelta
 import sys
 from copy import copy
 from datetime import datetime
+from collections import defaultdict
 
 f_datetime = "%Y%m%dT%H%M%S"
 
 
 class SectionLinks(fields.Raw):
-
-    def __init__(self, **kwargs):
-        super(SectionLinks, self).__init__(**kwargs)
 
     def output(self, key, obj):
         links = None
@@ -44,6 +43,40 @@ class SectionLinks(fields.Raw):
         if links:
             for type_, value in links:
                 response.append({"type": type_.name, "id": value})
+        return response
+
+
+class FareLinks(fields.Raw):
+
+    def output(self, key, obj):
+        ticket_ids = []
+        try:
+            for t_id in obj.ticket_id:
+                ticket_ids.append(t_id)
+        except ValueError:
+            return None
+        response = []
+        for value in ticket_ids:
+            response.append({"type": "ticket", "rel": "tickets",
+                             "internal": True, "templated": False,
+                             "id": value})
+        return response
+
+
+class TicketLinks(fields.Raw):
+
+    def output(self, key, obj):
+        section_ids = []
+        try:
+            for s_id in obj.section_id:
+                section_ids.append(s_id)
+        except ValueError:
+            return None
+        response = []
+        for value in section_ids:
+            response.append({"type": "section", "rel": "sections",
+                             "internal": True, "templated": False,
+                             "id": value})
         return response
 
 
@@ -112,6 +145,7 @@ class section_place(PbField):
             return super(PbField, self).output(key, obj)
 section = {
     "type": section_type(attribute="type"),
+    "id": fields.String(),
     "mode": enum_type(attribute="street_network.mode"),
     "duration": fields.Integer(),
     "from": section_place(place, attribute="origin"),
@@ -132,6 +166,16 @@ section = {
     "arrival_date_time": fields.String(attribute="end_date_time"),
 }
 
+cost = {
+    'value': fields.Float(),
+    'currency': fields.String(),
+}
+
+fare = {
+    'total': NonNullNested(cost),
+    'found': fields.Boolean(),
+    'links': FareLinks(attribute="ticket_id")
+}
 
 journey = {
     'duration': fields.Integer(),
@@ -143,12 +187,20 @@ journey = {
     'from': PbField(place, attribute='origin'),
     'to': PbField(place, attribute='destination'),
     'type': fields.String(),
+    'fare': NonNullNested(fare),
     "status": enum_type(attribute="message_status")
 }
 
+ticket = {
+    "id": fields.String(),
+    "name": fields.String(),
+    "cost": NonNullNested(cost),
+    "links": TicketLinks(attribute="section_id")
+}
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
-    "error": PbField(error, attribute='error')
+    "error": PbField(error, attribute='error'),
+    "tickets": NonNullList(NonNullNested(ticket))
 }
 
 
@@ -298,6 +350,46 @@ class add_journey_pagination(object):
 
         return (datetime_first, datetime_last)
 
+#add the link between a section and the ticket needed for that section
+class add_fare_links(object):
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            print "add fare_links"
+            if objects[1] != 200:
+                return objects
+            if not "journeys" in objects[0].keys():
+                return objects
+            ticket_by_section = defaultdict(list)
+            if not 'tickets' in objects[0].keys():
+                return objects
+
+            for t in objects[0]['tickets']:
+                if "links" in t.keys():
+                    for s in t['links']:
+                        ticket_by_section[s['id']].append(t['id'])
+
+            for j in objects[0]['journeys']:
+                if not "sections" in j.keys():
+                    continue
+                for s in j['sections']:
+
+                    #them we add the link to the different tickets needed
+                    for ticket_needed in ticket_by_section[s["id"]]:
+                        s['links'].append({"type": "ticket",
+                                           "rel": "tickets",
+                                           "internal": True,
+                                           "templated": False,
+                                           "id": ticket_needed})
+                        print "on ajoute le lien ", ticket_needed, " a la section ", s["id"]
+
+            print "fini!"
+            return objects
+        return wrapper
+
+
 
 class Journeys(ResourceUri):
 
@@ -345,6 +437,7 @@ class Journeys(ResourceUri):
 
     @clean_links()
     @add_id_links()
+    @add_fare_links()
     @add_journey_pagination()
     @add_journey_href()
     @marshal_with(journeys)
