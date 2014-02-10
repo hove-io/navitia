@@ -44,12 +44,12 @@ def fusio2ed(instance_config, filename, job_id):
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('pyed.lock|' + instance.name)
+    lock = redis.lock('tyr.lock|' + instance.name)
     if not lock.acquire(blocking=False):
         fusio2ed.retry(countdown=300, max_retries=10)
 
     try:
-        pyed_logger = logging.getLogger('tyr')
+        tyr_logger = logging.getLogger('tyr')
         fusio_logger = logging.getLogger('fusio2ed')
         working_directory = os.path.dirname(filename)
 
@@ -68,7 +68,7 @@ def fusio2ed(instance_config, filename, job_id):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        res = launch_exec("fusio2ed", params, fusio_logger, pyed_logger)
+        res = launch_exec("fusio2ed", params, fusio_logger, tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
@@ -271,12 +271,12 @@ def fare2ed(instance_config, filename, job_id):
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('pyed.lock|' + instance.name)
+    lock = redis.lock('tyr.lock|' + instance.name)
     if not lock.acquire(blocking=False):
         fare2ed.retry(countdown=300, max_retries=10)
 
     try:
-        pyed_logger = logging.getLogger('tyr')
+        tyr_logger = logging.getLogger('tyr')
         fare_logger = logging.getLogger('fare2ed')
         working_directory = os.path.dirname(filename)
 
@@ -288,7 +288,7 @@ def fare2ed(instance_config, filename, job_id):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        res = launch_exec("fare2ed", params, fare_logger, pyed_logger)
+        res = launch_exec("fare2ed", params, fare_logger, tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
