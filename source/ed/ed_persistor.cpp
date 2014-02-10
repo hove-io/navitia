@@ -556,7 +556,11 @@ void EdPersistor::insert_synonyms(const std::map<std::string, std::string>& syno
     this->lotus.finish_bulk_insert();
 }
 
+// TODO:
+// before adding in bd a transition or an od fare, we should check if object filtering the transition is in ed (the line, the network, ...)
+
 void EdPersistor::insert_transitions(const ed::Data& data) {
+
     this->lotus.prepare_bulk_insert("navitia.transition", {"id", "before_change","after_change","start_trip","end_trip","global_condition","ticket_id"});
     size_t count = 1;
     std::vector<std::vector<std::string>> null_ticket_vector;

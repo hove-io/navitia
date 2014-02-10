@@ -30,7 +30,6 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     RAPTOR raptor(b.data);
 
     //fare data initialization
-    //lazyness dictates only OD data
     boost::gregorian::date start_date(boost::gregorian::from_undelimited_string("20110101"));
     boost::gregorian::date end_date(boost::gregorian::from_undelimited_string("20350101"));
     b.data.fare.fare_map["price1"].add(start_date, end_date, fare::Ticket("price1", "Ticket vj 1", 100, "125"));

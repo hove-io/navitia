@@ -292,36 +292,4 @@ struct StopTime : public Nameable {
     bool operator<(const StopTime& other) const;
 };
 
-//Bare fare structures
-//struct Transition {
-//    uint32_t idx = 0;
-//    std::string before_change;
-//    std::string after_change;
-//    std::string start_trip;
-//    std::string end_trip;
-//    std::string global_condition;
-//    uint32_t price_idx = 0;
-//};
-
-//struct Price {
-//    uint32_t idx = 0;
-//    std::string cle_ticket;
-//    boost::gregorian::date valid_from = 0;
-//    boost::gregorian::date valid_to = 0;
-//    int ticket_price = 0;
-//    std::string currency = "euro";
-//    std::string ticket_title;
-//};
-
-//struct Origin_Destination {
-//    uint32_t idx = 0;
-//    std::string code_uic_depart;
-//    std::string gare_depart;
-//    std::string code_uic_arrival;
-//    std::string gare_arrival;
-//    std::vector<uint32_t> ticket_idx;
-//    std::string delta_zone;
-//};
-
-
 }}//end namespace ed::types

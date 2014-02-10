@@ -57,12 +57,6 @@ private:
     std::vector<std::string> edge_to_ignore;
     std::vector<uint64_t> node_to_ignore;
 
-    //vectors qui servent pour charger les tarif
-//    std::vector<types::Transition*> transitions;
-//    std::vector<types::Price*> prices;
-//    std::vector<types::Origin_Destination*> origin_destinations;
-
-
     void fill_meta(navitia::type::Data& data, pqxx::work& work);
     void fill_networks(navitia::type::Data& data, pqxx::work& work);
     void fill_commercial_modes(navitia::type::Data& data, pqxx::work& work);

@@ -110,6 +110,7 @@ message Ticket {
     optional string name = 2;
     optional Cost cost = 3;
     repeated string section_id = 4;
+    optional bool found = 5;
 }
 
 message Fare {

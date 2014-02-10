@@ -194,6 +194,7 @@ journey = {
 ticket = {
     "id": fields.String(),
     "name": fields.String(),
+    "found": fields.Boolean(),
     "cost": NonNullNested(cost),
     "links": TicketLinks(attribute="section_id")
 }
@@ -383,9 +384,7 @@ class add_fare_links(object):
                                            "internal": True,
                                            "templated": False,
                                            "id": ticket_needed})
-                        print "on ajoute le lien ", ticket_needed, " a la section ", s["id"]
 
-            print "fini!"
             return objects
         return wrapper
 

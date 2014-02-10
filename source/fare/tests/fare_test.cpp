@@ -318,10 +318,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value,170);
     BOOST_CHECK_EQUAL(res.tickets.at(1).value , 395); // code 140
     BOOST_CHECK_EQUAL(res.tickets.at(0).sections.size() , 1);
-//    BOOST_CHECK_EQUAL(res.tickets.at(0).sections.at(0).section, keys.at(0)); TODO: refaire fonctionner ce test, la on peut pas car en cours de refacto
     BOOST_CHECK_EQUAL(res.tickets.at(1).sections.size(), 2);
-//    BOOST_CHECK_EQUAL(res.tickets.at(1).sections.at(0).section, keys.at(1));TODO: refaire fonctionner ce test, la on peut pas car en cours de refacto
-//    BOOST_CHECK_EQUAL(res.tickets.at(1).sections.at(1).section, keys.at(2));TODO: refaire fonctionner ce test, la on peut pas car en cours de refacto
 
     // On prend le RER intramuros
     keys.clear();
@@ -469,3 +466,33 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
 }
 
+//TODO tout decouper + rajout fixture
+
+BOOST_AUTO_TEST_CASE(unkown_fare) {
+    std::vector<std::string> keys;
+
+    Fare fare;
+    boost::gregorian::date start_date(boost::gregorian::from_undelimited_string("20110101"));
+    boost::gregorian::date end_date(boost::gregorian::from_undelimited_string("20350101"));
+    fare.fare_map["price1"].add(start_date, end_date, Ticket("price1", "Ticket vj 1", 100, "125"));
+    fare.fare_map["price2"].add(start_date, end_date, Ticket("price2", "Ticket vj 2", 200, "175"));
+
+    Transition transition;
+    transition.start_conditions = {};
+    transition.end_conditions = {};
+    transition.ticket_key = "price1";
+    transition.global_condition = Transition::GlobalCondition::with_changes;
+    State start;
+    State end;
+    start.mode = "metro";
+    end.mode = "metro";
+    auto start_v = boost::add_vertex(start, fare.g);
+    auto end_v = boost::add_vertex(end, fare.g);
+    boost::add_edge(start_v, end_v, transition, fare.g);
+
+    // Un trajet simple
+    keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal");
+    results res = fare.compute_fare(string_to_path(keys));
+    BOOST_CHECK_EQUAL(res.tickets.size(), 1);
+    BOOST_CHECK_EQUAL(res.tickets.at(0).key, "unkown_ticket");
+}

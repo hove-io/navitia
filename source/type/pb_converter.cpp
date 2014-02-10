@@ -577,11 +577,6 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     double total(0.);
     size_t cpt_ticket = enhanced_response.response.tickets_size();
 
-    if (fare.not_found) {
-        pb_fare->set_found(false);
-        return;
-    }
-
     boost::optional<std::string> currency;
     for (const auto& ticket : fare.tickets) {
         if (! currency)
@@ -603,8 +598,9 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
         pb_fare->add_ticket_id(pb_ticket->id());
     }
     pb_fare->mutable_total()->set_value(total);
-    pb_fare->mutable_total()->set_currency(*currency);
-    pb_fare->set_found(true);
+    if (currency)
+        pb_fare->mutable_total()->set_currency(*currency);
+    pb_fare->set_found(! fare.not_found);
 }
 
 void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,

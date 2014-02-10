@@ -31,7 +31,7 @@ void fare_parser::load() {
 void fare_parser::load_transitions() {
     CsvReader reader(state_transition_filename);
     std::vector<std::string> row;
-    reader.next(); //en-tête
+    reader.next(); //header
 
     for (row = reader.next(); !reader.eof(); row = reader.next()) {
         bool symetric = false;
@@ -80,18 +80,23 @@ void fare_parser::load_transitions() {
 void fare_parser::load_prices() {
     CsvReader reader(prices_filename);
     for (std::vector<std::string> row = reader.next() ; ! reader.eof() ; row = reader.next()) {
-        // La structure du csv est : clef;date_debut;date_fin;prix;libellé
+        // csv structure is:
+        //key; begin; end; price; name; unknown field :); comment; currency(optional)
         greg::date start(greg::from_undelimited_string(row.at(1)));
         greg::date end(greg::from_undelimited_string(row.at(2)));
-        data.fare_map[row.at(0)].add(start, end,
-                             fa::Ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5)) );
+
+        fa::Ticket dated_ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5));
+        if (row.size() > 7) {
+            dated_ticket.currency = row[8];
+        }
+        data.fare_map[row.at(0)].add(start, end, dated_ticket);
     }
 }
 
 void fare_parser::load_od() {
     CsvReader reader(od_filename);
     std::vector<std::string> row;
-    reader.next(); //en-tête
+    reader.next(); //header
 
     // file format is :
     // Origin ID, Origin name, Origin mode, Destination ID, Destination name, Destination mode, ticket_id, ticket id, .... (with any number of ticket)
@@ -105,13 +110,13 @@ void fare_parser::load_od() {
         }
         std::string start_saec = boost::algorithm::trim_copy(row[0]);
         std::string dest_saec = boost::algorithm::trim_copy(row[3]);
-        //col 1 and 3 are the human readable name of the start/end, and are not used
+        //col 1 and 4 are the human readable name of the start/end, and are not used
 
         std::string start_mode = boost::algorithm::trim_copy(row[2]);
         std::string dest_mode = boost::algorithm::trim_copy(row[5]);
 
         std::vector<std::string> price_keys;
-        for (int i = 6; i < row.size(); ++i) {
+        for (size_t i = 6; i < row.size(); ++i) {
             std::string price_key = boost::algorithm::trim_copy(row[i]);
 
             if (price_key.empty())
@@ -135,7 +140,7 @@ void fare_parser::load_od() {
 
         count++;
     }
-    LOG4CPLUS_INFO(logger, "Nombre de tarifs OD Île-de-France : " << count);
+    LOG4CPLUS_INFO(logger, "Nb OD fares: " << count);
 }
 
 }

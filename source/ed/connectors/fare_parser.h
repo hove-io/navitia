@@ -4,6 +4,14 @@
 
 namespace ed { namespace connectors {
 
+/**
+ * Parser for fare files
+ *
+ * There are 3 fare files:
+ *  - price.csv: description of all the different prices
+ *  - fares.csv: description of the transition for the state machine
+ *  - od_fares.csv: description of the fare by od (not mandatory)
+ */
 struct fare_parser {
     Data& data;
 
@@ -18,15 +26,14 @@ struct fare_parser {
         od_filename(od) {}
 
     void load();
+
 private:
-    /// Charge les deux fichiers obligatoires
     void load_transitions();
+
     void load_prices();
 
-    /// Charge les tarifs
     void load_fares();
 
-    /// Charge le fichier d'OD
     void load_od();
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");

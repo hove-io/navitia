@@ -82,6 +82,8 @@ results Fare::compute_fare(const routing::Path& path) const {
     // Étiquette de départ
     labels[0].push_back(Label());
     size_t section_idx(0);
+
+    boost::optional<Ticket> not_found_ticket;
     for (auto item : path.items) {
         if (item.type != routing::ItemType::public_transport) {
             section_idx++;
@@ -89,34 +91,34 @@ results Fare::compute_fare(const routing::Path& path) const {
         }
 
         SectionKey section_key(item, section_idx++);
+        bool one_ticket_found = false;
 
-//        LOG4CPLUS_INFO(logger, "Nouvelle section à étudier : " /*<< item */);
         std::vector<std::vector<Label>> new_labels(nb_nodes);
-        SectionKey section(section_key);
         try {
             BOOST_FOREACH(edge_t e, boost::edges(g)) {
                 vertex_t u = boost::source(e,g);
                 vertex_t v = boost::target(e,g);
-                if (! valid(g[v], section))
+                if (! valid(g[v], section_key))
                     continue;
 
                 for (Label label: labels[u]) {
                     Ticket ticket;
                     Transition transition = g[e];
                     if (valid(g[u], label) && transition.valid(section_key, label)){
-                        //                            LOG4CPLUS_INFO(logger, "\tTransition valide : " << transition.dump());
+                        one_ticket_found = true;
                         if(transition.ticket_key != "") {
                             bool ticket_found = false; //TODO refactor this, optional is way better
                             auto it = fare_map.find(transition.ticket_key);
                             try {
                                 if (it != fare_map.end()) {
-                                    ticket = it->second.get_fare(section.date);
+                                    ticket = it->second.get_fare(section_key.date);
                                     ticket_found = true;
                                 }
                             }
                             catch(no_ticket) { //the ticket_found bool is still false
                             }
                             if (! ticket_found) {
+                                one_ticket_found |= false;
                                 ticket.type = Ticket::None;
                                 ticket.key = transition.ticket_key;
                                 ticket.value = -100; // no price
@@ -128,17 +130,17 @@ results Fare::compute_fare(const routing::Path& path) const {
                         else if(transition.global_condition == Transition::GlobalCondition::with_changes) {
                             ticket.type = Ticket::ODFare;
                         }
-                        Label next = next_label(label, ticket, section);
+                        Label next = next_label(label, ticket, section_key);
 
                         // On résoud le ticket OD : cas où on ne se servira plus de ce ticket
                         if (label.current_type == Ticket::ODFare || ticket.type == Ticket::ODFare) {
                             try {
                                 Ticket ticket_od;
-                                ticket_od = get_od(next, section).get_fare(section.date);
+                                ticket_od = get_od(next, section_key).get_fare(section_key.date);
                                 if(label.tickets.size() > 0 && label.current_type == Ticket::ODFare)
                                     ticket_od.sections = label.tickets.back().sections;
 
-                                ticket_od.sections.push_back(section);
+                                ticket_od.sections.push_back(section_key);
                                 Label n = next;
                                 n.cost += ticket_od.value;
                                 n.tickets.back() = ticket_od;
@@ -148,9 +150,10 @@ results Fare::compute_fare(const routing::Path& path) const {
                                 LOG4CPLUS_INFO(logger, "\t\tOn résoud un ticket OD : " << ticket_od.value);
                             } catch (no_ticket) {
                                 LOG4CPLUS_WARN(logger, "\t\tOn a pas réussi à résoudre le ticket OD; SA=" << next.stop_area << " zone=" << next.zone
-                                               << ", section start_zone=" << section.start_zone << ", dest_zone=" << section.start_zone
-                                               << " start_sa=" << section.start_stop_area << " dest_sa=" << section.dest_stop_area
-                                               << " mode=" << section.mode);
+                                               << ", section start_zone=" << section_key.start_zone << ", dest_zone=" << section_key.start_zone
+                                               << " start_sa=" << section_key.start_stop_area << " dest_sa=" << section_key.dest_stop_area
+                                               << " mode=" << section_key.mode);
+                                one_ticket_found |= false;
                             }
 
                         } else {
@@ -168,10 +171,19 @@ results Fare::compute_fare(const routing::Path& path) const {
             new_labels.clear();
             new_labels.resize(nb_nodes);
             BOOST_FOREACH(Label label, labels.at(0)){
-                new_labels.at(0).push_back(next_label(label, ticket, section));
+                new_labels.at(0).push_back(next_label(label, ticket, section_key));
             }
         }
         labels = new_labels;
+
+        if (! one_ticket_found) {
+            if (! not_found_ticket) {
+                not_found_ticket = Ticket();
+                (*not_found_ticket).key = "unkown_ticket";
+                (*not_found_ticket).comment = "unkown ticket";
+            }
+            (*not_found_ticket).sections.push_back(section_key);
+        }
     }
 
     // On recherche le label de moindre coût
@@ -186,6 +198,10 @@ results Fare::compute_fare(const routing::Path& path) const {
             best_cost = label.cost;
             best_num_tickets = label.tickets.size();
         }
+    }
+
+    if (not_found_ticket) {
+        res.tickets.push_back(*not_found_ticket);
     }
 
     LOG4CPLUS_INFO(logger, "nombre de résultats : " << res.tickets.size());
