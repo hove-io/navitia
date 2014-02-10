@@ -2,7 +2,9 @@
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 from navitiacommon.cache import cache
-
+from geoalchemy2.types import Geography
+from flask import current_app
+from sqlalchemy.orm import load_only
 
 db = SQLAlchemy()
 
@@ -15,6 +17,7 @@ class User(db.Model):
 
     authorizations = db.relationship('Authorization', backref='user',
                                      lazy='dynamic')
+    cache_prefix = "user"
 
     def __init__(self, login=None, email=None, keys=None, authorizations=None):
         self.login = login
@@ -42,17 +45,17 @@ class User(db.Model):
 
     @classmethod
     def get_from_token(cls, token, valid_until):
-        cache_res = cache.get(token)
+        cache_res = cache.get(cls.cache_prefix, token)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
             res = cls.query.join(Key).filter(Key.token == token,
                                               (Key.valid_until > valid_until)
                                               | (Key.valid_until == None))
             if res:
-                cache.set(token, (res.first(),), app.config['AUTH_CACHE_TTL'])
+                cache.set(cls.cache_prefix, token, (res.first(),))
                 return res.first()
             else:
-                cache.set(token, (None,), app.config['AUTH_CACHE_TTL'])
+                cache.set(cls.cache_prefix, token, (None,))
                 return None
         else:
             return cache_res[0]
@@ -69,10 +72,10 @@ class User(db.Model):
 
     def has_access(self, instance_name, api_name):
         key = '%d_%s_%s' % (self.id, instance_name, api_name)
-        res = cache.get(key)
+        res = cache.get(self.cache_prefix, key)
         if res is None:
             res = self._has_access(instance_name, api_name)
-            cache.set(key, res, app.config['AUTH_CACHE_TTL'])
+            cache.set(self.cache_prefix, key, res)
         return res
 
 
@@ -159,7 +162,8 @@ class Job(db.Model):
     state = db.Column(db.Enum('pending', 'running', 'done', 'failed',
                               name='job_state'))
 
-    data_sets = db.relationship('DataSet', backref='job', lazy='dynamic')
+    data_sets = db.relationship('DataSet', backref='job', lazy='dynamic',
+                                cascade='delete')
 
     def __repr__(self):
         return '<Job %r>' % self.id
@@ -175,3 +179,368 @@ class DataSet(db.Model):
     def __repr__(self):
         return '<DataSet %r>' % self.id
 
+
+class mixin_get_from_uri():
+
+    @classmethod
+    def get_from_uri(cls, uri):
+        prefix = "uri"
+        cache_res = cache.get(prefix, uri)
+        if cache_res is None: # we store a tuple to be able to distinguish
+        #  if we have already look for this element
+            res = cls.query.filter(cls.uri == uri)
+            if res:
+                cache.set(prefix, uri, (res.first(),))
+                return res.first()
+            else:
+                cache.set(prefix, uri, (None,))
+                return None
+        else:
+            return cache_res[0]
+
+
+class StopAreaInstance(db.Model):
+    __tablename__ = "rel_stop_area_instance"
+    object_id = db.Column(db.Integer, db.ForeignKey("stop_area.id", ondelete="CASCADE"),
+                         primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey("instance.id", ondelete="CASCADE"),
+                            primary_key=True)
+
+    def __init__(self, stop_area_id, instance_id):
+        self.object_id = stop_area_id
+        self.instance_id = instance_id
+
+    def __repr__(self):
+        return '<StopAreaInstance %r, %r>' % (self.object_id, self.instance_id)
+
+
+
+class StopArea(db.Model, mixin_get_from_uri):
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.Text, nullable=False, unique=True)
+    coord = db.Column(Geography(geometry_type="POINT", srid=4326,
+                                spatial_index=False))
+    instances = db.relationship("Instance",
+                            secondary="rel_stop_area_instance",
+                            backref="stop_area",
+                            cascade="all",
+                            passive_deletes=True)
+    name = db.Column(db.Text, nullable=False)
+    original_uri = db.Column(db.Text, index=True)
+    cls_rel_instance = StopAreaInstance
+
+
+    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+                 name=None):
+        self.id = id
+        self.uri = uri
+        self.coord = coord
+        self.original_uri = original_uri
+        self.name = name
+
+
+    def __repr__(self):
+        return '<StopArea %r>' % self.id
+
+
+class StopPointInstance(db.Model):
+    __tablename__ = "rel_stop_point_instance"
+    object_id = db.Column(db.Integer, db.ForeignKey("stop_point.id", ondelete="CASCADE"),
+                         primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey("instance.id", ondelete="CASCADE"),
+                            primary_key=True)
+
+    def __init__(self, stop_point_id, instance_id):
+        self.object_id = stop_point_id
+        self.instance_id = instance_id
+
+    def __repr__(self):
+        return '<StopPointInstance %r, %r>' % (self.object_id, self.instance_id)
+
+
+class StopPoint(db.Model, mixin_get_from_uri):
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.Text, nullable=False, unique=True)
+    coord = db.Column(Geography(geometry_type="POINT", srid=4326,
+                                spatial_index=False))
+    instances = db.relationship("Instance",
+                            secondary="rel_stop_point_instance",
+                            backref="stop_point",
+                            cascade="all",
+                            passive_deletes=True)
+    name = db.Column(db.Text, nullable=False)
+    original_uri = db.Column(db.Text, index=True)
+    cls_rel_instance = StopPointInstance
+
+
+    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+                 name=None):
+        self.id = id
+        self.uri = uri
+        self.coord = coord
+        self.original_uri = original_uri
+        self.name = name
+
+
+    def __repr__(self):
+        return '<StopPoint %r>' % self.id
+
+
+class PoiInstance(db.Model):
+    __tablename__ = "rel_poi_instance"
+    object_id = db.Column(db.Integer, db.ForeignKey("poi.id", ondelete="CASCADE"),
+                         primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey("instance.id", ondelete="CASCADE"),
+                            primary_key=True)
+
+    def __init__(self, poi_id, instance_id):
+        self.object_id = poi_id
+        self.instance_id = instance_id
+
+    def __repr__(self):
+        return '<PoiInstance %r, %r>' % (self.object_id, self.instance_id)
+
+
+class Poi(db.Model, mixin_get_from_uri):
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.Text, nullable=False, unique=True)
+    coord = db.Column(Geography(geometry_type="POINT", srid=4326,
+                                spatial_index=False))
+    instances = db.relationship("Instance",
+                            secondary="rel_poi_instance",
+                            backref="poi",
+                            cascade="all",
+                            passive_deletes=True)
+    name = db.Column(db.Text, nullable=False)
+    original_uri = db.Column(db.Text, index=True)
+    cls_rel_instance = PoiInstance
+
+
+    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+                 name=None):
+        self.id = id
+        self.uri = uri
+        self.coord = coord
+        self.original_uri = original_uri
+        self.name = name
+
+
+    def __repr__(self):
+        return '<Poi %r>' % self.id
+
+
+
+class AdminInstance(db.Model):
+    __tablename__ = "rel_admin_instance"
+    object_id = db.Column(db.Integer, db.ForeignKey("admin.id", ondelete="CASCADE"),
+                         primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey("instance.id", ondelete="CASCADE"),
+                            primary_key=True)
+
+    def __init__(self, admin_id, instance_id):
+        self.object_id = admin_id
+        self.instance_id = instance_id
+
+    def __repr__(self):
+        return '<AdminInstance %r, %r>' % (self.object_id, self.instance_id)
+
+
+class Admin(db.Model, mixin_get_from_uri):
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.Text, nullable=False, unique=True)
+    instances = db.relationship("Instance",
+                            secondary="rel_admin_instance",
+                            backref="admin",
+                            cascade="all",
+                            passive_deletes=True)
+    name = db.Column(db.Text, nullable=False)
+    original_uri = db.Column(db.Text, index=True)
+    cls_rel_instance = AdminInstance
+
+    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+                 name=None):
+        self.id = id
+        self.uri = uri
+        self.coord = coord
+        self.original_uri = original_uri
+        self.name = name
+
+
+    def __repr__(self):
+        return '<Admin %r>' % self.id
+
+
+class LineInstance(db.Model):
+    __tablename__ = "rel_line_instance"
+    object_id = db.Column(db.Integer, db.ForeignKey("line.id", ondelete="CASCADE"),
+                         primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey("instance.id", ondelete="CASCADE"),
+                            primary_key=True)
+
+    def __init__(self, line_id, instance_id):
+        self.object_id = line_id
+        self.instance_id = instance_id
+
+    def __repr__(self):
+        return '<LineInstance %r, %r>' % (self.object_id, self.instance_id)
+
+
+class Line(db.Model, mixin_get_from_uri):
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.Text, nullable=False, unique=True)
+    instances = db.relationship("Instance",
+                            secondary="rel_line_instance",
+                            backref="line",
+                            cascade="all",
+                            passive_deletes=True)
+    name = db.Column(db.Text, nullable=False)
+    original_uri = db.Column(db.Text, index=True)
+    cls_rel_instance = LineInstance
+
+
+    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+                 name=None):
+        self.id = id
+        self.uri = uri
+        self.coord = coord
+        self.original_uri = original_uri
+        self.name = name
+
+
+    def __repr__(self):
+        return '<Line %r>' % self.id
+
+
+class RouteInstance(db.Model):
+    __tablename__ = "rel_route_instance"
+    object_id = db.Column(db.Integer, db.ForeignKey("route.id", ondelete="CASCADE"),
+                         primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey("instance.id", ondelete="CASCADE"),
+                            primary_key=True)
+
+    def __init__(self, route_id, instance_id):
+        self.object_id = route_id
+        self.instance_id = instance_id
+
+    def __repr__(self):
+        return '<RouteInstance %r, %r>' % (self.object_id, self.instance_id)
+
+
+class Route(db.Model, mixin_get_from_uri):
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.Text, nullable=False, unique=True)
+    instances = db.relationship("Instance",
+                            secondary="rel_route_instance",
+                            backref="route",
+                            cascade="all",
+                            passive_deletes=True)
+    name = db.Column(db.Text, nullable=False)
+    original_uri = db.Column(db.Text, index=True)
+    cls_rel_instance = RouteInstance
+
+
+    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+                 name=None):
+        self.id = id
+        self.uri = uri
+        self.coord = coord
+        self.original_uri = original_uri
+        self.name = name
+
+    def __repr__(self):
+        return '<Route %r>' % self.id
+
+
+class NetworkInstance(db.Model):
+    __tablename__ = "rel_network_instance"
+    object_id = db.Column(db.Integer, db.ForeignKey("network.id", ondelete="CASCADE"),
+                         primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey("instance.id", ondelete="CASCADE"),
+                            primary_key=True)
+
+    def __init__(self, network_id, instance_id):
+        self.object_id = network_id
+        self.instance_id = instance_id
+
+    def __repr__(self):
+        return '<NetworkInstance %r, %r>' % (self.object_id, self.instance_id)
+
+
+class Network(db.Model, mixin_get_from_uri):
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.Text, nullable=False, unique=True)
+    instances = db.relationship("Instance",
+                            secondary="rel_network_instance",
+                            backref="network",
+                            cascade="all",
+                            passive_deletes=True)
+    name = db.Column(db.Text, nullable=False)
+    original_uri = db.Column(db.Text, index=True)
+    cls_rel_instance = NetworkInstance
+
+
+    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+                 name=None):
+        self.id = id
+        self.uri = uri
+        self.coord = coord
+        self.original_uri = original_uri
+        self.name = name
+
+
+    def __repr__(self):
+        return '<Network %r>' % self.id
+
+
+def get_class_type(typename):
+    if typename == 'stop_area':
+        return StopArea
+    elif typename == 'stop_point':
+        return StopPoint
+    elif typename == 'poi':
+        return Poi
+    elif typename == 'admin':
+        return Admin
+    elif typename == 'line':
+        return Line
+    elif typename == 'route':
+        return Route
+    elif typename == 'network':
+        return Network
+    else:
+        raise ValueError("Unable to find type : %s" % self.type)
+
+class PtObject(db.Model, mixin_get_from_uri):
+    id = db.Column(db.Integer, primary_key=True)
+    uri = db.Column(db.Text, nullable=False, unique=True)
+    name = db.Column(db.Text, nullable=False)
+    original_uri = db.Column(db.Text, index=True)
+    type = db.Column(db.Text, nullable=False)
+    __tablename__ = "ptobject"
+
+    def instances(self):
+        cls_object = get_class_type(self.type)
+        rel_instance = cls_object.cls_rel_instance
+        query_rel = rel_instance.query.options(load_only("instance_id")).\
+            filter(rel_instance.object_id == self.id).subquery()
+        query_instance = Instance.query.filter(Instance.id.in_(query_rel))
+        print query_instance
+        if query_instance:
+            return query_instance.all()
+        else:
+            return None
+    @classmethod
+    def get_from_original_uri(cls, original_uri):
+        prefix = "original_uri"
+        cache_res = cache.get(prefix, original_uri)
+        if cache_res is None: # we store a tuple to be able to distinguish
+        #  if we have already look for this element
+            res = cls.query.filter(cls.original_uri == original_uri)
+            if res:
+                cache.set(prefix, original_uri, (res.first(),))
+                return res.first()
+            else:
+                cache.set(prefix, original_uri, (None,))
+                return None
+        else:
+            return cache_res[0]
