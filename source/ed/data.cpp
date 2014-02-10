@@ -527,4 +527,17 @@ void Data::finalize_frequency() {
         }
     }
 }
+
+Georef::~Georef(){
+    for(auto itm : this->nodes)
+         delete itm.second;
+    for(auto itm : this->edges)
+         delete itm.second;
+    for(auto itm : this->ways)
+         delete itm.second;
+    for(auto itm : this->house_numbers)
+         delete itm.second;
+    for(auto itm : this->admins)
+         delete itm.second;
+}
 }//namespace

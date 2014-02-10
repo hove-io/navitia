@@ -3,6 +3,7 @@
 #include "utils/lotus.h"
 #include "data.h"
 #include "type/meta_data.h"
+#include "utils/functions.h"
 
 
 namespace ed{
@@ -10,12 +11,14 @@ namespace ed{
 struct EdPersistor{
 
     Lotus lotus;
+    Lotus lotus_second;
 
-    EdPersistor(const std::string& connection_string) : lotus(connection_string){}
+    EdPersistor(const std::string& connection_string) : lotus(connection_string), lotus_second(connection_string){}
 
     void persist(const ed::Data& data, const navitia::type::MetaData& meta);
     void persist_fare(const ed::Data& data);
-
+    /// Données Georef
+    void persist(const ed::Georef& data);
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
     void insert_sa_sp_properties(const ed::Data& data);
@@ -52,6 +55,19 @@ private:
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
     void build_relation();
+
+    /// Données Georef
+    void clean_georef();
+    void insert_admins(const ed::Georef& data);
+    void insert_ways(const ed::Georef& data);
+    void insert_nodes(const ed::Georef& data);
+    void insert_house_numbers(const ed::Georef& data);
+    void insert_edges(const ed::Georef& data);
+    void build_relation_way_admin(const ed::Georef& data);
+    void update_boundary();
+
+    navitia::type::GeographicalCoord coord2wgs84(const navitia::type::GeographicalCoord& coord, const uint32_t coord_in = 27572);
+
 
 };
 
