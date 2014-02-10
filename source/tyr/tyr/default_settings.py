@@ -61,4 +61,10 @@ CELERYBEAT_SCHEDULE = {
 CELERY_TIMEZONE = 'UTC'
 
 #http://docs.celeryproject.org/en/master/configuration.html#std:setting-CELERYBEAT_SCHEDULE_FILENAME
-CELERYBEAT_SCHEDULE_FILENAME='/tmp/celerybeat-schedule'
+CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
+
+#Validate the presence of a mx record on the domain
+EMAIL_CHECK_MX = True
+
+#Validate the email by connecting to the smtp server, but doesn't send an email
+EMAIL_CHECK_SMTP = True

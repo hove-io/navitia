@@ -1,9 +1,10 @@
 #coding: utf-8
 
-from flask import abort
+from flask import abort, current_app
 import flask_restful
 from flask_restful import fields, marshal_with, marshal, reqparse, types
 import sqlalchemy
+from validate_email import validate_email
 
 import logging
 
@@ -78,6 +79,12 @@ class User(flask_restful.Resource):
         parser.add_argument('email', type=unicode, required=True,
                 case_sensitive=False, help='email is required')
         args = parser.parse_args()
+
+        if not validate_email(args['email'],
+                          check_mx=current_app.config['EMAIL_CHECK_MX'],
+                          verify=current_app.config['EMAIL_CHECK_SMTP']):
+            return ({'error': 'email invalid'}, 400)
+
         try:
             user = models.User(login=args['login'], email=args['email'])
             db.session.add(user)
@@ -95,6 +102,12 @@ class User(flask_restful.Resource):
         parser.add_argument('email', type=unicode, required=True,
                 case_sensitive=False, help='email is required')
         args = parser.parse_args()
+
+        if not validate_email(args['email'],
+                          check_mx=current_app.config['EMAIL_CHECK_MX'],
+                          verify=current_app.config['EMAIL_CHECK_SMTP']):
+            return ({'error': 'email invalid'}, 400)
+
         try:
             user.email = args['email']
             db.session.commit()
