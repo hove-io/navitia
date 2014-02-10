@@ -283,12 +283,10 @@ def fare2ed(instance_config, filename, job_id):
         zip_file = zipfile.ZipFile(filename)
         zip_file.extractall(path=working_directory)
 
-        params = ["-f", working_directory]
-
-        connection_string = make_connection_string(instance_config)
-        params.append("--connection-string")
-        params.append(connection_string)
-        res = launch_exec("fare2ed", params, fare_logger, tyr_logger)
+        res = launch_exec("fare2ed", ['-f', working_directory,
+                                      '--connection-string',
+                                      make_connection_string(instance_config)],
+                          fare_logger, tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
