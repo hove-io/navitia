@@ -60,5 +60,6 @@ class Disruptions(ResourceUri):
         else:
             args["filter"] = ""
 
-        response = i_manager.dispatch(args, self.region, "disruptions")
+        response = i_manager.dispatch(args, "disruptions",
+                                      instance_name=self.region)
         return response

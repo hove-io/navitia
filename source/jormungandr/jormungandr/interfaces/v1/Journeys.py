@@ -477,7 +477,7 @@ class Journeys(ResourceUri):
         else:
             api = 'isochrone'
 
-        response = i_manager.dispatch(args, self.region, api)
+        response = i_manager.dispatch(args, api, instance_name=self.region)
         return response
 
     def transform_id(self, id):

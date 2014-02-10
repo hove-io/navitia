@@ -45,5 +45,5 @@ class Places(Resource):
         args = self.parsers["get"].parse_args()
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
-        response = i_manager.dispatch(args, region, "places")
+        response = i_manager.dispatch(args, "places", instance_name=region)
         return protobuf_to_dict(response, use_enum_labels=True), 200

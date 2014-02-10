@@ -60,7 +60,8 @@ class Schedules(ResourceUri):
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
-        return i_manager.dispatch(args, self.region, self.endpoint)
+        return i_manager.dispatch(args, self.endpoint,
+                                  instance_name=self.region)
 
 
 date_time = {

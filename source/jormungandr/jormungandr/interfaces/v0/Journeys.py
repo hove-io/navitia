@@ -85,7 +85,7 @@ class Journeys(Resource):
         args = self.parsers["get"].parse_args()
         if region is None:
             region = i_manager.key_of_id(args["origin"])
-        response = i_manager.dispatch(args, region, "journeys")
+        response = i_manager.dispatch(args, "journeys", instance_name=region)
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:
@@ -128,7 +128,7 @@ class Isochrone(Resource):
         args = self.parsers["get"].parse_args()
         if region is None:
             region = i_manager.key_of_id(args["origin"])
-        response = i_manager.dispatch(args, region, "isochrone")
+        response = i_manager.dispatch(args, "isochrone", instance_name=region)
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:
