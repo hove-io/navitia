@@ -9,6 +9,28 @@
 
 namespace ed{ namespace connectors{
 
+struct GeopalParserException{
+    std::string message;
+    GeopalParserException(const std::string& message): message(message){};
+};
+
+struct FileNotValid {
+    std::string filename;
+    FileNotValid(std::string filename) : filename(filename) {}
+};
+
+struct UnableToFindProductionDateException {};
+
+struct InvalidHeaders {
+    std::string filename;
+    InvalidHeaders(std::string filename) : filename(filename) {}
+};
+
+struct InvalidPath {
+    std::string message;
+    InvalidPath(std::string message) : message(message) {}
+};
+
 class GeopalParser{
 private:
     std::string path;///< Chemin vers les fichiers
@@ -21,6 +43,7 @@ private:
     void fill_nodes(ed::Georef& data);
     void fill_ways_edges(ed::Georef& data);
     void fill_House_numbers(ed::Georef& data);
+    bool starts_with(const std::string& filename, const std::string& prefex);
 
 public:
     GeopalParser(const std::string& path);
