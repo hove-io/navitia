@@ -253,7 +253,7 @@ void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
         std::vector<std::string> values;
         values.push_back(std::to_string(net->idx));
         values.push_back(navitia::base64_encode(net->uri));
-        values.push_back(net->uri);
+        values.push_back(net->external_code);
         values.push_back(net->name);
         values.push_back(net->comment);
         this->lotus.insert(values);
@@ -397,7 +397,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
         std::vector<std::string> values;
         values.push_back(std::to_string(sa->idx));
         values.push_back(navitia::base64_encode(sa->uri));
-        values.push_back(sa->uri);
+        values.push_back(sa->external_code);
         values.push_back(sa->name);
         values.push_back("POINT(" + std::to_string(sa->coord.lon()) + " " + std::to_string(sa->coord.lat()) + ")");
         values.push_back(sa->comment);
@@ -415,7 +415,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
         std::vector<std::string> values;
         values.push_back(std::to_string(sp->idx));
         values.push_back(navitia::base64_encode(sp->uri));
-        values.push_back(sp->uri);
+        values.push_back(sp->external_code);
         values.push_back(sp->name);
         values.push_back("POINT(" + std::to_string(sp->coord.lon()) + " " + std::to_string(sp->coord.lat()) + ")");
         values.push_back(sp->comment);
@@ -439,7 +439,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         std::vector<std::string> values;
         values.push_back(std::to_string(line->idx));
         values.push_back(navitia::base64_encode(line->uri));
-        values.push_back(line->uri);
+        values.push_back(line->external_code);
         values.push_back(line->name);
         values.push_back(line->comment);
         values.push_back(line->color);
@@ -507,7 +507,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
         std::vector<std::string> values;
         values.push_back(std::to_string(route->idx));
         values.push_back(navitia::base64_encode(route->uri));
-        values.push_back(route->uri);
+        values.push_back(route->external_code);
         values.push_back(route->name);
         values.push_back(route->comment);
         if(route->line != NULL){
@@ -670,7 +670,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         std::vector<std::string> values;
         values.push_back(std::to_string(vj->idx));
         values.push_back(navitia::base64_encode(vj->uri));
-        values.push_back(vj->uri);
+        values.push_back(vj->external_code);
         values.push_back(vj->name);
         values.push_back(vj->comment);
         if(vj->validity_pattern != NULL){
