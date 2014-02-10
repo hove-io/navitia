@@ -25,7 +25,7 @@ struct EdReader{
         }
     }
 
-    void fill(navitia::type::Data& nav_data);
+    void fill(navitia::type::Data& nav_data, const double percent_delete);
 
 private:
     //map d'id en base vers le poiteur de l'objet instancié
@@ -86,7 +86,7 @@ private:
     void fill_house_numbers(navitia::type::Data& data, pqxx::work& work);
     void fill_vertex(navitia::type::Data& data, pqxx::work& work);
     void fill_graph(navitia::type::Data& data, pqxx::work& work);
-    void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work);
+    void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work, const double percent_delete);
     void fill_graph_vls(navitia::type::Data& data, pqxx::work& work);
 
     //les alias et synonymes:
