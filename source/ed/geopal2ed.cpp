@@ -60,14 +60,14 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     ed::Georef data(coord_system);
     ed::connectors::GeopalParser geopal_parser(input);
-    geopal_parser.fill(data);
 
-//    ed::connectors::FusioParser fusio_parser(input);
-//    fusio_parser.fill(data, date);
-//    read = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    try{
+            geopal_parser.fill(data);
+        }catch(const ed::connectors::GeopalParserException& e){
+            LOG4CPLUS_FATAL(logger, "Erreur :"+ e.message);
+            return 0;
+        }
 
-
-//    start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);
     p.persist(data);
     std::cout<<std::endl<<"temps :"<<(pt::microsec_clock::local_time() - start).total_milliseconds()<<std::endl;
