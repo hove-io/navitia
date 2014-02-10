@@ -150,6 +150,39 @@ def osm2ed(instance_config, osm_filename, job_id):
     finally:
         lock.release()
 
+@celery.task()
+def geopal2ed(instance_config, filename, job_id):
+    """ launch geopal2ed """
+
+    job = models.Job.query.get(job_id)
+    instance = job.instance
+    lock = redis.lock('tyr.lock|' + instance.name)
+    if not lock.acquire(blocking=False):
+        geopal2ed.retry(countdown=300, max_retries=10)
+
+    try:
+        working_directory = os.path.dirname(filename)
+
+        zip_file = zipfile.ZipFile(filename)
+        zip_file.extractall(path=working_directory)
+
+        tyr_logger = logging.getLogger('tyr')
+        geopal_logger = logging.getLogger('geopal2ed')
+
+        connection_string = make_connection_string(instance_config)
+        res = launch_exec('geopal2ed',
+                ["-i", working_directory, "--connection-string", connection_string],
+                geopal_logger, tyr_logger)
+        if res != 0:
+            #@TODO: exception
+            raise ValueError('todo: exception')
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+    finally:
+        lock.release()
+
 
 @celery.task()
 def reload_data(instance_config, job_id):
