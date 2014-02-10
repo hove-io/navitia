@@ -7,7 +7,6 @@ using namespace boost::assign;
 namespace ed { namespace connectors {
 
 GeopalParser::GeopalParser(const std::string& path): path(path){
-    init_logger();
     logger = log4cplus::Logger::getInstance("log");
     try{
             boost::filesystem::path directory(this->path);
@@ -48,10 +47,10 @@ ed::types::Node* GeopalParser::add_node(ed::Georef& data, const navitia::type::G
 
 void GeopalParser::fill_nodes(ed::Georef& data){
     for(const std::string file_name : this->files){
-        std::string adresse(file_name.begin(), file_name.begin() + 7);
-        if (adresse != "adresse")
+        if(!boost::algorithm::starts_with(file_name, "adresse")){
             continue;
-        CsvReader reader(this->path + "/" + file_name, ';', true);
+        }
+        CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
             LOG4CPLUS_WARN(logger, "Immpossible d'ouvrir le fichier " + reader.filename);
             return;
@@ -85,10 +84,10 @@ void GeopalParser::fill_nodes(ed::Georef& data){
 
 void GeopalParser::fill_admins(ed::Georef& data){
     for(const std::string file_name : this->files){
-        std::string commune(file_name.begin(), file_name.begin() + 7);
-        if (commune != "commune")
+        if (! boost::algorithm::starts_with(file_name, "commune")){
             continue;
-        CsvReader reader(this->path + "/" + file_name, ';', true);
+        }
+        CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
             LOG4CPLUS_WARN(logger, "Immpossible d'ouvrir le fichier " + reader.filename);
             return;
@@ -122,94 +121,95 @@ void GeopalParser::fill_admins(ed::Georef& data){
 
 void GeopalParser::fill_ways_edges(ed::Georef& data){
     for(const std::string file_name : this->files){
-        std::string route_adresse(file_name.begin(), file_name.begin() + 7);
-        if (route_adresse != "route_a")
+        if (! boost::algorithm::starts_with(file_name, "route_a")){
             continue;
-        CsvReader reader(this->path + "/" + file_name, ';', true);
+        }
+        CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
             LOG4CPLUS_WARN(logger, "Immpossible d'ouvrir le fichier " + reader.filename);
             return;
         }
         std::vector<std::string> mandatory_headers = {"x_debut" , "y_debut", "x_fin", "y_fin", "longueur", "inseecom_g",
-                                                      "inseecom_d", "bornedeb_d", "bornedeb_g", "bornefin_d", "bornefin_g"};
+        "inseecom_d", "bornedeb_d", "bornedeb_g", "bornefin_d", "bornefin_g"};
         if(!reader.validate(mandatory_headers)) {
             LOG4CPLUS_ERROR(logger, "Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
             return;
         }
         int nom_voie_d = reader.get_pos_col("nom_voie_d");
-//        int nom_voie_g = reader.get_pos_col("nom_voie_g");
+        //        int nom_voie_g = reader.get_pos_col("nom_voie_g");
         int x1 = reader.get_pos_col("x_debut");
         int y1 = reader.get_pos_col("y_debut");
         int x2 = reader.get_pos_col("x_fin");
         int y2 = reader.get_pos_col("y_fin");
         int l = reader.get_pos_col("longueur");
-//        int inseecom_g = reader.get_pos_col("inseecom_g");
+        //        int inseecom_g = reader.get_pos_col("inseecom_g");
         int inseecom_d = reader.get_pos_col("inseecom_d");
         while(!reader.eof()){
             std::vector<std::string> row = reader.next();
             if (reader.is_valid(x1, row) && reader.is_valid(y1, row)
                 && reader.is_valid(x2, row) && reader.is_valid(y2, row)
                 && reader.is_valid(inseecom_d, row)){
-                    auto admin = data.admins.find(row[inseecom_d]);
-                    if(admin != data.admins.end()){
-                        std::string source  = row[x1] + row[y1];
-                        std::string target  = row[x2] + row[y2];
-                        std::string edge_uri = source + target;
-                        ed::types::Node* source_node;
-                        ed::types::Node* target_node;
-                        auto source_it = data.nodes.find(source);
-                        auto target_it = data.nodes.find(target);
-                        if(source_it == data.nodes.end()){
-                                source_node = this->add_node(data, navitia::type::GeographicalCoord(str_to_double(row[x1]), str_to_double(row[y1])), source);
-                        }else{
-                                source_node = source_it->second;
-                        }
+                auto admin = data.admins.find(row[inseecom_d]);
+                if(admin != data.admins.end()){
+                    std::string source  = row[x1] + row[y1];
+                    std::string target  = row[x2] + row[y2];
+                    std::string edge_uri = source + target;
+                    ed::types::Node* source_node;
+                    ed::types::Node* target_node;
+                    auto source_it = data.nodes.find(source);
+                    auto target_it = data.nodes.find(target);
 
-                        if(target_it == data.nodes.end()){
-                           target_node = this->add_node(data, navitia::type::GeographicalCoord(str_to_double(row[x2]), str_to_double(row[y2])), target);
-                        }else{
-                           target_node = target_it->second;
-                        }
-                        std::hash<std::string> hash_fn;
-                        ed::types::Way* current_way;
-                        std::string wayd_uri = std::to_string(hash_fn(row[nom_voie_d])) + row[inseecom_d];
-                        auto way = data.ways.find(wayd_uri);
-                        if(way == data.ways.end()){
-                            ed::types::Way* wy = new ed::types::Way;
-                            wy->admin = admin->second;
-                            admin->second->is_used = true;
-                            wy->id = data.ways.size() + 1;
-                            if(reader.is_valid(nom_voie_d, row))
-                                wy->name = row[nom_voie_d];
-                            wy->type ="";
-                            data.ways[wayd_uri] = wy;
-                            current_way = wy;
-                        }else{
-                            current_way = way->second;
-                        }
-                        auto edge = data.edges.find(edge_uri);
-                        if(edge == data.edges.end()){
-                            ed::types::Edge* edg = new ed::types::Edge;
-                            edg->source = source_node;
-                            edg->source->is_used = true;
-                            edg->target = target_node;
-                            edg->target->is_used = true;
-                            if(reader.is_valid(l, row))
-                                edg->length = str_to_int(row[l]);
-                            edg->way = current_way;
-                            data.edges[edge_uri]= edg;
-                        }
-                   }
+                    if(source_it == data.nodes.end()){
+                        source_node = this->add_node(data, navitia::type::GeographicalCoord(str_to_double(row[x1]), str_to_double(row[y1])), source);
+                    }else{
+                        source_node = source_it->second;
+                    }
+
+                    if(target_it == data.nodes.end()){
+                        target_node = this->add_node(data, navitia::type::GeographicalCoord(str_to_double(row[x2]), str_to_double(row[y2])), target);
+                    }else{
+                        target_node = target_it->second;
+                    }
+                    std::hash<std::string> hash_fn;
+                    ed::types::Way* current_way = nullptr;
+                    std::string wayd_uri = std::to_string(hash_fn(row[nom_voie_d])) + row[inseecom_d];
+                    auto way = data.ways.find(wayd_uri);
+                    if(way == data.ways.end()){
+                        ed::types::Way* wy = new ed::types::Way;
+                        wy->admin = admin->second;
+                        admin->second->is_used = true;
+                        wy->id = data.ways.size() + 1;
+                        if(reader.is_valid(nom_voie_d, row))
+                        wy->name = row[nom_voie_d];
+                        wy->type ="";
+                        data.ways[wayd_uri] = wy;
+                        current_way = wy;
+                    }else{
+                        current_way = way->second;
+                    }
+                    auto edge = data.edges.find(edge_uri);
+                    if(edge == data.edges.end()){
+                        ed::types::Edge* edg = new ed::types::Edge;
+                        edg->source = source_node;
+                        edg->source->is_used = true;
+                        edg->target = target_node;
+                        edg->target->is_used = true;
+                        if(reader.is_valid(l, row))
+                        edg->length = str_to_int(row[l]);
+                        edg->way = current_way;
+                        data.edges[edge_uri]= edg;
+                    }
                 }
             }
         }
     }
+}
 void GeopalParser::fill_House_numbers(ed::Georef& data){
     for(const std::string file_name : this->files){
-        std::string adresse(file_name.begin(), file_name.begin() + 7);
-        if (adresse != "adresse")
+        if (! boost::algorithm::starts_with(file_name, "adresse")){
             continue;
-        CsvReader reader(this->path + "/" + file_name, ';', true);
+        }
+        CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
             LOG4CPLUS_WARN(logger, "Immpossible d'ouvrir le fichier " + reader.filename);
             return;
