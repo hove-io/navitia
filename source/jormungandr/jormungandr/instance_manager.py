@@ -3,8 +3,7 @@ from shapely import geometry, geos, wkt
 import ConfigParser
 import zmq
 from threading import Thread, Event
-from navitiacommon import type_pb2
-from navitiacommon import request_pb2
+from navitiacommon import type_pb2, request_pb2, models
 import glob
 from jormungandr.singleton import singleton
 from importlib import import_module
@@ -64,15 +63,19 @@ class InstanceManager(object):
         if start_ping:
             self.thread.start()
 
-    def dispatch(self, arguments, region, api, request=None):
-        if region in self.instances:
-            if api in self.instances[region].script.apis:
-                api_func = getattr(self.instances[region].script, api)
-                return api_func(arguments, self.instances[region])
+    def dispatch(self, arguments, api, instance_obj=None, instance_name=None,
+                 request=None):
+        if instance_obj:
+            instance_name = instance_obj.name
+        if instance_name in self.instances:
+            instance = self.instances[instance_name]
+            if api in instance.script.apis:
+                api_func = getattr(instance.script, api)
+                return api_func(arguments, instance)
             else:
                 raise ApiNotFound(api)
         else:
-            raise RegionNotFound(region)
+            raise RegionNotFound(instance_name)
 
     def thread_ping(self, timer=1):
         req = request_pb2.Request()
@@ -112,14 +115,11 @@ class InstanceManager(object):
                 raise RegionNotFound(object_id=object_id)
             return self.key_of_coord(flon, flat)
         else:
-            try:
-                contributor = object_id.split(":")[1]
-            except ValueError:
-                raise RegionNotFound(object_id=object_id)
-            if contributor in self.contributors:
-                return self.contributors[contributor]
-            elif contributor in self.instances.keys():
-                return contributor
+            ptobject = models.PtObject.get_from_uri(object_id)
+            if ptobject:
+                instances = ptobject.instances()
+                if len(instances) > 0:
+                    return instances[0].name
         raise RegionNotFound(object_id=object_id)
 
     def key_of_coord(self, lon, lat):
