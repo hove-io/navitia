@@ -1,13 +1,14 @@
 #pragma once
 
 #include "config.h"
+#include "routing/routing.h"
+#include "utils/logger.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
-#include "routing/routing.h"
 
 namespace navitia { namespace fare {
 

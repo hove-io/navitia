@@ -1,5 +1,6 @@
 #include "disruption.h"
 #include "ptreferential/ptreferential.h"
+#include "type/data.h"
 
 namespace navitia { namespace disruption {
 

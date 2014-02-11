@@ -1,7 +1,8 @@
 #pragma once
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/type.h"
 #include "type/pt_data.h"
+#include "utils/logger.h"
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 namespace navitia { namespace disruption {
 

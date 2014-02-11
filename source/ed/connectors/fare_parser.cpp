@@ -5,13 +5,6 @@
 
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/qi_lit.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include <boost/fusion/include/adapt_struct.hpp>
 
 /// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
 namespace fa = navitia::fare;
