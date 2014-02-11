@@ -81,6 +81,9 @@ int main(int argc, char * argv[])
     std::cout << "journey_pattern point connections : " << data.pt_data.journey_pattern_point_connections.size() << std::endl;
     std::cout << "alias : " << data.geo_ref.alias.size() << std::endl;
     std::cout << "synonyms : " << data.geo_ref.synonymes.size() << std::endl;
+    std::cout << "fare tickets: " << data.fare.fare_map.size() << std::endl;
+    std::cout << "fare transitions: " << data.fare.nb_transitions() << std::endl;
+    std::cout << "fare od: " << data.fare.od_tickets.size() << std::endl;
 
     start = pt::microsec_clock::local_time();
     data.pt_data.sort();
