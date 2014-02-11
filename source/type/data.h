@@ -1,15 +1,15 @@
 #pragma once
 #include "pt_data.h"
-#include <boost/serialization/version.hpp>
-#include <boost/thread/shared_mutex.hpp>
+#include "routing/dataraptor.h"
 #include "georef/georef.h"
 #include "fare/fare.h"
+#include "meta_data.h"
 #include "utils/logger.h"
 #include "utils/configuration.h"
-#include "boost/utility.hpp"
-#include "meta_data.h"
+#include <boost/utility.hpp>
+#include <boost/serialization/version.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/format.hpp>
-#include "routing/dataraptor.h"
 #include <atomic>
 
 namespace navitia { namespace type {

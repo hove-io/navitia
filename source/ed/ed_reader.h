@@ -1,12 +1,12 @@
 #pragma once
 
 #include "data.h"
-#include <pqxx/pqxx>
 #include "utils/exception.h"
-#include <unordered_map>
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
+#include <pqxx/pqxx>
+#include <unordered_map>
 #include <algorithm>
 
 namespace ed{

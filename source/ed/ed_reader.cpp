@@ -992,7 +992,8 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
 
     std::string request = "select ticket_key, ticket_title, "
-            "ticket_id, valid_from, valid_to, ticket_price, comments, currency from navitia.ticket, navitia.dated_ticket "
+            "ticket_id, valid_from, valid_to, ticket_price, comments, "
+            "currency from navitia.ticket, navitia.dated_ticket "
             "where ticket_id = ticket_key";
 
     pqxx::result result = work.exec(request);
@@ -1018,7 +1019,8 @@ void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
     nf::Fare::vertex_t begin_v = boost::add_vertex(begin, data.fare.g);
     state_map[begin] = begin_v;
 
-    std::string request = "select id, before_change, after_change, start_trip, end_trip, global_condition, ticket_id from navitia.transition ";
+    std::string request = "select id, before_change, after_change, start_trip, "
+        "end_trip, global_condition, ticket_id from navitia.transition ";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nf::Transition transition;
