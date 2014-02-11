@@ -78,10 +78,9 @@ void Visitor::relation_callback(uint64_t osmid, const CanalTP::Tags & tags, cons
 void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
     if(tags.find("addr:housenumber") != tags.end()){
         OSMHouseNumber osm_hn;
-        osm_hn.number = str_to_int(tags.at("addr:housenumber"));
-        if (osm_hn.number > 0 ){
-            this->housenumbers[osmid] = osm_hn;
-        }
+        osm_hn.number = tags.at("addr:housenumber");
+        this->housenumbers[osmid] = osm_hn;
+
     }
 }
 
@@ -175,7 +174,7 @@ void Visitor::insert_house_numbers(){
         if(tmp_node != nodes.end()) {
             Node n = tmp_node->second;
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->lotus.insert({point, std::to_string(hn.second.number), std::to_string(hn.second.number % 2 == 0)});
+            this->lotus.insert({point, hn.second.number, std::to_string((str_to_int(hn.second.number) % 2) == 0)});
         } else {
             std::cout << "Unable to find node " << hn.first << std::endl;
         }

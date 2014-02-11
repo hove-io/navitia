@@ -8,6 +8,7 @@
 #include <pqxx/pqxx>
 #include <unordered_map>
 #include <algorithm>
+#include "utils/functions.h"
 
 namespace ed{
 

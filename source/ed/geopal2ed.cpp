@@ -64,8 +64,8 @@ int main(int argc, char * argv[])
     try{
             geopal_parser.fill(data);
         }catch(const ed::connectors::GeopalParserException& e){
-            LOG4CPLUS_FATAL(logger, "Erreur :"+ e.message);
-            return 0;
+            LOG4CPLUS_FATAL(logger, "Erreur :"+ std::string(e.what()) + "  backtrace :" + e.backtrace());
+            return -1;
         }
 
     ed::EdPersistor p(connection_string);

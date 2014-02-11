@@ -22,10 +22,8 @@ GeopalParser::GeopalParser(const std::string& path): path(path){
         }
 }
 
-bool GeopalParser::starts_with(const std::string& filename, const std::string& prefex){
-    std::string name(filename);
-    boost::to_lower(name);
-    return boost::algorithm::starts_with(name, prefex);
+bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
+    return boost::algorithm::starts_with(filename, prefex);
 }
 
 void GeopalParser::fill(ed::Georef& data){
@@ -230,21 +228,18 @@ void GeopalParser::fill_House_numbers(ed::Georef& data){
             if (reader.is_valid(x_c, row) && reader.is_valid(y_c, row)
                 && reader.is_valid(insee_c, row) && reader.is_valid(numero_c, row)
                 && reader.is_valid(nom_voie_c, row)){
-                int number = str_to_int(row[numero_c]);
-                if(number != -1){
-                    std::hash<std::string> hash_fn;
-                    std::string way_uri = std::to_string(hash_fn(row[nom_voie_c])) + row[insee_c];
-                    auto way_it = data.ways.find(way_uri);
-                    if(way_it != data.ways.end()){
-                        std::string hn_uri = row[x_c] + row[y_c] + row[numero_c];
-                        auto hn = data.house_numbers.find(hn_uri);
-                        if (hn == data.house_numbers.end()){
-                            ed::types::HouseNumber* current_hn = new ed::types::HouseNumber;
-                            current_hn->coord = navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c]));
-                            current_hn->number = number;
-                            current_hn->way = way_it->second;
-                            data.house_numbers[hn_uri] = current_hn;
-                        }
+                std::hash<std::string> hash_fn;
+                std::string way_uri = std::to_string(hash_fn(row[nom_voie_c])) + row[insee_c];
+                auto way_it = data.ways.find(way_uri);
+                if(way_it != data.ways.end()){
+                    std::string hn_uri = row[x_c] + row[y_c] + row[numero_c];
+                    auto hn = data.house_numbers.find(hn_uri);
+                    if (hn == data.house_numbers.end()){
+                        ed::types::HouseNumber* current_hn = new ed::types::HouseNumber;
+                        current_hn->coord = navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c]));
+                        current_hn->number = row[numero_c];
+                        current_hn->way = way_it->second;
+                        data.house_numbers[hn_uri] = current_hn;
                     }
                 }
             }

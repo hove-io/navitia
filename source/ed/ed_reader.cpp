@@ -730,14 +730,19 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
     std::string request = "SELECT way_id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, number, left_side FROM georef.house_number where way_id IS NOT NULL;";
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
-        navitia::georef::HouseNumber hn;
-        const_it["number"].to(hn.number);
-        hn.coord.set_lon(const_it["lon"].as<double>());
-        hn.coord.set_lat(const_it["lat"].as<double>());
-        navitia::georef::Way* way = this->way_map[const_it["way_id"].as<idx_t>()];
-        if (way != NULL){
-            way->add_house_number(hn);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        std::string string_number;
+        const_it["number"].to(string_number);
+        int int_number = str_to_int(string_number);
+        if( int_number != -1){
+            navitia::georef::HouseNumber hn;
+            hn.number = int_number;
+            hn.coord.set_lon(const_it["lon"].as<double>());
+            hn.coord.set_lat(const_it["lat"].as<double>());
+            navitia::georef::Way* way = this->way_map[const_it["way_id"].as<idx_t>()];
+            if (way != NULL){
+                way->add_house_number(hn);
+            }
         }
     }
 }

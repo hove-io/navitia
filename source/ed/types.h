@@ -329,11 +329,11 @@ struct Edge{
 };
 
 struct HouseNumber{
-    int number;
+    std::string number;
     Way* way;
     navitia::type::GeographicalCoord coord;
 
-    HouseNumber(): number(-1), way(nullptr){}
+    HouseNumber(): number(""), way(nullptr){}
 
 };
 
