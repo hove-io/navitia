@@ -1,9 +1,9 @@
 #include "ptreferential.h"
-#include "type/data.h"
 #include "reflexion.h"
 #include "where.h"
 #include "proximity_list/proximity_list.h"
 #include "georef/pois.h"
+#include "type/data.h"
 
 #include <algorithm>
 #include <regex>

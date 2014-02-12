@@ -571,6 +571,37 @@ void fill_pb_placemark(navitia::georef::Way* way,
     place->set_embedded_type(pbnavitia::ADDRESS);
 }
 
+void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* pb_journey, const fare::results& fare) {
+    auto pb_fare = pb_journey->mutable_fare();
+
+    double total(0.);
+    size_t cpt_ticket = enhanced_response.response.tickets_size();
+
+    boost::optional<std::string> currency;
+    for (const auto& ticket : fare.tickets) {
+        if (! currency)
+            currency = ticket.currency;
+        if (ticket.currency != *currency)
+            throw navitia::exception("cannot have different currencies for tickets"); //if we really had to handle different currencies it could be done, but I don't see the point
+
+        total += ticket.value;
+        auto pb_ticket = enhanced_response.response.add_tickets();
+        pb_ticket->set_name(ticket.key);
+        pb_ticket->set_id("ticket_" + boost::lexical_cast<std::string>(++cpt_ticket));
+        pb_ticket->mutable_cost()->set_currency(*currency);
+        pb_ticket->mutable_cost()->set_value(ticket.value);
+        for (auto section: ticket.sections) {
+            auto section_id = enhanced_response.get_section_id(pb_journey, section.path_item_idx);
+            pb_ticket->add_section_id(section_id);
+        }
+
+        pb_fare->add_ticket_id(pb_ticket->id());
+    }
+    pb_fare->mutable_total()->set_value(total);
+    if (currency)
+        pb_fare->mutable_total()->set_currency(*currency);
+    pb_fare->set_found(! fare.not_found);
+}
 
 void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,
                       const navitia::type::Data& data, const boost::posix_time::ptime departure,
@@ -619,11 +650,12 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     }
 }
 
-pbnavitia::Section* create_section(pbnavitia::Journey* pb_journey, const navitia::georef::PathItem& first_item,
+pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey, const navitia::georef::PathItem& first_item,
                                            const navitia::type::Data& data,
                                            int depth, const pt::ptime& now, const pt::time_period& action_period) {
 
     auto section = pb_journey->add_sections();
+    section->set_id(response.register_section(first_item));
     section->set_type(pbnavitia::STREET_NETWORK);
 
     pbnavitia::Place* orig_place = section->mutable_origin();
@@ -635,7 +667,7 @@ pbnavitia::Section* create_section(pbnavitia::Journey* pb_journey, const navitia
     return section;
 }
 
-void fill_street_sections(const type::EntryPoint& ori_dest,
+void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,
                             const georef::Path& path, const type::Data& data,
                             pbnavitia::Journey* pb_journey, const boost::posix_time::ptime departure,
                             int max_depth, const pt::ptime& now,
@@ -647,7 +679,7 @@ void fill_street_sections(const type::EntryPoint& ori_dest,
     auto session_departure = departure;
 
     boost::optional<georef::PathItem::TransportCaracteristic> last_transportation_carac = {};
-    auto section = create_section(pb_journey, path.path_items.front(), data, depth, now, action_period);
+    auto section = create_section(response, pb_journey, path.path_items.front(), data, depth, now, action_period);
     georef::PathItem last_item;
 
     //we create 1 section by mean of transport
@@ -660,7 +692,7 @@ void fill_street_sections(const type::EntryPoint& ori_dest,
             session_departure += bt::seconds(section->duration());
 
             //and be create a new one
-            section = create_section(pb_journey, item, data, depth, now, action_period);
+            section = create_section(response, pb_journey, item, data, depth, now, action_period);
         }
 
         add_path_item(section->mutable_street_network(), item, ori_dest, data);

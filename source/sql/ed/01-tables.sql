@@ -482,4 +482,64 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+CREATE TABLE IF NOT EXISTS navitia.ticket(
+	ticket_key TEXT PRIMARY KEY,
+	ticket_title TEXT,
+	ticket_comment TEXT
+);
+
+CREATE TABLE IF NOT EXISTS navitia.dated_ticket(
+	id BIGINT PRIMARY KEY,
+	ticket_id TEXT REFERENCES navitia.ticket,
+	valid_from DATE NOT NULL,
+	valid_to DATE NOT NULL,
+	ticket_price INT NOT NULL,
+	comments TEXT,
+	currency TEXT
+);
+
+-- add enum
+DO $$
+BEGIN
+    CASE WHEN (SELECT count(*) = 0 FROM pg_type where pg_type.typname='fare_od_mode')
+    THEN
+        CREATE TYPE fare_od_mode AS ENUM ('Zone', 'StopArea', 'Mode');
+    ELSE
+        RAISE NOTICE 'fare_od_mode already exists, skipping';
+    END CASE;
+
+    CASE WHEN (SELECT count(*) = 0 FROM pg_type where pg_type.typname='fare_transition_condition')
+    THEN
+        CREATE TYPE fare_transition_condition AS ENUM ('nothing', 'exclusive', 'with_changes');
+    ELSE
+        RAISE NOTICE 'fare_transition_condition already exists, skipping';
+    END CASE;
+
+END$$;
+
+
+CREATE TABLE IF NOT EXISTS navitia.transition(
+	id BIGINT PRIMARY KEY,
+	before_change TEXT NOT NULL,
+	after_change TEXT NOT NULL,
+	start_trip TEXT NOT NULL,
+	end_trip TEXT NOT NULL,
+	global_condition fare_transition_condition NOT NULL,
+    ticket_id TEXT,
+    FOREIGN KEY (ticket_id) REFERENCES navitia.ticket(ticket_key)
+);
+
+CREATE TABLE IF NOT EXISTS navitia.origin_destination(
+	id BIGINT PRIMARY KEY,
+	origin_id TEXT NOT NULL,
+	origin_mode fare_od_mode NOT NULL,
+	destination_id TEXT NOT NULL,
+	destination_mode fare_od_mode NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS navitia.od_ticket(
+    id BIGINT PRIMARY KEY,
+    od_id BIGINT NOT NULL REFERENCES navitia.origin_destination,
+    ticket_id TEXT NOT NULL REFERENCES navitia.ticket
+);
 

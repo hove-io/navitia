@@ -14,6 +14,7 @@ struct EdPersistor{
     EdPersistor(const std::string& connection_string) : lotus(connection_string){}
 
     void persist(const ed::Data& data, const navitia::type::MetaData& meta);
+    void persist_fare(const ed::Data& data);
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
@@ -42,6 +43,12 @@ private:
     void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
     void insert_alias(const std::map<std::string, std::string>& alias);
     void insert_synonyms(const std::map<std::string, std::string>& synonyms);
+
+    /// Inserer les données fare
+    void insert_transitions(const ed::Data& data);
+    void insert_prices(const ed::Data& data);
+    void insert_origin_destination(const ed::Data& data);
+
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
     void build_relation();

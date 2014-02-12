@@ -1,0 +1,101 @@
+"avant changement";" après changement";" début trajet";" fin trajet";" condition globale";"clef ticket"
+"*";" mode=metro";" ";" ";" ";"tickett"
+"*";" mode=bus";" ";" ";" ";"tickett"
+"*";" mode=Tramway";" ";" ";" ";"tickett"
+"mode=metro";" mode=metro";" ";" ";;
+"mode=metro";" mode=metro";"";"";"with_changes";
+"mode=localtrain";" mode=metro";"";" ";"with_changes";
+"mode=rapidtransit";" mode=metro";"";" ";"with_changes";
+"mode=rapidtransit";" mode=rapidtransit";" zone=1 ";"zone=1 ";;
+"mode=bus";" mode=bus";" duration<90";" ";;
+"mode=Tramway";" mode=bus";" duration<90";" ";;
+"mode=bus";" mode=Tramway";" duration<90";" ";;
+"mode=Tramway";" mode=Tramway";" duration<90";" ";;
+"mode=metro";" mode=rapidtransit";" zone = 1 ";" zone =1 ";;
+"mode=rapidtransit";" mode=metro";" zone = 1 ";" zone =1 ";;
+"mode=metro";" mode=rapidtransit";"";"";"with_changes";
+"mode=metro";" mode=localtrain";"";"";"with_changes";
+"*";" mode=rapidtransit";" zone=1 ";" zone=1 ";;"tickett"
+"*";"network=56";"zone=1";"zone=1 ";"exclusive";"tickett"
+"*";"network=56";"zone=1";"zone=2 ";"exclusive";"tickett"
+"*";"network=56";"zone=1";"zone=3 ";"exclusive";"2tickett"
+"*";"network=56";"zone=1";"zone=4 ";"exclusive";"3tickett"
+"*";"network=56";"zone=1";"zone=5 ";"exclusive";"4tickett"
+"*";"network=56";"zone=1";"zone=1 ";"exclusive";"tickett"
+"*";"network=56";"zone=2";"zone=1 ";"exclusive";"tickett"
+"*";"network=56";"zone=3";"zone=1 ";"exclusive";"2tickett"
+"*";"network=56";"zone=4";"zone=1 ";"exclusive";"3tickett"
+"*";"network=56";"zone=5";"zone=1 ";"exclusive";"4tickett"
+"*";"network=56";;;"exclusive";"xtickett"
+"*";"mode=rapidtransit"; ; ; "with_changes";
+"*";"mode=localtrain"; ; ; "with_changes";
+"*";"line=800:T4"; ; ; "with_changes";
+"*";"mode=metro"; ; ; "with_changes";
+"mode=localtrain";"mode=rapidtransit"; ; ; "with_changes";
+"mode=rapidtransit";"mode=rapidtransit"; ; ; "with_changes" ;
+"mode=rapidtransit";"mode=localtrain"; ; ; "with_changes";
+"mode=localtrain";"mode=localtrain"; ; ; "with_changes";
+"line=800:T4";"mode=rapidtransit"; ; ; "with_changes";
+"line=800:T4";"mode=localtrain"; ; ; "with_changes";
+"mode=rapidtransit";"line=800:T4"; ; ; "with_changes";
+"mode=localtrain";"line=800:T4"; ; ; "with_changes";
+"*";"line=100100283:ORLYBUS";;;"exclusive";"100:ORLYBUS"
+"*";"line=100100352:ROISSYB";;;"exclusive";"100:ROISSYB"
+"*";"line=100110200:ORLYVAL";;;"exclusive";"100:ORLYVAL"
+"*";"line=100110100:FUN";;;"exclusive";"tickett"
+"*";"line=098098001:1";;;"exclusive";"098:1"
+"*";"line=098098002:2";;;"exclusive";"098:2"
+"*";"line=098098003:3";;;"exclusive";"098:3"
+"*";"line=098098004:4";;;"exclusive";"098:4" 
+"*";"line=291191005:91-05";;;"exclusive";"ntickett"
+"*";"line=100100221:221";;;"exclusive";"ntickett"
+"*";"line=291191002:91-02";;;"exclusive";"ntickett"
+"*";"line=051377019:19";;;"exclusive";"ntickett"
+"*";"line=100100351:351";;;"exclusive";"ntickett"
+"*";"line=088088001:27-01";;;"exclusive";"ntickett"
+"*";"line=054054020:20Exp";;;"exclusive";"ntickett"
+"*";"line=057057022:22";;;"exclusive";"ntickett"
+"*";"line=100100297:297";;;"exclusive";"ntickett"
+"*";"line=064177034:34";;;"exclusive";"ntickett"
+"*";"line=011011019:19";;;"exclusive";"ntickett"
+"*";"line=040040010:10";;;"exclusive";"ntickett"
+"*";"line=100100350:350";;;"exclusive";"ntickett"
+"*";"line=010010007:10-07";;;"exclusive";"ntickett"
+"*";"line=055155001:DM151";;;"exclusive";"ntickett"
+"*";"line=230410475:475";;;"exclusive";"ntickett"
+"*";"line=100100299:299";;;"exclusive";"ntickett"
+"*";"line=097097003:03";;;"exclusive";"ntickett"
+"*";"line=013013003:03";;;"exclusive";"ntickett"
+"*";"line=027027015:15";;;"exclusive";"ntickett"
+"*";"line=291191008:91-08";;;"exclusive";"ntickett"
+"*";"line=100100007:BALABUS";;;"exclusive";"ntickett"
+"*";"line=051177018:18";;;"exclusive";"ntickett"
+"*";"line=228177050:50";;;"exclusive";"ntickett"
+"*";"line=291191003:91-03";;;"exclusive";"ntickett"
+"*";"line=012012016:16";;;"exclusive";"ntickett"
+"*";"line=067067019:19";;;"exclusive";"ntickett"
+"*";"line=244244001:ExpA14";;;"exclusive";"ntickett"
+"*";"line=244244002:ExpA14";;;"exclusive";"ntickett"
+"*";"line=244244003:ExpA14";;;"exclusive";"ntickett"
+"*";"line=030595045:CITEBUSA";;;"exclusive";"gratuit"
+"*";"line=030595045:CITEBUSB";;;"exclusive";"gratuit"
+"*";"line=043043100:CDGVAL";;;"exclusive";"gratuit"
+"*";"line=043043001:N1";;;"exclusive";"gratuit"
+"*";"line=100100571:SUBB";;;"exclusive";"gratuit"
+"*";"line=100100597:597";;;"exclusive";"gratuit"
+"*";"line=100100593:V6";;;"exclusive";"gratuit"
+"*";"line=100100589:TUVIM";;;"exclusive";"gratuit"
+"*";"line=100100541:541";;;"exclusive";"gratuit"
+"*";"line=100100585:V7";;;"exclusive";"gratuit"
+"*";"line=100100563:563";;;"exclusive";"gratuit"
+"*";"line=100100564:564";;;"exclusive";"gratuit"
+"*";"line=100100565:565";;;"exclusive";"gratuit"
+"*";"line=100100562:V4";;;"exclusive";"gratuit"
+"*";"line=100100579:579";;;"exclusive";"gratuit"
+"*";"line=100100581:V3";;;"exclusive";"gratuit"
+"*";"line=100100592:AMIBUS";;;"exclusive";"gratuit"
+"*";"line=100100583:V2";;;"exclusive";"gratuit"
+"*";"line=100100581:581";;;"exclusive";"gratuit"
+"*";"line=100100584:V5";;;"exclusive";"gratuit"
+"*";"line=100100542:V1";;;"exclusive";"gratuit"
+"*";"line=082082003:37E";;;"exclusive";"inconnu"
