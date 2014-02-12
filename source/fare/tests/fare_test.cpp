@@ -20,6 +20,18 @@ namespace ph = boost::phoenix;
 
 struct invalid_condition : public std::exception {};
 
+void print_res(const results& res) {
+    std::cout << "found : " << !res.not_found << std::endl;
+
+    for (const auto& ticket : res.tickets) {
+        std::cout << ticket.key << " : " << ticket.value << " (" << ticket.comment << ")" << std::endl;
+        for (const auto& s : ticket.sections) {
+            std::cout << " -- " << s.path_item_idx << std::endl;
+        }
+    }
+
+}
+
 boost::posix_time::time_duration parse_time(const std::string & time_str){
     // Règle permettant de parser une heure au format HH|MM
     qi::rule<std::string::const_iterator, int()> time_r = (qi::int_ >> '|' >> qi::int_)[qi::_val = qi::_1 * 3600 + qi::_2 * 60];
@@ -109,13 +121,15 @@ Fare load_fare_from_ed(ed::Data ed_data) {
     Fare fare;
     //for od and price, easy
     fare.od_tickets = ed_data.od_tickets;
-    fare.fare_map = ed_data.fare_map;
+    for (const auto& f: ed_data.fare_map) {
+        fare.fare_map.insert(f);
+    }
+//    fare.fare_map = ed_data.fare_map;
 
     //for transition we have to build the graph
     std::map<State, Fare::vertex_t> state_map;
-    State begin; // Le début est un nœud vide
-    Fare::vertex_t begin_v = boost::add_vertex(begin, fare.g);
-    state_map[begin] = begin_v;
+    State begin; // Start is an empty node (and the node is already is the fare graph, since it has been added in the constructor with the default ticket)
+    state_map[begin] = fare.begin_v;
 
     for (auto tuple : ed_data.transitions) {
         const State& start = std::get<0>(tuple);
@@ -138,6 +152,13 @@ Fare load_fare_from_ed(ed::Data ed_data) {
 
         boost::add_edge(start_v, end_v, transition, fare.g);
     }
+//    Transition default_transition;
+//    Ticket default_ticket = make_default_ticket();
+//    default_transition.ticket_key = default_ticket.key;
+//    boost::add_edge(fare.begin_v, fare.begin_v, default_transition, fare.g);
+//    DateTicket dticket;
+//    dticket.add(boost::gregorian::date(boost::gregorian::neg_infin), boost::gregorian::date(boost::gregorian::pos_infin), default_ticket);
+//    fare.fare_map.insert({default_ticket.key, dticket});
 
     return fare;
 }
@@ -462,8 +483,57 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("440;59062;100112013:T3;8775864;2012|12|05;17|12;17|18;1;1;Tramway");
     keys.push_back("436;8775864;810:B;8775499;2012|12|05;17|25;17|34;1;3;RapidTransit");
     res = f.compute_fare(string_to_path(keys));
+    print_res(res);
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
+
+    // tests with unknown section in the middle
+    keys.clear();
+    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;Metro");
+    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
+    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
+    keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
+    res = f.compute_fare(string_to_path(keys));
+    print_res(res);
+    BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);
+    BOOST_CHECK_EQUAL(res.tickets.at(0).value, 250);
+    BOOST_CHECK_EQUAL(res.tickets.at(1).key, make_default_ticket().key);
+
+    keys.clear();
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|06;02|10;1;1;metro");
+    keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
+    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
+    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
+    res = f.compute_fare(string_to_path(keys));
+    print_res(res);
+    BOOST_REQUIRE_EQUAL(res.tickets.size(), 3);
+    BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
+    BOOST_CHECK_EQUAL(res.tickets.at(1).key, make_default_ticket().key);
+    BOOST_CHECK_EQUAL(res.tickets.at(2).value, 250);//we have to take another ticket since we don't have any information on the bob-morane section
+
+    // tests with unknown section in the beginning
+    keys.clear();
+    keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
+    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;Metro");
+    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
+    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
+    res = f.compute_fare(string_to_path(keys));
+    print_res(res);
+    BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);
+    BOOST_CHECK_EQUAL(res.tickets.at(0).key, make_default_ticket().key);
+    BOOST_CHECK_EQUAL(res.tickets.at(1).value, 250);
+
+    // tests with unknown section in the beginning
+    keys.clear();
+    keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
+    keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
+    keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
+    res = f.compute_fare(string_to_path(keys));
+    print_res(res);
+    BOOST_REQUIRE_EQUAL(res.tickets.size(), 3);
+    BOOST_CHECK_EQUAL(res.tickets.at(0).key, make_default_ticket().key);
+    BOOST_CHECK_EQUAL(res.tickets.at(1).key, make_default_ticket().key);
+    BOOST_CHECK_EQUAL(res.tickets.at(2).key, make_default_ticket().key);
 }
 
 //TODO tout decouper + rajout fixture
@@ -476,6 +546,16 @@ BOOST_AUTO_TEST_CASE(unkown_fare) {
     boost::gregorian::date end_date(boost::gregorian::from_undelimited_string("20350101"));
     fare.fare_map["price1"].add(start_date, end_date, Ticket("price1", "Ticket vj 1", 100, "125"));
     fare.fare_map["price2"].add(start_date, end_date, Ticket("price2", "Ticket vj 2", 200, "175"));
+
+    Transition default_transition;
+    Ticket default_ticket = make_default_ticket();
+    default_ticket.value = 999999;
+    default_transition.ticket_key = default_ticket.key;
+    auto begin_v = boost::add_vertex(State(), fare.g);
+    boost::add_edge(begin_v, begin_v, default_transition, fare.g);
+    DateTicket dticket;
+    dticket.add(boost::gregorian::date(boost::gregorian::neg_infin), boost::gregorian::date(boost::gregorian::pos_infin), default_ticket);
+    fare.fare_map.insert({default_ticket.key, dticket});
 
     Transition transition;
     transition.start_conditions = {};
@@ -493,6 +573,6 @@ BOOST_AUTO_TEST_CASE(unkown_fare) {
     // Un trajet simple
     keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal");
     results res = fare.compute_fare(string_to_path(keys));
-    BOOST_CHECK_EQUAL(res.tickets.size(), 1);
-    BOOST_CHECK_EQUAL(res.tickets.at(0).key, "unkown_ticket");
+    BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
+    BOOST_CHECK_EQUAL(res.tickets.at(0).key, make_default_ticket().key);
 }

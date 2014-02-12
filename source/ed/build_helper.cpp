@@ -212,7 +212,7 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
 
 
 VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
-    return VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
+    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri);
 }
 
 VJ builder::vj(const std::string &network_name, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
@@ -287,6 +287,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     network->name = "base_network";
     network->uri = "base_network";
     this->data.pt_data.networks.push_back(network);
+    this->nts.insert({network->uri, network});
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data.pt_data.commercial_modes.size();

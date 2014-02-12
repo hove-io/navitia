@@ -12,26 +12,85 @@
 
 namespace navitia { namespace fare {
 
+/**
+ * Structure to model a possible null cost (boost::optional was not meeting the requirement)
+ */
+struct Cost {
+    int value = 0;
+    bool undefined = false; //with at least one undefined ticket in the label, its cost become undefined
+
+    Cost(int v): value(v) {}
+    Cost(): undefined(true) {}
+    Cost(const Cost& c) = default;
+
+    Cost operator+ (Cost c) const {
+        return c+= *this;
+    }
+
+    Cost& operator+= (Cost c) {
+        if (c.undefined)
+            undefined = true;
+        //we continue to update the value even if the cost is undefined (it will be the cost on all defined subcost)
+        value += c.value;
+        return *this;
+    }
+
+    //an undefined cost is always greater than a defined one
+    bool operator<(Cost c) const {
+        if (undefined)
+            return false;
+        if (c.undefined)
+            return true;
+        return value < c.value;
+    }
+    bool operator==(Cost c) const {
+        if (undefined)
+            return c.undefined;
+        if (c.undefined)
+            return false;
+        return c.value == value;
+    }
+    bool operator!=(Cost c) const {
+        return !(*this == c);
+    }
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & value & undefined;
+    }
+};
+
+inline std::ostream& operator<< (std::ostream& s, const Cost& c) {
+    c.undefined ? s << "undef (" << c.value << ")" : s << c.value;
+    return s;
+}
+
+
 /// Définit un billet : libellé et tarif
 struct SectionKey;
 struct Ticket {
     enum ticket_type {FlatFare, GraduatedFare, ODFare, None};
     std::string key;
     std::string caption;
-    int value;
     std::string currency = "euro";
+    Cost value = {0};
     std::string comment;
     ticket_type type;
     std::vector<SectionKey> sections;
+    bool is_default_ticket() const { return value.undefined; }
 
     Ticket() : value(0), type(None) {}
     Ticket(const std::string & key, const std::string & caption, int value, const std::string & comment, ticket_type type = FlatFare) :
         key(key), caption(caption), value(value), comment(comment), type(type){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & key & caption & value & comment & type /*& sections*/; //CHECK, il me semble qu'on a pas besoin de serializer les sections car le ticket est forcement vide dans le graph
+        ar & key & caption & value & comment & type;
     }
 };
+
+inline Ticket make_default_ticket() {
+    Ticket default_t("unkown_ticket", "unkown ticket", 0, "unknown ticket");
+    default_t.value = Cost();//undefined cost
+    return default_t;
+}
 
 /// Définit un billet pour une période données
 struct PeriodTicket {
@@ -162,7 +221,8 @@ struct Condition {
 
 /// Structure représentant une étiquette
 struct Label {
-    int cost; //< Coût cummulé
+    Cost cost; //< Coût cummulé
+    size_t nb_undefined_sub_cost = 0;
     int start_time; //< Heure de compostage du billet
     //int duration;//< durée jusqu'à présent du trajet depuis le dernier ticket
     int nb_changes;//< nombre de changement effectués depuis le dernier ticket
@@ -184,8 +244,12 @@ struct Label {
                 line == l.line && network == l.network;
     }
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & cost & start_time & nb_changes & stop_area & zone & mode & line & network & current_type & tickets;
+    bool operator<(const Label& l) const {
+        if (nb_undefined_sub_cost != l.nb_undefined_sub_cost)
+            return nb_undefined_sub_cost < l.nb_undefined_sub_cost;
+        if (cost.value != l.cost.value)
+            return cost.value < l.cost.value;
+        return nb_changes < l.nb_changes;
     }
 };
 
@@ -248,6 +312,7 @@ struct OD_key{
 
 struct results {
     std::vector<Ticket> tickets;
+    Cost total;
     bool not_found = true;
 };
 
@@ -263,6 +328,9 @@ struct Fare {
     typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
     typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
     Graph g;
+    Fare::vertex_t begin_v; //begin vertex descriptor
+
+    Fare() { add_default_ticket(); }
 
     /// Effectue la recherche du meilleur tarif
     /// Retourne une liste de billets à acheter
@@ -283,6 +351,8 @@ struct Fare {
 private:
     /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
     DateTicket get_od(Label label, SectionKey section) const;
+
+    void add_default_ticket();
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 };

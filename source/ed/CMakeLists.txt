@@ -42,7 +42,7 @@ target_link_libraries(ed2nav types connectors fare pq pqxx data georef routing
 add_subdirectory(connectors)
 
 add_executable(nav2rt nav2rt.cpp)
-target_link_libraries(nav2rt ed types connectors pq pqxx data georef routing
+target_link_libraries(nav2rt ed types connectors pq pqxx data fare georef routing
     utils autocomplete ${BOOST_LIBS} log4cplus)
 
 INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed fare2ed)

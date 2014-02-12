@@ -641,7 +641,7 @@ void EdPersistor::insert_prices(const ed::Data& data) {
                 dated_ticket.ticket.key,
                 bg::to_iso_extended_string(start),
                 bg::to_iso_extended_string(last),
-                std::to_string(dated_ticket.ticket.value),
+                std::to_string(dated_ticket.ticket.value.value),
                 dated_ticket.ticket.caption,
                 dated_ticket.ticket.currency
             };
