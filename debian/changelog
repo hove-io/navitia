@@ -1,3 +1,9 @@
+navitia2 (0.80.1) unstable; urgency=low
+
+  * Bug fix in tyr
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 12 Feb 2014 19:02:15 +0100
+
 navitia2 (0.80.0) unstable; urgency=low
 
   * Add Fare
