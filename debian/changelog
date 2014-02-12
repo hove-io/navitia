@@ -1,3 +1,12 @@
+navitia2 (0.80.0) unstable; urgency=low
+
+ * Handle fare
+ * Prepare Tyr for geopal
+ * Kraken: change routing::Pahtitem datetime to boost::posixtime
+ * Version 0.79.0
+
+ -- Vincent Lara <vincent.lara@canaltp.fr> Wed 12 Feb 2014, 11:02:56 +0100
+
 navitia2 (0.79.0) unstable; urgency=low
 
   * Fix on journeys duration
