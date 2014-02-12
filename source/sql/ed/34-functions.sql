@@ -204,22 +204,37 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION georef.update_boundary(adminid bigint)
   RETURNS VOID AS
 $$
+DECLARE 
+	ret GEOGRAPHY;
 BEGIN
-	UPDATE navitia.admin set boundary = ST_Multi(ST_Buffer(ST_Collect(
+	SELECT ST_Multi(ST_ConvexHull(ST_Collect(
 		ARRAY(
 				select aa.coord::geometry from (
-					select n.coord as coord from georef.rel_way_admin rel, 
-						georef.edge e, georef.node n  
+					select n.coord as coord from georef.rel_way_admin rel,
+						georef.edge e, georef.node n
 					where rel.admin_id=adminid
 					and rel.way_id=e.way_id
 					and e.source_node_id=n.id
 					UNION
-					select n.coord as coord from georef.rel_way_admin rel, 
-						georef.edge e, georef.node n  
+					select n.coord as coord from georef.rel_way_admin rel,
+						georef.edge e, georef.node n
 					where rel.admin_id=adminid
 					and rel.way_id=e.way_id
-					and e.target_node_id=n.id)aa)), 0.001))
-	where navitia.admin.id=adminid;
+					and e.target_node_id=n.id)aa)))) INTO ret;
+	CASE  geometrytype(ret) 
+		WHEN 'MULTIPOLYGON'  THEN
+			UPDATE navitia.admin 
+			set boundary = ret
+			where navitia.admin.id=adminid;
+		WHEN 'MultiLineString'  THEN
+			UPDATE navitia.admin 
+			set boundary = ST_Multi(ST_Polygonize(ret))
+			where navitia.admin.id=adminid;
+		ELSE 
+			UPDATE navitia.admin 
+			set boundary = NULL
+			where navitia.admin.id=adminid;
+	END CASE;
 END
 $$
 LANGUAGE plpgsql;
