@@ -78,10 +78,9 @@ void Visitor::relation_callback(uint64_t osmid, const CanalTP::Tags & tags, cons
 void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
     if(tags.find("addr:housenumber") != tags.end()){
         OSMHouseNumber osm_hn;
-        osm_hn.number = str_to_int(tags.at("addr:housenumber"));
-        if (osm_hn.number > 0 ){
-            this->housenumbers[osmid] = osm_hn;
-        }
+        osm_hn.number = tags.at("addr:housenumber");
+        this->housenumbers[osmid] = osm_hn;
+
     }
 }
 
@@ -175,7 +174,7 @@ void Visitor::insert_house_numbers(){
         if(tmp_node != nodes.end()) {
             Node n = tmp_node->second;
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->lotus.insert({point, std::to_string(hn.second.number), std::to_string(hn.second.number % 2 == 0)});
+            this->lotus.insert({point, hn.second.number, std::to_string((str_to_int(hn.second.number) % 2) == 0)});
         } else {
             std::cout << "Unable to find node " << hn.first << std::endl;
         }
@@ -212,7 +211,7 @@ std::string Visitor::geometry_of_admin(const CanalTP::References & refs) const{
         vec_id.push_back(vec_id.front());
     }
 
-    std::string geom("POLYGON((");
+    std::string geom("MULTIPOLYGON(((");
     std::string sep = "";
 
     for (auto osm_node_id : vec_id){
@@ -221,7 +220,7 @@ std::string Visitor::geometry_of_admin(const CanalTP::References & refs) const{
         geom += sep + std::to_string(node.lon()) + " " + std::to_string(node.lat());
         sep = ",";
     }
-    geom += "))";
+    geom += ")))";
     return geom;
 }
 
@@ -281,10 +280,10 @@ void Visitor::insert_admin(){
     int ignored = 0;
     for(auto ar : OSMAdminRefs){
         auto admin = ar.second;
-        std::string polygon = this->geometry_of_admin(admin.refs);
-        if(!polygon.empty()){
+        std::string multipolygon = this->geometry_of_admin(admin.refs);
+        if(!multipolygon.empty()){
             std::string coord = "POINT(" + std::to_string(admin.coord.lon()) + " " + std::to_string(admin.coord.lat()) + ")";
-            this->lotus.insert({std::to_string(ar.first), admin.name, admin.postcode, admin.insee, admin.level, coord,polygon , std::to_string(ar.first)});
+            this->lotus.insert({std::to_string(ar.first), admin.name, admin.postcode, admin.insee, admin.level, coord,multipolygon , std::to_string(ar.first)});
         } else {
             ignored++;
         }

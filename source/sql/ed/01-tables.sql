@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS navitia.admin (
     insee TEXT,
     level INTEGER NOT NULL,
     coord GEOGRAPHY(POINT, 4326),
-    boundary GEOGRAPHY(POLYGON, 4326),
+    boundary GEOGRAPHY(MULTIPOLYGON, 4326),
     uri TEXT NOT NULL
 );
 

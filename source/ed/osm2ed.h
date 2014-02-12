@@ -9,9 +9,9 @@ namespace ed { namespace connectors {
 
 struct OSMHouseNumber{
     navitia::type::GeographicalCoord coord;
-    int number;
+    std::string number;
 
-    OSMHouseNumber(): number(-1){}
+    OSMHouseNumber(): number(""){}
 
 };
 

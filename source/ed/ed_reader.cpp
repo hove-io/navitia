@@ -7,11 +7,11 @@ namespace bg = boost::gregorian;
 namespace nt = navitia::type;
 namespace nf = navitia::fare;
 
-void EdReader::fill(navitia::type::Data& data){
+void EdReader::fill(navitia::type::Data& data, const double percent_delete){
 
     pqxx::work work(*conn, "loading ED");
 
-    this->fill_vector_to_ignore(data, work);
+    this->fill_vector_to_ignore(data, work, percent_delete);
     this->fill_meta(data, work);
 
     this->fill_networks(data, work);
@@ -730,19 +730,24 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
     std::string request = "SELECT way_id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, number, left_side FROM georef.house_number where way_id IS NOT NULL;";
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
-        navitia::georef::HouseNumber hn;
-        const_it["number"].to(hn.number);
-        hn.coord.set_lon(const_it["lon"].as<double>());
-        hn.coord.set_lat(const_it["lat"].as<double>());
-        navitia::georef::Way* way = this->way_map[const_it["way_id"].as<idx_t>()];
-        if (way != NULL){
-            way->add_house_number(hn);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        std::string string_number;
+        const_it["number"].to(string_number);
+        int int_number = str_to_int(string_number);
+        if( int_number != -1){
+            navitia::georef::HouseNumber hn;
+            hn.number = int_number;
+            hn.coord.set_lon(const_it["lon"].as<double>());
+            hn.coord.set_lat(const_it["lat"].as<double>());
+            navitia::georef::Way* way = this->way_map[const_it["way_id"].as<idx_t>()];
+            if (way != NULL){
+                way->add_house_number(hn);
+            }
         }
     }
 }
 
-void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work){
+void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, const double percent_delete){
     navitia::georef::GeoRef geo_ref_temp;
     std::unordered_map<idx_t, uint64_t> osmid_idex;
     std::unordered_map<uint64_t, idx_t> node_map_temp;
@@ -791,9 +796,10 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work){
             }
         }
     }
+
     // remplissage de la liste des noeuds et edges à ne pas binariser
     for (navitia::georef::vertex_t i = 0;  i != component.size(); ++i){
-        if (component[i] != principal_component){
+        if(((principal_component > 0) && ((component[i]/principal_component) < percent_delete))){
             bool found = false;
             uint64_t source = osmid_idex[i];
             BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(i, geo_ref_temp.graph)){
@@ -814,7 +820,8 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work){
         navitia::georef::vertex_t source_idx = boost::source(*i, geo_ref_temp.graph);
         navitia::georef::vertex_t target_idx = boost::target(*i, geo_ref_temp.graph);
 
-        if ((principal_component == component[source_idx]) || (principal_component == component[target_idx])){
+        if ((principal_component > 0)
+            && (((component[source_idx]/principal_component) > percent_delete ) || ((component[target_idx]/principal_component) > percent_delete ))){
             navitia::georef::edge_t e;
             bool b;
             boost::tie(e,b) = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
