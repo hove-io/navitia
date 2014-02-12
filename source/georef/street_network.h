@@ -1,6 +1,8 @@
 #pragma once
 #include "georef.h"
 #include <boost/graph/filtered_graph.hpp>
+#include <boost/graph/two_bit_color_map.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
 
 namespace bt = boost::posix_time;
 
@@ -149,8 +151,7 @@ private:
 };
 
 /** Structure managing the computation on the streetnetwork */
-class StreetNetwork {
-public:
+struct StreetNetwork {
     StreetNetwork(const GeoRef& geo_ref);
 
     void init(const type::EntryPoint& start_coord, boost::optional<const type::EntryPoint&> end_coord = {});
@@ -172,7 +173,6 @@ public:
      **/
     Path get_direct_path();
 
-private:
     const GeoRef & geo_ref;
     PathFinder departure_path_finder;
     PathFinder arrival_path_finder;

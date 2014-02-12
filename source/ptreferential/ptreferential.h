@@ -18,7 +18,8 @@
   * 3) On remplit le protobuf
   */
 
-#include "type/data.h"
+#include "type/type.h"
+#include "georef/georef.h"
 #include "where.h"
 #include "utils/paginate.h"
 

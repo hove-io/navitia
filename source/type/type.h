@@ -1,4 +1,7 @@
 #pragma once
+
+#include "datetime.h"
+#include "utils/flat_enum_map.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <vector>
 #include <bitset>
@@ -14,9 +17,6 @@
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/linestring.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-
-#include "datetime.h"
-#include "utils/flat_enum_map.h"
 
 namespace mpl = boost::mpl;
 namespace navitia { namespace georef {

@@ -59,7 +59,9 @@ struct builder{
 
 
     /// Il faut préciser là date de début des différents validity patterns
-    builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {}
+    builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
+        data.meta.production_date = {begin, begin + boost::gregorian::years(1)};
+    }
 
     /// Crée un vehicle journey
     VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="");

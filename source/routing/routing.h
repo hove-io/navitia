@@ -38,59 +38,54 @@ enum ItemType {
 };
 
 /** Étape d'un itinéraire*/
-struct PathItem{
-    navitia::DateTime arrival;
-    navitia::DateTime departure;
-    std::vector<navitia::DateTime> arrivals;
-    std::vector<navitia::DateTime> departures;
-    std::vector<size_t> orders;
-    type::idx_t vj_idx;
-    std::vector<type::idx_t> stop_points;
+struct PathItem {
+    boost::posix_time::ptime arrival;
+    boost::posix_time::ptime departure;
+    std::vector<boost::posix_time::ptime> arrivals;
+    std::vector<boost::posix_time::ptime> departures;
+    std::vector<const nt::StopTime*> stop_times; //empty if not public transport
+
+    /**
+     * if public transport, contains the list of visited stop_point
+     * for transfers, contains the departure and arrival stop points
+     */
+    std::vector<const navitia::type::StopPoint*> stop_points;
+
+    const navitia::type::StopPointConnection* connection;
+
     ItemType type;
 
-    PathItem(navitia::DateTime departure = navitia::DateTimeUtils::inf, navitia::DateTime arrival = navitia::DateTimeUtils::inf,
-            type::idx_t vj_idx = type::invalid_idx) :
-        arrival(arrival), departure(departure), vj_idx(vj_idx), type(public_transport) {
-            if(departure != navitia::DateTimeUtils::inf)
-                departures.push_back(departure);
-            if(arrival != navitia::DateTimeUtils::inf)
-                arrivals.push_back(arrival);
-        }
+    PathItem(boost::posix_time::ptime departure = boost::posix_time::pos_infin,
+             boost::posix_time::ptime arrival = boost::posix_time::pos_infin) :
+        arrival(arrival), departure(departure), type(public_transport) {
+    }
 
-    std::string print(const navitia::type::PT_Data & data) const;
+    std::string print() const;
+
+    const navitia::type::VehicleJourney* get_vj() const {
+        if (stop_times.empty())
+            return nullptr;
+        return stop_times.front()->vehicle_journey;
+    }
 };
 
 /** Un itinéraire complet */
 struct Path {
-    uint32_t duration;
+    boost::posix_time::time_duration duration;
     uint32_t nb_changes;
     boost::posix_time::ptime request_time;
     std::vector<PathItem> items;
 
-    Path() : duration(std::numeric_limits<uint32_t>::max()), nb_changes(std::numeric_limits<uint32_t>::max()) {}
+    Path() : duration(boost::posix_time::pos_infin), nb_changes(std::numeric_limits<uint32_t>::max()) {}
 
-    void print(const navitia::type::PT_Data & data) const {
+    void print() const {
         for(auto item : items)
-            std::cout << item.print(data) << std::endl;
+            std::cout << item.print() << std::endl;
     }
 
 };
 
 bool operator==(const PathItem & a, const PathItem & b);
-
-class Verification {
-
-public :
-    const navitia::type::PT_Data & data;
-    Verification(const navitia::type::PT_Data & data) : data(data) {}
-
-    bool verif(Path path);
-    bool croissance(Path path);
-    bool vj_valides(Path path);
-    bool appartenance_rp(Path path);
-    bool check_correspondances(Path path);
-
-};
 
 
 }}

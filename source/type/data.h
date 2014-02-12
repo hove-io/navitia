@@ -1,14 +1,15 @@
 #pragma once
 #include "pt_data.h"
-#include <boost/serialization/version.hpp>
-#include <boost/thread/shared_mutex.hpp>
+#include "routing/dataraptor.h"
 #include "georef/georef.h"
+#include "fare/fare.h"
+#include "meta_data.h"
 #include "utils/logger.h"
 #include "utils/configuration.h"
-#include "boost/utility.hpp"
-#include "meta_data.h"
+#include <boost/utility.hpp>
+#include <boost/serialization/version.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/format.hpp>
-#include "routing/dataraptor.h"
 #include <atomic>
 
 namespace navitia { namespace type {
@@ -38,6 +39,9 @@ public:
 
     /// Données précalculées pour le raptor
     navitia::routing::dataRAPTOR dataRaptor;
+
+    /// Fare data
+    navitia::fare::Fare fare;
 
     /** Retourne la structure de données associée au type */
     /// TODO : attention aux perfs à faire la copie
@@ -104,7 +108,7 @@ public:
             LOG4CPLUS_WARN(logger, boost::format("Attention le fichier de données est à la version %u (version actuelle : %d)") % version % v);
         }
 
-        ar & pt_data & geo_ref & meta;
+        ar & pt_data & geo_ref & meta & fare;
     }
 
     /** Charge les données et effectue les initialisations nécessaires */

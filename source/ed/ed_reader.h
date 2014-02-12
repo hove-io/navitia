@@ -1,12 +1,12 @@
 #pragma once
 
 #include "data.h"
-#include <pqxx/pqxx>
 #include "utils/exception.h"
-#include <unordered_map>
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
+#include <pqxx/pqxx>
+#include <unordered_map>
 #include <algorithm>
 
 namespace ed{
@@ -92,6 +92,11 @@ private:
     //les alias et synonymes:
     void fill_alias(navitia::type::Data& data, pqxx::work& work);
     void fill_synonyms(navitia::type::Data& data, pqxx::work& work);
+
+    //les tarifs:
+    void fill_prices(navitia::type::Data& data, pqxx::work& work);
+    void fill_transitions(navitia::type::Data& data, pqxx::work& work);
+    void fill_origin_destinations(navitia::type::Data& data, pqxx::work& work);
 
     /// les relations admin et les autres objets
     void build_rel_stop_point_admin(navitia::type::Data& data, pqxx::work& work);

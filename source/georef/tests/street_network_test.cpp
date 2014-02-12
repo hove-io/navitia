@@ -1,14 +1,11 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_street_network
-#include <boost/test/unit_test.hpp>
 #include "georef/georef.h"
 #include "builder.h"
 #include "type/data.h"
 
-//to be able to test private member.
-#define private public
 #include"georef/street_network.h"
-#undef private
+#include <boost/test/unit_test.hpp>
 
 using namespace navitia::georef;
 

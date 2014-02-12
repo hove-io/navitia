@@ -23,10 +23,15 @@ def type_of_data(filename):
         return 'osm'
     if filename.endswith('.zip'):
         zipf = zipfile.ZipFile(filename)
+        if 'fares.csv' in zipf.namelist():
+            return 'fare'
+
         if "contributors.txt" in zipf.namelist():
             return 'fusio'
         else:
             return 'gtfs'
+    if filename.endswith('.geopal'):
+        return 'geopal'
     return None
 
 
@@ -66,8 +71,16 @@ def update_data():
                 filename = move_to_backupdirectory(_file,
                         instance_config.backup_directory)
                 actions.append(osm2ed.si(instance_config, filename))
+            elif dataset.type == 'geopal':
+                filename = move_to_backupdirectory(_file,
+                        instance_config.backup_directory)
+                actions.append(geopal2ed.si(instance_config, filename))
+            elif dataset.type == 'fare':
+                filename = move_to_backupdirectory(_file,
+                        instance_config.backup_directory)
+                actions.append(fare2ed.si(instance_config, filename))
             else:
-                #unknow type, we skip it
+                #unknown type, we skip it
                 continue
 
             #currently the name of a dataset is the path to it

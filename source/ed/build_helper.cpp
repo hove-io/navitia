@@ -44,6 +44,19 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         b.data.pt_data.journey_patterns.push_back(jp);
         route->journey_pattern_list.push_back(jp);
         jp->route = route;
+        //add physical mode
+        if (! b.data.pt_data.physical_modes.empty()) {
+            auto mode = b.data.pt_data.physical_modes.front();
+            jp->physical_mode = mode;
+        }
+        else {
+            jp->physical_mode = new navitia::type::PhysicalMode();
+            jp->physical_mode->idx = b.data.pt_data.physical_modes.size();
+            jp->physical_mode->uri = "physical_mode:0";
+            b.data.pt_data.physical_modes.push_back(jp->physical_mode);
+        }
+        jp->physical_mode->journey_pattern_list.push_back(jp);
+
         vj->journey_pattern = jp;
     } else {
         //@TODO va surement falloir créer un nouveau journeypattern
