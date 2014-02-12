@@ -9,7 +9,7 @@ namespace pt = boost::posix_time;
 
 namespace ed{
 
-nt::ValidityPattern* find_validity_pattern(nt::PT_Data& data, nt::ValidityPattern* validity_pattern){
+nt::ValidityPattern* get_or_create_validity_pattern(nt::PT_Data& data, nt::ValidityPattern* validity_pattern){
     auto find_vp_predicate = [&](nt::ValidityPattern* vp1) { return validity_pattern->days == vp1->days;};
     auto it = std::find_if(data.validity_patterns.begin(),
                         data.validity_patterns.end(), find_vp_predicate);
@@ -39,10 +39,10 @@ nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
             vp->remove(current_date);
         }
     }
-    return find_validity_pattern(data, vp);
+    return get_or_create_validity_pattern(data, vp);
 }
 
-void delete_vj(nt::VehicleJourney* vehicle_journey,
+void update_adapted_validity_pattern(nt::VehicleJourney* vehicle_journey,
         const nt::AtPerturbation& pert, nt::PT_Data& data){
    vehicle_journey->adapted_validity_pattern = get_validity_pattern(vehicle_journey->adapted_validity_pattern,
                                                                      pert,
@@ -316,7 +316,7 @@ void AtAdaptedLoader::apply_deletion_on_vj(nt::VehicleJourney* vehicle_journey,
         const std::set<nt::AtPerturbation>& perturbations, nt::PT_Data& data){
     for(nt::AtPerturbation pert : perturbations){
         if(vehicle_journey->stop_time_list.size() > 0){
-            delete_vj(vehicle_journey, pert, data);
+            update_adapted_validity_pattern(vehicle_journey, pert, data);
         }
     }
 }
