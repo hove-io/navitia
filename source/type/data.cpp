@@ -137,7 +137,7 @@ void Data::build_raptor() {
     dataRaptor.load(this->pt_data);
 }
 
-ValidityPattern* Data::find_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time){
+ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time){
 
     if(time > 24*3600) {
         std::bitset<366> tmp_days = ref_validity_pattern->days;
@@ -161,11 +161,11 @@ void Data::build_midnight_interchange(){
     for(VehicleJourney* vj : this->pt_data.vehicle_journeys){
         for(StopTime* stop : vj->stop_time_list){
             // Théorique
-            stop->departure_validity_pattern = find_validity_pattern(vj->validity_pattern, stop->departure_time);
-            stop->arrival_validity_pattern = find_validity_pattern(vj->validity_pattern, stop->arrival_time);
+            stop->departure_validity_pattern = get_or_create_validity_pattern(vj->validity_pattern, stop->departure_time);
+            stop->arrival_validity_pattern = get_or_create_validity_pattern(vj->validity_pattern, stop->arrival_time);
             // Adapté
-            stop->departure_adapted_validity_pattern = find_validity_pattern(vj->adapted_validity_pattern, stop->departure_time);
-            stop->arrival_adapted_validity_pattern = find_validity_pattern(vj->adapted_validity_pattern, stop->arrival_time);
+            stop->departure_adapted_validity_pattern = get_or_create_validity_pattern(vj->adapted_validity_pattern, stop->departure_time);
+            stop->arrival_adapted_validity_pattern = get_or_create_validity_pattern(vj->adapted_validity_pattern, stop->arrival_time);
         }
     }
 }
