@@ -190,28 +190,26 @@ inline std::string comp_to_string(const Comp_e comp) {
     }
 }
 
-/// Définit un arc et les conditions pour l'emprunter
-/// Les conditions peuvent être : prendre u
+/// Define an edge and the condition to take it
 struct Condition {
-    /// Valeur à que doit respecter la condition
+    /// Value to respect
     std::string key;
 
-    /// Ticket à acheter pour prendre cet arc
-    /// Chaîne vide si rien à faire
+    /// ticket to buy to take the edge
+    /// if empty, it's free
     std::string ticket;
-    
-    /// Opérateur de comparaison
-    /// Nil s'il n'y a pas de restriction
-    Comp_e comparaison;
 
-    /// Valeur à comparer
+    ///comparison operator
+    Comp_e comparaison = Comp_e::True;
+
+    /// Value to compare with
     std::string value;
 
     std::string to_string() const {
         return key + comp_to_string(comparaison) + value;
     }
 
-    Condition() : comparaison(Comp_e::True) {}
+    Condition() {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & key & ticket & comparaison & value;
@@ -221,23 +219,23 @@ struct Condition {
 
 /// Structure représentant une étiquette
 struct Label {
-    Cost cost; //< Coût cummulé
+    Cost cost = 0; //< Coût cummulé
     size_t nb_undefined_sub_cost = 0;
-    int start_time; //< Heure de compostage du billet
+    int start_time = 0; //< Heure de compostage du billet
     //int duration;//< durée jusqu'à présent du trajet depuis le dernier ticket
-    int nb_changes;//< nombre de changement effectués depuis le dernier ticket
+    int nb_changes = 0;//< nombre de changement effectués depuis le dernier ticket
     std::string stop_area; //< stop_area d'achat du billet
    // std::string dest_stop_area; //< on est obligé de descendre à ce stop_area
-    int zone;
+    int zone = -1;
     std::string mode;
     std::string line;
     std::string network;
 
-    Ticket::ticket_type current_type;
+    Ticket::ticket_type current_type = Ticket::FlatFare;
 
     std::vector<Ticket> tickets; //< Ensemble de billets à acheter pour arriver à cette étiquette
     ///Constructeur par défaut
-    Label() : cost(0), start_time(0), nb_changes(0), current_type(Ticket::FlatFare) {}
+    Label() {}
     bool operator==(const Label & l) const {
         return cost==l.cost && start_time==l.start_time && nb_changes==l.nb_changes &&
                 stop_area==l.stop_area && zone==l.zone && mode == l.mode &&

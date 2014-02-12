@@ -11,14 +11,14 @@ namespace greg = boost::gregorian;
 namespace navitia { namespace fare {
 
 Label next_label(Label label, Ticket ticket, const SectionKey & section) {
-    // On note des informations sur le dernier mode utilisé
+    // we save the informations about the last mod used
     label.line = section.line;
     label.mode = section.mode;
     label.network = section.network;
 
 
     if(ticket.type == Ticket::ODFare){
-        if(label.stop_area == "" || label.current_type != Ticket::ODFare){ // C'est un nouveau ticket de type OD
+        if(label.stop_area == "" || label.current_type != Ticket::ODFare){ // It's a new OD ticket
             label.stop_area = section.start_stop_area;
             label.zone = section.start_zone;
             label.nb_changes = 0;
@@ -26,19 +26,19 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section) {
 
             ticket.sections.push_back(section);
             label.tickets.push_back(ticket);
-        }else{ // On a un ancien ticket
+        }else{ // We got an old ticket
             label.tickets.back().sections.push_back(section);
             label.nb_changes++;
         }
 
     }else{
-        // Si c'est un ticket vide, c'est juste un changement
-        // On incrémente le nombre de changements et la durée effectuée avec le même ticket
+        // empty ticket, it is juste a change
+        // we have to update the number of changes and the duration with the same ticket
         if(ticket.caption == "" && ticket.value == 0){
             label.nb_changes++;
         } else {
-            // On a acheté un nouveau billet
-            // On note le coût global du trajet, remet à 0 la durée/changements
+            // we bought a new ticket
+            // we save the global cost, and we reset the number of changes and duration
             if (ticket.value.undefined)
                 label.nb_undefined_sub_cost++; //we need to track the number of undefined ticket for the comparison operator
             label.cost += ticket.value;
@@ -160,7 +160,7 @@ results Fare::compute_fare(const routing::Path& path) const {
                 }
             }
         }
-        // On est tombé sur un segment exclusif : on est obligé d'utilisé ce ticket
+        // exclusive segment, we have to use that ticket
         catch(Ticket ticket) {
             LOG4CPLUS_TRACE(logger, "\texclusive section for fare");
             new_labels.clear();
@@ -172,20 +172,12 @@ results Fare::compute_fare(const routing::Path& path) const {
         labels = new_labels;
 
     }
-    std::cout << "solution ::: " << std::endl;
-    for(Label label : labels.at(0)) {
-        std::cout << "++ label : " << label.cost << " unkown = " << label.nb_undefined_sub_cost << std::endl;
-        for (const auto& t: label.tickets) {
-            std::cout << t.key << " cost: " << t.value << std::endl;
-        }
-    }
 
-    // On recherche le label de moindre coût
-    // Si on a deux fois le même coût, on prend celui qui nécessite le moins de billets
+    // We look for the cheapest label
+    // if 2 label have the same cost, we take the one with the least number of tickets
     boost::optional<Label> best_label;
     for(Label label : labels.at(0)) {
         if(!best_label || label < (*best_label)) {
-            std::cout << "label is the best for the moment : " << label.cost << " unkown = " << label.nb_undefined_sub_cost << std::endl;
             res.tickets = label.tickets;
             res.not_found = (label.nb_undefined_sub_cost != 0);
             res.total = label.cost;
@@ -273,7 +265,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
     bool result = true;
     if(label.current_type == Ticket::ODFare && this->global_condition != Transition::GlobalCondition::with_changes)
         result = false;
-    BOOST_FOREACH(Condition cond, this->start_conditions)
+    for(Condition cond: this->start_conditions)
     {
         if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.start_zone)
             result = false;
@@ -294,7 +286,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
             result &= compare(label.tickets.back().key, cond.value, cond.comparaison);
         }
     }
-    BOOST_FOREACH(Condition cond, this->end_conditions)
+    for(Condition cond: this->end_conditions)
     {
         if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.dest_zone)
             result = false;

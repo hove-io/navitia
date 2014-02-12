@@ -124,7 +124,6 @@ Fare load_fare_from_ed(ed::Data ed_data) {
     for (const auto& f: ed_data.fare_map) {
         fare.fare_map.insert(f);
     }
-//    fare.fare_map = ed_data.fare_map;
 
     //for transition we have to build the graph
     std::map<State, Fare::vertex_t> state_map;
@@ -152,34 +151,29 @@ Fare load_fare_from_ed(ed::Data ed_data) {
 
         boost::add_edge(start_v, end_v, transition, fare.g);
     }
-//    Transition default_transition;
-//    Ticket default_ticket = make_default_ticket();
-//    default_transition.ticket_key = default_ticket.key;
-//    boost::add_edge(fare.begin_v, fare.begin_v, default_transition, fare.g);
-//    DateTicket dticket;
-//    dticket.add(boost::gregorian::date(boost::gregorian::neg_infin), boost::gregorian::date(boost::gregorian::pos_infin), default_ticket);
-//    fare.fare_map.insert({default_ticket.key, dticket});
 
     return fare;
 }
 
-BOOST_AUTO_TEST_CASE(test_computation) {
+struct fare_load_fixture {
+    fare_load_fixture() {
+        ed::connectors::fare_parser parser(ed_data, std::string(FIXTURES_DIR) + "/fare/idf.fares",
+                                           std::string(FIXTURES_DIR) + "/fare/prix.csv",
+                                           std::string(FIXTURES_DIR) + "/fare/tarifs_od.csv");
+        parser.load();
+        f = load_fare_from_ed(parser.data);
+    }
+
     std::vector<std::string> keys;
-
     ed::Data ed_data;
+    Fare f;
+    navitia::fare::results res;
+};
 
-
-    ed::connectors::fare_parser parser(ed_data, std::string(FIXTURES_DIR) + "/fare/idf.fares",
-                                       std::string(FIXTURES_DIR) + "/fare/prix.csv",
-                                       std::string(FIXTURES_DIR) + "/fare/tarifs_od.csv");
-
-    parser.load();
-
-    Fare f = load_fare_from_ed(parser.data);
-
+BOOST_FIXTURE_TEST_CASE(simple_journey, fare_load_fixture) {
     // Un trajet simple
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|06;02|10;1;1;metro");
-    navitia::fare::results res = f.compute_fare(string_to_path(keys));
+    res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size() , 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value , 170);
 
@@ -207,7 +201,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;1;bus");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size() , 3);
+}
 
+BOOST_FIXTURE_TEST_CASE(od_paris, fare_load_fixture) {
     // On teste un peu les OD vers paris
     keys.clear();
     keys.push_back("ratp;8711388;8775890;FILGATO-2;2011|07|01;04|40;04|50;4;1;rapidtransit");
@@ -226,13 +222,17 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|07|01;04|40;04|50;1;1;tramway");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size() , 2);
+}
 
+BOOST_FIXTURE_TEST_CASE(other_date, fare_load_fixture) {
     // On teste le tarif à une autre date
     keys.clear();
     keys.push_back("ratp;mantes;FILNav31;FILGATO-2;2011|12|01;04|40;04|50;4;1;metro");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.at(0).value,170);
+}
 
+BOOST_FIXTURE_TEST_CASE(noctilien, fare_load_fixture) {
     // On teste le noctilien
     keys.clear();
     keys.push_back("56;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;1;bus");
@@ -262,6 +262,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size() , 2);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(test_filgato, fare_load_fixture) {
     keys.clear();
     keys.push_back("ratp;8739300;FILGATO-2;8775499;2011|12|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute_fare(string_to_path(keys));
@@ -269,6 +272,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value,960); // 230 + 120 + 610 [codes 30;100;44]
     BOOST_CHECK_EQUAL(res.tickets.at(0).sections.size() , 1);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(two_rer_test_case, fare_load_fixture) {
     // Cas avec deux RER
     keys.clear();
     keys.push_back("ratp;8739300;FILGATO-2;8775890;2011|12|01;04|40;04|50;4;1;rapidtransit");
@@ -278,6 +284,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value,960);
     BOOST_CHECK_EQUAL(res.tickets.at(0).sections.size() , 2);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(rer_with_metro, fare_load_fixture) {
     // Cas avec un RER, un changement en métro
     keys.clear();
     keys.push_back("ratp;8739300;FILGATO-2;8775890;2011|12|01;04|40;04|50;4;1;rapidtransit");
@@ -286,8 +295,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.size() , 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 320); // code 130
     BOOST_CHECK_EQUAL(res.tickets.at(0).sections.size() , 2);
+}
 
-
+BOOST_FIXTURE_TEST_CASE(two_rer_with_metro, fare_load_fixture) {
     // Cas avec deux RER, un changement en métro au milieu
     keys.clear();
     keys.push_back("ratp;8739300;FILGATO-2;8775890;2011|12|01;04|40;04|50;4;1;rapidtransit");
@@ -297,8 +307,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.size() , 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value,960);
     BOOST_CHECK_EQUAL(res.tickets.at(0).sections.size() , 3);
+}
 
-
+BOOST_FIXTURE_TEST_CASE(two_rer_with_bus, fare_load_fixture) {
     // Cas avec un RER, un changement en bus => faut payer
     keys.clear();
     keys.push_back("ratp;8739300;FILGATO-2;8775890;2011|12|01;04|40;04|50;4;1;rapidtransit");
@@ -312,7 +323,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(1).sections.size() , 1);
     BOOST_CHECK_EQUAL(res.tickets.at(2).value,700); // code 144
     BOOST_CHECK_EQUAL(res.tickets.at(2).sections.size() , 1);
+}
 
+BOOST_FIXTURE_TEST_CASE(natio_filgato, fare_load_fixture) {
     keys.clear();
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2011|12|01;04|40;04|50;1;1;rapidtransit");
     keys.push_back("ratp;8775890;FILGATO-2;8775499;2011|12|01;04|40;04|50;1;5;rapidtransit");
@@ -341,6 +354,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).sections.size() , 1);
     BOOST_CHECK_EQUAL(res.tickets.at(1).sections.size(), 2);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(rer_in_paris, fare_load_fixture) {
     // On prend le RER intramuros
     keys.clear();
     keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;1;1;RapidTransit"); // Aulnay -> CDG "intramuros"
@@ -348,6 +364,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(tram_with_od, fare_load_fixture) {
     // 13/10/2011 : youpppiiii on peut prendre "parfois" le tramway avec un ticket O/D
     keys.clear();
     keys.push_back(";8711388;800:T4;8727141;2011|07|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
@@ -365,6 +384,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
     BOOST_CHECK_EQUAL(res.tickets.at(1).value, 470); // code 12+84 => 230 + 240
 
+}
+
+BOOST_FIXTURE_TEST_CASE(exclusive_line, fare_load_fixture) {
     // On teste les lignes à tarif exclusif
     keys.clear();
     keys.push_back(";paris;098098001:1;areoport;2011|07|31;09|28;09|39;4;4;Bus");
@@ -380,6 +402,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
     BOOST_CHECK_EQUAL(res.tickets.at(1).value, 1150); // Kof ! c'est cher la navette AF}
 
+}
+
+BOOST_FIXTURE_TEST_CASE(metro_rer_bus, fare_load_fixture) {
     // Metro-RER-Bus
     keys.clear();
     keys.push_back("439;59465;100110008:8;8739303;2011|12|01;16|07;16|34;1;1;Metro");
@@ -389,9 +414,10 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 320);
     BOOST_CHECK_EQUAL(res.tickets.at(1).value, 170);
+}
 
     // Jeux de tests rajoutés par le STIF
-
+BOOST_FIXTURE_TEST_CASE(stif_test_case_1, fare_load_fixture) {
     // Essais avec noctilien
     keys.clear();
     keys.push_back("56;59557;100987785:N12;59452;2011|12|02;03|20;03|42;1;1;Bus");
@@ -404,6 +430,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(1).value, 340);
     BOOST_CHECK_EQUAL(res.tickets.at(2).value, 170);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(mode_than_90_after_billing, fare_load_fixture) {
     // Plus de 90min depuis le dernier compostage
     keys.clear();
     keys.push_back("442;59362;100100068:68;59624;2011|12|05;10|52;11|08;1;2;Bus");
@@ -416,6 +445,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
     BOOST_CHECK_EQUAL(res.tickets.at(1).value, 170);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(orlybus, fare_load_fixture) {
     // Orlybus
     keys.clear();
     keys.push_back("442;8775863;100100283:ORLYBUS;59675;2011|12|05;05|35;05|56;1;4;Bus");
@@ -423,6 +455,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 690);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(free_journey, fare_load_fixture) {
     // UN trajet qui coûtait 0 pour des raison obscures
     keys.clear();
     keys.push_back("440;59108;100112013:T3;59624;2011|12|05;11|43;11|45;1;1;Tramway");
@@ -432,6 +467,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(mantis_sword_36393, fare_load_fixture) {
     // Ticket mantis sword 36393
     // Ressort deux ticket t+ au lieu d'un seul
     keys.clear();
@@ -441,6 +479,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(stif_test_case_2, fare_load_fixture) {
     // Remonté par le stif, deux tickets au lieu d'un
     keys.clear();
     keys.push_back("439;59500;100110009:9;59489;2011|12|13;10|17;10|23;1;1;Metro");
@@ -465,6 +506,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 250);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(mantis_sword_39517, fare_load_fixture) {
     // Mantis sword 39517
     keys.clear();
     keys.push_back("440;8711389;800:T4;8743179;2012|04|23;14|28;14|29;4;4;Tramway");
@@ -478,15 +522,21 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 265);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(mantis_sword_46044, fare_load_fixture) {
     // Mantis sword 46044
     keys.clear();
     keys.push_back("440;59062;100112013:T3;8775864;2012|12|05;17|12;17|18;1;1;Tramway");
     keys.push_back("436;8775864;810:B;8775499;2012|12|05;17|25;17|34;1;3;RapidTransit");
     res = f.compute_fare(string_to_path(keys));
-    print_res(res);
+//    print_res(res);
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
 
+}
+
+BOOST_FIXTURE_TEST_CASE(journeys_with_unknown_section, fare_load_fixture) {
     // tests with unknown section in the middle
     keys.clear();
     keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;Metro");
@@ -494,7 +544,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
     keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
     res = f.compute_fare(string_to_path(keys));
-    print_res(res);
+//    print_res(res);
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 250);
     BOOST_CHECK_EQUAL(res.tickets.at(1).key, make_default_ticket().key);
@@ -505,7 +555,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
     keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
     res = f.compute_fare(string_to_path(keys));
-    print_res(res);
+//    print_res(res);
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 3);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
     BOOST_CHECK_EQUAL(res.tickets.at(1).key, make_default_ticket().key);
@@ -518,7 +568,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
     keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
     res = f.compute_fare(string_to_path(keys));
-    print_res(res);
+//    print_res(res);
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).key, make_default_ticket().key);
     BOOST_CHECK_EQUAL(res.tickets.at(1).value, 250);
@@ -529,16 +579,14 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
     keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal"); //unkown fare section
     res = f.compute_fare(string_to_path(keys));
-    print_res(res);
+//    print_res(res);
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 3);
     BOOST_CHECK_EQUAL(res.tickets.at(0).key, make_default_ticket().key);
     BOOST_CHECK_EQUAL(res.tickets.at(1).key, make_default_ticket().key);
     BOOST_CHECK_EQUAL(res.tickets.at(2).key, make_default_ticket().key);
 }
 
-//TODO tout decouper + rajout fixture
-
-BOOST_AUTO_TEST_CASE(unkown_fare) {
+BOOST_AUTO_TEST_CASE(test_without_file_load_and_unknown_fare) {
     std::vector<std::string> keys;
 
     Fare fare;
@@ -546,16 +594,6 @@ BOOST_AUTO_TEST_CASE(unkown_fare) {
     boost::gregorian::date end_date(boost::gregorian::from_undelimited_string("20350101"));
     fare.fare_map["price1"].add(start_date, end_date, Ticket("price1", "Ticket vj 1", 100, "125"));
     fare.fare_map["price2"].add(start_date, end_date, Ticket("price2", "Ticket vj 2", 200, "175"));
-
-    Transition default_transition;
-    Ticket default_ticket = make_default_ticket();
-    default_ticket.value = 999999;
-    default_transition.ticket_key = default_ticket.key;
-    auto begin_v = boost::add_vertex(State(), fare.g);
-    boost::add_edge(begin_v, begin_v, default_transition, fare.g);
-    DateTicket dticket;
-    dticket.add(boost::gregorian::date(boost::gregorian::neg_infin), boost::gregorian::date(boost::gregorian::pos_infin), default_ticket);
-    fare.fare_map.insert({default_ticket.key, dticket});
 
     Transition transition;
     transition.start_conditions = {};
