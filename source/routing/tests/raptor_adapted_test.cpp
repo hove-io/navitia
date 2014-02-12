@@ -44,7 +44,7 @@ Call-1:
 -------
 parameters :
     date: 20140114T101000
-    without_disrupt=false
+    disruption_active=false
 
 Result: The raptor propose vehicle journey vj2 with departure at 10h30 and arrival at 11h10.
 This is the optimized solution.
@@ -53,7 +53,7 @@ Call-2:
 -------
 parameters :
     date: 20140114T101000
-    without_disrupt=true
+    disruption_active=true
 
 Result: The raptor propose vehicle journey vj1 with departure at 10h10 and arrival at 11h10.
 This is not the optimized solution but another proposition avoiding vehiclejourney with disruption (Impact-1).
@@ -62,7 +62,7 @@ Call-3:
 -------
 parameters :
     date: 20140115T101000
-    without_disrupt=true
+    disruption_active=true
 
 Result: The raptor propose vehicle journey vj2 because there is no disruption for this day.
 This is the optimized solution.
@@ -71,7 +71,7 @@ Call-4:
 -------
 parameters :
     date: 20140116T101000
-    without_disrupt=true
+    disruption_active=true
 
 Result: The raptor propose vehicle journey vj1 with departure at 10h10 and arrival at 11h10.
 This is not the optimized solution but another proposition avoiding vehiclejourney with disruption (Impact-2).
@@ -80,7 +80,7 @@ Call-5:
 -------
 parameters :
     date: 20140118T101000
-    without_disrupt=true
+    disruption_active=true
 
 Result: The raptor propose vehicle journey vj2 because there is no disruption active between 10h30
 and 11h10 for this day. Impact-3 is active between 08h00 and 10h29 for 2014-01-18.
@@ -248,18 +248,18 @@ impact-3
 
         b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2014,01,13), boost::gregorian::date(2014,01,25));
     }
-    pbnavitia::Response make_response(const std::vector<std::string> &datetimes_str, bool without_disrupt) {
+    pbnavitia::Response make_response(const std::vector<std::string> &datetimes_str, bool disruption_active) {
         return ::make_response(*raptor, origin, destination,
                                datetimes_str, true,
                                type::AccessibiliteParams(),
                                forbidden,
-                               *street_network, without_disrupt);
+                               *street_network, disruption_active);
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE( without_disrupt, Params)
+BOOST_FIXTURE_TEST_SUITE(disruption_active, Params)
 
-BOOST_AUTO_TEST_CASE(Test_without_disrupt_false) {
+BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     {
     pbnavitia::Response resp = make_response({"20140114T101000"}, false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);

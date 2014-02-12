@@ -6,10 +6,10 @@ namespace navitia { namespace routing {
 std::vector<Departure_Type>
 getDepartures(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
               bool clockwise, const std::vector<label_vector_t> &labels,
-              const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool without_disrupt) {
+              const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active) {
       std::vector<Departure_Type> result;
 
-      auto pareto_front = getParetoFront(clockwise, departs, destinations, labels, accessibilite_params, data, without_disrupt);
+      auto pareto_front = getParetoFront(clockwise, departs, destinations, labels, accessibilite_params, data, disruption_active);
       result.insert(result.end(), pareto_front.begin(), pareto_front.end());
 
       if(!pareto_front.empty()) {
@@ -44,7 +44,7 @@ getDepartures(const std::vector<std::pair<type::idx_t, bt::time_duration> > &dep
 
 
 std::vector<Departure_Type>
-getDepartures(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const DateTime &dep, bool clockwise, const type::Data & data,bool without_disrupt) {
+getDepartures(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const DateTime &dep, bool clockwise, const type::Data & data,bool disruption_active) {
     std::vector<Departure_Type> result;
     for(auto dep_dist : departs) {
         for(auto journey_pattern : data.pt_data.stop_points[dep_dist.first]->journey_pattern_point_list) {
@@ -75,7 +75,7 @@ std::vector<Departure_Type>
 getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, 
                const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
                const std::vector<label_vector_t> &labels, 
-               const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool without_disrupt){
+               const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active){
     std::vector<Departure_Type> result;
 
     DateTime best_dt, best_dt_jpp;
@@ -107,7 +107,7 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time
                         const type::StopTime* st;
                         DateTime dt = 0;
 
-                        std::tie(st, dt) = best_stop_time(journey_pattern_point, l.dt, accessibilite_params.vehicle_properties, !clockwise, without_disrupt, data, true);
+                        std::tie(st, dt) = best_stop_time(journey_pattern_point, l.dt, accessibilite_params.vehicle_properties, !clockwise, disruption_active, data, true);
                         BOOST_ASSERT(st!=nullptr);
                         if(st != nullptr) {
                             if(clockwise) {

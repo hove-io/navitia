@@ -10,13 +10,13 @@ namespace navitia { namespace routing {
 std::pair<const type::StopTime*, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
               const DateTime dt,
-              const type::Data &data, bool without_disrupt, bool reconstructing_path = false,
+              const type::Data &data, bool disruption_active, bool reconstructing_path = false,
               const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
 ///Cherche le premier stop_time partant avant dt sur la journey_pattern au journey_pattern point order
 /// Renvoie la première heure d'arrivée avant dt
 std::pair<const type::StopTime*, uint32_t>
 tardiest_stop_time(const type::JourneyPatternPoint* jpp,
-              const DateTime dt, const type::Data &data, bool without_disrupt, bool reconstructing_path,
+              const DateTime dt, const type::Data &data, bool disruption_active, bool reconstructing_path,
               const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
 
 /// Returns the next stop time at given journey pattern point
@@ -26,7 +26,7 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
           const DateTime dt,
           /*const type::Properties &required_properties*/
           const type::VehicleProperties & vehicle_properties,
-          const bool clockwise, bool without_disrupt, const type::Data &data, bool reconstructing_path = false);
+          const bool clockwise, bool disruption_active, const type::Data &data, bool reconstructing_path = false);
 
 /// Pour les horaires en frequences
 

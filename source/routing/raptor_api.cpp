@@ -307,7 +307,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::AccessibiliteParams & accessibilite_params,
               std::vector<std::string> forbidden,
               georef::StreetNetwork & worker,
-              bool without_disrupt,
+              bool disruption_active,
               uint32_t max_duration, uint32_t max_transfers) {
 
     pbnavitia::Response response;
@@ -351,7 +351,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, without_disrupt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, bound, max_transfers, accessibilite_params, forbidden, clockwise);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1) {
@@ -380,7 +380,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
-                                   bool without_disrupt,
+                                   bool disruption_active,
                                    int max_duration, uint32_t max_transfers) {
     pbnavitia::Response response;
 
@@ -405,7 +405,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                           accessibilite_params/*wheelchair*/, forbidden, clockwise, without_disrupt);
+                           accessibilite_params/*wheelchair*/, forbidden, clockwise, disruption_active);
 
 
     for(const type::StopPoint* sp : raptor.data.pt_data.stop_points) {

@@ -369,13 +369,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         return routing::make_response(*planner, origin, destination, datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.without_disrupt(), request.max_duration(),
+                request.disruption_active(), request.max_duration(),
                 request.max_transfers());
     } else {
         return navitia::routing::make_isochrone(*planner, origin, request.datetimes(0),
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.without_disrupt(), request.max_duration(),
+                request.disruption_active(), request.max_duration(),
                 request.max_transfers());
     }
 }

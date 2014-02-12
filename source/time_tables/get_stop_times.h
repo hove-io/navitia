@@ -16,7 +16,7 @@ typedef std::pair<DateTime, const type::StopTime*> datetime_stop_time;
  * @return : Renvoie de paire de datetime, st.idx de départs. La liste est triée selon les datetimes.
  */
 std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const DateTime &dt,
-                                   const DateTime &max_dt, const size_t max_departures, const type::Data & data, bool without_disrupt,
+                                   const DateTime &max_dt, const size_t max_departures, const type::Data & data, bool disruption_active,
                                    const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams());
 
 

@@ -33,7 +33,7 @@ std::unordered_map<type::idx_t, uint32_t> get_arrival_order(const std::vector<ty
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                        const std::vector<std::string>& forbidden_uris,
                                        const DateTime &datetime, const DateTime &max_datetime,
-                                       type::Data & data, bool without_disrupt);
+                                       type::Data & data, bool disruption_active);
 
 /**
  * @brief departure_board : Renvoie un flux protocole, fait appel à la fonction departure_board renvoyant les paires DateTime/StopTime.
@@ -49,6 +49,6 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
  */
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                    const std::vector<std::string>& forbidden_uris,
-                                   const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data, bool without_disrupt);
+                                   const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data, bool disruption_active);
 
 }}
