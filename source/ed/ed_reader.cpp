@@ -1,15 +1,17 @@
 #include "ed_reader.h"
+#include "ed/connectors/fare_utils.h"
 
 namespace ed{
 
 namespace bg = boost::gregorian;
 namespace nt = navitia::type;
+namespace nf = navitia::fare;
 
-void EdReader::fill(navitia::type::Data& data){
+void EdReader::fill(navitia::type::Data& data, const double percent_delete){
 
     pqxx::work work(*conn, "loading ED");
 
-    this->fill_vector_to_ignore(data, work);
+    this->fill_vector_to_ignore(data, work, percent_delete);
     this->fill_meta(data, work);
 
     this->fill_networks(data, work);
@@ -57,6 +59,10 @@ void EdReader::fill(navitia::type::Data& data){
     this->build_rel_way_admin(data, work);
     this->build_rel_poi_admin(data, work);
     this->build_rel_admin_admin(data, work);
+
+    this->fill_prices(data, work);
+    this->fill_transitions(data, work);
+    this->fill_origin_destinations(data, work);
 }
 
 
@@ -724,19 +730,24 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
     std::string request = "SELECT way_id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, number, left_side FROM georef.house_number where way_id IS NOT NULL;";
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
-        navitia::georef::HouseNumber hn;
-        const_it["number"].to(hn.number);
-        hn.coord.set_lon(const_it["lon"].as<double>());
-        hn.coord.set_lat(const_it["lat"].as<double>());
-        navitia::georef::Way* way = this->way_map[const_it["way_id"].as<idx_t>()];
-        if (way != NULL){
-            way->add_house_number(hn);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        std::string string_number;
+        const_it["number"].to(string_number);
+        int int_number = str_to_int(string_number);
+        if( int_number != -1){
+            navitia::georef::HouseNumber hn;
+            hn.number = int_number;
+            hn.coord.set_lon(const_it["lon"].as<double>());
+            hn.coord.set_lat(const_it["lat"].as<double>());
+            navitia::georef::Way* way = this->way_map[const_it["way_id"].as<idx_t>()];
+            if (way != NULL){
+                way->add_house_number(hn);
+            }
         }
     }
 }
 
-void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work){
+void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, const double percent_delete){
     navitia::georef::GeoRef geo_ref_temp;
     std::unordered_map<idx_t, uint64_t> osmid_idex;
     std::unordered_map<uint64_t, idx_t> node_map_temp;
@@ -785,9 +796,10 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work){
             }
         }
     }
+
     // remplissage de la liste des noeuds et edges à ne pas binariser
     for (navitia::georef::vertex_t i = 0;  i != component.size(); ++i){
-        if (component[i] != principal_component){
+        if(((principal_component > 0) && ((component[i]/principal_component) < percent_delete))){
             bool found = false;
             uint64_t source = osmid_idex[i];
             BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(i, geo_ref_temp.graph)){
@@ -808,7 +820,8 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work){
         navitia::georef::vertex_t source_idx = boost::source(*i, geo_ref_temp.graph);
         navitia::georef::vertex_t target_idx = boost::target(*i, geo_ref_temp.graph);
 
-        if ((principal_component == component[source_idx]) || (principal_component == component[target_idx])){
+        if ((principal_component > 0)
+            && (((component[source_idx]/principal_component) > percent_delete ) || ((component[target_idx]/principal_component) > percent_delete ))){
             navitia::georef::edge_t e;
             bool b;
             boost::tie(e,b) = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
@@ -979,6 +992,94 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
         const_it["key"].to(key);
         const_it["value"].to(value);
         data.geo_ref.synonymes[key]=value;
+    }
+}
+
+//Fares:
+void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
+
+    std::string request = "select ticket_key, ticket_title, "
+            "ticket_id, valid_from, valid_to, ticket_price, comments, "
+            "currency from navitia.ticket, navitia.dated_ticket "
+            "where ticket_id = ticket_key";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        nf::Ticket ticket;
+        const_it["ticket_key"].to(ticket.key);
+        const_it["ticket_title"].to(ticket.comment);
+        const_it["currency"].to(ticket.currency);
+        const_it["ticket_price"].to(ticket.value.value);
+        bg::date start = bg::from_string(const_it["valid_from"].as<std::string>());
+        bg::date end = bg::from_string(const_it["valid_to"].as<std::string>());
+
+        nf::DateTicket& date_ticket = data.fare.fare_map[ticket.key];
+
+        date_ticket.add(start, end, ticket);
+    }
+}
+
+void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
+    //we build the transition graph
+    std::map<nf::State, nf::Fare::vertex_t> state_map;
+    nf::State begin; // Start is an empty node (and the node is already is the fare graph, since it has been added in the constructor with the default ticket)
+    state_map[begin] = data.fare.begin_v;
+
+    std::string request = "select id, before_change, after_change, start_trip, "
+        "end_trip, global_condition, ticket_id from navitia.transition ";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        nf::Transition transition;
+
+        std::string before_str = const_it["before_change"].as<std::string>();
+        std::string after_str = const_it["after_change"].as<std::string>();
+
+        nf::State start = ed::connectors::parse_state(before_str);
+        nf::State end = ed::connectors::parse_state(after_str);
+
+        std::string start_trip_str = const_it["start_trip"].as<std::string>();
+        std::string end_trip_str = const_it["end_trip"].as<std::string>();
+
+        transition.start_conditions = ed::connectors::parse_conditions(start_trip_str);
+        transition.end_conditions = ed::connectors::parse_conditions(end_trip_str);
+
+        std::string cond_str = const_it["global_condition"].as<std::string>();
+        transition.global_condition = ed::connectors::to_global_condition(cond_str);
+
+        const_it["ticket_id"].to(transition.ticket_key);
+
+        nf::Fare::vertex_t start_v, end_v;
+        if(state_map.find(start) == state_map.end()){
+            start_v = boost::add_vertex(start, data.fare.g);
+            state_map[start] = start_v;
+        }
+        else start_v = state_map[start];
+
+        if(state_map.find(end) == state_map.end()) {
+            end_v = boost::add_vertex(end, data.fare.g);
+            state_map[end] = end_v;
+        }
+        else end_v = state_map[end];
+
+        //add the edge the the fare graph
+        boost::add_edge(start_v, end_v, transition, data.fare.g);
+    }
+}
+
+void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& work) {
+    std::string request = "select od.id, origin_id, origin_mode, destination_id, destination_mode, "
+                            "ticket.id, ticket.od_id, ticket_id "
+                            "from navitia.origin_destination as od, navitia.od_ticket as ticket where od.id = ticket.od_id;";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        nf::OD_key::od_type origin_mode = ed::connectors::to_od_type(const_it["origin_mode"].as<std::string>());
+        nf::OD_key origin(origin_mode, const_it["origin_id"].as<std::string>());
+
+        nf::OD_key::od_type destination_mode = ed::connectors::to_od_type(const_it["destination_mode"].as<std::string>());
+        nf::OD_key destination(destination_mode, const_it["destination_id"].as<std::string>());
+
+        std::string ticket = const_it["ticket_id"].as<std::string>();
+        data.fare.od_tickets[origin][destination].push_back(ticket);
     }
 }
 

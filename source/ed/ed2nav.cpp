@@ -19,13 +19,16 @@ namespace pt = boost::posix_time;
 int main(int argc, char * argv[])
 {
     navitia::init_app();
+    auto logger = log4cplus::Logger::getInstance("log");
     std::string output, connection_string;
+    double percent_delete;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "Fichier de sortie")
+        ("percent-delete,p", po::value<double>(&percent_delete)->default_value(0.0), "Pourcentage à partir duquel on supprime les graphes non connectées")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
 
     po::variables_map vm;
@@ -63,7 +66,7 @@ int main(int argc, char * argv[])
     now = start = pt::microsec_clock::local_time();
 
     ed::EdReader reader(connection_string);
-    reader.fill(data);
+    reader.fill(data, percent_delete);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
@@ -81,6 +84,9 @@ int main(int argc, char * argv[])
     std::cout << "journey_pattern point connections : " << data.pt_data.journey_pattern_point_connections.size() << std::endl;
     std::cout << "alias : " << data.geo_ref.alias.size() << std::endl;
     std::cout << "synonyms : " << data.geo_ref.synonymes.size() << std::endl;
+    std::cout << "fare tickets: " << data.fare.fare_map.size() << std::endl;
+    std::cout << "fare transitions: " << data.fare.nb_transitions() << std::endl;
+    std::cout << "fare od: " << data.fare.od_tickets.size() << std::endl;
 
     start = pt::microsec_clock::local_time();
     data.pt_data.sort();

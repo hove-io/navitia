@@ -1,22 +1,17 @@
 #pragma once
-
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
-
-
 #include "third_party/RTree/RTree.h"
-
+#include "adminref.h"
+#include "utils/exception.h"
+#include "utils/flat_enum_map.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <map>
-#include "adminref.h"
-#include "utils/logger.h"
-#include "utils/exception.h"
-#include "utils/flat_enum_map.h"
+
 
 namespace nt = navitia::type;
 namespace nf = navitia::autocomplete;
@@ -155,11 +150,12 @@ struct PathItem {
         case TransportCaracteristic::BssTake:
             return 0;
         case TransportCaracteristic::Walk:
-            return duration.total_seconds() / (default_speed[type::Mode_e::Walking] * speed_factor);
+            //milliseconds to reduce rounding
+            return duration.total_milliseconds() * (default_speed[type::Mode_e::Walking] * speed_factor) / 1000;
         case TransportCaracteristic::Bike:
-            return duration.total_seconds() / (default_speed[type::Mode_e::Bike] * speed_factor);
+            return duration.total_milliseconds() * (default_speed[type::Mode_e::Bike] * speed_factor) / 1000;
         case TransportCaracteristic::Car:
-            return duration.total_seconds() / (default_speed[type::Mode_e::Car] * speed_factor);
+            return duration.total_milliseconds() * (default_speed[type::Mode_e::Car] * speed_factor) / 1000;
         default:
             throw navitia::exception("unhandled transportation case");
         }

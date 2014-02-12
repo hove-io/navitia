@@ -5,7 +5,34 @@
 
 #define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
 
-namespace navitia{
+namespace navitia {
+
+struct EnhancedResponse {
+    pbnavitia::Response response;
+    size_t nb_sections = 0;
+    std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
+    pbnavitia::Ticket* unkown_ticket = nullptr; //we want only one unknown ticket
+
+    const std::string& register_section(pbnavitia::Journey* j, const routing::PathItem& /*routing_item*/, size_t section_idx) {
+        routing_section_map[{j, section_idx}] = "section_" + boost::lexical_cast<std::string>(nb_sections++);
+        return routing_section_map[{j, section_idx}];
+    }
+
+    std::string register_section(const georef::PathItem& /*georef_item*/) {
+        //we don't need to register the georef item
+        return "section_" + boost::lexical_cast<std::string>(nb_sections++);
+    }
+
+    std::string get_section_id(pbnavitia::Journey* j, size_t section_idx) {
+        auto it  = routing_section_map.find({j, section_idx});
+        if (it == routing_section_map.end()) {
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "Impossible to find section id for section idx " << section_idx);
+            return "";
+        }
+        return it->second;
+    }
+};
+
 #define FILL_PB_CONSTRUCTOR(type_name, collection_name)\
 void fill_pb_object(const nt::type_name* item, const nt::Data& data, pbnavitia::type_name *, int max_depth = 0,\
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,\
@@ -49,7 +76,9 @@ void fill_pb_placemark(navitia::georef::POI* poi, const type::Data &data, pbnavi
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_street_sections(const type::EntryPoint &ori_dest, const georef::Path & path, const type::Data &data, pbnavitia::Journey* pb_journey,
+void fill_fare_section(EnhancedResponse& pb_response, pbnavitia::Journey* pb_journey, const fare::results& fare);
+
+void fill_street_sections(EnhancedResponse& response, const type::EntryPoint &ori_dest, const georef::Path & path, const type::Data &data, pbnavitia::Journey* pb_journey,
         const boost::posix_time::ptime departure, int max_depth = 1,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);

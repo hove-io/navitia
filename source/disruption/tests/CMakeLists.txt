@@ -5,7 +5,7 @@ SET(BOOST_LIBS ${BOOST_LIB} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM
 
 add_executable(disruption_test disruption_test.cpp)
 
-target_link_libraries(disruption_test disruption_api types ptreferential pb_lib data routing ed georef autocomplete utils ${BOOST_LIBS})
+target_link_libraries(disruption_test disruption_api types ptreferential pb_lib data fare routing ed georef autocomplete utils ${BOOST_LIBS})
 
 
 ADD_TEST(disruption_test ${EXECUTABLE_OUTPUT_PATH}/disruption_test --report_level=no)

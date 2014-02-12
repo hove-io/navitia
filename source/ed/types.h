@@ -292,4 +292,49 @@ struct StopTime : public Nameable {
     bool operator<(const StopTime& other) const;
 };
 
+/// Données Geographique
+
+struct Node{
+    size_t id;
+    bool is_used;
+    navitia::type::GeographicalCoord coord;
+    Node():id(0), is_used(false){};
+};
+
+struct Admin{
+    size_t id;
+    bool is_used;
+    std::string level;
+    std::string insee;
+    std::string name;
+    std::string postcode;
+    navitia::type::GeographicalCoord coord;
+    Admin():id(0), is_used(false), level("8"){};
+};
+
+struct Way{
+    size_t id;
+    Admin* admin;
+    std::string name;
+    std::string type;
+    Way():id(0), admin(nullptr), name(""), type(""){};
+};
+
+struct Edge{
+    Way* way;
+    Node* source;
+    Node* target;
+    int length;
+    Edge():way(nullptr), source(nullptr), target(nullptr), length(0){}
+};
+
+struct HouseNumber{
+    std::string number;
+    Way* way;
+    navitia::type::GeographicalCoord coord;
+
+    HouseNumber(): number(""), way(nullptr){}
+
+};
+
 }}//end namespace ed::types

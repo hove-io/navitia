@@ -156,7 +156,7 @@ display_informations_vj = {
     "label": get_label(attribute="display_information"),
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
-    "equipments":equipments(attribute="has_equipments"),
+    "equipments": equipments(attribute="has_equipments"),
     "messages": NonNullList(NonNullNested(generic_message))
 }
 

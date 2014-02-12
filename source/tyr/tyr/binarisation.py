@@ -40,16 +40,16 @@ def make_connection_string(instance_config):
 #TODO bind task
 @celery.task()
 def fusio2ed(instance_config, filename, job_id):
-    """ Unzip fusio file and launch fusio2ed """
+    """ launch fusio2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('pyed.lock|' + instance.name)
+    lock = redis.lock('tyr.lock|' + instance.name)
     if not lock.acquire(blocking=False):
         fusio2ed.retry(countdown=300, max_retries=10)
 
     try:
-        pyed_logger = logging.getLogger('tyr')
+        tyr_logger = logging.getLogger('tyr')
         fusio_logger = logging.getLogger('fusio2ed')
         working_directory = os.path.dirname(filename)
 
@@ -68,7 +68,7 @@ def fusio2ed(instance_config, filename, job_id):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        res = launch_exec("fusio2ed", params, fusio_logger, pyed_logger)
+        res = launch_exec("fusio2ed", params, fusio_logger, tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
@@ -82,7 +82,7 @@ def fusio2ed(instance_config, filename, job_id):
 
 @celery.task()
 def gtfs2ed(instance_config, gtfs_filename,  job_id):
-    """ Unzip gtfs file launch gtfs2ed """
+    """ launch gtfs2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -140,6 +140,39 @@ def osm2ed(instance_config, osm_filename, job_id):
         res = launch_exec('osm2ed',
                 ["-i", osm_filename, "--connection-string", connection_string],
                 osm_logger, tyr_logger)
+        if res != 0:
+            #@TODO: exception
+            raise ValueError('todo: exception')
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+    finally:
+        lock.release()
+
+@celery.task()
+def geopal2ed(instance_config, filename, job_id):
+    """ launch geopal2ed """
+
+    job = models.Job.query.get(job_id)
+    instance = job.instance
+    lock = redis.lock('tyr.lock|' + instance.name)
+    if not lock.acquire(blocking=False):
+        geopal2ed.retry(countdown=300, max_retries=10)
+
+    try:
+        working_directory = os.path.dirname(filename)
+
+        zip_file = zipfile.ZipFile(filename)
+        zip_file.extractall(path=working_directory)
+
+        tyr_logger = logging.getLogger('tyr')
+        geopal_logger = logging.getLogger('geopal2ed')
+
+        connection_string = make_connection_string(instance_config)
+        res = launch_exec('geopal2ed',
+                ["-i", working_directory, "--connection-string", connection_string],
+                geopal_logger, tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
@@ -223,6 +256,39 @@ def nav2rt(instance_config, job_id):
                         "--connection-string", connection_string],
                     nav2rt_logger, tyr_logger)
         if res != 0:
+            raise ValueError('todo: exception')
+    except:
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+    finally:
+        lock.release()
+
+
+@celery.task()
+def fare2ed(instance_config, filename, job_id):
+    """ launch fare2ed """
+
+    job = models.Job.query.get(job_id)
+    instance = job.instance
+    lock = redis.lock('tyr.lock|' + instance.name)
+    if not lock.acquire(blocking=False):
+        fare2ed.retry(countdown=300, max_retries=10)
+
+    try:
+        tyr_logger = logging.getLogger('tyr')
+        fare_logger = logging.getLogger('fare2ed')
+        working_directory = os.path.dirname(filename)
+
+        zip_file = zipfile.ZipFile(filename)
+        zip_file.extractall(path=working_directory)
+
+        res = launch_exec("fare2ed", ['-f', working_directory,
+                                      '--connection-string',
+                                      make_connection_string(instance_config)],
+                          fare_logger, tyr_logger)
+        if res != 0:
+            #@TODO: exception
             raise ValueError('todo: exception')
     except:
         job.state = 'failed'

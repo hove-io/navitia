@@ -151,6 +151,37 @@ BEGIN
         RAISE NOTICE 'relation "message_uri_idx" already exists, skipping';
     END CASE;
 
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'node_id')
+    THEN
+        CREATE UNIQUE INDEX node_id ON georef.node(id);
+    ELSE
+        RAISE NOTICE 'relation "node_id" already exists, skipping';
+    END CASE;
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'edge_source_node_id')
+    THEN
+        CREATE INDEX edge_source_node_id ON georef.edge(source_node_id);
+    ELSE
+        RAISE NOTICE 'relation "edge_source_node_id" already exists, skipping';
+    END CASE;
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'edge_target_node_id')
+    THEN
+        CREATE INDEX edge_target_node_id ON georef.edge(target_node_id);
+    ELSE
+        RAISE NOTICE 'relation "edge_target_node_id" already exists, skipping';
+    END CASE;
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'edge_way_id')
+    THEN
+        CREATE INDEX edge_way_id ON georef.edge(way_id);
+    ELSE
+        RAISE NOTICE 'relation "edge_way_id" already exists, skipping';
+    END CASE;
+
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'rel_amin_way_id')
+    THEN
+        CREATE INDEX rel_amin_way_id ON georef.rel_way_admin(admin_id, way_id);
+    ELSE
+        RAISE NOTICE 'relation "rel_amin_way_id" already exists, skipping';
+    END CASE;
 END$$;
 
 

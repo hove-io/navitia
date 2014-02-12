@@ -3,18 +3,24 @@
 #include "utils/lotus.h"
 #include "data.h"
 #include "type/meta_data.h"
+#include "utils/functions.h"
 
 
 namespace ed{
 
 struct EdPersistor{
-
     Lotus lotus;
+    Lotus lotus_second;
+    log4cplus::Logger logger;
 
-    EdPersistor(const std::string& connection_string) : lotus(connection_string){}
+    EdPersistor(const std::string& connection_string) : lotus(connection_string),
+                        lotus_second(connection_string),
+                        logger(log4cplus::Logger::getInstance("log")){}
 
     void persist(const ed::Data& data, const navitia::type::MetaData& meta);
-
+    void persist_fare(const ed::Data& data);
+    /// Données Georef
+    void persist(const ed::Georef& data);
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
     void insert_sa_sp_properties(const ed::Data& data);
@@ -42,9 +48,28 @@ private:
     void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
     void insert_alias(const std::map<std::string, std::string>& alias);
     void insert_synonyms(const std::map<std::string, std::string>& synonyms);
+
+    /// Inserer les données fare
+    void insert_transitions(const ed::Data& data);
+    void insert_prices(const ed::Data& data);
+    void insert_origin_destination(const ed::Data& data);
+
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
     void build_relation();
+
+    /// Données Georef
+    void clean_georef();
+    void insert_admins(const ed::Georef& data);
+    void insert_ways(const ed::Georef& data);
+    void insert_nodes(const ed::Georef& data);
+    void insert_house_numbers(const ed::Georef& data);
+    void insert_edges(const ed::Georef& data);
+    void build_relation_way_admin(const ed::Georef& data);
+    void update_boundary();
+
+    navitia::type::GeographicalCoord coord2wgs84(const navitia::type::GeographicalCoord& coord, const uint32_t coord_in = 27572);
+
 
 };
 

@@ -26,20 +26,26 @@ add_subdirectory(tests)
 add_library(transportation_data_import ed_persistor.cpp)
 
 add_executable(gtfs2ed gtfs2ed.cpp)
-target_link_libraries(gtfs2ed transportation_data_import ed connectors types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
+target_link_libraries(gtfs2ed transportation_data_import ed connectors types  fare pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
 
 add_executable(fusio2ed fusio2ed.cpp)
-target_link_libraries(fusio2ed transportation_data_import ed connectors types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
+target_link_libraries(fusio2ed transportation_data_import ed connectors fare types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
+
+add_executable(fare2ed fare2ed.cpp)
+target_link_libraries(fare2ed transportation_data_import ed connectors fare types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
-target_link_libraries(ed2nav types connectors pq pqxx data georef routing
+target_link_libraries(ed2nav types connectors fare pq pqxx data georef routing
     utils autocomplete ${BOOST_LIBS} log4cplus)
 
 
 add_subdirectory(connectors)
 
 add_executable(nav2rt nav2rt.cpp)
-target_link_libraries(nav2rt ed types connectors pq pqxx data georef routing
+target_link_libraries(nav2rt ed types connectors pq pqxx data fare georef routing
     utils autocomplete ${BOOST_LIBS} log4cplus)
 
-INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed)
+add_executable(geopal2ed geopal2ed.cpp)
+target_link_libraries(geopal2ed transportation_data_import ed connectors types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
+
+INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed fare2ed geopal2ed)

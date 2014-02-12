@@ -1,13 +1,14 @@
 #pragma once
 
 #include "data.h"
-#include <pqxx/pqxx>
 #include "utils/exception.h"
-#include <unordered_map>
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
+#include <pqxx/pqxx>
+#include <unordered_map>
 #include <algorithm>
+#include "utils/functions.h"
 
 namespace ed{
 
@@ -25,7 +26,7 @@ struct EdReader{
         }
     }
 
-    void fill(navitia::type::Data& nav_data);
+    void fill(navitia::type::Data& nav_data, const double percent_delete);
 
 private:
     //map d'id en base vers le poiteur de l'objet instancié
@@ -86,12 +87,17 @@ private:
     void fill_house_numbers(navitia::type::Data& data, pqxx::work& work);
     void fill_vertex(navitia::type::Data& data, pqxx::work& work);
     void fill_graph(navitia::type::Data& data, pqxx::work& work);
-    void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work);
+    void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work, const double percent_delete);
     void fill_graph_vls(navitia::type::Data& data, pqxx::work& work);
 
     //les alias et synonymes:
     void fill_alias(navitia::type::Data& data, pqxx::work& work);
     void fill_synonyms(navitia::type::Data& data, pqxx::work& work);
+
+    //les tarifs:
+    void fill_prices(navitia::type::Data& data, pqxx::work& work);
+    void fill_transitions(navitia::type::Data& data, pqxx::work& work);
+    void fill_origin_destinations(navitia::type::Data& data, pqxx::work& work);
 
     /// les relations admin et les autres objets
     void build_rel_stop_point_admin(navitia::type::Data& data, pqxx::work& work);

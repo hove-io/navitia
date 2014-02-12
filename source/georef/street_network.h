@@ -1,6 +1,8 @@
 #pragma once
 #include "georef.h"
 #include <boost/graph/filtered_graph.hpp>
+#include <boost/graph/two_bit_color_map.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
 
 namespace bt = boost::posix_time;
 
@@ -142,11 +144,14 @@ private:
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
     std::pair<bt::time_duration, vertex_t> find_nearest_vertex(const ProjectionData& target) const;
 
+    ///return the time the travel the distance at the current speed (used for projections)
+    bt::time_duration distance_to_duration(const double val) const;
+
+    void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection) const;
 };
 
 /** Structure managing the computation on the streetnetwork */
-class StreetNetwork {
-public:
+struct StreetNetwork {
     StreetNetwork(const GeoRef& geo_ref);
 
     void init(const type::EntryPoint& start_coord, boost::optional<const type::EntryPoint&> end_coord = {});
@@ -168,7 +173,6 @@ public:
      **/
     Path get_direct_path();
 
-private:
     const GeoRef & geo_ref;
     PathFinder departure_path_finder;
     PathFinder arrival_path_finder;

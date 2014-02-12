@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 
     path_finder.init({3, 3, true}, Mode_e::Walking, 1); //starting from d
     p = path_finder.compute_path({4, 4, true}); //going to e
-    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
 }
 
@@ -379,16 +379,20 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     res = w.find_nearest_stop_points(100_s, pl, false);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / default_speed[Mode_e::Walking])); //the projection is always done with the walking default speed regardless of the mean of transport
+    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / (default_speed[Mode_e::Walking] * 2))); //the projection is done with the same mean of transport, at the same speed
 
     w.init(starting_point);
     res = w.find_nearest_stop_points(1000_s, pl, false);
     std::sort(res.begin(), res.end());
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / default_speed[Mode_e::Walking]));
+    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / (default_speed[Mode_e::Walking] * 2)));
     BOOST_CHECK_EQUAL(res[1].first , 1);
-    BOOST_CHECK_EQUAL(res[1].second, bt::seconds(50 / default_speed[Mode_e::Walking]) + 150_s); //travel (300 at 2m/s) + projection
+    //a bit strange but logical:
+    //since the walking travel speed (1.38 * 2) is greater than the travel on the edge (2m/s),
+    //the algorithm goes to b with the projection
+    BOOST_CHECK_EQUAL(res[1].second, bt::seconds(100 / (default_speed[Mode_e::Walking] * 2)) +
+            bt::seconds(50 / (default_speed[Mode_e::Walking] * 2)) + 100_s); //travel (300 at 2m/s) + projection
 }
 
 // Récupérer les cordonnées d'un numéro impair :

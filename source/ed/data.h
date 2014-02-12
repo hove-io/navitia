@@ -43,6 +43,11 @@ public:
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
 
+    //fare:
+    std::vector<std::tuple<navitia::fare::State, navitia::fare::State, navitia::fare::Transition>> transitions; // transition with state before and after
+    std::map<std::string, navitia::fare::DateTicket> fare_map;
+    std::map<navitia::fare::OD_key, std::map<navitia::fare::OD_key, std::vector<std::string>>> od_tickets;
+
     /**
          * trie les différentes donnée et affecte l'idx
          *
@@ -116,4 +121,16 @@ public:
     }
 
 };
+
+struct Georef{
+    uint32_t coord_system;
+    std::unordered_map<std::string, types::Node* > nodes;
+    std::unordered_map<std::string, types::Edge* > edges;
+    std::unordered_map<std::string, types::Way* > ways;
+    std::unordered_map<std::string, types::HouseNumber* > house_numbers;
+    std::unordered_map<std::string, types::Admin *> admins;
+    Georef( const uint32_t coord_system = 27572): coord_system(coord_system){};
+    ~Georef();
+};
+
 }

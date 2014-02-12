@@ -2,6 +2,8 @@
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
+from wx._misc_ import new_AboutDialogInfo
+from jormungandr.interfaces.v1.Journeys import journey
 from jormungandr.renderers import render_from_protobuf
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
@@ -9,7 +11,7 @@ import itertools
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
-    'stop_point':  type_pb2.STOP_POINT,
+    'stop_point': type_pb2.STOP_POINT,
     'address': type_pb2.ADDRESS,
     'poi': type_pb2.POI,
     'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
@@ -211,24 +213,22 @@ class Script(object):
                     qualifier_one(resp.journeys)
                 break  # result found, no need to inspect other fallback mode
 
-        if resp and not resp.HasField("error") and trip_type == "rapid":
+        if not debug and resp and not resp.HasField("error") and \
+                        trip_type == "rapid":
             #We are looking for the asap result
-            earliest_dt = None
-            earliest_i = None
+            rapid_index = None
             for i in range(0, len(resp.journeys)):
-                if not earliest_dt\
-                        or earliest_dt > resp.journeys[i].arrival_date_time:
-                    earliest_dt = resp.journeys[i].arrival_date_time
-                    earliest_i = i
+                if resp.journeys[i].type == "rapid":
+                    rapid_index = i
 
-            if earliest_dt and not debug:
-                #We list the journeys to delete
-                to_delete = range(0, len(resp.journeys))
-                del to_delete[earliest_i]
-                to_delete.sort(reverse=True)
-                #And then we delete it
-                for i in to_delete:
-                    del resp.journeys[i]
+            #We list the journeys to delete
+            to_delete = range(0, len(resp.journeys))
+            if rapid_index:
+                del to_delete[rapid_index]
+            to_delete.sort(reverse=True)
+            #And then we delete it
+            for i in to_delete:
+                del resp.journeys[i]
         self.__fill_uris(resp)
         return resp
 
@@ -274,10 +274,34 @@ class Script(object):
             req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
             tmp_resp = self.get_journey(req, instance, request["type"],
                                         request["debug"])
+
+            #since it's not the first call to kraken, some kraken's id
+            #might not be uniq anymore
+            self.change_ids(tmp_resp, len(resp.journeys))
             if len(tmp_resp.journeys) == 0:
                 break
             else:
                 resp.journeys.extend(tmp_resp.journeys)
+                #we have to add the addition fare too
+                if tmp_resp.tickets:
+                    resp.tickets.extend(tmp_resp.tickets)
+
+    @staticmethod
+    def change_ids(new_journeys, journey_count):
+        #we need to change the fare id, the section id and the fare ref in the journey
+        for ticket in new_journeys.tickets:
+            journey_count += 1
+            ticket.id = ticket.id + '_' + str(journey_count)
+            for i in range(len(ticket.section_id)):
+                ticket.section_id[i] = ticket.section_id[i] + '_' + str(journey_count)
+
+        for new_journey in new_journeys.journeys:
+            for i in range(len(new_journey.fare.ticket_id)):
+                new_journey.fare.ticket_id[i] = new_journey.fare.ticket_id[i] \
+                                                + '_' + str(journey_count)
+
+            for section in new_journey.sections:
+                section.id = section.id + '_' + str(journey_count)
 
     def delete_journeys(self, resp, request):
         to_delete = []
@@ -390,7 +414,7 @@ class Script(object):
         return self.__on_ptref("lines", type_pb2.LINE, request, instance)
 
     def routes(self, request, instance):
-        return self.__on_ptref("routes", type_pb2.ROUTE, request,  instance)
+        return self.__on_ptref("routes", type_pb2.ROUTE, request, instance)
 
     def networks(self, request, instance):
         return self.__on_ptref("networks", type_pb2.NETWORK, request, instance)

@@ -44,6 +44,19 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         b.data.pt_data.journey_patterns.push_back(jp);
         route->journey_pattern_list.push_back(jp);
         jp->route = route;
+        //add physical mode
+        if (! b.data.pt_data.physical_modes.empty()) {
+            auto mode = b.data.pt_data.physical_modes.front();
+            jp->physical_mode = mode;
+        }
+        else {
+            jp->physical_mode = new navitia::type::PhysicalMode();
+            jp->physical_mode->idx = b.data.pt_data.physical_modes.size();
+            jp->physical_mode->uri = "physical_mode:0";
+            b.data.pt_data.physical_modes.push_back(jp->physical_mode);
+        }
+        jp->physical_mode->journey_pattern_list.push_back(jp);
+
         vj->journey_pattern = jp;
     } else {
         //@TODO va surement falloir créer un nouveau journeypattern
@@ -199,7 +212,7 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
 
 
 VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
-    return VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
+    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri);
 }
 
 VJ builder::vj(const std::string &network_name, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
@@ -274,6 +287,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     network->name = "base_network";
     network->uri = "base_network";
     this->data.pt_data.networks.push_back(network);
+    this->nts.insert({network->uri, network});
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data.pt_data.commercial_modes.size();
