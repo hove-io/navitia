@@ -355,7 +355,7 @@ class Script(object):
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
-        req.journeys.without_disrupt = request["without_disrupt"]
+        req.journeys.disruption_active = request["disruption_active"]
         self.origin_modes = request["origin_mode"]
 
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":

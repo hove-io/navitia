@@ -426,7 +426,7 @@ class Journeys(ResourceUri):
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
-        parser_get.add_argument("without_disrupt",
+        parser_get.add_argument("disruption_active",
                                 type=boolean, default=False)
 # a supprimer
         parser_get.add_argument("max_duration", type=int, default=36000)
