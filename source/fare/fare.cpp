@@ -11,14 +11,14 @@ namespace greg = boost::gregorian;
 namespace navitia { namespace fare {
 
 Label next_label(Label label, Ticket ticket, const SectionKey & section) {
-    // On note des informations sur le dernier mode utilisé
+    // we save the informations about the last mod used
     label.line = section.line;
     label.mode = section.mode;
     label.network = section.network;
 
 
     if(ticket.type == Ticket::ODFare){
-        if(label.stop_area == "" || label.current_type != Ticket::ODFare){ // C'est un nouveau ticket de type OD
+        if(label.stop_area == "" || label.current_type != Ticket::ODFare){ // It's a new OD ticket
             label.stop_area = section.start_stop_area;
             label.zone = section.start_zone;
             label.nb_changes = 0;
@@ -26,19 +26,21 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section) {
 
             ticket.sections.push_back(section);
             label.tickets.push_back(ticket);
-        }else{ // On a un ancien ticket
+        }else{ // We got an old ticket
             label.tickets.back().sections.push_back(section);
             label.nb_changes++;
         }
 
     }else{
-        // Si c'est un ticket vide, c'est juste un changement
-        // On incrémente le nombre de changements et la durée effectuée avec le même ticket
+        // empty ticket, it is juste a change
+        // we have to update the number of changes and the duration with the same ticket
         if(ticket.caption == "" && ticket.value == 0){
             label.nb_changes++;
         } else {
-            // On a acheté un nouveau billet
-            // On note le coût global du trajet, remet à 0 la durée/changements
+            // we bought a new ticket
+            // we save the global cost, and we reset the number of changes and duration
+            if (ticket.value.undefined)
+                label.nb_undefined_sub_cost++; //we need to track the number of undefined ticket for the comparison operator
             label.cost += ticket.value;
             label.tickets.push_back(ticket);
             label.nb_changes = 0;
@@ -46,7 +48,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section) {
             label.stop_area = section.start_stop_area;
         }
         if(label.tickets.size() == 0)
-            throw navitia::exception("Problème interne");
+            throw navitia::exception("internal problem");
         label.tickets.back().sections.push_back(section);
     }
     label.current_type = ticket.type;
@@ -79,11 +81,10 @@ results Fare::compute_fare(const routing::Path& path) const {
         return res;
     }
     std::vector< std::vector<Label> > labels(nb_nodes);
-    // Étiquette de départ
+    // Start label
     labels[0].push_back(Label());
     size_t section_idx(0);
 
-    boost::optional<Ticket> not_found_ticket;
     for (auto item : path.items) {
         if (item.type != routing::ItemType::public_transport) {
             section_idx++;
@@ -91,7 +92,6 @@ results Fare::compute_fare(const routing::Path& path) const {
         }
 
         SectionKey section_key(item, section_idx++);
-        bool one_ticket_found = false;
 
         std::vector<std::vector<Label>> new_labels(nb_nodes);
         try {
@@ -104,9 +104,8 @@ results Fare::compute_fare(const routing::Path& path) const {
                 for (Label label: labels[u]) {
                     Ticket ticket;
                     Transition transition = g[e];
-                    if (valid(g[u], label) && transition.valid(section_key, label)){
-                        one_ticket_found = true;
-                        if(transition.ticket_key != "") {
+                    if (valid(g[u], label) && transition.valid(section_key, label)) {
+                        if (transition.ticket_key != "") {
                             bool ticket_found = false; //TODO refactor this, optional is way better
                             auto it = fare_map.find(transition.ticket_key);
                             try {
@@ -118,7 +117,6 @@ results Fare::compute_fare(const routing::Path& path) const {
                             catch(no_ticket) { //the ticket_found bool is still false
                             }
                             if (! ticket_found) {
-                                one_ticket_found |= false;
                                 ticket.type = Ticket::None;
                                 ticket.key = transition.ticket_key;
                                 ticket.value = -100; // no price
@@ -132,7 +130,7 @@ results Fare::compute_fare(const routing::Path& path) const {
                         }
                         Label next = next_label(label, ticket, section_key);
 
-                        // On résoud le ticket OD : cas où on ne se servira plus de ce ticket
+                        // we process the OD ticket: case where we'll not use this ticket anymore
                         if (label.current_type == Ticket::ODFare || ticket.type == Ticket::ODFare) {
                             try {
                                 Ticket ticket_od;
@@ -146,65 +144,47 @@ results Fare::compute_fare(const routing::Path& path) const {
                                 n.tickets.back() = ticket_od;
                                 n.current_type = Ticket::FlatFare;
 
-                                new_labels.at(0).push_back(n);
-                                LOG4CPLUS_INFO(logger, "\t\tOn résoud un ticket OD : " << ticket_od.value);
+                                new_labels[0].push_back(n);
                             } catch (no_ticket) {
-                                LOG4CPLUS_WARN(logger, "\t\tOn a pas réussi à résoudre le ticket OD; SA=" << next.stop_area << " zone=" << next.zone
+                                LOG4CPLUS_WARN(logger, "Unable to get the OD ticket SA=" << next.stop_area << " zone=" << next.zone
                                                << ", section start_zone=" << section_key.start_zone << ", dest_zone=" << section_key.start_zone
                                                << " start_sa=" << section_key.start_stop_area << " dest_sa=" << section_key.dest_stop_area
                                                << " mode=" << section_key.mode);
-                                one_ticket_found |= false;
                             }
 
                         } else {
-                            new_labels.at(0).push_back(next);
+                            new_labels[0].push_back(next);
                         }
                         new_labels[v].push_back(next);
                     }
                 }
-
             }
         }
-        // On est tombé sur un segment exclusif : on est obligé d'utilisé ce ticket
+        // exclusive segment, we have to use that ticket
         catch(Ticket ticket) {
-            LOG4CPLUS_INFO(logger, "\t On tombe sur un segment exclusif");
+            LOG4CPLUS_TRACE(logger, "\texclusive section for fare");
             new_labels.clear();
             new_labels.resize(nb_nodes);
-            BOOST_FOREACH(Label label, labels.at(0)){
+            for (Label label : labels.at(0)) {
                 new_labels.at(0).push_back(next_label(label, ticket, section_key));
             }
         }
         labels = new_labels;
 
-        if (! one_ticket_found) {
-            if (! not_found_ticket) {
-                not_found_ticket = Ticket();
-                (*not_found_ticket).key = "unkown_ticket";
-                (*not_found_ticket).comment = "unkown ticket";
-            }
-            (*not_found_ticket).sections.push_back(section_key);
-        }
     }
 
-    // On recherche le label de moindre coût
-    // Si on a deux fois le même coût, on prend celui qui nécessite le moins de billets
-    size_t best_num_tickets = std::numeric_limits<size_t>::max();
-    int best_cost = std::numeric_limits<int>::max();
-    BOOST_FOREACH(Label label, labels.at(0)){
-        if(label.cost < best_cost || (label.cost == best_cost && label.tickets.size() < best_num_tickets)){
-            LOG4CPLUS_INFO(logger, "prix : " << label.cost);
+    // We look for the cheapest label
+    // if 2 label have the same cost, we take the one with the least number of tickets
+    boost::optional<Label> best_label;
+    for(Label label : labels.at(0)) {
+        if(!best_label || label < (*best_label)) {
             res.tickets = label.tickets;
-            res.not_found = false;
-            best_cost = label.cost;
-            best_num_tickets = label.tickets.size();
+            res.not_found = (label.nb_undefined_sub_cost != 0);
+            res.total = label.cost;
+            best_label = label;
         }
     }
 
-    if (not_found_ticket) {
-        res.tickets.push_back(*not_found_ticket);
-    }
-
-    LOG4CPLUS_INFO(logger, "nombre de résultats : " << res.tickets.size());
     return res;
 }
 
@@ -285,7 +265,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
     bool result = true;
     if(label.current_type == Ticket::ODFare && this->global_condition != Transition::GlobalCondition::with_changes)
         result = false;
-    BOOST_FOREACH(Condition cond, this->start_conditions)
+    for(Condition cond: this->start_conditions)
     {
         if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.start_zone)
             result = false;
@@ -306,7 +286,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
             result &= compare(label.tickets.back().key, cond.value, cond.comparaison);
         }
     }
-    BOOST_FOREACH(Condition cond, this->end_conditions)
+    for(Condition cond: this->end_conditions)
     {
         if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.dest_zone)
             result = false;
@@ -371,6 +351,20 @@ DateTicket Fare::get_od(Label label, SectionKey section) const {
 
 size_t Fare::nb_transitions() const {
     return boost::num_edges(g);
+}
+
+void Fare::add_default_ticket() {
+    State begin; // Start is an empty node
+    begin_v = boost::add_vertex(begin, g);
+
+    //add a default ticket (more expensive than all the other, so it is taken only when no other choices are available)
+    Transition default_transition;
+    Ticket default_ticket = make_default_ticket();
+    default_transition.ticket_key = default_ticket.key;
+    boost::add_edge(begin_v, begin_v, default_transition, g);
+    DateTicket dticket;
+    dticket.add(boost::gregorian::date(boost::gregorian::neg_infin), boost::gregorian::date(boost::gregorian::pos_infin), default_ticket);
+    fare_map.insert({default_ticket.key, dticket});
 }
 
 }

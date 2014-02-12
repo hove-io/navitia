@@ -68,7 +68,9 @@ void fare_parser::load_transitions() {
             data.transitions.push_back(std::make_tuple(start, end, sym_transition));
         }
     }
+
 }
+
 
 void fare_parser::load_prices() {
     CsvReader reader(prices_filename);

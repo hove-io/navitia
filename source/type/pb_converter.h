@@ -11,6 +11,7 @@ struct EnhancedResponse {
     pbnavitia::Response response;
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
+    pbnavitia::Ticket* unkown_ticket = nullptr; //we want only one unknown ticket
 
     const std::string& register_section(pbnavitia::Journey* j, const routing::PathItem& /*routing_item*/, size_t section_idx) {
         routing_section_map[{j, section_idx}] = "section_" + boost::lexical_cast<std::string>(nb_sections++);

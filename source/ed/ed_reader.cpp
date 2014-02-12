@@ -1009,7 +1009,7 @@ void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
         const_it["ticket_key"].to(ticket.key);
         const_it["ticket_title"].to(ticket.comment);
         const_it["currency"].to(ticket.currency);
-        const_it["ticket_price"].to(ticket.value);
+        const_it["ticket_price"].to(ticket.value.value);
         bg::date start = bg::from_string(const_it["valid_from"].as<std::string>());
         bg::date end = bg::from_string(const_it["valid_to"].as<std::string>());
 
@@ -1022,9 +1022,8 @@ void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
 void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
     //we build the transition graph
     std::map<nf::State, nf::Fare::vertex_t> state_map;
-    nf::State begin; // Start is an empty node
-    nf::Fare::vertex_t begin_v = boost::add_vertex(begin, data.fare.g);
-    state_map[begin] = begin_v;
+    nf::State begin; // Start is an empty node (and the node is already is the fare graph, since it has been added in the constructor with the default ticket)
+    state_map[begin] = data.fare.begin_v;
 
     std::string request = "select id, before_change, after_change, start_trip, "
         "end_trip, global_condition, ticket_id from navitia.transition ";

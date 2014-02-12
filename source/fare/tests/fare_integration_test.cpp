@@ -35,23 +35,20 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     b.data.fare.fare_map["price1"].add(start_date, end_date, fare::Ticket("price1", "Ticket vj 1", 100, "125"));
     b.data.fare.fare_map["price2"].add(start_date, end_date, fare::Ticket("price2", "Ticket vj 2", 200, "175"));
 
-    std::vector<std::string> price1 {"price1"};
-    std::vector<std::string> price2 {"price2"};
-    b.data.fare.od_tickets[fare::OD_key(fare::OD_key::StopArea, "stop1")][fare::OD_key(fare::OD_key::StopArea, "stop2")] = price1;
-    b.data.fare.od_tickets[fare::OD_key(fare::OD_key::StopArea, "stop2")][fare::OD_key(fare::OD_key::StopArea, "stop5")] = price2;
+    // dummy transition
+    fare::Transition transitionA;
+    fare::State endA;
+    endA.line = "A";
+    transitionA.ticket_key = "price1";
+    auto endA_v = boost::add_vertex(endA, b.data.fare.g);
+    boost::add_edge(b.data.fare.begin_v, endA_v, transitionA, b.data.fare.g);
 
-    // if the graph is empty, the algorithm do not work, so we add a dummy transition
-    // that for any start to any arrival it's free (we want the OD the take precedence)
-    fare::Transition transition;
-    transition.start_conditions = {};
-    transition.end_conditions = {};
-    transition.ticket_key = "price1";
-    transition.global_condition = fare::Transition::GlobalCondition::with_changes;
-    fare::State start;
-    fare::State end;
-    auto start_v = boost::add_vertex(start, b.data.fare.g);
-    auto end_v = boost::add_vertex(end, b.data.fare.g);
-    boost::add_edge(start_v, end_v, transition, b.data.fare.g);
+    fare::Transition transitionB;
+    fare::State endB;
+    endB.line = "B";
+    transitionB.ticket_key = "price2";
+    auto endB_v = boost::add_vertex(endB, b.data.fare.g);
+    boost::add_edge(b.data.fare.begin_v, endB_v, transitionB, b.data.fare.g);
 
     //call to raptor
     type::EntryPoint origin(type::Type_e::StopArea, "stop1");
@@ -127,8 +124,10 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     //fare structures check
     const pbnavitia::Fare& pb_fare = journey.fare();
 
-    BOOST_REQUIRE_EQUAL(pb_fare.ticket_id_size(), 0);
+    BOOST_REQUIRE_EQUAL(pb_fare.ticket_id_size(), 1);
+    BOOST_REQUIRE_EQUAL(pb_fare.ticket_id(0), "unknown_ticket");
     BOOST_CHECK_EQUAL(pb_fare.found(), false);
 
-    BOOST_REQUIRE_EQUAL(resp.tickets_size(), 0);
+    BOOST_REQUIRE_EQUAL(resp.tickets_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.tickets(0).id(), "unknown_ticket");
 }

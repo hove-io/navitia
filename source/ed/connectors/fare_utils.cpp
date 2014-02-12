@@ -1,5 +1,3 @@
-
-#pragma once
 #include "fare_utils.h"
 #include "utils/csv.h"
 #include "fare/fare.h"
