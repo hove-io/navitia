@@ -22,3 +22,7 @@ ADD_TEST(extcode2uri_test ${EXECUTABLE_OUTPUT_PATH}/extcode2uri_test --report_le
 add_executable(fate_parser_test fare_parser_test.cpp)
 target_link_libraries(fate_parser_test connectors fare utils ${BOOST_LIBS} log4cplus)
 ADD_TEST(fate_parser_test ${EXECUTABLE_OUTPUT_PATH}/fate_parser_test --report_level=no)
+
+add_executable(conv_coord_test conv_coord_test.cpp)
+target_link_libraries(conv_coord_test connectors types utils ${BOOST_LIBS} log4cplus)
+ADD_TEST(conv_coord_test ${EXECUTABLE_OUTPUT_PATH}/conv_coord_test --report_level=no)

@@ -6,7 +6,7 @@
 using namespace boost::assign;
 namespace ed { namespace connectors {
 
-GeopalParser::GeopalParser(const std::string& path): path(path){
+GeopalParser::GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord): path(path), conv_coord(conv_coord){
     logger = log4cplus::Logger::getInstance("log");
     try{
             boost::filesystem::path directory(this->path);
@@ -42,7 +42,7 @@ void GeopalParser::fill(ed::Georef& data){
 ed::types::Node* GeopalParser::add_node(ed::Georef& data, const navitia::type::GeographicalCoord& coord, const std::string& uri){
     ed::types::Node* node = new ed::types::Node;
     node->id = data.nodes.size() + 1;
-    node->coord = coord;
+    node->coord = this->conv_coord.convert_to(coord);
     data.nodes[uri] = node;
     return node;
 }
@@ -112,7 +112,7 @@ void GeopalParser::fill_admins(ed::Georef& data){
                     admin->id = data.admins.size() + 1;
                     if (reader.is_valid(name_c, row))
                         admin->name = row[name_c];
-                    admin->coord = navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c]));
+                    admin->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])));
                     data.admins[admin->insee] = admin;
                 }
             }
@@ -129,7 +129,7 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
         if(!reader.is_open()) {
             throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
         }
-        std::vector<std::string> mandatory_headers = {"x_debut" , "y_debut", "x_fin", "y_fin", "longueur", "inseecom_g",
+        std::vector<std::string> mandatory_headers = {"id", "x_debut" , "y_debut", "x_fin", "y_fin", "longueur", "inseecom_g",
         "inseecom_d"};
         if(!reader.validate(mandatory_headers)) {
             throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
@@ -142,11 +142,13 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
         int y2 = reader.get_pos_col("y_fin");
         int l = reader.get_pos_col("longueur");
         int inseecom_d = reader.get_pos_col("inseecom_d");
+        int id = reader.get_pos_col("id");
         while(!reader.eof()){
             std::vector<std::string> row = reader.next();
             if (reader.is_valid(x1, row) && reader.is_valid(y1, row)
                 && reader.is_valid(x2, row) && reader.is_valid(y2, row)
-                && reader.is_valid(inseecom_d, row)){
+                && reader.is_valid(inseecom_d, row)
+                && reader.is_valid(id, row)){
                 auto admin = data.admins.find(row[inseecom_d]);
                 if(admin != data.admins.end()){
                     std::string source  = row[x1] + row[y1];
@@ -168,10 +170,10 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
                     }else{
                         target_node = target_it->second;
                     }
-                    std::hash<std::string> hash_fn;
+//                    std::hash<std::string> hash_fn;
                     ed::types::Way* current_way = nullptr;
                     // TODO : deux rues dans la même ville pourtant le même nom !
-                    std::string wayd_uri = std::to_string(hash_fn(row[nom_voie_d])) + row[inseecom_d];
+                    std::string wayd_uri = row[id];//std::to_string(hash_fn(row[nom_voie_d])) + row[inseecom_d];
                     auto way = data.ways.find(wayd_uri);
                     if(way == data.ways.end()){
                         ed::types::Way* wy = new ed::types::Way;
@@ -214,7 +216,7 @@ void GeopalParser::fill_House_numbers(ed::Georef& data){
         if(!reader.is_open()) {
             throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
         }
-        std::vector<std::string> mandatory_headers = {"numero", "nom_voie", "code_insee", "x_adresse", "y_adresse"};
+        std::vector<std::string> mandatory_headers = {"id_tr", "numero", "nom_voie", "code_insee", "x_adresse", "y_adresse"};
         if(!reader.validate(mandatory_headers)) {
             throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
         }
@@ -223,20 +225,23 @@ void GeopalParser::fill_House_numbers(ed::Georef& data){
         int numero_c = reader.get_pos_col("numero");
         int x_c = reader.get_pos_col("x_adresse");
         int y_c = reader.get_pos_col("y_adresse");
+        int id_tr = reader.get_pos_col("id_tr");
         while(!reader.eof()){
             std::vector<std::string> row = reader.next();
             if (reader.is_valid(x_c, row) && reader.is_valid(y_c, row)
                 && reader.is_valid(insee_c, row) && reader.is_valid(numero_c, row)
-                && reader.is_valid(nom_voie_c, row)){
-                std::hash<std::string> hash_fn;
-                std::string way_uri = std::to_string(hash_fn(row[nom_voie_c])) + row[insee_c];
+                && reader.is_valid(nom_voie_c, row)
+                && reader.is_valid(id_tr, row)){
+//                std::hash<std::string> hash_fn;
+//                std::string way_uri = std::to_string(hash_fn(row[nom_voie_c])) + row[insee_c];
+                std::string way_uri = row[id_tr];
                 auto way_it = data.ways.find(way_uri);
                 if(way_it != data.ways.end()){
                     std::string hn_uri = row[x_c] + row[y_c] + row[numero_c];
                     auto hn = data.house_numbers.find(hn_uri);
                     if (hn == data.house_numbers.end()){
                         ed::types::HouseNumber* current_hn = new ed::types::HouseNumber;
-                        current_hn->coord = navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c]));
+                        current_hn->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])));
                         current_hn->number = row[numero_c];
                         current_hn->way = way_it->second;
                         data.house_numbers[hn_uri] = current_hn;

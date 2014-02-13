@@ -123,13 +123,11 @@ public:
 };
 
 struct Georef{
-    uint32_t coord_system;
     std::unordered_map<std::string, types::Node* > nodes;
     std::unordered_map<std::string, types::Edge* > edges;
     std::unordered_map<std::string, types::Way* > ways;
     std::unordered_map<std::string, types::HouseNumber* > house_numbers;
     std::unordered_map<std::string, types::Admin *> admins;
-    Georef( const uint32_t coord_system = 27572): coord_system(coord_system){};
     ~Georef();
 };
 

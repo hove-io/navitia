@@ -10,11 +10,9 @@ namespace ed{
 
 struct EdPersistor{
     Lotus lotus;
-    Lotus lotus_second;
     log4cplus::Logger logger;
 
     EdPersistor(const std::string& connection_string) : lotus(connection_string),
-                        lotus_second(connection_string),
                         logger(log4cplus::Logger::getInstance("log")){}
 
     void persist(const ed::Data& data, const navitia::type::MetaData& meta);
@@ -68,8 +66,8 @@ private:
     void build_relation_way_admin(const ed::Georef& data);
     void update_boundary();
 
-    navitia::type::GeographicalCoord coord2wgs84(const navitia::type::GeographicalCoord& coord, const uint32_t coord_in = 27572);
-
+    std::string to_geografic_point(const navitia::type::GeographicalCoord& coord) const;
+    std::string to_geografic_linestring(const navitia::type::GeographicalCoord& source, const navitia::type::GeographicalCoord& target) const;
 
 };
 

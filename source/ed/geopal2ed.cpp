@@ -58,8 +58,9 @@ int main(int argc, char * argv[])
     pt::ptime start;
 
     start = pt::microsec_clock::local_time();
-    ed::Georef data(coord_system);
-    ed::connectors::GeopalParser geopal_parser(input);
+    ed::Georef data;
+    ed::connectors::Projection origin("Lambert 2 étendu", std::to_string(coord_system), false);
+    ed::connectors::GeopalParser geopal_parser(input, ed::connectors::ConvCoord(origin));
 
     try{
             geopal_parser.fill(data);
