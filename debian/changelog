@@ -1,3 +1,27 @@
+navitia2 (0.80.5) unstable; urgency=low
+
+ * Fix migration script
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 11:02:33 +0100
+
+navitia2 (0.80.4) unstable; urgency=low
+
+ * Deploy migration sql script
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 11:02:04 +0100
+
+navitia2 (0.80.3) unstable; urgency=low
+
+ * Fix import in script/default
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 10:02:12 +0100
+
+navitia2 (0.80.2) unstable; urgency=low
+
+ * Install geopal2ed
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 09:02:29 +0100
+
 navitia2 (0.80.1) unstable; urgency=low
 
   * Bug fix in tyr
