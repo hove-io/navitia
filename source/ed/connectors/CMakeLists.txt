@@ -6,7 +6,6 @@ SET(SOURCE_LIB
     osm_tags_reader.cpp
     poi_parser.cpp
     messages_connector.cpp
-    redismap.cpp
     fare_parser.cpp
     fare_utils.cpp
     geopal_parser.cpp

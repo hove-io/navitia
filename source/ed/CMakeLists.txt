@@ -35,7 +35,7 @@ target_link_libraries(fare2ed transportation_data_import ed connectors fare type
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
 target_link_libraries(ed2nav types connectors pq pqxx data georef routing
-    utils autocomplete hiredis ${BOOST_LIBS} log4cplus)
+    utils autocomplete ${BOOST_LIBS} log4cplus)
 
 
 add_subdirectory(connectors)
