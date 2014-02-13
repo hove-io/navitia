@@ -26,6 +26,11 @@ void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj
     fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
 }
 
+bt::ptime strip_fractional_second(bt::ptime ptime) {
+    bt::time_duration tod = ptime.time_of_day();
+    return bt::ptime(ptime.date(), bt::seconds(tod.total_seconds()));
+}
+
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths,
         const nt::Data& d, georef::StreetNetwork& worker,
@@ -183,8 +188,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 arrival_time = arrival_time + temp.duration;
             }
         }
-        const auto str_departure = bt::to_iso_string(departure_time);
-        const auto str_arrival = bt::to_iso_string(arrival_time);
+
+
+        const auto str_departure = bt::to_iso_string(strip_fractional_second(departure_time));
+        const auto str_arrival = bt::to_iso_string(strip_fractional_second(arrival_time));
         pb_journey->set_departure_date_time(str_departure);
         pb_journey->set_arrival_date_time(str_arrival);
         pb_journey->set_duration((arrival_time - departure_time).total_seconds());
