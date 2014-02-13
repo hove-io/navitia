@@ -41,7 +41,7 @@ $$;
 DO $$
     DECLARE count_multi int;
 BEGIN
-    count_multi := coalesce((select count(*) from navitia.admin where geometrytype(boundary) = 'MULTIPOLYGON' limit 1), 0);
+    count_multi := coalesce((select count(*) from navitia.admin where geometrytype(boundary::geometry) = 'MULTIPOLYGON' limit 1), 0);
     CASE WHEN count_multi = 0 
         THEN
         		-- Ajout d'une colonne temporaire
