@@ -34,14 +34,14 @@ add_executable(fare2ed fare2ed.cpp)
 target_link_libraries(fare2ed transportation_data_import ed connectors fare types pq pqxx data utils ${BOOST_LIBS} log4cplus)
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
-target_link_libraries(ed2nav types connectors pq pqxx data georef routing
+target_link_libraries(ed2nav types connectors pq pqxx data georef routing fare
     utils autocomplete ${BOOST_LIBS} log4cplus)
 
 
 add_subdirectory(connectors)
 
 add_executable(nav2rt nav2rt.cpp)
-target_link_libraries(nav2rt ed types connectors pq pqxx data georef routing
+target_link_libraries(nav2rt ed types connectors pq pqxx fare data georef routing
     utils autocomplete ${BOOST_LIBS} log4cplus)
 
 INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed)

@@ -844,6 +844,7 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
 
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_vertices(data.geo_ref.graph) << " vertex added");
 }
+
 void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
     std::string request = "select e.source_node_id, target_node_id, e.way_id, ST_LENGTH(the_geog) AS leng,";
                 request += "e.pedestrian_allowed as pede,e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
