@@ -358,7 +358,6 @@ class add_fare_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            print "add fare_links"
             if objects[1] != 200:
                 return objects
             if not "journeys" in objects[0].keys():

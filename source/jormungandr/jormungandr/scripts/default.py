@@ -199,7 +199,7 @@ class Script(object):
                     uris.physical_mode = pt_infos.uris.physical_mode
                     uris.network = pt_infos.uris.network
 
-    def get_journey(self, req, instance, trip_type, debug):
+    def get_journey(self, req, instance):
         resp = None
 
         for o_mode, d_mode in itertools.product(
@@ -212,28 +212,12 @@ class Script(object):
                     qualifier_one(resp.journeys)
                 break  # result found, no need to inspect other fallback mode
 
-        if not debug and resp and not resp.HasField("error") and \
-                        trip_type == "rapid":
-            #We are looking for the asap result
-            rapid_index = None
-            for i in range(0, len(resp.journeys)):
-                if resp.journeys[i].type == "rapid":
-                    rapid_index = i
-
-            #We list the journeys to delete
-            to_delete = range(0, len(resp.journeys))
-            if rapid_index:
-                del to_delete[rapid_index]
-            to_delete.sort(reverse=True)
-            #And then we delete it
-            for i in to_delete:
-                del resp.journeys[i]
         self.__fill_uris(resp)
         return resp
 
     def journey_compare(self, j1, j2):
         arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
-        arrival_j2_f = datetime.strptime(j1.arrival_date_time, f_date_time)
+        arrival_j2_f = datetime.strptime(j2.arrival_date_time, f_date_time)
         if arrival_j1_f > arrival_j2_f:
             return 1
         elif arrival_j1_f == arrival_j2_f:
@@ -241,9 +225,9 @@ class Script(object):
         else:
             return -1
 
-    def fill_journeys(self, resp, req, request, instance):
-        if request["count"] is None:
-            return
+    def fill_journeys(self, req, request, instance):
+        resp = self.get_journey(req, instance)
+
         while request["count"] > len(resp.journeys):
             temp_datetime = None
             if request['clockwise']:
@@ -271,8 +255,7 @@ class Script(object):
                     temp_datetime = r_datetime_f + timedelta(seconds=duration)
 
             req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
-            tmp_resp = self.get_journey(req, instance, request["type"],
-                                        request["debug"])
+            tmp_resp = self.get_journey(req, instance)
 
             #since it's not the first call to kraken, some kraken's id
             #might not be uniq anymore
@@ -284,6 +267,8 @@ class Script(object):
                 #we have to add the addition fare too
                 if tmp_resp.tickets:
                     resp.tickets.extend(tmp_resp.tickets)
+
+        return resp
 
     @staticmethod
     def change_ids(new_journeys, journey_count):
@@ -303,23 +288,25 @@ class Script(object):
                 section.id = section.id + '_' + str(journey_count)
 
     def delete_journeys(self, resp, request):
-        to_delete = []
+        if request["debug"] or not resp:
+            return #in debug we want to keep all journeys
 
-        if not request["debug"]:  # in debug we want to keep all journeys
-            if request['destination']:
-                for i in range(0, len(resp.journeys)):
-                    if resp.journeys[i].type == "" and not i in to_delete:
-                        to_delete.append(i)
+        if not request['destination']:
+            return #for isochrone we don't want to filter
 
-                to_delete.sort(reverse=True)
-                for i in to_delete:
-                    del resp.journeys[i]
+        if resp.HasField("error"):
+            return #we don't filter anything if errors
 
-                if request["count"] and len(resp.journeys) > request["count"]:
-                    to_delete = range(request["count"], len(resp.journeys))
-                    to_delete.sort(reverse=True)
-                    for i in to_delete:
-                        del resp.journeys[i]
+        #filter on journey type (the qualifier)
+        if request["type"] != "" or request["type"] != "all":
+            resp.journeys[:] = [j for j in resp.journeys if j.type == request["type"]]
+        else:
+            #by default, we filter non tagged journeys
+            resp.journeys[:] = [j for j in resp.journeys if j.type != ""]
+
+        #after all filters, we filter not to give too many results
+        if request["count"] and len(resp.journeys) > request["count"]:
+            del resp.journeys[request["count"]:]
 
     def __on_journeys(self, requested_type, request, instance):
         req = request_pb2.Request()
@@ -355,7 +342,7 @@ class Script(object):
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
-        req.journeys.disruption_active = request["disruption_active"]
+
         self.origin_modes = request["origin_mode"]
 
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
@@ -368,14 +355,12 @@ class Script(object):
         if not "type" in request:
             request["type"] = "all"
         #call to kraken
-        resp = self.get_journey(req, instance, request["type"],
-                                request["debug"])
-        if len(resp.journeys) > 0 and "count" in request:
-            self.fill_journeys(resp, req, request, instance)
-            self.delete_journeys(resp, request)
+        resp = self.fill_journeys(req, request, instance)
+        self.delete_journeys(resp, request)
 
-            if not request["clockwise"]:
-                resp.journeys.sort(self.journey_compare)
+        if not request["clockwise"]:
+            resp.journeys.sort(self.journey_compare)
+
         return resp
 
     def journeys(self, request, instance):
