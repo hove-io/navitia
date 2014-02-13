@@ -717,6 +717,9 @@ struct StopTime : public Nameable {
     ValidityPattern* departure_validity_pattern;
     ValidityPattern* arrival_validity_pattern;
 
+    ValidityPattern* departure_adapted_validity_pattern;
+    ValidityPattern* arrival_adapted_validity_pattern;
+
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
@@ -787,10 +790,13 @@ struct StopTime : public Nameable {
     //@TODO construire ces putin de validy pattern!!
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
         headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey(nullptr), journey_pattern_point(nullptr),
-        local_traffic_zone(std::numeric_limits<uint32_t>::max()), departure_validity_pattern(nullptr), arrival_validity_pattern(nullptr){}
+        local_traffic_zone(std::numeric_limits<uint32_t>::max()), departure_validity_pattern(nullptr), arrival_validity_pattern(nullptr),
+        departure_adapted_validity_pattern(nullptr), arrival_adapted_validity_pattern(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point & properties & local_traffic_zone & departure_validity_pattern & arrival_validity_pattern & comment;
+            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point
+            & properties & local_traffic_zone & departure_validity_pattern & arrival_validity_pattern
+            & departure_adapted_validity_pattern & arrival_adapted_validity_pattern & comment;
     }
 
     bool operator<(const StopTime& other) const {

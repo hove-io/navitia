@@ -13,7 +13,7 @@ namespace navitia { namespace timetables {
 std::vector<std::vector<datetime_stop_time> >
 get_all_stop_times(const vector_idx &journey_patterns,
                    const DateTime &dateTime,
-                   const DateTime &max_datetime, type::Data &d) {
+                   const DateTime &max_datetime, type::Data &d, bool disruption_active) {
     std::vector<std::vector<datetime_stop_time> > result;
 
     //On cherche les premiers journey_pattern_points
@@ -28,7 +28,7 @@ get_all_stop_times(const vector_idx &journey_patterns,
     //On fait un best_stop_time sur ces journey_pattern points
     auto first_dt_st = get_stop_times(first_journey_pattern_points,
                                       dateTime, max_datetime,
-                                      std::numeric_limits<int>::max(), d);
+                                      std::numeric_limits<int>::max(), d, disruption_active);
 
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {
@@ -93,7 +93,7 @@ route_schedule(const std::string& filter,
                const std::string &str_dt,
                uint32_t duration, uint32_t interface_version,
                const uint32_t max_depth, int count, int start_page,
-               type::Data &d) {
+               type::Data &d, bool disruption_active) {
     RequestHandle handler("ROUTE_SCHEDULE", filter, forbidden_uris, str_dt, duration, d);
 
     if(handler.pb_response.has_error()) {
@@ -112,7 +112,7 @@ route_schedule(const std::string& filter,
         auto jps = route->get(type::Type_e::JourneyPattern, d.pt_data);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(jps, handler.date_time,
-                                             handler.max_datetime, d);
+                                             handler.max_datetime, d, disruption_active);
         std::vector<vector_idx> stop_points;
         for(auto jp_idx : jps) {
             auto jp = d.pt_data.journey_patterns[jp_idx];

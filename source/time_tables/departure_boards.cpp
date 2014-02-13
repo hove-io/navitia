@@ -134,7 +134,7 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
                 const std::string& date,
                 uint32_t duration, int32_t max_date_times,
                 int interface_version,
-                int count, int start_page, const type::Data &data) {
+                int count, int start_page, const type::Data &data, bool disruption_active) {
 
     RequestHandle handler("DEPARTURE_BOARD", request, forbidden_uris, date,  duration, data);
 
@@ -190,7 +190,7 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
                 }else{
                         auto tmp = get_stop_times({jpp->idx}, handler.date_time,
                                                          handler.max_datetime,
-                                                         max_date_times, data);
+                                                         max_date_times, data, disruption_active);
                         if(tmp.size() == 0){
                             response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
                         }else{

@@ -67,6 +67,7 @@ int main(int argc, char * argv[])
 
     ed::EdReader reader(connection_string);
     reader.fill(data, percent_delete);
+    data.build_midnight_interchange();
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 

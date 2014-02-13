@@ -19,3 +19,8 @@ add_executable(best_stoptime_test best_stoptime.cpp)
 target_link_libraries(best_stoptime_test ed connectors data fare types routing
     autocomplete pb_lib autocomplete georef utils ${BOOST_LIBS} log4cplus)
 ADD_TEST(best_stoptime_test ${EXECUTABLE_OUTPUT_PATH}/best_stoptime_test --report_level=no)
+
+add_executable(raptor_adapted_test raptor_adapted_test.cpp)
+target_link_libraries(raptor_adapted_test ed data types routing fare pb_lib georef
+    autocomplete utils ${BOOST_LIBS} log4cplus)
+ADD_TEST(raptor_adapted_test ${EXECUTABLE_OUTPUT_PATH}/raptor_adapted_test --report_level=no)
