@@ -1,3 +1,9 @@
+navitia2 (0.80.2) unstable; urgency=low
+
+ * Install geopal2ed
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 09:02:29 +0100
+
 navitia2 (0.80.1) unstable; urgency=low
 
   * Bug fix in tyr
