@@ -157,13 +157,13 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
 
 double GeographicalCoord::distance_to(const GeographicalCoord &other) const{
     static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
-    double longitudeArc = (this->lon() - other.lon()) * DEG_TO_RAD;
-    double latitudeArc  = (this->lat() - other.lat()) * DEG_TO_RAD;
+    double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;
+    double latitudeArc  = (this->lat() - other.lat()) * N_DEG_TO_RAD;
     double latitudeH = sin(latitudeArc * 0.5);
     latitudeH *= latitudeH;
     double lontitudeH = sin(longitudeArc * 0.5);
     lontitudeH *= lontitudeH;
-    double tmp = cos(this->lat()*DEG_TO_RAD) * cos(other.lat()*DEG_TO_RAD);
+    double tmp = cos(this->lat()*N_DEG_TO_RAD) * cos(other.lat()*N_DEG_TO_RAD);
     return EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
 }
 

@@ -270,7 +270,7 @@ struct GeographicalCoord{
 
     void set_lon(double lon) { this->_lon = lon;}
     void set_lat(double lat) { this->_lat = lat;}
-    void set_xy(double x, double y){this->set_lon(x*M_TO_DEG); this->set_lat(y*M_TO_DEG);}
+    void set_xy(double x, double y){this->set_lon(x*N_M_TO_DEG); this->set_lat(y*N_M_TO_DEG);}
 
     constexpr static double coord_epsilon = 1e-15;
     /// Ordre des coordonnées utilisé par ProximityList
@@ -284,8 +284,8 @@ struct GeographicalCoord{
                 || fabs(lat() - other.lat()) > coord_epsilon ;
     }
 
-    constexpr static double DEG_TO_RAD = 0.01745329238;
-    constexpr static double M_TO_DEG = 1.0/111319.9;
+    constexpr static double N_DEG_TO_RAD = 0.01745329238;
+    constexpr static double N_M_TO_DEG = 1.0/111319.9;
     /** Calcule la distance Grand Arc entre deux nœuds
       *
       * On utilise la formule de Haversine
@@ -310,8 +310,8 @@ struct GeographicalCoord{
     */
     double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
         static const double EARTH_RADIUS_IN_METERS_SQUARE = 40612548751652.183023;
-        double latitudeArc = (this->lat() - other.lat()) * DEG_TO_RAD;
-        double longitudeArc = (this->lon() - other.lon()) * DEG_TO_RAD;
+        double latitudeArc = (this->lat() - other.lat()) * N_DEG_TO_RAD;
+        double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;
         double tmp = coslat * longitudeArc;
         return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
     }
