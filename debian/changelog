@@ -1,3 +1,9 @@
+navitia2 (0.81.1) unstable; urgency=low
+
+ * Hotfix for date format in protobuff 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 17:02:50 +0100
+
 navitia2 (0.81.0) unstable; urgency=low
 
  * Add email validation to tyr
