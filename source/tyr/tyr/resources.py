@@ -68,7 +68,21 @@ class User(flask_restful.Resource):
             return marshal(models.User.query.get_or_404(user_id),
                     user_fields_full)
         else:
-            return marshal(models.User.query.all(), user_fields)
+            parser = reqparse.RequestParser()
+            parser.add_argument('login', type=unicode, required=False,
+                    case_sensitive=False, help='login')
+            parser.add_argument('email', type=unicode, required=False,
+                    case_sensitive=False, help='email')
+            args = parser.parse_args()
+
+            # dict comprehension would be better, but it's not in python 2.6
+            filter_params = dict((k, v) for k, v in args.items() if v)
+
+            if filter_params:
+                users = models.User.query.filter_by(**filter_params).all()
+                return marshal(users, user_fields)
+            else:
+                return marshal(models.User.query.all(), user_fields)
 
     def post(self):
         user = None
