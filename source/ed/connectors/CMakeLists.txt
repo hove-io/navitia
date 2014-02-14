@@ -1,3 +1,5 @@
+find_library(PROJ proj REQUIRED)
+
 SET(SOURCE_LIB
     gtfs_parser.cpp
     fusio_parser.cpp
@@ -7,9 +9,11 @@ SET(SOURCE_LIB
     extcode2uri.cpp
     fare_parser.cpp
     fare_utils.cpp
-	geopal_parser.cpp
+    geopal_parser.cpp
+    conv_coord.cpp
 )
 
 add_library(connectors ${SOURCE_LIB})
+target_link_libraries(connectors ${PROJ})
 
 

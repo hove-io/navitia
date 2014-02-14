@@ -23,8 +23,8 @@ void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_i
         std::cout << "section " << (int)(section.type()) << std::endl
                      << " -- coordinates :" << std::endl;
         for (int i = 0; i < section.street_network().coordinates_size(); ++i)
-            std::cout << "coord: " << section.street_network().coordinates(i).lon() / type::GeographicalCoord::M_TO_DEG
-                      << ", " << section.street_network().coordinates(i).lat() / type::GeographicalCoord::M_TO_DEG
+            std::cout << "coord: " << section.street_network().coordinates(i).lon() / type::GeographicalCoord::N_M_TO_DEG
+                      << ", " << section.street_network().coordinates(i).lat() / type::GeographicalCoord::N_M_TO_DEG
                       <<std::endl;
 
         std::cout << "dump item : " << std::endl;
