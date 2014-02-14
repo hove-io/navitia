@@ -6,11 +6,11 @@ std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const type::JourneyPatternPoint* jpp,
                const DateTime dt,
                const type::VehicleProperties& vehicle_properties,
-               const bool clockwise, const type::Data &data, bool reconstructing_path) {
+               const bool clockwise, bool disruption_active, const type::Data &data, bool reconstructing_path) {
     if(clockwise)
-        return earliest_stop_time(jpp, dt, data, reconstructing_path, vehicle_properties);
+        return earliest_stop_time(jpp, dt, data, disruption_active, reconstructing_path, vehicle_properties);
     else
-        return tardiest_stop_time(jpp, dt, data, reconstructing_path, vehicle_properties);
+        return tardiest_stop_time(jpp, dt, data, disruption_active, reconstructing_path, vehicle_properties);
 }
 
 
@@ -20,14 +20,15 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
  */
 const type::StopTime* valid_pick_up(type::idx_t idx, const type::idx_t end, const DateTime dt,
         const type::Data &data, bool reconstructing_path,
-        const type::VehicleProperties &required_vehicle_properties){
+        const type::VehicleProperties &required_vehicle_properties,
+        bool disruption_active){
     const auto date = DateTimeUtils::date(dt);
     const auto hour = DateTimeUtils::hour(dt);
     for(; idx < end; ++idx) {
         const type::StopTime* st = data.dataRaptor.st_idx_forward[idx];
         if (st->valid_end(reconstructing_path) && st->valid_hour(hour, true) &&
-            st->departure_validity_pattern->check(date) &&
-            st->vehicle_journey->accessible(required_vehicle_properties) ){
+            ((disruption_active && st->arrival_adapted_validity_pattern->check(date)) || ((!disruption_active) && st->arrival_validity_pattern->check(date)))
+            && st->vehicle_journey->accessible(required_vehicle_properties) ){
                 return st;
         }
     }
@@ -37,14 +38,15 @@ const type::StopTime* valid_pick_up(type::idx_t idx, const type::idx_t end, cons
 
 const type::StopTime* valid_drop_off(type::idx_t idx, const type::idx_t end, const DateTime dt,
                const type::Data &data, bool reconstructing_path,
-               const type::VehicleProperties &required_vehicle_properties){
+               const type::VehicleProperties &required_vehicle_properties,
+               bool disruption_active){
     const auto date = DateTimeUtils::date(dt);
     const auto hour = DateTimeUtils::hour(dt);
     for(; idx < end; ++idx) {
         const type::StopTime* st = data.dataRaptor.st_idx_backward[idx];
         if (st->valid_end(!reconstructing_path) && st->valid_hour(hour, false) &&
-            st->arrival_validity_pattern->check(date) &&
-            st->vehicle_journey->accessible(required_vehicle_properties) ){
+            ((disruption_active && st->arrival_adapted_validity_pattern->check(date)) || ((!disruption_active) && st->arrival_validity_pattern->check(date)))
+            && st->vehicle_journey->accessible(required_vehicle_properties) ){
                 return st;
         }
     }
@@ -54,6 +56,7 @@ const type::StopTime* valid_drop_off(type::idx_t idx, const type::idx_t end, con
 std::pair<const type::StopTime*, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
                    const DateTime dt, const type::Data &data,
+                   bool disruption_active,
                    bool reconstructing_path,
                    const type::VehicleProperties& vehicle_properties) {
     //On cherche le plus petit stop time de la journey_pattern >= dt.hour()
@@ -70,14 +73,14 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
 
     //On renvoie le premier trip valide
     const type::StopTime* first_st = valid_pick_up(idx, end_idx,
-            dt, data, reconstructing_path, vehicle_properties);
+            dt, data, reconstructing_path, vehicle_properties,disruption_active);
     auto working_dt = dt;
     // If no trip was found, we look for one the day after
     if(first_st == nullptr) {
         idx = begin - data.dataRaptor.departure_times.begin();
         working_dt = DateTimeUtils::set(DateTimeUtils::date(dt)+1, 0);
         first_st = valid_pick_up(idx, end_idx, working_dt,
-            data, reconstructing_path, vehicle_properties);
+            data, reconstructing_path, vehicle_properties,disruption_active);
     }
 
     if(first_st != nullptr) {
@@ -98,7 +101,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
 
 std::pair<const type::StopTime*, uint32_t>
 tardiest_stop_time(const type::JourneyPatternPoint* jpp,
-                   const DateTime dt, const type::Data &data,
+                   const DateTime dt, const type::Data &data, bool disruption_active,
                    bool reconstructing_path,
                    const type::VehicleProperties& vehicle_properties) {
     //On cherche le plus grand stop time de la journey_pattern <= dt.hour()
@@ -114,7 +117,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
 
     const type::StopTime* first_st = valid_drop_off(idx, end_idx,
             dt, data,
-            reconstructing_path, vehicle_properties);
+            reconstructing_path, vehicle_properties, disruption_active);
 
     auto working_dt = dt;
     // If no trip was found, we look for one the day before
@@ -123,7 +126,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
         working_dt = DateTimeUtils::set(DateTimeUtils::date(working_dt) - 1,
                                         DateTimeUtils::SECONDS_PER_DAY - 1);
         first_st = valid_drop_off(idx, end_idx, working_dt, data, reconstructing_path,
-                vehicle_properties);
+                vehicle_properties, disruption_active);
     }
 
     if(first_st != nullptr){

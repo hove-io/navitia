@@ -129,6 +129,8 @@ public:
 
     /** Construit les données raptor */
     void build_raptor();
+    /** Construction des validity pattern des StopTimes **/
+    void build_midnight_interchange();
 
     Data& operator=(Data&& other);
 
@@ -144,7 +146,8 @@ private:
 
     /** Sauvegarde les données en binaire compressé avec LZ4*/
     void save_lz4(const std::string & filename);
-
+    /** Recherche d'une ValidityPattern lors de clacul du passe-minuit**/
+    ValidityPattern* get_or_create_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time);
 
 };
 

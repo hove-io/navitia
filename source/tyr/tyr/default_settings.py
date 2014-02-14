@@ -42,9 +42,14 @@ REDIS_DB = 0
 
 REDIS_PASSWORD = None
 
+#Validate the presence of a mx record on the domain
+EMAIL_CHECK_MX = True
+
+#Validate the email by connecting to the smtp server, but doesn't send an email
+EMAIL_CHECK_SMTP = True
+
 #configuration of celery, don't edit
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
-
 
 CELERYBEAT_SCHEDULE = {
     'udpate-data-every-30-seconds': {
@@ -62,9 +67,3 @@ CELERY_TIMEZONE = 'UTC'
 
 #http://docs.celeryproject.org/en/master/configuration.html#std:setting-CELERYBEAT_SCHEDULE_FILENAME
 CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
-
-#Validate the presence of a mx record on the domain
-EMAIL_CHECK_MX = True
-
-#Validate the email by connecting to the smtp server, but doesn't send an email
-EMAIL_CHECK_SMTP = True

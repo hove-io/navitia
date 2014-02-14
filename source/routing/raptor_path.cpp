@@ -8,7 +8,7 @@ namespace navitia { namespace routing {
 std::vector<Path>
 makePathes(std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > destinations,
            DateTime dt,
-           const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const RAPTOR &raptor_, bool clockwise) {
+           const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_, bool clockwise, bool disruption_active) {
     std::vector<Path> result;
     DateTime best_dt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
     for(unsigned int i=1;i<=raptor_.count;++i) {
@@ -31,7 +31,7 @@ makePathes(std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> 
             }
         }
         if(best_jpp != type::invalid_idx)
-            result.push_back(makePath(best_jpp, i, clockwise, accessibilite_params/*required_properties*/, raptor_));
+            result.push_back(makePath(best_jpp, i, clockwise, disruption_active, accessibilite_params, raptor_));
     }
 
     return result;
@@ -39,19 +39,19 @@ makePathes(std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> 
 
 std::pair<const type::StopTime*, uint32_t>
 get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels,
-                      const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data) {
+                      const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data, bool disruption_active) {
     const auto& label = labels[count][journey_pattern_point];
     if(label.type == boarding_type::vj) {
         const type::JourneyPatternPoint* jpp = data.pt_data.journey_pattern_points[journey_pattern_point];
-        return best_stop_time(jpp, label.dt, accessibilite_params.vehicle_properties, clockwise, data, true);
+        return best_stop_time(jpp, label.dt, accessibilite_params.vehicle_properties, clockwise, disruption_active, data, true);
     }
     return std::make_pair(nullptr, std::numeric_limits<uint32_t>::max());
 }
 
 
 Path
-makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
-         const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/,
+makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise, bool disruption_active,
+         const type::AccessibiliteParams & accessibilite_params,
          const RAPTOR &raptor_) {
     Path result;
     unsigned int current_jpp_idx = destination_idx;
@@ -119,7 +119,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 //BOOST_ASSERT(result.items.empty() || clockwise &&  (l >= result.items.back().arrival));
                 boarding_jpp = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
 
-                std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_jpp_idx, raptor_.labels, accessibilite_params, clockwise,  raptor_.data) ;
+                std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_jpp_idx, raptor_.labels, accessibilite_params, clockwise,  raptor_.data, disruption_active) ;
                 item = PathItem();
                 item.type = public_transport;
                 while(boarding_jpp != current_jpp_idx) {
@@ -293,9 +293,9 @@ void patch_datetimes(Path &path){
 
 Path
 makePathreverse(unsigned int destination_idx, unsigned int countb,
-                const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/,
-                const RAPTOR &raptor_) {
-    return makePath(destination_idx, countb, false, accessibilite_params/*required_properties*/, raptor_);
+                const type::AccessibiliteParams & accessibilite_params,
+                const RAPTOR &raptor_, bool disruption_active) {
+    return makePath(destination_idx, countb, disruption_active, false, accessibilite_params, raptor_);
 }
 
 

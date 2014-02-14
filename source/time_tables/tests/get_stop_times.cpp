@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(test1){
     std::vector<navitia::type::idx_t> rps;
     for(auto jpp : b.data.pt_data.journey_pattern_points)
         rps.push_back(jpp->idx);
-    auto result = get_stop_times(rps, navitia::DateTimeUtils::min, navitia::DateTimeUtils::inf, 1, b.data);
+    auto result = get_stop_times(rps, navitia::DateTimeUtils::min, navitia::DateTimeUtils::inf, 1, b.data, false);
     BOOST_REQUIRE_EQUAL(result.size(), 1);
 
 }

@@ -31,6 +31,7 @@ struct dataRAPTOR {
     label_vector_t labels_const_reverse;
     vector_idx boardings_const;
     std::vector<boost::dynamic_bitset<> > jp_validity_patterns;
+    std::vector<boost::dynamic_bitset<> > jp_adapted_validity_pattern;
 
 
     dataRAPTOR()  {}

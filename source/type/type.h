@@ -270,7 +270,7 @@ struct GeographicalCoord{
 
     void set_lon(double lon) { this->_lon = lon;}
     void set_lat(double lat) { this->_lat = lat;}
-    void set_xy(double x, double y){this->set_lon(x*M_TO_DEG); this->set_lat(y*M_TO_DEG);}
+    void set_xy(double x, double y){this->set_lon(x*N_M_TO_DEG); this->set_lat(y*N_M_TO_DEG);}
 
     constexpr static double coord_epsilon = 1e-15;
     /// Ordre des coordonnées utilisé par ProximityList
@@ -284,8 +284,8 @@ struct GeographicalCoord{
                 || fabs(lat() - other.lat()) > coord_epsilon ;
     }
 
-    constexpr static double DEG_TO_RAD = 0.01745329238;
-    constexpr static double M_TO_DEG = 1.0/111319.9;
+    constexpr static double N_DEG_TO_RAD = 0.01745329238;
+    constexpr static double N_M_TO_DEG = 1.0/111319.9;
     /** Calcule la distance Grand Arc entre deux nœuds
       *
       * On utilise la formule de Haversine
@@ -310,8 +310,8 @@ struct GeographicalCoord{
     */
     double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
         static const double EARTH_RADIUS_IN_METERS_SQUARE = 40612548751652.183023;
-        double latitudeArc = (this->lat() - other.lat()) * DEG_TO_RAD;
-        double longitudeArc = (this->lon() - other.lon()) * DEG_TO_RAD;
+        double latitudeArc = (this->lat() - other.lat()) * N_DEG_TO_RAD;
+        double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;
         double tmp = coslat * longitudeArc;
         return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
     }
@@ -717,6 +717,9 @@ struct StopTime : public Nameable {
     ValidityPattern* departure_validity_pattern;
     ValidityPattern* arrival_validity_pattern;
 
+    ValidityPattern* departure_adapted_validity_pattern;
+    ValidityPattern* arrival_adapted_validity_pattern;
+
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
@@ -787,10 +790,13 @@ struct StopTime : public Nameable {
     //@TODO construire ces putin de validy pattern!!
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
         headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey(nullptr), journey_pattern_point(nullptr),
-        local_traffic_zone(std::numeric_limits<uint32_t>::max()), departure_validity_pattern(nullptr), arrival_validity_pattern(nullptr){}
+        local_traffic_zone(std::numeric_limits<uint32_t>::max()), departure_validity_pattern(nullptr), arrival_validity_pattern(nullptr),
+        departure_adapted_validity_pattern(nullptr), arrival_adapted_validity_pattern(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point & properties & local_traffic_zone & departure_validity_pattern & arrival_validity_pattern & comment;
+            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point
+            & properties & local_traffic_zone & departure_validity_pattern & arrival_validity_pattern
+            & departure_adapted_validity_pattern & arrival_adapted_validity_pattern & comment;
     }
 
     bool operator<(const StopTime& other) const {

@@ -8,7 +8,6 @@
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 #include "utils/exception.h"
 #include "ed_persistor.h"
 
@@ -20,7 +19,7 @@ int main(int argc, char * argv[])
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
 
-    std::string input, date, connection_string;
+    std::string input, connection_string;
     uint32_t coord_system;
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -58,8 +57,9 @@ int main(int argc, char * argv[])
     pt::ptime start;
 
     start = pt::microsec_clock::local_time();
-    ed::Georef data(coord_system);
-    ed::connectors::GeopalParser geopal_parser(input);
+    ed::Georef data;
+    ed::connectors::Projection origin("Lambert 2 étendu", std::to_string(coord_system), false);
+    ed::connectors::GeopalParser geopal_parser(input, ed::connectors::ConvCoord(origin));
 
     try{
             geopal_parser.fill(data);
@@ -70,7 +70,7 @@ int main(int argc, char * argv[])
 
     ed::EdPersistor p(connection_string);
     p.persist(data);
-    std::cout<<std::endl<<"temps :"<<(pt::microsec_clock::local_time() - start).total_milliseconds()<<std::endl;
+    std::cout<<std::endl<<"temps :"<<to_simple_string(pt::microsec_clock::local_time() - start)<<std::endl;
 
     return 0;
 }

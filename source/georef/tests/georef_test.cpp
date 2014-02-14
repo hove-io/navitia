@@ -53,8 +53,8 @@ std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& p
 void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
     std::cout << " coord : " << std::endl;
     for (auto c : coord) {
-        std::cout << " -- " << c.lon() / navitia::type::GeographicalCoord::M_TO_DEG
-                  << ", " << c.lat() / navitia::type::GeographicalCoord::M_TO_DEG
+        std::cout << " -- " << c.lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
+                  << ", " << c.lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
                      << std::endl;
     }
 }

@@ -9,14 +9,23 @@ namespace pt = boost::posix_time;
 
 namespace ed{
 
+nt::ValidityPattern* get_or_create_validity_pattern(nt::PT_Data& data, nt::ValidityPattern* validity_pattern){
+    auto find_vp_predicate = [&](nt::ValidityPattern* vp1) { return validity_pattern->days == vp1->days;};
+    auto it = std::find_if(data.validity_patterns.begin(),
+                        data.validity_patterns.end(), find_vp_predicate);
+    if(it != data.validity_patterns.end()) {
+        delete validity_pattern;
+        return *(it);
+    } else {
+         data.validity_patterns.push_back(validity_pattern);
+         return validity_pattern;
+    }
+}
 
-void delete_vj(nt::VehicleJourney* vehicle_journey,
-        const nt::AtPerturbation& pert, nt::PT_Data& data){
-    //TODO on duplique les validitypattern à tort et à travers la, va falloir les mutualiser
-    nt::ValidityPattern* vp = NULL;
-    vp = new nt::ValidityPattern(*vehicle_journey->adapted_validity_pattern);
-    data.validity_patterns.push_back(vp);
-    vehicle_journey->adapted_validity_pattern = vp;
+nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
+                          const nt::AtPerturbation& pert,
+                          nt::PT_Data& data, uint32_t time){
+    nt::ValidityPattern* vp = new nt::ValidityPattern(*validity_pattern);
 
     for(size_t i=0; i < vp->days.size(); ++i){
         bg::date current_date = vp->beginning_date + bg::days(i);
@@ -24,13 +33,22 @@ void delete_vj(nt::VehicleJourney* vehicle_journey,
                 || current_date > pert.application_period.end().date()){
             continue;
         }
-        pt::ptime begin(current_date, pt::seconds(vehicle_journey->stop_time_list.front()->departure_time));
+        pt::ptime begin(current_date, pt::seconds(time));
         //si le départ du vj est dans la plage d'appliation du message, on le supprime
         if(pert.is_applicable(pt::time_period(begin, pt::seconds(1)))){
             vp->remove(current_date);
         }
-
     }
+    return get_or_create_validity_pattern(data, vp);
+}
+
+void update_adapted_validity_pattern(nt::VehicleJourney* vehicle_journey,
+        const nt::AtPerturbation& pert, nt::PT_Data& data){
+   vehicle_journey->adapted_validity_pattern = get_validity_pattern(vehicle_journey->adapted_validity_pattern,
+                                                                     pert,
+                                                                     data,
+                                                                     vehicle_journey->stop_time_list.front()->departure_time
+                                                                     );
 }
 
 pt::time_period build_stop_period(const nt::StopTime& stop,
@@ -114,7 +132,12 @@ nt::VehicleJourney* create_adapted_vj(
     nt::JourneyPattern* jp = new nt::JourneyPattern(*vj_adapted->journey_pattern);
     data.journey_patterns.push_back(jp);
     vj_adapted->journey_pattern = jp;
+    auto it = std::find(jp->vehicle_journey_list.begin(), jp->vehicle_journey_list.end(), current_vj);
+    if(it != jp->vehicle_journey_list.end()){
+        jp->vehicle_journey_list.erase(it);
+    }
     jp->vehicle_journey_list.push_back(vj_adapted);
+    jp->uri = vj_adapted->journey_pattern->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_patterns.size());
     //@TODO changer l'uri
 
     //on duplique les journey pattern point
@@ -125,6 +148,7 @@ nt::VehicleJourney* create_adapted_vj(
         jp->journey_pattern_point_list.push_back(new_jpp);
         new_jpp->journey_pattern = jp;
         //@TODO changer l'uri
+        new_jpp->uri = jpp->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_pattern_points.size());
     }
 
     //On duplique les StopTime
@@ -134,6 +158,7 @@ nt::VehicleJourney* create_adapted_vj(
         nt::StopTime* new_stop = new nt::StopTime(*stop);
         new_stop->vehicle_journey = vj_adapted;
         new_stop->journey_pattern_point = jp->journey_pattern_point_list[i];
+
         vj_adapted->stop_time_list.push_back(new_stop);
         data.stop_times.push_back(new_stop);
     }
@@ -231,10 +256,8 @@ std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey,
                 vj_adapted->stop_time_list.erase(it);
             }
         }
-
         vj_adapted->adapted_validity_pattern->add(current_period.begin().date());
         current_vj->adapted_validity_pattern->remove(current_period.begin().date());
-
         prec_vjs[current_vj] = vj_adapted;
     }
 
@@ -293,7 +316,7 @@ void AtAdaptedLoader::apply_deletion_on_vj(nt::VehicleJourney* vehicle_journey,
         const std::set<nt::AtPerturbation>& perturbations, nt::PT_Data& data){
     for(nt::AtPerturbation pert : perturbations){
         if(vehicle_journey->stop_time_list.size() > 0){
-            delete_vj(vehicle_journey, pert, data);
+            update_adapted_validity_pattern(vehicle_journey, pert, data);
         }
     }
 }

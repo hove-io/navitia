@@ -23,8 +23,8 @@ void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_i
         std::cout << "section " << (int)(section.type()) << std::endl
                      << " -- coordinates :" << std::endl;
         for (int i = 0; i < section.street_network().coordinates_size(); ++i)
-            std::cout << "coord: " << section.street_network().coordinates(i).lon() / type::GeographicalCoord::M_TO_DEG
-                      << ", " << section.street_network().coordinates(i).lat() / type::GeographicalCoord::M_TO_DEG
+            std::cout << "coord: " << section.street_network().coordinates(i).lon() / type::GeographicalCoord::N_M_TO_DEG
+                      << ", " << section.street_network().coordinates(i).lat() / type::GeographicalCoord::N_M_TO_DEG
                       <<std::endl;
 
         std::cout << "dump item : " << std::endl;
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     type::EntryPoint destination(destination_type, "stop_area:stop2");
 
     georef::StreetNetwork sn_worker(data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
 
     // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
     std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
-    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
@@ -427,7 +427,7 @@ struct streetnetworkmode_fixture {
     pbnavitia::Response make_response() {
         georef::StreetNetwork sn_worker(b.data.geo_ref);
         RAPTOR raptor(b.data);
-        return ::make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams(), forbidden, sn_worker);
+        return ::make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams(), forbidden, sn_worker, false);
     }
 
     bt::time_duration to_duration(double dist, type::Mode_e mode) {

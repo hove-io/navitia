@@ -313,7 +313,9 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const type::AccessibiliteParams & accessibilite_params,
               std::vector<std::string> forbidden,
-              georef::StreetNetwork & worker, uint32_t max_duration, uint32_t max_transfers) {
+              georef::StreetNetwork & worker,
+              bool disruption_active,
+              uint32_t max_duration, uint32_t max_transfers) {
 
     pbnavitia::Response response;
 
@@ -356,7 +358,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, bound, max_transfers, accessibilite_params/*wheelchair*/, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, bound, max_transfers, accessibilite_params, forbidden, clockwise);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1) {
@@ -384,7 +386,9 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const std::string &datetime_str,bool clockwise,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
-                                   georef::StreetNetwork & worker, int max_duration, uint32_t max_transfers) {
+                                   georef::StreetNetwork & worker,
+                                   bool disruption_active,
+                                   int max_duration, uint32_t max_transfers) {
     pbnavitia::Response response;
 
     boost::posix_time::ptime datetime;
@@ -408,7 +412,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                           accessibilite_params/*wheelchair*/, forbidden, clockwise);
+                           accessibilite_params/*wheelchair*/, forbidden, clockwise, disruption_active);
 
 
     for(const type::StopPoint* sp : raptor.data.pt_data.stop_points) {

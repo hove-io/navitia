@@ -5,6 +5,7 @@ import celery
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 from flask import current_app
+import os
 
 
 def configure_logger(app):
@@ -12,11 +13,7 @@ def configure_logger(app):
     initialize logging
     """
     filename = app.config["LOG_FILENAME"]
-    handler = logging.FileHandler(filename)
-    log_format = '[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s - ' \
-            '%(filename)s:%(lineno)d in %(funcName)s'
-    handler.setFormatter(logging.Formatter(log_format))
-    app.logger.addHandler(handler)
+    celery.log.setup_logger(loglevel=app.config["LOG_LEVEL"], logfile=filename)
     app.logger.setLevel(app.config["LOG_LEVEL"])
 
     logging.getLogger('sqlalchemy.engine').setLevel(
@@ -25,12 +22,6 @@ def configure_logger(app):
             app.config["LOG_LEVEL_SQLALCHEMY"])
     logging.getLogger('sqlalchemy.dialects.postgresql')\
             .setLevel(app.config["LOG_LEVEL_SQLALCHEMY"])
-
-    logging.getLogger('sqlalchemy.engine').addHandler(handler)
-    logging.getLogger('sqlalchemy.pool').addHandler(handler)
-    logging.getLogger('sqlalchemy.dialects.postgresql').addHandler(handler)
-
-    celery.log.setup_logger(loglevel=app.config["LOG_LEVEL"], logfile=filename)
 
 
 def make_celery(app):
@@ -132,3 +123,21 @@ def build_error(config, validate_result):
             error = 'Missing value or section.'
         result += section_string + ' => ' + str(error) + "\n"
     return result
+
+
+def get_instance_logger(instance):
+    """
+    return the logger for this instance
+    all log will be in a file specific to this instance
+    """
+    logger = logging.getLogger('tyr.{0}'.format(instance.name))
+    log_dir = os.path.dirname(current_app.config['LOG_FILENAME'])
+    log_filename = log_dir + '/{0}.log'.format(instance.name)
+    logger.setLevel(current_app.config["LOG_LEVEL"])
+    handler = logging.FileHandler(log_filename)
+    log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
+            ' %(message)s'
+    handler.setFormatter(logging.Formatter(log_format))
+    logger.addHandler(handler)
+    logger.propagate = False
+    return logger
