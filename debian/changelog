@@ -1,3 +1,9 @@
+navitia2 (0.81.4) unstable; urgency=low
+
+ * hotfix for sql functions 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 11:02:51 +0100
+
 navitia2 (0.81.3) unstable; urgency=low
 
  * Hotfix for stop_point projection 

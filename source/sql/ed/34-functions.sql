@@ -221,14 +221,14 @@ BEGIN
 					where rel.admin_id=adminid
 					and rel.way_id=e.way_id
 					and e.target_node_id=n.id)aa)))) INTO ret;
-	CASE  geometrytype(ret) 
+	CASE  geometrytype(ret::geometry) 
 		WHEN 'MULTIPOLYGON'  THEN
 			UPDATE navitia.admin 
-			set boundary = ret
+			set boundary = ret::geometry
 			where navitia.admin.id=adminid;
 		WHEN 'MultiLineString'  THEN
 			UPDATE navitia.admin 
-			set boundary = ST_Multi(ST_Polygonize(ret))
+			set boundary = ST_Multi(ST_Polygonize(ret::geometry))
 			where navitia.admin.id=adminid;
 		ELSE 
 			UPDATE navitia.admin 
