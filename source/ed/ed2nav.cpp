@@ -21,15 +21,16 @@ int main(int argc, char * argv[])
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
     std::string output, connection_string;
-    double percent_delete;
+    double min_non_connected_graph_ratio;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "Fichier de sortie")
-        ("percent-delete,p", po::value<double>(&percent_delete)->default_value(0.0), "Pourcentage à partir duquel on supprime les graphes non connectées")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("config-file", po::value<std::string>(), "path to the config file")
+        ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "output file")
+        // by default, we filter the non connected graphs that are smaller than 10% of the biggest graph
+        ("min_non_connected_ratio,m", po::value<double>(&min_non_connected_graph_ratio)->default_value(0.1), "min ratio for the size of non connected graph")
+        ("connection-string", po::value<std::string>(&connection_string)->required(), "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -66,7 +67,7 @@ int main(int argc, char * argv[])
     now = start = pt::microsec_clock::local_time();
 
     ed::EdReader reader(connection_string);
-    reader.fill(data, percent_delete);
+    reader.fill(data, min_non_connected_graph_ratio);
     data.build_midnight_interchange();
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 

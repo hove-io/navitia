@@ -26,7 +26,7 @@ struct EdReader{
         }
     }
 
-    void fill(navitia::type::Data& nav_data, const double percent_delete);
+    void fill(navitia::type::Data& nav_data, const double min_non_connected_graph_ratio);
 
 private:
     //map d'id en base vers le poiteur de l'objet instancié
@@ -54,9 +54,9 @@ private:
     std::unordered_map<uint64_t, uint64_t> node_map;
 
     // ces deux vectors servent pour ne pas charger les graphes secondaires
-    std::vector<uint64_t> way_no_ignore;
-    std::vector<std::string> edge_to_ignore;
-    std::vector<uint64_t> node_to_ignore;
+    std::set<uint64_t> way_to_ignore; //TODO if bottleneck change to flat_set
+    std::set<std::pair<uint64_t, uint64_t>> edge_to_ignore;
+    std::set<uint64_t> node_to_ignore;
 
     void fill_meta(navitia::type::Data& data, pqxx::work& work);
     void fill_networks(navitia::type::Data& data, pqxx::work& work);
