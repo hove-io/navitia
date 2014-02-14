@@ -1,9 +1,5 @@
 #include "geopal_parser.h"
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/linestring.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/assign.hpp>
-using namespace boost::assign;
+
 namespace ed { namespace connectors {
 
 GeopalParser::GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord): path(path), conv_coord(conv_coord){
@@ -35,8 +31,12 @@ void GeopalParser::fill(ed::Georef& data){
     this->fill_ways_edges(data);
     LOG4CPLUS_INFO(logger, "Way count :" + std::to_string(data.ways.size()));
     LOG4CPLUS_INFO(logger, "Edge count :" + std::to_string(data.edges.size()));
-    this->fill_House_numbers(data);
+    this->fill_house_numbers(data);
     LOG4CPLUS_INFO(logger, "House number count :" + std::to_string(data.house_numbers.size()));
+    this->fill_poi_types(data);
+    LOG4CPLUS_INFO(logger, "PoiTypes count :" + std::to_string(data.poi_types.size()));
+    this->fill_pois(data);
+    LOG4CPLUS_INFO(logger, "Pois count :" + std::to_string(data.pois.size()));
 }
 
 ed::types::Node* GeopalParser::add_node(ed::Georef& data, const navitia::type::GeographicalCoord& coord, const std::string& uri){
@@ -135,7 +135,6 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
             throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
         }
         int nom_voie_d = reader.get_pos_col("nom_voie_d");
-        //        int nom_voie_g = reader.get_pos_col("nom_voie_g");
         int x1 = reader.get_pos_col("x_debut");
         int y1 = reader.get_pos_col("y_debut");
         int x2 = reader.get_pos_col("x_fin");
@@ -170,10 +169,8 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
                     }else{
                         target_node = target_it->second;
                     }
-//                    std::hash<std::string> hash_fn;
                     ed::types::Way* current_way = nullptr;
-                    // TODO : deux rues dans la même ville pourtant le même nom !
-                    std::string wayd_uri = row[id];//std::to_string(hash_fn(row[nom_voie_d])) + row[inseecom_d];
+                    std::string wayd_uri = row[id];
                     auto way = data.ways.find(wayd_uri);
                     if(way == data.ways.end()){
                         ed::types::Way* wy = new ed::types::Way;
@@ -207,7 +204,8 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
         }
     }
 }
-void GeopalParser::fill_House_numbers(ed::Georef& data){
+
+void GeopalParser::fill_house_numbers(ed::Georef& data){
     for(const std::string file_name : this->files){
         if (! this->starts_with(file_name, "adresse")){
             continue;
@@ -232,8 +230,6 @@ void GeopalParser::fill_House_numbers(ed::Georef& data){
                 && reader.is_valid(insee_c, row) && reader.is_valid(numero_c, row)
                 && reader.is_valid(nom_voie_c, row)
                 && reader.is_valid(id_tr, row)){
-//                std::hash<std::string> hash_fn;
-//                std::string way_uri = std::to_string(hash_fn(row[nom_voie_c])) + row[insee_c];
                 std::string way_uri = row[id_tr];
                 auto way_it = data.ways.find(way_uri);
                 if(way_it != data.ways.end()){
@@ -245,6 +241,91 @@ void GeopalParser::fill_House_numbers(ed::Georef& data){
                         current_hn->number = row[numero_c];
                         current_hn->way = way_it->second;
                         data.house_numbers[hn_uri] = current_hn;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void GeopalParser::fill_poi_types(ed::Georef& data){
+    for(const std::string file_name : this->files){
+        if (! this->starts_with(file_name, "poi_type")){
+            continue;
+        }
+        CsvReader reader(this->path + "/" + file_name, ';', true, true);
+        if(!reader.is_open()) {
+            throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
+        }
+        std::vector<std::string> mandatory_headers = {"poi_type_id" , "poi_type_name"};
+        if(!reader.validate(mandatory_headers)) {
+            throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
+        }
+        int id_c = reader.get_pos_col("poi_type_id");
+        int name_c = reader.get_pos_col("poi_type_name");
+        while(!reader.eof()){
+            std::vector<std::string> row = reader.next();
+            if (reader.is_valid(id_c, row) && reader.is_valid(name_c, row)){
+                const auto& itm = data.poi_types.find(row[id_c]);
+                if(itm == data.poi_types.end()){
+                    ed::types::PoiType* poi_type = new ed::types::PoiType;
+                    poi_type->id = data.poi_types.size() + 1;
+                    poi_type->name = row[name_c];
+                    data.poi_types[row[id_c]] = poi_type;
+                }
+            }
+        }
+    }
+}
+void GeopalParser::fill_pois(ed::Georef& data){
+    for(const std::string file_name : this->files){
+        if (! this->starts_with(file_name, "poi.txt")){
+            continue;
+        }
+        CsvReader reader(this->path + "/" + file_name, ';', true, true);
+        if(!reader.is_open()) {
+            throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
+        }
+        std::vector<std::string> mandatory_headers = {"poi_id", "poi_name", "poi_weight", "poi_visible", "poi_lat", "poi_lon", "poi_type_id"};
+        if(!reader.validate(mandatory_headers)) {
+            throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
+        }
+        int id_c = reader.get_pos_col("poi_id");
+        int name_c = reader.get_pos_col("poi_name");
+        int weight_c = reader.get_pos_col("poi_weight");
+        int visible_c = reader.get_pos_col("poi_visible");
+        int lat_c = reader.get_pos_col("poi_lat");
+        int lon_c = reader.get_pos_col("poi_lon");
+        int type_id_c = reader.get_pos_col("poi_type_id");
+
+        while(!reader.eof()){
+            std::vector<std::string> row = reader.next();
+            if (reader.is_valid(id_c, row) && reader.is_valid(name_c, row)
+                && reader.is_valid(weight_c, row) && reader.is_valid(visible_c, row)
+                && reader.is_valid(lat_c, row) && reader.is_valid(lon_c, row)
+                && reader.is_valid(type_id_c, row)){
+                const auto& itm = data.pois.find(row[id_c]);
+                if(itm == data.pois.end()){
+                    const auto& poi_type = data.poi_types.find(row[type_id_c]);
+                    if(poi_type != data.poi_types.end()){
+                        ed::types::Poi* poi = new ed::types::Poi;
+                        poi->id = data.pois.size() + 1;
+                        poi->name = row[name_c];
+                        try{
+                            poi->visible = boost::lexical_cast<bool>(row[visible_c]);
+                        }catch(boost::bad_lexical_cast ) {
+                            LOG4CPLUS_WARN(logger, "Impossible to parse the visible for " + row[id_c] + " " + row[name_c]);
+                            poi->visible = true;
+                        }
+                        try{
+                            poi->weight = boost::lexical_cast<int>(row[weight_c]);
+                        }catch(boost::bad_lexical_cast ) {
+                            LOG4CPLUS_WARN(logger, "Impossible to parse the weight for " + row[id_c] + " " + row[name_c]);
+                            poi->weight = 0;
+                        }
+                        poi->poi_type = poi_type->second;
+                        poi->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[lon_c]), str_to_double(row[lat_c])));
+                        data.pois[row[id_c]] = poi;
                     }
                 }
             }

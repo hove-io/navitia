@@ -6,7 +6,6 @@ namespace bg = boost::gregorian;
 namespace ed{
 
 void EdPersistor::persist(const ed::Georef& data){
-
     this->lotus.start_transaction();
     LOG4CPLUS_INFO(logger, "début : vider toutes les tables (TRUNCATE)!");
     this->clean_georef();
@@ -22,13 +21,16 @@ void EdPersistor::persist(const ed::Georef& data){
     this->insert_edges(data);
     LOG4CPLUS_INFO(logger, "début : relation admin way");
     this->build_relation_way_admin(data);
+    LOG4CPLUS_INFO(logger, "début : ajout des poitypes");
+    this->insert_poi_types(data);
+    LOG4CPLUS_INFO(logger, "début : ajout des pois");
+    this->insert_pois(data);
     LOG4CPLUS_INFO(logger, "début : mise à jour des limites des régions adminstratives");
     this->update_boundary();
     LOG4CPLUS_INFO(logger, "début : Relations stop_area, stop_point et admins");
     this->build_relation();
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "Fin : commit");
-    std::cout << "" << std::endl;
 }
 
 std::string EdPersistor::to_geografic_point(const navitia::type::GeographicalCoord& coord) const{
@@ -100,6 +102,28 @@ void EdPersistor::insert_edges(const ed::Georef& data){
         this->lotus.insert({std::to_string(edge.second->target->id), std::to_string(edge.second->source->id), std::to_string(edge.second->way->id),
                            this->to_geografic_linestring(edge.second->target->coord, edge.second->source->coord),
                            std::to_string(true), std::to_string(true), std::to_string(true)});
+    }
+    lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_poi_types(const ed::Georef& data){
+    this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
+    for(const auto& itm : data.poi_types) {
+        this->lotus.insert({std::to_string(itm.second->id), itm.first, itm.second->name});
+    }
+    lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_pois(const ed::Georef& data){
+    this->lotus.prepare_bulk_insert("navitia.poi", {"id", "weight", "coord", "name", "uri", "poi_type_id"});
+    for(const auto& itm : data.pois) {
+        std::string poi_type("NULL");
+        if(itm.second->poi_type != nullptr){
+            poi_type = std::to_string(itm.second->poi_type->id);
+        }
+        this->lotus.insert({std::to_string(itm.second->id), std::to_string(itm.second->weight),
+                           this->to_geografic_point(itm.second->coord),
+                           itm.second->name, itm.first, poi_type});
     }
     lotus.finish_bulk_insert();
 }
