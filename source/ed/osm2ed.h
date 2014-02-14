@@ -4,16 +4,17 @@
 #include "utils/lotus.h"
 #include "utils/logger.h"
 #include <unordered_map>
+#include "ed/types.h"
 
 namespace ed { namespace connectors {
 
-struct OSMHouseNumber{
-    navitia::type::GeographicalCoord coord;
-    std::string number;
+//struct OSMHouseNumber{
+//    navitia::type::GeographicalCoord coord;
+//    std::string number;
 
-    OSMHouseNumber(): number(""){}
+//    OSMHouseNumber(): number(""){}
 
-};
+//};
 
 
 struct Node {
@@ -55,28 +56,6 @@ public:
     }
 };
 
-struct OSMPOIType {
-    int32_t idx;
-    std::string uri;
-    std::string name;
-    bool visible;
-    OSMPOIType(){}
-    OSMPOIType(const int32_t  other_idx, const std::string & other_uri, const std::string & other_name, bool other_visible = true):
-        idx(other_idx),
-        uri(other_uri),
-        name(other_name),
-        visible(other_visible){}
-};
-
-struct OSMPOI{
-    int32_t idx;
-    std::string uri;
-    std::string name;
-    int32_t poitype_idx;
-    int weight;
-
-};
-
 struct OSMWay {
     const static uint8_t CYCLE_FWD = 0;
     const static uint8_t CYCLE_BWD = 1;
@@ -107,11 +86,11 @@ struct Visitor{
     log4cplus::Logger logger;
     std::unordered_map<uint64_t,CanalTP::References> references;
     std::unordered_map<uint64_t, Node> nodes;
-    std::unordered_map<uint64_t, OSMHouseNumber> housenumbers;
+    std::unordered_map<uint64_t, ed::types::HouseNumber> housenumbers;
     std::unordered_map<uint64_t, OSMAdminRef> OSMAdminRefs;
 
-    std::unordered_map<uint64_t, OSMPOI> pois;
-    std::unordered_map<std::string, OSMPOIType> poi_types;
+    std::unordered_map<uint64_t, ed::types::Poi> pois;
+    std::unordered_map<std::string, ed::types::PoiType> poi_types;
 
     int total_ways;
     int total_house_number;
