@@ -199,7 +199,7 @@ class Script(object):
                     uris.physical_mode = pt_infos.uris.physical_mode
                     uris.network = pt_infos.uris.network
 
-    def get_journey(self, req, instance):
+    def call_kraken(self, req, instance):
         resp = None
 
         for o_mode, d_mode in itertools.product(
@@ -208,11 +208,20 @@ class Script(object):
             req.journeys.streetnetwork_params.destination_mode = d_mode
             resp = instance.send_and_receive(req)
             if resp.response_type == response_pb2.ITINERARY_FOUND:
-                if req.requested_api == type_pb2.PLANNER:
-                    qualifier_one(resp.journeys)
                 break  # result found, no need to inspect other fallback mode
 
         self.__fill_uris(resp)
+        return resp
+
+    def get_journey(self, req, instance):
+        resp = self.call_kraken(req, instance)
+
+        if not resp or req.requested_api != type_pb2.PLANNER:
+            return
+
+        #we qualify the journeys
+        qualifier_one(resp.journeys)
+
         return resp
 
     def journey_compare(self, j1, j2):
