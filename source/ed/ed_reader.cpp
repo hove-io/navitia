@@ -676,19 +676,22 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, type FROM georef.way;";
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
-        if(binary_search(this->way_no_ignore.begin(), this->way_no_ignore.end(), const_it["id"].as<idx_t>())){
-            navitia::georef::Way* way = new navitia::georef::Way;
-            const_it["uri"].to(way->uri);
-            const_it["name"].to(way->name);
-            const_it["id"].to(way->id);
-            way->idx =data.geo_ref.ways.size();
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        idx_t id = const_it["id"].as<idx_t>();
 
-            const_it["type"].to(way->way_type);
-            data.geo_ref.ways.push_back(way);
-            this->way_map[const_it["id"].as<idx_t>()] = way;
-        }
-    }    
+        if (way_to_ignore.find(id) != way_to_ignore.end())
+            continue;
+
+        navitia::georef::Way* way = new navitia::georef::Way;
+        const_it["uri"].to(way->uri);
+        const_it["name"].to(way->name);
+        way->id = id;
+        way->idx =data.geo_ref.ways.size();
+
+        const_it["type"].to(way->way_type);
+        data.geo_ref.ways.push_back(way);
+        this->way_map[const_it["id"].as<idx_t>()] = way;
+    }
 }
 
 void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
@@ -711,7 +714,7 @@ void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
     }
 }
 
-void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, const double percent_delete){
+void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, const double percent_delete) {
     navitia::georef::GeoRef geo_ref_temp;
     std::unordered_map<idx_t, uint64_t> osmid_idex;
     std::unordered_map<uint64_t, idx_t> node_map_temp;
@@ -743,130 +746,145 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, co
             boost::add_edge(source, target, e, geo_ref_temp.graph);
     }
 
-    std::vector<navitia::georef::vertex_t> component(boost::num_vertices(geo_ref_temp.graph));
-    boost::connected_components(geo_ref_temp.graph, &component[0]);
-    std::map<uint64_t, uint64_t> map_count;
-    std::pair<uint64_t, uint64_t> principal_component = {std::numeric_limits<uint64_t>::max(), 0}; //pair with id/number of vertex
-    // recherche de la composante principale
-    for (navitia::georef::vertex_t i = 0; i != component.size(); ++i) {
-        int component_ = component[i];
-        map_count[component_]++;
+    std::cout << "donnees chargees !" << std::endl;
+    std::vector<size_t> vertex_component(boost::num_vertices(geo_ref_temp.graph));
+    boost::connected_components(geo_ref_temp.graph, &vertex_component[0]);
+    std::map<size_t, size_t> component_size;
+    boost::optional<std::pair<size_t, size_t>> principal_component = {{std::numeric_limits<size_t>::max(), 0}}; //pair with id/number of vertex
+    // we create the map to know the size of each component
+    for (navitia::georef::vertex_t component : vertex_component) {
+        component_size[component]++;
 
-        uint64_t count = map_count[component_];
-        if (principal_component.second < count) {
-            principal_component = {component_, count} ;
+        size_t count = component_size[component];
+        if (! principal_component || principal_component->second < count) {
+            principal_component = {component, count} ;
         }
     }
 
-    // remplissage de la liste des noeuds et edges à ne pas binariser
-//    for (navitia::georef::vertex_t i = 0;  i != component.size(); ++i) {
-//        if(((principal_component > 0) && ((component[i]/principal_component) < percent_delete))) {
-//            bool found = false;
-//            uint64_t source = osmid_idex[i];
-//            BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(i, geo_ref_temp.graph)) {
-//                uint64_t target = boost::target(e, geo_ref_temp.graph);
-//                edge_to_ignore.push_back(std::to_string(source) + std::to_string(target));
-//                node_to_ignore.push_back(source);
-//                node_to_ignore.push_back(target);
-//                found = true;
-//            }
-//            if (!found){
-//                node_to_ignore.push_back(source);
-//            }
-//        }
-//    }
-//    // remplissage de la liste des voies à binariser
-//    navitia::georef::edge_iterator i, end;
-//    for (tie(i, end) = boost::edges(geo_ref_temp.graph); i != end; ++i) {
-//        navitia::georef::vertex_t source_idx = boost::source(*i, geo_ref_temp.graph);
-//        navitia::georef::vertex_t target_idx = boost::target(*i, geo_ref_temp.graph);
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), component_size.size() << " connexes components found");
 
-//        if ((principal_component.first != std::numeric_limits<uint64_t>::max())
-//            && (((component[source_idx] / principal_component.second) > percent_delete ) || ((component[target_idx]/principal_component.second) > percent_delete ))) {
-//            navitia::georef::edge_t e;
-//            bool b;
-//            boost::tie(e,b) = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
-//            navitia::georef::Edge edge = geo_ref_temp.graph[e];
-//            way_no_ignore.push_back(edge.way_idx);
-//        }
-//    }
-
-    navitia::georef::edge_iterator i, end;
-    for (tie(i, end) = boost::edges(geo_ref_temp.graph); i != end; ++i) {
-        navitia::georef::vertex_t source_idx = boost::source(*i, geo_ref_temp.graph);
-        navitia::georef::vertex_t target_idx = boost::target(*i, geo_ref_temp.graph);
-
-        navitia::georef::edge_t e;
-        bool b;
-        boost::tie(e,b) = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
-        navitia::georef::Edge edge = geo_ref_temp.graph[e];
-        way_no_ignore.push_back(edge.way_idx);
+    if (! principal_component) {
+        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Impossible to find a main composent in graph. Graph must be empty (nb vertices = "
+                        << boost::num_vertices(geo_ref_temp.graph) <<")");
+        return;
     }
 
-    std::vector<uint64_t>::iterator it;
-    std::sort(way_no_ignore.begin(), way_no_ignore.end());
-    it = std::unique(way_no_ignore.begin(), way_no_ignore.end());
-    way_no_ignore.resize( std::distance(way_no_ignore.begin(),it) );
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the bigest has " << principal_component->second << " nodes");
 
-    std::sort(node_to_ignore.begin(), node_to_ignore.end());
-    it = std::unique(node_to_ignore.begin(), node_to_ignore.end());
-    node_to_ignore.resize( std::distance(node_to_ignore.begin(),it) );
+    // we fill the node_to_ignore and edge_to_ignore lists
+    // those edges and nodes will be erased
+    for (navitia::georef::vertex_t vertex_idx = 0;  vertex_idx != vertex_component.size(); ++vertex_idx) {
+        auto comp = vertex_component[vertex_idx];
 
-    std::vector<std::string>::iterator itstr;
-    std::sort(edge_to_ignore.begin(), edge_to_ignore.end());
-    itstr = std::unique(edge_to_ignore.begin(), edge_to_ignore.end());
-    edge_to_ignore.resize( std::distance(edge_to_ignore.begin(),itstr) );
+        auto nb_elt_in_component = component_size[comp];
+
+        if (nb_elt_in_component / principal_component->second >= percent_delete)
+            continue; //big enough, we skip
+
+        uint64_t source = osmid_idex[vertex_idx];
+
+        node_to_ignore.insert(source);
+        BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(vertex_idx, geo_ref_temp.graph)) {
+            uint64_t target = boost::target(e, geo_ref_temp.graph);
+            edge_to_ignore.insert({source, target});
+            node_to_ignore.insert(target);
+        }
+    }
+
+    // we fill the list of way to ignore
+    BOOST_FOREACH(navitia::georef::edge_t e, boost::edges(geo_ref_temp.graph)) {
+        navitia::georef::vertex_t source_idx = boost::source(e, geo_ref_temp.graph);
+        navitia::georef::vertex_t target_idx = boost::target(e, geo_ref_temp.graph);
+
+        auto source_component = vertex_component[source_idx];
+        auto target_component = vertex_component[source_idx];
+
+        //by construction source and target must be in the same component
+        if (source_component != target_component) {
+            throw navitia::exception("technical problem");
+        }
+
+        auto nb_elt = component_size[source_component];
+
+        if (nb_elt / principal_component->second >= percent_delete)
+            continue; //big enough, we skip
+
+        auto edge_and_found = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
+        //by construction it has to be found, no need to check
+
+        navitia::georef::Edge edge = geo_ref_temp.graph[edge_and_found.first];
+        way_to_ignore.insert(edge.way_idx);
+    }
+
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), way_to_ignore.size() << " way to ignore");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), edge_to_ignore.size() << " edge to ignore");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), node_to_ignore.size() << " node to ignore");
 }
 
 void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
     std::string request = "select id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat from georef.node;";
     pqxx::result result = work.exec(request);
     uint64_t idx = 0;
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        this->node_map[const_it["id"].as<uint64_t>()] = std::numeric_limits<uint64_t>::max();
-        if(! binary_search(this->node_to_ignore.begin(), this->node_to_ignore.end(), const_it["id"].as<uint64_t>())){
-            navitia::georef::Vertex v;
-            v.coord.set_lon(const_it["lon"].as<double>());
-            v.coord.set_lat(const_it["lat"].as<double>());
-            boost::add_vertex(v, data.geo_ref.graph);
-            this->node_map[const_it["id"].as<uint64_t>()] = idx;
-            idx++;
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        auto id = const_it["id"].as<uint64_t>();
+
+        if (node_to_ignore.find(id) != node_to_ignore.end()) {
+            this->node_map[id] = std::numeric_limits<uint64_t>::max();
+            continue;
         }
+
+        navitia::georef::Vertex v;
+        v.coord.set_lon(const_it["lon"].as<double>());
+        v.coord.set_lat(const_it["lat"].as<double>());
+        boost::add_vertex(v, data.geo_ref.graph);
+        this->node_map[id] = idx;
+        idx++;
     }
     data.geo_ref.init();
-}
 
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_vertices(data.geo_ref.graph) << " vertex added");
+}
 void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
     std::string request = "select e.source_node_id, target_node_id, e.way_id, ST_LENGTH(the_geog) AS leng,";
-                request += "e.pedestrian_allowed as map,e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
+                request += "e.pedestrian_allowed as pede,e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
-        std::string source, target;
-        const_it["source_node_id"].to(source);
-        const_it["target_node_id"].to(target);
-        if ((way != NULL) && (! binary_search(this->edge_to_ignore.begin(), this->edge_to_ignore.end(), source+target))){
-            navitia::georef::Edge e;
-            float len;
-            const_it["leng"].to(len);
-            e.way_idx = way->idx;
-            uint64_t source = this->node_map[const_it["source_node_id"].as<uint64_t>()];
-            uint64_t target = this->node_map[const_it["target_node_id"].as<uint64_t>()];
-            if ((source != std::numeric_limits<uint64_t>::max()) && (target != std::numeric_limits<uint64_t>::max())){
-                data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
-                e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
-                boost::add_edge(source, target, e, data.geo_ref.graph);
-                if (const_it["bike"].as<bool>()){
-                    e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Bike]);
-                    boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Bike] + source, data.geo_ref.offsets[navitia::type::Mode_e::Bike] + target, e, data.geo_ref.graph);
-                }
-                if (const_it["car"].as<bool>()){
-                    e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Car]);
-                    boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Car] + source, data.geo_ref.offsets[navitia::type::Mode_e::Car] + target, e, data.geo_ref.graph);
-                }
-            }
+
+        auto it_source = node_map.find(const_it["source_node_id"].as<uint64_t>());
+        auto it_target = node_map.find(const_it["target_node_id"].as<uint64_t>());
+
+        if (it_source == node_map.end() || it_target == node_map.end())
+            continue;
+
+        uint64_t source = it_source->second;
+        uint64_t target = it_target->second;
+
+        if (source == std::numeric_limits<uint64_t>::max() || target == std::numeric_limits<uint64_t>::max())
+            continue;
+
+        if (way == nullptr || edge_to_ignore.find({source, target}) != edge_to_ignore.end())
+            continue;
+
+        navitia::georef::Edge e;
+        float len = const_it["leng"].as<float>();
+        e.way_idx = way->idx;
+        //TODO et les pietons ??!
+
+        data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
+        e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
+        boost::add_edge(source, target, e, data.geo_ref.graph);
+        if (const_it["bike"].as<bool>()) {
+            e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Bike]);
+            boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Bike] + source, data.geo_ref.offsets[navitia::type::Mode_e::Bike] + target, e, data.geo_ref.graph);
+        }
+        if (const_it["car"].as<bool>()) {
+            e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Car]);
+            boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Car] + source, data.geo_ref.offsets[navitia::type::Mode_e::Car] + target, e, data.geo_ref.graph);
         }
     }
+
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref.graph) << " edges added");
 }
 
 //get the minimum distance and the vertex to start from between 2 edges

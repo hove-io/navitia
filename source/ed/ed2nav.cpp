@@ -26,10 +26,11 @@ int main(int argc, char * argv[])
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "Fichier de sortie")
-        ("percent-delete,p", po::value<double>(&percent_delete)->default_value(0.0), "Pourcentage à partir duquel on supprime les graphes non connectées")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("config-file", po::value<std::string>(), "path to the config file")
+        ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "output file")
+        // by default, we filter the non connected graphs that are smaller than 10% of the biggest graph
+        ("percent-delete,p", po::value<double>(&percent_delete)->default_value(0.1), "min ratio for the size of non connected graph")
+        ("connection-string", po::value<std::string>(&connection_string)->required(), "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
