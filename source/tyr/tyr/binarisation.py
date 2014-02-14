@@ -12,6 +12,7 @@ from flask import current_app
 import kombu
 from navitiacommon import models
 import shutil
+from celery.utils.log import get_task_logger
 
 
 def move_to_backupdirectory(filename, working_directory):
@@ -49,8 +50,7 @@ def fusio2ed(instance_config, filename, job_id):
         fusio2ed.retry(countdown=300, max_retries=10)
 
     try:
-        tyr_logger = logging.getLogger('tyr')
-        fusio_logger = logging.getLogger('fusio2ed')
+        tyr_logger = get_task_logger('tyr')
         working_directory = os.path.dirname(filename)
 
         zip_file = zipfile.ZipFile(filename)
@@ -68,7 +68,7 @@ def fusio2ed(instance_config, filename, job_id):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        res = launch_exec("fusio2ed", params, fusio_logger, tyr_logger)
+        res = launch_exec("fusio2ed", params, tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
@@ -91,8 +91,7 @@ def gtfs2ed(instance_config, gtfs_filename,  job_id):
         gtfs2ed.retry(countdown=300, max_retries=10)
 
     try:
-        tyr_logger = logging.getLogger('tyr')
-        gtfs_logger = logging.getLogger('gtfs2ed')
+        tyr_logger = get_task_logger('tyr')
         working_directory = os.path.dirname(gtfs_filename)
 
         zip_file = zipfile.ZipFile(gtfs_filename)
@@ -110,7 +109,7 @@ def gtfs2ed(instance_config, gtfs_filename,  job_id):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        res = launch_exec("gtfs2ed", params, gtfs_logger, tyr_logger)
+        res = launch_exec("gtfs2ed", params, tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
@@ -133,13 +132,12 @@ def osm2ed(instance_config, osm_filename, job_id):
         osm2ed.retry(countdown=300, max_retries=10)
 
     try:
-        tyr_logger = logging.getLogger('tyr')
-        osm_logger = logging.getLogger('osm2ed')
+        tyr_logger = get_task_logger('tyr')
 
         connection_string = make_connection_string(instance_config)
         res = launch_exec('osm2ed',
                 ["-i", osm_filename, "--connection-string", connection_string],
-                osm_logger, tyr_logger)
+                tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
@@ -166,13 +164,12 @@ def geopal2ed(instance_config, filename, job_id):
         zip_file = zipfile.ZipFile(filename)
         zip_file.extractall(path=working_directory)
 
-        tyr_logger = logging.getLogger('tyr')
-        geopal_logger = logging.getLogger('geopal2ed')
+        tyr_logger = get_task_logger('tyr')
 
         connection_string = make_connection_string(instance_config)
         res = launch_exec('geopal2ed',
                 ["-i", working_directory, "--connection-string", connection_string],
-                geopal_logger, tyr_logger)
+                tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
@@ -192,7 +189,7 @@ def reload_data(instance_config, job_id):
     try:
         task = navitiacommon.task_pb2.Task()
         task.action = navitiacommon.task_pb2.RELOAD
-        tyr_logger = logging.getLogger('tyr')
+        tyr_logger = get_task_logger('tyr')
 
         connection = kombu.Connection(current_app.config['CELERY_BROKER_URL'])
         exchange = kombu.Exchange(instance_config.exchange, 'topic',
@@ -219,13 +216,12 @@ def ed2nav(instance_config, job_id):
         ed2nav.retry(countdown=300, max_retries=10)
 
     try:
-        tyr_logger = logging.getLogger('tyr')
-        ed2nav_logger = logging.getLogger('ed2nav')
+        tyr_logger = get_task_logger('tyr')
         filename = instance_config.tmp_file
         connection_string = make_connection_string(instance_config)
         res = launch_exec('ed2nav',
                     ["-o", filename, "--connection-string", connection_string],
-                    ed2nav_logger, tyr_logger)
+                    tyr_logger)
         if res != 0:
             raise ValueError('todo: exception')
     except:
@@ -246,15 +242,14 @@ def nav2rt(instance_config, job_id):
         nav2rt.retry(countdown=300, max_retries=10)
 
     try:
-        tyr_logger = logging.getLogger('tyr')
-        nav2rt_logger = logging.getLogger('nav2rt')
+        tyr_logger = get_task_logger('tyr')
         source_filename = instance_config.tmp_file
         target_filename = instance_config.target_file
         connection_string = make_connection_string(instance_config)
         res = launch_exec('nav2rt',
                     ["-i", source_filename, "-o", target_filename,
                         "--connection-string", connection_string],
-                    nav2rt_logger, tyr_logger)
+                    tyr_logger)
         if res != 0:
             raise ValueError('todo: exception')
     except:
@@ -276,8 +271,7 @@ def fare2ed(instance_config, filename, job_id):
         fare2ed.retry(countdown=300, max_retries=10)
 
     try:
-        tyr_logger = logging.getLogger('tyr')
-        fare_logger = logging.getLogger('fare2ed')
+        tyr_logger = get_task_logger('tyr')
         working_directory = os.path.dirname(filename)
 
         zip_file = zipfile.ZipFile(filename)
@@ -286,7 +280,7 @@ def fare2ed(instance_config, filename, job_id):
         res = launch_exec("fare2ed", ['-f', working_directory,
                                       '--connection-string',
                                       make_connection_string(instance_config)],
-                          fare_logger, tyr_logger)
+                          tyr_logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('todo: exception')
