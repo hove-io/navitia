@@ -18,9 +18,13 @@ namespace ed{ namespace connectors{
     struct ConvCoord{
         Projection origin;
         Projection destination;
-        ConvCoord(){};
-        ConvCoord(const Projection& origin, const Projection& destination = Projection()): origin(origin), destination(destination){};
-        ConvCoord(const ConvCoord& conv_coord): origin(conv_coord.origin), destination(conv_coord.destination){};
+
+        projPJ pj_origin;
+        projPJ pj_destination;
+
+        ~ConvCoord();
+        ConvCoord(const Projection& origin, const Projection& destination = Projection());
+//        ConvCoord(const ConvCoord& conv_coord): origin(conv_coord.origin), destination(conv_coord.destination){};
 
         navitia::type::GeographicalCoord convert_to(navitia::type::GeographicalCoord coord) const;
     };
