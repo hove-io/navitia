@@ -26,10 +26,9 @@ int main(int argc, char * argv[])
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "path to the config file")
-        ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "output file")
-        // by default, we filter the non connected graphs that are smaller than 10% of the biggest graph
-        ("min_non_connected_ratio,m", po::value<double>(&min_non_connected_graph_ratio)->default_value(0.1), "min ratio for the size of non connected graph")
+        ("config-file", po::value<std::string>(), "Path to config file")
+        ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"),
+            "Output file")
         ("name,n", po::value<std::string>(&region_name)->default_value("default"),
             "Name of the region you are extracting")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia");
@@ -69,7 +68,7 @@ int main(int argc, char * argv[])
     now = start = pt::microsec_clock::local_time();
 
     ed::EdReader reader(connection_string);
-    reader.fill(data, min_non_connected_graph_ratio);
+    reader.fill(data, percent_delete);
     data.build_midnight_interchange();
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
@@ -87,7 +86,7 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.pt_data.journey_pattern_point_connections.size());
     LOG4CPLUS_INFO(logger, "alias : " << data.geo_ref.alias.size());
     LOG4CPLUS_INFO(logger, "synonyms : " << data.geo_ref.synonymes.size());
-    LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare.fare_map.size());
+	LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare.fare_map.size());
     LOG4CPLUS_INFO(logger, "fare transitions: " << data.fare.nb_transitions());
     LOG4CPLUS_INFO(logger, "fare od: " << data.fare.od_tickets.size());
 
@@ -116,8 +115,8 @@ int main(int argc, char * argv[])
     try {
         data.save(output);
     } catch(const navitia::exception &e) {
-        LOG4CPLUS_INFO(logger, "Unable to save");
-        LOG4CPLUS_INFO(logger, e.what());
+        LOG4CPLUS_ERROR(logger, "Unable to save");
+        LOG4CPLUS_ERROR(logger, e.what());
     }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
     LOG4CPLUS_INFO(logger, "Data saved");

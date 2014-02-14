@@ -525,7 +525,6 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
 void EdPersistor::insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_patterns){
     this->lotus.prepare_bulk_insert("navitia.journey_pattern", {"id", "uri", "original_uri", "name", "comment", "physical_mode_id", "is_frequence", "route_id"});
 
-
     for(types::JourneyPattern* jp : journey_patterns){
         std::vector<std::string> values;
         values.push_back(std::to_string(jp->idx));

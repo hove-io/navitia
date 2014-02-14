@@ -33,11 +33,11 @@ int main(int argc, char * argv[])
         ("aliases,a", po::value<std::string>(&aliases_file), "Fichier aliases")
         ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
-		("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare")
+        ("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
              "parametres de connexion à la base de données: host=localhost "
-              "user=navitia dbname=navitia password=navitia");
+             "user=navitia dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
