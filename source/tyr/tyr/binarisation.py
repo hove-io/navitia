@@ -49,8 +49,8 @@ def fusio2ed(instance_config, filename, job_id):
     if not lock.acquire(blocking=False):
         fusio2ed.retry(countdown=300, max_retries=10)
 
+    logger = get_instance_logger(instance)
     try:
-        logger = get_instance_logger(instance)
         working_directory = os.path.dirname(filename)
 
         zip_file = zipfile.ZipFile(filename)
@@ -131,12 +131,12 @@ def osm2ed(instance_config, osm_filename, job_id):
     if not lock.acquire(blocking=False):
         osm2ed.retry(countdown=300, max_retries=10)
 
-    tyr_logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance)
     try:
         connection_string = make_connection_string(instance_config)
         res = launch_exec('osm2ed',
                 ["-i", osm_filename, "--connection-string", connection_string],
-                tyr_logger)
+                logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('osm2ed failed')
@@ -158,7 +158,7 @@ def geopal2ed(instance_config, filename, job_id):
     if not lock.acquire(blocking=False):
         geopal2ed.retry(countdown=300, max_retries=10)
 
-    tyr_logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance)
     try:
         working_directory = os.path.dirname(filename)
 
@@ -168,7 +168,7 @@ def geopal2ed(instance_config, filename, job_id):
         connection_string = make_connection_string(instance_config)
         res = launch_exec('geopal2ed',
                 ["-i", working_directory, "--connection-string", connection_string],
-                tyr_logger)
+                logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('geopal2ed failed')
@@ -216,13 +216,13 @@ def ed2nav(instance_config, job_id):
     if not lock.acquire(blocking=False):
         ed2nav.retry(countdown=300, max_retries=10)
 
-    tyr_logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance)
     try:
         filename = instance_config.tmp_file
         connection_string = make_connection_string(instance_config)
         res = launch_exec('ed2nav',
                     ["-o", filename, "--connection-string", connection_string],
-                    tyr_logger)
+                    logger)
         if res != 0:
             raise ValueError('ed2nav failed')
     except:
@@ -243,7 +243,7 @@ def nav2rt(instance_config, job_id):
     if not lock.acquire(blocking=False):
         nav2rt.retry(countdown=300, max_retries=10)
 
-    tyr_logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance)
     try:
         source_filename = instance_config.tmp_file
         target_filename = instance_config.target_file
@@ -251,7 +251,7 @@ def nav2rt(instance_config, job_id):
         res = launch_exec('nav2rt',
                     ["-i", source_filename, "-o", target_filename,
                         "--connection-string", connection_string],
-                    tyr_logger)
+                    logger)
         if res != 0:
             raise ValueError('nav2rt failed')
     except:
@@ -273,7 +273,7 @@ def fare2ed(instance_config, filename, job_id):
     if not lock.acquire(blocking=False):
         fare2ed.retry(countdown=300, max_retries=10)
 
-    tyr_logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance)
     try:
         working_directory = os.path.dirname(filename)
 
@@ -283,7 +283,7 @@ def fare2ed(instance_config, filename, job_id):
         res = launch_exec("fare2ed", ['-f', working_directory,
                                       '--connection-string',
                                       make_connection_string(instance_config)],
-                          tyr_logger)
+                          logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('fare2ed failed')
