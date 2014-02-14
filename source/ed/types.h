@@ -337,4 +337,23 @@ struct HouseNumber{
 
 };
 
+struct PoiType{
+    size_t id;
+    std::string name;
+
+    PoiType(): id(0), name(""){}
+};
+
+struct Poi{
+    size_t id;
+    std::string name;
+    int weight;
+    bool visible;
+    PoiType* poi_type;
+    navitia::type::GeographicalCoord coord;
+
+    Poi(): id(0), name(""), weight(0), visible(true), poi_type(nullptr){}
+
+};
+
 }}//end namespace ed::types

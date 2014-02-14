@@ -63,6 +63,8 @@ private:
     void insert_nodes(const ed::Georef& data);
     void insert_house_numbers(const ed::Georef& data);
     void insert_edges(const ed::Georef& data);
+    void insert_poi_types(const ed::Georef& data);
+    void insert_pois(const ed::Georef& data);
     void build_relation_way_admin(const ed::Georef& data);
     void update_boundary();
 

@@ -1,7 +1,6 @@
 #pragma once
 #include <utils/logger.h>
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
 #include "utils/csv.h"
 #include "utils/functions.h"
 #include "ed/data.h"
@@ -26,7 +25,9 @@ private:
     void fill_admins(ed::Georef& data);
     void fill_nodes(ed::Georef& data);
     void fill_ways_edges(ed::Georef& data);
-    void fill_House_numbers(ed::Georef& data);
+    void fill_house_numbers(ed::Georef& data);
+    void fill_poi_types(ed::Georef& data);
+    void fill_pois(ed::Georef& data);
     bool starts_with(std::string filename, const std::string& prefex);
 
 public:
@@ -35,6 +36,6 @@ public:
     void fill(ed::Georef& data);
 
 };
-}
-}
+}//namespace connectors
+}//namespace ed
 
