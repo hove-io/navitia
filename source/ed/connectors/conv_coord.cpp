@@ -17,7 +17,6 @@ ConvCoord::~ConvCoord(){
 }
 
 navitia::type::GeographicalCoord ConvCoord::convert_to(navitia::type::GeographicalCoord coord) const{
-
     if(this->origin.is_degree){
         coord.set_lon(coord.lon() * DEG_TO_RAD);
         coord.set_lat(coord.lat() * DEG_TO_RAD);
@@ -31,7 +30,6 @@ navitia::type::GeographicalCoord ConvCoord::convert_to(navitia::type::Geographic
         coord.set_lon(coord.lon() * RAD_TO_DEG);
         coord.set_lat(coord.lat() * RAD_TO_DEG);
     }
-
     return coord;
 }
 
