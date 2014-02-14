@@ -4,11 +4,15 @@ Function to launch a bin
 import subprocess
 import os
 import select
+import re
 
 
 def launch_exec(exec_name, args, logger):
     """ Launch an exec with args, log the outputs """
-    logger.info("Launching " + exec_name + " " + " ".join(args))
+    log = 'Launching ' + exec_name + ' ' + ' '.join(args)
+    #we hide the password in logs
+    logger.info(re.sub('password=\w+', 'password=xxxxxxxxx', log))
+
     args.insert(0, exec_name)
     fdr, fdw = os.pipe()
     proc = subprocess.Popen(args, stderr=fdw,
