@@ -4,7 +4,6 @@ SET(SOURCE_LIB
         types.cpp
         build_helper.cpp
         adapted.cpp
-        external_parser.cpp
 )
 
 

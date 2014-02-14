@@ -342,6 +342,7 @@ struct PoiType{
     std::string name;
 
     PoiType(): id(0), name(""){}
+    PoiType(size_t id, const std::string& name): id(id), name(name){}
 };
 
 struct Poi{

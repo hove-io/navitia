@@ -11,6 +11,7 @@ SET(SOURCE_LIB
     fare_utils.cpp
     geopal_parser.cpp
     conv_coord.cpp
+    external_parser.cpp
 )
 
 add_library(connectors ${SOURCE_LIB})
