@@ -25,18 +25,18 @@ bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
 void GeopalParser::fill(ed::Georef& data){
 //    chargement des données
     this->fill_admins(data);
-    LOG4CPLUS_INFO(logger, "Admin count :" + std::to_string(data.admins.size()));
+    LOG4CPLUS_INFO(logger, "Admin count :" << data.admins.size());
     this->fill_nodes(data);
-    LOG4CPLUS_INFO(logger, "Noeud count :" + std::to_string(data.nodes.size()));
+    LOG4CPLUS_INFO(logger, "Noeud count :" << data.nodes.size());
     this->fill_ways_edges(data);
-    LOG4CPLUS_INFO(logger, "Way count :" + std::to_string(data.ways.size()));
-    LOG4CPLUS_INFO(logger, "Edge count :" + std::to_string(data.edges.size()));
+    LOG4CPLUS_INFO(logger, "Way count :" << data.ways.size());
+    LOG4CPLUS_INFO(logger, "Edge count :" << data.edges.size());
     this->fill_house_numbers(data);
-    LOG4CPLUS_INFO(logger, "House number count :" + std::to_string(data.house_numbers.size()));
+    LOG4CPLUS_INFO(logger, "House number count :" << data.house_numbers.size());
     this->fill_poi_types(data);
-    LOG4CPLUS_INFO(logger, "PoiTypes count :" + std::to_string(data.poi_types.size()));
+    LOG4CPLUS_INFO(logger, "PoiTypes count :" << data.poi_types.size());
     this->fill_pois(data);
-    LOG4CPLUS_INFO(logger, "Pois count :" + std::to_string(data.pois.size()));
+    LOG4CPLUS_INFO(logger, "Pois count :" << data.pois.size());
 }
 
 ed::types::Node* GeopalParser::add_node(ed::Georef& data, const navitia::type::GeographicalCoord& coord, const std::string& uri){
@@ -54,12 +54,12 @@ void GeopalParser::fill_nodes(ed::Georef& data){
         }
         CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
-            throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
+            throw GeopalParserException("Error on open file " + reader.filename);
         }
         std::vector<std::string> mandatory_headers = {"code_insee", "code_post", "x_adresse", "y_adresse"};
         if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Erreur lors du parsing de "
-                                        + reader.filename + " . Il manque les colonnes : "
+            throw GeopalParserException("Impossible to parse file "
+                                        + reader.filename + " . Not find column : "
                                         + reader.missing_headers(mandatory_headers));
         }
         int insee_c = reader.get_pos_col("code_insee");
@@ -92,11 +92,11 @@ void GeopalParser::fill_admins(ed::Georef& data){
         }
         CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
-            throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
+            throw GeopalParserException("Error on open file " + reader.filename);
         }
         std::vector<std::string> mandatory_headers = {"nom" , "code_insee", "x_commune", "y_commune"};
         if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
+            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
         }
         int name_c = reader.get_pos_col("nom");
         int insee_c = reader.get_pos_col("code_insee");
@@ -127,12 +127,12 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
         }
         CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
-            throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
+            throw GeopalParserException("Error on open file " + reader.filename);
         }
         std::vector<std::string> mandatory_headers = {"id", "x_debut" , "y_debut", "x_fin", "y_fin", "longueur", "inseecom_g",
         "inseecom_d"};
         if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
+            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
         }
         int nom_voie_d = reader.get_pos_col("nom_voie_d");
         int x1 = reader.get_pos_col("x_debut");
@@ -212,11 +212,11 @@ void GeopalParser::fill_house_numbers(ed::Georef& data){
         }
         CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
-            throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
+            throw GeopalParserException("Error on open file " + reader.filename);
         }
         std::vector<std::string> mandatory_headers = {"id_tr", "numero", "nom_voie", "code_insee", "x_adresse", "y_adresse"};
         if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
+            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
         }
         int insee_c = reader.get_pos_col("code_insee");
         int nom_voie_c = reader.get_pos_col("nom_voie");
@@ -255,11 +255,11 @@ void GeopalParser::fill_poi_types(ed::Georef& data){
         }
         CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
-            throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
+            throw GeopalParserException("Error on open file " + reader.filename);
         }
         std::vector<std::string> mandatory_headers = {"poi_type_id" , "poi_type_name"};
         if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
+            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
         }
         int id_c = reader.get_pos_col("poi_type_id");
         int name_c = reader.get_pos_col("poi_type_name");
@@ -284,11 +284,11 @@ void GeopalParser::fill_pois(ed::Georef& data){
         }
         CsvReader reader(this->path + "/" + file_name, ';', true, true);
         if(!reader.is_open()) {
-            throw GeopalParserException("Immpossible d'ouvrir le fichier " + reader.filename);
+            throw GeopalParserException("Error on open file " + reader.filename);
         }
         std::vector<std::string> mandatory_headers = {"poi_id", "poi_name", "poi_weight", "poi_visible", "poi_lat", "poi_lon", "poi_type_id"};
         if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Erreur lors du parsing de " + reader.filename +" . Il manque les colonnes : " + reader.missing_headers(mandatory_headers));
+            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
         }
         int id_c = reader.get_pos_col("poi_id");
         int name_c = reader.get_pos_col("poi_name");
