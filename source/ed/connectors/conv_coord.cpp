@@ -2,18 +2,24 @@
 
 namespace ed{ namespace connectors{
 
-Projection::Projection(const std::string& name, const std::string& num_epsg, bool is_degree): name(name), is_degree(is_degree){
-    this->definition = "+init=epsg:" + num_epsg;
+Projection::Projection(const std::string& name, const std::string& num_epsg, bool is_degree){
+    definition = "+init=epsg:" + num_epsg;
+    proj_pj = pj_init_plus(definition.c_str());
+    this->name = name;
+    this->is_degree = is_degree;
+
 }
 
-ConvCoord::ConvCoord(const Projection& origin, const Projection& destination): origin(origin), destination(destination){
-    this->pj_origin = pj_init_plus(this->origin.definition.c_str());
-    this->pj_destination = pj_init_plus(this->destination.definition.c_str());
+Projection::Projection(const Projection& other) {
+    name = other.name;
+    is_degree = other.is_degree;
+    definition = other.definition;
+    //we allocate a new proj
+    proj_pj = pj_init_plus(definition.c_str());
 }
 
-ConvCoord::~ConvCoord(){
-    pj_free(this->pj_destination);
-    pj_free(this->pj_origin);
+Projection::~Projection() {
+    pj_free(this->proj_pj);
 }
 
 navitia::type::GeographicalCoord ConvCoord::convert_to(navitia::type::GeographicalCoord coord) const{
@@ -23,7 +29,7 @@ navitia::type::GeographicalCoord ConvCoord::convert_to(navitia::type::Geographic
     }
     double x = coord.lon();
     double y = coord.lat();
-    pj_transform(this->pj_origin, this->pj_destination, 1, 1,&x, &y, NULL);
+    pj_transform(this->origin.proj_pj, this->destination.proj_pj, 1, 1,&x, &y, NULL);
     coord.set_lon(x);
     coord.set_lat(y);
     if(this->destination.is_degree){
