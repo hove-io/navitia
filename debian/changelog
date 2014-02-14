@@ -1,3 +1,13 @@
+navitia2 (0.82.0) unstable; urgency=low
+
+ * Tyr : better logging
+ * Tyr: log action for one instance in separate file
+ * Ed : import pois of geopal
+ * Ed : Improved coordinate conversion
+ * Ed : fix a bug on delete connected components
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 17:02:56 +0100
+
 navitia2 (0.81.4) unstable; urgency=low
 
  * hotfix for sql functions 
