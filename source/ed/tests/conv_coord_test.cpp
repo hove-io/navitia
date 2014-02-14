@@ -8,9 +8,7 @@ class CoordParams{
 public:
     ed::connectors::Projection lambert2;
     ed::connectors::Projection wgs84;
-    CoordParams() :lambert2("Lambert 2 étendu", "27572", false), wgs84("wgs84", "4326", true) {
-
-    }
+    CoordParams() :lambert2("Lambert 2 étendu", "27572", false), wgs84("wgs84", "4326", true) {}
 };
 
 BOOST_FIXTURE_TEST_CASE(lambertII2Wgs84, CoordParams) {
@@ -37,6 +35,14 @@ BOOST_FIXTURE_TEST_CASE(copy_test, CoordParams) {
     navitia::type::GeographicalCoord coord_lambert2(537482.27, 2381791.96);
     ed::connectors::Projection lambert_bis(lambert2);
     ed::connectors::ConvCoord conv_coord(lambert_bis, wgs84);
+    navitia::type::GeographicalCoord coord_wgs84 = conv_coord.convert_to(coord_lambert2);
+
+    BOOST_REQUIRE_EQUAL(coord_wgs84 == navitia::type::GeographicalCoord(1.491911486572199, 48.431961616400599), true);
+}
+
+BOOST_FIXTURE_TEST_CASE(default_constructor_test, CoordParams) {
+    navitia::type::GeographicalCoord coord_lambert2(537482.27, 2381791.96);
+    ed::connectors::ConvCoord conv_coord(lambert2);
     navitia::type::GeographicalCoord coord_wgs84 = conv_coord.convert_to(coord_lambert2);
 
     BOOST_REQUIRE_EQUAL(coord_wgs84 == navitia::type::GeographicalCoord(1.491911486572199, 48.431961616400599), true);
