@@ -113,7 +113,7 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, original_uri, comment FROM navitia.network";
+    std::string request = "SELECT id, name, uri, comment FROM navitia.network";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -130,7 +130,7 @@ void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, original_uri FROM navitia.commercial_mode";
+    std::string request = "SELECT id, name, uri FROM navitia.commercial_mode";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -146,7 +146,7 @@ void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, original_uri FROM navitia.physical_mode";
+    std::string request = "SELECT id, name, uri FROM navitia.physical_mode";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -162,7 +162,7 @@ void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, original_uri FROM navitia.contributor";
+    std::string request = "SELECT id, name, uri FROM navitia.contributor";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -195,21 +195,18 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, sa.original_uri as original_uri, sa.comment as comment,";
-    request += "ST_X(sa.coord::geometry) as lon,";
-    request += "ST_Y(sa.coord::geometry) as lat,";
-    request += "pr.wheelchair_boarding as wheelchair_boarding,";
-    request += "pr.sheltered as sheltered,";
-    request += "pr.elevator as elevator,";
-    request += "pr.escalator as escalator,";
-    request += "pr.bike_accepted as bike_accepted,";
-    request += "pr.bike_depot as bike_depot,";
-    request += "pr.visual_announcement as visual_announcement,";
-    request += "pr.audible_announcement as audible_announcement,";
-    request += "pr.appropriate_escort as appropriate_escort,";
-    request += "pr.appropriate_signage as appropriate_signage ";
-    request += "FROM navitia.stop_area as sa, navitia.properties  as pr ";
-    request += "where sa.properties_id=pr.id ";
+    std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, "
+     "sa.comment as comment,"
+     "ST_X(sa.coord::geometry) as lon, ST_Y(sa.coord::geometry) as lat,"
+     "pr.wheelchair_boarding as wheelchair_boarding, pr.sheltered as sheltered,"
+     "pr.elevator as elevator, pr.escalator as escalator,"
+     "pr.bike_accepted as bike_accepted, pr.bike_depot as bike_depot,"
+     "pr.visual_announcement as visual_announcement,"
+     "pr.audible_announcement as audible_announcement,"
+     "pr.appropriate_escort as appropriate_escort,"
+     "pr.appropriate_signage as appropriate_signage "
+     "FROM navitia.stop_area as sa, navitia.properties  as pr "
+     "where sa.properties_id=pr.id ";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -258,21 +255,20 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT sp.id as id, sp.name as name, sp.uri as uri, sp.original_uri as original_uri,";
-    request += "sp.comment as comment, ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,";
-    request += "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,";
-    request += "pr.wheelchair_boarding as wheelchair_boarding,";
-    request += "pr.sheltered as sheltered,";
-    request += "pr.elevator as elevator,";
-    request += "pr.escalator as escalator,";
-    request += "pr.bike_accepted as bike_accepted,";
-    request += "pr.bike_depot as bike_depot,";
-    request += "pr.visual_announcement as visual_announcement,";
-    request += "pr.audible_announcement as audible_announcement,";
-    request += "pr.appropriate_escort as appropriate_escort,";
-    request += "pr.appropriate_signage as appropriate_signage ";
-    request += "FROM navitia.stop_point as sp, navitia.properties  as pr ";
-    request += "where sp.properties_id=pr.id";
+    std::string request = "SELECT sp.id as id, sp.name as name, sp.uri as uri, "
+       "sp.comment as comment,"
+       "ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,"
+       "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,"
+       "pr.wheelchair_boarding as wheelchair_boarding,"
+       "pr.sheltered as sheltered, pr.elevator as elevator,"
+       "pr.escalator as escalator, pr.bike_accepted as bike_accepted,"
+       "pr.bike_depot as bike_depot,"
+       "pr.visual_announcement as visual_announcement,"
+       "pr.audible_announcement as audible_announcement,"
+       "pr.appropriate_escort as appropriate_escort,"
+       "pr.appropriate_signage as appropriate_signage "
+       "FROM navitia.stop_point as sp, navitia.properties  as pr "
+       "where sp.properties_id=pr.id";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -322,8 +318,8 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, original_uri, comment, code, color, network_id, commercial_mode_id "
-        "FROM navitia.line";
+    std::string request = "SELECT id, name, uri, comment, code, color, "
+        "network_id, commercial_mode_id FROM navitia.line";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -346,7 +342,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, original_uri, comment, line_id "
+    std::string request = "SELECT id, name, uri, comment, line_id "
         "FROM navitia.route";
 
     pqxx::result result = work.exec(request);
@@ -365,8 +361,8 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, original_uri, comment, route_id, is_frequence, physical_mode_id "
-        "FROM navitia.journey_pattern";
+    std::string request = "SELECT id, name, uri, comment, route_id, "
+        "is_frequence, physical_mode_id FROM navitia.journey_pattern";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -393,15 +389,14 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
 
 
 void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, original_uri, comment, \"order\", stop_point_id, journey_pattern_id FROM navitia.journey_pattern_point";
+    std::string request = "SELECT id, name, uri, comment, \"order\","
+        "stop_point_id, journey_pattern_id FROM navitia.journey_pattern_point";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::JourneyPatternPoint* jpp = new nt::JourneyPatternPoint();
 
         const_it["uri"].to(jpp->uri);
-        //const_it["name"].to(jpp->name);
-        //const_it["comment"].to(jpp->comment);
         const_it["\"order\""].to(jpp->order);
 
         jpp->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
@@ -435,22 +430,21 @@ void EdReader::fill_validity_patterns(nt::Data& data, pqxx::work& work){
 
 
 void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT conn.departure_stop_point_id as departure_stop_point_id,";
-                request += "conn.destination_stop_point_id as destination_stop_point_id,";
-                request += "conn.connection_type_id as connection_type_id,";
-                request += "conn.display_duration as display_duration, conn.duration as duration, conn.max_duration as max_duration,";
-                request += "pr.wheelchair_boarding as wheelchair_boarding,";
-                request += "pr.sheltered as sheltered,";
-                request += "pr.elevator as elevator,";
-                request += "pr.escalator as escalator,";
-                request += "pr.bike_accepted as bike_accepted,";
-                request += "pr.bike_depot as bike_depot,";
-                request += "pr.visual_announcement as visual_announcement,";
-                request += "pr.audible_announcement as audible_announcement,";
-                request += "pr.appropriate_escort as appropriate_escort,";
-                request += "pr.appropriate_signage as appropriate_signage ";
-                request += "FROM navitia.connection as conn, navitia.properties  as pr ";
-                request += "where conn.properties_id=pr.id ";
+    std::string request = "SELECT conn.departure_stop_point_id as departure_stop_point_id,"
+        "conn.destination_stop_point_id as destination_stop_point_id,"
+        "conn.connection_type_id as connection_type_id,"
+        "conn.display_duration as display_duration, conn.duration as duration, "
+        "conn.max_duration as max_duration,"
+        "pr.wheelchair_boarding as wheelchair_boarding,"
+        "pr.sheltered as sheltered, pr.elevator as elevator,"
+        "pr.escalator as escalator, pr.bike_accepted as bike_accepted,"
+        "pr.bike_depot as bike_depot,"
+        "pr.visual_announcement as visual_announcement,"
+        "pr.audible_announcement as audible_announcement,"
+        "pr.appropriate_escort as appropriate_escort,"
+        "pr.appropriate_signage as appropriate_signage "
+        "FROM navitia.connection as conn, navitia.properties  as pr "
+        "where conn.properties_id=pr.id ";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -506,17 +500,18 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_journey_pattern_point_connections(nt::Data& data, pqxx::work& work){
-    std::string request = "select departure_journey_pattern_point_id,";
-                request += "destination_journey_pattern_point_id,";
-                request += "connection_kind_id,";
-                request += "length ";
-                request += "from navitia.journey_pattern_point_connection";
+    std::string request = "select departure_journey_pattern_point_id,"
+        "destination_journey_pattern_point_id, connection_kind_id, length "
+        "from navitia.journey_pattern_point_connection";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        auto it_departure = journey_pattern_point_map.find(const_it["departure_journey_pattern_point_id"].as<idx_t>());
-        auto it_destination = journey_pattern_point_map.find(const_it["destination_journey_pattern_point_id"].as<idx_t>());
-        if(it_departure!=journey_pattern_point_map.end() && it_destination!=journey_pattern_point_map.end()) {
+        auto id_departure = const_it["departure_journey_pattern_point_id"];
+        auto id_destination = const_it["destination_journey_pattern_point_id"];
+        auto it_departure = journey_pattern_point_map.find(id_departure.as<idx_t>());
+        auto it_destination = journey_pattern_point_map.find(id_destination.as<idx_t>());
+        if(it_departure!=journey_pattern_point_map.end() &&
+                it_destination!=journey_pattern_point_map.end()) {
             auto* jppc= new nt::JourneyPatternPointConnection();
             jppc->departure = it_departure->second;
             jppc->destination = it_destination->second;
@@ -529,23 +524,23 @@ void EdReader::fill_journey_pattern_point_connections(nt::Data& data, pqxx::work
 
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,";
-                request += "vj.original_uri as original_uri, vj.comment as comment,";
-                request += "vj.company_id as company_id, ";
-                request += "vj.journey_pattern_id as journey_pattern_id, vj.validity_pattern_id as validity_pattern_id,";
-                request += "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,";
-                request += "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,";
-                request += "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,";
-                request += "vp.wheelchair_accessible as wheelchair_accessible,";
-                request += "vp.bike_accepted as bike_accepted,";
-                request += "vp.air_conditioned as air_conditioned,";
-                request += "vp.visual_announcement as visual_announcement,";
-                request += "vp.audible_announcement as audible_announcement,";
-                request += "vp.appropriate_escort as appropriate_escort,";
-                request += "vp.appropriate_signage as appropriate_signage,";
-                request += "vp.school_vehicle as school_vehicle ";
-                request += "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp ";
-                request += "where vj.vehicle_properties_id = vp.id ";
+    std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,"
+        "vj.comment as comment, vj.company_id as company_id, "
+        "vj.journey_pattern_id as journey_pattern_id,"
+        "vj.validity_pattern_id as validity_pattern_id,"
+        "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,"
+        "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
+        "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
+        "vp.wheelchair_accessible as wheelchair_accessible,"
+        "vp.bike_accepted as bike_accepted,"
+        "vp.air_conditioned as air_conditioned,"
+        "vp.visual_announcement as visual_announcement,"
+        "vp.audible_announcement as audible_announcement,"
+        "vp.appropriate_escort as appropriate_escort,"
+        "vp.appropriate_signage as appropriate_signage,"
+        "vp.school_vehicle as school_vehicle "
+        "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp "
+        "where vj.vehicle_properties_id = vp.id ";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){

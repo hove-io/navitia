@@ -226,16 +226,16 @@ class StopArea(db.Model, mixin_get_from_uri):
                             cascade="all",
                             passive_deletes=True)
     name = db.Column(db.Text, nullable=False)
-    original_uri = db.Column(db.Text, index=True)
+    external_code = db.Column(db.Text, index=True)
     cls_rel_instance = StopAreaInstance
 
 
-    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+    def __init__(self, id=None, uri=None, coord=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.coord = coord
-        self.original_uri = original_uri
+        self.external_code = external_code
         self.name = name
 
 
@@ -269,16 +269,16 @@ class StopPoint(db.Model, mixin_get_from_uri):
                             cascade="all",
                             passive_deletes=True)
     name = db.Column(db.Text, nullable=False)
-    original_uri = db.Column(db.Text, index=True)
+    external_code = db.Column(db.Text, index=True)
     cls_rel_instance = StopPointInstance
 
 
-    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+    def __init__(self, id=None, uri=None, coord=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.coord = coord
-        self.original_uri = original_uri
+        self.external_code = external_code
         self.name = name
 
 
@@ -312,16 +312,16 @@ class Poi(db.Model, mixin_get_from_uri):
                             cascade="all",
                             passive_deletes=True)
     name = db.Column(db.Text, nullable=False)
-    original_uri = db.Column(db.Text, index=True)
+    external_code = db.Column(db.Text, index=True)
     cls_rel_instance = PoiInstance
 
 
-    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+    def __init__(self, id=None, uri=None, coord=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.coord = coord
-        self.original_uri = original_uri
+        self.external_code = external_code
         self.name = name
 
 
@@ -354,15 +354,15 @@ class Admin(db.Model, mixin_get_from_uri):
                             cascade="all",
                             passive_deletes=True)
     name = db.Column(db.Text, nullable=False)
-    original_uri = db.Column(db.Text, index=True)
+    external_code = db.Column(db.Text, index=True)
     cls_rel_instance = AdminInstance
 
-    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+    def __init__(self, id=None, uri=None, coord=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.coord = coord
-        self.original_uri = original_uri
+        self.external_code = external_code
         self.name = name
 
 
@@ -394,16 +394,16 @@ class Line(db.Model, mixin_get_from_uri):
                             cascade="all",
                             passive_deletes=True)
     name = db.Column(db.Text, nullable=False)
-    original_uri = db.Column(db.Text, index=True)
+    external_code = db.Column(db.Text, index=True)
     cls_rel_instance = LineInstance
 
 
-    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+    def __init__(self, id=None, uri=None, coord=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.coord = coord
-        self.original_uri = original_uri
+        self.external_code = external_code
         self.name = name
 
 
@@ -435,16 +435,16 @@ class Route(db.Model, mixin_get_from_uri):
                             cascade="all",
                             passive_deletes=True)
     name = db.Column(db.Text, nullable=False)
-    original_uri = db.Column(db.Text, index=True)
+    external_code = db.Column(db.Text, index=True)
     cls_rel_instance = RouteInstance
 
 
-    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+    def __init__(self, id=None, uri=None, coord=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.coord = coord
-        self.original_uri = original_uri
+        self.external_code = external_code
         self.name = name
 
     def __repr__(self):
@@ -475,16 +475,16 @@ class Network(db.Model, mixin_get_from_uri):
                             cascade="all",
                             passive_deletes=True)
     name = db.Column(db.Text, nullable=False)
-    original_uri = db.Column(db.Text, index=True)
+    external_code = db.Column(db.Text, index=True)
     cls_rel_instance = NetworkInstance
 
 
-    def __init__(self, id=None, uri=None, coord=None, original_uri=None,
+    def __init__(self, id=None, uri=None, coord=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.coord = coord
-        self.original_uri = original_uri
+        self.external_code = external_code
         self.name = name
 
 
@@ -530,17 +530,17 @@ class PtObject(db.Model, mixin_get_from_uri):
         else:
             return None
     @classmethod
-    def get_from_original_uri(cls, original_uri):
-        prefix = "original_uri"
-        cache_res = cache.get(prefix, original_uri)
+    def get_from_external_code(cls, external_code):
+        prefix = "external_code"
+        cache_res = cache.get(prefix, external_code)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
-            res = cls.query.filter(cls.original_uri == original_uri)
+            res = cls.query.filter(cls.external_code == external_code)
             if res:
-                cache.set(prefix, original_uri, (res.first(),))
+                cache.set(prefix, external_code, (res.first(),))
                 return res.first()
             else:
-                cache.set(prefix, original_uri, (None,))
+                cache.set(prefix, external_code, (None,))
                 return None
         else:
             return cache_res[0]

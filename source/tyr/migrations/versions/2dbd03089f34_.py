@@ -24,67 +24,67 @@ def upgrade():
     sa.Column('uri', sa.Text(), nullable=False),
     sa.Column('coord', ga.Geography(geometry_type='POINT', srid=4326, spatial_index=False), nullable=True),
     sa.Column('name', sa.Text(), nullable=False),
-    sa.Column('original_uri', sa.Text(), nullable=True),
+    sa.Column('external_code', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uri')
     )
-    op.create_index('ix_stop_point_original_uri', 'stop_point', ['original_uri'], unique=False)
+    op.create_index('ix_stop_point_external_code', 'stop_point', ['external_code'], unique=False)
     op.create_table('line',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('uri', sa.Text(), nullable=False),
     sa.Column('name', sa.Text(), nullable=False),
-    sa.Column('original_uri', sa.Text(), nullable=True),
+    sa.Column('external_code', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uri')
     )
-    op.create_index('ix_line_original_uri', 'line', ['original_uri'], unique=False)
+    op.create_index('ix_line_external_code', 'line', ['external_code'], unique=False)
     op.create_table('poi',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('uri', sa.Text(), nullable=False),
     sa.Column('coord', ga.Geography(geometry_type='POINT', srid=4326, spatial_index=False), nullable=True),
     sa.Column('name', sa.Text(), nullable=False),
-    sa.Column('original_uri', sa.Text(), nullable=True),
+    sa.Column('external_code', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uri')
     )
-    op.create_index('ix_poi_original_uri', 'poi', ['original_uri'], unique=False)
+    op.create_index('ix_poi_external_code', 'poi', ['external_code'], unique=False)
     op.create_table('route',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('uri', sa.Text(), nullable=False),
     sa.Column('name', sa.Text(), nullable=False),
-    sa.Column('original_uri', sa.Text(), nullable=True),
+    sa.Column('external_code', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uri')
     )
-    op.create_index('ix_route_original_uri', 'route', ['original_uri'], unique=False)
+    op.create_index('ix_route_external_code', 'route', ['external_code'], unique=False)
     op.create_table('admin',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('uri', sa.Text(), nullable=False),
     sa.Column('name', sa.Text(), nullable=False),
-    sa.Column('original_uri', sa.Text(), nullable=True),
+    sa.Column('external_code', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uri')
     )
-    op.create_index('ix_admin_original_uri', 'admin', ['original_uri'], unique=False)
+    op.create_index('ix_admin_external_code', 'admin', ['external_code'], unique=False)
     op.create_table('network',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('uri', sa.Text(), nullable=False),
     sa.Column('name', sa.Text(), nullable=False),
-    sa.Column('original_uri', sa.Text(), nullable=True),
+    sa.Column('external_code', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uri')
     )
-    op.create_index('ix_network_original_uri', 'network', ['original_uri'], unique=False)
+    op.create_index('ix_network_external_code', 'network', ['external_code'], unique=False)
     op.create_table('stop_area',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('uri', sa.Text(), nullable=False),
     sa.Column('coord', ga.Geography(geometry_type='POINT', srid=4326, spatial_index=False), nullable=True),
     sa.Column('name', sa.Text(), nullable=False),
-    sa.Column('original_uri', sa.Text(), nullable=True),
+    sa.Column('external_code', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uri')
     )
-    op.create_index('ix_stop_area_original_uri', 'stop_area', ['original_uri'], unique=False)
+    op.create_index('ix_stop_area_external_code', 'stop_area', ['external_code'], unique=False)
     op.create_table('rel_stop_area_instance',
     sa.Column('object_id', sa.Integer(), nullable=False),
     sa.Column('instance_id', sa.Integer(), nullable=False),
@@ -137,13 +137,13 @@ def upgrade():
 
     op.execute("""
         CREATE VIEW ptobject AS
-            SELECT id, uri, original_uri, name, 'stop_area' as type FROM stop_area UNION
-            SELECT id, uri, original_uri, name, 'stop_point' as type FROM stop_point UNION
-            SELECT id, uri, original_uri, name, 'poi' as type FROM poi UNION
-            SELECT id, uri, original_uri, name, 'admin' as type FROM admin UNION
-            SELECT id, uri, original_uri, name, 'line' as type FROM line UNION
-            SELECT id, uri, original_uri, name, 'route' as type FROM route UNION
-            SELECT id, uri, original_uri, name, 'network' as type FROM network
+            SELECT id, uri, external_code, name, 'stop_area' as type FROM stop_area UNION
+            SELECT id, uri, external_code, name, 'stop_point' as type FROM stop_point UNION
+            SELECT id, uri, external_code, name, 'poi' as type FROM poi UNION
+            SELECT id, uri, external_code, name, 'admin' as type FROM admin UNION
+            SELECT id, uri, external_code, name, 'line' as type FROM line UNION
+            SELECT id, uri, external_code, name, 'route' as type FROM route UNION
+            SELECT id, uri, external_code, name, 'network' as type FROM network
                       ;""")
     ### end Alembic commands ###
 
@@ -158,18 +158,18 @@ def downgrade():
     op.drop_table('rel_network_instance')
     op.drop_table('rel_poi_instance')
     op.drop_table('rel_stop_area_instance')
-    op.drop_index('ix_stop_area_original_uri', 'stop_area')
+    op.drop_index('ix_stop_area_external_code', 'stop_area')
     op.drop_table('stop_area')
-    op.drop_index('ix_network_original_uri', 'network')
+    op.drop_index('ix_network_external_code', 'network')
     op.drop_table('network')
-    op.drop_index('ix_admin_original_uri', 'admin')
+    op.drop_index('ix_admin_external_code', 'admin')
     op.drop_table('admin')
-    op.drop_index('ix_route_original_uri', 'route')
+    op.drop_index('ix_route_external_code', 'route')
     op.drop_table('route')
-    op.drop_index('ix_poi_original_uri', 'poi')
+    op.drop_index('ix_poi_external_code', 'poi')
     op.drop_table('poi')
-    op.drop_index('ix_line_original_uri', 'line')
+    op.drop_index('ix_line_external_code', 'line')
     op.drop_table('line')
-    op.drop_index('ix_stop_point_original_uri', 'stop_point')
+    op.drop_index('ix_stop_point_external_code', 'stop_point')
     op.drop_table('stop_point')
     ### end Alembic commands ###
