@@ -1,4 +1,5 @@
 # coding=utf-8
+from ANSI import term
 import navitiacommon.response_pb2 as response_pb2
 from functools import partial
 from datetime import datetime, timedelta
@@ -176,3 +177,29 @@ def qualifier_one(journeys):
             continue
 
         best.type = name
+
+""" Check if some particular journeys are missing,
+    and return if it is the case a modified version of the request
+    to be rerun
+"""
+def check_missing_journey(journeys, initial_request):
+
+    #we want to check if all journeys use the TER network
+    #if it is true, we want to call kraken and forbid this network
+    ter_uri = "bob"
+    only_ter = all(
+        any(
+            any(link.type == "network" and link.id != ter_uri for link in section.links)
+            for section in journey.sections
+        )
+        for journey in journeys
+    )
+
+    if not only_ter:
+        return None
+
+    req = copy.deepcopy(initial_request) #force copy
+
+    req.ptref.forbidden_uri.append(ter_uri)
+    return req
+
