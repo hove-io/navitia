@@ -22,7 +22,7 @@ def move_to_backupdirectory(filename, working_directory):
     """
     now = datetime.datetime.now()
     working_directory += "/" + now.strftime("%Y%m%d-%H%M%S%f")
-    os.mkdir(working_directory)
+    os.mkdir(working_directory, 0755)
     destination = working_directory + '/' + os.path.basename(filename)
     shutil.move(filename, destination)
     return destination
