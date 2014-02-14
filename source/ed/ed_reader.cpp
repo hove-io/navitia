@@ -745,55 +745,63 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, co
 
     std::vector<navitia::georef::vertex_t> component(boost::num_vertices(geo_ref_temp.graph));
     boost::connected_components(geo_ref_temp.graph, &component[0]);
-    std::unordered_map<uint64_t, uint64_t> map_count;
-    uint64_t principal_component = 0;
+    std::map<uint64_t, uint64_t> map_count;
+    std::pair<uint64_t, uint64_t> principal_component = {std::numeric_limits<uint64_t>::max(), 0}; //pair with id/number of vertex
     // recherche de la composante principale
-    for (navitia::georef::vertex_t i = 0; i != component.size(); ++i){
+    for (navitia::georef::vertex_t i = 0; i != component.size(); ++i) {
         int component_ = component[i];
-        auto mc = map_count.find(component_);
-        if(mc == map_count.end()){
-            map_count[component_] = 0;
-        }else{
-            map_count[component_] = mc->second + 1 ;
-            if (principal_component < map_count[component_]){
-                principal_component = component_;
-            }
+        map_count[component_]++;
+
+        uint64_t count = map_count[component_];
+        if (principal_component.second < count) {
+            principal_component = {component_, count} ;
         }
     }
 
     // remplissage de la liste des noeuds et edges à ne pas binariser
-    for (navitia::georef::vertex_t i = 0;  i != component.size(); ++i){
-        if(((principal_component > 0) && ((component[i]/principal_component) < percent_delete))){
-            bool found = false;
-            uint64_t source = osmid_idex[i];
-            BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(i, geo_ref_temp.graph)){
-                uint64_t target = boost::target(e, geo_ref_temp.graph);
-                edge_to_ignore.push_back(std::to_string(source) + std::to_string(target));
-                node_to_ignore.push_back(source);
-                node_to_ignore.push_back(target);
-                found = true;
-            }
-            if (!found){
-                node_to_ignore.push_back(source);
-            }
-        }
-    }
-    // remplissage de la liste des voies à binariser
+//    for (navitia::georef::vertex_t i = 0;  i != component.size(); ++i) {
+//        if(((principal_component > 0) && ((component[i]/principal_component) < percent_delete))) {
+//            bool found = false;
+//            uint64_t source = osmid_idex[i];
+//            BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(i, geo_ref_temp.graph)) {
+//                uint64_t target = boost::target(e, geo_ref_temp.graph);
+//                edge_to_ignore.push_back(std::to_string(source) + std::to_string(target));
+//                node_to_ignore.push_back(source);
+//                node_to_ignore.push_back(target);
+//                found = true;
+//            }
+//            if (!found){
+//                node_to_ignore.push_back(source);
+//            }
+//        }
+//    }
+//    // remplissage de la liste des voies à binariser
+//    navitia::georef::edge_iterator i, end;
+//    for (tie(i, end) = boost::edges(geo_ref_temp.graph); i != end; ++i) {
+//        navitia::georef::vertex_t source_idx = boost::source(*i, geo_ref_temp.graph);
+//        navitia::georef::vertex_t target_idx = boost::target(*i, geo_ref_temp.graph);
+
+//        if ((principal_component.first != std::numeric_limits<uint64_t>::max())
+//            && (((component[source_idx] / principal_component.second) > percent_delete ) || ((component[target_idx]/principal_component.second) > percent_delete ))) {
+//            navitia::georef::edge_t e;
+//            bool b;
+//            boost::tie(e,b) = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
+//            navitia::georef::Edge edge = geo_ref_temp.graph[e];
+//            way_no_ignore.push_back(edge.way_idx);
+//        }
+//    }
+
     navitia::georef::edge_iterator i, end;
     for (tie(i, end) = boost::edges(geo_ref_temp.graph); i != end; ++i) {
         navitia::georef::vertex_t source_idx = boost::source(*i, geo_ref_temp.graph);
         navitia::georef::vertex_t target_idx = boost::target(*i, geo_ref_temp.graph);
 
-        if ((principal_component > 0)
-            && (((component[source_idx]/principal_component) > percent_delete ) || ((component[target_idx]/principal_component) > percent_delete ))){
-            navitia::georef::edge_t e;
-            bool b;
-            boost::tie(e,b) = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
-            navitia::georef::Edge edge = geo_ref_temp.graph[e];
-            way_no_ignore.push_back(edge.way_idx);
-        }
+        navitia::georef::edge_t e;
+        bool b;
+        boost::tie(e,b) = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
+        navitia::georef::Edge edge = geo_ref_temp.graph[e];
+        way_no_ignore.push_back(edge.way_idx);
     }
-
 
     std::vector<uint64_t>::iterator it;
     std::sort(way_no_ignore.begin(), way_no_ignore.end());

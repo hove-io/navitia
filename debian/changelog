@@ -1,3 +1,15 @@
+navitia2 (0.81.4) unstable; urgency=low
+
+ * hotfix for sql functions 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 11:02:51 +0100
+
+navitia2 (0.81.3) unstable; urgency=low
+
+ * Hotfix for stop_point projection 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 09:02:55 +0100
+
 navitia2 (0.81.1) unstable; urgency=low
 
  * Hotfix for date format in protobuff 
