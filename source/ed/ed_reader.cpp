@@ -7,11 +7,11 @@ namespace bg = boost::gregorian;
 namespace nt = navitia::type;
 namespace nf = navitia::fare;
 
-void EdReader::fill(navitia::type::Data& data, const double percent_delete){
+void EdReader::fill(navitia::type::Data& data, const double min_non_connected_graph_ratio) {
 
     pqxx::work work(*conn, "loading ED");
 
-    this->fill_vector_to_ignore(data, work, percent_delete);
+    this->fill_vector_to_ignore(data, work, min_non_connected_graph_ratio);
     this->fill_meta(data, work);
 
     this->fill_networks(data, work);
@@ -714,7 +714,7 @@ void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
     }
 }
 
-void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, const double percent_delete) {
+void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, const double min_non_connected_graph_ratio) {
     navitia::georef::GeoRef geo_ref_temp;
     std::unordered_map<idx_t, uint64_t> osmid_idex;
     std::unordered_map<uint64_t, idx_t> node_map_temp;
@@ -746,7 +746,6 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, co
             boost::add_edge(source, target, e, geo_ref_temp.graph);
     }
 
-    std::cout << "donnees chargees !" << std::endl;
     std::vector<size_t> vertex_component(boost::num_vertices(geo_ref_temp.graph));
     boost::connected_components(geo_ref_temp.graph, &vertex_component[0]);
     std::map<size_t, size_t> component_size;
@@ -769,7 +768,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, co
         return;
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the bigest has " << principal_component->second << " nodes");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the biggest has " << principal_component->second << " nodes");
 
     // we fill the node_to_ignore and edge_to_ignore lists
     // those edges and nodes will be erased
@@ -778,7 +777,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, co
 
         auto nb_elt_in_component = component_size[comp];
 
-        if (nb_elt_in_component / principal_component->second >= percent_delete)
+        if (nb_elt_in_component / principal_component->second >= min_non_connected_graph_ratio)
             continue; //big enough, we skip
 
         uint64_t source = osmid_idex[vertex_idx];
@@ -806,7 +805,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work, co
 
         auto nb_elt = component_size[source_component];
 
-        if (nb_elt / principal_component->second >= percent_delete)
+        if (nb_elt / principal_component->second >= min_non_connected_graph_ratio)
             continue; //big enough, we skip
 
         auto edge_and_found = boost::edge(source_idx, target_idx, geo_ref_temp.graph);

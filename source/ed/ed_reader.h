@@ -26,7 +26,7 @@ struct EdReader{
         }
     }
 
-    void fill(navitia::type::Data& nav_data, const double percent_delete);
+    void fill(navitia::type::Data& nav_data, const double min_non_connected_graph_ratio);
 
 private:
     //map d'id en base vers le poiteur de l'objet instancié
