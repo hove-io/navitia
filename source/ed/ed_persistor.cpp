@@ -29,6 +29,8 @@ void EdPersistor::persist(const ed::Georef& data){
     this->update_boundary();
     LOG4CPLUS_INFO(logger, "début : Relations stop_area, stop_point et admins");
     this->build_relation();
+    LOG4CPLUS_INFO(logger, "début : Fusion des voies");
+    this->build_ways();
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "Fin : commit");
 }
@@ -47,6 +49,33 @@ std::string EdPersistor::to_geografic_linestring(const navitia::type::Geographic
     geog.str("");
     geog << "LINESTRING("<<source.lon()<<" "<<source.lat()<<","<<target.lon()<<" "<<target.lat()<<")";
     return geog.str();
+}
+
+void EdPersistor::build_ways(){
+    /// Ajout un nom pour le communes ayant un nom vide
+    PQclear(this->lotus.exec("SELECT georef.add_way_name();", "", PGRES_TUPLES_OK));
+    /// Fusion des voies par nom et commune
+    PQclear(this->lotus.exec("SELECT georef.fusion_ways_by_admin_name();", "", PGRES_TUPLES_OK));
+    /// Déplacement des relations admin,voie  de façon à ce que le couple (admin, voie) soit unique
+    PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
+    /// MAJ des way_id dans la table edge
+    PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
+    ///  Ajout des voies qui ne sont pas dans la table de fusion : cas voie appartient à un seul admin avec un level 9
+    PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
+    /// Ajout des voies n'ayant pas de communes dans la table de fusion
+    PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
+    /// Ecrasement des données de la table 'rel_way_admin' par 'tmp_rel_way_admin'
+    PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
+    /// Suppression des doublons de la atbles des voies
+    PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
+    /// MAJ des way_id de la table des adresses
+    PQclear(this->lotus.exec("SELECT georef.update_house_number();", "", PGRES_TUPLES_OK));
+    /// Remise des noms des rues à vide qui étaient initialement vides
+    PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
+    /// MAJ des coordonées des admins qui n'ont pas de coordonnées : Calcul du barycentre de l'admin
+    PQclear(this->lotus.exec("SELECT navitia.update_admin_coord();", "", PGRES_TUPLES_OK));
+    /// Relation entre les admins
+    PQclear(this->lotus.exec("SELECT navitia.match_admin_to_admin();", "", PGRES_TUPLES_OK));
 }
 
 void EdPersistor::insert_admins(const ed::Georef& data){
@@ -206,10 +235,13 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
 void EdPersistor::build_relation(){
     PQclear(this->lotus.exec("SELECT georef.match_stop_area_to_admin()", "", PGRES_TUPLES_OK));
     PQclear(this->lotus.exec("SELECT georef.match_stop_point_to_admin();", "", PGRES_TUPLES_OK));
+    PQclear(this->lotus.exec("SELECT georef.match_poi_to_admin();", "", PGRES_TUPLES_OK));
 }
+
 void EdPersistor::clean_georef(){
     PQclear(this->lotus.exec("truncate georef.node, georef.house_number, navitia.admin, georef.way, navitia.poi_type CASCADE;"));
 }
+
 void EdPersistor::clean_db(){
     PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, navitia.alias,navitia.synonym,"
                             "navitia.commercial_mode, navitia.vehicle_properties, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));

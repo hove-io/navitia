@@ -19,6 +19,10 @@ struct EdPersistor{
     void persist_fare(const ed::Data& data);
     /// Données Georef
     void persist(const ed::Georef& data);
+    void build_ways();
+    void clean_georef();
+    void build_relation();
+
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
     void insert_sa_sp_properties(const ed::Data& data);
@@ -54,10 +58,8 @@ private:
 
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
-    void build_relation();
 
     /// Données Georef
-    void clean_georef();
     void insert_admins(const ed::Georef& data);
     void insert_ways(const ed::Georef& data);
     void insert_nodes(const ed::Georef& data);
