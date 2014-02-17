@@ -1,3 +1,9 @@
+navitia2 (0.82.1) unstable; urgency=low
+
+ * Kraken : Change output dates format 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 17 Feb 2014 12:02:56 +0100
+
 navitia2 (0.82.0) unstable; urgency=low
 
  * Tyr : better logging
