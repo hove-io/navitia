@@ -8,15 +8,6 @@
 
 namespace ed { namespace connectors {
 
-//struct OSMHouseNumber{
-//    navitia::type::GeographicalCoord coord;
-//    std::string number;
-
-//    OSMHouseNumber(): number(""){}
-
-//};
-
-
 struct Node {
 private:
     // On utilise des int32 pour économiser de la mémoire. C’est les coordonnées * 1e6
