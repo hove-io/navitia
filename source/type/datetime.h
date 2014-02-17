@@ -69,4 +69,18 @@ inline DateTime operator+(DateTime time, boost::posix_time::time_duration dur) {
     return time + dur.total_seconds();
 }
 
+inline boost::posix_time::ptime strip_fractional_second(boost::posix_time::ptime ptime) {
+    boost::posix_time::time_duration tod = ptime.time_of_day();
+    return boost::posix_time::ptime(ptime.date(), boost::posix_time::seconds(tod.total_seconds())); // striping fractional seconds
+}
+
+inline boost::posix_time::time_duration strip_fractional_second(boost::posix_time::time_duration dur) {
+    return boost::posix_time::seconds(dur.total_seconds());
+}
+
+template <typename Time>
+inline std::string to_iso_string_no_fractional(Time t) {
+    return boost::posix_time::to_iso_string(strip_fractional_second(t));
+}
+
 }
