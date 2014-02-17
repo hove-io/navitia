@@ -17,7 +17,7 @@ SET(BOOST_LIBS ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_FILESYSTEM_LIBRARY}
 FIND_LIBRARY(OSMPBF osmpbf)
 
 add_executable(osm2ed osm2ed.cpp)
-target_link_libraries(osm2ed ed connectors pq pqxx ${OSMPBF} pb_lib utils
+target_link_libraries(osm2ed transportation_data_import ed connectors pq pqxx ${OSMPBF} pb_lib utils
     ${BOOST_LIBS} log4cplus)
 
 add_subdirectory(tests)
