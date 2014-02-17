@@ -1,3 +1,9 @@
+navitia2 (0.82.2) unstable; urgency=low
+
+ * Journeys: Correct V0
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 17 Feb 2014 18:02:12 +0100
+
 navitia2 (0.82.1) unstable; urgency=low
 
  * Kraken : Change output dates format 
