@@ -351,6 +351,7 @@ class add_journey_pagination(object):
 
         return (datetime_first, datetime_last)
 
+
 #add the link between a section and the ticket needed for that section
 class add_fare_links(object):
 
@@ -386,7 +387,6 @@ class add_fare_links(object):
 
             return objects
         return wrapper
-
 
 
 class Journeys(ResourceUri):

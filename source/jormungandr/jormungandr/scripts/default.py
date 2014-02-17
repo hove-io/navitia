@@ -1,4 +1,5 @@
 # coding=utf-8
+import copy
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
@@ -168,6 +169,80 @@ class Script(object):
         return self.__stop_times(request, instance, request["filter"], "",
                                  type_pb2.DEPARTURE_BOARDS)
 
+    def parse_journey_request(self, requested_type, request):
+        """Parse the request dict and create the protobuf version"""
+        req = request_pb2.Request()
+        req.requested_api = requested_type
+        req.journeys.origin = request["origin"]
+        if "destination" in request and request["destination"]:
+            req.journeys.destination = request["destination"]
+            self.destination_modes = request["destination_mode"]
+        else:
+            self.destination_modes = ["walking"]
+        req.journeys.datetimes.append(request["datetime"])
+        req.journeys.clockwise = request["clockwise"]
+        sn_params = req.journeys.streetnetwork_params
+        if "max_duration_to_pt" in request:
+            sn_params.max_duration_to_pt = request["max_duration_to_pt"]
+        else:
+            # for the moment we compute the non_TC duration
+            # with the walking_distance
+            max_duration = request["walking_distance"] / request["walking_speed"]
+            sn_params.max_duration_to_pt = max_duration
+        sn_params.walking_speed = request["walking_speed"]
+        sn_params.bike_speed = request["bike_speed"]
+        sn_params.car_speed = request["car_speed"]
+        sn_params.bss_speed = request["bss_speed"]
+        if "origin_filter" in request:
+            sn_params.origin_filter = request["origin_filter"]
+        else:
+            sn_params.origin_filter = ""
+        if "destination_filter" in request:
+            sn_params.destination_filter = request["destination_filter"]
+        else:
+            sn_params.destination_filter = ""
+        req.journeys.max_duration = request["max_duration"]
+        req.journeys.max_transfers = request["max_transfers"]
+        req.journeys.wheelchair = request["wheelchair"]
+
+        self.origin_modes = request["origin_mode"]
+
+        if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
+            req.journeys.streetnetwork_params.origin_mode = "bss"
+        if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
+            req.journeys.streetnetwork_params.destination_mode = "bss"
+        if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.journeys.forbidden_uris.append(forbidden_uri)
+        if not "type" in request:
+            request["type"] = "all" #why ?
+
+        return req
+
+    def check_missing_journey(self, list_journey, initial_request):
+        """ Check if some particular journeys are missing, and return:
+                if it is the case a modified version of the request to be rerun
+                else None"""
+        #we want to check if all journeys use the TER network
+        #if it is true, we want to call kraken and forbid this network
+        ter_uris = ["network:TER", "network:SNCF"]
+        only_ter = all(
+            any(
+                section.pt_display_informations.uris.network in ter_uris
+                for section in journey.sections
+            )
+            for journey in list_journey
+        )
+
+        if not only_ter:
+            return None
+
+        req = copy.deepcopy(initial_request)
+        for uri in ter_uris:
+            req.journeys.forbidden_uris.append(uri)
+
+        return req
+
     def places_nearby(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
@@ -213,16 +288,27 @@ class Script(object):
         self.__fill_uris(resp)
         return resp
 
-    def get_journey(self, req, instance):
-        resp = self.call_kraken(req, instance)
+    def get_journey(self, pb_req, instance, original_request):
+        resp = self.call_kraken(pb_req, instance)
 
-        if not resp or req.requested_api != type_pb2.PLANNER:
+        if not resp or pb_req.requested_api != type_pb2.PLANNER:
             return
+
+        new_request = self.check_missing_journey(resp.journeys, pb_req)
+
+        if new_request:
+            #we have to call kraken again with a modified version of the request
+            new_resp = self.call_kraken(new_request, instance)
+            print "we have {} new journeys for modified request {}".format(len(new_resp.journeys), new_request)
+            self.merge_response(resp, new_resp)
 
         #we qualify the journeys
         qualifier_one(resp.journeys)
 
+        #we filter the journeys
+        self.delete_journeys(resp, original_request)
         return resp
+
 
     def journey_compare(self, j1, j2):
         arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
@@ -234,8 +320,8 @@ class Script(object):
         else:
             return -1
 
-    def fill_journeys(self, req, request, instance):
-        resp = self.get_journey(req, instance)
+    def fill_journeys(self, pb_req, request, instance):
+        resp = self.get_journey(pb_req, instance, request)
 
         while request["count"] > len(resp.journeys):
             temp_datetime = None
@@ -248,7 +334,7 @@ class Script(object):
                     temp_datetime = l_date_time_f + timedelta(seconds=1)
                 else:
                     duration = int(resp.journeys[-1].duration) + 1
-                    r_datetime = req.journeys.datetimes[0]
+                    r_datetime = pb_req.journeys.datetimes[0]
                     r_datetime_f = datetime.strptime(r_datetime, f_date_time)
                     temp_datetime = r_datetime_f + timedelta(seconds=duration)
             else:
@@ -259,25 +345,28 @@ class Script(object):
                     temp_datetime = l_date_time_f + timedelta(seconds=-1)
                 else:
                     duration = int(resp.journeys[-1].duration) - 1
-                    r_datetime = req.journeys.datetimes[0]
+                    r_datetime = pb_req.journeys.datetimes[0]
                     r_datetime_f = datetime.strptime(r_datetime, f_date_time)
                     temp_datetime = r_datetime_f + timedelta(seconds=duration)
 
-            req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
-            tmp_resp = self.get_journey(req, instance)
+            pb_req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
+            tmp_resp = self.get_journey(pb_req, instance, request)
 
-            #since it's not the first call to kraken, some kraken's id
-            #might not be uniq anymore
-            self.change_ids(tmp_resp, len(resp.journeys))
-            if len(tmp_resp.journeys) == 0:
-                break
-            else:
-                resp.journeys.extend(tmp_resp.journeys)
-                #we have to add the addition fare too
-                if tmp_resp.tickets:
-                    resp.tickets.extend(tmp_resp.tickets)
+            self.merge_response(resp, tmp_resp)
 
         return resp
+
+    def merge_response(self, initial_response, new_response):
+        #since it's not the first call to kraken, some kraken's id
+        #might not be uniq anymore
+        self.change_ids(new_response, len(initial_response.journeys))
+        if len(new_response.journeys) == 0:
+            return
+
+        initial_response.journeys.extend(new_response.journeys)
+        #we have to add the addition fare too
+        if new_response.tickets:
+            initial_response.tickets.extend(new_response.tickets)
 
     @staticmethod
     def change_ids(new_journeys, journey_count):
@@ -307,65 +396,27 @@ class Script(object):
             return #we don't filter anything if errors
 
         #filter on journey type (the qualifier)
-        if request["type"] != "" or request["type"] != "all":
-            resp.journeys[:] = [j for j in resp.journeys if j.type == request["type"]]
+        to_delete = []
+        if request["type"] != "" and request["type"] != "all":
+            to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
         else:
             #by default, we filter non tagged journeys
-            resp.journeys[:] = [j for j in resp.journeys if j.type != ""]
+            to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type == ""])
+
+        # list comprehension does not work with repeated field, so we have to delete them manually
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del resp.journeys[idx]
 
         #after all filters, we filter not to give too many results
         if request["count"] and len(resp.journeys) > request["count"]:
             del resp.journeys[request["count"]:]
 
     def __on_journeys(self, requested_type, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = requested_type
-        req.journeys.origin = request["origin"]
-        if "destination" in request and request["destination"]:
-            req.journeys.destination = request["destination"]
-            self.destination_modes = request["destination_mode"]
-        else:
-            self.destination_modes = ["walking"]
-        req.journeys.datetimes.append(request["datetime"])
-        req.journeys.clockwise = request["clockwise"]
-        sn_params = req.journeys.streetnetwork_params
-        if "max_duration_to_pt" in request:
-            sn_params.max_duration_to_pt = request["max_duration_to_pt"]
-        else:
-            # for the moment we compute the non_TC duration
-            # with the walking_distance
-            max_duration = request["walking_distance"] / request["walking_speed"]
-            sn_params.max_duration_to_pt = max_duration
-        sn_params.walking_speed = request["walking_speed"]
-        sn_params.bike_speed = request["bike_speed"]
-        sn_params.car_speed = request["car_speed"]
-        sn_params.bss_speed = request["bss_speed"]
-        if "origin_filter" in request:
-            sn_params.origin_filter = request["origin_filter"]
-        else:
-            sn_params.origin_filter = ""
-        if "destination_filter" in request:
-            sn_params.destination_filter = request["destination_filter"]
-        else:
-            sn_params.destination_filter = ""
-        req.journeys.max_duration = request["max_duration"]
-        req.journeys.max_transfers = request["max_transfers"]
-        req.journeys.wheelchair = request["wheelchair"]
+        req = self.parse_journey_request(requested_type, request)
 
-        self.origin_modes = request["origin_mode"]
-
-        if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
-            req.journeys.streetnetwork_params.origin_mode = "bss"
-        if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
-            req.journeys.streetnetwork_params.destination_mode = "bss"
-        if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
-            for forbidden_uri in request["forbidden_uris[]"]:
-                req.journeys.forbidden_uris.append(forbidden_uri)
-        if not "type" in request:
-            request["type"] = "all"
-        #call to kraken
+        # call to kraken
         resp = self.fill_journeys(req, request, instance)
-        self.delete_journeys(resp, request)
 
         if not request["clockwise"]:
             resp.journeys.sort(self.journey_compare)
