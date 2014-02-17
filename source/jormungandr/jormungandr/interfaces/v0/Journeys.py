@@ -77,6 +77,7 @@ class Journeys(Resource):
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
         parser_get.add_argument("wheelchair", type=boolean, default=False)
+        parser_get.add_argument("disruption_active", type=boolean, default=False)
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
