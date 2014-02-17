@@ -131,13 +131,16 @@ def get_instance_logger(instance):
     all log will be in a file specific to this instance
     """
     logger = logging.getLogger('tyr.{0}'.format(instance.name))
-    log_dir = os.path.dirname(current_app.config['LOG_FILENAME'])
-    log_filename = log_dir + '/{0}.log'.format(instance.name)
-    logger.setLevel(current_app.config["LOG_LEVEL"])
-    handler = logging.FileHandler(log_filename)
-    log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
-            ' %(message)s'
-    handler.setFormatter(logging.Formatter(log_format))
-    logger.addHandler(handler)
+    #does not add the handler at each time
+    if not logger.handlers:
+        log_dir = os.path.dirname(current_app.config['LOG_FILENAME'])
+        log_filename = log_dir + '/{0}.log'.format(instance.name)
+        logger.setLevel(current_app.config["LOG_LEVEL"])
+        handler = logging.FileHandler(log_filename)
+        log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
+                ' %(message)s'
+        handler.setFormatter(logging.Formatter(log_format))
+        logger.addHandler(handler)
+
     logger.propagate = False
     return logger
