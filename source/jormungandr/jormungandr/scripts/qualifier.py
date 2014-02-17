@@ -132,8 +132,27 @@ def qualifier_one(journeys):
         max_allow_duration = transport_duration + max_mn_shift
         return get_nontransport_duration(journey) <= max_allow_duration
 
+    def no_train(journey):
+        ter_uris = ["network:TER", "network:SNCF"]  #TODO share this list
+        has_train = any(section.pt_display_informations.uris.network in ter_uris
+                        for section in journey.sections)
+
+        return not has_train
+
     #definition of the journeys to qualify
     trip_caracs = [
+        #the cheap journey, is the fastest one without train
+        ("cheap", trip_carac([
+            partial(no_train),
+            #partial(journey_length_constraint, max_evolution=.50),
+            #partial(journey_arrival_constraint, max_mn_shift=40),
+        ],
+            [
+                transfers_crit,
+                arrival_crit,
+                nonTC_crit
+            ]
+        )),
         ("healthy", trip_carac([
             partial(journey_length_constraint, max_evolution=.20),
             partial(journey_arrival_constraint, max_mn_shift=20),
