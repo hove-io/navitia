@@ -9,8 +9,8 @@
 namespace navitia { namespace routing {
 
 void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj,
-        const nt::Data & d, boost::posix_time::ptime now,
-        boost::posix_time::time_period action_period) {
+        const nt::Data & d, bt::ptime now,
+        bt::time_period action_period) {
 
     if (vj->has_boarding()){
         pb_section->set_type(pbnavitia::boarding);
@@ -26,32 +26,28 @@ void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj
     fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
 }
 
-bt::ptime strip_fractional_second(bt::ptime ptime) {
-    bt::time_duration tod = ptime.time_of_day();
-    return bt::ptime(ptime.date(), bt::seconds(tod.total_seconds()));
-}
 
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths,
         const nt::Data& d, georef::StreetNetwork& worker,
         const type::EntryPoint& origin, const type::EntryPoint& destination,
-        const std::vector<boost::posix_time::ptime>& datetimes,
+        const std::vector<bt::ptime>& datetimes,
                                 bool clockwise) {
     EnhancedResponse enhanced_response; //wrapper around raw protobuff response to handle ids
     pbnavitia::Response& pb_response = enhanced_response.response;
 
-    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+    bt::ptime now = bt::second_clock::local_time();
 
     auto temp = worker.get_direct_path();
     if(!temp.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
 
         //for each date time we add a direct street journey
-        for(boost::posix_time::ptime datetime : datetimes) {
+        for(bt::ptime datetime : datetimes) {
             pbnavitia::Journey* pb_journey = pb_response.add_journeys();
             pb_journey->set_duration(temp.duration.total_seconds());
 
-            boost::posix_time::ptime departure;
+            bt::ptime departure;
             if (clockwise) {
                 departure = datetime;
             } else {
@@ -59,8 +55,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             }
             fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
 
-            const auto str_departure = boost::posix_time::to_iso_string(departure);
-            const auto str_arrival = boost::posix_time::to_iso_string(departure + temp.duration);
+            const auto str_departure = navitia::to_iso_string_no_fractional(departure);
+            const auto str_arrival = navitia::to_iso_string_no_fractional(departure + temp.duration);
             pb_journey->set_departure_date_time(str_departure);
             pb_journey->set_arrival_date_time(str_arrival);
         }
@@ -74,7 +70,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pbnavitia::Journey* pb_journey = pb_response.add_journeys();
 
         pb_journey->set_nb_transfers(path.nb_changes);
-        pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
+        pb_journey->set_requested_date_time(navitia::to_iso_string_no_fractional(path.request_time));
 
         // La marche à pied initiale si on avait donné une coordonnée
         if(path.items.size() > 0 && ! path.items.front().stop_points.empty()) {
@@ -103,19 +99,19 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
             if(item.type == public_transport) {
                 pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
-                boost::posix_time::ptime departure_ptime , arrival_ptime;
+                bt::ptime departure_ptime , arrival_ptime;
                 vj = item.get_vj();
                 int length = 0;
                 for(size_t i=0;i<item.stop_points.size();++i) {
                     if ((!vj->has_boarding()) && (!vj->has_landing())) {
                         pbnavitia::StopDateTime* stop_time = pb_section->add_stop_date_times();
-                        auto arr_time = bt::to_iso_string(item.arrivals[i]);
+                        auto arr_time = navitia::to_iso_string_no_fractional(item.arrivals[i]);
                         stop_time->set_arrival_date_time(arr_time);
-                        auto dep_time = bt::to_iso_string(item.departures[i]);
+                        auto dep_time = navitia::to_iso_string_no_fractional(item.departures[i]);
                         stop_time->set_departure_date_time(dep_time);
                         const auto p_deptime = item.departures[i];
                         const auto p_arrtime = item.arrivals[i];
-                        boost::posix_time::time_period action_period(p_deptime, p_arrtime);
+                        bt::time_period action_period(p_deptime, p_arrtime);
                         fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 0, now, action_period);
 
                         if (item.get_vj() != nullptr) {
@@ -138,13 +134,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 if (item.stop_points.size() > 1) {
                     auto arr_time = item.arrivals[0];
                     auto dep_time = item.departures[0];
-                    boost::posix_time::time_period action_period(dep_time, arr_time);
+                    bt::time_period action_period(dep_time, arr_time);
                     fill_pb_placemark(item.stop_points.front(), d, pb_section->mutable_origin(), 1, now, action_period);
                     fill_pb_placemark(item.stop_points.back(), d, pb_section->mutable_destination(), 1, now, action_period);
                 }
                 pb_section->set_length(length);
                 if( item.get_vj() != nullptr) { // TODO : réfléchir si ça peut vraiment arriver
-                    boost::posix_time::time_period action_period(departure_ptime, arrival_ptime);
+                    bt::time_period action_period(departure_ptime, arrival_ptime);
                     fill_section(pb_section, item.get_vj(), d, now, action_period);
                 }
             } else {
@@ -156,16 +152,16 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     default : pb_section->set_transfer_type(pbnavitia::walking); break;
                 }
 
-                boost::posix_time::time_period action_period(item.departure, item.arrival);
+                bt::time_period action_period(item.departure, item.arrival);
                 const auto origin_sp = item.stop_points.front();
                 const auto destination_sp = item.stop_points.back();
                 fill_pb_placemark(origin_sp, d, pb_section->mutable_origin(), 1, now, action_period);
                 fill_pb_placemark(destination_sp, d, pb_section->mutable_destination(), 1, now, action_period);
                 pb_section->set_length(origin_sp->coord.distance_to(destination_sp->coord));
             }
-            auto dep_time = bt::to_iso_string(item.departure);
+            auto dep_time = navitia::to_iso_string_no_fractional(item.departure);
             pb_section->set_begin_date_time(dep_time);
-            auto arr_time = bt::to_iso_string(item.arrival);
+            auto arr_time = navitia::to_iso_string_no_fractional(item.arrival);
             pb_section->set_end_date_time(arr_time);
 
             if(departure_time == bt::pos_infin)
@@ -189,9 +185,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             }
         }
 
-
-        const auto str_departure = bt::to_iso_string(strip_fractional_second(departure_time));
-        const auto str_arrival = bt::to_iso_string(strip_fractional_second(arrival_time));
+        const auto str_departure = navitia::to_iso_string_no_fractional(departure_time);
+        const auto str_arrival = navitia::to_iso_string_no_fractional(arrival_time);
         pb_journey->set_departure_date_time(str_departure);
         pb_journey->set_arrival_date_time(str_arrival);
         pb_journey->set_duration((arrival_time - departure_time).total_seconds());
@@ -276,15 +271,15 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
 }
 
 
-std::vector<boost::posix_time::ptime>
+std::vector<bt::ptime>
 parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
                 pbnavitia::Response &response, bool clockwise) {
-    std::vector<boost::posix_time::ptime> datetimes;
+    std::vector<bt::ptime> datetimes;
 
     for(std::string datetime: datetimes_str){
         try {
-            boost::posix_time::ptime ptime;
-            ptime = boost::posix_time::from_iso_string(datetime);
+            bt::ptime ptime;
+            ptime = bt::from_iso_string(datetime);
             if(!raptor.data.meta.production_date.contains(ptime.date())) {
                 fill_pb_error(pbnavitia::Error::date_out_of_bounds,
                                 "date is not in data production period",
@@ -300,7 +295,7 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
     }
     if(clockwise)
         std::sort(datetimes.begin(), datetimes.end(),
-                  [](boost::posix_time::ptime dt1, boost::posix_time::ptime dt2){return dt1 > dt2;});
+                  [](bt::ptime dt1, bt::ptime dt2){return dt1 > dt2;});
     else
         std::sort(datetimes.begin(), datetimes.end());
 
@@ -319,7 +314,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 
     pbnavitia::Response response;
 
-    std::vector<boost::posix_time::ptime> datetimes;
+    std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, datetimes_str, response, clockwise);
     if(response.has_error() || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
@@ -349,7 +344,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
 
-    for(boost::posix_time::ptime datetime : datetimes) {
+    for(bt::ptime datetime : datetimes) {
         int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
         int time = datetime.time_of_day().total_seconds();
         DateTime init_dt = DateTimeUtils::set(day, time);
@@ -391,7 +386,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    int max_duration, uint32_t max_transfers) {
     pbnavitia::Response response;
 
-    boost::posix_time::ptime datetime;
+    bt::ptime datetime;
     auto tmp_datetime = parse_datetimes(raptor, {datetime_str}, response, clockwise);
     if(response.has_error() || tmp_datetime.size() == 0 ||
        response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {

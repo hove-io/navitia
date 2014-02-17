@@ -384,10 +384,10 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
     int depth = (max_depth <= 3) ? max_depth : 3;
     auto p = boost::posix_time::seconds(st->arrival_time);
 
-    stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
+    stop_time->set_arrival_time(navitia::to_iso_string_no_fractional(p));
 
     p = boost::posix_time::seconds(st->departure_time);
-    stop_time->set_departure_time(boost::posix_time::to_iso_string(p));
+    stop_time->set_departure_time(navitia::to_iso_string_no_fractional(p));
     stop_time->set_pickup_allowed(st->pick_up_allowed());
     stop_time->set_drop_off_allowed(st->drop_off_allowed());
     if(st->journey_pattern_point != nullptr && depth > 0) {
@@ -634,8 +634,8 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     section->set_duration(total_duration);
     section->set_length(total_length);
 
-    section->set_begin_date_time(bt::to_iso_string(departure));
-    section->set_end_date_time(bt::to_iso_string(departure + bt::seconds(total_duration)));
+    section->set_begin_date_time(navitia::to_iso_string_no_fractional(departure));
+    section->set_end_date_time(navitia::to_iso_string_no_fractional(departure + bt::seconds(total_duration)));
 
     //add the destination as a placemark
     pbnavitia::Place* dest_place = section->mutable_destination();
@@ -741,11 +741,11 @@ void fill_message(const boost::shared_ptr<type::Message> message,
         pb_message->set_title(it->second.title);
     }
 
-    pb_message->set_start_application_date(boost::posix_time::to_iso_string((message->application_period).begin()));
-    pb_message->set_end_application_date(boost::posix_time::to_iso_string((message->application_period).end()));
+    pb_message->set_start_application_date(navitia::to_iso_string_no_fractional((message->application_period).begin()));
+    pb_message->set_end_application_date(navitia::to_iso_string_no_fractional((message->application_period).end()));
 
-    pb_message->set_start_application_daily_hour(boost::posix_time::to_iso_string(message->application_daily_start_hour));
-    pb_message->set_end_application_daily_hour(boost::posix_time::to_iso_string(message->application_daily_end_hour));
+    pb_message->set_start_application_daily_hour(navitia::to_iso_string_no_fractional(message->application_daily_start_hour));
+    pb_message->set_end_application_daily_hour(navitia::to_iso_string_no_fractional(message->application_daily_end_hour));
 }
 
 
