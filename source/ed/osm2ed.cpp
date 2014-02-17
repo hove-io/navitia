@@ -147,7 +147,6 @@ void Visitor::insert_edges(){
                     // If a node is used more than once, it is an intersection, hence it's a node of the street network graph
                     else if(current_node.uses > 1){
                         uint64_t target = current_ref;
-                        // TODO : gérer les modes
                         geog << ")";
                         this->persistor.lotus.insert({std::to_string(source), std::to_string(target), std::to_string(w.first), geog.str(),
                                            std::to_string(w.second.properties[FOOT_FWD]), std::to_string(w.second.properties[CYCLE_FWD]), std::to_string(w.second.properties[CAR_FWD])});

@@ -7,32 +7,32 @@ namespace ed{
 
 void EdPersistor::persist(const ed::Georef& data){
     this->lotus.start_transaction();
-    LOG4CPLUS_INFO(logger, "début : vider toutes les tables (TRUNCATE)!");
+    LOG4CPLUS_INFO(logger, "Begin : TRUNCATE data!");
     this->clean_georef();
-    LOG4CPLUS_INFO(logger, "début : ajout des admins");
+    LOG4CPLUS_INFO(logger, "Begin : add admins data");
     this->insert_admins(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des voies");
+    LOG4CPLUS_INFO(logger, "Begin : add ways data");
     this->insert_ways(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des noeuds");
+    LOG4CPLUS_INFO(logger, "Begin : add nodes data");
     this->insert_nodes(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des adresses");
+    LOG4CPLUS_INFO(logger, "Begin : add house numbers data");
     this->insert_house_numbers(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des segments");
+    LOG4CPLUS_INFO(logger, "Begin : add edges data");
     this->insert_edges(data);
-    LOG4CPLUS_INFO(logger, "début : relation admin way");
+    LOG4CPLUS_INFO(logger, "Begin : relation admin way");
     this->build_relation_way_admin(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des poitypes");
+    LOG4CPLUS_INFO(logger, "Begin : add poitypes data");
     this->insert_poi_types(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des pois");
+    LOG4CPLUS_INFO(logger, "Begin : add pois data");
     this->insert_pois(data);
-    LOG4CPLUS_INFO(logger, "début : mise à jour des limites des régions adminstratives");
+    LOG4CPLUS_INFO(logger, "Begin : update boundary admins");
     this->update_boundary();
-    LOG4CPLUS_INFO(logger, "début : Relations stop_area, stop_point et admins");
+    LOG4CPLUS_INFO(logger, "Begin : Relations stop_area, stop_point et admins");
     this->build_relation();
-    LOG4CPLUS_INFO(logger, "début : Fusion des voies");
+    LOG4CPLUS_INFO(logger, "Begin : Fusion ways");
     this->build_ways();
     this->lotus.commit();
-    LOG4CPLUS_INFO(logger, "Fin : commit");
+    LOG4CPLUS_INFO(logger, "End : commit");
 }
 
 std::string EdPersistor::to_geografic_point(const navitia::type::GeographicalCoord& coord) const{
@@ -52,29 +52,29 @@ std::string EdPersistor::to_geografic_linestring(const navitia::type::Geographic
 }
 
 void EdPersistor::build_ways(){
-    /// Ajout un nom pour le communes ayant un nom vide
+    /// Add a name for the admins with an empty name
     PQclear(this->lotus.exec("SELECT georef.add_way_name();", "", PGRES_TUPLES_OK));
-    /// Fusion des voies par nom et commune
+    /// Fusion ways by name and admin
     PQclear(this->lotus.exec("SELECT georef.fusion_ways_by_admin_name();", "", PGRES_TUPLES_OK));
-    /// Déplacement des relations admin,voie  de façon à ce que le couple (admin, voie) soit unique
+    /// Moving admin and way relations, so that the pair (admin, way) is unique
     PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// MAJ des way_id dans la table edge
+    /// Update way_id in table edge
     PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
-    ///  Ajout des voies qui ne sont pas dans la table de fusion : cas voie appartient à un seul admin avec un level 9
+    /// Add ways not in fusion table
     PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Ajout des voies n'ayant pas de communes dans la table de fusion
+    /// Add ways where admin is nil
     PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Ecrasement des données de la table 'rel_way_admin' par 'tmp_rel_way_admin'
+    /// Remplace data in table 'rel_way_admin' by 'tmp_rel_way_admin'
     PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// Suppression des doublons de la atbles des voies
+    /// Remove duplicate data in table of ways
     PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
-    /// MAJ des way_id de la table des adresses
+    /// Update way_id in housenumber table
     PQclear(this->lotus.exec("SELECT georef.update_house_number();", "", PGRES_TUPLES_OK));
-    /// Remise des noms des rues à vide qui étaient initialement vides
+    /// Update ways name
     PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
-    /// MAJ des coordonées des admins qui n'ont pas de coordonnées : Calcul du barycentre de l'admin
+    /// Update of admin cordinates  : Calcul of barycentre
     PQclear(this->lotus.exec("SELECT navitia.update_admin_coord();", "", PGRES_TUPLES_OK));
-    /// Relation entre les admins
+    /// Relation between admins
     PQclear(this->lotus.exec("SELECT navitia.match_admin_to_admin();", "", PGRES_TUPLES_OK));
 }
 
