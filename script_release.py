@@ -14,10 +14,29 @@ AUTHOR_MAIL = "vincent.lara@canaltp.fr"
 
 repo = Repo(".")
 git = repo.git
-last_tag = repo.tags[-1]
 
-version_n = last_tag.name[1:].split('.')
+tags = repo.tags
+
+latest_version = None
+last_tag = git.describe('--tags', abbrev=0)
+
+version = re.search('.*(\d+\.\d+\.\d+).*', last_tag)
+if version:
+    latest_version = version.group(1)
+
+if not latest_version:
+    print "no latest version found"
+    exit(1)
+
+version_n = latest_version.split('.')
+print "latest version is %s" % version_n
+
 version_n = [int(i) for i in version_n]
+
+if len(argv) != 2:
+    print "mandatory argument: {major|minor|hotfix}"
+    exit(5)
+
 if argv[1] == "major":
     version_n[0] += 1
     version_n[1] = version_n[2] = 0
