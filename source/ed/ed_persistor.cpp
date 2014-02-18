@@ -8,32 +8,44 @@ namespace ed{
 void EdPersistor::persist(const ed::Georef& data){
 
     this->lotus.start_transaction();
-    LOG4CPLUS_INFO(logger, "Begin : TRUNCATE data!");
+    LOG4CPLUS_INFO(logger, "Begin: TRUNCATE data!");
     this->clean_georef();
-    LOG4CPLUS_INFO(logger, "Begin : add admins data");
+    LOG4CPLUS_INFO(logger, "Begin: add admins data");
     this->insert_admins(data);
-    LOG4CPLUS_INFO(logger, "Begin : add ways data");
+    LOG4CPLUS_INFO(logger, "End: add admins data\n"
+                           "Begin: add ways data");
     this->insert_ways(data);
-    LOG4CPLUS_INFO(logger, "Begin : add nodes data");
+    LOG4CPLUS_INFO(logger, "End: add ways data\n"
+                           "Begin: add nodes data");
     this->insert_nodes(data);
-    LOG4CPLUS_INFO(logger, "Begin : add house numbers data");
+    LOG4CPLUS_INFO(logger, "End: add nodes data\n"
+                           "Begin: add house numbers data");
     this->insert_house_numbers(data);
-    LOG4CPLUS_INFO(logger, "Begin : add edges data");
+    LOG4CPLUS_INFO(logger, "End: add house numbers data\n"
+                           "Begin: add edges data");
     this->insert_edges(data);
-    LOG4CPLUS_INFO(logger, "Begin : relation admin way");
+    LOG4CPLUS_INFO(logger, "End: add edges data\n"
+                           "Begin: relation admin way");
     this->build_relation_way_admin(data);
-    LOG4CPLUS_INFO(logger, "Begin : add poitypes data");
+    LOG4CPLUS_INFO(logger, "End: relation admin way\n"
+                           "Begin: add poitypes data");
     this->insert_poi_types(data);
-    LOG4CPLUS_INFO(logger, "Begin : add pois data");
+    LOG4CPLUS_INFO(logger, "End: add poitypes data\n"
+                           "Begin: add pois data");
     this->insert_pois(data);
-    LOG4CPLUS_INFO(logger, "Begin : update boundary admins");
+    LOG4CPLUS_INFO(logger, "End: add pois data\n"
+                           "Begin: update boundary admins");
     this->update_boundary();
-    LOG4CPLUS_INFO(logger, "Begin : Relations stop_area, stop_point et admins");
+    LOG4CPLUS_INFO(logger, "End: update boundary admins\n"
+                           "Begin: Relations stop_area, stop_point et admins");
     this->build_relation();
-    LOG4CPLUS_INFO(logger, "Begin : Fusion ways");
+    LOG4CPLUS_INFO(logger, "End: Relations stop_area, stop_point et admins\n"
+                           "Begin: Fusion ways");
     this->build_ways();
+    LOG4CPLUS_INFO(logger, "End: Fusion ways\n"
+                           "Begin commit");
     this->lotus.commit();
-    LOG4CPLUS_INFO(logger, "End : commit");
+    LOG4CPLUS_INFO(logger, "End: commit");
 }
 
 std::string EdPersistor::to_geografic_point(const navitia::type::GeographicalCoord& coord) const{
@@ -65,7 +77,7 @@ void EdPersistor::build_ways(){
     PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
     /// Add ways where admin is nil
     PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Remplace data in table 'rel_way_admin' by 'tmp_rel_way_admin'
+    /// Update data in table 'rel_way_admin' by 'tmp_rel_way_admin'
     PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
     /// Remove duplicate data in table of ways
     PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
