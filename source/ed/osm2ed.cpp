@@ -77,7 +77,7 @@ void Visitor::relation_callback(uint64_t osmid, const CanalTP::Tags & tags, cons
 
 void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
     if(tags.find("addr:housenumber") != tags.end()){
-        OSMHouseNumber osm_hn;
+        ed::types::HouseNumber osm_hn;
         osm_hn.number = tags.at("addr:housenumber");
         this->housenumbers[osmid] = osm_hn;
 
@@ -294,7 +294,7 @@ void Visitor::insert_admin(){
 void Visitor::insert_poitypes(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(auto pt : poi_types){
-        this->lotus.insert({std::to_string(pt.second.id), pt.first, pt.second.name});
+        this->persistor.lotus.insert({std::to_string(pt.second.id), pt.first, pt.second.name});
     }
     persistor.lotus.finish_bulk_insert();
 }
@@ -307,8 +307,8 @@ void Visitor::insert_pois(){
             Node n = nodes.at(poi.first);
             count++;
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->lotus.insert({std::to_string(count),std::to_string(poi.second.weight),
-								point, poi.second.name, std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
+            this->persistor.lotus.insert({std::to_string(count),std::to_string(poi.second.weight),
+                                        point, poi.second.name, std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
         }catch(...){
             std::cout << "Attention, le noued  : [" << poi.first << " est introuvable]." << std::endl;
         }
