@@ -5,8 +5,10 @@
 #include "utils/logger.h"
 #include <unordered_map>
 #include "ed/types.h"
+#include "ed_persistor.h"
 
 namespace ed { namespace connectors {
+
 
 struct Node {
 private:
@@ -73,7 +75,7 @@ struct OSMAdminRef{
 
 /** Structure appelée par parseur OSM PBF */
 struct Visitor{
-    Lotus lotus;
+    ed::EdPersistor persistor;
     log4cplus::Logger logger;
     std::unordered_map<uint64_t,CanalTP::References> references;
     std::unordered_map<uint64_t, Node> nodes;
@@ -92,7 +94,7 @@ struct Visitor{
     //Pour charger les données administratives
     //navitia::georef::Levels levellist;
 
-    Visitor(const std::string & conn_str) : lotus(conn_str), total_ways(0), total_house_number(0), node_idx(0){}
+    Visitor(const std::string & conn_str) : persistor(conn_str), total_ways(0), total_house_number(0), node_idx(0){}
 
     void node_callback(uint64_t osmid, double lon, double lat, const CanalTP::Tags & tags);
     void way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std::vector<uint64_t> &refs);
@@ -121,13 +123,10 @@ struct Visitor{
     /// construction des informations administratives
     void insert_admin();
 
-    /// purge la bdd des données géoref avant d'insérer les nouvelles
-    void clean_georef();
 
     /// construit les relation d'inclusions entre les objets géographique
     void build_relation();
-    /// fusion des voies
-    void build_ways();
+ 
     void fill_PoiTypes();
     void fill_pois(const uint64_t osmid, const CanalTP::Tags & tags);
     void insert_poitypes();

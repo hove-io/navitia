@@ -39,7 +39,7 @@ void Visitor::way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std:
         std::string name;
         if(tags.find("name") != tags.end())
             name = tags.at("name");
-        this->lotus.insert({std::to_string(osmid), name, std::to_string(osmid)});
+        this->persistor.lotus.insert({std::to_string(osmid), name, std::to_string(osmid)});
     }else{
         // Dans le cas où la maison est dessinée par un way et non pas juste par un node
         add_osm_housenumber(refs.front(), tags);
@@ -92,7 +92,7 @@ void Visitor::insert_if_needed(uint64_t ref) {
         if(n.increment_use(this->node_idx)){
             this->node_idx++;
             std::string line = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->lotus.insert({std::to_string(ref), line});
+            this->persistor.lotus.insert({std::to_string(ref), line});
         }
     } else {
         std::cout << "Unable to find node " << ref << std::endl;
@@ -101,7 +101,7 @@ void Visitor::insert_if_needed(uint64_t ref) {
 
 
 void Visitor::count_nodes_uses() {
-    this->lotus.prepare_bulk_insert("georef.node", {"id", "coord"});
+    this->persistor.lotus.prepare_bulk_insert("georef.node", {"id", "coord"});
 
     for(const auto & w : ways){
         if(w.second.properties.any()) {
@@ -118,11 +118,11 @@ void Visitor::count_nodes_uses() {
 
     }
 
-    lotus.finish_bulk_insert();
+    persistor.lotus.finish_bulk_insert();
 }
 
 void Visitor::insert_edges(){
-    this->lotus.prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog", "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+    this->persistor.lotus.prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog", "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
     std::stringstream geog;
     geog << std::cout.precision(10);
 
@@ -147,11 +147,10 @@ void Visitor::insert_edges(){
                     // If a node is used more than once, it is an intersection, hence it's a node of the street network graph
                     else if(current_node.uses > 1){
                         uint64_t target = current_ref;
-                        // TODO : gérer les modes
                         geog << ")";
-                        this->lotus.insert({std::to_string(source), std::to_string(target), std::to_string(w.first), geog.str(),
+                        this->persistor.lotus.insert({std::to_string(source), std::to_string(target), std::to_string(w.first), geog.str(),
                                            std::to_string(w.second.properties[FOOT_FWD]), std::to_string(w.second.properties[CYCLE_FWD]), std::to_string(w.second.properties[CAR_FWD])});
-                        this->lotus.insert({std::to_string(target), std::to_string(source), std::to_string(w.first), geog.str(),
+                        this->persistor.lotus.insert({std::to_string(target), std::to_string(source), std::to_string(w.first), geog.str(),
                                            std::to_string(w.second.properties[FOOT_BWD]), std::to_string(w.second.properties[CYCLE_BWD]), std::to_string(w.second.properties[CAR_BWD])});
                         source = target;
                         geog.str("");
@@ -163,23 +162,23 @@ void Visitor::insert_edges(){
             }
         }
     }
-    lotus.finish_bulk_insert();
+    persistor.lotus.finish_bulk_insert();
 }
 
 
 void Visitor::insert_house_numbers(){
-    this->lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side"});
+    this->persistor.lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side"});
     for(auto hn : housenumbers) {
         const auto tmp_node = nodes.find(hn.first);
         if(tmp_node != nodes.end()) {
             Node n = tmp_node->second;
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->lotus.insert({point, hn.second.number, std::to_string((str_to_int(hn.second.number) % 2) == 0)});
+            this->persistor.lotus.insert({point, hn.second.number, std::to_string((str_to_int(hn.second.number) % 2) == 0)});
         } else {
             std::cout << "Unable to find node " << hn.first << std::endl;
         }
     }
-    lotus.finish_bulk_insert();
+    persistor.lotus.finish_bulk_insert();
 }
 
 navitia::type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & refs){
@@ -276,83 +275,50 @@ std::vector<uint64_t> Visitor::nodes_of_relation(const CanalTP::References & ref
 
 
 void Visitor::insert_admin(){
-    this->lotus.prepare_bulk_insert("navitia.admin", {"id", "name", "post_code", "insee", "level", "coord", "boundary", "uri"});
+    this->persistor.lotus.prepare_bulk_insert("navitia.admin", {"id", "name", "post_code", "insee", "level", "coord", "boundary", "uri"});
     int ignored = 0;
     for(auto ar : OSMAdminRefs){
         auto admin = ar.second;
         std::string multipolygon = this->geometry_of_admin(admin.refs);
         if(!multipolygon.empty()){
             std::string coord = "POINT(" + std::to_string(admin.coord.lon()) + " " + std::to_string(admin.coord.lat()) + ")";
-            this->lotus.insert({std::to_string(ar.first), admin.name, admin.postcode, admin.insee, admin.level, coord,multipolygon , std::to_string(ar.first)});
+            this->persistor.lotus.insert({std::to_string(ar.first), admin.name, admin.postcode, admin.insee, admin.level, coord,multipolygon , std::to_string(ar.first)});
         } else {
             ignored++;
         }
     }
-    this->lotus.finish_bulk_insert();
+    this->persistor.lotus.finish_bulk_insert();
     std::cout << " Admin ignorés : " << ignored << " sur " << OSMAdminRefs.size() << std::endl;
 }
 
 void Visitor::insert_poitypes(){
-    this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
+    this->persistor.lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(auto pt : poi_types){
-        this->lotus.insert({std::to_string(pt.second.id), pt.first, pt.second.name});
+        this->persistor.lotus.insert({std::to_string(pt.second.id), pt.first, pt.second.name});
     }
-    lotus.finish_bulk_insert();
+    persistor.lotus.finish_bulk_insert();
 }
 
 void Visitor::insert_pois(){
-    this->lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id"});
+    this->persistor.lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id"});
     int32_t count =0;
     for(auto poi : pois){
         try{
             Node n = nodes.at(poi.first);
             count++;
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->lotus.insert({std::to_string(count),std::to_string(poi.second.weight),
-                               point, poi.second.name, std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
+            this->persistor.lotus.insert({std::to_string(count),std::to_string(poi.second.weight),
+                                        point, poi.second.name, std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
         }catch(...){
             std::cout << "Attention, le noued  : [" << poi.first << " est introuvable]." << std::endl;
         }
     }
-    lotus.finish_bulk_insert();
-}
-
-void Visitor::clean_georef(){
-    PQclear(this->lotus.exec("truncate georef.node, georef.house_number, navitia.admin, georef.way, navitia.poi_type CASCADE;"));
-}
-
-void Visitor::build_ways(){
-    /// Ajout un nom pour le communes ayant un nom vide
-    PQclear(this->lotus.exec("SELECT georef.add_way_name();", "", PGRES_TUPLES_OK));
-    /// Fusion des voies par nom et commune
-    PQclear(this->lotus.exec("SELECT georef.fusion_ways_by_admin_name();", "", PGRES_TUPLES_OK));
-    /// Déplacement des relations admin,voie  de façon à ce que le couple (admin, voie) soit unique
-    PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// MAJ des way_id dans la table edge
-    PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
-    ///  Ajout des voies qui ne sont pas dans la table de fusion : cas voie appartient à un seul admin avec un level 9
-    PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Ajout des voies n'ayant pas de communes dans la table de fusion
-    PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Ecrasement des données de la table 'rel_way_admin' par 'tmp_rel_way_admin'
-    PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// Suppression des doublons de la atbles des voies
-    PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
-    /// MAJ des way_id de la table des adresses
-    PQclear(this->lotus.exec("SELECT georef.update_house_number();", "", PGRES_TUPLES_OK));
-    /// Remise des noms des rues à vide qui étaient initialement vides
-    PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
-    /// MAJ des coordonées des admins qui n'ont pas de coordonnées : Calcul du barycentre de l'admin
-    PQclear(this->lotus.exec("SELECT navitia.update_admin_coord();", "", PGRES_TUPLES_OK));
-    /// Relation entre les admins
-    PQclear(this->lotus.exec("SELECT navitia.match_admin_to_admin();", "", PGRES_TUPLES_OK));
+    persistor.lotus.finish_bulk_insert();
 }
 
 void Visitor::build_relation(){
-    PQclear(this->lotus.exec("SELECT georef.match_stop_area_to_admin()", "", PGRES_TUPLES_OK));
-    PQclear(this->lotus.exec("SELECT georef.match_stop_point_to_admin();", "", PGRES_TUPLES_OK));
-    PQclear(this->lotus.exec("SELECT georef.match_way_to_admin();", "", PGRES_TUPLES_OK));
-    PQclear(this->lotus.exec("SELECT georef.match_poi_to_admin();", "", PGRES_TUPLES_OK));
+    this->persistor.build_relation();
+    PQclear(this->persistor.lotus.exec("SELECT georef.match_way_to_admin();", "", PGRES_TUPLES_OK));
 }
 
 void Visitor::fill_PoiTypes(){
@@ -384,8 +350,9 @@ void Visitor::set_coord_admin(){
     }
 }
 
-}}
-//void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
+}
+}
+
 int main(int argc, char** argv) {
     navitia::init_app();
     pt::ptime start;
@@ -413,14 +380,14 @@ int main(int argc, char** argv) {
     start = pt::microsec_clock::local_time();
     po::notify(vm);
     ed::connectors::Visitor v(connection_string);
-    v.lotus.start_transaction();
+    v.persistor.lotus.start_transaction();
 
-    v.clean_georef();
+    v.persistor.clean_georef();
     v.fill_PoiTypes();
-    v.lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri"});
+    v.persistor.lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri"});
     CanalTP::read_osm_pbf(input, v);
     v.set_coord_admin();
-    v.lotus.finish_bulk_insert();
+    v.persistor.lotus.finish_bulk_insert();
 
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     std::cout<<v.poi_types.size()<<" poitype/ "<<v.pois.size()<< " poi"<<std::endl;
@@ -437,9 +404,9 @@ int main(int argc, char** argv) {
     v.build_relation();
 
     std::cout<<"Fusion des voies"<<std::endl;
-    v.build_ways();
+    v.persistor.build_ways();
 
-    v.lotus.commit();
+    v.persistor.lotus.commit();
 
     std::cout<<"Durée d'intégration des données OSM :"<<to_simple_string(pt::microsec_clock::local_time() - start)<<std::endl;
     return 0;

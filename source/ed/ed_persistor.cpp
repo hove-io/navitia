@@ -7,30 +7,32 @@ namespace ed{
 
 void EdPersistor::persist(const ed::Georef& data){
     this->lotus.start_transaction();
-    LOG4CPLUS_INFO(logger, "début : vider toutes les tables (TRUNCATE)!");
+    LOG4CPLUS_INFO(logger, "Begin : TRUNCATE data!");
     this->clean_georef();
-    LOG4CPLUS_INFO(logger, "début : ajout des admins");
+    LOG4CPLUS_INFO(logger, "Begin : add admins data");
     this->insert_admins(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des voies");
+    LOG4CPLUS_INFO(logger, "Begin : add ways data");
     this->insert_ways(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des noeuds");
+    LOG4CPLUS_INFO(logger, "Begin : add nodes data");
     this->insert_nodes(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des adresses");
+    LOG4CPLUS_INFO(logger, "Begin : add house numbers data");
     this->insert_house_numbers(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des segments");
+    LOG4CPLUS_INFO(logger, "Begin : add edges data");
     this->insert_edges(data);
-    LOG4CPLUS_INFO(logger, "début : relation admin way");
+    LOG4CPLUS_INFO(logger, "Begin : relation admin way");
     this->build_relation_way_admin(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des poitypes");
+    LOG4CPLUS_INFO(logger, "Begin : add poitypes data");
     this->insert_poi_types(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des pois");
+    LOG4CPLUS_INFO(logger, "Begin : add pois data");
     this->insert_pois(data);
-    LOG4CPLUS_INFO(logger, "début : mise à jour des limites des régions adminstratives");
+    LOG4CPLUS_INFO(logger, "Begin : update boundary admins");
     this->update_boundary();
-    LOG4CPLUS_INFO(logger, "début : Relations stop_area, stop_point et admins");
+    LOG4CPLUS_INFO(logger, "Begin : Relations stop_area, stop_point et admins");
     this->build_relation();
+    LOG4CPLUS_INFO(logger, "Begin : Fusion ways");
+    this->build_ways();
     this->lotus.commit();
-    LOG4CPLUS_INFO(logger, "Fin : commit");
+    LOG4CPLUS_INFO(logger, "End : commit");
 }
 
 std::string EdPersistor::to_geografic_point(const navitia::type::GeographicalCoord& coord) const{
@@ -47,6 +49,33 @@ std::string EdPersistor::to_geografic_linestring(const navitia::type::Geographic
     geog.str("");
     geog << "LINESTRING("<<source.lon()<<" "<<source.lat()<<","<<target.lon()<<" "<<target.lat()<<")";
     return geog.str();
+}
+
+void EdPersistor::build_ways(){
+    /// Add a name for the admins with an empty name
+    PQclear(this->lotus.exec("SELECT georef.add_way_name();", "", PGRES_TUPLES_OK));
+    /// Fusion ways by name and admin
+    PQclear(this->lotus.exec("SELECT georef.fusion_ways_by_admin_name();", "", PGRES_TUPLES_OK));
+    /// Moving admin and way relations, so that the pair (admin, way) is unique
+    PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
+    /// Update way_id in table edge
+    PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
+    /// Add ways not in fusion table
+    PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
+    /// Add ways where admin is nil
+    PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
+    /// Remplace data in table 'rel_way_admin' by 'tmp_rel_way_admin'
+    PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
+    /// Remove duplicate data in table of ways
+    PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
+    /// Update way_id in housenumber table
+    PQclear(this->lotus.exec("SELECT georef.update_house_number();", "", PGRES_TUPLES_OK));
+    /// Update ways name
+    PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
+    /// Update of admin cordinates  : Calcul of barycentre
+    PQclear(this->lotus.exec("SELECT navitia.update_admin_coord();", "", PGRES_TUPLES_OK));
+    /// Relation between admins
+    PQclear(this->lotus.exec("SELECT navitia.match_admin_to_admin();", "", PGRES_TUPLES_OK));
 }
 
 void EdPersistor::insert_admins(const ed::Georef& data){
@@ -206,10 +235,13 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
 void EdPersistor::build_relation(){
     PQclear(this->lotus.exec("SELECT georef.match_stop_area_to_admin()", "", PGRES_TUPLES_OK));
     PQclear(this->lotus.exec("SELECT georef.match_stop_point_to_admin();", "", PGRES_TUPLES_OK));
+    PQclear(this->lotus.exec("SELECT georef.match_poi_to_admin();", "", PGRES_TUPLES_OK));
 }
+
 void EdPersistor::clean_georef(){
     PQclear(this->lotus.exec("truncate georef.node, georef.house_number, navitia.admin, georef.way, navitia.poi_type CASCADE;"));
 }
+
 void EdPersistor::clean_db(){
     PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, navitia.alias,navitia.synonym,"
                             "navitia.commercial_mode, navitia.vehicle_properties, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));
