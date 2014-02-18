@@ -122,6 +122,7 @@ void EdPersistor::insert_nodes(const ed::Georef& data){
         if(itm.second->is_used){
             this->lotus.insert({std::to_string(itm.second->id), this->to_geografic_point(itm.second->coord)});
         }
+
      }
     this->lotus.finish_bulk_insert();
 }
@@ -276,13 +277,12 @@ void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
 }
 
 void EdPersistor::insert_commercial_modes(const std::vector<types::CommercialMode*>& commercial_modes){
-    this->lotus.prepare_bulk_insert("navitia.commercial_mode", {"id", "uri",
-            "external_code", "name"});
+    this->lotus.prepare_bulk_insert("navitia.commercial_mode",
+            {"id", "uri","name"});
     for(types::CommercialMode* mode : commercial_modes){
         std::vector<std::string> values;
         values.push_back(std::to_string(mode->idx));
         values.push_back(navitia::base64_encode(mode->uri));
-        values.push_back(mode->uri);
         values.push_back(mode->name);
         this->lotus.insert(values);
     }
@@ -290,12 +290,12 @@ void EdPersistor::insert_commercial_modes(const std::vector<types::CommercialMod
 }
 
 void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>& physical_modes){
-    this->lotus.prepare_bulk_insert("navitia.physical_mode", {"id", "uri", "external_code", "name"});
+    this->lotus.prepare_bulk_insert("navitia.physical_mode",
+            {"id", "uri", "name"});
     for(types::PhysicalMode* mode : physical_modes){
         std::vector<std::string> values;
         values.push_back(std::to_string(mode->idx));
         values.push_back(navitia::base64_encode(mode->uri));
-        values.push_back(mode->uri);
         values.push_back(mode->name);
         this->lotus.insert(values);
     }
@@ -303,14 +303,13 @@ void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>&
 }
 
 void EdPersistor::insert_companies(const std::vector<types::Company*>& companies){
-    this->lotus.prepare_bulk_insert("navitia.company", {"id", "uri", "external_code",
+    this->lotus.prepare_bulk_insert("navitia.company", {"id", "uri",
             "name", "comment", "address_name", "address_number",
             "address_type_name", "phone_number","mail", "website", "fax"});
     for(types::Company* company : companies){
         std::vector<std::string> values;
         values.push_back(std::to_string(company->idx));
         values.push_back(navitia::base64_encode(company->uri));
-        values.push_back(company->uri);
         values.push_back(company->name);
         values.push_back(company->comment);
         values.push_back(company->address_name);
@@ -327,12 +326,11 @@ void EdPersistor::insert_companies(const std::vector<types::Company*>& companies
 
 void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& contributors){
     this->lotus.prepare_bulk_insert("navitia.contributor",
-            {"id", "uri", "external_code", "name"});
+            {"id", "uri", "name"});
     for(types::Contributor* contributor : contributors){
         std::vector<std::string> values;
         values.push_back(std::to_string(contributor->idx));
         values.push_back(navitia::base64_encode(contributor->uri));
-        values.push_back(contributor->uri);
         values.push_back(contributor->name);
         this->lotus.insert(values);
     }
@@ -553,14 +551,13 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
 
 void EdPersistor::insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_patterns){
     this->lotus.prepare_bulk_insert("navitia.journey_pattern",
-            {"id", "uri", "external_code", "name", "comment", "physical_mode_id",
+            {"id", "uri", "name", "comment", "physical_mode_id",
             "is_frequence", "route_id"});
 
     for(types::JourneyPattern* jp : journey_patterns){
         std::vector<std::string> values;
         values.push_back(std::to_string(jp->idx));
         values.push_back(navitia::base64_encode(jp->uri));
-        values.push_back(jp->uri);
         values.push_back(jp->name);
         values.push_back(jp->comment);
         if (jp->physical_mode != NULL){
@@ -637,14 +634,13 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
 
 void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points){
     this->lotus.prepare_bulk_insert("navitia.journey_pattern_point",
-            {"id", "uri", "external_code", "name", "comment", "\"order\"",
+            {"id", "uri", "name", "comment", "\"order\"",
             "stop_point_id", "journey_pattern_id"});
 
     for(types::JourneyPatternPoint* jpp : journey_pattern_points){
         std::vector<std::string> values;
         values.push_back(std::to_string(jpp->idx));
         values.push_back(navitia::base64_encode(jpp->uri));
-        values.push_back(jpp->uri);
         values.push_back(jpp->name);
         values.push_back(jpp->comment);
         values.push_back(std::to_string(jpp->order));

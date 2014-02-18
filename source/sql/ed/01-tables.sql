@@ -163,7 +163,6 @@ CREATE TABLE IF NOT EXISTS navitia.validity_pattern (
 CREATE TABLE IF NOT EXISTS navitia.physical_mode (
     id BIGINT PRIMARY KEY,
     uri TEXT NOT NULL,
-    external_code TEXT NOT NULL,
     name TEXT NOT NULL
 );
 
@@ -171,14 +170,12 @@ CREATE TABLE IF NOT EXISTS navitia.physical_mode (
 CREATE TABLE IF NOT EXISTS navitia.commercial_mode (
     id BIGINT PRIMARY KEY,
     uri TEXT NOT NULL,
-    external_code TEXT NOT NULL,
     name TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS navitia.contributor (
     id BIGINT PRIMARY KEY,
     uri TEXT NOT NULL,
-    external_code TEXT NOT NULL,
     name TEXT NOT NULL
 );
 
@@ -187,7 +184,6 @@ CREATE TABLE IF NOT EXISTS navitia.company (
     comment TEXT,
     name TEXT NOT NULL,
     uri TEXT NOT NULL,
-    external_code TEXT NOT NULL,
     address_name TEXT,
     address_number TEXT,
     address_type_name TEXT,
@@ -238,7 +234,6 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
     physical_mode_id BIGINT NOT NULL REFERENCES navitia.physical_mode,
     comment TEXT,
     uri TEXT NOT NULL,
-    external_code TEXT NOT NULL,
     name TEXT NOT NULL,
     is_frequence BOOLEAN NOT NULL
 );
@@ -256,7 +251,6 @@ BEGIN
             physical_mode_id BIGINT NOT NULL REFERENCES navitia.physical_mode,
             comment TEXT,
             uri TEXT NOT NULL,
-            external_code TEXT NOT NULL,
             name TEXT NOT NULL,
             is_frequence BOOLEAN NOT NULL
         );
@@ -360,7 +354,6 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern_point (
     journey_pattern_id BIGINT NOT NULL REFERENCES navitia.journey_pattern,
     name TEXT NOT NULL,
     uri TEXT NOT NULL,
-    external_code TEXT NOT NULL,
     "order" INTEGER NOT NULL,
     comment TEXT,
     stop_point_id BIGINT NOT NULL REFERENCES navitia.stop_point
