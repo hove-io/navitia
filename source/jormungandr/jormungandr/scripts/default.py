@@ -31,6 +31,7 @@ class Script(object):
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
                      "status", "load", "networks", "place_uri", "disruptions"]
+        self.functional_params = {}
 
     def __pagination(self, request, ressource_name, resp):
         pagination = resp.pagination
@@ -223,6 +224,10 @@ class Script(object):
         """ Check if some particular journeys are missing, and return:
                 if it is the case a modified version of the request to be rerun
                 else None"""
+        if not "cheap_journey" in self.functional_params \
+            or self.functional_params["cheap_journey"] != "True":
+            return
+
         #we want to check if all journeys use the TER network
         #if it is true, we want to call kraken and forbid this network
         ter_uris = ["network:TER", "network:SNCF"]
@@ -299,7 +304,6 @@ class Script(object):
         if new_request:
             #we have to call kraken again with a modified version of the request
             new_resp = self.call_kraken(new_request, instance)
-            print "we have {} new journeys for modified request {}".format(len(new_resp.journeys), new_request)
             self.merge_response(resp, new_resp)
 
         #we qualify the journeys
