@@ -327,6 +327,9 @@ class Script(object):
     def fill_journeys(self, pb_req, request, instance):
         resp = self.get_journey(pb_req, instance, request)
 
+        if len(resp.journeys) == 0:
+            return resp  # no journeys found, useless to call kraken again
+
         while request["count"] > len(resp.journeys):
             temp_datetime = None
             if request['clockwise']:
@@ -356,8 +359,12 @@ class Script(object):
             pb_req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
             tmp_resp = self.get_journey(pb_req, instance, request)
 
+            if len(tmp_resp.journeys) == 0:
+                break  #no more journeys found, we stop
+
             self.merge_response(resp, tmp_resp)
 
+        self.delete_journeys(resp, request)  # last filter
         return resp
 
     def merge_response(self, initial_response, new_response):
