@@ -44,7 +44,8 @@ struct Message;
     FUN(JourneyPatternPoint, journey_pattern_points)\
     FUN(Company, companies)\
     FUN(Route, routes)\
-    FUN(Contributor, contributors)
+    FUN(Contributor, contributors)\
+    FUN(Calendar, calendars)
 
 enum class Type_e {
     ValidityPattern                 = 0,
@@ -72,7 +73,8 @@ enum class Type_e {
     Unknown                         = 20,
     Way                             = 21,
     Admin                           = 22,
-    POIType                         = 23
+    POIType                         = 23,
+    Calendar                        = 24
 };
 
 enum class Mode_e{
@@ -257,6 +259,11 @@ struct HasMessages{
 
 };
 
+enum class exception_type {
+    add = 0,
+    sub
+};
+
 /** Coordonnées géographiques en WGS84
  */
 struct GeographicalCoord{
@@ -399,7 +406,26 @@ struct Connection: public Header, hasProperties{
 typedef Connection<JourneyPatternPoint>  JourneyPatternPointConnection;
 typedef Connection<StopPoint>  StopPointConnection;
 
+struct ExceptionDate {
+    exception_type type;
+    boost::gregorian::date date;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & type & date;
+    }
+};
 
+struct Calendar : public Nameable, public Header {
+    const static Type_e type = Type_e::Calendar;
+    typedef std::bitset<7> Week;
+    Week week_pattern;
+    std::vector<boost::posix_time::time_period> active_periods;
+    std::vector<ExceptionDate> exceptions;
+    bool operator<(const Calendar & other) const { return this < &other; }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & week_pattern & active_periods & exceptions;
+    }
+};
 
 struct StopArea : public Header, Nameable, hasProperties, HasMessages{
     const static Type_e type = Type_e::StopArea;
@@ -513,6 +539,7 @@ struct Line : public Header, Nameable, HasMessages{
 
     std::vector<Route*> route_list;
     std::vector<PhysicalMode*> physical_mode_list;
+    std::vector<Calendar*> calendar_list;
 
     Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
@@ -566,6 +593,12 @@ struct JourneyPattern : public Header, Nameable{
 
 };
 
+struct AssociatedCalendar {
+    Calendar* calendar;
+
+    std::vector<ExceptionDate> exceptions;
+};
+
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages{
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
@@ -574,6 +607,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
+    AssociatedCalendar associated_calendar;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;
