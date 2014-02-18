@@ -90,7 +90,7 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.pt_data.journey_pattern_point_connections.size());
     LOG4CPLUS_INFO(logger, "alias : " << data.geo_ref.alias.size());
     LOG4CPLUS_INFO(logger, "synonyms : " << data.geo_ref.synonymes.size());
-	LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare.fare_map.size());
+    LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare.fare_map.size());
     LOG4CPLUS_INFO(logger, "fare transitions: " << data.fare.nb_transitions());
     LOG4CPLUS_INFO(logger, "fare od: " << data.fare.od_tickets.size());
 
