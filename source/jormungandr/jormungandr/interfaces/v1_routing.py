@@ -134,6 +134,8 @@ def v1_routing(api):
     api.add_resource(Journeys.Journeys,
                      region + '<uri:uri>/journeys',
                      coord + '<uri:uri>/journeys',
+                     region + 'journeys',
+                     coord + 'journeys',
                      '/v1/journeys',
                      endpoint='v1.journeys'
                      )
