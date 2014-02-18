@@ -1,3 +1,9 @@
+navitia2 (0.82.3) unstable; urgency=low
+
+ * Temporary delete configuration of auth_ttl
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 18 Feb 2014 10:02:28 +0100
+
 navitia2 (0.82.2) unstable; urgency=low
 
  * Journeys: Correct V0
@@ -6,7 +12,7 @@ navitia2 (0.82.2) unstable; urgency=low
 
 navitia2 (0.82.1) unstable; urgency=low
 
- * Kraken : Change output dates format 
+ * Kraken : Change output dates format
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 17 Feb 2014 12:02:56 +0100
 
@@ -22,19 +28,19 @@ navitia2 (0.82.0) unstable; urgency=low
 
 navitia2 (0.81.4) unstable; urgency=low
 
- * hotfix for sql functions 
+ * hotfix for sql functions
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 11:02:51 +0100
 
 navitia2 (0.81.3) unstable; urgency=low
 
- * Hotfix for stop_point projection 
+ * Hotfix for stop_point projection
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 09:02:55 +0100
 
 navitia2 (0.81.1) unstable; urgency=low
 
- * Hotfix for date format in protobuff 
+ * Hotfix for date format in protobuff
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 17:02:50 +0100
 
