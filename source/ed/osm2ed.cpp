@@ -77,7 +77,7 @@ void Visitor::relation_callback(uint64_t osmid, const CanalTP::Tags & tags, cons
 
 void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
     if(tags.find("addr:housenumber") != tags.end()){
-        OSMHouseNumber osm_hn;
+        ed::types::HouseNumber osm_hn;
         osm_hn.number = tags.at("addr:housenumber");
         this->housenumbers[osmid] = osm_hn;
 
@@ -295,7 +295,7 @@ void Visitor::insert_admin(){
 void Visitor::insert_poitypes(){
     this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(auto pt : poi_types){
-        this->lotus.insert({std::to_string(pt.second.idx), pt.second.uri, pt.second.name});
+        this->lotus.insert({std::to_string(pt.second.id), pt.first, pt.second.name});
     }
     lotus.finish_bulk_insert();
 }
@@ -308,7 +308,8 @@ void Visitor::insert_pois(){
             Node n = nodes.at(poi.first);
             count++;
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->lotus.insert({std::to_string(count),std::to_string(poi.second.weight), point, poi.second.name, poi.second.uri,std::to_string(poi.second.poitype_idx)});
+            this->lotus.insert({std::to_string(count),std::to_string(poi.second.weight),
+                               point, poi.second.name, std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
         }catch(...){
             std::cout << "Attention, le noued  : [" << poi.first << " est introuvable]." << std::endl;
         }
@@ -355,12 +356,12 @@ void Visitor::build_relation(){
 }
 
 void Visitor::fill_PoiTypes(){
-    poi_types["college"] = OSMPOIType(0, "college", "école");
-    poi_types["university"] = OSMPOIType(1, "university", "université");
-    poi_types["theatre"] = OSMPOIType(2, "theatre", "théâtre");
-    poi_types["hospital"] = OSMPOIType(3, "hospital", "hôpital");
-    poi_types["post_office"] = OSMPOIType(4, "post_office", "bureau de poste");
-    poi_types["bicycle_rental"] = OSMPOIType(5, "bicycle_rental", "station vls", false);
+    poi_types["college"] = ed::types::PoiType(0,  "école");
+    poi_types["university"] = ed::types::PoiType(1, "université");
+    poi_types["theatre"] = ed::types::PoiType(2, "théâtre");
+    poi_types["hospital"] = ed::types::PoiType(3, "hôpital");
+    poi_types["post_office"] = ed::types::PoiType(4, "bureau de poste");
+    poi_types["bicycle_rental"] = ed::types::PoiType(5, "station vls");
 }
 
 void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
@@ -368,9 +369,8 @@ void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
         std::string value = tags.at("amenity");
         auto it = poi_types.find(value);
         if(it != poi_types.end()){
-            OSMPOI poi;
-            poi.poitype_idx = it->second.idx;
-            poi.uri = boost::lexical_cast<std::string>(osmid);
+            ed::types::Poi poi;
+            poi.poi_type = &it->second;
             if(tags.find("name") != tags.end()){
                 poi.name = tags.at("name");
             }

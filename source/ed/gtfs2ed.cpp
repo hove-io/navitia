@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "ed/connectors/gtfs_parser.h"
-#include "external_parser.h"
+#include "ed/connectors/external_parser.h"
 
 #include "utils/timer.h"
 
@@ -12,7 +12,6 @@
 #include <boost/filesystem.hpp>
 #include "utils/exception.h"
 #include "ed_persistor.h"
-#include "connectors/extcode2uri.h"
 #include "utils/init.h"
 
 namespace po = boost::program_options;
