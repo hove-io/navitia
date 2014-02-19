@@ -269,7 +269,7 @@ class add_journey_pagination(object):
                 args["datetime"] = datetime_before.strftime(f_datetime)
                 args["datetime_represents"] = "arrival"
                 if "region" in kwargs:
-                    args["region"] = str(kwargs["region"])
+                    args["region"] = kwargs["region"]
                 objects[0]["links"].append({
                     "href": url_for("v1.journeys", _external=True, **args),
                     "templated": False,
@@ -293,6 +293,8 @@ class add_journey_pagination(object):
                     args[item[0]] = item[1]
                 args["datetime"] = datetime_first.strftime(f_datetime)
                 args["datetime_represents"] = "departure"
+                if "region" in kwargs:
+                    args["region"] = kwargs["region"]
                 objects[0]["links"].append({
                     "href": url_for("v1.journeys", _external=True, **args),
                     "templated": False,
