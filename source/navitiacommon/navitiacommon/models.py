@@ -49,10 +49,10 @@ class User(db.Model):
                                               (Key.valid_until > valid_until)
                                               | (Key.valid_until == None))
             if res:
-                cache.set(token, (res.first(),), app.config['AUTH_CACHE_TTL'])
+                cache.set(token, (res.first(),), 5000)
                 return res.first()
             else:
-                cache.set(token, (None,), app.config['AUTH_CACHE_TTL'])
+                cache.set(token, (None,), 5000)
                 return None
         else:
             return cache_res[0]
@@ -72,7 +72,7 @@ class User(db.Model):
         res = cache.get(key)
         if res is None:
             res = self._has_access(instance_name, api_name)
-            cache.set(key, res, app.config['AUTH_CACHE_TTL'])
+            cache.set(key, res, 5000)
         return res
 
 
