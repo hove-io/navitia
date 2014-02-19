@@ -823,15 +823,19 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
     pqxx::result result = work.exec(request);
     uint64_t idx = 0;
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        this->node_map[const_it["id"].as<uint64_t>()] = std::numeric_limits<uint64_t>::max();
-        if(! binary_search(this->node_to_ignore.begin(), this->node_to_ignore.end(), const_it["id"].as<uint64_t>())){
-            navitia::georef::Vertex v;
-            v.coord.set_lon(const_it["lon"].as<double>());
-            v.coord.set_lat(const_it["lat"].as<double>());
-            boost::add_vertex(v, data.geo_ref.graph);
-            this->node_map[const_it["id"].as<uint64_t>()] = idx;
-            idx++;
+        auto id = const_it["id"].as<uint64_t>();
+
+        if (node_to_ignore.find(id) != node_to_ignore.end()) {
+            this->node_map[id] = std::numeric_limits<uint64_t>::max();
+            continue;
         }
+
+        navitia::georef::Vertex v;
+        v.coord.set_lon(const_it["lon"].as<double>());
+        v.coord.set_lat(const_it["lat"].as<double>());
+        boost::add_vertex(v, data.geo_ref.graph);
+        this->node_map[id] = idx;
+        idx++;
     }
     data.geo_ref.init();
 }

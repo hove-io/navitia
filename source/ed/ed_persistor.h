@@ -22,7 +22,8 @@ struct EdPersistor{
     void persist(const ed::Georef& data);
     void build_ways();
     void clean_georef();
-    void build_relation();
+    void build_stop_admin_relation();
+    void build_poi_admin_relation();
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
