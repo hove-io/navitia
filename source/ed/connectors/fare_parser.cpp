@@ -82,7 +82,7 @@ void fare_parser::load_prices() {
 
         fa::Ticket dated_ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5));
         if (row.size() > 7) {
-            dated_ticket.currency = row[8];
+            dated_ticket.currency = row[7];
         }
         data.fare_map[row.at(0)].add(start, end, dated_ticket);
     }
