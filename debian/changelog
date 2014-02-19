@@ -1,3 +1,9 @@
+navitia2 (0.82.4) unstable; urgency=low
+
+ * Fare hotfix 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 19 Feb 2014 15:02:22 +0100
+
 navitia2 (0.82.3) unstable; urgency=low
 
  * Temporary delete configuration of auth_ttl
