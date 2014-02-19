@@ -52,7 +52,7 @@ DO
 $BODY$
 DECLARE
     m varchar;
-    arr varchar[] = array['network', 'line', 'route', 'stop_area', 'stop_point'];
+    arr varchar[] = array['network', 'line', 'route', 'stop_area', 'stop_point', 'vehicle_journey'];
 BEGIN
         FOREACH m IN ARRAY arr
         LOOP
