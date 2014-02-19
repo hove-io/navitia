@@ -40,7 +40,7 @@ class TimeTables(Resource):
     def get(self, region):
         args = self.parsers["get"].parse_args()
         args["interface_version"] = 0
-        response = i_manager.dispatch(args, region, self.api)
+        response = i_manager.dispatch(args, self.api, instance_name=region)
         return protobuf_to_dict(response, use_enum_labels=True), 200
 
 

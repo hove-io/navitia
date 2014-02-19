@@ -197,7 +197,8 @@ CREATE TABLE IF NOT EXISTS navitia.network (
     id BIGINT PRIMARY KEY,
     comment TEXT,
     name TEXT NOT NULL,
-    uri TEXT NOT NULL
+    uri TEXT NOT NULL,
+    external_code TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS navitia.line (
@@ -206,6 +207,7 @@ CREATE TABLE IF NOT EXISTS navitia.line (
     commercial_mode_id BIGINT NOT NULL REFERENCES navitia.commercial_mode,
     comment TEXT,
     uri TEXT NOT NULL,
+    external_code TEXT NOT NULL,
     name TEXT NOT NULL,
     code TEXT,
     color TEXT
@@ -222,7 +224,8 @@ CREATE TABLE IF NOT EXISTS navitia.route (
     line_id BIGINT NOT NULL REFERENCES navitia.line,
     comment TEXT,
     name TEXT NOT NULL,
-    uri TEXT NOT NULL
+    uri TEXT NOT NULL,
+    external_code TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
@@ -287,6 +290,7 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     company_id BIGINT NOT NULL REFERENCES navitia.company,
     journey_pattern_id BIGINT NOT NULL REFERENCES navitia.journey_pattern,
     uri TEXT NOT NULL,
+    external_code TEXT NOT NULL,
     comment TEXT,
     odt_message TEXT, -- Utiliser pour stocker le message TAD
     name TEXT NOT NULL,
@@ -301,6 +305,7 @@ CREATE TABLE IF NOT EXISTS navitia.stop_area (
     id BIGINT PRIMARY KEY,
     properties_id BIGINT REFERENCES navitia.properties,
     uri TEXT NOT NULL,
+    external_code TEXT NOT NULL,
     name TEXT NOT NULL,
     coord GEOGRAPHY(POINT, 4326),
     comment TEXT
@@ -316,6 +321,7 @@ CREATE TABLE IF NOT EXISTS navitia.stop_point (
     id BIGINT PRIMARY KEY,
     properties_id BIGINT REFERENCES navitia.properties,
     uri TEXT NOT NULL,
+    external_code TEXT NOT NULL,
     coord GEOGRAPHY(POINT, 4326),
     fare_zone INTEGER,
     name TEXT NOT NULL,

@@ -50,7 +50,8 @@ class Places(ResourceUri):
         args = self.parsers["get"].parse_args()
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
-        response = i_manager.dispatch(args, self.region, "places")
+        response = i_manager.dispatch(args, "places",
+                                      instance_name=self.region)
         return response, 200
 
 
@@ -73,7 +74,8 @@ class PlaceUri(ResourceUri):
             args["uri"] = "admin:" + id.split(":")[-1]
         if not "uri" in args.keys():
             args["uri"] = id
-        response = i_manager.dispatch(args, self.region, "place_uri")
+        response = i_manager.dispatch(args, "place_uri",
+                                      instance_name=self.region)
         return response, 200
 
 place_nearby = deepcopy(place)
@@ -139,6 +141,6 @@ class PlacesNearby(ResourceUri):
         else:
             abort(404)
         args["filter"] = args["filter"].replace(".id", ".uri")
-        response = i_manager.dispatch(args, self.region,
-                                      "places_nearby")
+        response = i_manager.dispatch(args, "places_nearby",
+                                      instance_name=self.region)
         return response, 200

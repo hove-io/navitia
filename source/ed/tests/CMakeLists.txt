@@ -15,10 +15,6 @@ target_link_libraries(adapted_test ed fare types connectors  pq pqxx data georef
 
 ADD_TEST(adapted_test ${EXECUTABLE_OUTPUT_PATH}/adapted_test --report_level=no)
 
-add_executable(extcode2uri_test extcode2uri_test.cpp)
-target_link_libraries(extcode2uri_test ed connectors types utils hiredis ${BOOST_LIBS} log4cplus)
-ADD_TEST(extcode2uri_test ${EXECUTABLE_OUTPUT_PATH}/extcode2uri_test --report_level=no)
-
 add_executable(fate_parser_test fare_parser_test.cpp)
 target_link_libraries(fate_parser_test connectors fare utils ${BOOST_LIBS} log4cplus)
 ADD_TEST(fate_parser_test ${EXECUTABLE_OUTPUT_PATH}/fate_parser_test --report_level=no)

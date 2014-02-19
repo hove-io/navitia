@@ -317,7 +317,8 @@ void Visitor::insert_pois(){
 }
 
 void Visitor::build_relation(){
-    this->persistor.build_relation();
+    this->persistor.build_stop_admin_relation();
+    this->persistor.build_poi_admin_relation();
     PQclear(this->persistor.lotus.exec("SELECT georef.match_way_to_admin();", "", PGRES_TUPLES_OK));
 }
 
