@@ -83,7 +83,7 @@ def load_instance_config(instance_name):
     ini_file = '%s/%s.ini' % \
                (current_app.config['INSTANCES_DIR'], instance_name)
     if not os.path.isfile(ini_file):
-        raise ValueError("File doesn't exists or is not a file %s" % ini_file) 
+        raise ValueError("File doesn't exists or is not a file %s" % ini_file)
 
     config = ConfigObj(ini_file, configspec=confspec, stringify=True)
     val = Validator()
@@ -128,3 +128,23 @@ def build_error(config, validate_result):
             error = 'Missing value or section.'
         result += section_string + ' => ' + str(error) + "\n"
     return result
+
+def get_instance_logger(instance):
+    """
+return the logger for this instance
+all log will be in a file specific to this instance
+"""
+    logger = logging.getLogger('tyr.{0}'.format(instance.name))
+    #does not add the handler at each time
+    if not logger.handlers:
+        log_dir = os.path.dirname(current_app.config['LOG_FILENAME'])
+        log_filename = log_dir + '/{0}.log'.format(instance.name)
+        logger.setLevel(current_app.config["LOG_LEVEL"])
+        handler = logging.FileHandler(log_filename)
+        log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
+                ' %(message)s'
+        handler.setFormatter(logging.Formatter(log_format))
+        logger.addHandler(handler)
+
+    logger.propagate = False
+    return logger
