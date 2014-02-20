@@ -84,3 +84,17 @@ BEGIN
         RAISE NOTICE 'database already in version 4, skipping';
     END CASE;
 END$$;
+
+DO $$
+    DECLARE db_version int;
+BEGIN
+    db_version := coalesce((select version from public.database_version limit 1), 0);
+    CASE WHEN db_version < 5
+        THEN
+	insert into navitia.exception_type values (0, 'sub'), 
+		(1, 'add');
+        update public.database_version set version=5;
+    ELSE
+        RAISE NOTICE 'database already in version 5, skipping';
+    END CASE;
+END$$;

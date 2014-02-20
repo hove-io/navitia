@@ -388,7 +388,53 @@ CREATE TABLE IF NOT EXISTS navitia.stop_time (
     properties_id BIGINT REFERENCES navitia.properties
 );
 
+CREATE TABLE IF NOT EXISTS navitia.week_pattern (
+    id BIGSERIAL PRIMARY KEY,
+	monday BOOLEAN NOT NULL,
+	tuesday BOOLEAN NOT NULL,
+	wednesday BOOLEAN NOT NULL,
+	thursday BOOLEAN NOT NULL,
+	friday BOOLEAN NOT NULL,
+	saturday BOOLEAN NOT NULL,
+	sunday BOOLEAN NOT NULL
+);
 
+CREATE TABLE IF NOT EXISTS navitia.exception_type (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS navitia.calendar (
+    id BIGSERIAL PRIMARY KEY,
+    uri TEXT NOT NULL,
+    name TEXT NOT NULL,
+    week_pattern_id BIGINT NOT NULL REFERENCES navitia.week_pattern
+);
+
+CREATE TABLE IF NOT EXISTS navitia.exception_date (
+    id BIGSERIAL PRIMARY KEY,
+    datetime DATE NOT NULL,
+    exception_type_id BIGINT NOT NULL REFERENCES navitia.exception_type,
+    calendar_id BIGINT NOT NULL REFERENCES navitia.calendar
+);
+
+CREATE TABLE IF NOT EXISTS navitia.period (
+    id BIGSERIAL PRIMARY KEY,
+    begin_date DATE NOT NULL,
+    end_date DATE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS navitia.rel_calendar_line (
+    calendar_id BIGINT NOT NULL REFERENCES navitia.calendar,
+    line_id BIGINT NOT NULL REFERENCES navitia.line,
+    CONSTRAINT rel_calendar_line_pk PRIMARY KEY (calendar_id, line_id)
+);
+
+CREATE TABLE IF NOT EXISTS navitia.rel_calendar_period (
+    calendar_id BIGINT NOT NULL REFERENCES navitia.calendar,
+    period_id BIGINT NOT NULL REFERENCES navitia.period,
+    CONSTRAINT rel_calendar_period_pk PRIMARY KEY (calendar_id, period_id)
+);
 
 -- Schéma Georef
 
