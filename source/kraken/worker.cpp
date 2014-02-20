@@ -381,7 +381,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 }
 
 
-pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
+pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     std::vector<std::string> forbidden_uri;
     for(int i = 0; i < request.forbidden_uri_size(); ++i)
