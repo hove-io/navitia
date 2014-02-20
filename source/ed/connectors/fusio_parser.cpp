@@ -649,7 +649,7 @@ void HPeriodFusioHandler::init(Data&){
 
 void HPeriodFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(! is_first_line && ! has_col(calendar_c, row)) {
-        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename <<
                         "  file has more than one period and no calendar_id column");
         throw InvalidHeaders(csv.filename);
     }
@@ -657,22 +657,46 @@ void HPeriodFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
     if(cal == gtfs_data.calendars_map.end()){
         LOG4CPLUS_WARN(logger, "HPeriodFusioHandler : Impossible to find the calendar " << row[calendar_c]);
     }else{
-        types::Period* period = new types::Period();
-        period->id = data.periods.size() + 1;
+        boost::gregorian::date begin_date(boost::gregorian::not_a_date_time);
+        boost::gregorian::date end_date(boost::gregorian::not_a_date_time);
+
         try{
-            period->begin_date = boost::gregorian::from_undelimited_string(row[begin_c]);
-        }catch(...){
-            //
+            begin_date = boost::gregorian::from_undelimited_string(row[begin_c]);
+        }catch(boost::bad_lexical_cast ) {
+            LOG4CPLUS_WARN(logger, "Impossible to parse the begin date for " << row[begin_c]);
+        }catch(boost::gregorian::bad_day_of_month) {
+            LOG4CPLUS_WARN(logger, "bad_day_of_month : Impossible to parse the begin date for " << row[begin_c]);
+        }catch(boost::gregorian::bad_day_of_year) {
+            LOG4CPLUS_WARN(logger, "bad_day_of_year : Impossible to parse the begin date for " << row[begin_c]);
+        }catch(boost::gregorian::bad_month) {
+            LOG4CPLUS_WARN(logger, "bad_month : Impossible to parse the begin date for " << row[begin_c]);
+        }catch(boost::gregorian::bad_year) {
+            LOG4CPLUS_WARN(logger, "bad_year : Impossible to parse the begin date for " << row[begin_c]);
         }
 
         try{
-            period->end_date = boost::gregorian::from_undelimited_string(row[end_c]);
-        }catch(...){
-            //
+            end_date = boost::gregorian::from_undelimited_string(row[end_c]);
+        }catch(boost::bad_lexical_cast ) {
+            LOG4CPLUS_WARN(logger, "Impossible to parse the end date for " << row[end_c]);
+        }catch(boost::gregorian::bad_day_of_month) {
+            LOG4CPLUS_WARN(logger, "bad_day_of_month : Impossible to parse the end date for " << row[end_c]);
+        }catch(boost::gregorian::bad_day_of_year) {
+            LOG4CPLUS_WARN(logger, "bad_day_of_year : Impossible to parse the end date for " << row[end_c]);
+        }catch(boost::gregorian::bad_month) {
+            LOG4CPLUS_WARN(logger, "bad_month : Impossible to parse the end date for " << row[end_c]);
+        }catch(boost::gregorian::bad_year) {
+            LOG4CPLUS_WARN(logger, "bad_year : Impossible to parse the end date for " << row[end_c]);
         }
-        period->idx = data.periods.size() + 1;
-        data.periods.push_back(period);
-        cal->second->period_list.push_back(period);
+
+        if((!begin_date.is_not_a_date()) && (!end_date.is_not_a_date())){
+            types::Period* period = new types::Period();
+            period->idx = data.periods.size() + 1;
+            period->id = data.periods.size() + 1;
+            period->begin_date = begin_date;
+            period->end_date = end_date;
+            data.periods.push_back(period);
+            cal->second->period_list.push_back(period);
+        }
     }
 }
 
@@ -726,10 +750,29 @@ void HExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is
     if(cal == gtfs_data.calendars_map.end()){
         LOG4CPLUS_WARN(logger, "HExceptionDatesFusioHandler : Impossible to find the calendar " << row[calendar_c]);
     }else{
-        navitia::type::ExceptionDate exception_date;
-        exception_date.type = static_cast<navitia::type::ExceptionDate::ExceptionType>(boost::lexical_cast<int>(row[type_c]));
-        exception_date.date = boost::gregorian::from_undelimited_string(row[datetime_c]);
-        cal->second->exceptions.push_back(exception_date);
+        if((row[type_c] == "0") || (row[type_c] == "1")){
+            boost::gregorian::date date(boost::gregorian::not_a_date_time);
+            try{
+                date = boost::gregorian::from_undelimited_string(row[datetime_c]);
+            }catch(boost::bad_lexical_cast ) {
+                LOG4CPLUS_WARN(logger, "Impossible to parse the exception date for " << row[datetime_c]);
+            }catch(boost::gregorian::bad_day_of_month) {
+                LOG4CPLUS_WARN(logger, "bad_day_of_month : Impossible to parse the exception date for " << row[datetime_c]);
+            }catch(boost::gregorian::bad_day_of_year) {
+                LOG4CPLUS_WARN(logger, "bad_day_of_year : Impossible to parse the exception date for " << row[datetime_c]);
+            }catch(boost::gregorian::bad_month) {
+                LOG4CPLUS_WARN(logger, "bad_month : Impossible to parse the exception date for " << row[datetime_c]);
+            }catch(boost::gregorian::bad_year) {
+                LOG4CPLUS_WARN(logger, "bad_year : Impossible to parse the exception date for " << row[datetime_c]);
+            }
+            if(!date.is_not_a_date()){
+                navitia::type::ExceptionDate exception_date;
+                exception_date.type = static_cast<navitia::type::ExceptionDate::ExceptionType>(boost::lexical_cast<int>(row[type_c]));
+                cal->second->exceptions.push_back(exception_date);
+            }
+        }else{
+            LOG4CPLUS_WARN(logger, "HExceptionDatesFusioHandler : unknown type " << row[type_c]);
+        }
     }
 }
 
