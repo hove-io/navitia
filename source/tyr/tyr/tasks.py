@@ -1,6 +1,6 @@
 from celery import chain
 from celery.signals import task_postrun
-from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed
+from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed, fare2ed
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from flask import current_app
 import glob
