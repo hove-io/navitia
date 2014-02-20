@@ -38,6 +38,7 @@ struct GtfsData {
     std::unordered_map<std::string, std::string> odt_conditions_map;
     std::unordered_map<std::string, navitia::type::hasProperties> hasProperties_map;
     std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
+    std::unordered_map<std::string, ed::types::Calendar*> calendars_map;
 
     boost::gregorian::date_period production_date;///<Période de validité des données
 };

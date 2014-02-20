@@ -58,14 +58,21 @@ struct JourneyPatternPointConnection: public Header {
     bool operator<(const JourneyPatternPointConnection &other) const;
 };
 
+struct Period : public Header {
+    boost::gregorian::date begin_date;
+    boost::gregorian::date end_date;
+};
+
 struct Calendar : public Nameable, public Header {
     const static nt::Type_e type = nt::Type_e::Calendar;
     typedef std::bitset<7> Week;
     Week week_pattern;
-    std::vector<boost::posix_time::time_period> active_periods;
+    std::vector<Line*> line_list;
+    std::vector<Period*> period_list;
     std::vector<navitia::type::ExceptionDate> exceptions;
 
     navitia::type::Calendar* get_navitia_type() const;
+    navitia::type::idx_t to_ulog() const{ return week_pattern.to_ulong();}
 
     Calendar() {}
 
