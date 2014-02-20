@@ -712,7 +712,7 @@ void HCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool is_
 
 void HExceptionDatesFusioHandler::init(Data &){
     calendar_c = csv.get_pos_col("calendar_id");
-    datetime_c = csv.get_pos_col("datetime");
+    datetime_c = csv.get_pos_col("date");
     type_c = csv.get_pos_col("type");
 }
 

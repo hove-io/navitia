@@ -223,7 +223,7 @@ struct HExceptionDatesFusioHandler : public GenericHandler {
     int calendar_c, datetime_c, type_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"calendar_id", "datetime", "type"}; }
+    const std::vector<std::string> required_headers() const { return {"calendar_id", "date", "type"}; }
 };
 
 struct HCalendarLineFusioHandler : public GenericHandler {

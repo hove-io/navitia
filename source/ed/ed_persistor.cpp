@@ -277,14 +277,24 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
     LOG4CPLUS_INFO(logger, "End: insert fares");
-
+    LOG4CPLUS_INFO(logger, "Begin: insert week patterns");
     this->insert_week_patterns(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert week patterns");
+    LOG4CPLUS_INFO(logger, "Begin: insert calendars");
     this->insert_calendars(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert week calendars");
+    LOG4CPLUS_INFO(logger, "Begin: insert exception dates");
     this->insert_exception_dates(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert exception dates");
+    LOG4CPLUS_INFO(logger, "Begin: insert periods");
     this->insert_periods(data.periods);
+    LOG4CPLUS_INFO(logger, "End: insert periods");
+    LOG4CPLUS_INFO(logger, "Begin: insert relation calendar line");
     this->insert_rel_calendar_line(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert relation calendar line");
+    LOG4CPLUS_INFO(logger, "Begin: insert relation calendar period");
     this->insert_rel_calendar_period(data.calendars);
-
+    LOG4CPLUS_INFO(logger, "End: insert relation calendar period");
     LOG4CPLUS_INFO(logger, "Begin: build stops admin relations");
     this->build_stop_admin_relation();
     LOG4CPLUS_INFO(logger, "End: build stops admin relations");
@@ -347,7 +357,7 @@ void EdPersistor::clean_db(){
                 "navitia.vehicle_properties, navitia.properties, "
                 "navitia.validity_pattern, navitia.network, navitia.parameters, "
                 "navitia.connection, navitia.calendar, navitia.period, "
-				"navitia.week_pattern CASCADE"));
+                "navitia.week_pattern CASCADE"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -826,6 +836,97 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         this->lotus.insert(values);
     }
 
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_week_patterns(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.week_pattern", {"id", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"});
+    std::vector<navitia::type::idx_t> to_insert;
+    for(const types::Calendar* cal : calendars){
+        navitia::type::idx_t idx = cal->to_ulog();
+        if(!binary_search(to_insert.begin(), to_insert.end(), idx)){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(idx));
+            values.push_back(std::to_string(cal->week_pattern[0]));
+            values.push_back(std::to_string(cal->week_pattern[1]));
+            values.push_back(std::to_string(cal->week_pattern[2]));
+            values.push_back(std::to_string(cal->week_pattern[3]));
+            values.push_back(std::to_string(cal->week_pattern[4]));
+            values.push_back(std::to_string(cal->week_pattern[5]));
+            values.push_back(std::to_string(cal->week_pattern[6]));
+            this->lotus.insert(values);
+            to_insert.push_back(idx);
+            std::sort(to_insert.begin(), to_insert.end());
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_calendars(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.calendar", {"id", "uri", "name", "week_pattern_id"});
+
+    for(const types::Calendar* cal : calendars){
+        navitia::type::idx_t idx = cal->to_ulog();
+        std::vector<std::string> values;
+        values.push_back(std::to_string(cal->idx));
+        values.push_back(cal->uri);
+        values.push_back(cal->name);
+        values.push_back(std::to_string(idx));
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_exception_dates(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.exception_date", {"datetime", "exception_type_id", "calendar_id"});
+
+    for(const types::Calendar* cal : calendars){
+        for( const auto except : cal->exceptions){
+            std::vector<std::string> values;
+            values.push_back(bg::to_iso_extended_string(except.date));
+            values.push_back(std::to_string(static_cast<int>(except.type)));
+            values.push_back(std::to_string(cal->idx));
+            this->lotus.insert(values);
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_periods(const std::vector<types::Period*>& periods){
+    this->lotus.prepare_bulk_insert("navitia.period", {"id", "begin_date", "end_date"});
+    for(const types::Period* period : periods){
+        std::vector<std::string> values;
+        values.push_back(std::to_string(period->idx));
+        values.push_back(bg::to_iso_extended_string(period->begin_date));
+        values.push_back(bg::to_iso_extended_string(period->end_date));
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_rel_calendar_line(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.rel_calendar_line", {"calendar_id", "line_id"});
+    for(const types::Calendar* cal : calendars){
+        for(const types::Line* line : cal->line_list){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(cal->idx));
+            values.push_back(std::to_string(line->idx));
+            this->lotus.insert(values);
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_rel_calendar_period(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.rel_calendar_period", {"calendar_id", "period_id"});
+    for(const types::Calendar* cal : calendars){
+        for(const types::Period* periode : cal->period_list){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(cal->idx));
+            values.push_back(std::to_string(periode->idx));
+            this->lotus.insert(values);
+        }
+    }
     this->lotus.finish_bulk_insert();
 }
 
