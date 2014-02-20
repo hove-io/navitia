@@ -81,7 +81,7 @@ void EdPersistor::build_ways(){
     PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
     /// Add ways where admin is nil
     PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Update data in table 'rel_way_admin' by 'tmp_rel_way_admin'
+    /// Remplace data in table 'rel_way_admin' by 'tmp_rel_way_admin'
     PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
     /// Remove duplicate data in table of ways
     PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
@@ -278,6 +278,13 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     persist_fare(data);
     LOG4CPLUS_INFO(logger, "End: insert fares");
 
+    this->insert_week_patterns(data.calendars);
+    this->insert_calendars(data.calendars);
+    this->insert_exception_dates(data.calendars);
+    this->insert_periods(data.periods);
+    this->insert_rel_calendar_line(data.calendars);
+    this->insert_rel_calendar_period(data.calendars);
+
     LOG4CPLUS_INFO(logger, "Begin: build stops admin relations");
     this->build_stop_admin_relation();
     LOG4CPLUS_INFO(logger, "End: build stops admin relations");
@@ -339,7 +346,8 @@ void EdPersistor::clean_db(){
                 "navitia.synonym, navitia.commercial_mode, "
                 "navitia.vehicle_properties, navitia.properties, "
                 "navitia.validity_pattern, navitia.network, navitia.parameters, "
-                "navitia.connection CASCADE"));
+                "navitia.connection, navitia.calendar, navitia.period, "
+				"navitia.week_pattern CASCADE"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){

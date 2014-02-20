@@ -53,6 +53,14 @@ private:
     void insert_alias(const std::map<std::string, std::string>& alias);
     void insert_synonyms(const std::map<std::string, std::string>& synonyms);
 
+    /// Inserer les données fiche horaire par période
+    void insert_week_patterns(const std::vector<types::Calendar*>& calendars);
+    void insert_calendars(const std::vector<types::Calendar*>& calendars);
+    void insert_exception_dates(const std::vector<types::Calendar*>& calendars);
+    void insert_periods(const std::vector<types::Period*>& periods);
+    void insert_rel_calendar_line(const std::vector<types::Calendar*>& calendars);
+    void insert_rel_calendar_period(const std::vector<types::Calendar*>& calendars);
+
     /// Inserer les données fare
     void insert_transitions(const ed::Data& data);
     void insert_prices(const ed::Data& data);
