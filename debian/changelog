@@ -1,7 +1,6 @@
 navitia2 (0.82.5) unstable; urgency=low
 
  * Fix tyr
- * Fix fusio2ed
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 20 Feb 2014 10:02:13 +0100
 
