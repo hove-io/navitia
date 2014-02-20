@@ -259,11 +259,6 @@ struct HasMessages{
 
 };
 
-enum class exception_type {
-    add = 0,
-    sub
-};
-
 /** Coordonnées géographiques en WGS84
  */
 struct GeographicalCoord{
@@ -407,7 +402,11 @@ typedef Connection<JourneyPatternPoint>  JourneyPatternPointConnection;
 typedef Connection<StopPoint>  StopPointConnection;
 
 struct ExceptionDate {
-    exception_type type;
+    enum class ExceptionType {
+        sub = 0,      // Suppression
+        add = 1       // Ajout
+    };
+    ExceptionType type;
     boost::gregorian::date date;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & type & date;
