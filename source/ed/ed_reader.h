@@ -49,9 +49,10 @@ private:
     std::unordered_map<idx_t, navitia::georef::Way*> way_map;
     std::unordered_map<idx_t, navitia::georef::POI*> poi_map;
     std::unordered_map<idx_t, navitia::georef::POIType*> poi_type_map;
+    std::unordered_map<uint64_t, navitia::type::Calendar*> calendar_map;
 
-//    std::unordered_map<uint64_t, idx_t> admin_map;
     std::unordered_map<uint64_t, uint64_t> node_map;
+
 
     // ces deux vectors servent pour ne pas charger les graphes secondaires
     std::set<uint64_t> way_to_ignore; //TODO if bottleneck change to flat_set
@@ -98,6 +99,12 @@ private:
     void fill_prices(navitia::type::Data& data, pqxx::work& work);
     void fill_transitions(navitia::type::Data& data, pqxx::work& work);
     void fill_origin_destinations(navitia::type::Data& data, pqxx::work& work);
+
+    // la fiche horaire par période
+    void fill_calendars(navitia::type::Data& data, pqxx::work& work);
+    void fill_periods(navitia::type::Data& data, pqxx::work& work);
+    void fill_exception_dates(navitia::type::Data& data, pqxx::work& work);
+    void fill_rel_calendars_lines(navitia::type::Data& data, pqxx::work& work);
 
     /// les relations admin et les autres objets
     void build_rel_stop_point_admin(navitia::type::Data& data, pqxx::work& work);

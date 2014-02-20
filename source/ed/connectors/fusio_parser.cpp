@@ -767,6 +767,7 @@ void HExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is
             }
             if(!date.is_not_a_date()){
                 navitia::type::ExceptionDate exception_date;
+                exception_date.date = date;
                 exception_date.type = static_cast<navitia::type::ExceptionDate::ExceptionType>(boost::lexical_cast<int>(row[type_c]));
                 cal->second->exceptions.push_back(exception_date);
             }

@@ -422,7 +422,7 @@ struct Calendar : public Nameable, public Header {
     bool operator<(const Calendar & other) const { return this < &other; }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & week_pattern & active_periods & exceptions;
+        ar & id & idx & uri & week_pattern & active_periods & exceptions;
     }
 };
 
@@ -546,7 +546,7 @@ struct Line : public Header, Nameable, HasMessages{
         ar & id & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & messages;
+                & messages & calendar_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
