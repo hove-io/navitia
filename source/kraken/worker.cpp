@@ -34,6 +34,7 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::POI: return nt::Type_e::POI; break;
     case pbnavitia::POITYPE: return nt::Type_e::POIType; break;
     case pbnavitia::ADMINISTRATIVE_REGION: return nt::Type_e::Admin; break;
+    case pbnavitia::CALENDAR: return nt::Type_e::Calendar; break;
     default: return nt::Type_e::Unknown;
     }
 }

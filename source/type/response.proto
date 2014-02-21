@@ -341,6 +341,7 @@ message Response{
     repeated Route routes = 27;
     repeated Poi pois = 28;
     repeated PoiType poi_types = 29;
+    repeated Calendar calendars = 55;
 
     //Journeys
     repeated Journey journeys = 30;

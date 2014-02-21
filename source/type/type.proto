@@ -292,9 +292,37 @@ message Address {
     optional int32 house_number = 2;
 }
 
+enum ExceptionType {
+    ADD = 0;
+    REMOVE = 1;
+}
+
+message CalendarException {
+    optional string datetime = 1;
+    optional ExceptionType type = 2;
+}
+
+message CalendarPeriod {
+    optional string begin = 1;
+    optional string end = 2;
+}
+
+message WeekPattern {
+    optional bool monday = 1;
+    optional bool tuesday = 2;
+    optional bool wednesday = 3;
+    optional bool thursday = 4;
+    optional bool friday = 5;
+    optional bool saturday = 6;
+    optional bool sunday = 7;
+}
+
 message Calendar{
-    optional string uri = 3;
-    optional string name = 4;
+    optional string uri = 1;
+    optional string name = 2;
+    optional WeekPattern week_pattern = 3;
+    repeated CalendarPeriod active_periods = 4;
+    repeated CalendarException exceptions = 5;
 }
 
 message ValidityPattern {

@@ -233,7 +233,7 @@ address = deepcopy(generic_type_admin)
 address["house_number"] = fields.Integer()
 
 calendar = {
-    "id": fields.String(),
+    "id": fields.String(attribute="uri"),
     "name": fields.String(),
 }
 connection = {

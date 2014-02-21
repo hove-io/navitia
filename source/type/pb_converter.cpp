@@ -1,10 +1,11 @@
 #include "pb_converter.h"
 #include "georef/georef.h"
 #include "georef/street_network.h"
-#include "boost/lexical_cast.hpp"
+#include "utils/exception.h"
+#include "utils/exception.h"
 #include <functional>
-#include "utils/exception.h"
-#include "utils/exception.h"
+#include <boost/lexical_cast.hpp>
+#include <boost/date_time/date_defs.hpp>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -878,6 +879,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     }
 
 }
+
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period)
@@ -927,6 +929,46 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     }
     if (vj->school_vehicle()){
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_school_vehicle);
+    }
+}
+
+void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
+                    pbnavitia::Calendar* pb_cal, int,
+                    const pt::ptime&, const pt::time_period&)
+{
+    pb_cal->set_uri(cal->uri);
+    pb_cal->set_name(cal->name);
+
+    auto week = pb_cal->mutable_week_pattern();
+    week->set_monday(cal->week_pattern[boost::date_time::Monday]);
+    week->set_tuesday(cal->week_pattern[boost::date_time::Tuesday]);
+    week->set_wednesday(cal->week_pattern[boost::date_time::Wednesday]);
+    week->set_thursday(cal->week_pattern[boost::date_time::Thursday]);
+    week->set_friday(cal->week_pattern[boost::date_time::Friday]);
+    week->set_saturday(cal->week_pattern[boost::date_time::Saturday]);
+    week->set_sunday(cal->week_pattern[boost::date_time::Sunday]);
+
+    for (const auto& p: cal->active_periods) {
+        auto pb_period = pb_cal->add_active_periods();
+        pb_period->set_begin(navitia::to_iso_string_no_fractional(p.begin()));
+        pb_period->set_end(navitia::to_iso_string_no_fractional(p.last()));
+    }
+
+    for (const auto& excep: cal->exceptions) {
+        auto pb_ex = pb_cal->add_exceptions();
+        pb_ex->set_datetime(boost::gregorian::to_iso_extended_string(excep.date));
+        pbnavitia::ExceptionType type;
+        switch (excep.type) {
+        case nt::ExceptionDate::ExceptionType::add:
+            type = pbnavitia::ADD;
+            break;
+        case nt::ExceptionDate::ExceptionType::sub:
+            type = pbnavitia::REMOVE;
+            break;
+        default:
+            throw navitia::exception("exception date case not handled");
+        }
+        pb_ex->set_type(type);
     }
 }
 
