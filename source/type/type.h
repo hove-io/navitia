@@ -422,7 +422,7 @@ struct Calendar : public Nameable, public Header {
     bool operator<(const Calendar & other) const { return this < &other; }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & week_pattern & active_periods & exceptions;
+        ar & id & name & idx & uri & week_pattern & active_periods & exceptions;
     }
 };
 
