@@ -1,11 +1,10 @@
 from jormungandr import app
 from jormungandr import i_manager
-from instance_read import InstanceRead
 from nose.tools import *
 from navitiacommon.models import db
+from instance_read import mock_read_send_and_receive
 
-
-#__all__ = ['TestCase']
+__all__ = ['TestCase']
 
 
 class TestCase:
@@ -17,15 +16,16 @@ class TestCase:
     }
 
     def __init__(self, *args, **kwargs):
+        i_manager.initialisation(start_ping=False)
         i_manager.stop()
         app.config.from_object('jormungandr.test_settings')
         app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
-        db.drop_all()
-        syncdb()
+        #db.drop_all()
+        #syncdb()
         self.tester = app.test_client()
+
         for name, instance in i_manager.instances.iteritems():
-            i_manager.instances[name] = InstanceRead("tests/fixtures",
-                                                     instance)
+            i_manager.instances[name].send_and_receive = mock_read_send_and_receive
 
     def test_index(self):
         self.tester = app.test_client(self)
@@ -43,8 +43,6 @@ class TestCase:
         eq_(response.status_code, 200)
 
     def test_calendars(self):
-        print "bob? c'est toi ?"
-        eq_(True, False)
         self.tester = app.test_client(self)
         response = self.tester.get(self.urls["test_calendars"])
         eq_(response.status_code, 200)
