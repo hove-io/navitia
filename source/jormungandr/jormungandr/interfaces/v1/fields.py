@@ -1,3 +1,4 @@
+from dateutil.relativedelta import weekday
 from flask.ext.restful import fields
 from copy import deepcopy
 from collections import OrderedDict
