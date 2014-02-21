@@ -1,6 +1,6 @@
 from instance_test import InstanceTest
 import os
-import jormungandr.request_pb2
+import navitiacommon.request_pb2
 import logging
 
 
@@ -13,7 +13,7 @@ class InstanceSave(InstanceTest):
             request = kwargs["request"]
         else:
             for arg in args:
-                if type(arg) == jormungandr.request_pb2.Request:
+                if type(arg) == navitiacommon.request_pb2.Request:
                     request = arg
         if request:
             self.save(request, resp)
