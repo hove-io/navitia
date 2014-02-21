@@ -721,6 +721,7 @@ void HCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool is_
     ed::types::Calendar* calendar = new ed::types::Calendar();
     calendar->id = row[id_c];
     calendar->uri = row[id_c];
+    calendar->external_code = row[id_c];
     calendar->name =  row[name_c];
     calendar->week_pattern[0] = is_active(monday_c, row);
     calendar->week_pattern[1] = is_active(tuesday_c, row);

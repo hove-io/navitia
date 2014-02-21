@@ -406,6 +406,7 @@ CREATE TABLE IF NOT EXISTS navitia.exception_type (
 
 CREATE TABLE IF NOT EXISTS navitia.calendar (
     id BIGSERIAL PRIMARY KEY,
+    external_code TEXT NOT NULL,
     uri TEXT NOT NULL,
     name TEXT NOT NULL,
     week_pattern_id BIGINT NOT NULL REFERENCES navitia.week_pattern

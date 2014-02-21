@@ -66,6 +66,7 @@ struct Period : public Header {
 struct Calendar : public Nameable, public Header {
     const static nt::Type_e type = nt::Type_e::Calendar;
     typedef std::bitset<7> Week;
+    std::string external_code;
     Week week_pattern;
     std::vector<Line*> line_list;
     std::vector<Period*> period_list;

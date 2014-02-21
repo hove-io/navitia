@@ -1079,11 +1079,11 @@ void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& w
 }
 
 void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "select cal.id, cal.name, cal.uri, ";
-                request += "wp.monday, wp.tuesday, wp.wednesday, ";
-                request += "wp.thursday,wp.friday, wp.saturday, wp.sunday ";
-                request += "from navitia.calendar  cal, navitia.week_pattern wp ";
-                request += "where cal.week_pattern_id = wp.id;";
+    std::string request = "select cal.id, cal.name, cal.uri, "
+                "wp.monday, wp.tuesday, wp.wednesday, "
+                "wp.thursday,wp.friday, wp.saturday, wp.sunday "
+                "from navitia.calendar  cal, navitia.week_pattern wp "
+                "where cal.week_pattern_id = wp.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::type::Calendar* cal = new navitia::type::Calendar();
@@ -1103,9 +1103,9 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_periods(navitia::type::Data& , pqxx::work& work){
-    std::string request = "select calp.calendar_id, per.begin_date, per.end_date ";
-                request += "from navitia.rel_calendar_period  calp, navitia.period per ";
-                request += "where calp.period_id = per.id;";
+    std::string request = "select calp.calendar_id, per.begin_date, per.end_date "
+                           "from navitia.rel_calendar_period  calp, navitia.period per "
+                           "where calp.period_id = per.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::type::Calendar* cal = this->calendar_map[const_it["calendar_id"].as<idx_t>()];
@@ -1133,8 +1133,8 @@ void EdReader::fill_exception_dates(navitia::type::Data& , pqxx::work& work){
 }
 
 void EdReader::fill_rel_calendars_lines(navitia::type::Data& , pqxx::work& work){
-    std::string request = "select rcl.calendar_id, rcl.line_id ";
-                request += "from navitia.rel_calendar_line  rcl;";
+    std::string request = "select rcl.calendar_id, rcl.line_id "
+                            "from navitia.rel_calendar_line  rcl;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::type::Calendar* cal = this->calendar_map[const_it["calendar_id"].as<idx_t>()];

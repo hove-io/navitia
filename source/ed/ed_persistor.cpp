@@ -863,13 +863,14 @@ void EdPersistor::insert_week_patterns(const std::vector<types::Calendar*>& cale
 }
 
 void EdPersistor::insert_calendars(const std::vector<types::Calendar*>& calendars){
-    this->lotus.prepare_bulk_insert("navitia.calendar", {"id", "uri", "name", "week_pattern_id"});
+    this->lotus.prepare_bulk_insert("navitia.calendar", {"id", "uri", "external_code", "name", "week_pattern_id"});
 
     for(const types::Calendar* cal : calendars){
         navitia::type::idx_t idx = cal->to_ulog();
         std::vector<std::string> values;
         values.push_back(std::to_string(cal->idx));
-        values.push_back(cal->uri);
+        values.push_back(navitia::base64_encode(cal->uri));
+        values.push_back(cal->external_code);
         values.push_back(cal->name);
         values.push_back(std::to_string(idx));
         this->lotus.insert(values);
