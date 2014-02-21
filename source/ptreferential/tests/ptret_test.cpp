@@ -270,8 +270,7 @@ BOOST_AUTO_TEST_CASE(find_path_test){
         // Route c'est lui même puisque c'est la source, et validity pattern est puni, donc il est seul dans son coin, de même pour POI et POIType
         if(node_pred.first != Type_e::Route && node_pred.first != Type_e::ValidityPattern &&
                 node_pred.first != Type_e::POI && node_pred.first != Type_e::POIType &&
-                node_pred.first != Type_e::Contributor &&
-                node_pred.first != Type_e::Calendar)
+                node_pred.first != Type_e::Contributor)
             BOOST_CHECK(node_pred.first != node_pred.second);
     }
 
@@ -281,9 +280,9 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     Jointures j;
     std::vector<vertex_t> component(boost::num_vertices(j.g));
     int num = boost::connected_components(j.g, &component[0]);
-    BOOST_CHECK_EQUAL(num, 4);
+    BOOST_CHECK_EQUAL(num, 3);
     num =  boost::strong_components(j.g, &component[0]);
-    BOOST_CHECK_EQUAL(num, 5);
+    BOOST_CHECK_EQUAL(num, 4);
 
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
     BOOST_CHECK_THROW(find_path(navitia::type::Type_e::Unknown), ptref_error);
