@@ -17,6 +17,7 @@ enum NavitiaType {
     ADDRESS = 18;
     POITYPE = 23;
     ADMINISTRATIVE_REGION = 22;
+    CALENDAR = 25;
 }
 
 

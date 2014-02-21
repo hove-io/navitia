@@ -6,7 +6,7 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
     commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
-    journey_pattern, vehicle_journey, connection, error, PbField
+    journey_pattern, vehicle_journey, connection, error, calendar, PbField
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -380,6 +380,28 @@ def networks(is_collection):
                             description="original uri of the object you"
                                     "want to query")
     return Networks
+
+
+def calendars(is_collection):
+    class Calendars(Uri):
+
+        """ Retrieves calendars"""
+
+        def __init__(self):
+            Uri.__init__(self, is_collection, "calendars")
+            self.collections = [
+                ("calendars", NonNullList(fields.Nested(calendar,
+                                           display_null=False))),
+                ("pagination", PbField(pagination)),
+                ("error", PbField(error))
+            ]
+            collections = marshal_with(OrderedDict(self.collections),
+                                       display_null=False)
+            self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
+    return Calendars
 
 
 def addresses(is_collection):
