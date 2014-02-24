@@ -11,6 +11,7 @@ import connectors.realtime_pb2
 import connectors.type_pb2
 import google
 import os
+import requests
 
 
 def int_to_bitset(s):
@@ -50,6 +51,7 @@ class AtRealtimeReader(object):
     """
     This class load messages and perturbation from the "alerte trafic" database
     """
+
     def __init__(self, config, redis_helper):
         self.message_list = []
         self.perturbation_list = []
@@ -59,7 +61,7 @@ class AtRealtimeReader(object):
             self.__engine = create_engine(url)
         except:
             raise ValueError("AT : Connecting at server failed")
-
+        self.jormungandr_url = jormungandr_url
         self._redis_helper = redis_helper
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
@@ -125,7 +127,9 @@ class AtRealtimeReader(object):
     def get_uri(self, externalcode, object_type):
         uri = None
         if object_type in self._collections.keys():
-            self._redis_helper.set_prefix(self._collections[object_type])
+            url = "%s/v1/%s" % (self.jormungandr_url,
+                                         self._collections[object_type])
+            request_jormun = request.get(url, params={"external_code":externalcode)
             uri = self._redis_helper.get(externalcode)
         return uri
 

@@ -20,6 +20,7 @@ class Config(object):
         self.redisqueque_port = None
         self.redisqueque_password = None
         self.redisqueque_db = None
+        self.jormungandr_url = None
 
     def build_error(self, config, validate_result):
         """
@@ -51,6 +52,7 @@ class Config(object):
         confspec.append('at-connection-string = string()')
         confspec.append('broker-url = string()')
         confspec.append('last-exec-time-file = string(default="./last_exec_time.txt")')
+        confspec.append('jormungandr_url = string()')
 
         confspec.append('[redishelper]')
         confspec.append('host = string(default="localhost")')

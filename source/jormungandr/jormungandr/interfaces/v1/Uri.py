@@ -35,6 +35,8 @@ class Uri(ResourceUri):
                             description="forbidden ids",
                             dest="forbidden_uris[]",
                             action="append")
+        parser.add_argument("external_code", type=unicode,
+                            description="An external code to query")
         if is_collection:
             parser.add_argument("filter", type=str, default="",
                                 description="The filter parameter")
@@ -43,18 +45,25 @@ class Uri(ResourceUri):
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
+        args = self.parsers["get"].parse_args()
+        if region is None and lat is None and lon is None:
+            if "external_code" in args and args["external_code"]:
+                res = PtObject.get_from_external_code(args["external_code"])
+                if res:
+                    id = res.uri
+                    instances = res.instances()
+                    if len(instances) > 0:
+                        region = res.instances()[0].name
+                else:
+                    abort(404, message="Unable to find an object for the uri %s"
+                          % args["external_code"])
+            else:
+                abort(503, message="Not implemented yet")
         self.region = i_manager.get_region(region, lon, lat)
         if not self.region:
             return {"error": "No region"}, 404
-        args = self.parsers["get"].parse_args()
 
-        if "original_id" in args and args["original_id"]:
-            res = PtObject.get_from_original_uri(args["original_id"])
-            if res:
-                id = res.uri
-            else:
-                abort(404, message="Unable to find an object for the uri %s"%
-                      args["original_id"])
+
 
         if(collection and id):
             args["filter"] = collections_to_resource_type[collection] + ".uri="

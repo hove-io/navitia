@@ -515,7 +515,7 @@ class PtObject(db.Model, mixin_get_from_uri):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
     name = db.Column(db.Text, nullable=False)
-    original_uri = db.Column(db.Text, index=True)
+    external_code = db.Column(db.Text, index=True)
     type = db.Column(db.Text, nullable=False)
     __tablename__ = "ptobject"
 

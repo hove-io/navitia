@@ -46,7 +46,7 @@ def aggregate_places(instance_config, job_id):
             cls_type = models.get_class_type(type_name)
             rel_instance = cls_type.cls_rel_instance
             has_coord = "coord" in dir(cls_type)
-            has_original_uri = "original_uri" in TypeEd.__table__.c
+            has_external_code = "external_code" in TypeEd.__table__.c
             #We delete all relations object<->instance
             rel_instance.query.filter_by(instance_id=instance.id).delete()
             db.session.commit()
@@ -66,8 +66,8 @@ def aggregate_places(instance_config, job_id):
             for object_ in db.engine.execute(to_update_query):
                 object_ed = query_ed.get(object_[0])
                 to_update = {
-                    "original_uri" : "" if not has_original_uri\
-                                        else object_ed.original_uri,
+                    "external_code" : "" if not has_external_code\
+                                        else object_ed.external_code,
                     "name" : object_ed.name,
                 }
                 if has_coord:
@@ -86,12 +86,14 @@ def aggregate_places(instance_config, job_id):
             to_insert_query = table_uris.select(
                 not_(table_uris.c.uri.in_(cls_type.query.options(load_only(cls_type.uri)))))
             for object_ in db.engine.execute(to_insert_query):
+                if object_[0] is None:
+                    continue
                 object_ed = query_ed.get(object_[0])
                 new_object = cls_type()
                 new_object.uri = object_ed.uri
                 new_object.name = object_ed.name
-                new_object.original_uri = "" if not has_original_uri\
-                                            else object_ed.original_uri
+                new_object.external_code = "" if not has_external_code\
+                                            else object_ed.external_code
                 if has_coord:
                     new_object.coord = to_shape(object_ed.coord).wkt
                 new_object.instances.append(instance)
@@ -106,7 +108,7 @@ def aggregate_places(instance_config, job_id):
         #the name of existing classes, I don't know how to access this dictionnary
         class StopAreaEd(Base_ed):
             __table__ = Table("stop_area", meta_ed,
-                        autoload=True, autoload_with=engine_ed)
+                         autoload=True, autoload_with=engine_ed)
         handle_object_instance("stop_area", StopAreaEd)
 
         class StopPointEd(Base_ed):
@@ -121,12 +123,12 @@ def aggregate_places(instance_config, job_id):
 
         class AdminEd(Base_ed):
             __table__ = Table("admin", meta_ed,
-                        autoload=True, autoload_with=engine_ed)
+                         autoload=True, autoload_with=engine_ed)
         handle_object_instance("admin", AdminEd)
 
         class LineEd(Base_ed):
             __table__ = Table("line", meta_ed,
-                        autoload=True, autoload_with=engine_ed)
+                         autoload=True, autoload_with=engine_ed)
         handle_object_instance("line", LineEd)
 
         class RouteEd(Base_ed):
