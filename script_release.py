@@ -57,8 +57,8 @@ write_lines = [
     u'\n',
 ]
 if argv[1] != "hotfix":
-    parents_sha = [c.hexsha for c in last_tag.commit.parents]
-    parents_sha.append(last_tag.commit.hexsha)
+    parents_sha = [c.hexsha for c in repo.commit(last_tag).parents]
+    parents_sha.append(last_tag)
     for c in repo.iter_commits("dev"):
         if c.hexsha in parents_sha:
             break
