@@ -60,9 +60,8 @@ namespace ph = ::boost::phoenix;
         throw invalid_condition("impossible to parse condition " + condition_str);
     }
 
-    //TODO change condition.key to enum
-    if (cond.key == "stoparea") {
-        //we have to encode the stop area
+    std::vector<std::string> to_encode = {"line", "mode", "stoparea", "network"};
+    if(std::find(to_encode.begin(), to_encode.end(), cond.key) != to_encode.end()) {
         cond.value = navitia::base64_encode(cond.value);
     }
 
@@ -87,10 +86,9 @@ namespace ph = ::boost::phoenix;
         if(cond.comparaison != navitia::fare::Comp_e::EQ)
             throw invalid_key("invalid key, comparator has to be equal and is " +
                     navitia::fare::comp_to_string(cond.comparaison));
-        auto encoded_value = navitia::base64_encode(cond.value);
         if(cond.key == "line"){
             if(state.line != "") throw invalid_key("line already filled");
-            state.line = encoded_value;
+            state.line = cond.value;
         }
         else if(cond.key == "zone"){
             if(state.zone != "") throw invalid_key("zone already filled");
@@ -98,15 +96,15 @@ namespace ph = ::boost::phoenix;
         }
         else if(cond.key == "mode"){
             if(state.mode != "") throw invalid_key("mode already filled");
-            state.mode = encoded_value;
+            state.mode = cond.value;
         }
         else if(cond.key == "stoparea"){
             if(state.stop_area != "") throw invalid_key("stoparea already filled");
-            state.stop_area = encoded_value;
+            state.stop_area = cond.value;
         }
         else if(cond.key == "network"){
             if(state.network != "") throw invalid_key("network already filled");
-            state.network = encoded_value;
+            state.network = cond.value;
         }
         else if(cond.key == "ticket"){
             if(state.ticket != "") throw invalid_key("ticket already filled");
