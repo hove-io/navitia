@@ -351,6 +351,7 @@ class add_journey_pagination(object):
 
         return (datetime_first, datetime_last)
 
+
 #add the link between a section and the ticket needed for that section
 class add_fare_links(object):
 
@@ -358,7 +359,6 @@ class add_fare_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            print "add fare_links"
             if objects[1] != 200:
                 return objects
             if not "journeys" in objects[0].keys():
@@ -387,7 +387,6 @@ class add_fare_links(object):
 
             return objects
         return wrapper
-
 
 
 class Journeys(ResourceUri):
