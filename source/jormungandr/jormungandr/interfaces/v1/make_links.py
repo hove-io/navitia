@@ -54,7 +54,7 @@ class add_pagination_links(object):
                 elif key in ["journeys", "stop_schedules", "route_schedules",
                              "departures", "arrivals", "places_nearby"]:
                     endpoint = "v1." + key
-            if pagination and endpoint:
+            if pagination and endpoint and "region" in kwargs:
                 pagination = data["pagination"]
                 if "start_page" in pagination.keys() and \
                         "items_on_page" in pagination.keys() and \

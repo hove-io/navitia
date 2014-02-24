@@ -86,7 +86,7 @@ class add_computed_resources(object):
             else:
                 kwargs["uri"] += '{' + collection + ".id}"
             if collection in ['stop_areas', 'stop_points', 'lines', 'routes',
-                              'addresses']:
+                              'addresses'] and "region" in kwargs:
                 for api in ['route_schedules', 'stop_schedules',
                             'arrivals', 'departures', "places_nearby"]:
                     data['links'].append({
@@ -100,7 +100,7 @@ class add_computed_resources(object):
                     "rel": "journeys",
                     "templated": templated
                 })
-            if collection in ['stop_areas', 'lines', 'networks']:
+            if collection in ['stop_areas', 'lines', 'networks'] and "region" in kwargs:
                 data['links'].append({
                     "href": url_for("v1/disruptions", **kwargs),
                     "rel": "disruptions",

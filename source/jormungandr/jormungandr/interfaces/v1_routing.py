@@ -105,6 +105,12 @@ def v1_routing(api):
                              'v1.' + collection + '.redirect',
                              Uri.Redirect)
 
+    collecs = ["routes", "lines", "networks", "stop_areas", "stop_points"]
+    for collection in collecs:
+        api.add_resource(getattr(Uri, collection)(True),
+                         '/v1/' + collection,
+                         endpoint='v1.' + collection + '.external_codes')
+
     api.add_resource(Places.Places,
                      region + 'places',
                      coord + 'places',
