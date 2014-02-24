@@ -1,9 +1,10 @@
+import werkzeug
 from utils import * #useful to load the settings env var definition
 from jormungandr import app
 from jormungandr import i_manager
 from nose.tools import *
 from navitiacommon.models import db
-from instance_read import mock_read_send_and_receive
+from instance_read import *
 
 __all__ = ['TestCase']
 
@@ -13,7 +14,7 @@ class TestCase:
         "test_index": "/v1/",
         "test_coverage": "/v1/coverage",
         "test_region": "/v1/coverage/rennes",
-        #"test_calendars": "/v1/coverage/rennes/calendars",
+        "test_calendars": "/v1/coverage/rennes/calendars",
     }
 
     def __init__(self, *args, **kwargs):
@@ -25,30 +26,38 @@ class TestCase:
             i_manager.instances[name].send_and_receive = mock_read_send_and_receive
 
     def test_index(self):
-        self.tester = app.test_client(self)
-        response = self.tester.get(self.urls["test_index"])
-        eq_(response.status_code, 200)
+        json_response = check_and_get_as_json(self, self.urls["test_index"])
+        #TODO!
 
     def test_coverage(self):
-        self.tester = app.test_client(self)
-        response = self.tester.get(self.urls["test_coverage"])
-        eq_(response.status_code, 200)
+        json_response = check_and_get_as_json(self, self.urls["test_coverage"])
+        #TODO!
 
     def test_region(self):
-        self.tester = app.test_client(self)
-        response = self.tester.get(self.urls["test_region"])
-        eq_(response.status_code, 200)
+        json_response = check_and_get_as_json(self, self.urls["test_region"])
+        #TODO!
 
-    """
     def test_calendars(self):
-        self.tester = app.test_client(self)
-        response = self.tester.get(self.urls["test_calendars"])
-        assert response is not None
+        json_response = check_and_get_as_json(self, self.urls["test_calendars"])
 
-        eq_(response.status_code, 200)
-        """
+        assert "calendars" in json_response
 
+        calendars = json_response["calendars"]
 
+        #we need at least one calendar
+        assert len(calendars) >= 1
 
+        cal = calendars[0]
 
+        get_not_null(cal, "id")
+        get_not_null(cal, "name")
+        get_not_null(cal, "week_pattern")
 
+        active_periods = get_not_null(cal, "active_periods")
+        assert len(active_periods) > 0
+
+        beg = get_not_null(active_periods[0], "begin")
+        assert is_valid_date(beg)
+
+        end = get_not_null(active_periods[0], "end")
+        assert is_valid_date(end)

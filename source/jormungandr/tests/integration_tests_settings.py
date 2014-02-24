@@ -2,6 +2,8 @@
 
 import logging
 
+TESTING = True
+
 # Start the thread at startup, True in production, False for test environments
 START_MONITORING_THREAD = False
 
