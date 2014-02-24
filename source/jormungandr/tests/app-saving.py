@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
+from utils import *
 from app_test import __all__ as alltests
-from utils import saving_directory
 from jormungandr import i_manager, app
 from instance_save import InstanceSave
 import importlib

@@ -1,3 +1,4 @@
+from utils import * #useful to load the settings env var definition
 from jormungandr import app
 from jormungandr import i_manager
 from nose.tools import *
@@ -12,14 +13,14 @@ class TestCase:
         "test_index": "/v1/",
         "test_coverage": "/v1/coverage",
         "test_region": "/v1/coverage/rennes",
-        "test_calendars": "/v1/coverage/rennes/calendars",
+        #"test_calendars": "/v1/coverage/rennes/calendars",
     }
 
     def __init__(self, *args, **kwargs):
         i_manager.initialisation(start_ping=False)
         i_manager.stop()
-        app.config.from_object('jormungandr.test_settings')
-        app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
+        #        app.config.from_object('jormungandr.test_settings')
+        #        app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
         #db.drop_all()
         #syncdb()
         self.tester = app.test_client()
@@ -42,12 +43,14 @@ class TestCase:
         response = self.tester.get(self.urls["test_region"])
         eq_(response.status_code, 200)
 
+    """
     def test_calendars(self):
         self.tester = app.test_client(self)
         response = self.tester.get(self.urls["test_calendars"])
         assert response is not None
 
         eq_(response.status_code, 200)
+        """
 
 
 

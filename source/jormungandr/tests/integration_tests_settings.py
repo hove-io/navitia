@@ -2,9 +2,6 @@
 
 import logging
 
-# emplacement ou charger les fichier de configuration par instances
-#INSTANCES_DIR = '/etc/jormungandr.d'
-
 # Start the thread at startup, True in production, False for test environments
 START_MONITORING_THREAD = False
 
@@ -13,22 +10,40 @@ START_MONITORING_THREAD = False
 #http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
 SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun'
 
-# désactivation de l'authentification
+# disable authentication
 PUBLIC = True
 
 REDIS_HOST = 'localhost'
 
 REDIS_PORT = 6379
 
-# indice de la base de données redis utilisé, entier de 0 à 15 par défaut
+# index of the redis data base used (integer from 0 to 15)
 REDIS_DB = 0
 
 REDIS_PASSWORD = None
 
-# Desactive l'utilisation du cache, et donc de redis
+# disable the redis cache (if no cache, redis is not used at all)
 CACHE_DISABLED = False
 
-# durée de vie des info d'authentification dans le cache en secondes
+# life time tfo authentication data, in the cache (in seconds)
 AUTH_CACHE_TTL = 300
 
-LOG_LEVEL = logging.DEBUG
+# logger configuration
+LOGGER = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'default': {
+            'level': 'INFO',
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout"
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['default'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+    }
+}
