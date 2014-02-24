@@ -28,7 +28,7 @@ REDIS_PASSWORD = None
 # disable the redis cache (if no cache, redis is not used at all)
 CACHE_DISABLED = False
 
-# life time tfo authentication data, in the cache (in seconds)
+# life time of authentication data, in the cache (in seconds)
 AUTH_CACHE_TTL = 300
 
 # logger configuration

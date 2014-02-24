@@ -19,10 +19,6 @@ class TestCase:
     def __init__(self, *args, **kwargs):
         i_manager.initialisation(start_ping=False)
         i_manager.stop()
-        #        app.config.from_object('jormungandr.test_settings')
-        #        app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
-        #db.drop_all()
-        #syncdb()
         self.tester = app.test_client()
 
         for name, instance in i_manager.instances.iteritems():
