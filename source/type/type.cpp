@@ -269,6 +269,24 @@ template<typename T> std::vector<idx_t> indexes(std::vector<T*> elements){
     return result;
 }
 
+std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::Line:{
+        for(Line* line: data.lines) {
+            for(Calendar* cal : line->calendar_list) {
+                if(cal == this) {
+                    result.push_back(line->idx);
+                    break;
+                }
+            }
+        }
+    }
+    break;
+    default : break;
+    }
+    return result;
+}
 std::vector<idx_t> StopArea::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
@@ -327,6 +345,7 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     case Type_e::Company: return indexes(company_list); break;
     case Type_e::Network: result.push_back(network->idx); break;
     case Type_e::Route: return indexes(route_list); break;
+    case Type_e::Calendar: return indexes(calendar_list); break;
     default: break;
     }
     return result;
