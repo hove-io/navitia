@@ -2,11 +2,8 @@
 
 import logging
 
-# path of the configuration file for each instances
-INSTANCES_DIR = '/etc/jormungandr.d'
-
 # Start the thread at startup, True in production, False for test environments
-START_MONITORING_THREAD = True
+START_MONITORING_THREAD = False
 
 #URI for postgresql
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
@@ -38,10 +35,8 @@ LOGGER = {
     'handlers': {
         'default': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            "filename": "jormungandr.log",
-            "maxBytes": "20000000",
-            "backupCount": "5",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout"
         },
     },
     'loggers': {
