@@ -100,7 +100,19 @@ class add_computed_resources(object):
                     "rel": "journeys",
                     "templated": templated
                 })
-            if collection in ['stop_areas', 'lines', 'networks'] and "region" in kwargs:
+            if collection in ['lines']:
+                data['links'].append({
+                    "href": url_for("v1.calendars.collection", **kwargs),
+                    "rel": "calendars",
+                    "templated": templated
+                })
+            if collection in ['calendars']:
+                data['links'].append({
+                    "href": url_for("v1.lines.collection", **kwargs),
+                    "rel": "lines",
+                    "templated": templated
+                })
+            if collection in ['stop_areas', 'lines', 'networks']:
                 data['links'].append({
                     "href": url_for("v1/disruptions", **kwargs),
                     "rel": "disruptions",
