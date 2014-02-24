@@ -1,6 +1,7 @@
 # encoding: utf-8
 import logging
 import logging.config
+import os
 from flask import Flask, got_request_exception
 from flask.ext.restful import Api
 import sys
@@ -8,7 +9,8 @@ from jormungandr.exceptions import log_exception
 
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')
-app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
+if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
+    app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
 
 if 'LOGGER' in app.config:
     logging.config.dictConfig(app.config['LOGGER'])
