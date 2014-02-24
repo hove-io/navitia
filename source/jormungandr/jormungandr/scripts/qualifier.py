@@ -1,5 +1,4 @@
 # coding=utf-8
-from ANSI import term
 import navitiacommon.response_pb2 as response_pb2
 from functools import partial
 from datetime import datetime, timedelta
