@@ -273,6 +273,7 @@ std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::Line:{
+        // if the method is slow, adding a list of lines in calendar
         for(Line* line: data.lines) {
             for(Calendar* cal : line->calendar_list) {
                 if(cal == this) {
