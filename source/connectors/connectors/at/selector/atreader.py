@@ -95,7 +95,7 @@ class AtRealtimeReader(object):
         self.label_message = 'message'
         self.label_message_lang = 'lang'
 
-        self.last_exec_file_name = '/'.join([config.last_exec_time_path, config.last_exec_time_file])
+        self.last_exec_file_name = config.last_exec_time_file
         self.datetime_format = '%Y-%m-%d %H:%M:%S'
         self._collections = {"StopPoint": "stop_point",
                              "VehicleJourney": "vehicle_journey",

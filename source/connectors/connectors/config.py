@@ -50,8 +50,7 @@ class Config(object):
         confspec.append('exchange-name = string(default="navitia")')
         confspec.append('at-connection-string = string()')
         confspec.append('broker-url = string()')
-        confspec.append('last-exec-time-file = string(default="last_exec_time.txt")')
-        confspec.append('last-exec-time-path = string(default="./")')
+        confspec.append('last-exec-time-file = string(default="./last_exec_time.txt")')
 
         confspec.append('[redishelper]')
         confspec.append('host = string(default="localhost")')
@@ -73,7 +72,6 @@ class Config(object):
         self.exchange_name = config['connector-at']['exchange-name']
         self.rt_topics = config['connector-at']['rt-topic']
         self.last_exec_time_file = config['connector-at']['last-exec-time-file']
-        self.last_exec_time_path = config['connector-at']['last-exec-time-path']
 
         self.redishelper_host = config['redishelper']['host']
         self.redishelper_password = config['redishelper']['password']
