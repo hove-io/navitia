@@ -1,4 +1,5 @@
 # encoding: utf-8
+from logging import StreamHandler, FileHandler
 from flask import Flask, got_request_exception
 from flask.ext.restful import Api
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
@@ -16,10 +17,12 @@ if 'ERROR_HANDLER_TYPE' in app.config and\
     file_ = app.config['ERROR_HANDLER_FILE']
     if app.config['ERROR_HANDLER_TYPE'] == 'rotating':
         handler = RotatingFileHandler(file_, **params)
-    if app.config['ERROR_HANDLER_TYPE'] == 'timedrotating':
+    elif app.config['ERROR_HANDLER_TYPE'] == 'timedrotating':
         handler = TimedRotatingFileHandler(file_, **params)
     elif app.config['ERROR_HANDLER_FILE'] == 'file':
         handler = FileHandler(file_, **params)
+    else:  # Default is std out
+        handler = StreamHandler()
     if handler:
         if 'ERROR_HANDLER_LEVEL' in app.config:
             handler.setLevel(app.config['ERROR_HANDLER_LEVEL'])

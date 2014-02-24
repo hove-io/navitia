@@ -45,5 +45,11 @@ class TestCase:
     def test_calendars(self):
         self.tester = app.test_client(self)
         response = self.tester.get(self.urls["test_calendars"])
+        assert response is not None
+
         eq_(response.status_code, 200)
+
+
+
+
 

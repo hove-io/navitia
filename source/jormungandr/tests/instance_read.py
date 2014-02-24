@@ -3,8 +3,11 @@ import os
 from navitiacommon import request_pb2, response_pb2
 
 
-
 def mock_read_send_and_receive(*args, **kwargs):
+    """
+    Mock send_and_receive function for integration tests
+    This just read the previously serialized file for the given request
+    """
     request = None
     if "request" in kwargs:
         request = kwargs["request"]
@@ -19,6 +22,7 @@ def mock_read_send_and_receive(*args, **kwargs):
             resp.ParseFromString(pb)
             return resp
     return None
+
 
 def read(request):
     file_name = make_filename(request)
