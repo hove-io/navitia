@@ -1,9 +1,10 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_fares
-#include <boost/test/unit_test.hpp>
+#include "utils/base64_encode.h"
 #include "fare/fare.h"
 #include "type/data.h"
 #include "ed/connectors/fare_parser.h"
+#include <boost/test/unit_test.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
@@ -69,20 +70,21 @@ const navitia::routing::Path string_to_path(const std::vector<std::string>& keys
         if (string_vec.size() != 10)
             throw std::string("Nombre incorrect d'éléments dans une section :" + boost::lexical_cast<std::string>(string_vec.size()) + " sur 10 attendus. " + key);
 
-        std::string network = string_vec.at(0);
-        std::string start_stop_area = string_vec.at(1);
-        std::string dest_stop_area = string_vec.at(3);
-        std::string line = string_vec.at(2);
+        std::string network = navitia::base64_encode(string_vec.at(0));
+        std::string start_stop_area = navitia::base64_encode(string_vec.at(1));
+        std::string dest_stop_area = navitia::base64_encode(string_vec.at(3));
+        std::string line = navitia::base64_encode(string_vec.at(2));
         auto date = parse_nav_date(string_vec.at(4));
         auto start_time = parse_time(string_vec.at(5));
         auto dest_time = parse_time(string_vec.at(6));
         std::string start_zone = string_vec.at(7);
         std::string dest_zone = string_vec.at(8);
-        std::string mode = string_vec.at(9);
+        std::string mode = navitia::base64_encode(string_vec.at(9));
 
         //construction of a mock item
         //will leak from everywhere :)
-        navitia::routing::PathItem item(boost::posix_time::ptime(date, start_time), boost::posix_time::ptime(date, dest_time));
+        navitia::routing::PathItem item(boost::posix_time::ptime(date, start_time),
+                boost::posix_time::ptime(date, dest_time));
         nt::StopPoint* first_sp = new nt::StopPoint();
         first_sp->stop_area = new nt::StopArea();
         first_sp->stop_area->uri = start_stop_area;

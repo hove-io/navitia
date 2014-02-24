@@ -1,5 +1,6 @@
 #include "fare_utils.h"
 #include "utils/csv.h"
+#include "utils/base64_encode.h"
 #include "fare/fare.h"
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
@@ -40,12 +41,13 @@ namespace ph = ::boost::phoenix;
     qi::rule<std::string::iterator, std::string()> txt = +(qi::alnum|qi::char_("_:-"));
 
     // Tous les opérateurs que l'on veut matcher et leur valeur associée
-    qi::rule<std::string::iterator, navitia::fare::Comp_e()> operator_r = qi::string("<=")[qi::_val = navitia::fare::Comp_e::LTE]
-                                                         | qi::string(">=")[qi::_val = navitia::fare::Comp_e::GTE]
-                                                         | qi::string("!=")[qi::_val = navitia::fare::Comp_e::NEQ]
-                                                         | qi::string("<") [qi::_val = navitia::fare::Comp_e::LT]
-                                                         | qi::string(">") [qi::_val = navitia::fare::Comp_e::GT]
-                                                         | qi::string("=")[qi::_val = navitia::fare::Comp_e::EQ];
+    using cond_rule = qi::rule<std::string::iterator, navitia::fare::Comp_e()>;
+    cond_rule operator_r = qi::string("<=")[qi::_val = navitia::fare::Comp_e::LTE]
+                              | qi::string(">=")[qi::_val = navitia::fare::Comp_e::GTE]
+                              | qi::string("!=")[qi::_val = navitia::fare::Comp_e::NEQ]
+                              | qi::string("<") [qi::_val = navitia::fare::Comp_e::LT]
+                              | qi::string(">") [qi::_val = navitia::fare::Comp_e::GT]
+                              | qi::string("=")[qi::_val = navitia::fare::Comp_e::EQ];
 
     // Une condition est de la forme "txt op txt"
     qi::rule<std::string::iterator, navitia::fare::Condition()> condition_r = txt >> operator_r >> txt ;
@@ -57,6 +59,13 @@ namespace ph = ::boost::phoenix;
     if(!qi::phrase_parse(begin, end, condition_r, boost::spirit::ascii::space, cond) || begin != end) {
         throw invalid_condition("impossible to parse condition " + condition_str);
     }
+
+    //TODO change condition.key to enum
+    if (cond.key == "stoparea") {
+        //we have to encode the stop area
+        cond.value = navitia::base64_encode(cond.value);
+    }
+
     return cond;
 }
 
@@ -76,10 +85,12 @@ namespace ph = ::boost::phoenix;
         return state;
     for (navitia::fare::Condition cond : parse_conditions(state_str)) {
         if(cond.comparaison != navitia::fare::Comp_e::EQ)
-            throw invalid_key("invalid key, comparator has to be equal and is " + navitia::fare::comp_to_string(cond.comparaison));
+            throw invalid_key("invalid key, comparator has to be equal and is " +
+                    navitia::fare::comp_to_string(cond.comparaison));
+        auto encoded_value = navitia::base64_encode(cond.value);
         if(cond.key == "line"){
             if(state.line != "") throw invalid_key("line already filled");
-            state.line = cond.value;
+            state.line = encoded_value;
         }
         else if(cond.key == "zone"){
             if(state.zone != "") throw invalid_key("zone already filled");
@@ -87,15 +98,15 @@ namespace ph = ::boost::phoenix;
         }
         else if(cond.key == "mode"){
             if(state.mode != "") throw invalid_key("mode already filled");
-            state.mode = cond.value;
+            state.mode = encoded_value;
         }
         else if(cond.key == "stoparea"){
             if(state.stop_area != "") throw invalid_key("stoparea already filled");
-            state.stop_area = cond.value;
+            state.stop_area = encoded_value;
         }
         else if(cond.key == "network"){
             if(state.network != "") throw invalid_key("network already filled");
-            state.network = cond.value;
+            state.network = encoded_value;
         }
         else if(cond.key == "ticket"){
             if(state.ticket != "") throw invalid_key("ticket already filled");
