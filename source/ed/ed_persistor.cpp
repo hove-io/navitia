@@ -6,31 +6,49 @@ namespace bg = boost::gregorian;
 namespace ed{
 
 void EdPersistor::persist(const ed::Georef& data){
+
     this->lotus.start_transaction();
-    LOG4CPLUS_INFO(logger, "début : vider toutes les tables (TRUNCATE)!");
+    LOG4CPLUS_INFO(logger, "Begin: TRUNCATE data!");
     this->clean_georef();
-    LOG4CPLUS_INFO(logger, "début : ajout des admins");
+    LOG4CPLUS_INFO(logger, "Begin: add admins data");
     this->insert_admins(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des voies");
+    LOG4CPLUS_INFO(logger, "End: add admins data");
+    LOG4CPLUS_INFO(logger, "Begin: add ways data");
     this->insert_ways(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des noeuds");
+    LOG4CPLUS_INFO(logger, "End: add ways data");
+    LOG4CPLUS_INFO(logger, "Begin: add nodes data");
     this->insert_nodes(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des adresses");
+    LOG4CPLUS_INFO(logger, "End: add nodes data");
+    LOG4CPLUS_INFO(logger, "Begin: add house numbers data");
     this->insert_house_numbers(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des segments");
+    LOG4CPLUS_INFO(logger, "End: add house numbers data");
+    LOG4CPLUS_INFO(logger, "Begin: add edges data");
     this->insert_edges(data);
-    LOG4CPLUS_INFO(logger, "début : relation admin way");
+    LOG4CPLUS_INFO(logger, "End: add edges data");
+    LOG4CPLUS_INFO(logger, "Begin: relation admin way");
     this->build_relation_way_admin(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des poitypes");
+    LOG4CPLUS_INFO(logger, "End: relation admin way");
+    LOG4CPLUS_INFO(logger, "Begin: add poitypes data");
     this->insert_poi_types(data);
-    LOG4CPLUS_INFO(logger, "début : ajout des pois");
+    LOG4CPLUS_INFO(logger, "End: add poitypes data");
+    LOG4CPLUS_INFO(logger, "Begin: add pois data");
     this->insert_pois(data);
-    LOG4CPLUS_INFO(logger, "début : mise à jour des limites des régions adminstratives");
+    LOG4CPLUS_INFO(logger, "End: add pois data");
+    LOG4CPLUS_INFO(logger, "Begin: update boundary admins");
     this->update_boundary();
-    LOG4CPLUS_INFO(logger, "début : Relations stop_area, stop_point et admins");
-    this->build_relation();
+    LOG4CPLUS_INFO(logger, "End: update boundary admins");
+    LOG4CPLUS_INFO(logger, "Begin: Relations stop_area, stop_point and admins");
+    this->build_stop_admin_relation();
+    LOG4CPLUS_INFO(logger, "End: Relations stop_area, stop_point and admins");
+    LOG4CPLUS_INFO(logger, "Begin: Relation poi and admins");
+    this->build_poi_admin_relation();
+    LOG4CPLUS_INFO(logger, "End: Relation poi and admins");
+    LOG4CPLUS_INFO(logger, "Begin: Fusion ways");
+    this->build_ways();
+    LOG4CPLUS_INFO(logger, "End: Fusion ways");
+    LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
-    LOG4CPLUS_INFO(logger, "Fin : commit");
+    LOG4CPLUS_INFO(logger, "End: commit");
 }
 
 std::string EdPersistor::to_geografic_point(const navitia::type::GeographicalCoord& coord) const{
@@ -41,7 +59,8 @@ std::string EdPersistor::to_geografic_point(const navitia::type::GeographicalCoo
     return geog.str();
 }
 
-std::string EdPersistor::to_geografic_linestring(const navitia::type::GeographicalCoord& source, const navitia::type::GeographicalCoord& target) const{
+std::string EdPersistor::to_geografic_linestring(const navitia::type::GeographicalCoord& source,
+        const navitia::type::GeographicalCoord& target) const{
     std::stringstream geog;
     geog << std::cout.precision(10);
     geog.str("");
@@ -49,8 +68,36 @@ std::string EdPersistor::to_geografic_linestring(const navitia::type::Geographic
     return geog.str();
 }
 
+void EdPersistor::build_ways(){
+    /// Add a name for the admins with an empty name
+    PQclear(this->lotus.exec("SELECT georef.add_way_name();", "", PGRES_TUPLES_OK));
+    /// Fusion ways by name and admin
+    PQclear(this->lotus.exec("SELECT georef.fusion_ways_by_admin_name();", "", PGRES_TUPLES_OK));
+    /// Moving admin and way relations, so that the pair (admin, way) is unique
+    PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
+    /// Update way_id in table edge
+    PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
+    /// Add ways not in fusion table
+    PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
+    /// Add ways where admin is nil
+    PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
+    /// Update data in table 'rel_way_admin' by 'tmp_rel_way_admin'
+    PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
+    /// Remove duplicate data in table of ways
+    PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
+    /// Update way_id in housenumber table
+    PQclear(this->lotus.exec("SELECT georef.update_house_number();", "", PGRES_TUPLES_OK));
+    /// Update ways name
+    PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
+    /// Update of admin cordinates  : Calcul of barycentre
+    PQclear(this->lotus.exec("SELECT navitia.update_admin_coord();", "", PGRES_TUPLES_OK));
+    /// Relation between admins
+    PQclear(this->lotus.exec("SELECT navitia.match_admin_to_admin();", "", PGRES_TUPLES_OK));
+}
+
 void EdPersistor::insert_admins(const ed::Georef& data){
-    this->lotus.prepare_bulk_insert("navitia.admin", {"id", "name", "post_code", "insee", "level", "coord", "uri"});
+    this->lotus.prepare_bulk_insert("navitia.admin",
+            {"id", "name", "post_code", "insee", "level", "coord", "uri"});
     for(const auto& itm : data.admins){
         if(itm.second->is_used){
             this->lotus.insert({std::to_string(itm.second->id), itm.second->name,
@@ -80,6 +127,7 @@ void EdPersistor::insert_nodes(const ed::Georef& data){
         if(itm.second->is_used){
             this->lotus.insert({std::to_string(itm.second->id), this->to_geografic_point(itm.second->coord)});
         }
+
      }
     this->lotus.finish_bulk_insert();
 }
@@ -87,21 +135,30 @@ void EdPersistor::insert_nodes(const ed::Georef& data){
 void EdPersistor::insert_house_numbers(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side"});
     for(const auto& itm : data.house_numbers) {
-        this->lotus.insert({this->to_geografic_point(itm.second->coord), itm.second->number, std::to_string(str_to_int(itm.second->number) % 2 == 0)});
+        this->lotus.insert({this->to_geografic_point(itm.second->coord),
+                itm.second->number,
+                std::to_string(str_to_int(itm.second->number) % 2 == 0)});
     }
     lotus.finish_bulk_insert();
 }
 
 void EdPersistor::insert_edges(const ed::Georef& data){
-    this->lotus.prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog", "pedestrian_allowed",
-                                    "cycles_allowed", "cars_allowed"});
+    this->lotus.prepare_bulk_insert("georef.edge",
+            {"source_node_id", "target_node_id", "way_id", "the_geog",
+            "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
     for(const auto& edge : data.edges){
-        this->lotus.insert({std::to_string(edge.second->source->id), std::to_string(edge.second->target->id), std::to_string(edge.second->way->id),
-                           this->to_geografic_linestring(edge.second->source->coord, edge.second->target->coord),
-                           std::to_string(true), std::to_string(true), std::to_string(true)});
-        this->lotus.insert({std::to_string(edge.second->target->id), std::to_string(edge.second->source->id), std::to_string(edge.second->way->id),
-                           this->to_geografic_linestring(edge.second->target->coord, edge.second->source->coord),
-                           std::to_string(true), std::to_string(true), std::to_string(true)});
+        this->lotus.insert({std::to_string(edge.second->source->id),
+                std::to_string(edge.second->target->id),
+                std::to_string(edge.second->way->id),
+                this->to_geografic_linestring(edge.second->source->coord,
+                edge.second->target->coord),
+                std::to_string(true), std::to_string(true), std::to_string(true)});
+        this->lotus.insert({std::to_string(edge.second->target->id),
+                std::to_string(edge.second->source->id),
+                std::to_string(edge.second->way->id),
+                this->to_geografic_linestring(edge.second->target->coord,
+                edge.second->source->coord),
+                std::to_string(true), std::to_string(true), std::to_string(true)});
     }
     lotus.finish_bulk_insert();
 }
@@ -115,15 +172,17 @@ void EdPersistor::insert_poi_types(const ed::Georef& data){
 }
 
 void EdPersistor::insert_pois(const ed::Georef& data){
-    this->lotus.prepare_bulk_insert("navitia.poi", {"id", "weight", "coord", "name", "uri", "poi_type_id"});
+    this->lotus.prepare_bulk_insert("navitia.poi",
+            {"id", "weight", "coord", "name", "uri", "poi_type_id"});
     for(const auto& itm : data.pois) {
         std::string poi_type("NULL");
         if(itm.second->poi_type != nullptr){
             poi_type = std::to_string(itm.second->poi_type->id);
         }
-        this->lotus.insert({std::to_string(itm.second->id), std::to_string(itm.second->weight),
-                           this->to_geografic_point(itm.second->coord),
-                           itm.second->name, itm.first, poi_type});
+        this->lotus.insert({std::to_string(itm.second->id),
+                std::to_string(itm.second->weight),
+                this->to_geografic_point(itm.second->coord),
+                itm.second->name, itm.first, poi_type});
     }
     lotus.finish_bulk_insert();
 }
@@ -140,87 +199,157 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
 }
 
 void EdPersistor::update_boundary(){
-    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from navitia.admin;", "", PGRES_TUPLES_OK));
+    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from navitia.admin;",
+                "", PGRES_TUPLES_OK));
 }
 
 void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
 
     this->lotus.start_transaction();
 
-    std::cout << "début : vider toutes les tables (TRUNCATE)!" << std::endl;
+    LOG4CPLUS_INFO(logger, "Begin: clean db");
     this->clean_db();
-
-    std::cout << "début : block insert!" << std::endl;
+    LOG4CPLUS_INFO(logger, "End: clean db");
+    LOG4CPLUS_INFO(logger, "Begin: insert metadata");
     this->insert_metadata(meta);
+    LOG4CPLUS_INFO(logger, "End: insert metadata");
+    LOG4CPLUS_INFO(logger, "Begin: insert networks");
     this->insert_networks(data.networks);
+    LOG4CPLUS_INFO(logger, "End: insert networks");
+    LOG4CPLUS_INFO(logger, "Begin: insert commercial_modes");
     this->insert_commercial_modes(data.commercial_modes);
+    LOG4CPLUS_INFO(logger, "End: insert commercial_modes");
+    LOG4CPLUS_INFO(logger, "Begin: insert physical_modes");
     this->insert_physical_modes(data.physical_modes);
+    LOG4CPLUS_INFO(logger, "End: insert physical_modes");
+    LOG4CPLUS_INFO(logger, "Begin: insert companies");
     this->insert_companies(data.companies);
+    LOG4CPLUS_INFO(logger, "End: insert companies");
+    LOG4CPLUS_INFO(logger, "Begin: insert contributors");
     this->insert_contributors(data.contributors);
-
+    LOG4CPLUS_INFO(logger, "End: insert contributors");
+    LOG4CPLUS_INFO(logger, "Begin: insert stops properties");
     this->insert_sa_sp_properties(data);
+    LOG4CPLUS_INFO(logger, "End: insert stops properties");
+    LOG4CPLUS_INFO(logger, "Begin: insert stop areas");
     this->insert_stop_areas(data.stop_areas);
+    LOG4CPLUS_INFO(logger, "End: insert stop areas");
+    LOG4CPLUS_INFO(logger, "Begin: insert stop points");
     this->insert_stop_points(data.stop_points);
-
+    LOG4CPLUS_INFO(logger, "End: insert stop points");
+    LOG4CPLUS_INFO(logger, "Begin: insert lines");
     this->insert_lines(data.lines);
+    LOG4CPLUS_INFO(logger, "End: insert lines");
+    LOG4CPLUS_INFO(logger, "Begin: insert routes");
     this->insert_routes(data.routes);
+    LOG4CPLUS_INFO(logger, "End: insert routes");
+    LOG4CPLUS_INFO(logger, "Begin: insert journey patterns");
     this->insert_journey_patterns(data.journey_patterns);
-
+    LOG4CPLUS_INFO(logger, "End: insert journey patterns");
+    LOG4CPLUS_INFO(logger, "Begin: insert validity patterns");
     this->insert_validity_patterns(data.validity_patterns);
+    LOG4CPLUS_INFO(logger, "End: insert validity patterns");
+    LOG4CPLUS_INFO(logger, "Begin: insert vehicle properties");
     this->insert_vehicle_properties(data.vehicle_journeys);
+    LOG4CPLUS_INFO(logger, "End: insert vehicle properties");
+    LOG4CPLUS_INFO(logger, "Begin: insert vehicle journeys");
     this->insert_vehicle_journeys(data.vehicle_journeys);
-
+    LOG4CPLUS_INFO(logger, "End: insert vehicle journeys");
+    LOG4CPLUS_INFO(logger, "Begin: insert journey pattern points");
     this->insert_journey_pattern_point(data.journey_pattern_points);
-
+    LOG4CPLUS_INFO(logger, "End: insert journey pattern points");
+    LOG4CPLUS_INFO(logger, "Begin: insert stop times");
     this->insert_stop_times(data.stops);
-
+    LOG4CPLUS_INFO(logger, "End: insert stop times");
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
+    LOG4CPLUS_INFO(logger, "Begin: insert stop point connections");
     this->insert_stop_point_connections(data.stop_point_connections);
+    LOG4CPLUS_INFO(logger, "End: insert stop point connections");
+    LOG4CPLUS_INFO(logger, "Begin: insert journey pattern point connections");
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
+    LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
+    LOG4CPLUS_INFO(logger, "Begin: insert aliases");
     this->insert_alias(data.alias);
+    LOG4CPLUS_INFO(logger, "End: insert aliases");
+    LOG4CPLUS_INFO(logger, "Begin: insert synonyms");
     this->insert_synonyms(data.synonymes);
-
+    LOG4CPLUS_INFO(logger, "End: insert synonyms");
+    LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
+    LOG4CPLUS_INFO(logger, "End: insert fares");
 
-    std::cout << "fin : block insert!" << std::endl;
-    this->build_relation();
+    LOG4CPLUS_INFO(logger, "Begin: build stops admin relations");
+    this->build_stop_admin_relation();
+    LOG4CPLUS_INFO(logger, "End: build stops admin relations");
+    LOG4CPLUS_INFO(logger, "Begin: commit");
     this->lotus.commit();
-    std::cout << "fin : commit!" << std::endl;
+    LOG4CPLUS_INFO(logger, "End: commit");
 }
 
 
 void EdPersistor::persist_fare(const ed::Data& data) {
-    std::cout << "TRUNCATE fare tables" << std::endl;
-    PQclear(this->lotus.exec("TRUNCATE navitia.origin_destination, navitia.transition, navitia.ticket, navitia.dated_ticket, navitia.od_ticket CASCADE"));
+    LOG4CPLUS_INFO(logger, "Begin: truncate fare tables");
+    PQclear(this->lotus.exec(
+                "TRUNCATE navitia.origin_destination, navitia.transition, "
+                "navitia.ticket, navitia.dated_ticket, navitia.od_ticket CASCADE"));
+    LOG4CPLUS_INFO(logger, "End: truncate fare tables");
+    LOG4CPLUS_INFO(logger, "Begin: insert prices");
     this->insert_prices(data);
+    LOG4CPLUS_INFO(logger, "End: insert prices");
+    LOG4CPLUS_INFO(logger, "Begin: insert transitions");
     this->insert_transitions(data);
+    LOG4CPLUS_INFO(logger, "End: insert transitions");
+    LOG4CPLUS_INFO(logger, "Begin: insert origin destinations");
     this->insert_origin_destination(data);
+    LOG4CPLUS_INFO(logger, "End: insert origin destinations");
 }
 
 void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
-    std::string request = "insert into navitia.parameters (beginning_date, end_date) VALUES ('" + bg::to_iso_extended_string(meta.production_date.begin()) +
-        "', '" + bg::to_iso_extended_string(meta.production_date.end()) + "');";
+    std::string request = "insert into navitia.parameters (beginning_date, end_date) "
+                          "VALUES ('" + bg::to_iso_extended_string(meta.production_date.begin()) +
+                          "', '" + bg::to_iso_extended_string(meta.production_date.end()) + "');";
     PQclear(this->lotus.exec(request));
 }
 
-void EdPersistor::build_relation(){
+void EdPersistor::build_stop_admin_relation(){
+    LOG4CPLUS_INFO(logger, "Begin: execute georef.match_stop_area_to_admin()");
     PQclear(this->lotus.exec("SELECT georef.match_stop_area_to_admin()", "", PGRES_TUPLES_OK));
+    LOG4CPLUS_INFO(logger, "End: execute georef.match_stop_area_to_admin()\n"
+                           "Begin: execute georef.match_stop_point_to_admin");
     PQclear(this->lotus.exec("SELECT georef.match_stop_point_to_admin();", "", PGRES_TUPLES_OK));
+    LOG4CPLUS_INFO(logger, "End: execute georef.match_stop_point_to_admin\n");
 }
+
+void EdPersistor::build_poi_admin_relation() {
+    LOG4CPLUS_INFO(logger, "Begin: execute georef.match_poi_to_admin\n");
+    PQclear(this->lotus.exec("SELECT georef.match_poi_to_admin();", "", PGRES_TUPLES_OK));
+    LOG4CPLUS_INFO(logger, "End: execute georef.match_poi_to_admin\n");
+}
+
 void EdPersistor::clean_georef(){
-    PQclear(this->lotus.exec("truncate georef.node, georef.house_number, navitia.admin, georef.way, navitia.poi_type CASCADE;"));
+    PQclear(this->lotus.exec(
+                "TRUNCATE georef.node, georef.house_number, navitia.admin, "
+                "georef.way, navitia.poi_type, navitia.poi CASCADE;"));
 }
+
 void EdPersistor::clean_db(){
-    PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, navitia.alias,navitia.synonym,"
-                            "navitia.commercial_mode, navitia.vehicle_properties, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));
+    PQclear(this->lotus.exec(
+                "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
+                "navitia.physical_mode, navitia.contributor, navitia.alias, "
+                "navitia.synonym, navitia.commercial_mode, "
+                "navitia.vehicle_properties, navitia.properties, "
+                "navitia.validity_pattern, navitia.network, navitia.parameters, "
+                "navitia.connection CASCADE"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
-    this->lotus.prepare_bulk_insert("navitia.network", {"id", "uri", "name", "comment"});
+    this->lotus.prepare_bulk_insert("navitia.network", {"id", "uri",
+            "external_code", "name", "comment"});
     for(types::Network* net : networks){
         std::vector<std::string> values;
         values.push_back(std::to_string(net->idx));
-        values.push_back(net->uri);
+        values.push_back(navitia::base64_encode(net->uri));
+        values.push_back(net->external_code);
         values.push_back(net->name);
         values.push_back(net->comment);
         this->lotus.insert(values);
@@ -229,11 +358,12 @@ void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
 }
 
 void EdPersistor::insert_commercial_modes(const std::vector<types::CommercialMode*>& commercial_modes){
-    this->lotus.prepare_bulk_insert("navitia.commercial_mode", {"id", "uri", "name"});
+    this->lotus.prepare_bulk_insert("navitia.commercial_mode",
+            {"id", "uri","name"});
     for(types::CommercialMode* mode : commercial_modes){
         std::vector<std::string> values;
         values.push_back(std::to_string(mode->idx));
-        values.push_back(mode->uri);
+        values.push_back(navitia::base64_encode(mode->uri));
         values.push_back(mode->name);
         this->lotus.insert(values);
     }
@@ -241,11 +371,12 @@ void EdPersistor::insert_commercial_modes(const std::vector<types::CommercialMod
 }
 
 void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>& physical_modes){
-    this->lotus.prepare_bulk_insert("navitia.physical_mode", {"id", "uri", "name"});
+    this->lotus.prepare_bulk_insert("navitia.physical_mode",
+            {"id", "uri", "name"});
     for(types::PhysicalMode* mode : physical_modes){
         std::vector<std::string> values;
         values.push_back(std::to_string(mode->idx));
-        values.push_back(mode->uri);
+        values.push_back(navitia::base64_encode(mode->uri));
         values.push_back(mode->name);
         this->lotus.insert(values);
     }
@@ -253,12 +384,13 @@ void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>&
 }
 
 void EdPersistor::insert_companies(const std::vector<types::Company*>& companies){
-    this->lotus.prepare_bulk_insert("navitia.company", {"id", "uri", "name", "comment", "address_name", "address_number",
-                                    "address_type_name", "phone_number","mail", "website", "fax"});
+    this->lotus.prepare_bulk_insert("navitia.company", {"id", "uri",
+            "name", "comment", "address_name", "address_number",
+            "address_type_name", "phone_number","mail", "website", "fax"});
     for(types::Company* company : companies){
         std::vector<std::string> values;
         values.push_back(std::to_string(company->idx));
-        values.push_back(company->uri);
+        values.push_back(navitia::base64_encode(company->uri));
         values.push_back(company->name);
         values.push_back(company->comment);
         values.push_back(company->address_name);
@@ -274,11 +406,12 @@ void EdPersistor::insert_companies(const std::vector<types::Company*>& companies
 }
 
 void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& contributors){
-    this->lotus.prepare_bulk_insert("navitia.contributor", {"id", "uri", "name"});
+    this->lotus.prepare_bulk_insert("navitia.contributor",
+            {"id", "uri", "name"});
     for(types::Contributor* contributor : contributors){
         std::vector<std::string> values;
         values.push_back(std::to_string(contributor->idx));
-        values.push_back(contributor->uri);
+        values.push_back(navitia::base64_encode(contributor->uri));
         values.push_back(contributor->name);
         this->lotus.insert(values);
     }
@@ -286,9 +419,10 @@ void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& co
 }
 
 void EdPersistor::insert_sa_sp_properties(const ed::Data& data){
-    this->lotus.prepare_bulk_insert("navitia.properties", {"id", "wheelchair_boarding", "sheltered", "elevator", "escalator",
-                                    "bike_accepted","bike_depot", "visual_announcement", "audible_announcement",
-                                    "appropriate_escort", "appropriate_signage"});
+    this->lotus.prepare_bulk_insert("navitia.properties",
+            {"id", "wheelchair_boarding", "sheltered", "elevator", "escalator",
+             "bike_accepted","bike_depot", "visual_announcement",
+             "audible_announcement", "appropriate_escort", "appropriate_signage"});
     std::vector<navitia::type::idx_t> to_insert;
     for(types::StopArea* sa : data.stop_areas){
         navitia::type::idx_t idx = sa->to_ulog();
@@ -354,12 +488,15 @@ void EdPersistor::insert_sa_sp_properties(const ed::Data& data){
 }
 
 void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_areas){
-    this->lotus.prepare_bulk_insert("navitia.stop_area", {"id", "uri", "name", "coord", "comment", "properties_id"});
+    this->lotus.prepare_bulk_insert("navitia.stop_area",
+            {"id", "uri", "external_code", "name", "coord", "comment",
+            "properties_id"});
 
     for(types::StopArea* sa : stop_areas){
         std::vector<std::string> values;
         values.push_back(std::to_string(sa->idx));
-        values.push_back(sa->uri);
+        values.push_back(navitia::base64_encode(sa->uri));
+        values.push_back(sa->external_code);
         values.push_back(sa->name);
         values.push_back("POINT(" + std::to_string(sa->coord.lon()) + " " + std::to_string(sa->coord.lat()) + ")");
         values.push_back(sa->comment);
@@ -371,12 +508,15 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
 }
 
 void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_points){
-    this->lotus.prepare_bulk_insert("navitia.stop_point", {"id", "uri", "name", "coord", "comment", "fare_zone", "stop_area_id","properties_id"});
+    this->lotus.prepare_bulk_insert("navitia.stop_point",
+            {"id", "uri", "external_code", "name", "coord", "comment",
+            "fare_zone", "stop_area_id","properties_id"});
 
     for(types::StopPoint* sp : stop_points){
         std::vector<std::string> values;
         values.push_back(std::to_string(sp->idx));
-        values.push_back(sp->uri);
+        values.push_back(navitia::base64_encode(sp->uri));
+        values.push_back(sp->external_code);
         values.push_back(sp->name);
         values.push_back("POINT(" + std::to_string(sp->coord.lon()) + " " + std::to_string(sp->coord.lat()) + ")");
         values.push_back(sp->comment);
@@ -394,12 +534,15 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 
 }
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
-    this->lotus.prepare_bulk_insert("navitia.line", {"id", "uri", "name", "comment", "color", "code", "commercial_mode_id", "network_id"});
+    this->lotus.prepare_bulk_insert("navitia.line",
+            {"id", "uri", "external_code", "name", "comment", "color", "code",
+            "commercial_mode_id", "network_id"});
 
     for(types::Line* line : lines){
         std::vector<std::string> values;
         values.push_back(std::to_string(line->idx));
-        values.push_back(line->uri);
+        values.push_back(navitia::base64_encode(line->uri));
+        values.push_back(line->external_code);
         values.push_back(line->name);
         values.push_back(line->comment);
         values.push_back(line->color);
@@ -423,8 +566,10 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 }
 
 void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections){
-    this->lotus.prepare_bulk_insert("navitia.connection", {"departure_stop_point_id", "destination_stop_point_id", "connection_type_id",
-                                    "display_duration","duration", "max_duration", "properties_id"});
+    this->lotus.prepare_bulk_insert("navitia.connection",
+            {"departure_stop_point_id", "destination_stop_point_id",
+            "connection_type_id", "display_duration","duration", "max_duration",
+            "properties_id"});
 
     //@TODO properties!!
     for(types::StopPointConnection* co : connections){
@@ -444,8 +589,10 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 }
 
 void EdPersistor::insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections){
-    this->lotus.prepare_bulk_insert("navitia.journey_pattern_point_connection", {"departure_journey_pattern_point_id",
-            "destination_journey_pattern_point_id", "connection_kind_id", "length"});
+    this->lotus.prepare_bulk_insert("navitia.journey_pattern_point_connection",
+            {"departure_journey_pattern_point_id",
+            "destination_journey_pattern_point_id", "connection_kind_id",
+            "length"});
 
     //@TODO properties!!
     for(types::JourneyPatternPointConnection* co : connections){
@@ -461,12 +608,14 @@ void EdPersistor::insert_journey_pattern_point_connections(const std::vector<typ
 }
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
-    this->lotus.prepare_bulk_insert("navitia.route", {"id", "uri", "name", "comment", "line_id"});
+    this->lotus.prepare_bulk_insert("navitia.route",
+            {"id", "uri", "external_code", "name", "comment", "line_id"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
         values.push_back(std::to_string(route->idx));
-        values.push_back(route->uri);
+        values.push_back(navitia::base64_encode(route->uri));
+        values.push_back(route->external_code);
         values.push_back(route->name);
         values.push_back(route->comment);
         if(route->line != NULL){
@@ -482,12 +631,14 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
 }
 
 void EdPersistor::insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_patterns){
-    this->lotus.prepare_bulk_insert("navitia.journey_pattern", {"id", "uri", "name", "comment", "physical_mode_id", "is_frequence", "route_id"});
+    this->lotus.prepare_bulk_insert("navitia.journey_pattern",
+            {"id", "uri", "name", "comment", "physical_mode_id",
+            "is_frequence", "route_id"});
 
     for(types::JourneyPattern* jp : journey_patterns){
         std::vector<std::string> values;
         values.push_back(std::to_string(jp->idx));
-        values.push_back(jp->uri);
+        values.push_back(navitia::base64_encode(jp->uri));
         values.push_back(jp->name);
         values.push_back(jp->comment);
         if (jp->physical_mode != NULL){
@@ -521,9 +672,11 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
 }
 
 void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_times){
-    this->lotus.prepare_bulk_insert("navitia.stop_time", {"arrival_time", "departure_time", "local_traffic_zone", "start_time",
-                                    "end_time", "headway_sec", "odt", "pick_up_allowed", "drop_off_allowed",
-                                    "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "comment", "date_time_estimated"});
+    this->lotus.prepare_bulk_insert("navitia.stop_time",
+            {"arrival_time", "departure_time", "local_traffic_zone", "start_time",
+             "end_time", "headway_sec", "odt", "pick_up_allowed", "drop_off_allowed",
+             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id",
+             "comment", "date_time_estimated"});
 
     for(types::StopTime* stop : stop_times){
         std::vector<std::string> values;
@@ -561,12 +714,14 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
 }
 
 void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points){
-    this->lotus.prepare_bulk_insert("navitia.journey_pattern_point", {"id", "uri", "name", "comment", "\"order\"", "stop_point_id", "journey_pattern_id"});
+    this->lotus.prepare_bulk_insert("navitia.journey_pattern_point",
+            {"id", "uri", "name", "comment", "\"order\"",
+            "stop_point_id", "journey_pattern_id"});
 
     for(types::JourneyPatternPoint* jpp : journey_pattern_points){
         std::vector<std::string> values;
         values.push_back(std::to_string(jpp->idx));
-        values.push_back(jpp->uri);
+        values.push_back(navitia::base64_encode(jpp->uri));
         values.push_back(jpp->name);
         values.push_back(jpp->comment);
         values.push_back(std::to_string(jpp->order));
@@ -589,10 +744,10 @@ void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyP
 }
 
 void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys){
-    this->lotus.prepare_bulk_insert("navitia.vehicle_properties", {"id", "wheelchair_accessible",
-                                    "bike_accepted", "air_conditioned", "visual_announcement",
-                                    "audible_announcement", "appropriate_escort", "appropriate_signage",
-                                    "school_vehicle"});
+    this->lotus.prepare_bulk_insert("navitia.vehicle_properties",
+            {"id", "wheelchair_accessible", "bike_accepted", "air_conditioned",
+            "visual_announcement", "audible_announcement", "appropriate_escort",
+            "appropriate_signage", "school_vehicle"});
 
     std::vector<navitia::type::idx_t> to_insert;
     for(types::VehicleJourney* vj : vehicle_journeys){
@@ -618,14 +773,17 @@ void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJour
 }
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
-    this->lotus.prepare_bulk_insert("navitia.vehicle_journey", {"id", "uri", "name", "comment", "validity_pattern_id",
-                                    "adapted_validity_pattern_id", "company_id", "journey_pattern_id", "theoric_vehicle_journey_id",
-                                    "vehicle_properties_id","odt_type_id", "odt_message"});
+    this->lotus.prepare_bulk_insert("navitia.vehicle_journey",
+            {"id", "uri", "external_code", "name", "comment", "validity_pattern_id",
+             "adapted_validity_pattern_id", "company_id", "journey_pattern_id",
+             "theoric_vehicle_journey_id", "vehicle_properties_id",
+             "odt_type_id", "odt_message"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
         values.push_back(std::to_string(vj->idx));
-        values.push_back(vj->uri);
+        values.push_back(navitia::base64_encode(vj->uri));
+        values.push_back(vj->external_code);
         values.push_back(vj->name);
         values.push_back(vj->comment);
         if(vj->validity_pattern != NULL){
@@ -697,11 +855,14 @@ void EdPersistor::insert_synonyms(const std::map<std::string, std::string>& syno
 }
 
 // TODO:
-// before adding in bd a transition or an od fare, we should check if object filtering the transition is in ed (the line, the network, ...)
+// before adding in bd a transition or an od fare,
+// we should check if object filtering the transition is in ed (the line, the network, ...)
 
 void EdPersistor::insert_transitions(const ed::Data& data) {
 
-    this->lotus.prepare_bulk_insert("navitia.transition", {"id", "before_change","after_change","start_trip","end_trip","global_condition","ticket_id"});
+    this->lotus.prepare_bulk_insert("navitia.transition",
+            {"id", "before_change", "after_change", "start_trip", "end_trip",
+            "global_condition", "ticket_id"});
     size_t count = 1;
     std::vector<std::vector<std::string>> null_ticket_vector;
     for (const auto& transition_tuple: data.transitions) {
@@ -737,13 +898,16 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
             continue;
         }
 
-        std::cout << "transition : " << boost::algorithm::join(values, ",") << std::endl;
+        LOG4CPLUS_INFO(logger, "transition : " << boost::algorithm::join(values, ","));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
 
-    //the postgres connector does not handle well null values, so we add the transition without tickets in a separate bulk
-    this->lotus.prepare_bulk_insert("navitia.transition", {"id", "before_change","after_change","start_trip","end_trip","global_condition",});
+    // the postgres connector does not handle well null values,
+    // so we add the transition without tickets in a separate bulk
+    this->lotus.prepare_bulk_insert("navitia.transition",
+            {"id", "before_change", "after_change", "start_trip", "end_trip",
+            "global_condition",});
     for (const auto& null_ticket: null_ticket_vector) {
         this->lotus.insert(null_ticket);
     }
@@ -751,7 +915,8 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
 }
 
 void EdPersistor::insert_prices(const ed::Data& data) {
-    this->lotus.prepare_bulk_insert("navitia.ticket", {"ticket_key", "ticket_title", "ticket_comment"});
+    this->lotus.prepare_bulk_insert("navitia.ticket",
+            {"ticket_key", "ticket_title", "ticket_comment"});
     for (const auto& ticket_it: data.fare_map) {
         const navitia::fare::DateTicket& tickets = ticket_it.second;
 
@@ -761,14 +926,16 @@ void EdPersistor::insert_prices(const ed::Data& data) {
             tickets.tickets.front().ticket.caption,
             tickets.tickets.front().ticket.comment
         };
-        std::cout << "ticket : " << boost::algorithm::join(values, ",") << std::endl;
+        LOG4CPLUS_INFO(logger, "ticket : " << boost::algorithm::join(values, ","));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
 
     //we add the dated ticket afterward
-    std::cout << "dated ticket : " << std::endl;
-    this->lotus.prepare_bulk_insert("navitia.dated_ticket", {"id", "ticket_id", "valid_from", "valid_to", "ticket_price", "comments", "currency"});
+    LOG4CPLUS_INFO(logger, "dated ticket");
+    this->lotus.prepare_bulk_insert("navitia.dated_ticket",
+            {"id", "ticket_id", "valid_from", "valid_to", "ticket_price",
+            "comments", "currency"});
     int count = 0;
     for (const auto& ticket_it: data.fare_map) {
         const navitia::fare::DateTicket& tickets = ticket_it.second;
@@ -792,7 +959,8 @@ void EdPersistor::insert_prices(const ed::Data& data) {
 }
 
 void EdPersistor::insert_origin_destination(const ed::Data& data) {
-    this->lotus.prepare_bulk_insert("navitia.origin_destination", {"id", "origin_id", "origin_mode", "destination_id", "destination_mode"});
+    this->lotus.prepare_bulk_insert("navitia.origin_destination",
+            {"id", "origin_id", "origin_mode", "destination_id", "destination_mode"});
     size_t cpt(0); //id of the od
     for (const auto& origin_ticket: data.od_tickets) {
         for (const auto& destination_ticket: origin_ticket.second) {
@@ -822,7 +990,7 @@ void EdPersistor::insert_origin_destination(const ed::Data& data) {
                     std::to_string(cpt),
                     ticket
                 };
-                std::cout << "origin_destination : " << boost::algorithm::join(values, ",") << std::endl;
+                LOG4CPLUS_INFO(logger, "origin_destination : " << boost::algorithm::join(values, ","));
                 this->lotus.insert(values);
             }
             cpt++;

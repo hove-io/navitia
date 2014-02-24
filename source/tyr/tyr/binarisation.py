@@ -41,7 +41,7 @@ def make_connection_string(instance_config):
 #TODO bind task
 @celery.task()
 def fusio2ed(instance_config, filename, job_id):
-    """ launch fusio2ed """
+    """ Unzip fusio file and launch fusio2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -82,7 +82,7 @@ def fusio2ed(instance_config, filename, job_id):
 
 @celery.task()
 def gtfs2ed(instance_config, gtfs_filename,  job_id):
-    """ launch gtfs2ed """
+    """ Unzip gtfs file launch gtfs2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance

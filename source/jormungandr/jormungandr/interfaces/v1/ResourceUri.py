@@ -17,7 +17,6 @@ class ResourceUri(Resource):
         self.region = None
         self.method_decorators = []
         self.method_decorators.append(add_id_links())
-        self.method_decorators.append(add_address_poi_id(self))
         self.method_decorators.append(add_computed_resources(self))
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
@@ -87,7 +86,7 @@ class add_computed_resources(object):
             else:
                 kwargs["uri"] += '{' + collection + ".id}"
             if collection in ['stop_areas', 'stop_points', 'lines', 'routes',
-                              'addresses']:
+                              'addresses'] and "region" in kwargs:
                 for api in ['route_schedules', 'stop_schedules',
                             'arrivals', 'departures', "places_nearby"]:
                     data['links'].append({
@@ -101,7 +100,7 @@ class add_computed_resources(object):
                     "rel": "journeys",
                     "templated": templated
                 })
-            if collection in ['stop_areas', 'lines', 'networks']:
+            if collection in ['stop_areas', 'lines', 'networks'] and "region" in kwargs:
                 data['links'].append({
                     "href": url_for("v1/disruptions", **kwargs),
                     "rel": "disruptions",
@@ -112,47 +111,6 @@ class add_computed_resources(object):
             else:
                 return data
         return wrapper
-
-
-class add_address_poi_id(object):
-
-    def __init__(self, resource):
-        self.resource = resource
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-
-            def add_id(objects, region, type_=None):
-                if isinstance(objects, list) or isinstance(objects, tuple):
-                    for item in objects:
-                        add_id(item, region, type_)
-                elif isinstance(objects, dict) or\
-                        isinstance(objects, OrderedDict):
-                    for v in objects.keys():
-                        add_id(objects[v], region, v)
-                    if 'address' == type_:
-                        lon = objects['coord']['lon']
-                        lat = objects['coord']['lat']
-                        objects['id'] = lon + ';' + lat
-                    if type_ == 'poi' or type_ == 'pois':
-                        old_id = objects['id']
-                        objects['id'] = 'poi:' + region + ':' + old_id
-                    if type_ == 'administrative_region' or\
-                            type_ == 'administrative_regions':
-                        old_id = objects['id']
-                        objects['id'] = 'admin:' + region + old_id[5:]
-                    if 'embedded_type' in objects.keys() and\
-                        (objects['embedded_type'] == 'address' or
-                         objects['embedded_type'] == 'poi' or
-                         objects['embedded_type'] == 'administrative_region'):
-                        objects["id"] = objects[objects['embedded_type']]["id"]
-            if self.resource.region:
-                add_id(objects, self.resource.region)
-            return objects
-        return wrapper
-
 
 class add_notes(object):
 

@@ -46,5 +46,6 @@ class PlacesNearby(Resource):
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
-        response = i_manager.dispatch(args, region, "places_nearby")
+        response = i_manager.dispatch(args, "places_nearby",
+                                      instance_name=region)
         return protobuf_to_dict(response, use_enum_labels=True), 200

@@ -20,17 +20,22 @@ int main(int argc, char * argv[])
 {
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
-    std::string output, connection_string;
+    std::string output, connection_string, region_name;
     double min_non_connected_graph_ratio;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "path to the config file")
-        ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "output file")
-        // by default, we filter the non connected graphs that are smaller than 10% of the biggest graph
-        ("min_non_connected_ratio,m", po::value<double>(&min_non_connected_graph_ratio)->default_value(0.1), "min ratio for the size of non connected graph")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia");
+        ("config-file", po::value<std::string>(), "Path to config file")
+        ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"),
+            "Output file")
+        ("name,n", po::value<std::string>(&region_name)->default_value("default"),
+            "Name of the region you are extracting")
+        ("min_non_connected_ratio,m",
+         po::value<double>(&min_non_connected_graph_ratio)->default_value(0.1),
+         "min ratio for the size of non connected graph")
+        ("connection-string", po::value<std::string>(&connection_string)->required(),
+         "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -45,7 +50,7 @@ int main(int argc, char * argv[])
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
         if(!stream.is_open()){
-            throw navitia::exception("loading config file failed");
+            throw navitia::exception("Unable to load config file");
         }else{
             po::store(po::parse_config_file(stream, desc), vm);
         }
@@ -71,60 +76,60 @@ int main(int argc, char * argv[])
     data.build_midnight_interchange();
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-
-    std::cout << "line: " << data.pt_data.lines.size() << std::endl;
-    std::cout << "route: " << data.pt_data.routes.size() << std::endl;
-    std::cout << "journey_pattern: " << data.pt_data.journey_patterns.size() << std::endl;
-    std::cout << "stoparea: " << data.pt_data.stop_areas.size() << std::endl;
-    std::cout << "stoppoint: " << data.pt_data.stop_points.size() << std::endl;
-    std::cout << "vehiclejourney: " << data.pt_data.vehicle_journeys.size() << std::endl;
-    std::cout << "stop: " << data.pt_data.stop_times.size() << std::endl;
-    std::cout << "connection: " << data.pt_data.stop_point_connections.size() << std::endl;
-    std::cout << "journey_pattern points: " << data.pt_data.journey_pattern_points.size() << std::endl;
-    std::cout << "modes: " << data.pt_data.physical_modes.size() << std::endl;
-    std::cout << "validity pattern : " << data.pt_data.validity_patterns.size() << std::endl;
-    std::cout << "journey_pattern point connections : " << data.pt_data.journey_pattern_point_connections.size() << std::endl;
-    std::cout << "alias : " << data.geo_ref.alias.size() << std::endl;
-    std::cout << "synonyms : " << data.geo_ref.synonymes.size() << std::endl;
-    std::cout << "fare tickets: " << data.fare.fare_map.size() << std::endl;
-    std::cout << "fare transitions: " << data.fare.nb_transitions() << std::endl;
-    std::cout << "fare od: " << data.fare.od_tickets.size() << std::endl;
+    LOG4CPLUS_INFO(logger, "line: " << data.pt_data.lines.size());
+    LOG4CPLUS_INFO(logger, "route: " << data.pt_data.routes.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern: " << data.pt_data.journey_patterns.size());
+    LOG4CPLUS_INFO(logger, "stoparea: " << data.pt_data.stop_areas.size());
+    LOG4CPLUS_INFO(logger, "stoppoint: " << data.pt_data.stop_points.size());
+    LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.pt_data.vehicle_journeys.size());
+    LOG4CPLUS_INFO(logger, "stop: " << data.pt_data.stop_times.size());
+    LOG4CPLUS_INFO(logger, "connection: " << data.pt_data.stop_point_connections.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.pt_data.journey_pattern_points.size());
+    LOG4CPLUS_INFO(logger, "modes: " << data.pt_data.physical_modes.size());
+    LOG4CPLUS_INFO(logger, "validity pattern : " << data.pt_data.validity_patterns.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.pt_data.journey_pattern_point_connections.size());
+    LOG4CPLUS_INFO(logger, "alias : " << data.geo_ref.alias.size());
+    LOG4CPLUS_INFO(logger, "synonyms : " << data.geo_ref.synonymes.size());
+    LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare.fare_map.size());
+    LOG4CPLUS_INFO(logger, "fare transitions: " << data.fare.nb_transitions());
+    LOG4CPLUS_INFO(logger, "fare od: " << data.fare.od_tickets.size());
 
     start = pt::microsec_clock::local_time();
     data.pt_data.sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
-    std::cout << "Construction de proximity list" << std::endl;
+    LOG4CPLUS_INFO(logger, "Building proximity list");
     data.build_proximity_list();
-    std::cout << "Construction de external code" << std::endl;
+    LOG4CPLUS_INFO(logger, "Building uri maps");
     //construction des map uri => idx
     data.build_uri();
 
-    std::cout << "Construction de first letter" << std::endl;
+    LOG4CPLUS_INFO(logger, "Building autocomplete");
     data.build_autocomplete();
 
     /* ça devrait etre fait avant, à vérifier
-    std::cout << "On va construire les correspondances" << std::endl;
+    LOG4CPLUS_INFO(logger, "On va construire les correspondances");
     {Timer t("Construction des correspondances");  data.pt_data.build_connections();}
     */
     autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
-    std::cout << "Debut sauvegarde ..." << std::endl;
+    LOG4CPLUS_INFO(logger, "Begin to save ...");
 
     start = pt::microsec_clock::local_time();
     try {
         data.save(output);
     } catch(const navitia::exception &e) {
-        std::cout << "Impossible de sauvegarder" << std::endl;
-        std::cout << e.what() << std::endl;
+        LOG4CPLUS_ERROR(logger, "Unable to save");
+        LOG4CPLUS_ERROR(logger, e.what());
     }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    LOG4CPLUS_INFO(logger, "Data saved");
 
-    std::cout << "temps de traitement" << std::endl;
-    std::cout << "\t lecture des fichiers " << read << "ms" << std::endl;
-    std::cout << "\t trie des données " << sort << "ms" << std::endl;
-    std::cout << "\t autocomplete " << autocomplete << "ms" << std::endl;
-    std::cout << "\t enregistrement des données " << save << "ms" << std::endl;
+    LOG4CPLUS_INFO(logger, "Computing times");
+    LOG4CPLUS_INFO(logger, "\t File reading: " << read << "ms");
+    LOG4CPLUS_INFO(logger, "\t Sorting data: " << sort << "ms");
+    LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
+    LOG4CPLUS_INFO(logger, "\t Data writing: " << save << "ms");
 
     return 0;
 }

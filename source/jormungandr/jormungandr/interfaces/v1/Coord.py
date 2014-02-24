@@ -32,8 +32,8 @@ class Coord(ResourceUri):
                 "start_page": 0,
                 "filter": ""
             }
-            pb_result = i_manager.dispatch(args, self.region,
-                                           "places_nearby")
+            pb_result = i_manager.dispatch(args, "places_nearby",
+                                           instance_name=self.region)
             if len(pb_result.places_nearby) > 0:
                 e_type = pb_result.places_nearby[0].embedded_type
                 if _NAVITIATYPE.values_by_name["ADDRESS"].number == e_type:

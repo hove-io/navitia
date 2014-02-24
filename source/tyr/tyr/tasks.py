@@ -1,7 +1,8 @@
-from celery import chain
+from celery import chain, group
 from celery.signals import task_postrun
 from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed, fare2ed
 from tyr.binarisation import reload_data, move_to_backupdirectory
+from tyr.aggregate_places import aggregate_places
 from flask import current_app
 import glob
 from tyr import celery
@@ -48,11 +49,13 @@ def finish_job(job_id):
 @celery.task()
 def update_data():
     for instance in models.Instance.query.all():
+        current_app.logger.info("Update data of : %s"%instance.name)
         instance_config = load_instance_config(instance.name)
         files = glob.glob(instance_config.source_directory + "/*")
         actions = []
         job = models.Job()
         job.instance = instance
+        job.state = 'pending'
         for _file in files:
             dataset = models.DataSet()
             filename = None
@@ -89,18 +92,22 @@ def update_data():
             job.data_sets.append(dataset)
 
         if actions:
-            actions.append(ed2nav.si(instance_config))
-            actions.append(nav2rt.si(instance_config))
-            actions.append(reload_data.si(instance_config))
-            actions.append(finish_job.si())
-            job.state = 'pending'
             models.db.session.add(job)
             models.db.session.commit()
-            #We pass the job id to each tasks, but job need to be commited for
-            #having an id
             for action in actions:
                 action.kwargs['job_id'] = job.id
-            task = chain(*actions).delay()
+            #We pass the job id to each tasks, but job need to be commited for
+            #having an id
+            binarisation = [ed2nav.si(instance_config, job.id),
+                            nav2rt.si(instance_config, job.id)]
+            aggregate = aggregate_places.si(instance_config, job.id)
+            #We pass the job id to each tasks, but job need to be commited for
+            #having an id
+            actions.append(group(chain(*binarisation), aggregate))
+            actions.append(reload_data.si(instance_config, job.id))
+            actions.append(finish_job.si(job.id))
+            chain(*actions).delay()
+
 
 
 @celery.task()

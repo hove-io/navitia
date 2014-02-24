@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "data.h"
+#include "ed/data.h"
 #include <utils/logger.h>
 
 //namespace navitia{ namespace georef{

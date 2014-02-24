@@ -13,6 +13,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from errors import ManageError
 from Coord import Coord
+from navitiacommon.models import PtObject
 
 
 class Uri(ResourceUri):
@@ -34,6 +35,8 @@ class Uri(ResourceUri):
                             description="forbidden ids",
                             dest="forbidden_uris[]",
                             action="append")
+        parser.add_argument("external_code", type=unicode,
+                            description="An external code to query")
         if is_collection:
             parser.add_argument("filter", type=str, default="",
                                 description="The filter parameter")
@@ -42,11 +45,27 @@ class Uri(ResourceUri):
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
+        args = self.parsers["get"].parse_args()
+        if region is None and lat is None and lon is None:
+            if "external_code" in args and args["external_code"]:
+                res = PtObject.get_from_external_code(args["external_code"])
+                if res:
+                    id = res.uri
+                    instances = res.instances()
+                    if len(instances) > 0:
+                        region = res.instances()[0].name
+                else:
+                    abort(404, message="Unable to find an object for the uri %s"
+                          % args["external_code"])
+            else:
+                abort(503, message="Not implemented yet")
         self.region = i_manager.get_region(region, lon, lat)
         if not self.region:
             return {"error": "No region"}, 404
-        args = self.parsers["get"].parse_args()
-        if(collection is not None and id is not None):
+
+
+
+        if(collection and id):
             args["filter"] = collections_to_resource_type[collection] + ".uri="
             if collection != 'pois':
                 args["filter"] += id
@@ -59,7 +78,10 @@ class Uri(ResourceUri):
             if collection is None:
                 collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
             args["filter"] = self.get_filter(uris)
-        response = i_manager.dispatch(args, self.region, collection)
+        #else:
+        #    abort(503, message="Not implemented")
+        response = i_manager.dispatch(args, collection,
+                                      instance_name=self.region)
         return response
 
 
@@ -179,6 +201,9 @@ def stop_points(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return StopPoints
 
 
@@ -199,6 +224,9 @@ def stop_areas(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return StopAreas
 
 
@@ -279,6 +307,9 @@ def routes(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return Routes
 
 
@@ -299,6 +330,9 @@ def lines(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return Lines
 
 
@@ -319,6 +353,9 @@ def pois(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return Pois
 
 
@@ -339,6 +376,9 @@ def networks(is_collection):
             collections = marshal_with(OrderedDict(self.collections),
                                        display_null=False)
             self.method_decorators.insert(1, collections)
+            self.parsers["get"].add_argument("original_id", type=unicode,
+                            description="original uri of the object you"
+                                    "want to query")
     return Networks
 
 

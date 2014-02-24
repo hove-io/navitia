@@ -1,11 +1,11 @@
 # coding=utf-8
 from flask import Flask, request, url_for
-from flask.ext.restful import fields, reqparse, marshal_with
+from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.Uri import journey_pattern_points
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from fields import stop_point, stop_area, line, physical_mode,\
+from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
@@ -351,6 +351,7 @@ class add_journey_pagination(object):
 
         return (datetime_first, datetime_last)
 
+
 #add the link between a section and the ticket needed for that section
 class add_fare_links(object):
 
@@ -358,7 +359,6 @@ class add_fare_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            print "add fare_links"
             if objects[1] != 200:
                 return objects
             if not "journeys" in objects[0].keys():
@@ -387,7 +387,6 @@ class add_fare_links(object):
 
             return objects
         return wrapper
-
 
 
 class Journeys(ResourceUri):
@@ -457,8 +456,8 @@ class Journeys(ResourceUri):
                 if objects and len(objects) % 2 == 0:
                     args['origin'] = self.transform_id(objects[-1])
                 else:
-                    return {'error': 'Unable to compute journeys from this '
-                            'object'}, 503
+                    abort(503, message="Unable to compute journeys "
+                                       "from this object")
         else:
             if args['origin']:
                 self.region = i_manager.key_of_id(args['origin'])
@@ -477,7 +476,7 @@ class Journeys(ResourceUri):
         else:
             api = 'isochrone'
 
-        response = i_manager.dispatch(args, self.region, api)
+        response = i_manager.dispatch(args, api, instance_name=self.region)
         return response
 
     def transform_id(self, id):

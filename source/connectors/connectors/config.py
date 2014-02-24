@@ -20,6 +20,7 @@ class Config(object):
         self.redisqueque_port = None
         self.redisqueque_password = None
         self.redisqueque_db = None
+        self.jormungandr_url = None
 
     def build_error(self, config, validate_result):
         """
@@ -47,9 +48,11 @@ class Config(object):
         confspec = []
         confspec.append('[connector-at]')
         confspec.append('rt-topic = string()')
-        confspec.append('exchange_name = string(default="navitia")')
+        confspec.append('exchange-name = string(default="navitia")')
         confspec.append('at-connection-string = string()')
         confspec.append('broker-url = string()')
+        confspec.append('last-exec-time-file = string(default="./last_exec_time.txt")')
+        confspec.append('jormungandr_url = string()')
 
         confspec.append('[redishelper]')
         confspec.append('host = string(default="localhost")')
@@ -69,7 +72,8 @@ class Config(object):
         self.broker_url = config['connector-at']['broker-url']
         self.at_connection_string = config['connector-at']['at-connection-string']
         self.exchange_name = config['connector-at']['exchange-name']
-        self.rt_topic = config['connector-at']['rt-topic']
+        self.rt_topics = config['connector-at']['rt-topic']
+        self.last_exec_time_file = config['connector-at']['last-exec-time-file']
 
         self.redishelper_host = config['redishelper']['host']
         self.redishelper_password = config['redishelper']['password']

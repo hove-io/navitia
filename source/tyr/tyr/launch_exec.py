@@ -15,15 +15,21 @@ def launch_exec(exec_name, args, logger):
 
     args.insert(0, exec_name)
     fdr, fdw = os.pipe()
-    proc = subprocess.Popen(args, stderr=fdw,
-                     stdout=fdw, close_fds=True)
-    poller = select.poll()
-    poller.register(fdr)
-    while True:
-        if poller.poll(1000):
-            line = os.read(fdr, 1000)
-            logger.info(line)
-        if proc.poll() is not None:
-            break
+    try:
+        proc = subprocess.Popen(args, stderr=fdw,
+                         stdout=fdw, close_fds=True)
+        poller = select.poll()
+        poller.register(fdr)
+        while True:
+            if poller.poll(1000):
+                line = os.read(fdr, 1000)
+                logger.info(line)
+            if proc.poll() is not None:
+                break
+
+    finally:
+        os.close(fdr)
+        os.close(fdw)
+
 
     return proc.returncode

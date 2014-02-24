@@ -37,7 +37,8 @@ class Ptref(Resource):
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
-        response = i_manager.dispatch(args, region, self.resource_type)
+        response = i_manager.dispatch(args, self.resource_type,
+                                      instance_name=region)
         return protobuf_to_dict(response, use_enum_labels=True), 200
 
 

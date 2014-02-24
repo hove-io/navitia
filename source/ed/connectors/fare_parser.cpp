@@ -1,5 +1,6 @@
 #include "fare_parser.h"
 #include "utils/csv.h"
+#include "utils/base64_encode.h"
 #include "ed/data.h"
 #include "fare_utils.h"
 
@@ -131,6 +132,15 @@ void fare_parser::load_od() {
         }
 
         fa::OD_key start(to_od_type(start_mode), start_saec), dest(to_od_type(dest_mode), dest_saec);
+
+        //zones are not encoded
+        if (start.type != fa::OD_key::Zone) {
+            start.value = navitia::base64_encode(start.value);
+        }
+
+        if (dest.type != fa::OD_key::Zone) {
+            dest.value = navitia::base64_encode(dest.value);
+        }
         data.od_tickets[start][dest] = price_keys;
 
         count++;

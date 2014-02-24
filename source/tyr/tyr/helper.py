@@ -58,6 +58,7 @@ class InstanceConfig(object):
         self.pg_dbname = None
         self.pg_username = None
         self.pg_password = None
+        self.name = None
 
 
 def load_instance_config(instance_name):
@@ -71,6 +72,7 @@ def load_instance_config(instance_name):
     confspec.append('exchange = string(default="navitia")')
     confspec.append('synonyms_file = string(default="")')
     confspec.append('aliases_file = string(default="")')
+    confspec.append('name = string()')
 
     confspec.append('[database]')
     confspec.append('host = string()')
@@ -79,15 +81,17 @@ def load_instance_config(instance_name):
     confspec.append('password = string()')
 
     ini_file = '%s/%s.ini' % \
-            (current_app.config['INSTANCES_DIR'], instance_name)
+               (current_app.config['INSTANCES_DIR'], instance_name)
+    if not os.path.isfile(ini_file):
+        raise ValueError("File doesn't exists or is not a file %s" % ini_file)
 
     config = ConfigObj(ini_file, configspec=confspec, stringify=True)
     val = Validator()
     res = config.validate(val, preserve_errors=True)
     #validate retourne true, ou un dictionaire  ...
-    if res != True:
+    if type(res) is dict:
         error = build_error(config, res)
-        raise ValueError("Config is not valid: %s in %s" \
+        raise ValueError("Config is not valid: %s in %s"
                 % (error, ini_file))
     instance = InstanceConfig()
     instance.source_directory = config['instance']['source-directory']
@@ -98,6 +102,7 @@ def load_instance_config(instance_name):
     instance.exchange = config['instance']['exchange']
     instance.synonyms_file = config['instance']['synonyms_file']
     instance.aliases_file = config['instance']['aliases_file']
+    instance.name = config['instance']['name']
 
     instance.pg_host = config['database']['host']
     instance.pg_dbname = config['database']['dbname']
@@ -119,25 +124,27 @@ def build_error(config, validate_result):
         else:
             section_list.append('[missing section]')
         section_string = ', '.join(section_list)
-        if error == False:
+        if error is False:
             error = 'Missing value or section.'
         result += section_string + ' => ' + str(error) + "\n"
     return result
 
-
 def get_instance_logger(instance):
     """
-    return the logger for this instance
-    all log will be in a file specific to this instance
-    """
+return the logger for this instance
+all log will be in a file specific to this instance
+"""
     logger = logging.getLogger('tyr.{0}'.format(instance.name))
-    log_dir = os.path.dirname(current_app.config['LOG_FILENAME'])
-    log_filename = log_dir + '/{0}.log'.format(instance.name)
-    logger.setLevel(current_app.config["LOG_LEVEL"])
-    handler = logging.FileHandler(log_filename)
-    log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
-            ' %(message)s'
-    handler.setFormatter(logging.Formatter(log_format))
-    logger.addHandler(handler)
+    #does not add the handler at each time
+    if not logger.handlers:
+        log_dir = os.path.dirname(current_app.config['LOG_FILENAME'])
+        log_filename = log_dir + '/{0}.log'.format(instance.name)
+        logger.setLevel(current_app.config["LOG_LEVEL"])
+        handler = logging.FileHandler(log_filename)
+        log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
+                ' %(message)s'
+        handler.setFormatter(logging.Formatter(log_format))
+        logger.addHandler(handler)
+
     logger.propagate = False
     return logger

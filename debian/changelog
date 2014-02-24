@@ -1,3 +1,16 @@
+navitia2 (0.83.0) unstable; urgency=low
+
+ * Tyr: add bitly
+ * Jormungandr: new API to get objects from an external_code
+ * Fare: Adapt fare to bitly
+ * Connector: call external_code API
+ * Conector at: Get object from their external_code
+ * Connector_at: add config of last-exec-time-file
+ * Tyr: set the charset of url.
+ * Kraken: fare bug correction
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 24 Feb 2014 12:02:53 +0100
+
 navitia2 (0.82.5) unstable; urgency=low
 
  * Fix tyr
@@ -6,7 +19,7 @@ navitia2 (0.82.5) unstable; urgency=low
 
 navitia2 (0.82.4) unstable; urgency=low
 
- * Fare hotfix 
+ * Fare hotfix
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 19 Feb 2014 15:02:22 +0100
 

@@ -1,4 +1,5 @@
 # coding=utf-8
+import copy
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
@@ -30,6 +31,7 @@ class Script(object):
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
                      "status", "load", "networks", "place_uri", "disruptions"]
+        self.functional_params = {}
 
     def __pagination(self, request, ressource_name, resp):
         pagination = resp.pagination
@@ -168,160 +170,8 @@ class Script(object):
         return self.__stop_times(request, instance, request["filter"], "",
                                  type_pb2.DEPARTURE_BOARDS)
 
-    def places_nearby(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.places_nearby
-        req.places_nearby.uri = request["uri"]
-        req.places_nearby.distance = request["distance"]
-        req.places_nearby.depth = request["depth"]
-        req.places_nearby.count = request["count"]
-        req.places_nearby.start_page = request["start_page"]
-        if request["type[]"]:
-            for type in request["type[]"]:
-                req.places_nearby.types.append(pb_type[type])
-        req.places_nearby.filter = request["filter"]
-        resp = instance.send_and_receive(req)
-        self.__pagination(request, "places_nearby", resp)
-        return resp
-
-    def __fill_uris(self, resp):
-        for journey in resp.journeys:
-            for section in journey.sections:
-                if section.type != response_pb2.PUBLIC_TRANSPORT:
-                    continue
-                if section.HasField("pt_display_informations"):
-                    uris = section.uris
-                    pt_infos = section.pt_display_informations
-                    uris.vehicle_journey = pt_infos.uris.vehicle_journey
-                    uris.line = pt_infos.uris.line
-                    uris.route = pt_infos.uris.route
-                    uris.commercial_mode = pt_infos.uris.commercial_mode
-                    uris.physical_mode = pt_infos.uris.physical_mode
-                    uris.network = pt_infos.uris.network
-
-    def get_journey(self, req, instance, trip_type, debug):
-        resp = None
-
-        for o_mode, d_mode in itertools.product(
-                self.origin_modes, self.destination_modes):
-            req.journeys.streetnetwork_params.origin_mode = o_mode
-            req.journeys.streetnetwork_params.destination_mode = d_mode
-            resp = instance.send_and_receive(req)
-            if resp.response_type == response_pb2.ITINERARY_FOUND:
-                if req.requested_api == type_pb2.PLANNER:
-                    qualifier_one(resp.journeys)
-                break  # result found, no need to inspect other fallback mode
-
-        if not debug and resp and not resp.HasField("error") and \
-                        trip_type == "rapid":
-            #We are looking for the asap result
-            rapid_index = None
-            for i in range(0, len(resp.journeys)):
-                if resp.journeys[i].type == "rapid":
-                    rapid_index = i
-
-            #We list the journeys to delete
-            to_delete = range(0, len(resp.journeys))
-            if rapid_index:
-                del to_delete[rapid_index]
-            to_delete.sort(reverse=True)
-            #And then we delete it
-            for i in to_delete:
-                del resp.journeys[i]
-        self.__fill_uris(resp)
-        return resp
-
-    def journey_compare(self, j1, j2):
-        arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
-        arrival_j2_f = datetime.strptime(j1.arrival_date_time, f_date_time)
-        if arrival_j1_f > arrival_j2_f:
-            return 1
-        elif arrival_j1_f == arrival_j2_f:
-            return 0
-        else:
-            return -1
-
-    def fill_journeys(self, resp, req, request, instance):
-        if request["count"] is None:
-            return
-        while request["count"] > len(resp.journeys):
-            temp_datetime = None
-            if request['clockwise']:
-                str_dt = ""
-                last_journey = resp.journeys[-1]
-                if last_journey.HasField("departure_date_time"):
-                    l_date_time = last_journey.departure_date_time
-                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                    temp_datetime = l_date_time_f + timedelta(seconds=1)
-                else:
-                    duration = int(resp.journeys[-1].duration) + 1
-                    r_datetime = req.journeys.datetimes[0]
-                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
-                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
-            else:
-                last_journey = resp.journeys[0]
-                if resp.journeys[-1].HasField("arrival_date_time"):
-                    l_date_time = last_journey.arrival_date_time
-                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                    temp_datetime = l_date_time_f + timedelta(seconds=-1)
-                else:
-                    duration = int(resp.journeys[-1].duration) - 1
-                    r_datetime = req.journeys.datetimes[0]
-                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
-                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
-
-            req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
-            tmp_resp = self.get_journey(req, instance, request["type"],
-                                        request["debug"])
-
-            #since it's not the first call to kraken, some kraken's id
-            #might not be uniq anymore
-            self.change_ids(tmp_resp, len(resp.journeys))
-            if len(tmp_resp.journeys) == 0:
-                break
-            else:
-                resp.journeys.extend(tmp_resp.journeys)
-                #we have to add the addition fare too
-                if tmp_resp.tickets:
-                    resp.tickets.extend(tmp_resp.tickets)
-
-    @staticmethod
-    def change_ids(new_journeys, journey_count):
-        #we need to change the fare id, the section id and the fare ref in the journey
-        for ticket in new_journeys.tickets:
-            journey_count += 1
-            ticket.id = ticket.id + '_' + str(journey_count)
-            for i in range(len(ticket.section_id)):
-                ticket.section_id[i] = ticket.section_id[i] + '_' + str(journey_count)
-
-        for new_journey in new_journeys.journeys:
-            for i in range(len(new_journey.fare.ticket_id)):
-                new_journey.fare.ticket_id[i] = new_journey.fare.ticket_id[i] \
-                                                + '_' + str(journey_count)
-
-            for section in new_journey.sections:
-                section.id = section.id + '_' + str(journey_count)
-
-    def delete_journeys(self, resp, request):
-        to_delete = []
-
-        if not request["debug"]:  # in debug we want to keep all journeys
-            if request['destination']:
-                for i in range(0, len(resp.journeys)):
-                    if resp.journeys[i].type == "" and not i in to_delete:
-                        to_delete.append(i)
-
-                to_delete.sort(reverse=True)
-                for i in to_delete:
-                    del resp.journeys[i]
-
-                if request["count"] and len(resp.journeys) > request["count"]:
-                    to_delete = range(request["count"], len(resp.journeys))
-                    to_delete.sort(reverse=True)
-                    for i in to_delete:
-                        del resp.journeys[i]
-
-    def __on_journeys(self, requested_type, request, instance):
+    def parse_journey_request(self, requested_type, request):
+        """Parse the request dict and create the protobuf version"""
         req = request_pb2.Request()
         req.requested_api = requested_type
         req.journeys.origin = request["origin"]
@@ -355,7 +205,7 @@ class Script(object):
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
-        req.journeys.disruption_active = request["disruption_active"]
+
         self.origin_modes = request["origin_mode"]
 
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
@@ -366,16 +216,222 @@ class Script(object):
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
         if not "type" in request:
-            request["type"] = "all"
-        #call to kraken
-        resp = self.get_journey(req, instance, request["type"],
-                                request["debug"])
-        if len(resp.journeys) > 0 and "count" in request:
-            self.fill_journeys(resp, req, request, instance)
-            self.delete_journeys(resp, request)
+            request["type"] = "all" #why ?
 
-            if not request["clockwise"]:
-                resp.journeys.sort(self.journey_compare)
+        return req
+
+    def check_missing_journey(self, list_journey, initial_request):
+        """ Check if some particular journeys are missing, and return:
+                if it is the case a modified version of the request to be rerun
+                else None"""
+        if not "cheap_journey" in self.functional_params \
+            or self.functional_params["cheap_journey"] != "True":
+            return
+
+        #we want to check if all journeys use the TER network
+        #if it is true, we want to call kraken and forbid this network
+        ter_uris = ["network:TER", "network:SNCF"]
+        only_ter = all(
+            any(
+                section.pt_display_informations.uris.network in ter_uris
+                for section in journey.sections
+            )
+            for journey in list_journey
+        )
+
+        if not only_ter:
+            return None
+
+        req = copy.deepcopy(initial_request)
+        for uri in ter_uris:
+            req.journeys.forbidden_uris.append(uri)
+
+        return req
+
+    def places_nearby(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.places_nearby
+        req.places_nearby.uri = request["uri"]
+        req.places_nearby.distance = request["distance"]
+        req.places_nearby.depth = request["depth"]
+        req.places_nearby.count = request["count"]
+        req.places_nearby.start_page = request["start_page"]
+        if request["type[]"]:
+            for type in request["type[]"]:
+                req.places_nearby.types.append(pb_type[type])
+        req.places_nearby.filter = request["filter"]
+        resp = instance.send_and_receive(req)
+        self.__pagination(request, "places_nearby", resp)
+        return resp
+
+    def __fill_uris(self, resp):
+        for journey in resp.journeys:
+            for section in journey.sections:
+                if section.type != response_pb2.PUBLIC_TRANSPORT:
+                    continue
+                if section.HasField("pt_display_informations"):
+                    uris = section.uris
+                    pt_infos = section.pt_display_informations
+                    uris.vehicle_journey = pt_infos.uris.vehicle_journey
+                    uris.line = pt_infos.uris.line
+                    uris.route = pt_infos.uris.route
+                    uris.commercial_mode = pt_infos.uris.commercial_mode
+                    uris.physical_mode = pt_infos.uris.physical_mode
+                    uris.network = pt_infos.uris.network
+
+    def call_kraken(self, req, instance):
+        resp = None
+
+        for o_mode, d_mode in itertools.product(
+                self.origin_modes, self.destination_modes):
+            req.journeys.streetnetwork_params.origin_mode = o_mode
+            req.journeys.streetnetwork_params.destination_mode = d_mode
+            resp = instance.send_and_receive(req)
+            if resp.response_type == response_pb2.ITINERARY_FOUND:
+                break  # result found, no need to inspect other fallback mode
+
+        self.__fill_uris(resp)
+        return resp
+
+    def get_journey(self, pb_req, instance, original_request):
+        resp = self.call_kraken(pb_req, instance)
+
+        if not resp or pb_req.requested_api != type_pb2.PLANNER:
+            return
+
+        new_request = self.check_missing_journey(resp.journeys, pb_req)
+
+        if new_request:
+            #we have to call kraken again with a modified version of the request
+            new_resp = self.call_kraken(new_request, instance)
+            self.merge_response(resp, new_resp)
+
+        #we qualify the journeys
+        qualifier_one(resp.journeys)
+
+        #we filter the journeys
+        self.delete_journeys(resp, original_request)
+        return resp
+
+
+    def journey_compare(self, j1, j2):
+        arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
+        arrival_j2_f = datetime.strptime(j2.arrival_date_time, f_date_time)
+        if arrival_j1_f > arrival_j2_f:
+            return 1
+        elif arrival_j1_f == arrival_j2_f:
+            return 0
+        else:
+            return -1
+
+    def fill_journeys(self, pb_req, request, instance):
+        resp = self.get_journey(pb_req, instance, request)
+
+        if len(resp.journeys) == 0:
+            return resp  # no journeys found, useless to call kraken again
+
+        while request["count"] > len(resp.journeys):
+            temp_datetime = None
+            if request['clockwise']:
+                str_dt = ""
+                last_journey = resp.journeys[-1]
+                if last_journey.HasField("departure_date_time"):
+                    l_date_time = last_journey.departure_date_time
+                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                    temp_datetime = l_date_time_f + timedelta(seconds=1)
+                else:
+                    duration = int(resp.journeys[-1].duration) + 1
+                    r_datetime = pb_req.journeys.datetimes[0]
+                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
+                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
+            else:
+                last_journey = resp.journeys[0]
+                if resp.journeys[-1].HasField("arrival_date_time"):
+                    l_date_time = last_journey.arrival_date_time
+                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                    temp_datetime = l_date_time_f + timedelta(seconds=-1)
+                else:
+                    duration = int(resp.journeys[-1].duration) - 1
+                    r_datetime = pb_req.journeys.datetimes[0]
+                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
+                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
+
+            pb_req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
+            tmp_resp = self.get_journey(pb_req, instance, request)
+
+            if len(tmp_resp.journeys) == 0:
+                break  #no more journeys found, we stop
+
+            self.merge_response(resp, tmp_resp)
+
+        self.delete_journeys(resp, request)  # last filter
+        return resp
+
+    def merge_response(self, initial_response, new_response):
+        #since it's not the first call to kraken, some kraken's id
+        #might not be uniq anymore
+        self.change_ids(new_response, len(initial_response.journeys))
+        if len(new_response.journeys) == 0:
+            return
+
+        initial_response.journeys.extend(new_response.journeys)
+        #we have to add the addition fare too
+        if new_response.tickets:
+            initial_response.tickets.extend(new_response.tickets)
+
+    @staticmethod
+    def change_ids(new_journeys, journey_count):
+        #we need to change the fare id, the section id and the fare ref in the journey
+        for ticket in new_journeys.tickets:
+            journey_count += 1
+            ticket.id = ticket.id + '_' + str(journey_count)
+            for i in range(len(ticket.section_id)):
+                ticket.section_id[i] = ticket.section_id[i] + '_' + str(journey_count)
+
+        for new_journey in new_journeys.journeys:
+            for i in range(len(new_journey.fare.ticket_id)):
+                new_journey.fare.ticket_id[i] = new_journey.fare.ticket_id[i] \
+                                                + '_' + str(journey_count)
+
+            for section in new_journey.sections:
+                section.id = section.id + '_' + str(journey_count)
+
+    def delete_journeys(self, resp, request):
+        if request["debug"] or not resp:
+            return #in debug we want to keep all journeys
+
+        if not request['destination']:
+            return #for isochrone we don't want to filter
+
+        if resp.HasField("error"):
+            return #we don't filter anything if errors
+
+        #filter on journey type (the qualifier)
+        to_delete = []
+        if request["type"] != "" and request["type"] != "all":
+            to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
+        else:
+            #by default, we filter non tagged journeys
+            to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type == ""])
+
+        # list comprehension does not work with repeated field, so we have to delete them manually
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del resp.journeys[idx]
+
+        #after all filters, we filter not to give too many results
+        if request["count"] and len(resp.journeys) > request["count"]:
+            del resp.journeys[request["count"]:]
+
+    def __on_journeys(self, requested_type, request, instance):
+        req = self.parse_journey_request(requested_type, request)
+
+        # call to kraken
+        resp = self.fill_journeys(req, request, instance)
+
+        if not request["clockwise"]:
+            resp.journeys.sort(self.journey_compare)
+
         return resp
 
     def journeys(self, request, instance):
