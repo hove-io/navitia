@@ -1,6 +1,6 @@
 from celery import chain, group
 from celery.signals import task_postrun
-from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed
+from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed, fare2ed
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr.aggregate_places import aggregate_places
 from flask import current_app
