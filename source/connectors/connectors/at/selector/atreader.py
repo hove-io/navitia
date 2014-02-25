@@ -127,10 +127,14 @@ class AtRealtimeReader(object):
     def get_uri(self, externalcode, object_type):
         uri = None
         if object_type in self._collections.keys():
-            url = "%s/v1/%s" % (self.jormungandr_url,
-                                         self._collections[object_type])
-            request_jormun = request.get(url, params={"external_code":externalcode)
-            uri = self._redis_helper.get(externalcode)
+            collection = self._collections[object_type]
+            url = "%s/v1/%s" % (self.jormungandr_url, collection)
+            request_jormun = requests.get(url,
+                                        params={"external_code": externalcode})
+            if request_jormun:
+                json = request_jormun.json()
+                if collection in json and len(json[collection]) > 0:
+                    uri = request_jormun.json()[0]['id']
         return uri
 
     def create_pertubation(self, message):
