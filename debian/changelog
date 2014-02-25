@@ -1,3 +1,9 @@
+navitia2 (0.83.6) unstable; urgency=low
+
+ * Add python-requests dependency
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Feb 2014 18:02:10 +0100
+
 navitia2 (0.83.5) unstable; urgency=low
 
  * fix connector_at
