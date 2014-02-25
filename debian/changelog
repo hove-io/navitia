@@ -1,3 +1,9 @@
+navitia2 (0.83.3) unstable; urgency=low
+
+ * Deploy connector-at
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 24 Feb 2014 12:55:57 +0100
+
 navitia2 (0.83.2) unstable; urgency=low
 
  * fix qualifier
