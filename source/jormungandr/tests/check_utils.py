@@ -1,5 +1,3 @@
-from utils import make_filename
-import os
 from jormungandr import app
 from nose.tools import *
 import json
@@ -7,37 +5,9 @@ from navitiacommon import request_pb2, response_pb2
 from datetime import datetime
 import logging
 
-
-def mock_read_send_and_receive(*args, **kwargs):
-    """
-    Mock send_and_receive function for integration tests
-    This just read the previously serialized file for the given request
-    """
-    request = None
-    if "request" in kwargs:
-        request = kwargs["request"]
-    else:
-        for arg in args:
-            if type(arg) == request_pb2.Request:
-                request = arg
-    if request:
-        pb = read(request)
-        if pb:
-            resp = response_pb2.Response()
-            resp.ParseFromString(pb)
-            return resp
-    return None
-
-
-def read(request):
-    file_name = make_filename(request)
-    assert(os.path.exists(file_name))
-
-    file_ = open(file_name, 'rb')
-    to_return = file_.read()
-    file_.close()
-    return to_return
-
+"""
+some small functions to check the service responses
+"""
 
 def check_and_get_as_dict(tester, url):
     """Test url status code to 200 and if valid format response as json"""
@@ -49,6 +19,8 @@ def check_and_get_as_dict(tester, url):
 
     assert response.data
     json_response = json.loads(response.data)
+
+    logging.debug("loaded response : " + str(json_response))
 
     assert json_response
     return json_response
@@ -88,3 +60,21 @@ def get_links_dict(response):
     links = {get_not_null(link, "rel"): link for link in raw_links}
 
     return links
+
+
+def check_valid_calendar(cal):
+    get_not_null(cal, "id")
+    get_not_null(cal, "name")
+    pattern = get_not_null(cal, "week_pattern")
+    is_valid_bool(get_not_null(pattern, "monday"))  # check one field in pattern
+
+    active_periods = get_not_null(cal, "active_periods")
+    assert len(active_periods) > 0
+
+    beg = get_not_null(active_periods[0], "begin")
+    assert is_valid_date(beg)
+
+    end = get_not_null(active_periods[0], "end")
+    assert is_valid_date(end)
+
+    #check links

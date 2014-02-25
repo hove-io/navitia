@@ -1,46 +1,46 @@
-import werkzeug
-from utils import * #useful to load the settings env var definition
-from jormungandr import app
-from jormungandr import i_manager
+import os
+os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
+    + '/integration_tests_settings.py'
+from utils import *
+from jormungandr import i_manager, app
 from nose.tools import *
-from navitiacommon.models import db
-from instance_read import *
-import re
+from check_utils import *
 
 __all__ = ['TestJormun']
 
 
-place_holder_regexp = re.compile("\{(.*)\.(.*)\}")
+def mock_read_send_and_receive(*args, **kwargs):
+    """
+    Mock send_and_receive function for integration tests
+    This just read the previously serialized file for the given request
+    """
+    request = None
+    if "request" in kwargs:
+        request = kwargs["request"]
+    else:
+        for arg in args:
+            if type(arg) == request_pb2.Request:
+                request = arg
+    if request:
+        pb = read(request)
+        if pb:
+            resp = response_pb2.Response()
+            resp.ParseFromString(pb)
+            return resp
+    return None
 
 
-def is_place_holder(part):
-    match = place_holder_regexp.match(part)
+def read(request):
+    file_name = make_filename(request)
+    assert(os.path.exists(file_name))
 
-    if not match:
-        return None
-
-    return match.group(1), match.group(2)
-
-
-def check_valid_calendar(cal):
-    get_not_null(cal, "id")
-    get_not_null(cal, "name")
-    pattern = get_not_null(cal, "week_pattern")
-    is_valid_bool(get_not_null(pattern, "monday"))  # check one field in pattern
-
-    active_periods = get_not_null(cal, "active_periods")
-    assert len(active_periods) > 0
-
-    beg = get_not_null(active_periods[0], "begin")
-    assert is_valid_date(beg)
-
-    end = get_not_null(active_periods[0], "end")
-    assert is_valid_date(end)
-
-    #check links
+    file_ = open(file_name, 'rb')
+    to_return = file_.read()
+    file_.close()
+    return to_return
 
 
-class TestJormun:
+class TestJormun(MockInstance):
     urls = {
         "test_index": "/v1/",
         "test_coverage": "/v1/coverage",
@@ -52,52 +52,17 @@ class TestJormun:
         "test_lines_calendars": "/v1/coverage/{regions.id}/calendars/{calendars.id}/lines/{lines.id}/calendars",
     }
 
-    def get_first_elt(self, current_url, place_holder):
-        assert len(place_holder) == 2
-
-        #target is a tuple, first elt if the rel to find, second is the attribute
-        target_type = place_holder[0]
-        target_attribute = place_holder[1]
-
-        response = check_and_get_as_dict(self, current_url)
-
-        list_targets = get_not_null(response, target_type)
-
-        assert len(list_targets) > 0
-
-        #we grab the first elt
-        first = list_targets[0]
-
-        #and we return it's attribute
-        return first[target_attribute]
-
-    def get_url(self, name):
-        raw_url = self.urls[name]
-
-        url_parts = raw_url.split('/')
-
-        current_url = ""
-        sep = ''
-        for part in url_parts:
-            # if it is a place holder we fetch the elt element in the collection
-            place_holder = is_place_holder(part)
-            if place_holder:
-                part = self.get_first_elt(current_url, place_holder)
-                logging.debug("for place holder %s, %s the url part is %s" % (place_holder[0], place_holder[1], part))
-            current_url += sep + part
-            sep = '/'
-
-        logging.info("requesting %s" % current_url)
-        return current_url
-
     def __init__(self, *args, **kwargs):
         i_manager.initialisation(start_ping=False)
         i_manager.stop()
         self.tester = app.test_client()
-        self.region_name = None
 
         for name, instance in i_manager.instances.iteritems():
             i_manager.instances[name].send_and_receive = mock_read_send_and_receive
+
+    def get_url(self, name):
+        raw_url = self.urls[name]
+        return self.transform_url(raw_url)
 
     def test_index(self):
         json_response = check_and_get_as_dict(self, self.get_url("test_index"))

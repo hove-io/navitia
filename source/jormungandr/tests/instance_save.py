@@ -2,12 +2,11 @@ from utils import *
 import os
 from navitiacommon import request_pb2
 import logging
-from jormungandr.instance import Instance
 
 
 class InstanceSave(Instance):
 
-    def __init__(self, saving_directory, instance):
+    def __init__(self, instance):
         self.geom = instance.geom
         self._sockets = instance._sockets
         self.socket_path = instance.socket_path
