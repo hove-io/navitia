@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+from setuptools import find_packages
 import glob
 
 setup(name='connectors',
@@ -9,7 +10,7 @@ setup(name='connectors',
         author='CanalTP',
         author_email='alexandre.jacquin@canaltp.fr',
         url='www.navitia.io',
-        packages=['connectors', 'connectors.at'],
+        packages=find_packages(),
         requires=['sqlalchemy', 'ampq', 'anyjson', 'argparse', 'kombu',
                   'protobuf', 'pymssql', 'redis', 'wsgiref', 'configobj'],
         scripts=['connector_at.py'])
