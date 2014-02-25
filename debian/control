@@ -76,3 +76,12 @@ Section: devel
 Priority: optional
 Description: Navitia-Tyr
     Tyr is a web service for managing ed and account used on jormungandr
+
+Package: navitia-connector-at
+Architecture: all
+Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
+Depends: python-sqlalchemy, python-argparse, python-configobj, python-protobuf, python-redis, python-wsgiref, navitia-common (= ${binary:Version})
+Section: devel
+Priority: optional
+Description: Navitia-connector-at
+    This service connects to alerte trafic database, reads it and sends to rabbit mq messages
