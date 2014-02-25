@@ -1,9 +1,9 @@
 #encoding: utf-8
 from connectors.config import Config
-from selector.atreader import AtRealtimeReader
+from connectors.at.selector.atreader import AtRealtimeReader
 import logging
 import kombu
-import connectors.task_pb2
+import navitiacommon.task_pb2
 from connectors.redis_helper import RedisHelper
 
 
