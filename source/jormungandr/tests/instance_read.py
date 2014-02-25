@@ -29,7 +29,7 @@ def mock_read_send_and_receive(*args, **kwargs):
     return None
 
 
-def check_and_get_as_json(tester, url):
+def check_and_get_as_dict(tester, url):
     """Test url status code to 200 and if valid format response as json"""
     tester = app.test_client(tester)
     response = tester.get(url)
@@ -53,13 +53,23 @@ def get_not_null(dict, field):
 def is_valid_date(str):
     assert str
 
-    print str
     try:
         datetime.strptime(str, "%Y%m%dT%H%M%S")
     except ValueError:
         logging.error("string '%s' is no valid date" % str)
         return False
     return True
+
+
+def is_valid_bool(str):
+    assert str
+    if type(str) is bool:
+        return True
+
+    #else check as string
+    lower = str.lower()
+    return lower == "true" or lower == "false"
+
 
 def read(request):
     file_name = make_filename(request)

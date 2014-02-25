@@ -37,7 +37,7 @@ LOGGER = {
     'disable_existing_loggers': False,
     'handlers': {
         'default': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             "filename": "jormungandr.log",
             "maxBytes": "20000000",

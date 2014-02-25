@@ -6,10 +6,10 @@ from nose.tools import *
 from navitiacommon.models import db
 from instance_read import *
 
-__all__ = ['JormunTest']
+__all__ = ['TestJormun']
 
 
-class JormunTest:
+class TestJormun:
     urls = {
         "test_index": "/v1/",
         "test_coverage": "/v1/coverage",
@@ -23,7 +23,7 @@ class JormunTest:
     def load_region(self):
         # get region name
         #todo refactor this, we need a generic mechanism to get params in request
-        regions = check_and_get_as_json(self, self.urls["test_coverage"])
+        regions = check_and_get_as_dict(self, self.urls["test_coverage"])
         self.region_name = regions["regions"][0]["id"]
 
     def get_url(self, name):
@@ -39,24 +39,23 @@ class JormunTest:
         self.tester = app.test_client()
         self.region_name = None
 
-
         for name, instance in i_manager.instances.iteritems():
             i_manager.instances[name].send_and_receive = mock_read_send_and_receive
 
     def test_index(self):
-        json_response = check_and_get_as_json(self, self.get_url("test_index"))
+        json_response = check_and_get_as_dict(self, self.get_url("test_index"))
         #TODO!
 
     def test_coverage(self):
-        json_response = check_and_get_as_json(self, self.get_url("test_coverage"))
+        json_response = check_and_get_as_dict(self, self.get_url("test_coverage"))
         #TODO!
 
     def test_region(self):
-        json_response = check_and_get_as_json(self, self.get_url("test_region"))
+        json_response = check_and_get_as_dict(self, self.get_url("test_region"))
         #TODO!
 
     def test_calendars(self):
-        json_response = check_and_get_as_json(self, self.get_url("test_calendars"))
+        json_response = check_and_get_as_dict(self, self.get_url("test_calendars"))
 
         assert "calendars" in json_response
 
@@ -69,7 +68,8 @@ class JormunTest:
 
         get_not_null(cal, "id")
         get_not_null(cal, "name")
-        get_not_null(cal, "week_pattern")
+        pattern = get_not_null(cal, "week_pattern")
+        is_valid_bool(get_not_null(pattern, "monday"))  # check one field in pattern
 
         active_periods = get_not_null(cal, "active_periods")
         assert len(active_periods) > 0
@@ -79,3 +79,5 @@ class JormunTest:
 
         end = get_not_null(active_periods[0], "end")
         assert is_valid_date(end)
+
+        #check links
