@@ -29,6 +29,16 @@ def mock_read_send_and_receive(*args, **kwargs):
     return None
 
 
+def read(request):
+    file_name = make_filename(request)
+    assert(os.path.exists(file_name))
+
+    file_ = open(file_name, 'rb')
+    to_return = file_.read()
+    file_.close()
+    return to_return
+
+
 def check_and_get_as_dict(tester, url):
     """Test url status code to 200 and if valid format response as json"""
     tester = app.test_client(tester)
@@ -71,11 +81,10 @@ def is_valid_bool(str):
     return lower == "true" or lower == "false"
 
 
-def read(request):
-    file_name = make_filename(request)
-    assert(os.path.exists(file_name))
+def get_links_dict(response):
+    raw_links = get_not_null(response, "links")
 
-    file_ = open(file_name, 'rb')
-    to_return = file_.read()
-    file_.close()
-    return to_return
+    #create a dict with the 'rel' field as key
+    links = {get_not_null(link, "rel"): link for link in raw_links}
+
+    return links
