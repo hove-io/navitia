@@ -348,7 +348,7 @@ void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
     for(types::Network* net : networks){
         std::vector<std::string> values;
         values.push_back(std::to_string(net->idx));
-        values.push_back(navitia::base64_encode(net->uri));
+        values.push_back(navitia::encode_uri(net->uri));
         values.push_back(net->external_code);
         values.push_back(net->name);
         values.push_back(net->comment);
@@ -363,7 +363,7 @@ void EdPersistor::insert_commercial_modes(const std::vector<types::CommercialMod
     for(types::CommercialMode* mode : commercial_modes){
         std::vector<std::string> values;
         values.push_back(std::to_string(mode->idx));
-        values.push_back(navitia::base64_encode(mode->uri));
+        values.push_back(navitia::encode_uri(mode->uri));
         values.push_back(mode->name);
         this->lotus.insert(values);
     }
@@ -376,7 +376,7 @@ void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>&
     for(types::PhysicalMode* mode : physical_modes){
         std::vector<std::string> values;
         values.push_back(std::to_string(mode->idx));
-        values.push_back(navitia::base64_encode(mode->uri));
+        values.push_back(navitia::encode_uri(mode->uri));
         values.push_back(mode->name);
         this->lotus.insert(values);
     }
@@ -390,7 +390,7 @@ void EdPersistor::insert_companies(const std::vector<types::Company*>& companies
     for(types::Company* company : companies){
         std::vector<std::string> values;
         values.push_back(std::to_string(company->idx));
-        values.push_back(navitia::base64_encode(company->uri));
+        values.push_back(navitia::encode_uri(company->uri));
         values.push_back(company->name);
         values.push_back(company->comment);
         values.push_back(company->address_name);
@@ -411,7 +411,7 @@ void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& co
     for(types::Contributor* contributor : contributors){
         std::vector<std::string> values;
         values.push_back(std::to_string(contributor->idx));
-        values.push_back(navitia::base64_encode(contributor->uri));
+        values.push_back(navitia::encode_uri(contributor->uri));
         values.push_back(contributor->name);
         this->lotus.insert(values);
     }
@@ -495,7 +495,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
     for(types::StopArea* sa : stop_areas){
         std::vector<std::string> values;
         values.push_back(std::to_string(sa->idx));
-        values.push_back(navitia::base64_encode(sa->uri));
+        values.push_back(navitia::encode_uri(sa->uri));
         values.push_back(sa->external_code);
         values.push_back(sa->name);
         values.push_back("POINT(" + std::to_string(sa->coord.lon()) + " " + std::to_string(sa->coord.lat()) + ")");
@@ -515,7 +515,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
     for(types::StopPoint* sp : stop_points){
         std::vector<std::string> values;
         values.push_back(std::to_string(sp->idx));
-        values.push_back(navitia::base64_encode(sp->uri));
+        values.push_back(navitia::encode_uri(sp->uri));
         values.push_back(sp->external_code);
         values.push_back(sp->name);
         values.push_back("POINT(" + std::to_string(sp->coord.lon()) + " " + std::to_string(sp->coord.lat()) + ")");
@@ -541,7 +541,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     for(types::Line* line : lines){
         std::vector<std::string> values;
         values.push_back(std::to_string(line->idx));
-        values.push_back(navitia::base64_encode(line->uri));
+        values.push_back(navitia::encode_uri(line->uri));
         values.push_back(line->external_code);
         values.push_back(line->name);
         values.push_back(line->comment);
@@ -614,7 +614,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     for(types::Route* route : routes){
         std::vector<std::string> values;
         values.push_back(std::to_string(route->idx));
-        values.push_back(navitia::base64_encode(route->uri));
+        values.push_back(navitia::encode_uri(route->uri));
         values.push_back(route->external_code);
         values.push_back(route->name);
         values.push_back(route->comment);
@@ -638,7 +638,7 @@ void EdPersistor::insert_journey_patterns(const std::vector<types::JourneyPatter
     for(types::JourneyPattern* jp : journey_patterns){
         std::vector<std::string> values;
         values.push_back(std::to_string(jp->idx));
-        values.push_back(navitia::base64_encode(jp->uri));
+        values.push_back(navitia::encode_uri(jp->uri));
         values.push_back(jp->name);
         values.push_back(jp->comment);
         if (jp->physical_mode != NULL){
@@ -721,7 +721,7 @@ void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyP
     for(types::JourneyPatternPoint* jpp : journey_pattern_points){
         std::vector<std::string> values;
         values.push_back(std::to_string(jpp->idx));
-        values.push_back(navitia::base64_encode(jpp->uri));
+        values.push_back(navitia::encode_uri(jpp->uri));
         values.push_back(jpp->name);
         values.push_back(jpp->comment);
         values.push_back(std::to_string(jpp->order));
@@ -782,7 +782,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
         values.push_back(std::to_string(vj->idx));
-        values.push_back(navitia::base64_encode(vj->uri));
+        values.push_back(navitia::encode_uri(vj->uri));
         values.push_back(vj->external_code);
         values.push_back(vj->name);
         values.push_back(vj->comment);

@@ -16,6 +16,7 @@
  * All kind of elemental utilities to parse fares
  */
 
+/// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
 BOOST_FUSION_ADAPT_STRUCT(
     navitia::fare::Condition,
     (std::string, key)
@@ -62,7 +63,7 @@ namespace ph = ::boost::phoenix;
 
     std::vector<std::string> to_encode = {"line", "mode", "stoparea", "network"};
     if(std::find(to_encode.begin(), to_encode.end(), cond.key) != to_encode.end()) {
-        cond.value = navitia::base64_encode(cond.value);
+        cond.value = navitia::encode_uri(cond.value);
     }
 
     return cond;
