@@ -5,7 +5,7 @@ import datetime
 import time
 from sqlalchemy import Column, Table, MetaData, select, create_engine, \
     ForeignKey, bindparam, and_, or_, exc
-from sqlalchemy.engine import url
+from sqlalchemy.engine import url as url_engine
 import connectors.task_pb2
 import connectors.realtime_pb2
 import connectors.type_pb2
@@ -55,7 +55,7 @@ class AtRealtimeReader(object):
     def __init__(self, config, redis_helper):
         self.message_list = []
         self.perturbation_list = []
-        url = url.make_url(config.at_connection_string)
+        url = url_engine.make_url(config.at_connection_string)
         url.query["charset"] = 'utf8'
         try:
             self.__engine = create_engine(url)
