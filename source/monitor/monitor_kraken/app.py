@@ -9,7 +9,7 @@ from monitor_kraken import response_pb2
 from monitor_kraken import type_pb2
 
 app = Flask(__name__)
-app.config.from_object('default_settings')
+app.config.from_object('monitor_kraken.default_settings')
 app.config.from_envvar('MONITOR_CONFIG_FILE', silent=True)
 context = zmq.Context()
 
@@ -20,9 +20,8 @@ def monitor():
 
     instance = request.args['instance']
     config_file = '{path}/{instance}/kraken.ini'.format(
-                                            path=app.config['INSTANCE_DIR'],
+                                            path=app.config['KRAKEN_DIR'],
                                             instance=instance)
-    print config_file
     parser = ConfigParser()
     parser.read(config_file)
     try:

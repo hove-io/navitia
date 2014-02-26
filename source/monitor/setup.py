@@ -5,7 +5,7 @@ import glob
 
 setup(name='monitor_kraken',
         version='0.39.0',
-        description="Provide a small api for monitor kraken",
+        description="Provide a small api for monitoring kraken",
         author='CanalTP',
         author_email='alexandre.jacquin@canaltp.fr',
         url='www.navitia.io',

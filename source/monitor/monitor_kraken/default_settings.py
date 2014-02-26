@@ -1,2 +1,2 @@
-INSTANCE_DIR = '/srv/kraken/'
+KRAKEN_DIR = '/srv/kraken/'
 DEBUG = True

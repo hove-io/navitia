@@ -93,5 +93,5 @@ Depends: python-flask, python-protobuf, python-zmq
 Section: devel
 Priority: optional
 Description: small api for monitor kraken instances
-    small api for monitor kraken instances
+    small api for monitoring kraken instances
 
