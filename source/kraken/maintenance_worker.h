@@ -20,6 +20,7 @@ class MaintenanceWorker{
         std::string queue_name;
 
         void init_rabbitmq();
+        void listen_rabbitmq();
 
     public:
         MaintenanceWorker(type::Data** data);
