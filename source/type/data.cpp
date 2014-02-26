@@ -166,6 +166,28 @@ ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_valid
     return ref_validity_pattern;
 }
 
+void Data::build_associated_calendar(){
+    for(Calendar* cl : this->pt_data.calendars){
+        ValidityPattern vp = cl->calendar2validity_pattern(this->meta.production_date.begin());
+        for(VehicleJourney* vehicle_journey : this->pt_data.vehicle_journeys){
+            if(vehicle_journey->associated_calendar == nullptr){
+                if(vp == (*vehicle_journey->validity_pattern)){
+                    vehicle_journey->associated_calendar = new AssociatedCalendar();
+                    vehicle_journey->associated_calendar->calendar = cl;
+                    for(VehicleJourney* vehicle_journey_1 : this->pt_data.vehicle_journeys){
+                        if((vehicle_journey->validity_pattern == vehicle_journey_1->validity_pattern)
+                            && (vehicle_journey_1->associated_calendar == nullptr)){
+                            vehicle_journey_1->associated_calendar = vehicle_journey->associated_calendar;
+                        }
+                    }
+                }else{
+                    // Chercher le validitypattern le plus proche
+                }
+            }
+        }
+    }
+}
+
 void Data::build_midnight_interchange(){
     for(VehicleJourney* vj : this->pt_data.vehicle_journeys){
         for(StopTime* stop : vj->stop_time_list){

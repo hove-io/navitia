@@ -133,6 +133,8 @@ public:
     /** Construction des validity pattern des StopTimes **/
     void build_midnight_interchange();
 
+    void build_associated_calendar();
+
     Data& operator=(Data&& other);
 
     /** Retourne le type de l'id donné */
