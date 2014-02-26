@@ -77,10 +77,11 @@ public:
 
     bool last_load;
     boost::posix_time::ptime last_load_at;
-
+    std::atomic<bool> is_connected_to_rabbitmq;
 
     /// Constructeur de data, définit le nombre de threads, charge les données
     Data() : nb_threads(8), version(0), loaded(false), last_load(true){
+        this->is_connected_to_rabbitmq = false;
         if(Configuration::is_instanciated()){
             init_logger();
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));

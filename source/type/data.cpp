@@ -28,6 +28,7 @@ Data& Data::operator=(Data&& other){
     dataRaptor = other.dataRaptor;
     last_load = other.last_load;
     last_load_at = other.last_load_at;
+    is_connected_to_rabbitmq.store(other.is_connected_to_rabbitmq.load());
 
     return *this;
 }

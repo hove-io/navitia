@@ -48,7 +48,7 @@ void MaintenanceWorker::load(){
 
 
 void MaintenanceWorker::operator()(){
-    LOG4CPLUS_INFO(logger, "démarrage du thread de maintenance");
+    LOG4CPLUS_INFO(logger, "starting background thread");
     load();
 
     do{
@@ -58,6 +58,7 @@ void MaintenanceWorker::operator()(){
         }catch(const std::runtime_error& ex){
             LOG4CPLUS_ERROR(logger, std::string("connection to rabbitmq fail: ")
                     + ex.what());
+            (*data)->is_connected_to_rabbitmq = false;
             sleep(10);
         }
     }while(true);
@@ -67,6 +68,7 @@ void MaintenanceWorker::listen_rabbitmq(){
     auto consumer_tag = this->channel->BasicConsume(this->queue_name);
 
     LOG4CPLUS_INFO(logger, "start event loop");
+    (*data)->is_connected_to_rabbitmq = true;
     while(true){
         auto envelope = this->channel->BasicConsumeMessage(consumer_tag);
         LOG4CPLUS_TRACE(logger, "Message received");

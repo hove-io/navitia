@@ -72,6 +72,7 @@ pbnavitia::Response Worker::status() {
     status->set_last_load_status(d->last_load);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
     status->set_nb_threads(d->nb_threads);
+    status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
     for(auto data_sources: d->meta.data_sources){
         status->add_data_sources(data_sources);
     }
