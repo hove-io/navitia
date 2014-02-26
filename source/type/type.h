@@ -633,7 +633,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
-    AssociatedCalendar associated_calendar;
+    AssociatedCalendar* associated_calendar;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;
@@ -642,16 +642,17 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 
     VehicleJourney(): journey_pattern(nullptr), company(nullptr),
         validity_pattern(nullptr),
-        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false),
+        vehicle_journey_type(VehicleJourneyType::regular),
+        associated_calendar(nullptr), is_adapted(false),
         adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
 
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
-            & idx /*& wheelchair_boarding*/ & stop_time_list & is_adapted
+            & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages;
+            & odt_message & _vehicle_properties & messages & associated_calendar;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
