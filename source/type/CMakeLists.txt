@@ -22,6 +22,13 @@ add_custom_command (TARGET pb_lib
     task.proto realtime.proto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type )
 
+#we don't want a dependancy to navitiacommon for monitor
+add_custom_command (TARGET pb_lib
+    PRE_BUILD
+    COMMAND protoc ARGS --python_out=${CMAKE_SOURCE_DIR}/monitor/monitor_kraken type.proto
+    response.proto request.proto
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type )
+
 add_library(types type.cpp message.cpp datetime.cpp)
 
 SET(DATA_SRC

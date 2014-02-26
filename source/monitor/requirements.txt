@@ -1,0 +1,9 @@
+Flask==0.10.1
+Jinja2==2.7.2
+MarkupSafe==0.18
+Werkzeug==0.9.4
+argparse==1.2.1
+itsdangerous==0.23
+protobuf==2.5.0
+pyzmq==14.0.1
+wsgiref==0.1.2

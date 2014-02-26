@@ -85,3 +85,13 @@ Section: devel
 Priority: optional
 Description: Navitia-connector-at
     This service connects to alerte trafic database, reads it and sends to rabbit mq messages
+
+Package: navitia-monitor-kraken
+Architecture: all
+Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
+Depends: python-flask, python-protobuf, python-zmq
+Section: devel
+Priority: optional
+Description: small api for monitor kraken instances
+    small api for monitoring kraken instances
+
