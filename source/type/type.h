@@ -618,8 +618,11 @@ struct JourneyPattern : public Header, Nameable{
 
 struct AssociatedCalendar {
     Calendar* calendar;
-
     std::vector<ExceptionDate> exceptions;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & calendar & exceptions;
+    }
 };
 
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages{
