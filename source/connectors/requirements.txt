@@ -6,5 +6,4 @@ configobj==4.7.2
 kombu==3.0.10
 protobuf==2.5.0
 pymssql==2.0.1
-redis==2.9.0
 wsgiref==0.1.2

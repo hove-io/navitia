@@ -1,6 +1,12 @@
+navitia2 (0.83.8) unstable; urgency=low
+
+ * Fix connector_at
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 26 Feb 2014 18:02:19 +0100
+
 navitia2 (0.83.7) unstable; urgency=low
 
- * Disable id encoding 
+ * Disable id encoding
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 26 Feb 2014 15:02:43 +0100
 

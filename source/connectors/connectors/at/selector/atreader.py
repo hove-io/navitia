@@ -5,7 +5,7 @@ import datetime
 import time
 from sqlalchemy import Column, Table, MetaData, select, create_engine, \
     ForeignKey, bindparam, and_, or_, exc
-from sqlalchemy.engine import url
+from sqlalchemy.engine import url as url_engine
 import connectors.task_pb2
 import connectors.realtime_pb2
 import connectors.type_pb2
@@ -55,13 +55,13 @@ class AtRealtimeReader(object):
     def __init__(self, config, redis_helper):
         self.message_list = []
         self.perturbation_list = []
-        url = url.make_url(config.at_connection_string)
+        url = url_engine.make_url(config.at_connection_string)
         url.query["charset"] = 'utf8'
         try:
             self.__engine = create_engine(url)
         except:
             raise ValueError("AT : Connecting at server failed")
-        self.jormungandr_url = jormungandr_url
+        self.jormungandr_url = config.jormungandr_url
         self._redis_helper = redis_helper
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
@@ -130,7 +130,7 @@ class AtRealtimeReader(object):
             collection = self._collections[object_type]
             url = "%s/v1/%s" % (self.jormungandr_url, collection)
             request_jormun = requests.get(url,
-                                        params={"external_code": externalcode})
+                                          params={"external_code": externalcode})
             if request_jormun:
                 json = request_jormun.json()
                 if collection in json and len(json[collection]) > 0:
