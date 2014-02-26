@@ -45,7 +45,7 @@ get_all_stop_times(const vector_idx &journey_patterns,
 
 std::vector<std::vector<datetime_stop_time> >
 make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
-             Thermometer &thermometer, type::Data &) {
+             const Thermometer &thermometer, const type::Data &) {
     std::vector<std::vector<datetime_stop_time> > result;
     //On initilise le tableau vide
     for(unsigned int i=0; i<thermometer.get_thermometer().size(); ++i) {
@@ -103,7 +103,7 @@ route_schedule(const std::string& filter,
     auto pt_datetime = to_posix_time(handler.date_time, d);
     auto pt_max_datetime = to_posix_time(handler.max_datetime, d);
     pt::time_period action_period(pt_datetime, pt_max_datetime);
-    Thermometer thermometer(d);
+    Thermometer thermometer;
     auto routes_idx = ptref::make_query(type::Type_e::Route, filter, forbidden_uris, d);
     size_t total_result = routes_idx.size();
     routes_idx = paginate(routes_idx, count, start_page);

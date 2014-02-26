@@ -7,14 +7,10 @@ typedef std::vector<type::idx_t> vector_idx;
 typedef std::vector<uint16_t> vector_size;
 
 struct Thermometer {
-    type::Data& d;
-
-    Thermometer(type::Data &d) : d(d), nb_branches(0) {}
-
     void generate_thermometer(const std::vector<vector_idx> &journey_patterns);
-    vector_idx get_thermometer();
-    std::vector<uint32_t> match_journey_pattern(const type::JourneyPattern & journey_pattern);
-    std::vector<uint32_t> match_journey_pattern(const vector_idx &journey_pattern);
+    vector_idx get_thermometer() const;
+    std::vector<uint32_t> match_journey_pattern(const type::JourneyPattern & journey_pattern) const;
+    std::vector<uint32_t> match_journey_pattern(const vector_idx &journey_pattern) const;
 
     struct cant_match {
         type::idx_t rp_idx;
@@ -27,7 +23,7 @@ struct Thermometer {
 private :
     vector_idx thermometer;
     std::string filter;
-    int nb_branches;
+    int nb_branches = 0;
 
     std::vector<uint32_t> untail(std::vector<vector_idx> &journey_patterns, type::idx_t spidx, std::vector<vector_size> &pre_computed_lb);
     void retail(std::vector<vector_idx> &journey_patterns, type::idx_t spidx, const std::vector<uint32_t> &to_retail, std::vector<vector_size> &pre_computed_lb);
