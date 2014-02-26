@@ -110,8 +110,6 @@ void MaintenanceWorker::init_rabbitmq(){
 }
 
 MaintenanceWorker::MaintenanceWorker(type::Data** data) : data(data),
-        logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
-        next_rt_load(pt::microsec_clock::universal_time()){
-}
+        logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))){}
 
 }
