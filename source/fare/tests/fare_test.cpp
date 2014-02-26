@@ -70,16 +70,16 @@ const navitia::routing::Path string_to_path(const std::vector<std::string>& keys
         if (string_vec.size() != 10)
             throw std::string("Nombre incorrect d'éléments dans une section :" + boost::lexical_cast<std::string>(string_vec.size()) + " sur 10 attendus. " + key);
 
-        std::string network = navitia::base64_encode(string_vec.at(0));
-        std::string start_stop_area = navitia::base64_encode(string_vec.at(1));
-        std::string dest_stop_area = navitia::base64_encode(string_vec.at(3));
-        std::string line = navitia::base64_encode(string_vec.at(2));
+        std::string network = navitia::encode_uri(string_vec.at(0));
+        std::string start_stop_area = navitia::encode_uri(string_vec.at(1));
+        std::string dest_stop_area = navitia::encode_uri(string_vec.at(3));
+        std::string line = navitia::encode_uri(string_vec.at(2));
         auto date = parse_nav_date(string_vec.at(4));
         auto start_time = parse_time(string_vec.at(5));
         auto dest_time = parse_time(string_vec.at(6));
         std::string start_zone = string_vec.at(7);
         std::string dest_zone = string_vec.at(8);
-        std::string mode = navitia::base64_encode(string_vec.at(9));
+        std::string mode = navitia::encode_uri(string_vec.at(9));
 
         //construction of a mock item
         //will leak from everywhere :)

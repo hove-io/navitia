@@ -1,3 +1,9 @@
+navitia2 (0.83.7) unstable; urgency=low
+
+ * Disable id encoding 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 26 Feb 2014 15:02:43 +0100
+
 navitia2 (0.83.6) unstable; urgency=low
 
  * Add python-requests dependency

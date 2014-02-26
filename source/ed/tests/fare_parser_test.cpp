@@ -22,17 +22,17 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     BOOST_CHECK(parse_state("") == state);
 
     // on n'est pas case sensitive
-    BOOST_CHECK(parse_state("mode=Metro").mode == navitia::base64_encode("metro"));
+    BOOST_CHECK(parse_state("mode=Metro").mode == navitia::encode_uri("metro"));
 
     BOOST_CHECK(parse_state("zone=1").zone == "1");
 
     // on ignore les espaces
-    BOOST_CHECK(parse_state(" mode = Metro  ").mode == navitia::base64_encode("metro"));
-    BOOST_CHECK(parse_state("line=L1").line == navitia::base64_encode("l1"));
+    BOOST_CHECK(parse_state(" mode = Metro  ").mode == navitia::encode_uri("metro"));
+    BOOST_CHECK(parse_state("line=L1").line == navitia::encode_uri("l1"));
     //parse_state("stop_area=chatelet").stop_area;
     std::cout << parse_state("stoparea=chatelet").stop_area << std::endl;
-    std::cout << navitia::base64_encode("chatelet") << std::endl;
-    BOOST_CHECK(parse_state("stoparea=chatelet").stop_area == navitia::base64_encode("chatelet"));
+    std::cout << navitia::encode_uri("chatelet") << std::endl;
+    BOOST_CHECK(parse_state("stoparea=chatelet").stop_area == navitia::encode_uri("chatelet"));
 
     // Qu'est-ce qui se passe avec des boulets ?
     BOOST_CHECK_THROW(parse_state("mode=Metro=foo"), std::exception);
@@ -43,8 +43,8 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
 
     // On essaye de parser des choses plus compliquées
     State state2 = parse_state("mode=metro&stoparea=chatelet");
-    BOOST_CHECK(state2.mode == navitia::base64_encode("metro"));
-    BOOST_CHECK(state2.stop_area == navitia::base64_encode("chatelet"));
+    BOOST_CHECK(state2.mode == navitia::encode_uri("metro"));
+    BOOST_CHECK(state2.stop_area == navitia::encode_uri("chatelet"));
 
     // Si un attribut est en double
     BOOST_CHECK_THROW(parse_state("mode=foo&mode=bar"), invalid_key);

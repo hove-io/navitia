@@ -7,7 +7,6 @@
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 
-/// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
 namespace fa = navitia::fare;
 
 namespace greg = boost::gregorian;
@@ -135,11 +134,11 @@ void fare_parser::load_od() {
 
         //zones are not encoded
         if (start.type != fa::OD_key::Zone) {
-            start.value = navitia::base64_encode(start.value);
+            start.value = navitia::encode_uri(start.value);
         }
 
         if (dest.type != fa::OD_key::Zone) {
-            dest.value = navitia::base64_encode(dest.value);
+            dest.value = navitia::encode_uri(dest.value);
         }
         data.od_tickets[start][dest] = price_keys;
 
