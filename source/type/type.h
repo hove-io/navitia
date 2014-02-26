@@ -443,6 +443,7 @@ struct Calendar : public Nameable, public Header {
     std::vector<ExceptionDate> exceptions;
     bool operator<(const Calendar & other) const { return this < &other; }
 
+    ValidityPattern calendar2validity_pattern(boost::gregorian::date beginning_date) const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & name & idx & uri & week_pattern & active_periods & exceptions;

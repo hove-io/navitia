@@ -269,6 +269,25 @@ template<typename T> std::vector<idx_t> indexes(std::vector<T*> elements){
     return result;
 }
 
+ValidityPattern Calendar::calendar2validity_pattern(boost::gregorian::date beginning_date) const{
+    ValidityPattern vp(beginning_date);
+    for(boost::posix_time::time_period period : this->active_periods){
+        for(boost::gregorian::day_iterator it(period.begin().date()); it<=period.end().date(); ++it) {
+            vp.add(*it);
+        }
+    }
+    for(navitia::type::ExceptionDate exd : this->exceptions){
+        if(exd.type == ExceptionDate::ExceptionType::sub){
+            vp.remove(exd.date);
+        }else{
+            if(exd.type ==ExceptionDate::ExceptionType::add){
+                vp.add(exd.date);
+            }
+        }
+    }
+    return vp;
+}
+
 std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
     std::vector<idx_t> result;
     switch(type) {
