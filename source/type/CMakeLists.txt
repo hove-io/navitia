@@ -42,7 +42,12 @@ add_library(data ${DATA_SRC})
 SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
-    ${Boost_DATE_TIME_LIBRARY}  ${Boost_REGEX_LIBRARY})
+    ${Boost_DATE_TIME_LIBRARY}  ${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY})
+
+
+add_executable(associated_calendar_test tests/associated_calendar_test.cpp)
+target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus)
+ADD_TEST(associated_calendar_test ${EXECUTABLE_OUTPUT_PATH}/associated_calendar_test --report_level=no)
 
 add_executable(type_test tests/test.cpp)
 target_link_libraries(type_test types data utils ${BOOST_LIBS} log4cplus)
