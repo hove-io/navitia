@@ -51,19 +51,20 @@ def aggregate_places(instance_config, job_id):
             rel_instance.query.filter_by(instance_id=instance.id).delete()
             db.session.commit()
             #We create a temporary table to stode uris and ids of ed type
-            table_uris.create(checkfirst=True)
-            if db.engine.execute(table_uris.delete()): #make sure it's empty
+	    if not table_uris.exists():
+		    table_uris.create(db.engine, checkfirst=True)
+            if db.session.execute(table_uris.delete()): #make sure it's empty
                 db.session.commit()
 
             query_ed = session_ed.query(TypeEd)
             objects_ed = query_ed.all()
             #We insert uris in a temp table to be able to work on it after
-            db.engine.execute(table_uris.insert(),
+            db.session.execute(table_uris.insert(),
                             [{"id" : a.id, "uri" : a.uri} for a in objects_ed])
             #We update the object that are in ed and and tyr
             to_update_query = table_uris.select(
                 table_uris.c.uri.in_(cls_type.query.options(load_only(cls_type.uri))))
-            for object_ in db.engine.execute(to_update_query):
+            for object_ in db.session.execute(to_update_query):
                 object_ed = query_ed.get(object_[0])
                 to_update = {
                     "external_code" : "" if not has_external_code\
@@ -85,7 +86,7 @@ def aggregate_places(instance_config, job_id):
             #We insert the objects that are in ed but not in jormungandr
             to_insert_query = table_uris.select(
                 not_(table_uris.c.uri.in_(cls_type.query.options(load_only(cls_type.uri)))))
-            for object_ in db.engine.execute(to_insert_query):
+            for object_ in db.session.execute(to_insert_query):
                 if object_[0] is None:
                     continue
                 object_ed = query_ed.get(object_[0])
@@ -102,6 +103,7 @@ def aggregate_places(instance_config, job_id):
             db.session.query(cls_type).filter(not_(cls_type.instances.any()))\
                 .delete(synchronize_session=False)
             db.session.commit()
+	    table_uris.drop()
             app.logger.info("Finished to handle %s"%type_name)
 
         #Unable to factor the class, sqlalchemy handles a dictionnary of
