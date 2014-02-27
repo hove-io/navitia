@@ -5,7 +5,6 @@ import os
 os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
     + '/app_saving_settings.py'
 from utils import *
-#from app_test import __all__ as alltests
 from jormungandr import i_manager, app
 from instance_save import InstanceSave
 import importlib
