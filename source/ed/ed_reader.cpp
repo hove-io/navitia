@@ -1086,7 +1086,7 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
                 "where cal.week_pattern_id = wp.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        navitia::type::Calendar* cal = new navitia::type::Calendar();
+        navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta.production_date.begin());
         const_it["id"].to(cal->id);
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
@@ -1097,6 +1097,9 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
         cal->week_pattern[navitia::Friday] = const_it["friday"].as<bool>();
         cal->week_pattern[navitia::Saturday] = const_it["saturday"].as<bool>();
         cal->week_pattern[navitia::Sunday] = const_it["sunday"].as<bool>();
+
+        //computation of the validitypattern
+        cal->build_validity_pattern();
         data.pt_data.calendars.push_back(cal);
         calendar_map[const_it["id"].as<idx_t>()] = cal;
     }

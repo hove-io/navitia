@@ -269,23 +269,20 @@ template<typename T> std::vector<idx_t> indexes(std::vector<T*> elements){
     return result;
 }
 
-ValidityPattern Calendar::calendar2validity_pattern(boost::gregorian::date beginning_date) const{
-    ValidityPattern vp(beginning_date);
-    for(boost::posix_time::time_period period : this->active_periods){
-        for(boost::gregorian::day_iterator it(period.begin().date()); it<=period.end().date(); ++it) {
-            vp.add(*it);
+Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
+
+void Calendar::build_validity_pattern() {
+    //initialisation of the validity pattern from the active periods and the exceptions
+    for (boost::posix_time::time_period period : this->active_periods) {
+        validity_pattern.add(period.begin().date(), period.end().date(), week_pattern);
+    }
+    for (navitia::type::ExceptionDate exd : this->exceptions) {
+        if (exd.type == ExceptionDate::ExceptionType::sub) {
+            validity_pattern.remove(exd.date);
+        } else if (exd.type == ExceptionDate::ExceptionType::add) {
+            validity_pattern.add(exd.date);
         }
     }
-    for(navitia::type::ExceptionDate exd : this->exceptions){
-        if(exd.type == ExceptionDate::ExceptionType::sub){
-            vp.remove(exd.date);
-        }else{
-            if(exd.type ==ExceptionDate::ExceptionType::add){
-                vp.add(exd.date);
-            }
-        }
-    }
-    return vp;
 }
 
 std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
