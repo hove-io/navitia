@@ -1,3 +1,10 @@
+navitia2 (0.83.9) unstable; urgency=low
+
+ * Fix aggregate places
+ * Fix journeys
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 27 Feb 2014 16:02:24 +0100
+
 navitia2 (0.83.8) unstable; urgency=low
 
  * Fix connector_at
