@@ -404,8 +404,8 @@ typedef Connection<StopPoint>  StopPointConnection;
 
 struct ExceptionDate {
     enum class ExceptionType {
-        sub = 0,      // Suppression
-        add = 1       // Ajout
+        sub = 0,      // remove
+        add = 1       // add
     };
     ExceptionType type;
     boost::gregorian::date date;

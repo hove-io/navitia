@@ -293,12 +293,12 @@ message Address {
 }
 
 enum ExceptionType {
-    ADD = 0;
-    REMOVE = 1;
+    Add = 0;
+    Remove = 1;
 }
 
 message CalendarException {
-    optional string datetime = 1;
+    optional string date = 1;
     optional ExceptionType type = 2;
 }
 

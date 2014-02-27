@@ -956,14 +956,14 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
 
     for (const auto& excep: cal->exceptions) {
         auto pb_ex = pb_cal->add_exceptions();
-        pb_ex->set_datetime(boost::gregorian::to_iso_extended_string(excep.date));
+        pb_ex->set_date(boost::gregorian::to_iso_extended_string(excep.date));
         pbnavitia::ExceptionType type;
         switch (excep.type) {
         case nt::ExceptionDate::ExceptionType::add:
-            type = pbnavitia::ADD;
+            type = pbnavitia::Add;
             break;
         case nt::ExceptionDate::ExceptionType::sub:
-            type = pbnavitia::REMOVE;
+            type = pbnavitia::Remove;
             break;
         default:
             throw navitia::exception("exception date case not handled");
