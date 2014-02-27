@@ -205,6 +205,7 @@ class Script(object):
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
+        req.journeys.disruption_active = request["disruption_active"]
 
         self.origin_modes = request["origin_mode"]
 
@@ -296,7 +297,7 @@ class Script(object):
     def get_journey(self, pb_req, instance, original_request):
         resp = self.call_kraken(pb_req, instance)
 
-        if not resp or pb_req.requested_api != type_pb2.PLANNER:
+        if not resp or (pb_req.requested_api != type_pb2.PLANNER and pb_req.requested_api != type_pb2.ISOCHRONE):
             return
 
         new_request = self.check_missing_journey(resp.journeys, pb_req)
@@ -327,7 +328,7 @@ class Script(object):
     def fill_journeys(self, pb_req, request, instance):
         resp = self.get_journey(pb_req, instance, request)
 
-        if len(resp.journeys) == 0:
+        if not resp.journeys or len(resp.journeys) == 0:
             return resp  # no journeys found, useless to call kraken again
 
         while request["count"] > len(resp.journeys):
