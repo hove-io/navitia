@@ -388,7 +388,7 @@ def calendars(is_collection):
         """ Retrieves calendars"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "calendars")
+            super(Calendars, self).__init__(is_collection, "calendars")
             self.collections = [
                 ("calendars", NonNullList(fields.Nested(calendar,
                                            display_null=False))),

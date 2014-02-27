@@ -197,16 +197,17 @@ struct TripPropertiesFusioHandler: public GenericHandler{
     const std::vector<std::string> required_headers() const { return {"trip_property_id"}; }
 };
 
-struct HPeriodFusioHandler : public GenericHandler {
-    HPeriodFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+namespace grid_calendar {
+struct GridCalPeriodFusioHandler : public GenericHandler {
+    GridCalPeriodFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int calendar_c, begin_c, end_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"calendar_id", "begin_date", "end_date"}; }
 };
 
-struct HCalendarFusioHandler : public GenericHandler {
-    HCalendarFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+struct GridCalendarFusioHandler : public GenericHandler {
+    GridCalendarFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, name_c, monday_c,
     tuesday_c, wednesday_c,
     thursday_c, friday_c,
@@ -218,21 +219,22 @@ struct HCalendarFusioHandler : public GenericHandler {
                                                                         "sunday" }; }
 };
 
-struct HExceptionDatesFusioHandler : public GenericHandler {
-    HExceptionDatesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+struct ExceptionDatesFusioHandler : public GenericHandler {
+    ExceptionDatesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int calendar_c, datetime_c, type_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"calendar_id", "date", "type"}; }
 };
 
-struct HCalendarLineFusioHandler : public GenericHandler {
-    HCalendarLineFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+struct CalendarLineFusioHandler : public GenericHandler {
+    CalendarLineFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int calendar_c, line_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"calendar_id", "line_external_code"}; }
 };
+}
 
 /**
  * custom parser

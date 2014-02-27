@@ -940,13 +940,13 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
     pb_cal->set_name(cal->name);
 
     auto week = pb_cal->mutable_week_pattern();
-    week->set_monday(cal->week_pattern[boost::date_time::Monday]);
-    week->set_tuesday(cal->week_pattern[boost::date_time::Tuesday]);
-    week->set_wednesday(cal->week_pattern[boost::date_time::Wednesday]);
-    week->set_thursday(cal->week_pattern[boost::date_time::Thursday]);
-    week->set_friday(cal->week_pattern[boost::date_time::Friday]);
-    week->set_saturday(cal->week_pattern[boost::date_time::Saturday]);
-    week->set_sunday(cal->week_pattern[boost::date_time::Sunday]);
+    week->set_monday(cal->week_pattern[navitia::Monday]);
+    week->set_tuesday(cal->week_pattern[navitia::Tuesday]);
+    week->set_wednesday(cal->week_pattern[navitia::Wednesday]);
+    week->set_thursday(cal->week_pattern[navitia::Thursday]);
+    week->set_friday(cal->week_pattern[navitia::Friday]);
+    week->set_saturday(cal->week_pattern[navitia::Saturday]);
+    week->set_sunday(cal->week_pattern[navitia::Sunday]);
 
     for (const auto& p: cal->active_periods) {
         auto pb_period = pb_cal->add_active_periods();

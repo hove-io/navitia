@@ -2,6 +2,7 @@
 
 #include "datetime.h"
 #include "utils/flat_enum_map.h"
+#include "utils/exception.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <vector>
 #include <bitset>
@@ -412,6 +413,27 @@ struct ExceptionDate {
         ar & type & date;
     }
 };
+
+inline std::string to_string(ExceptionDate::ExceptionType t) {
+    switch (t) {
+    case ExceptionDate::ExceptionType::add:
+        return "Add";
+    case ExceptionDate::ExceptionType::sub:
+        return "Sub";
+    default:
+        throw navitia::exception("unhandled exception type");
+    }
+}
+
+inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
+    if (str == "Add") {
+        return ExceptionDate::ExceptionType::add;
+    }
+    if (str == "Sub") {
+        return ExceptionDate::ExceptionType::sub;
+    }
+    throw navitia::exception("unhandled exception type: " + str);
+}
 
 struct Calendar : public Nameable, public Header {
     const static Type_e type = Type_e::Calendar;

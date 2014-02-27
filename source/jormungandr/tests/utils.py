@@ -12,13 +12,28 @@ def make_filename(request):
     """Hash the request to make the name"""
     filename = hashlib.md5(str(request).encode()).hexdigest()
     filepath = os.path.join(saving_directory, filename)
-    logging.info("for request '%s' filename '%s'" % (request, filepath))
+    logging.info("for request '{r}' filename '{f}'".format(r=request, f=filepath))
     return filepath
 
 place_holder_regexp = re.compile("\{(.*)\.(.*)\}")
 
 
 def is_place_holder(part):
+    """
+    check if the url part is a place holder
+    a place holder is writen is the form {rel.attribute}
+    if it is a place holder return a tuple (rel, attribute) else return None
+    >>> is_place_holder("bob") is None
+    True
+    >>> is_place_holder("bob.id") is None
+    True
+    >>> is_place_holder("{bob.id}")
+    ('bob', 'id')
+    >>> is_place_holder("{bobid}") is None
+    True
+    >>> is_place_holder("") is None
+    True
+    """
     match = place_holder_regexp.match(part)
 
     if not match:
@@ -58,7 +73,7 @@ class MockInstance:
             place_holder = is_place_holder(part)
             if place_holder:
                 part = self.get_first_elt(current_url, place_holder)
-                logging.debug("for place holder %s, %s the url part is %s" % (place_holder[0], place_holder[1], part))
+                logging.debug("for place holder {p1}, {p2} the url part is {url}".format(p1=place_holder[0], p2=place_holder[1], url=part))
             current_url += sep + part
             sep = '/'
 

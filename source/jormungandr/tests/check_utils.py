@@ -27,27 +27,44 @@ def check_and_get_as_dict(tester, url):
 
 
 def get_not_null(dict, field):
-    assert field in dict and dict[field]
+    assert field in dict
 
+    val = dict[field]
+    if type(val) == bool:
+        return val  # no check for booleans
+
+    assert val
     return dict[field]
 
 
 def is_valid_date(str):
+    """
+    Check is the string is a valid date
+    >>> is_valid_date("bob")
+    False
+    >>> is_valid_date("")
+    Traceback (most recent call last):
+    AssertionError
+    >>> is_valid_date("20123101T215030")  # month is badly set
+    False
+    >>> is_valid_date("20120131T215030")
+    True
+    """
     assert str
 
     try:
         datetime.strptime(str, "%Y%m%dT%H%M%S")
     except ValueError:
-        logging.error("string '%s' is no valid date" % str)
+        logging.error("string '{}' is no valid date".format(str))
         return False
     return True
 
 
 def is_valid_bool(str):
-    assert str
     if type(str) is bool:
         return True
 
+    assert str
     #else check as string
     lower = str.lower()
     return lower == "true" or lower == "false"

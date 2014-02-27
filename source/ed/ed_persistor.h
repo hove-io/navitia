@@ -57,9 +57,8 @@ private:
     void insert_week_patterns(const std::vector<types::Calendar*>& calendars);
     void insert_calendars(const std::vector<types::Calendar*>& calendars);
     void insert_exception_dates(const std::vector<types::Calendar*>& calendars);
-    void insert_periods(const std::vector<types::Period*>& periods);
+    void insert_periods(const std::vector<types::Calendar*>& calendars);
     void insert_rel_calendar_line(const std::vector<types::Calendar*>& calendars);
-    void insert_rel_calendar_period(const std::vector<types::Calendar*>& calendars);
 
     /// Inserer les données fare
     void insert_transitions(const ed::Data& data);

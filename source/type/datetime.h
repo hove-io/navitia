@@ -83,4 +83,9 @@ inline std::string to_iso_string_no_fractional(Time t) {
     return boost::posix_time::to_iso_string(strip_fractional_second(t));
 }
 
+/**
+ * weeday enum (because boost::date_time::weekdays start on sunday and we want monday to be the first day)
+ */
+enum weekdays {Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday};
+
 }

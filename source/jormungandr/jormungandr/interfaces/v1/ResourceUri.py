@@ -94,19 +94,21 @@ class add_computed_resources(object):
                         "rel": api,
                         "templated": templated
                     })
-            if collection in ['stop_areas', 'stop_points', 'addresses']:
+            if collection in ['stop_a', 'stop_points', 'addresses']:
                 data['links'].append({
                     "href": url_for("v1.journeys", **kwargs),
                     "rel": "journeys",
                     "templated": templated
                 })
-            if collection in ['lines']:
+            #for lines we add the link to the calendars
+            if collection == 'lines':
                 data['links'].append({
                     "href": url_for("v1.calendars.collection", **kwargs),
                     "rel": "calendars",
                     "templated": templated
                 })
-            if collection in ['calendars']:
+            #for calendars we add the link to the lines
+            if collection == 'calendars':
                 data['links'].append({
                     "href": url_for("v1.lines.collection", **kwargs),
                     "rel": "lines",

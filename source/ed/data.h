@@ -48,7 +48,6 @@ public:
     std::map<std::string, navitia::fare::DateTicket> fare_map;
     std::map<navitia::fare::OD_key, std::map<navitia::fare::OD_key, std::vector<std::string>>> od_tickets;
 
-    std::vector<types::Period*> periods;
     /**
          * trie les différentes donnée et affecte l'idx
          *
@@ -118,9 +117,6 @@ public:
         ITERATE_NAVITIA_PT_TYPES(DELETE_ALL_ELEMENTS)
         for(ed::types::StopTime* stop : stops){
             delete stop;
-        }
-        for(ed::types::Period* period : periods){
-            delete period;
         }
     }
 

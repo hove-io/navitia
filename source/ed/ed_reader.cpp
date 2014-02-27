@@ -1090,35 +1090,37 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
         const_it["id"].to(cal->id);
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
-        cal->week_pattern[0] = const_it["monday"].as<bool>();
-        cal->week_pattern[1] = const_it["tuesday"].as<bool>();
-        cal->week_pattern[2] = const_it["wednesday"].as<bool>();
-        cal->week_pattern[3] = const_it["thursday"].as<bool>();
-        cal->week_pattern[4] = const_it["friday"].as<bool>();
-        cal->week_pattern[5] = const_it["saturday"].as<bool>();
-        cal->week_pattern[6] = const_it["sunday"].as<bool>();
+        cal->week_pattern[navitia::Monday] = const_it["monday"].as<bool>();
+        cal->week_pattern[navitia::Tuesday] = const_it["tuesday"].as<bool>();
+        cal->week_pattern[navitia::Wednesday] = const_it["wednesday"].as<bool>();
+        cal->week_pattern[navitia::Thursday] = const_it["thursday"].as<bool>();
+        cal->week_pattern[navitia::Friday] = const_it["friday"].as<bool>();
+        cal->week_pattern[navitia::Saturday] = const_it["saturday"].as<bool>();
+        cal->week_pattern[navitia::Sunday] = const_it["sunday"].as<bool>();
         data.pt_data.calendars.push_back(cal);
         calendar_map[const_it["id"].as<idx_t>()] = cal;
     }
 }
 
 void EdReader::fill_periods(navitia::type::Data& , pqxx::work& work){
-    std::string request = "select calp.calendar_id, per.begin_date, per.end_date "
-                           "from navitia.rel_calendar_period  calp, navitia.period per "
-                           "where calp.period_id = per.id;";
+    std::string request = "select per.calendar_id, per.begin_date, per.end_date "
+                           "from navitia.period per";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        navitia::type::Calendar* cal = this->calendar_map[const_it["calendar_id"].as<idx_t>()];
-        if (cal != nullptr){
-            boost::posix_time::ptime start = boost::posix_time::time_from_string(const_it["begin_date"].as<std::string>());
-            boost::posix_time::ptime end = boost::posix_time::time_from_string(const_it["end_date"].as<std::string>());
-            cal->active_periods.push_back(boost::posix_time::time_period(start, end));
+        auto cal_id = const_it["calendar_id"].as<idx_t>();
+        navitia::type::Calendar* cal = this->calendar_map[cal_id];
+        if (cal == nullptr) {
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unable to find calendar " << cal_id);
+            continue;
         }
+        boost::posix_time::ptime start = boost::posix_time::time_from_string(const_it["begin_date"].as<std::string>());
+        boost::posix_time::ptime end = boost::posix_time::time_from_string(const_it["end_date"].as<std::string>());
+        cal->active_periods.push_back(boost::posix_time::time_period(start, end));
     }
 }
 
 void EdReader::fill_exception_dates(navitia::type::Data& , pqxx::work& work){
-    std::string request = "select id, datetime, exception_type_id, calendar_id ";
+    std::string request = "select id, datetime, type_ex, calendar_id ";
                 request += "from exception_date;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
@@ -1126,7 +1128,7 @@ void EdReader::fill_exception_dates(navitia::type::Data& , pqxx::work& work){
         if (cal != nullptr){
             navitia::type::ExceptionDate exception_date;
             exception_date.date = bg::from_string(const_it["datetime"].as<std::string>());
-            exception_date.type = static_cast<navitia::type::ExceptionDate::ExceptionType>(const_it["exception_type_id"].as<int>());
+            exception_date.type = navitia::type::to_exception_type(const_it["type_ex"].as<std::string>());
             cal->exceptions.push_back(exception_date);
         }
     }

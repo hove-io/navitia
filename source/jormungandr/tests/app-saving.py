@@ -25,7 +25,7 @@ class Serializer(MockInstance):
 
     def serialize(self):
         logging.info("cleaning files")
-        #clean_dir(saving_directory)
+        clean_dir(saving_directory)
 
         tests_classes = importlib.import_module("app_test")
 
@@ -51,7 +51,7 @@ class Serializer(MockInstance):
                     except AssertionError as error:
                         logging.warn("url in error : assertion failed : " + error.message)
 
-        logging.info("%d tests serialized " % nb_test)
+        logging.info("{} tests serialized ".format(nb_test))
 
 
 def clean_dir(dir):
