@@ -131,7 +131,7 @@ struct Georef{
     std::unordered_map<std::string, types::PoiType *> poi_types;
     std::unordered_map<std::string, types::Poi *> pois;
                       // Old uri way, New uri way
-    std::unordered_map<std::string, std::string> fusion_ways;
+    std::unordered_map<std::string, types::Way*> fusion_ways;
     Georef(){};
     ~Georef();
 };

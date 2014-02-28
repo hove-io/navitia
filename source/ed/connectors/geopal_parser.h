@@ -31,8 +31,7 @@ private:
     bool starts_with(std::string filename, const std::string& prefex);
     void fusion_ways();
     void fusion_ways_by_graph(std::vector<types::Edge*>& ways);
-    void fusion_ways_list(const std::multimap<size_t, ed::types::Edge*>& component_edges);
-    ed::types::Way* get_way(const std::string& old_uri) const;
+    void fusion_ways_list(const std::multimap<size_t, ed::types::Edge*>& component_edges);    
 
 public:
     ed::Georef data;
