@@ -1,8 +1,11 @@
 #include "geopal_parser.h"
+#include <boost/graph/strong_components.hpp>
+#include <boost/graph/connected_components.hpp>
 
 namespace ed { namespace connectors {
 
-GeopalParser::GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord): path(path), conv_coord(conv_coord){
+GeopalParser::GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord): path(path),
+                            conv_coord(conv_coord), ways_fusionned(0){
     logger = log4cplus::Logger::getInstance("log");
     try{
             boost::filesystem::path directory(this->path);
@@ -22,32 +25,114 @@ bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
     return boost::algorithm::starts_with(filename, prefex);
 }
 
-void GeopalParser::fill(ed::Georef& data){
-//    chargement des données
-    this->fill_admins(data);
-    LOG4CPLUS_INFO(logger, "Admin count :" << data.admins.size());
-    this->fill_nodes(data);
-    LOG4CPLUS_INFO(logger, "Noeud count :" << data.nodes.size());
-    this->fill_ways_edges(data);
-    LOG4CPLUS_INFO(logger, "Way count :" << data.ways.size());
-    LOG4CPLUS_INFO(logger, "Edge count :" << data.edges.size());
-    this->fill_house_numbers(data);
-    LOG4CPLUS_INFO(logger, "House number count :" << data.house_numbers.size());
-    this->fill_poi_types(data);
-    LOG4CPLUS_INFO(logger, "PoiTypes count :" << data.poi_types.size());
-    this->fill_pois(data);
-    LOG4CPLUS_INFO(logger, "Pois count :" << data.pois.size());
+//we affect the first way for every edges of a component
+void GeopalParser::fusion_ways_list(const std::multimap<size_t, ed::types::Edge*>& component_edges){
+    for ( auto it_key = component_edges.begin(); it_key != component_edges.end() ; it_key = component_edges.upper_bound(it_key->first)) {
+        ed::types::Way* way_ref = it_key->second->way;
+        this->data.fusion_ways[way_ref->uri] = way_ref;
+        for (auto it = it_key ; it->first == it_key->first; ++it) {
+            ed::types::Way* way = it->second->way;
+            if(way != way_ref){
+                way->is_used = false;
+                this->data.fusion_ways[way->uri] = way_ref;
+                it->second->way = way_ref;
+                this->ways_fusionned++;
+            }
+        }
+    }
 }
 
-ed::types::Node* GeopalParser::add_node(ed::Georef& data, const navitia::type::GeographicalCoord& coord, const std::string& uri){
+
+//We make a graph out of each edge of every edges
+//We look for connected components in this graph
+void GeopalParser::fusion_ways_by_graph(std::vector<types::Edge*>& edges){
+    typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, size_t, ed::types::Edge*> Graph;
+    Graph graph;
+    std::unordered_map<uint64_t, idx_t> node_map_temp;
+    // Graph building
+    for(ed::types::Edge* edge : edges){
+        if(node_map_temp.find(edge->source->id) == node_map_temp.end()){
+            node_map_temp[edge->source->id] = boost::add_vertex(graph);
+        }
+        if(node_map_temp.find(edge->target->id) == node_map_temp.end()){
+            node_map_temp[edge->target->id] = boost::add_vertex(graph);
+        }
+        boost::add_edge(node_map_temp[edge->source->id], node_map_temp[edge->target->id], edge, graph);
+        boost::add_edge(node_map_temp[edge->target->id], node_map_temp[edge->source->id], edge, graph);
+    }
+    std::vector<size_t> vertex_component(boost::num_vertices(graph));
+    size_t num = boost::connected_components(graph, &vertex_component[0]);
+    if(num != edges.size()){
+        std::multimap<size_t, ed::types::Edge*> component_edges;
+        for(size_t i = 0; i<vertex_component.size(); ++i) {
+            auto begin_end = boost::out_edges(i, graph);
+            for(auto it = begin_end.first; it != begin_end.second; ++it) {
+                component_edges.insert({i, graph[*it]});
+            }
+        }
+        this->fusion_ways_list(component_edges);
+    }
+}
+
+// We group the way with the same name and the same admin
+void GeopalParser::fusion_ways(){
+    typedef std::unordered_map<std::string, std::vector<types::Edge*>> wayname_ways;
+    std::unordered_map<std::string, wayname_ways> admin_wayname_way;
+    for(auto way : this->data.ways) {
+        if(way.second->admin != nullptr) {
+            auto admin_it = admin_wayname_way.find(way.second->admin->insee);
+            if(admin_it == admin_wayname_way.end()) {
+                admin_wayname_way[way.second->admin->insee] =  wayname_ways();
+                admin_wayname_way[way.second->admin->insee][way.second->name] = std::vector<types::Edge*>(way.second->edges);
+            } else {
+                auto way_it = admin_it->second.find(way.second->name);
+                if(way_it == admin_it->second.end()) {
+                    admin_wayname_way[way.second->admin->insee][way.second->name] = std::vector<types::Edge*>(way.second->edges);
+                } else {
+                    auto &way_vector = admin_wayname_way[way.second->admin->insee][way.second->name];
+                    way_vector.insert(way_vector.begin(), way.second->edges.begin(),  way.second->edges.end());
+                }
+            }
+        }
+    }
+    for(auto wayname_ways_it : admin_wayname_way){
+        for(auto edges_it : wayname_ways_it.second){
+            this->fusion_ways_by_graph(edges_it.second);
+        }
+    }
+}
+
+void GeopalParser::fill(){
+
+    this->fill_admins();
+    LOG4CPLUS_INFO(logger, "Admin count :" << this->data.admins.size());
+    this->fill_nodes();
+    LOG4CPLUS_INFO(logger, "Noeud count :" << this->data.nodes.size());
+    this->fill_ways_edges();
+    LOG4CPLUS_INFO(logger, "Way count :" << this->data.ways.size());
+    LOG4CPLUS_INFO(logger, "Edge count :" << this->data.edges.size());
+
+    LOG4CPLUS_INFO(logger, "begin : fusio_way ");
+    this->fusion_ways();
+    LOG4CPLUS_INFO(logger, "End : fusio way " << this->ways_fusionned <<"/"<<this->data.ways.size()<<" fusionned.");
+
+    this->fill_house_numbers();
+    LOG4CPLUS_INFO(logger, "House number count :" << this->data.house_numbers.size());
+    this->fill_poi_types();
+    LOG4CPLUS_INFO(logger, "PoiTypes count :" << this->data.poi_types.size());
+    this->fill_pois();
+    LOG4CPLUS_INFO(logger, "Pois count :" << this->data.pois.size());
+}
+
+ed::types::Node* GeopalParser::add_node(const navitia::type::GeographicalCoord& coord, const std::string& uri){
     ed::types::Node* node = new ed::types::Node;
-    node->id = data.nodes.size() + 1;
+    node->id = this->data.nodes.size() + 1;
     node->coord = this->conv_coord.convert_to(coord);
-    data.nodes[uri] = node;
+    this->data.nodes[uri] = node;
     return node;
 }
 
-void GeopalParser::fill_nodes(ed::Georef& data){
+void GeopalParser::fill_nodes(){
     for(const std::string file_name : this->files){
         if(!this->starts_with(file_name, "adresse")){
             continue;
@@ -71,21 +156,21 @@ void GeopalParser::fill_nodes(ed::Georef& data){
             std::string uri;
             if (reader.is_valid(x_c, row) && reader.is_valid(y_c, row) && reader.is_valid(insee_c, row)){
                 uri = row[x_c] + row[y_c];
-                auto adm = data.admins.find(row[insee_c]);
-                if (adm != data.admins.end()){
+                auto adm = this->data.admins.find(row[insee_c]);
+                if (adm != this->data.admins.end()){
                     if(reader.is_valid(code_post_c, row)){
                         adm->second->postcode = row[code_post_c];
                     }
-                    auto nd = data.nodes.find(uri);
-                    if(nd == data.nodes.end())
-                        this->add_node(data, navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])), uri);
+                    auto nd = this->data.nodes.find(uri);
+                    if(nd == this->data.nodes.end())
+                        this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])), uri);
                 }
             }
         }
     }
 }
 
-void GeopalParser::fill_admins(ed::Georef& data){
+void GeopalParser::fill_admins(){
     for(const std::string file_name : this->files){
         if (! this->starts_with(file_name, "commune")){
             continue;
@@ -105,22 +190,22 @@ void GeopalParser::fill_admins(ed::Georef& data){
         while(!reader.eof()){
             std::vector<std::string> row = reader.next();
             if (reader.is_valid(insee_c, row) && reader.is_valid(x_c, row) && reader.is_valid(y_c, row)){
-                auto itm = data.admins.find(row[insee_c]);
-                if(itm == data.admins.end()){
+                auto itm = this->data.admins.find(row[insee_c]);
+                if(itm == this->data.admins.end()){
                     ed::types::Admin* admin = new ed::types::Admin;
                     admin->insee = row[insee_c];
-                    admin->id = data.admins.size() + 1;
+                    admin->id = this->data.admins.size() + 1;
                     if (reader.is_valid(name_c, row))
                         admin->name = row[name_c];
                     admin->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])));
-                    data.admins[admin->insee] = admin;
+                    this->data.admins[admin->insee] = admin;
                 }
             }
         }
     }
 }
 
-void GeopalParser::fill_ways_edges(ed::Georef& data){
+void GeopalParser::fill_ways_edges(){
     for(const std::string file_name : this->files){
         if (! this->starts_with(file_name, "route_a")){
             continue;
@@ -148,46 +233,47 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
                 && reader.is_valid(x2, row) && reader.is_valid(y2, row)
                 && reader.is_valid(inseecom_d, row)
                 && reader.is_valid(id, row)){
-                auto admin = data.admins.find(row[inseecom_d]);
-                if(admin != data.admins.end()){
+                auto admin = this->data.admins.find(row[inseecom_d]);
+                if(admin != this->data.admins.end()){
                     std::string source  = row[x1] + row[y1];
                     std::string target  = row[x2] + row[y2];
                     std::string edge_uri = source + target;
                     ed::types::Node* source_node;
                     ed::types::Node* target_node;
-                    auto source_it = data.nodes.find(source);
-                    auto target_it = data.nodes.find(target);
+                    auto source_it = this->data.nodes.find(source);
+                    auto target_it = this->data.nodes.find(target);
 
-                    if(source_it == data.nodes.end()){
-                        source_node = this->add_node(data, navitia::type::GeographicalCoord(str_to_double(row[x1]), str_to_double(row[y1])), source);
+                    if(source_it == this->data.nodes.end()){
+                        source_node = this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x1]), str_to_double(row[y1])), source);
                     }else{
                         source_node = source_it->second;
                     }
 
-                    if(target_it == data.nodes.end()){
-                        target_node = this->add_node(data, navitia::type::GeographicalCoord(str_to_double(row[x2]), str_to_double(row[y2])), target);
+                    if(target_it == this->data.nodes.end()){
+                        target_node = this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x2]), str_to_double(row[y2])), target);
                     }else{
                         target_node = target_it->second;
                     }
                     ed::types::Way* current_way = nullptr;
                     std::string wayd_uri = row[id];
-                    auto way = data.ways.find(wayd_uri);
-                    if(way == data.ways.end()){
+                    auto way = this->data.ways.find(wayd_uri);
+                    if(way == this->data.ways.end()){
                         ed::types::Way* wy = new ed::types::Way;
                         wy->admin = admin->second;
                         admin->second->is_used = true;
-                        wy->id = data.ways.size() + 1;
+                        wy->id = this->data.ways.size() + 1;
                         if(reader.is_valid(nom_voie_d, row)){
                             wy->name = row[nom_voie_d];
                         }
                         wy->type ="";
-                        data.ways[wayd_uri] = wy;
+                        wy->uri = wayd_uri;
+                        this->data.ways[wayd_uri] = wy;
                         current_way = wy;
                     }else{
                         current_way = way->second;
                     }
-                    auto edge = data.edges.find(edge_uri);
-                    if(edge == data.edges.end()){
+                    auto edge = this->data.edges.find(edge_uri);
+                    if(edge == this->data.edges.end()){
                         ed::types::Edge* edg = new ed::types::Edge;
                         edg->source = source_node;
                         edg->source->is_used = true;
@@ -197,7 +283,8 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
                             edg->length = str_to_int(row[l]);
                         }
                         edg->way = current_way;
-                        data.edges[edge_uri]= edg;
+                        this->data.edges[edge_uri]= edg;
+                        current_way->edges.push_back(edg);
                     }
                 }
             }
@@ -205,7 +292,7 @@ void GeopalParser::fill_ways_edges(ed::Georef& data){
     }
 }
 
-void GeopalParser::fill_house_numbers(ed::Georef& data){
+void GeopalParser::fill_house_numbers(){
     for(const std::string file_name : this->files){
         if (! this->starts_with(file_name, "adresse")){
             continue;
@@ -231,16 +318,16 @@ void GeopalParser::fill_house_numbers(ed::Georef& data){
                 && reader.is_valid(nom_voie_c, row)
                 && reader.is_valid(id_tr, row)){
                 std::string way_uri = row[id_tr];
-                auto way_it = data.ways.find(way_uri);
-                if(way_it != data.ways.end()){
+                auto it = this->data.fusion_ways.find(way_uri);
+                if(it != this->data.fusion_ways.end()){
                     std::string hn_uri = row[x_c] + row[y_c] + row[numero_c];
-                    auto hn = data.house_numbers.find(hn_uri);
-                    if (hn == data.house_numbers.end()){
+                    auto hn = this->data.house_numbers.find(hn_uri);
+                    if (hn ==this-> data.house_numbers.end()){
                         ed::types::HouseNumber* current_hn = new ed::types::HouseNumber;
                         current_hn->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])));
                         current_hn->number = row[numero_c];
-                        current_hn->way = way_it->second;
-                        data.house_numbers[hn_uri] = current_hn;
+                        current_hn->way = it->second;
+                        this->data.house_numbers[hn_uri] = current_hn;
                     }
                 }
             }
@@ -248,7 +335,7 @@ void GeopalParser::fill_house_numbers(ed::Georef& data){
     }
 }
 
-void GeopalParser::fill_poi_types(ed::Georef& data){
+void GeopalParser::fill_poi_types(){
     for(const std::string file_name : this->files){
         if (! this->starts_with(file_name, "poi_type")){
             continue;
@@ -266,18 +353,18 @@ void GeopalParser::fill_poi_types(ed::Georef& data){
         while(!reader.eof()){
             std::vector<std::string> row = reader.next();
             if (reader.is_valid(id_c, row) && reader.is_valid(name_c, row)){
-                const auto& itm = data.poi_types.find(row[id_c]);
-                if(itm == data.poi_types.end()){
+                const auto& itm = this->data.poi_types.find(row[id_c]);
+                if(itm == this->data.poi_types.end()){
                     ed::types::PoiType* poi_type = new ed::types::PoiType;
-                    poi_type->id = data.poi_types.size() + 1;
+                    poi_type->id = this->data.poi_types.size() + 1;
                     poi_type->name = row[name_c];
-                    data.poi_types[row[id_c]] = poi_type;
+                    this->data.poi_types[row[id_c]] = poi_type;
                 }
             }
         }
     }
 }
-void GeopalParser::fill_pois(ed::Georef& data){
+void GeopalParser::fill_pois(){
     for(const std::string file_name : this->files){
         if (! this->starts_with(file_name, "poi.txt")){
             continue;
@@ -304,12 +391,12 @@ void GeopalParser::fill_pois(ed::Georef& data){
                 && reader.is_valid(weight_c, row) && reader.is_valid(visible_c, row)
                 && reader.is_valid(lat_c, row) && reader.is_valid(lon_c, row)
                 && reader.is_valid(type_id_c, row)){
-                const auto& itm = data.pois.find(row[id_c]);
-                if(itm == data.pois.end()){
-                    const auto& poi_type = data.poi_types.find(row[type_id_c]);
-                    if(poi_type != data.poi_types.end()){
+                const auto& itm = this->data.pois.find(row[id_c]);
+                if(itm == this->data.pois.end()){
+                    const auto& poi_type = this->data.poi_types.find(row[type_id_c]);
+                    if(poi_type != this->data.poi_types.end()){
                         ed::types::Poi* poi = new ed::types::Poi;
-                        poi->id = data.pois.size() + 1;
+                        poi->id = this->data.pois.size() + 1;
                         poi->name = row[name_c];
                         try{
                             poi->visible = boost::lexical_cast<bool>(row[visible_c]);
@@ -325,7 +412,7 @@ void GeopalParser::fill_pois(ed::Georef& data){
                         }
                         poi->poi_type = poi_type->second;
                         poi->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[lon_c]), str_to_double(row[lat_c])));
-                        data.pois[row[id_c]] = poi;
+                        this->data.pois[row[id_c]] = poi;
                     }
                 }
             }

@@ -311,13 +311,16 @@ struct Admin{
     navitia::type::GeographicalCoord coord;
     Admin():id(0), is_used(false), level("8"){};
 };
-
+struct Edge;
 struct Way{
     size_t id;
+    std::string uri;
+    bool is_used;
     Admin* admin;
     std::string name;
     std::string type;
-    Way():id(0), admin(nullptr), name(""), type(""){};
+    std::vector<Edge*> edges;
+    Way():id(0), uri(""), is_used(true), admin(nullptr), name(""), type(""){};
 };
 
 struct Edge{

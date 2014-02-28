@@ -56,20 +56,19 @@ int main(int argc, char * argv[])
 
     pt::ptime start;
 
-    start = pt::microsec_clock::local_time();
-    ed::Georef data;
+    start = pt::microsec_clock::local_time();    
     ed::connectors::Projection origin("Lambert 2 étendu", std::to_string(coord_system), false);
     ed::connectors::GeopalParser geopal_parser(input, ed::connectors::ConvCoord(origin));
 
     try{
-            geopal_parser.fill(data);
+            geopal_parser.fill();
         }catch(const ed::connectors::GeopalParserException& e){
             LOG4CPLUS_FATAL(logger, "Erreur :"+ std::string(e.what()) + "  backtrace :" + e.backtrace());
             return -1;
         }
 
     ed::EdPersistor p(connection_string);
-    p.persist(data);
+    p.persist(geopal_parser.data);
     std::cout<<std::endl<<"temps :"<<to_simple_string(pt::microsec_clock::local_time() - start)<<std::endl;
 
     return 0;
