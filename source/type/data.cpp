@@ -172,29 +172,29 @@ get_difference(ValidityPattern::year_bitset set1, const ValidityPattern::year_bi
     return set1;
 }
 
-std::pair<const Calendar*, ValidityPattern::year_bitset>
-find_closest_calendar(const Data& data, const VehicleJourney* vehicle_journey) {
+using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
+
+list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey) {
     size_t threshold(15);
+    list_cal_bitset res;
 
     std::tuple<const Calendar*, size_t, ValidityPattern::year_bitset> best_match{nullptr, std::numeric_limits<size_t>::max(), {}};
     for (const auto calendar : data.pt_data.calendars) {
         auto diff = get_difference(calendar->validity_pattern.days, vehicle_journey->validity_pattern->days);
         size_t nb_diff = diff.count();
+        if (std::get<1>(best_match) > threshold) {
+            continue;
+        }
         if (std::get<1>(best_match) > nb_diff) {
-            best_match = std::make_tuple(calendar, nb_diff, diff);
+            res.push_back({calendar, diff});
         }
     }
 
-    if (std::get<1>(best_match) > threshold) {
-//        std::cout << "le plus pres calendar a " << std::get<1>(best_match)
-//                  << " diff, on ne rattache le vj a rien" << std::endl;
-        return {};
-    }
-    return {std::get<0>(best_match), std::get<2>(best_match)};
+    return res;
 }
 
 void Data::build_associated_calendar() {
-    std::map<ValidityPattern*, AssociatedCalendar*> associated_vp;
+    std::multimap<ValidityPattern*, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     for(VehicleJourney* vehicle_journey : this->pt_data.vehicle_journeys) {
 
@@ -202,25 +202,30 @@ void Data::build_associated_calendar() {
         //since a validity pattern can be shared by many vj
         auto it = associated_vp.find(vehicle_journey->validity_pattern);
         if (it != associated_vp.end()) {
-            vehicle_journey->associated_calendar =  it->second;
+            for (; it->first == vehicle_journey->validity_pattern; ++it) {
+                vehicle_journey->associated_calendars.push_back(it->second);
+            }
             continue;
         }
 
-        auto closest_cal = find_closest_calendar(*this, vehicle_journey);
+        auto close_cal = find_matching_calendar(*this, vehicle_journey);
 
-        if (!closest_cal.first) {
+        if (close_cal.empty()) {
             nb_not_matched_vj++;
             continue;
         }
-        auto associated_calendar = new AssociatedCalendar();
-        pt_data.associated_calendars.push_back(associated_calendar);
 
-        associated_calendar->calendar = closest_cal.first;
-//        associated_calendar->exceptions = TODO! //compute the exception from closest_cal.second
+        for (auto cal_bit_set: close_cal) {
+            auto associated_calendar = new AssociatedCalendar();
+            pt_data.associated_calendars.push_back(associated_calendar);
 
-        vehicle_journey->associated_calendar = associated_calendar;
+            associated_calendar->calendar = cal_bit_set.first;
+            //        associated_calendar->exceptions = TODO! //compute the exception from closest_cal.second
 
-        associated_vp.insert({vehicle_journey->validity_pattern, associated_calendar});
+            vehicle_journey->associated_calendars.push_back(associated_calendar);
+            associated_vp.insert({vehicle_journey->validity_pattern, associated_calendar});
+        }
+
     }
 
     if (nb_not_matched_vj) {

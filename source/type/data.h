@@ -156,6 +156,9 @@ private:
 };
 
 
+std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>
+find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey);
+
 } } //namespace navitia::type
 
 BOOST_CLASS_VERSION(navitia::type::Data, navitia::type::Data::data_version)

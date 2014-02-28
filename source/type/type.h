@@ -592,7 +592,7 @@ struct JourneyPattern : public Header, Nameable{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
 
-    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {};
+    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & is_frequence & route & commercial_mode
@@ -621,7 +621,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
-    AssociatedCalendar* associated_calendar;
+    ///list of the calendars that nearly match the validity pattern of the vj
+    std::vector<AssociatedCalendar*> associated_calendars;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;
@@ -630,8 +631,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 
     VehicleJourney(): journey_pattern(nullptr), company(nullptr),
         validity_pattern(nullptr),
-        vehicle_journey_type(VehicleJourneyType::regular),
-        associated_calendar(nullptr), is_adapted(false),
+        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false),
         adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
 
 
@@ -640,7 +640,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages & associated_calendar;
+            & odt_message & _vehicle_properties & messages & associated_calendars;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
