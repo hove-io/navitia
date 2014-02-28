@@ -79,8 +79,7 @@ private:
     void build_relation_way_admin(const ed::Georef& data);
     void update_boundary();
 
-    std::string to_geografic_point(const navitia::type::GeographicalCoord& coord) const;
-    std::string to_geografic_linestring(const navitia::type::GeographicalCoord& source, const navitia::type::GeographicalCoord& target) const;
+    std::string to_geographic_point(const navitia::type::GeographicalCoord& coord) const;
 
 };
 

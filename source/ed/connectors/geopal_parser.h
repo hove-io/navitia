@@ -8,32 +8,37 @@
 
 
 namespace ed{ namespace connectors{
-
 struct GeopalParserException: public navitia::exception{
     GeopalParserException(const std::string& message): navitia::exception(message){};
 };
 
 class GeopalParser{
 private:
-    std::string path;///< Chemin vers les fichiers
+    std::string path;///< Path files
     log4cplus::Logger logger;
     std::vector<std::string> files;
     ed::connectors::ConvCoord conv_coord;
 
-    ed::Georef data;
-    ed::types::Node* add_node(ed::Georef& data, const navitia::type::GeographicalCoord& coord, const std::string& uri);
-    void fill_admins(ed::Georef& data);
-    void fill_nodes(ed::Georef& data);
-    void fill_ways_edges(ed::Georef& data);
-    void fill_house_numbers(ed::Georef& data);
-    void fill_poi_types(ed::Georef& data);
-    void fill_pois(ed::Georef& data);
+    size_t ways_fusionned;
+
+    ed::types::Node* add_node(const navitia::type::GeographicalCoord& coord, const std::string& uri);
+    void fill_admins();
+    void fill_nodes();
+    void fill_ways_edges();
+    void fill_house_numbers();
+    void fill_poi_types();
+    void fill_pois();
     bool starts_with(std::string filename, const std::string& prefex);
+    void fusion_ways();
+    void fusion_ways_by_graph(std::vector<types::Edge*>& ways);
+    void fusion_ways_list(const std::multimap<size_t, ed::types::Edge*>& component_edges);
+    ed::types::Way* get_way(const std::string& old_uri) const;
 
 public:
-    GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord);
+    ed::Georef data;
 
-    void fill(ed::Georef& data);
+    GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord);
+    void fill();
 
 };
 }//namespace connectors
