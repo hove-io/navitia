@@ -43,28 +43,14 @@ void EdPersistor::persist(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, "Begin: Relation poi and admins");
     this->build_poi_admin_relation();
     LOG4CPLUS_INFO(logger, "End: Relation poi and admins");
-    LOG4CPLUS_INFO(logger, "Begin: Fusion ways");
-    this->build_ways();
-    LOG4CPLUS_INFO(logger, "End: Fusion ways");
     LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
 }
 
-std::string EdPersistor::to_geografic_point(const navitia::type::GeographicalCoord& coord) const{
+std::string EdPersistor::to_geographic_point(const navitia::type::GeographicalCoord& coord) const{
     std::stringstream geog;
-    geog << std::cout.precision(10);
-    geog.str("");
-    geog <<"POINT("<<coord.lon()<<" "<<coord.lat()<<")";
-    return geog.str();
-}
-
-std::string EdPersistor::to_geografic_linestring(const navitia::type::GeographicalCoord& source,
-        const navitia::type::GeographicalCoord& target) const{
-    std::stringstream geog;
-    geog << std::cout.precision(10);
-    geog.str("");
-    geog << "LINESTRING("<<source.lon()<<" "<<source.lat()<<","<<target.lon()<<" "<<target.lat()<<")";
+    geog << std::setprecision(10)<<"POINT("<<coord.lon()<<" "<<coord.lat()<<")";
     return geog.str();
 }
 
@@ -102,7 +88,7 @@ void EdPersistor::insert_admins(const ed::Georef& data){
         if(itm.second->is_used){
             this->lotus.insert({std::to_string(itm.second->id), itm.second->name,
                                     itm.second->postcode, itm.second->insee,
-                                    itm.second->level, this->to_geografic_point(itm.second->coord), itm.second->insee});
+                               itm.second->level, this->to_geographic_point(itm.second->coord),"admin:" + itm.second->insee});
         }
     }
     this->lotus.finish_bulk_insert();
@@ -111,12 +97,14 @@ void EdPersistor::insert_admins(const ed::Georef& data){
 void EdPersistor::insert_ways(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type"});
     for(const auto& itm : data.ways){
-        std::vector<std::string> values;
-        values.push_back(std::to_string(itm.second->id));
-        values.push_back(itm.second->name);
-        values.push_back(itm.first);
-        values.push_back(itm.second->type);
-        this->lotus.insert(values);
+        if(itm.second->is_used){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(itm.second->id));
+            values.push_back(itm.second->name);
+            values.push_back(itm.first);
+            values.push_back(itm.second->type);
+            this->lotus.insert(values);
+        }
      }
     this->lotus.finish_bulk_insert();
 }
@@ -125,7 +113,7 @@ void EdPersistor::insert_nodes(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.node", {"id","coord"});
     for(const auto& itm : data.nodes){
         if(itm.second->is_used){
-            this->lotus.insert({std::to_string(itm.second->id), this->to_geografic_point(itm.second->coord)});
+            this->lotus.insert({std::to_string(itm.second->id), this->to_geographic_point(itm.second->coord)});
         }
 
      }
@@ -135,38 +123,56 @@ void EdPersistor::insert_nodes(const ed::Georef& data){
 void EdPersistor::insert_house_numbers(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side"});
     for(const auto& itm : data.house_numbers) {
-        this->lotus.insert({this->to_geografic_point(itm.second->coord),
+        this->lotus.insert({this->to_geographic_point(itm.second->coord),
                 itm.second->number,
                 std::to_string(str_to_int(itm.second->number) % 2 == 0)});
     }
     lotus.finish_bulk_insert();
 }
 
+std::string coord_to_string(const navitia::type::GeographicalCoord& coord){
+    std::stringstream geog;
+    geog << std::setprecision(10) << coord.lon() << " " << coord.lat();
+    return geog.str();
+}
+
 void EdPersistor::insert_edges(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.edge",
             {"source_node_id", "target_node_id", "way_id", "the_geog",
             "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+    const auto bool_str = std::to_string(true);
+    size_t to_insert_count = 0;
+    size_t all_count = data.edges.size();
     for(const auto& edge : data.edges){
-        this->lotus.insert({std::to_string(edge.second->source->id),
-                std::to_string(edge.second->target->id),
-                std::to_string(edge.second->way->id),
-                this->to_geografic_linestring(edge.second->source->coord,
-                edge.second->target->coord),
-                std::to_string(true), std::to_string(true), std::to_string(true)});
-        this->lotus.insert({std::to_string(edge.second->target->id),
-                std::to_string(edge.second->source->id),
-                std::to_string(edge.second->way->id),
-                this->to_geografic_linestring(edge.second->target->coord,
-                edge.second->source->coord),
-                std::to_string(true), std::to_string(true), std::to_string(true)});
+        const auto source_str = std::to_string(edge.second->source->id);
+        const auto target_str = std::to_string(edge.second->target->id);
+        const auto way_str = std::to_string(edge.second->way->id);
+        const auto source_coord = coord_to_string(edge.second->source->coord);
+        const auto target_coord = coord_to_string(edge.second->target->coord);
+
+        this->lotus.insert({source_str, target_str, way_str,
+                           "LINESTRING(" + source_coord + "," + target_coord + ")",
+                            bool_str, bool_str, bool_str});
+        this->lotus.insert({target_str, source_str, way_str,
+                    "LINESTRING(" + target_coord + "," + source_coord + ")",
+                    bool_str, bool_str, bool_str});
+        ++to_insert_count;
+        if(to_insert_count % 150000 == 0) {
+            lotus.finish_bulk_insert();
+             LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
+            this->lotus.prepare_bulk_insert("georef.edge",
+                    {"source_node_id", "target_node_id", "way_id", "the_geog",
+                    "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+        }
     }
     lotus.finish_bulk_insert();
+    LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
 }
 
 void EdPersistor::insert_poi_types(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
-        this->lotus.insert({std::to_string(itm.second->id), itm.first, itm.second->name});
+        this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
     }
     lotus.finish_bulk_insert();
 }
@@ -181,8 +187,8 @@ void EdPersistor::insert_pois(const ed::Georef& data){
         }
         this->lotus.insert({std::to_string(itm.second->id),
                 std::to_string(itm.second->weight),
-                this->to_geografic_point(itm.second->coord),
-                itm.second->name, itm.first, poi_type});
+                this->to_geographic_point(itm.second->coord),
+                itm.second->name, "poi:" + itm.first, poi_type});
     }
     lotus.finish_bulk_insert();
 }
@@ -190,10 +196,12 @@ void EdPersistor::insert_pois(const ed::Georef& data){
 void EdPersistor::build_relation_way_admin(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
     for(const auto& itm : data.ways){
-        std::vector<std::string> values;
-        values.push_back(std::to_string(itm.second->admin->id));
-        values.push_back(std::to_string(itm.second->id));
-        this->lotus.insert(values);
+        if(itm.second->is_used){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(itm.second->admin->id));
+            values.push_back(std::to_string(itm.second->id));
+            this->lotus.insert(values);
+        }
      }
     this->lotus.finish_bulk_insert();
 }

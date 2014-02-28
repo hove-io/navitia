@@ -113,8 +113,6 @@ ITERATE_NAVITIA_PT_TYPES(CLEAR_EXT_CODE)
     this->pt_data.build_uri();
     geo_ref.build_pois();
     geo_ref.build_poitypes();
-    geo_ref.normalize_extcode_way();
-    geo_ref.normalize_extcode_admin();
 }
 
 void Data::build_proximity_list(){
