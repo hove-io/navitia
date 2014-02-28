@@ -647,15 +647,15 @@ boost::gregorian::date parse_date(const std::string& str) {
     try {
         return boost::gregorian::from_undelimited_string(str);
     } catch(const boost::bad_lexical_cast& ) {
-        LOG4CPLUS_WARN(logger, "Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "Impossible to parse the begin date for " << str);
     } catch(const boost::gregorian::bad_day_of_month&) {
-        LOG4CPLUS_WARN(logger, "bad_day_of_month : Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "bad_day_of_month : Impossible to parse the begin date for " << str);
     } catch(const boost::gregorian::bad_day_of_year&) {
-        LOG4CPLUS_WARN(logger, "bad_day_of_year : Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "bad_day_of_year : Impossible to parse the begin date for " << str);
     } catch(const boost::gregorian::bad_month&) {
-        LOG4CPLUS_WARN(logger, "bad_month : Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "bad_month : Impossible to parse the begin date for " << str);
     } catch(const boost::gregorian::bad_year&) {
-        LOG4CPLUS_WARN(logger, "bad_year : Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "bad_year : Impossible to parse the begin date for " << str);
     }
     return boost::gregorian::date(boost::gregorian::not_a_date_time);
 }
@@ -676,7 +676,7 @@ void GridCalPeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_f
     }
     auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_WARN(logger, "HPeriodFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "HPeriodFusioHandler : Impossible to find the calendar " << row[calendar_c]);
         return;
     }
 
@@ -684,7 +684,8 @@ void GridCalPeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_f
     boost::gregorian::date end_date(parse_date(row[end_c]));
 
     if (begin_date.is_not_a_date() || end_date.is_not_a_date()) {
-        LOG4CPLUS_WARN(logger, "period invalid, not added for calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "period invalid, not added for calendar " << row[calendar_c]);
+        return;
     }
 
     boost::gregorian::date_period period(begin_date, end_date);
@@ -750,7 +751,7 @@ void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
 
     boost::gregorian::date date(parse_date(row[datetime_c]));
     if(date.is_not_a_date()) {
-        LOG4CPLUS_WARN(logger, "date format not valid, we do not add the exception " <<
+        LOG4CPLUS_ERROR(logger, "date format not valid, we do not add the exception " <<
                        row[type_c] << " for " << row[calendar_c]);
         return;
     }
@@ -774,14 +775,14 @@ void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_fi
 
     auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_WARN(logger, "HCalendarLineFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "HCalendarLineFusioHandler : Impossible to find the calendar " << row[calendar_c]);
         return;
     }
 
     auto it = gtfs_data.line_map_by_external_code.find(row[line_c]);
 
     if (it == gtfs_data.line_map_by_external_code.end()) {
-        LOG4CPLUS_WARN(logger, "HCalendarLineFusioHandler : Impossible to find the line " << row[line_c]);
+        LOG4CPLUS_ERROR(logger, "HCalendarLineFusioHandler : Impossible to find the line " << row[line_c]);
         return;
     }
     cal->second->line_list.push_back(it->second);

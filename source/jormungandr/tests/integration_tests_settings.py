@@ -3,4 +3,6 @@ import os
 
 from app_saving_settings import *
 
-INSTANCES_DIR = os.path.dirname(os.path.realpath(__file__))
+INI_FILE = os.path.dirname(os.path.realpath(__file__)) + "/test_jormungandr.ini"
+
+
