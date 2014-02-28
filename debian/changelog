@@ -1,3 +1,12 @@
+navitia2 (0.83.10) unstable; urgency=low
+
+ * Tyr: typo fix
+ * Jormungandr: fix id of addresses
+ * Ed: change insert of uri of admins, poi, poi_types
+ * Ed: Faster merge of ways
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 28 Feb 2014 16:02:35 +0100
+
 navitia2 (0.83.9) unstable; urgency=low
 
  * Fix aggregate places
