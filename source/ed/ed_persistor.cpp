@@ -141,8 +141,8 @@ void EdPersistor::insert_edges(const ed::Georef& data){
             {"source_node_id", "target_node_id", "way_id", "the_geog",
             "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
     const auto bool_str = std::to_string(true);
-    size_t i = 0;
-    size_t count = data.edges.size() * 2;
+    size_t to_insert_count = 0;
+    size_t all_count = data.edges.size();
     for(const auto& edge : data.edges){
         const auto source_str = std::to_string(edge.second->source->id);
         const auto target_str = std::to_string(edge.second->target->id);
@@ -156,22 +156,23 @@ void EdPersistor::insert_edges(const ed::Georef& data){
         this->lotus.insert({target_str, source_str, way_str,
                     "LINESTRING(" + target_coord + "," + source_coord + ")",
                     bool_str, bool_str, bool_str});
-        ++i;
-        if(i%200000 == 0) {
+        ++to_insert_count;
+        if(to_insert_count % 150000 == 0) {
             lotus.finish_bulk_insert();
-             LOG4CPLUS_INFO(logger, i<<"/"<<count<<" edges inserées");
+             LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
             this->lotus.prepare_bulk_insert("georef.edge",
                     {"source_node_id", "target_node_id", "way_id", "the_geog",
                     "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
         }
     }
     lotus.finish_bulk_insert();
+    LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
 }
 
 void EdPersistor::insert_poi_types(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
-        this->lotus.insert({std::to_string(itm.second->id), "poi_type" + itm.first, itm.second->name});
+        this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
     }
     lotus.finish_bulk_insert();
 }
@@ -187,7 +188,7 @@ void EdPersistor::insert_pois(const ed::Georef& data){
         this->lotus.insert({std::to_string(itm.second->id),
                 std::to_string(itm.second->weight),
                 this->to_geographic_point(itm.second->coord),
-                itm.second->name, "poi" + itm.first, poi_type});
+                itm.second->name, "poi:" + itm.first, poi_type});
     }
     lotus.finish_bulk_insert();
 }
