@@ -130,7 +130,9 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
 
 
 pbnavitia::Response
-departure_board(const std::string& request, const std::vector<std::string>& forbidden_uris,
+departure_board(const std::string& request,
+                boost::optional<const std::string> calendar_id,
+                const std::vector<std::string>& forbidden_uris,
                 const std::string& date,
                 uint32_t duration, int32_t max_date_times,
                 int interface_version,
