@@ -51,8 +51,8 @@ def aggregate_places(instance_config, job_id):
             rel_instance.query.filter_by(instance_id=instance.id).delete()
             db.session.commit()
             #We create a temporary table to stode uris and ids of ed type
-	    if not table_uris.exists():
-		    table_uris.create(db.engine, checkfirst=True)
+            if not table_uris.exists():
+                table_uris.create(db.engine, checkfirst=True)
             if db.session.execute(table_uris.delete()): #make sure it's empty
                 db.session.commit()
 
