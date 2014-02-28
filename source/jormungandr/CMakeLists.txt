@@ -8,9 +8,7 @@ SET_PROPERTY(TEST jormungandr PROPERTY
 #we do it the weak way.
 add_test(jormungandr_integration_tests nosetests --with-doctest -v --where=${CMAKE_CURRENT_SOURCE_DIR}/tests)
 SET_PROPERTY(TEST jormungandr_integration_tests PROPERTY
-    ENVIRONMENT "JORMUNGANDR_CONFIG_FILE=../tests/integration_tests_settings.py")
-SET_PROPERTY(TEST jormungandr_integration_tests PROPERTY
     ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/navitiacommon")
 
-
-
+SET_PROPERTY(TEST jormungandr_integration_tests APPEND PROPERTY
+    ENVIRONMENT "JORMUNGANDR_CONFIG_FILE=${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_tests_settings.py")

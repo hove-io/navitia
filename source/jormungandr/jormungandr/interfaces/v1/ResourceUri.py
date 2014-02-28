@@ -94,7 +94,7 @@ class add_computed_resources(object):
                         "rel": api,
                         "templated": templated
                     })
-            if collection in ['stop_a', 'stop_points', 'addresses']:
+            if collection in ['stop_areas', 'stop_points', 'addresses']:
                 data['links'].append({
                     "href": url_for("v1.journeys", **kwargs),
                     "rel": "journeys",

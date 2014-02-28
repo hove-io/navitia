@@ -14,7 +14,7 @@ def check_and_get_as_dict(tester, url):
     tester = app.test_client(tester)
     response = tester.get(url)
 
-    assert response is not None
+    assert response
     eq_(response.status_code, 200)
 
     assert response.data
@@ -34,7 +34,7 @@ def get_not_null(dict, field):
         return val  # no check for booleans
 
     assert val
-    return dict[field]
+    return val
 
 
 def is_valid_date(str):
@@ -79,19 +79,3 @@ def get_links_dict(response):
     return links
 
 
-def check_valid_calendar(cal):
-    get_not_null(cal, "id")
-    get_not_null(cal, "name")
-    pattern = get_not_null(cal, "week_pattern")
-    is_valid_bool(get_not_null(pattern, "monday"))  # check one field in pattern
-
-    active_periods = get_not_null(cal, "active_periods")
-    assert len(active_periods) > 0
-
-    beg = get_not_null(active_periods[0], "begin")
-    assert is_valid_date(beg)
-
-    end = get_not_null(active_periods[0], "end")
-    assert is_valid_date(end)
-
-    #check links
