@@ -25,32 +25,16 @@ bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
     return boost::algorithm::starts_with(filename, prefex);
 }
 
-ed::types::Way* GeopalParser::get_way(const std::string& old_uri) const{
-    auto it = this->data.fusion_ways.find(old_uri);
-    ed::types::Way* way = nullptr;
-    if(it == this->data.fusion_ways.end()){
-        auto way_it = this->data.ways.find(old_uri);
-        if(way_it != this->data.ways.end()){
-            way = way_it->second;
-        }
-    }else{
-        auto way_it = this->data.ways.find(it->second);
-        if(way_it != this->data.ways.end()){
-            way = way_it->second;
-        }
-    }
-    return way;
-}
-
 //we affect the first way for every edges of a component
 void GeopalParser::fusion_ways_list(const std::multimap<size_t, ed::types::Edge*>& component_edges){
     for ( auto it_key = component_edges.begin(); it_key != component_edges.end() ; it_key = component_edges.upper_bound(it_key->first)) {
         ed::types::Way* way_ref = it_key->second->way;
+        this->data.fusion_ways[way_ref->uri] = way_ref;
         for (auto it = it_key ; it->first == it_key->first; ++it) {
             ed::types::Way* way = it->second->way;
             if(way != way_ref){
                 way->is_used = false;
-                this->data.fusion_ways[way->uri] = way_ref->uri;
+                this->data.fusion_ways[way->uri] = way_ref;
                 it->second->way = way_ref;
                 this->ways_fusionned++;
             }
@@ -334,15 +318,15 @@ void GeopalParser::fill_house_numbers(){
                 && reader.is_valid(nom_voie_c, row)
                 && reader.is_valid(id_tr, row)){
                 std::string way_uri = row[id_tr];
-                ed::types::Way* way = this->get_way(way_uri);
-                if(way != nullptr){
+                auto it = this->data.fusion_ways.find(way_uri);
+                if(it != this->data.fusion_ways.end()){
                     std::string hn_uri = row[x_c] + row[y_c] + row[numero_c];
                     auto hn = this->data.house_numbers.find(hn_uri);
                     if (hn ==this-> data.house_numbers.end()){
                         ed::types::HouseNumber* current_hn = new ed::types::HouseNumber;
                         current_hn->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])));
                         current_hn->number = row[numero_c];
-                        current_hn->way = way;
+                        current_hn->way = it->second;
                         this->data.house_numbers[hn_uri] = current_hn;
                     }
                 }
