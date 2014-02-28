@@ -81,7 +81,7 @@ void EdPersistor::build_ways(){
     PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
     /// Add ways where admin is nil
     PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Remplace data in table 'rel_way_admin' by 'tmp_rel_way_admin'
+    /// Update data in table 'rel_way_admin' by 'tmp_rel_way_admin'
     PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
     /// Remove duplicate data in table of ways
     PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
@@ -840,10 +840,10 @@ void EdPersistor::insert_week_patterns(const std::vector<types::Calendar*>& cale
     this->lotus.prepare_bulk_insert("navitia.week_pattern", {"id", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"});
     std::vector<navitia::type::idx_t> to_insert;
     for(const types::Calendar* cal : calendars){
-        navitia::type::idx_t idx = cal->week_pattern.to_ulong();
-        if(!binary_search(to_insert.begin(), to_insert.end(), idx)){
+        auto id = cal->week_pattern.to_ulong();
+        if(!binary_search(to_insert.begin(), to_insert.end(), id)){
             std::vector<std::string> values;
-            values.push_back(std::to_string(idx));
+            values.push_back(std::to_string(id));
             values.push_back(std::to_string(cal->week_pattern[navitia::Monday]));
             values.push_back(std::to_string(cal->week_pattern[navitia::Tuesday]));
             values.push_back(std::to_string(cal->week_pattern[navitia::Wednesday]));
@@ -852,7 +852,7 @@ void EdPersistor::insert_week_patterns(const std::vector<types::Calendar*>& cale
             values.push_back(std::to_string(cal->week_pattern[navitia::Saturday]));
             values.push_back(std::to_string(cal->week_pattern[navitia::Sunday]));
             this->lotus.insert(values);
-            to_insert.push_back(idx);
+            to_insert.push_back(id);
             std::sort(to_insert.begin(), to_insert.end());
         }
     }
@@ -863,13 +863,13 @@ void EdPersistor::insert_calendars(const std::vector<types::Calendar*>& calendar
     this->lotus.prepare_bulk_insert("navitia.calendar", {"id", "uri", "external_code", "name", "week_pattern_id"});
 
     for(const types::Calendar* cal : calendars){
-        navitia::type::idx_t idx = cal->week_pattern.to_ulong();
+        auto id = cal->week_pattern.to_ulong();
         std::vector<std::string> values;
         values.push_back(std::to_string(cal->idx));
         values.push_back(navitia::base64_encode(cal->uri));
         values.push_back(cal->external_code);
         values.push_back(cal->name);
-        values.push_back(std::to_string(idx));
+        values.push_back(std::to_string(id));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();

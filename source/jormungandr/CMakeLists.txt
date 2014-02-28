@@ -2,7 +2,7 @@ add_test(jormungandr nosetests --with-doctest -v --where=${CMAKE_CURRENT_SOURCE_
 SET_PROPERTY(TEST jormungandr PROPERTY
     ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/navitiacommon")
 
-add_test(jormungandr_integration_tests --with-doctest nosetests -v --where=${CMAKE_CURRENT_SOURCE_DIR}/tests)
+add_test(jormungandr_integration_tests nosetests --with-doctest -v --where=${CMAKE_CURRENT_SOURCE_DIR}/tests)
 SET_PROPERTY(TEST jormungandr_integration_tests PROPERTY
     ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/navitiacommon")
 
