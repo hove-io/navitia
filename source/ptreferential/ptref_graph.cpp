@@ -73,6 +73,10 @@ Jointures::Jointures() {
     //De poi vers poi type et vice et versa
     boost::add_edge(vertex_map[Type_e::POI], vertex_map[Type_e::POIType], g);
     boost::add_edge(vertex_map[Type_e::POIType], vertex_map[Type_e::POI], g);
+
+    //from line to calendar
+    boost::add_edge(vertex_map[Type_e::Calendar], vertex_map[Type_e::Line], g);
+    boost::add_edge(vertex_map[Type_e::Line], vertex_map[Type_e::Calendar], g);
 }
 
 // Retourne un map qui indique pour chaque type par quel type on peut l'atteindre

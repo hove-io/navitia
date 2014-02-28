@@ -34,6 +34,7 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::POI: return nt::Type_e::POI; break;
     case pbnavitia::POITYPE: return nt::Type_e::POIType; break;
     case pbnavitia::ADMINISTRATIVE_REGION: return nt::Type_e::Admin; break;
+    case pbnavitia::CALENDAR: return nt::Type_e::Calendar; break;
     default: return nt::Type_e::Unknown;
     }
 }
@@ -381,7 +382,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 }
 
 
-pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
+pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     std::vector<std::string> forbidden_uri;
     for(int i = 0; i < request.forbidden_uri_size(); ++i)

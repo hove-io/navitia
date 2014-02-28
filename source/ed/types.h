@@ -58,6 +58,21 @@ struct JourneyPatternPointConnection: public Header {
     bool operator<(const JourneyPatternPointConnection &other) const;
 };
 
+struct Calendar : public Nameable, public Header {
+    const static nt::Type_e type = nt::Type_e::Calendar;
+    typedef std::bitset<7> Week;
+    std::string external_code;
+    Week week_pattern;
+    std::vector<Line*> line_list;
+    std::vector<boost::gregorian::date_period> period_list;
+    std::vector<navitia::type::ExceptionDate> exceptions;
+
+    navitia::type::Calendar* get_navitia_type() const;
+
+    Calendar() {}
+
+    bool operator<(const Calendar & other) const { return this < &other; }
+};
 
 struct StopArea : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopArea;

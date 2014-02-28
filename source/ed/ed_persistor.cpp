@@ -277,7 +277,21 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
     LOG4CPLUS_INFO(logger, "End: insert fares");
-
+    LOG4CPLUS_INFO(logger, "Begin: insert week patterns");
+    this->insert_week_patterns(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert week patterns");
+    LOG4CPLUS_INFO(logger, "Begin: insert calendars");
+    this->insert_calendars(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert week calendars");
+    LOG4CPLUS_INFO(logger, "Begin: insert exception dates");
+    this->insert_exception_dates(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert exception dates");
+    LOG4CPLUS_INFO(logger, "Begin: insert periods");
+    this->insert_periods(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert periods");
+    LOG4CPLUS_INFO(logger, "Begin: insert relation calendar line");
+    this->insert_rel_calendar_line(data.calendars);
+    LOG4CPLUS_INFO(logger, "End: insert relation calendar line");
     LOG4CPLUS_INFO(logger, "Begin: build stops admin relations");
     this->build_stop_admin_relation();
     LOG4CPLUS_INFO(logger, "End: build stops admin relations");
@@ -339,7 +353,8 @@ void EdPersistor::clean_db(){
                 "navitia.synonym, navitia.commercial_mode, "
                 "navitia.vehicle_properties, navitia.properties, "
                 "navitia.validity_pattern, navitia.network, navitia.parameters, "
-                "navitia.connection CASCADE"));
+                "navitia.connection, navitia.calendar, navitia.period, "
+                "navitia.week_pattern CASCADE"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -820,6 +835,91 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
 
     this->lotus.finish_bulk_insert();
 }
+
+void EdPersistor::insert_week_patterns(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.week_pattern", {"id", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"});
+    std::vector<navitia::type::idx_t> to_insert;
+    for(const types::Calendar* cal : calendars){
+        auto id = cal->week_pattern.to_ulong();
+        if(!binary_search(to_insert.begin(), to_insert.end(), id)){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(id));
+            values.push_back(std::to_string(cal->week_pattern[navitia::Monday]));
+            values.push_back(std::to_string(cal->week_pattern[navitia::Tuesday]));
+            values.push_back(std::to_string(cal->week_pattern[navitia::Wednesday]));
+            values.push_back(std::to_string(cal->week_pattern[navitia::Thursday]));
+            values.push_back(std::to_string(cal->week_pattern[navitia::Friday]));
+            values.push_back(std::to_string(cal->week_pattern[navitia::Saturday]));
+            values.push_back(std::to_string(cal->week_pattern[navitia::Sunday]));
+            this->lotus.insert(values);
+            to_insert.push_back(id);
+            std::sort(to_insert.begin(), to_insert.end());
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_calendars(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.calendar", {"id", "uri", "external_code", "name", "week_pattern_id"});
+
+    for(const types::Calendar* cal : calendars){
+        auto id = cal->week_pattern.to_ulong();
+        std::vector<std::string> values;
+        values.push_back(std::to_string(cal->idx));
+        values.push_back(navitia::base64_encode(cal->uri));
+        values.push_back(cal->external_code);
+        values.push_back(cal->name);
+        values.push_back(std::to_string(id));
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_exception_dates(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.exception_date", {"datetime", "type_ex", "calendar_id"});
+
+    for(const types::Calendar* cal : calendars){
+        for( const auto except : cal->exceptions){
+            std::vector<std::string> values;
+            values.push_back(bg::to_iso_extended_string(except.date));
+            values.push_back(navitia::type::to_string(except.type));
+            values.push_back(std::to_string(cal->idx));
+            this->lotus.insert(values);
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_periods(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.period", {"id", "calendar_id", "begin_date", "end_date"});
+    size_t idx(0);
+    for (const types::Calendar* cal : calendars) {
+        for (const boost::gregorian::date_period period : cal->period_list) {
+            std::vector<std::string> values {
+                std::to_string(idx++),
+                std::to_string(cal->idx),
+                bg::to_iso_extended_string(period.begin()),
+                bg::to_iso_extended_string(period.end())
+            };
+            this->lotus.insert(values);
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_rel_calendar_line(const std::vector<types::Calendar*>& calendars){
+    this->lotus.prepare_bulk_insert("navitia.rel_calendar_line", {"calendar_id", "line_id"});
+    for(const types::Calendar* cal : calendars){
+        for(const types::Line* line : cal->line_list){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(cal->idx));
+            values.push_back(std::to_string(line->idx));
+            this->lotus.insert(values);
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
 
 void EdPersistor::insert_alias(const std::map<std::string, std::string>& alias){
     this->lotus.prepare_bulk_insert("navitia.alias", {"id", "key", "value"});

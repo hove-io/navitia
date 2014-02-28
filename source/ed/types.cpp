@@ -176,7 +176,6 @@ bool StopTime::operator<(const StopTime& other) const {
     }
 }
 
-
 navitia::type::StopArea* StopArea::get_navitia_type() const {
     navitia::type::StopArea* sa = new navitia::type::StopArea();
     sa->id = this->id;
@@ -418,6 +417,16 @@ nt::VehicleJourney* VehicleJourney::get_navitia_type() const {
     }*/
 
     return nt_vj;
+}
+
+nt::Calendar* Calendar::get_navitia_type() const{
+    nt::Calendar* nt_cal = new nt::Calendar();
+    nt_cal->comment = this->comment;
+    nt_cal->id = this->id;
+    nt_cal->idx = this->idx;
+    nt_cal->name = this->name;
+
+    return nt_cal;
 }
 
 nt::ValidityPattern* ValidityPattern::get_navitia_type() const {

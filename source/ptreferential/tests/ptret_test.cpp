@@ -268,7 +268,9 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     // On regarde qu'il y a un semblant d'itinéraire pour chaque type : il faut un prédécesseur
     for(auto node_pred : res){
         // Route c'est lui même puisque c'est la source, et validity pattern est puni, donc il est seul dans son coin, de même pour POI et POIType
-        if(node_pred.first != Type_e::Route && node_pred.first != Type_e::ValidityPattern && node_pred.first != Type_e::POI && node_pred.first != Type_e::POIType && node_pred.first != Type_e::Contributor)
+        if(node_pred.first != Type_e::Route && node_pred.first != Type_e::ValidityPattern &&
+                node_pred.first != Type_e::POI && node_pred.first != Type_e::POIType &&
+                node_pred.first != Type_e::Contributor)
             BOOST_CHECK(node_pred.first != node_pred.second);
     }
 

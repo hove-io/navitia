@@ -232,6 +232,34 @@ journey_pattern_point["stop_point"] = PbField(deepcopy(stop_point))
 address = deepcopy(generic_type_admin)
 address["house_number"] = fields.Integer()
 
+week_pattern = {
+    "monday": fields.Boolean(),
+    "tuesday": fields.Boolean(),
+    "wednesday": fields.Boolean(),
+    "thursday": fields.Boolean(),
+    "friday": fields.Boolean(),
+    "saturday": fields.Boolean(),
+    "sunday": fields.Boolean(),
+}
+
+calendar_period = {
+    "begin": fields.String(),
+    "end": fields.String(),
+}
+
+calendar_exception = {
+    "datetime": fields.String(),
+    "type": fields.String(),
+}
+
+calendar = {
+    "id": fields.String(attribute="uri"),
+    "name": fields.String(),
+    "week_pattern": NonNullNested(week_pattern),
+    "active_periods": NonNullList(NonNullNested(calendar_period)),
+    "exception": NonNullList(NonNullNested(calendar_exception)),
+}
+
 connection = {
     "origin": PbField(stop_point),
     "destination": PbField(stop_point),

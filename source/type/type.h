@@ -2,6 +2,7 @@
 
 #include "datetime.h"
 #include "utils/flat_enum_map.h"
+#include "utils/exception.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <vector>
 #include <bitset>
@@ -44,7 +45,8 @@ struct Message;
     FUN(JourneyPatternPoint, journey_pattern_points)\
     FUN(Company, companies)\
     FUN(Route, routes)\
-    FUN(Contributor, contributors)
+    FUN(Contributor, contributors)\
+    FUN(Calendar, calendars)
 
 enum class Type_e {
     ValidityPattern                 = 0,
@@ -72,7 +74,8 @@ enum class Type_e {
     Unknown                         = 20,
     Way                             = 21,
     Admin                           = 22,
-    POIType                         = 23
+    POIType                         = 23,
+    Calendar                        = 24
 };
 
 enum class Mode_e{
@@ -399,7 +402,52 @@ struct Connection: public Header, hasProperties{
 typedef Connection<JourneyPatternPoint>  JourneyPatternPointConnection;
 typedef Connection<StopPoint>  StopPointConnection;
 
+struct ExceptionDate {
+    enum class ExceptionType {
+        sub = 0,      // remove
+        add = 1       // add
+    };
+    ExceptionType type;
+    boost::gregorian::date date;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & type & date;
+    }
+};
 
+inline std::string to_string(ExceptionDate::ExceptionType t) {
+    switch (t) {
+    case ExceptionDate::ExceptionType::add:
+        return "Add";
+    case ExceptionDate::ExceptionType::sub:
+        return "Sub";
+    default:
+        throw navitia::exception("unhandled exception type");
+    }
+}
+
+inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
+    if (str == "Add") {
+        return ExceptionDate::ExceptionType::add;
+    }
+    if (str == "Sub") {
+        return ExceptionDate::ExceptionType::sub;
+    }
+    throw navitia::exception("unhandled exception type: " + str);
+}
+
+struct Calendar : public Nameable, public Header {
+    const static Type_e type = Type_e::Calendar;
+    typedef std::bitset<7> Week;
+    Week week_pattern;
+    std::vector<boost::posix_time::time_period> active_periods;
+    std::vector<ExceptionDate> exceptions;
+    bool operator<(const Calendar & other) const { return this < &other; }
+
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & id & name & idx & uri & week_pattern & active_periods & exceptions;
+    }
+};
 
 struct StopArea : public Header, Nameable, hasProperties, HasMessages{
     const static Type_e type = Type_e::StopArea;
@@ -513,6 +561,7 @@ struct Line : public Header, Nameable, HasMessages{
 
     std::vector<Route*> route_list;
     std::vector<PhysicalMode*> physical_mode_list;
+    std::vector<Calendar*> calendar_list;
 
     Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
@@ -520,7 +569,7 @@ struct Line : public Header, Nameable, HasMessages{
         ar & id & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & messages;
+                & messages & calendar_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -566,6 +615,12 @@ struct JourneyPattern : public Header, Nameable{
 
 };
 
+struct AssociatedCalendar {
+    Calendar* calendar;
+
+    std::vector<ExceptionDate> exceptions;
+};
+
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages{
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
@@ -574,6 +629,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
+    AssociatedCalendar associated_calendar;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;

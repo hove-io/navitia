@@ -443,6 +443,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
 
     data.lines.push_back(line);
     gtfs_data.line_map[line->uri] = line;
+    gtfs_data.line_map_by_external_code[line->external_code] = line;
 }
 
 void CompanyFusioHandler::init(Data&) {
@@ -640,6 +641,154 @@ void TripPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
         gtfs_data.hasVehicleProperties_map[row[id_c]] = has_properties;
     }
 }
+
+boost::gregorian::date parse_date(const std::string& str) {
+    auto logger = log4cplus::Logger::getInstance("log");
+    try {
+        return boost::gregorian::from_undelimited_string(str);
+    } catch(const boost::bad_lexical_cast& ) {
+        LOG4CPLUS_ERROR(logger, "Impossible to parse the begin date for " << str);
+    } catch(const boost::gregorian::bad_day_of_month&) {
+        LOG4CPLUS_ERROR(logger, "bad_day_of_month : Impossible to parse the begin date for " << str);
+    } catch(const boost::gregorian::bad_day_of_year&) {
+        LOG4CPLUS_ERROR(logger, "bad_day_of_year : Impossible to parse the begin date for " << str);
+    } catch(const boost::gregorian::bad_month&) {
+        LOG4CPLUS_ERROR(logger, "bad_month : Impossible to parse the begin date for " << str);
+    } catch(const boost::gregorian::bad_year&) {
+        LOG4CPLUS_ERROR(logger, "bad_year : Impossible to parse the begin date for " << str);
+    }
+    return boost::gregorian::date(boost::gregorian::not_a_date_time);
+}
+
+namespace grid_calendar {
+
+void GridCalPeriodFusioHandler::init(Data&) {
+    calendar_c = csv.get_pos_col("calendar_id");
+    begin_c = csv.get_pos_col("begin_date");
+    end_c = csv.get_pos_col("end_date");
+}
+
+void GridCalPeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
+    if(! is_first_line && ! has_col(calendar_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename <<
+                        "  file has more than one period and no calendar_id column");
+        throw InvalidHeaders(csv.filename);
+    }
+    auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
+    if (cal == gtfs_data.calendars_map.end()) {
+        LOG4CPLUS_ERROR(logger, "HPeriodFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        return;
+    }
+
+    boost::gregorian::date begin_date(parse_date(row[begin_c]));
+    boost::gregorian::date end_date(parse_date(row[end_c]));
+
+    if (begin_date.is_not_a_date() || end_date.is_not_a_date()) {
+        LOG4CPLUS_ERROR(logger, "period invalid, not added for calendar " << row[calendar_c]);
+        return;
+    }
+
+    boost::gregorian::date_period period(begin_date, end_date);
+    cal->second->period_list.push_back(period);
+}
+
+void GridCalendarFusioHandler::init(Data&) {
+    id_c = csv.get_pos_col("id");
+    name_c = csv.get_pos_col("name");
+    monday_c = csv.get_pos_col("monday");
+    tuesday_c = csv.get_pos_col("tuesday");
+    wednesday_c = csv.get_pos_col("wednesday");
+    thursday_c = csv.get_pos_col("thursday");
+    friday_c = csv.get_pos_col("friday");
+    saturday_c = csv.get_pos_col("saturday");
+    sunday_c = csv.get_pos_col("sunday");
+}
+
+void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+    if(! is_first_line && ! has_col(id_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        "  file has more than one calendar and no id column");
+        throw InvalidHeaders(csv.filename);
+    }
+    ed::types::Calendar* calendar = new ed::types::Calendar();
+    calendar->id = row[id_c];
+    calendar->uri = row[id_c];
+    calendar->external_code = row[id_c];
+    calendar->name =  row[name_c];
+    calendar->week_pattern[navitia::Monday] = is_active(monday_c, row);
+    calendar->week_pattern[navitia::Tuesday] = is_active(tuesday_c, row);
+    calendar->week_pattern[navitia::Wednesday] = is_active(wednesday_c, row);
+    calendar->week_pattern[navitia::Thursday] = is_active(thursday_c, row);
+    calendar->week_pattern[navitia::Friday] = is_active(friday_c, row);
+    calendar->week_pattern[navitia::Saturday] = is_active(saturday_c, row);
+    calendar->week_pattern[navitia::Sunday] = is_active(sunday_c, row);
+    calendar->idx = data.calendars.size() + 1;
+    data.calendars.push_back(calendar);
+    gtfs_data.calendars_map[calendar->uri] = calendar;
+}
+
+void ExceptionDatesFusioHandler::init(Data &){
+    calendar_c = csv.get_pos_col("calendar_id");
+    datetime_c = csv.get_pos_col("date");
+    type_c = csv.get_pos_col("type");
+}
+
+void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line){
+    if(! is_first_line && ! has_col(calendar_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        "  file has more than one calendar_id and no id column");
+        throw InvalidHeaders(csv.filename);
+    }
+    auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
+    if (cal == gtfs_data.calendars_map.end()) {
+        LOG4CPLUS_WARN(logger, "HExceptionDatesFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        return;
+    }
+    if (row[type_c] != "0" && row[type_c] != "1") {
+        LOG4CPLUS_WARN(logger, "HExceptionDatesFusioHandler : unknown type " << row[type_c]);
+        return;
+    }
+
+    boost::gregorian::date date(parse_date(row[datetime_c]));
+    if(date.is_not_a_date()) {
+        LOG4CPLUS_ERROR(logger, "date format not valid, we do not add the exception " <<
+                       row[type_c] << " for " << row[calendar_c]);
+        return;
+    }
+    navitia::type::ExceptionDate exception_date;
+    exception_date.date = date;
+    exception_date.type = static_cast<navitia::type::ExceptionDate::ExceptionType>(boost::lexical_cast<int>(row[type_c]));
+    cal->second->exceptions.push_back(exception_date);
+}
+
+void CalendarLineFusioHandler::init(Data&){
+    calendar_c = csv.get_pos_col("calendar_id");
+    line_c = csv.get_pos_col("line_external_code");
+}
+
+void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line){
+    if(! is_first_line && ! has_col(calendar_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        "  file has more than one calendar_id and no id column");
+        throw InvalidHeaders(csv.filename);
+    }
+
+    auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
+    if (cal == gtfs_data.calendars_map.end()) {
+        LOG4CPLUS_ERROR(logger, "HCalendarLineFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        return;
+    }
+
+    auto it = gtfs_data.line_map_by_external_code.find(row[line_c]);
+
+    if (it == gtfs_data.line_map_by_external_code.end()) {
+        LOG4CPLUS_ERROR(logger, "HCalendarLineFusioHandler : Impossible to find the line " << row[line_c]);
+        return;
+    }
+    cal->second->line_list.push_back(it->second);
+}
+}
+
 void FusioParser::fill_default_agency(Data & data){
     // création d'un réseau par defaut
     ed::types::Network * network = new ed::types::Network();
@@ -689,6 +838,10 @@ void FusioParser::parse_files(Data& data) {
     parse<TripsFusioHandler>(data, "trips.txt", true);
     parse<StopTimeFusioHandler>(data, "stop_times.txt", true);
     parse<FrequenciesGtfsHandler>(data, "frequencies.txt");
+    parse<grid_calendar::GridCalendarFusioHandler>(data, "hcalendars.txt");
+    parse<grid_calendar::GridCalPeriodFusioHandler>(data, "hperiods.txt");
+    parse<grid_calendar::ExceptionDatesFusioHandler>(data, "hexception_dates.txt");
+    parse<grid_calendar::CalendarLineFusioHandler>(data, "hrel_calendar_line.txt");
 }
 }
 }
