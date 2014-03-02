@@ -1,28 +1,24 @@
 import logging
+import logging.config
 import celery
-
 
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 from flask import current_app
 import os
+import sys
 
 
 def configure_logger(app):
     """
     initialize logging
     """
-    filename = app.config["LOG_FILENAME"]
-    celery.log.setup_logger(loglevel=app.config["LOG_LEVEL"], logfile=filename)
-    app.logger.setLevel(app.config["LOG_LEVEL"])
-
-    logging.getLogger('sqlalchemy.engine').setLevel(
-            app.config["LOG_LEVEL_SQLALCHEMY"])
-    logging.getLogger('sqlalchemy.pool').setLevel(
-            app.config["LOG_LEVEL_SQLALCHEMY"])
-    logging.getLogger('sqlalchemy.dialects.postgresql')\
-            .setLevel(app.config["LOG_LEVEL_SQLALCHEMY"])
-
+    if 'LOGGER' in app.config:
+        logging.config.dictConfig(app.config['LOGGER'])
+    else:  # Default is std out
+        handler = logging.StreamHandler(stream=sys.stdout)
+        app.logger.addHandler(handler)
+        app.logger.setLevel('INFO')
 
 def make_celery(app):
     celery_app = celery.Celery(app.import_name,

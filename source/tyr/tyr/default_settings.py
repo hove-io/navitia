@@ -23,15 +23,39 @@ INSTANCES_DIR = '..'
 # - WARN
 # - ERROR
 
-#log level for the app
-LOG_LEVEL = logging.INFO
-#where are writen the log
-LOG_FILENAME = "/tmp/tyr.log"
-
-#log level of the orm
-#INFO => log all request executed
-#DEBUG => log all request executed and the result
-LOG_LEVEL_SQLALCHEMY = logging.WARN
+# logger configuration
+LOGGER = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'default': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['default'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+        'sqlalchemy.engine': {
+            'handlers': ['default'],
+            'level': 'WARN',
+            'propagate': True
+        },
+        'sqlalchemy.pool': {
+            'handlers': ['default'],
+            'level': 'WARN',
+            'propagate': True
+        },
+        'sqlalchemy.dialects.postgresql': {
+            'handlers': ['default'],
+            'level': 'WARN',
+            'propagate': True
+        },
+    }
+}
 
 REDIS_HOST = 'localhost'
 
