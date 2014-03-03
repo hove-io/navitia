@@ -140,9 +140,7 @@ def get_instance_logger(instance):
         log_dir = os.path.dirname(file_hanlders[0].stream.name)
         log_filename = log_dir + '/{0}.log'.format(instance.name)
         handler = logging.FileHandler(log_filename)
-        log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
-                ' %(message)s'
-        handler.setFormatter(logging.Formatter(log_format))
+        handler.setFormatter(file_hanlders[0].formatter)
         logger.addHandler(handler)
         logger.propagate = False
 
