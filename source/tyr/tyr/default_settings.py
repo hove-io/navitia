@@ -15,7 +15,7 @@ CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun2'
 
 #Path to the directory where the configuration file of each instance of ed are defined
-INSTANCES_DIR = '..'
+INSTANCES_DIR = '.'
 
 #Log Level available
 # - DEBUG
@@ -23,15 +23,47 @@ INSTANCES_DIR = '..'
 # - WARN
 # - ERROR
 
-#log level for the app
-LOG_LEVEL = logging.INFO
-#where are writen the log
-LOG_FILENAME = "/tmp/tyr.log"
-
-#log level of the orm
-#INFO => log all request executed
-#DEBUG => log all request executed and the result
-LOG_LEVEL_SQLALCHEMY = logging.WARN
+# logger configuration
+LOGGER = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters':{
+        'default': {
+            'format': '[%(asctime)s] [%(levelname)5s] [%(process)5s] [%(name)25s] %(message)s',
+        },
+    },
+    'handlers': {
+        'default': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['default'],
+            'level': 'DEBUG',
+        },
+        'celery':{
+            'level': 'INFO',
+        },
+        'sqlalchemy.engine': {
+            'handlers': ['default'],
+            'level': 'WARN',
+            'propagate': True
+        },
+        'sqlalchemy.pool': {
+            'handlers': ['default'],
+            'level': 'WARN',
+            'propagate': True
+        },
+        'sqlalchemy.dialects.postgresql': {
+            'handlers': ['default'],
+            'level': 'WARN',
+            'propagate': True
+        },
+    }
+}
 
 REDIS_HOST = 'localhost'
 
@@ -67,3 +99,5 @@ CELERY_TIMEZONE = 'UTC'
 
 #http://docs.celeryproject.org/en/master/configuration.html#std:setting-CELERYBEAT_SCHEDULE_FILENAME
 CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
+
+CELERYD_HIJACK_ROOT_LOGGER = False
