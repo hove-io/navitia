@@ -138,7 +138,8 @@ def get_instance_logger(instance):
     #does not add the handler at each time or if we do not log to a file
     if not logger.handlers and file_hanlders:
         log_dir = os.path.dirname(file_hanlders[0].stream.name)
-        log_filename = log_dir + '/{0}.log'.format(instance.name)
+        log_filename = '{log_dir}/{name}.log'.format(log_dir=log_dir,
+                                                     name=instance.name)
         handler = logging.FileHandler(log_filename)
         handler.setFormatter(file_hanlders[0].formatter)
         logger.addHandler(handler)

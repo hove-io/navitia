@@ -30,7 +30,8 @@ def aggregate_places(instance_config, job_id):
     if instance_.first():
         instance = instance_.first()
     else:
-        logger.error("Instance %s can not be found"%instance_config.name)
+        logger.error("Instance {0} can not be found".format(
+                instance_config.name))
         return
 
     table_uris = Table("uris", meta_jormungandr,
@@ -45,7 +46,7 @@ def aggregate_places(instance_config, job_id):
         Base_ed = declarative_base(metadata=meta_ed)
         #We now insert/update places
         def handle_object_instance(type_name, TypeEd):
-            logger.info("Begin to handle %s"%type_name)
+            logger.info("Begin to handle {0}".format(type_name))
             cls_type = models.get_class_type(type_name)
             rel_instance = cls_type.cls_rel_instance
             has_coord = "coord" in dir(cls_type)
@@ -107,7 +108,7 @@ def aggregate_places(instance_config, job_id):
                 .delete(synchronize_session=False)
             db.session.commit()
             table_uris.drop()
-            logger.info("Finished to handle %s"%type_name)
+            logger.info("Finished to handle {0}".format(type_name))
 
         #Unable to factor the class, sqlalchemy handles a dictionnary of
         #the name of existing classes, I don't know how to access this dictionnary
