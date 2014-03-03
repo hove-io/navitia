@@ -30,7 +30,8 @@ class Script(object):
                      "connections", "journey_pattern_points",
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load", "networks", "place_uri", "disruptions"]
+                     "status", "load", "networks", "place_uri", "disruptions",
+                     "calendars"]
         self.functional_params = {}
 
     def __pagination(self, request, ressource_name, resp):
@@ -510,3 +511,7 @@ class Script(object):
     def poi_types(self, request, instance):
         return self.__on_ptref("poi_types", type_pb2.POITYPE, request,
                                instance)
+
+    def calendars(self, request, instance):
+        return self.__on_ptref("calendars", type_pb2.CALENDAR,
+                               request, instance)

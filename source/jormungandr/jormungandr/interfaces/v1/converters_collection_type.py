@@ -6,7 +6,8 @@ collections_to_resource_type = {
     "addresses": "address", "coords": "coord",
     "journey_pattern_points": "journey_pattern_point",
     "pois": "poi", "poi_types": "poi_type",
-    "connections": "connection", "vehicle_journeys":"vehicle_journey"}
+    "calendars": "calendar",
+    "connections": "connection", "vehicle_journeys": "vehicle_journey"}
 
 resource_type_to_collection = dict((resource_type, collection)
                                    for (collection, resource_type)

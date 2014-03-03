@@ -17,6 +17,7 @@ enum NavitiaType {
     ADDRESS = 18;
     POITYPE = 23;
     ADMINISTRATIVE_REGION = 22;
+    CALENDAR = 25;
 }
 
 
@@ -291,6 +292,38 @@ message Address {
     optional int32 house_number = 2;
 }
 
+enum ExceptionType {
+    Add = 0;
+    Remove = 1;
+}
+
+message CalendarException {
+    optional string date = 1;
+    optional ExceptionType type = 2;
+}
+
+message CalendarPeriod {
+    optional string begin = 1;
+    optional string end = 2;
+}
+
+message WeekPattern {
+    optional bool monday = 1;
+    optional bool tuesday = 2;
+    optional bool wednesday = 3;
+    optional bool thursday = 4;
+    optional bool friday = 5;
+    optional bool saturday = 6;
+    optional bool sunday = 7;
+}
+
+message Calendar{
+    optional string uri = 1;
+    optional string name = 2;
+    optional WeekPattern week_pattern = 3;
+    repeated CalendarPeriod active_periods = 4;
+    repeated CalendarException exceptions = 5;
+}
 
 message ValidityPattern {
     optional string beginning_date = 1;

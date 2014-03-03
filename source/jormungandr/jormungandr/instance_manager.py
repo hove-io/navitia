@@ -41,8 +41,12 @@ class InstanceManager(object):
         self.context = zmq.Context()
         self.default_socket = None
 
-        ini_files = []
-        ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
+        # if a .ini file is defined in the settings we take it
+        # else we load all .ini file found in the INSTANCES_DIR
+        if 'INI_FILE' in app.config:
+            ini_files = [app.config['INI_FILE']]
+        else:
+            ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
 
         for file_name in ini_files:
             logging.info("Initialisation, reading file : " + file_name)

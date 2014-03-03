@@ -196,6 +196,7 @@ message Status{
     optional bool loaded = 10;
 
     optional int32 nb_threads = 11;
+    optional bool is_connected_to_rabbitmq = 12;
 
 }
 
@@ -216,8 +217,8 @@ message RouteScheduleRow {
 }
 
 message addInfoVehicleJourney{
-	required VehicleJourneyType vehicle_journey_type = 1;
-	optional bool has_date_time_estimated = 2;
+    required VehicleJourneyType vehicle_journey_type = 1;
+    optional bool has_date_time_estimated = 2;
 }
 
 message Header{
@@ -341,6 +342,7 @@ message Response{
     repeated Route routes = 27;
     repeated Poi pois = 28;
     repeated PoiType poi_types = 29;
+    repeated Calendar calendars = 55;
 
     //Journeys
     repeated Journey journeys = 30;

@@ -13,13 +13,12 @@ class MaintenanceWorker{
         navitia::type::Data** data;
         log4cplus::Logger logger;
 
-        boost::posix_time::ptime next_rt_load;
-
         AmqpClient::Channel::ptr_t channel;
         //nom de la queue créer pour ce worker
         std::string queue_name;
 
         void init_rabbitmq();
+        void listen_rabbitmq();
 
     public:
         MaintenanceWorker(type::Data** data);

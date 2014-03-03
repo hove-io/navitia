@@ -49,7 +49,7 @@ def finish_job(job_id):
 @celery.task()
 def update_data():
     for instance in models.Instance.query.all():
-        current_app.logger.info("Update data of : %s"%instance.name)
+        current_app.logger.debug("Update data of : %s"%instance.name)
         instance_config = load_instance_config(instance.name)
         files = glob.glob(instance_config.source_directory + "/*")
         actions = []

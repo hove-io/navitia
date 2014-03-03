@@ -32,6 +32,7 @@ void Data::normalize_uri(){
     ::ed::normalize_uri(stop_points);
     ::ed::normalize_uri(vehicle_journeys);
     ::ed::normalize_uri(validity_patterns);
+    ::ed::normalize_uri(calendars);
 }
 
 void Data::complete(){

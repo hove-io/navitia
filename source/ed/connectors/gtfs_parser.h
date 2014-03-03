@@ -23,6 +23,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
+    std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
     std::unordered_map<std::string, ed::types::Route*> route_map;
     std::unordered_map<std::string, ed::types::ValidityPattern*> vp_map;
     std::unordered_map<std::string, ed::types::VehicleJourney*> vj_map;
@@ -38,6 +39,7 @@ struct GtfsData {
     std::unordered_map<std::string, std::string> odt_conditions_map;
     std::unordered_map<std::string, navitia::type::hasProperties> hasProperties_map;
     std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
+    std::unordered_map<std::string, ed::types::Calendar*> calendars_map;
 
     boost::gregorian::date_period production_date;///<Période de validité des données
 };

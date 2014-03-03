@@ -1,28 +1,24 @@
 import logging
+import logging.config
 import celery
-
 
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
 from flask import current_app
 import os
+import sys
 
 
 def configure_logger(app):
     """
     initialize logging
     """
-    filename = app.config["LOG_FILENAME"]
-    celery.log.setup_logger(loglevel=app.config["LOG_LEVEL"], logfile=filename)
-    app.logger.setLevel(app.config["LOG_LEVEL"])
-
-    logging.getLogger('sqlalchemy.engine').setLevel(
-            app.config["LOG_LEVEL_SQLALCHEMY"])
-    logging.getLogger('sqlalchemy.pool').setLevel(
-            app.config["LOG_LEVEL_SQLALCHEMY"])
-    logging.getLogger('sqlalchemy.dialects.postgresql')\
-            .setLevel(app.config["LOG_LEVEL_SQLALCHEMY"])
-
+    if 'LOGGER' in app.config:
+        logging.config.dictConfig(app.config['LOGGER'])
+    else:  # Default is std out
+        handler = logging.StreamHandler(stream=sys.stdout)
+        app.logger.addHandler(handler)
+        app.logger.setLevel('INFO')
 
 def make_celery(app):
     celery_app = celery.Celery(app.import_name,
@@ -131,20 +127,23 @@ def build_error(config, validate_result):
 
 def get_instance_logger(instance):
     """
-return the logger for this instance
-all log will be in a file specific to this instance
-"""
+    return the logger for this instance
+    all log will be in a file specific to this instance
+    """
     logger = logging.getLogger('tyr.{0}'.format(instance.name))
-    #does not add the handler at each time
-    if not logger.handlers:
-        log_dir = os.path.dirname(current_app.config['LOG_FILENAME'])
-        log_filename = log_dir + '/{0}.log'.format(instance.name)
-        logger.setLevel(current_app.config["LOG_LEVEL"])
+    root_logger = logging.root
+    logger.setLevel(root_logger.level)
+    file_hanlders = [h for h in root_logger.handlers
+                    if isinstance(h, logging.FileHandler)]
+    #does not add the handler at each time or if we do not log to a file
+    if not logger.handlers and file_hanlders:
+        log_dir = os.path.dirname(file_hanlders[0].stream.name)
+        log_filename = '{log_dir}/{name}.log'.format(log_dir=log_dir,
+                                                     name=instance.name)
         handler = logging.FileHandler(log_filename)
-        log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
-                ' %(message)s'
-        handler.setFormatter(logging.Formatter(log_format))
+        handler.setFormatter(file_hanlders[0].formatter)
         logger.addHandler(handler)
+        logger.propagate = False
 
-    logger.propagate = False
+
     return logger

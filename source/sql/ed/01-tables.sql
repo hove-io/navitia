@@ -388,7 +388,57 @@ CREATE TABLE IF NOT EXISTS navitia.stop_time (
     properties_id BIGINT REFERENCES navitia.properties
 );
 
+CREATE TABLE IF NOT EXISTS navitia.week_pattern (
+    id BIGSERIAL PRIMARY KEY,
+	monday BOOLEAN NOT NULL,
+	tuesday BOOLEAN NOT NULL,
+	wednesday BOOLEAN NOT NULL,
+	thursday BOOLEAN NOT NULL,
+	friday BOOLEAN NOT NULL,
+	saturday BOOLEAN NOT NULL,
+	sunday BOOLEAN NOT NULL
+);
 
+-- enum for exception type
+DO $$
+BEGIN
+    CASE WHEN (SELECT count(*) = 0 FROM pg_type where pg_type.typname='exception_type')
+    THEN
+        CREATE TYPE exception_type AS ENUM ('Add', 'Sub');
+    ELSE
+        RAISE NOTICE 'exception_type already exists, skipping';
+    END CASE;
+
+END$$;
+
+
+CREATE TABLE IF NOT EXISTS navitia.calendar (
+    id BIGSERIAL PRIMARY KEY,
+    external_code TEXT NOT NULL,
+    uri TEXT NOT NULL,
+    name TEXT NOT NULL,
+    week_pattern_id BIGINT NOT NULL REFERENCES navitia.week_pattern
+);
+
+CREATE TABLE IF NOT EXISTS navitia.exception_date (
+    id BIGSERIAL PRIMARY KEY,
+    datetime DATE NOT NULL,
+    type_ex exception_type NOT NULL,
+    calendar_id BIGINT NOT NULL REFERENCES navitia.calendar
+);
+
+CREATE TABLE IF NOT EXISTS navitia.period (
+    id BIGSERIAL PRIMARY KEY,
+    calendar_id BIGINT NOT NULL REFERENCES navitia.calendar,
+    begin_date DATE NOT NULL,
+    end_date DATE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS navitia.rel_calendar_line (
+    calendar_id BIGINT NOT NULL REFERENCES navitia.calendar,
+    line_id BIGINT NOT NULL REFERENCES navitia.line,
+    CONSTRAINT rel_calendar_line_pk PRIMARY KEY (calendar_id, line_id)
+);
 
 -- Schéma Georef
 

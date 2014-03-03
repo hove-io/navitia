@@ -75,6 +75,10 @@ pbnavitia::Response extract_data(const type::Data & data,
             fill_pb_object(data.pt_data.vehicle_journeys[idx], data,
                            result.add_vehicle_journeys(), depth, today);
             break;
+        case Type_e::Calendar:
+            fill_pb_object(data.pt_data.calendars[idx], data,
+                           result.add_calendars(), depth, today);
+            break;
         default: break;
         }
     }

@@ -48,28 +48,40 @@ void MaintenanceWorker::load(){
 
 
 void MaintenanceWorker::operator()(){
-    LOG4CPLUS_INFO(logger, "démarrage du thread de maintenance");
-    //
+    LOG4CPLUS_INFO(logger, "starting background thread");
     load();
-    //@TODO dans la prochaine version de simpleAMQPclient on devrait ne pas avoir a spécifier la queue
+
+    while(true){
+        try{
+            this->init_rabbitmq();
+            this->listen_rabbitmq();
+        }catch(const std::runtime_error& ex){
+            LOG4CPLUS_ERROR(logger, std::string("connection to rabbitmq fail: ")
+                    + ex.what());
+            (*data)->is_connected_to_rabbitmq = false;
+            sleep(10);
+        }
+    }
+}
+
+void MaintenanceWorker::listen_rabbitmq(){
     auto consumer_tag = this->channel->BasicConsume(this->queue_name);
 
-    bool running = true;
-    LOG4CPLUS_TRACE(logger, "début de la boucle d'evenement");
-    while(running){
+    LOG4CPLUS_INFO(logger, "start event loop");
+    (*data)->is_connected_to_rabbitmq = true;
+    while(true){
         auto envelope = this->channel->BasicConsumeMessage(consumer_tag);
-        LOG4CPLUS_TRACE(logger, "Message reçu");
+        LOG4CPLUS_TRACE(logger, "Message received");
         pbnavitia::Task task;
         bool result = task.ParseFromString(envelope->Message()->Body());
         if(!result){
-            LOG4CPLUS_WARN(logger, "impossible de parser le protobuf reçu");
+            LOG4CPLUS_WARN(logger, "protobuf not valid!");
             continue;
         }
         if(task.action() == pbnavitia::RELOAD){
             load();
         }
     }
-
 }
 
 void MaintenanceWorker::init_rabbitmq(){
@@ -82,24 +94,22 @@ void MaintenanceWorker::init_rabbitmq(){
     std::string password = conf->get_as<std::string>("BROKER", "password", "guest");
     std::string vhost = conf->get_as<std::string>("BROKER", "vhost", "/");
     //connection
-    LOG4CPLUS_DEBUG(logger, "connection à rabbitmq");
+    LOG4CPLUS_DEBUG(logger,
+            boost::format("connection to rabbitmq: %s@%s:%s/%s")
+            % username % host % port % vhost);
     this->channel = AmqpClient::Channel::Create(host, port, username,
-            password, vhost);
+                                                password, vhost);
 
-    //création de l'exchange (il devrait deja exister, mais dans l'doute)
     this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
-    //création d'une queue temporaire
+    //creation of a tempory queue for this kraken
     this->queue_name = channel->DeclareQueue("", false, false, true, true);
-    //on se bind sur l'echange precedement créer, et on prend tous les messages possible pôur cette instance
+    //binding the queue to the exchange for all task for this instance
     channel->BindQueue(queue_name, exchange_name, instance_name+".task.*");
-    LOG4CPLUS_TRACE(logger, "connecté à rabbitmq");
+    LOG4CPLUS_DEBUG(logger, "connected to rabbitmq");
 }
 
 MaintenanceWorker::MaintenanceWorker(type::Data** data) : data(data),
-        logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
-        next_rt_load(pt::microsec_clock::universal_time()){
-    init_rabbitmq();
-}
+        logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))){}
 
 }
