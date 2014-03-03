@@ -87,25 +87,25 @@ void GeopalParser::fusion_ways(){
     typedef std::unordered_map<std::string, std::vector<types::Edge*>> wayname_ways;
     std::unordered_map<std::string, wayname_ways> admin_wayname_way;
     for(auto way : this->data.ways) {
-        if(way.second->admin != nullptr) {
-            auto admin_it = admin_wayname_way.find(way.second->admin->insee);
-            if(admin_it == admin_wayname_way.end()) {
-                admin_wayname_way[way.second->admin->insee] =  wayname_ways();
-                admin_wayname_way[way.second->admin->insee][way.second->name] = std::vector<types::Edge*>(way.second->edges);
-            } else {
-                auto way_it = admin_it->second.find(way.second->name);
-                if(way_it == admin_it->second.end()) {
-                    admin_wayname_way[way.second->admin->insee][way.second->name] = std::vector<types::Edge*>(way.second->edges);
-                } else {
-                    auto &way_vector = admin_wayname_way[way.second->admin->insee][way.second->name];
-                    way_vector.insert(way_vector.begin(), way.second->edges.begin(),  way.second->edges.end());
-                }
-            }
+        if(way.second->admin == nullptr || way.second->edges.empty()) {
+            continue;
         }
+        auto admin_it = admin_wayname_way.find(way.second->admin->insee);
+        if(admin_it == admin_wayname_way.end()) {
+            admin_wayname_way[way.second->admin->insee] = wayname_ways();
+            admin_it = admin_wayname_way.find(way.second->admin->insee);
+        }
+        auto way_it = admin_it->second.find(way.second->name);
+        if(way_it == admin_it->second.end()) {
+            admin_wayname_way[way.second->admin->insee][way.second->name] = std::vector<types::Edge*>();
+            way_it = admin_it->second.find(way.second->name);
+        }
+        auto &way_vector = admin_wayname_way[way.second->admin->insee][way.second->name];
+        way_vector.insert(way_vector.begin(), way.second->edges.begin(),  way.second->edges.end());
     }
     for(auto wayname_ways_it : admin_wayname_way){
         for(auto edges_it : wayname_ways_it.second){
-            this->fusion_ways_by_graph(edges_it.second);
+            this->fusion_ways_list(edges_it.second);
         }
     }
 }
