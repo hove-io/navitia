@@ -51,7 +51,7 @@ void MaintenanceWorker::operator()(){
     LOG4CPLUS_INFO(logger, "starting background thread");
     load();
 
-    do{
+    while(true){
         try{
             this->init_rabbitmq();
             this->listen_rabbitmq();
@@ -61,7 +61,7 @@ void MaintenanceWorker::operator()(){
             (*data)->is_connected_to_rabbitmq = false;
             sleep(10);
         }
-    }while(true);
+    }
 }
 
 void MaintenanceWorker::listen_rabbitmq(){
