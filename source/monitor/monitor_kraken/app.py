@@ -53,6 +53,7 @@ def monitor():
         response['last_load'] = resp.status.last_load_at
         response['last_load_status'] = resp.status.last_load_status
         response['loaded'] = resp.status.loaded
+        response['is_connected_to_rabbitmq'] = resp.is_connected_to_rabbitmq
 
         if resp.status.last_load_status == False and 'status' not in response:
             response['status'] = 'last load failed'
