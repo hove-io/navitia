@@ -676,7 +676,7 @@ void GridCalPeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_f
     }
     auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_ERROR(logger, "HPeriodFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "GridCalPeriodFusioHandler : Impossible to find the calendar " << row[calendar_c]);
         return;
     }
 
@@ -741,11 +741,11 @@ void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
     }
     auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_WARN(logger, "HExceptionDatesFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler : Impossible to find the calendar " << row[calendar_c]);
         return;
     }
     if (row[type_c] != "0" && row[type_c] != "1") {
-        LOG4CPLUS_WARN(logger, "HExceptionDatesFusioHandler : unknown type " << row[type_c]);
+        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler : unknown type " << row[type_c]);
         return;
     }
 
@@ -775,14 +775,14 @@ void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_fi
 
     auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_ERROR(logger, "HCalendarLineFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler : Impossible to find the calendar " << row[calendar_c]);
         return;
     }
 
     auto it = gtfs_data.line_map_by_external_code.find(row[line_c]);
 
     if (it == gtfs_data.line_map_by_external_code.end()) {
-        LOG4CPLUS_ERROR(logger, "HCalendarLineFusioHandler : Impossible to find the line " << row[line_c]);
+        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler : Impossible to find the line " << row[line_c]);
         return;
     }
     cal->second->line_list.push_back(it->second);
@@ -838,10 +838,10 @@ void FusioParser::parse_files(Data& data) {
     parse<TripsFusioHandler>(data, "trips.txt", true);
     parse<StopTimeFusioHandler>(data, "stop_times.txt", true);
     parse<FrequenciesGtfsHandler>(data, "frequencies.txt");
-    parse<grid_calendar::GridCalendarFusioHandler>(data, "hcalendars.txt");
-    parse<grid_calendar::GridCalPeriodFusioHandler>(data, "hperiods.txt");
-    parse<grid_calendar::ExceptionDatesFusioHandler>(data, "hexception_dates.txt");
-    parse<grid_calendar::CalendarLineFusioHandler>(data, "hrel_calendar_line.txt");
+    parse<grid_calendar::GridCalendarFusioHandler>(data, "grid_calendars.txt");
+    parse<grid_calendar::GridCalPeriodFusioHandler>(data, "grid_periods.txt");
+    parse<grid_calendar::ExceptionDatesFusioHandler>(data, "grid_exception_dates.txt");
+    parse<grid_calendar::CalendarLineFusioHandler>(data, "grid_rel_calendar_line.txt");
 }
 }
 }
