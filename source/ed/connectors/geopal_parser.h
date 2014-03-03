@@ -30,8 +30,8 @@ private:
     void fill_pois();
     bool starts_with(std::string filename, const std::string& prefex);
     void fusion_ways();
-    void fusion_ways_by_graph(std::vector<types::Edge*>& ways);
-    void fusion_ways_list(const std::multimap<size_t, ed::types::Edge*>& component_edges);    
+    void fusion_ways_by_graph(const std::vector<types::Edge*>& edges);
+    void fusion_ways_list(const std::vector<types::Edge*>& edges);
 
 public:
     ed::Georef data;

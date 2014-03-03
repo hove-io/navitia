@@ -25,27 +25,29 @@ bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
     return boost::algorithm::starts_with(filename, prefex);
 }
 
+
+
+
+
 //we affect the first way for every edges of a component
-void GeopalParser::fusion_ways_list(const std::multimap<size_t, ed::types::Edge*>& component_edges){
-    for ( auto it_key = component_edges.begin(); it_key != component_edges.end() ; it_key = component_edges.upper_bound(it_key->first)) {
-        ed::types::Way* way_ref = it_key->second->way;
-        this->data.fusion_ways[way_ref->uri] = way_ref;
-        for (auto it = it_key ; it->first == it_key->first; ++it) {
-            ed::types::Way* way = it->second->way;
-            if(way != way_ref){
-                way->is_used = false;
-                this->data.fusion_ways[way->uri] = way_ref;
-                it->second->way = way_ref;
-                this->ways_fusionned++;
-            }
-        }
+void GeopalParser::fusion_ways_list(const std::vector<ed::types::Edge*>& edges){
+    auto begin = edges.begin();
+    ed::types::Way* way_ref = (*begin)->way;
+    this->data.fusion_ways[way_ref->uri] = way_ref;
+    ++begin;
+    for(auto it=begin; it != edges.end(); ++it) {
+        ed::types::Way* way = (*it)->way;
+        way->is_used = false;
+        this->data.fusion_ways[way->uri] = way_ref;
+        (*it)->way = way_ref;
+        this->ways_fusionned++;
     }
 }
 
 
 //We make a graph out of each edge of every edges
 //We look for connected components in this graph
-void GeopalParser::fusion_ways_by_graph(std::vector<types::Edge*>& edges){
+void GeopalParser::fusion_ways_by_graph(const std::vector<types::Edge*>& edges){
     typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, size_t, ed::types::Edge*> Graph;
     Graph graph;
     std::unordered_map<uint64_t, idx_t> node_map_temp;
@@ -63,14 +65,20 @@ void GeopalParser::fusion_ways_by_graph(std::vector<types::Edge*>& edges){
     std::vector<size_t> vertex_component(boost::num_vertices(graph));
     size_t num = boost::connected_components(graph, &vertex_component[0]);
     if(num != edges.size()){
-        std::multimap<size_t, ed::types::Edge*> component_edges;
+        std::map<size_t, std::vector<ed::types::Edge*>> component_edges;
         for(size_t i = 0; i<vertex_component.size(); ++i) {
+            auto component = vertex_component[i];
+            if(component_edges.find(component) != component_edges.end()) {
+                component_edges[component] = std::vector<ed::types::Edge*>();
+            }
             auto begin_end = boost::out_edges(i, graph);
             for(auto it = begin_end.first; it != begin_end.second; ++it) {
-                component_edges.insert({i, graph[*it]});
+                component_edges[component].push_back(graph[*it]);
             }
         }
-        this->fusion_ways_list(component_edges);
+        for(auto component_edges_ : component_edges) {
+            this->fusion_ways_list(component_edges_.second);
+        }
     }
 }
 
