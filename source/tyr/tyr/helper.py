@@ -127,20 +127,24 @@ def build_error(config, validate_result):
 
 def get_instance_logger(instance):
     """
-return the logger for this instance
-all log will be in a file specific to this instance
-"""
+    return the logger for this instance
+    all log will be in a file specific to this instance
+    """
     logger = logging.getLogger('tyr.{0}'.format(instance.name))
-    #does not add the handler at each time
-    if not logger.handlers:
-        log_dir = os.path.dirname(current_app.config['LOG_FILENAME'])
+    root_logger = logging.root
+    logger.setLevel(root_logger.level)
+    file_hanlders = [h for h in root_logger.handlers
+                    if isinstance(h, logging.FileHandler)]
+    #does not add the handler at each time or if we do not log to a file
+    if not logger.handlers and file_hanlders:
+        log_dir = os.path.dirname(file_hanlders[0].stream.name)
         log_filename = log_dir + '/{0}.log'.format(instance.name)
-        logger.setLevel(current_app.config["LOG_LEVEL"])
         handler = logging.FileHandler(log_filename)
         log_format = '[%(asctime)s: %(levelname)s/%(processName)s]' \
                 ' %(message)s'
         handler.setFormatter(logging.Formatter(log_format))
         logger.addHandler(handler)
+        logger.propagate = False
 
-    logger.propagate = False
+
     return logger

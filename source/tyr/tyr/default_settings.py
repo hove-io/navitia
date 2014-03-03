@@ -15,7 +15,7 @@ CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun2'
 
 #Path to the directory where the configuration file of each instance of ed are defined
-INSTANCES_DIR = '..'
+INSTANCES_DIR = '.'
 
 #Log Level available
 # - DEBUG
@@ -26,18 +26,26 @@ INSTANCES_DIR = '..'
 # logger configuration
 LOGGER = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
+    'formatters':{
+        'default': {
+            'format': '[%(asctime)s: %(name)s %(levelname)s] %(message)s',
+        },
+    },
     'handlers': {
         'default': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
+            'formatter': 'default',
         },
     },
     'loggers': {
         '': {
             'handlers': ['default'],
             'level': 'DEBUG',
-            'propagate': True
+        },
+        'celery':{
+            'level': 'INFO',
         },
         'sqlalchemy.engine': {
             'handlers': ['default'],
@@ -91,3 +99,5 @@ CELERY_TIMEZONE = 'UTC'
 
 #http://docs.celeryproject.org/en/master/configuration.html#std:setting-CELERYBEAT_SCHEDULE_FILENAME
 CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
+
+CELERYD_HIJACK_ROOT_LOGGER = False

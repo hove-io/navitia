@@ -4,10 +4,17 @@ from flask import Flask
 import flask_restful
 from tyr.helper import configure_logger, make_celery
 from redis import Redis
+from celery.signals import setup_logging
 
 app = Flask(__name__)
 app.config.from_object('tyr.default_settings')
 app.config.from_envvar('TYR_CONFIG_FILE')
+configure_logger(app)
+
+#we don't want celery to mess with our logging configuration
+@setup_logging.connect
+def celery_setup_logging(*args, **kwargs):
+    pass
 
 if app.config['REDIS_PASSWORD']:
     app.config['CELERY_RESULT_BACKEND'] = \
@@ -21,7 +28,6 @@ else:
                               app.config['REDIS_PORT'],
                               app.config['REDIS_DB'])
 
-configure_logger(app)
 
 from navitiacommon.models import db
 db.init_app(app)
