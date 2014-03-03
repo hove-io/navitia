@@ -1,3 +1,9 @@
+navitia2 (0.83.11) unstable; urgency=low
+
+ * Fix a bug on merge of ways
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 03 Mar 2014 10:03:38 +0100
+
 navitia2 (0.83.10) unstable; urgency=low
 
  * Tyr: typo fix
