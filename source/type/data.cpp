@@ -172,7 +172,7 @@ list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* v
     size_t threshold(15);
     list_cal_bitset res;
 
-    for (const auto calendar : data.pt_data.calendars) {
+    for (const auto calendar : vehicle_journey->journey_pattern->route->line->calendar_list) {
         auto diff = get_difference(calendar->validity_pattern.days, vehicle_journey->validity_pattern->days);
         size_t nb_diff = diff.count();
         if (nb_diff > threshold) {
