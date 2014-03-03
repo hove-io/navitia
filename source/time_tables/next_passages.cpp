@@ -31,7 +31,7 @@ next_passages(const std::string &request,
 
     auto passages_dt_st = get_stop_times(handler.journey_pattern_points,
                             handler.date_time, handler.max_datetime,
-                            nb_stoptimes, data, disruption_active, accessibilite_params);
+                            nb_stoptimes, data, disruption_active, {}, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
     auto now = pt::second_clock::local_time();

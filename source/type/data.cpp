@@ -194,7 +194,7 @@ void Data::build_associated_calendar() {
         auto it = associated_vp.find(vehicle_journey->validity_pattern);
         if (it != associated_vp.end()) {
             for (; it->first == vehicle_journey->validity_pattern; ++it) {
-                vehicle_journey->associated_calendars.push_back(it->second);
+                vehicle_journey->associated_calendars.insert({it->second->calendar->id, it->second});
             }
             continue;
         }
@@ -213,7 +213,7 @@ void Data::build_associated_calendar() {
             associated_calendar->calendar = cal_bit_set.first;
             //        associated_calendar->exceptions = TODO! //compute the exception from closest_cal.second
 
-            vehicle_journey->associated_calendars.push_back(associated_calendar);
+            vehicle_journey->associated_calendars.insert({associated_calendar->calendar->id, associated_calendar});
             associated_vp.insert({vehicle_journey->validity_pattern, associated_calendar});
         }
 

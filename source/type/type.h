@@ -621,8 +621,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
-    ///list of the calendars that nearly match the validity pattern of the vj
-    std::vector<AssociatedCalendar*> associated_calendars;
+    ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
+    std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;

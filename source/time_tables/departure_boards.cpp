@@ -189,15 +189,15 @@ departure_board(const std::string& request,
             if(jpp->journey_pattern->route == route) {
                 if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx){ // dans le cas de terminus
                     response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
+                    continue;
+                }
+                auto tmp = get_stop_times({jpp->idx}, handler.date_time,
+                                          handler.max_datetime,
+                                          max_date_times, data, disruption_active, calendar_id);
+                if(tmp.size() == 0){
+                    response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
                 }else{
-                        auto tmp = get_stop_times({jpp->idx}, handler.date_time,
-                                                         handler.max_datetime,
-                                                         max_date_times, data, disruption_active);
-                        if(tmp.size() == 0){
-                            response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
-                        }else{
-                            stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
-                        }
+                    stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
                 }
             }
         }

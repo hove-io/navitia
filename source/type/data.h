@@ -165,8 +165,7 @@ private:
   * to restrict those diff on the calendar
   */
 template <size_t N>
-std::bitset<N>
-get_difference(const std::bitset<N>& calendar, const std::bitset<N>& vj) {
+std::bitset<N> get_difference(const std::bitset<N>& calendar, const std::bitset<N>& vj) {
     auto res = (calendar ^ vj) & calendar;
     return res;
 }

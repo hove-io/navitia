@@ -130,8 +130,13 @@ BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
     navitia::type::Calendar* cal = b.data.pt_data.calendars.front();
     navitia::type::VehicleJourney* vj = b.data.pt_data.vehicle_journeys.front();
     BOOST_REQUIRE(! vj->associated_calendars.empty());
-    BOOST_CHECK((vj->associated_calendars.front()->calendar == cal));
-    BOOST_CHECK((vj->associated_calendars.front()->calendar->exceptions.size() == 0));
-    BOOST_CHECK((vj->associated_calendars.front()->exceptions.size() == 0));
+    auto it_associated_cal = vj->associated_calendars.find(cal->id);
+
+    BOOST_REQUIRE(it_associated_cal != vj->associated_calendars.end());
+
+    auto associated_cal = it_associated_cal->second;
+    BOOST_CHECK((associated_cal->calendar == cal));
+    BOOST_CHECK(associated_cal->calendar->exceptions.size() == 0);
+    BOOST_CHECK(associated_cal->exceptions.size() == 0);
 
 }
