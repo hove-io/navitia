@@ -166,28 +166,19 @@ ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_valid
     return ref_validity_pattern;
 }
 
-ValidityPattern::year_bitset
-get_difference(ValidityPattern::year_bitset set1, const ValidityPattern::year_bitset& set2) { //Note, the first set is copied
-    set1 ^= set2;
-    return set1;
-}
-
 using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
 
 list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey) {
     size_t threshold(15);
     list_cal_bitset res;
 
-    std::tuple<const Calendar*, size_t, ValidityPattern::year_bitset> best_match{nullptr, std::numeric_limits<size_t>::max(), {}};
     for (const auto calendar : data.pt_data.calendars) {
         auto diff = get_difference(calendar->validity_pattern.days, vehicle_journey->validity_pattern->days);
         size_t nb_diff = diff.count();
-        if (std::get<1>(best_match) > threshold) {
+        if (nb_diff > threshold) {
             continue;
         }
-        if (std::get<1>(best_match) > nb_diff) {
-            res.push_back({calendar, diff});
-        }
+        res.push_back({calendar, diff});
     }
 
     return res;

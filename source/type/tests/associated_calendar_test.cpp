@@ -80,6 +80,34 @@ BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test3, calendar_fixture) {
     BOOST_CHECK(cal->validity_pattern.check(date("20140213")));
 }
 
+BOOST_AUTO_TEST_CASE(get_differences_test) {
+    std::bitset<12> cal ("111000111000");
+    std::bitset<12> vj ("101010101010");
+
+    //the dif are the differences between cal and vj restricted on the active days of the calendar
+    auto res = navitia::type::get_difference(cal, vj);
+
+    BOOST_CHECK_EQUAL(res, std::bitset<12>("010000010000"));
+}
+
+BOOST_AUTO_TEST_CASE(get_differences_test_empty_cal) {
+    std::bitset<12> cal ("000000000000");
+    std::bitset<12> vj ("101010101010");
+
+    auto res = navitia::type::get_difference(cal, vj);
+
+    BOOST_CHECK_EQUAL(res, std::bitset<12>("000000000000"));
+}
+
+BOOST_AUTO_TEST_CASE(get_differences_test_full_cal) {
+    std::bitset<12> cal ("111111111111");
+    std::bitset<12> vj ("101010101010");
+
+    auto res = navitia::type::get_difference(cal, vj);
+
+    BOOST_CHECK_EQUAL(res, std::bitset<12>("010101010101"));
+}
+
 struct associated_cal_fixture : public calendar_fixture {
     associated_cal_fixture() {
         b.vj("network:R", "line:A", "1111", "", true, "vj1")
@@ -98,11 +126,11 @@ BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
     */
     // VehicleJourney à un validitypattern equivalent au validitypattern du calendrier
     b.data.build_associated_calendar();
-//    navitia::type::Calendar* cal = b.data.pt_data.calendars.front();
-//    navitia::type::VehicleJourney* vj = b.data.pt_data.vehicle_journeys.front();
-//    BOOST_REQUIRE(vj->associated_calendars);
-//    BOOST_CHECK((vj->associated_calendars->calendar == cal));
-//    BOOST_CHECK((vj->associated_calendars->calendar->exceptions.size() == 0));
-//    BOOST_CHECK((vj->associated_calendars->exceptions.size() == 0));
+    navitia::type::Calendar* cal = b.data.pt_data.calendars.front();
+    navitia::type::VehicleJourney* vj = b.data.pt_data.vehicle_journeys.front();
+    BOOST_REQUIRE(! vj->associated_calendars.empty());
+    BOOST_CHECK((vj->associated_calendars.front()->calendar == cal));
+    BOOST_CHECK((vj->associated_calendars.front()->calendar->exceptions.size() == 0));
+    BOOST_CHECK((vj->associated_calendars.front()->exceptions.size() == 0));
 
 }
