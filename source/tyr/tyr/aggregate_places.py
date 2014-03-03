@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker, load_only
 from geoalchemy2.types import Geography
 from geoalchemy2.shape import to_shape
 from sqlalchemy.ext.declarative import declarative_base
+import logging
 
 def make_sqlalchemy_connection_string(instance_config):
     connection_string = "postgresql://" + instance_config.pg_username
@@ -22,12 +23,14 @@ def aggregate_places(instance_config, job_id):
     meta_ed = MetaData(engine_ed)
     meta_jormungandr = MetaData(bind=db.engine)
 
+    logger = logging.getLogger(__name__)
+
     instance_ = models.Instance.query.\
         filter(models.Instance.name == instance_config.name)
     if instance_.first():
         instance = instance_.first()
     else:
-        app.logger.error("Instance %s can not be found"%instance_config.name)
+        logger.error("Instance %s can not be found"%instance_config.name)
         return
 
     table_uris = Table("uris", meta_jormungandr,
@@ -42,7 +45,7 @@ def aggregate_places(instance_config, job_id):
         Base_ed = declarative_base(metadata=meta_ed)
         #We now insert/update places
         def handle_object_instance(type_name, TypeEd):
-            app.logger.info("Begin to handle %s"%type_name)
+            logger.info("Begin to handle %s"%type_name)
             cls_type = models.get_class_type(type_name)
             rel_instance = cls_type.cls_rel_instance
             has_coord = "coord" in dir(cls_type)
@@ -103,8 +106,8 @@ def aggregate_places(instance_config, job_id):
             db.session.query(cls_type).filter(not_(cls_type.instances.any()))\
                 .delete(synchronize_session=False)
             db.session.commit()
-	    table_uris.drop()
-            app.logger.info("Finished to handle %s"%type_name)
+            table_uris.drop()
+            logger.info("Finished to handle %s"%type_name)
 
         #Unable to factor the class, sqlalchemy handles a dictionnary of
         #the name of existing classes, I don't know how to access this dictionnary
