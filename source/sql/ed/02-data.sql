@@ -63,7 +63,7 @@ BEGIN
     db_version := coalesce((select version from public.database_version limit 1), 0);
     CASE WHEN db_version < 3
         THEN
-        INSERT INTO navitia.connection_kind (id, name) VALUES (6, 'stay_in');		
+        INSERT INTO navitia.connection_kind (id, name) VALUES (6, 'stay_in');
         update public.database_version set version=3;
     ELSE
         RAISE NOTICE 'database already in version 3, skipping';
@@ -76,7 +76,7 @@ BEGIN
     db_version := coalesce((select version from public.database_version limit 1), 0);
     CASE WHEN db_version < 4
         THEN
-	insert into realtime.message_status values (0, 'information'), 
+	insert into realtime.message_status values (0, 'information'),
 		(1, 'warning'),
 		(2, 'disrupt');
         update public.database_version set version=4;
@@ -85,16 +85,3 @@ BEGIN
     END CASE;
 END$$;
 
-DO $$
-    DECLARE db_version int;
-BEGIN
-    db_version := coalesce((select version from public.database_version limit 1), 0);
-    CASE WHEN db_version < 5
-        THEN
-	insert into navitia.exception_type values (0, 'sub'), 
-		(1, 'add');
-        update public.database_version set version=5;
-    ELSE
-        RAISE NOTICE 'database already in version 5, skipping';
-    END CASE;
-END$$;
