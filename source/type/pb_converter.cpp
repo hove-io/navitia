@@ -938,8 +938,8 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
 {
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
-    auto vp = pb_cal->mutable_validity_pattern();    
-    vp->set_beginning_date(navitia::to_iso_string_no_fractional(boost::posix_time::ptime(cal->validity_pattern.beginning_date)));
+    auto vp = pb_cal->mutable_validity_pattern();
+    vp->set_beginning_date(boost::gregorian::to_iso_string(cal->validity_pattern.beginning_date));
     vp->set_days(cal->validity_pattern.str());
     auto week = pb_cal->mutable_week_pattern();
     week->set_monday(cal->week_pattern[navitia::Monday]);
@@ -952,13 +952,13 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
 
     for (const auto& p: cal->active_periods) {
         auto pb_period = pb_cal->add_active_periods();
-        pb_period->set_begin(navitia::to_iso_string_no_fractional(p.begin()));
-        pb_period->set_end(navitia::to_iso_string_no_fractional(p.last()));
+        pb_period->set_begin(boost::gregorian::to_iso_string((p.begin()).date()));
+        pb_period->set_end(boost::gregorian::to_iso_string((p.last()).date()));
     }
 
     for (const auto& excep: cal->exceptions) {
         auto pb_ex = pb_cal->add_exceptions();
-        pb_ex->set_date(navitia::to_iso_string_no_fractional(boost::posix_time::ptime(excep.date)));
+        pb_ex->set_date(boost::gregorian::to_iso_string(excep.date));
         pbnavitia::ExceptionType type;
         switch (excep.type) {
         case nt::ExceptionDate::ExceptionType::add:
