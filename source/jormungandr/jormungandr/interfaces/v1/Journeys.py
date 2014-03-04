@@ -251,7 +251,6 @@ class add_journey_href(object):
 
 
 class add_journey_pagination(object):
-
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -318,8 +317,10 @@ class add_journey_pagination(object):
             minute = timedelta(minutes=1)
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
+            s_arrival = asap_journey['arrival_date_time']
+            f_departure = datetime.strptime(s_arrival, f_datetime)
             datetime_after = f_departure + minute
-            f_arrival = datetime.strptime(s_departure, f_datetime)
+            f_arrival = datetime.strptime(s_arrival, f_datetime)
             datetime_before = f_arrival - minute
 
         return (datetime_before, datetime_after)
