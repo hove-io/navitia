@@ -73,7 +73,8 @@ int main(int argc, char * argv[])
 
     ed::EdReader reader(connection_string);
     reader.fill(data, min_non_connected_graph_ratio);
-    data.build_midnight_interchange();
+    data.complete();
+
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     LOG4CPLUS_INFO(logger, "line: " << data.pt_data.lines.size());

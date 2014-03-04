@@ -184,6 +184,12 @@ list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* v
     return res;
 }
 
+void Data::complete(){
+    this->build_midnight_interchange();
+    this->build_grid_validity_pattern();
+    this->build_associated_calendar();
+}
+
 void Data::build_associated_calendar() {
     std::multimap<ValidityPattern*, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
