@@ -224,6 +224,12 @@ void Data::build_associated_calendar() {
     }
 }
 
+void Data::build_grid_validity_pattern() {
+    for(Calendar* cal : this->pt_data.calendars){
+        cal->build_validity_pattern();
+    }
+}
+
 void Data::build_midnight_interchange() {
     for(VehicleJourney* vj : this->pt_data.vehicle_journeys) {
         for(StopTime* stop : vj->stop_time_list){

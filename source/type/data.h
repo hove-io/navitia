@@ -135,6 +135,7 @@ public:
 
     void build_associated_calendar();
 
+    void build_grid_validity_pattern();
     Data& operator=(Data&& other);
 
     /** Retourne le type de l'id donné */
