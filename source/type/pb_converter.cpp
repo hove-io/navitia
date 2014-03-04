@@ -666,9 +666,9 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     }
 }
 
-pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey, const navitia::georef::PathItem& first_item,
-                                           const navitia::type::Data& data,
-                                           int depth, const pt::ptime& now, const pt::time_period& action_period) {
+pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey,
+        const navitia::georef::PathItem& first_item, const navitia::type::Data& data,
+        int depth, const pt::ptime& now, const pt::time_period& action_period) {
 
     auto section = pb_journey->add_sections();
     section->set_id(response.register_section(first_item));
@@ -904,6 +904,11 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     }
     pt_display_info->set_description(vj->odt_message);
     pt_display_info->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
+    auto physical_mode_name = vj->journey_pattern->physical_mode->name;
+    if(physical_mode_name == "LocalTrain" || physical_mode_name == "RapidTransit"
+            || physical_mode_name == "LongDistanceTrain" || physical_mode_name == "Train") {
+        pt_display_info->set_train_identifier(vj->name);
+    }
 
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
     if (vj->wheelchair_accessible()){
