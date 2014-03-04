@@ -87,7 +87,7 @@ void GeopalParser::fusion_ways(){
     typedef std::unordered_map<std::string, std::vector<types::Edge*>> wayname_ways;
     std::unordered_map<std::string, wayname_ways> admin_wayname_way;
     for(auto way : this->data.ways) {
-        if(way.second->admin == nullptr || way.second->edges.empty()) {
+        if(way.second->admin == nullptr || way.second->edges.empty() || way.second->name == "") {
             continue;
         }
         auto admin_it = admin_wayname_way.find(way.second->admin->insee);
