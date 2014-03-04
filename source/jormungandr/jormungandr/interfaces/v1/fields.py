@@ -249,8 +249,8 @@ calendar_period = {
 }
 
 calendar_exception = {
-    "datetime": fields.String(),
-    "type": fields.String(),
+    "datetime": fields.String(attribute="date"),
+    "type": enum_type(),
 }
 validity_pattern = {
     'beginning_date': fields.String(),
@@ -261,7 +261,7 @@ calendar = {
     "name": fields.String(),
     "week_pattern": NonNullNested(week_pattern),
     "active_periods": NonNullList(NonNullNested(calendar_period)),
-    "exception": NonNullList(NonNullNested(calendar_exception)),
+    "exceptions": NonNullList(NonNullNested(calendar_exception)),
     "validity_pattern": NonNullNested(validity_pattern)
 }
 
