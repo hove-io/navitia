@@ -252,13 +252,17 @@ calendar_exception = {
     "datetime": fields.String(),
     "type": fields.String(),
 }
-
+validity_pattern = {
+    'beginning_date': fields.String(),
+    'days': fields.String(),
+}
 calendar = {
     "id": fields.String(attribute="uri"),
     "name": fields.String(),
     "week_pattern": NonNullNested(week_pattern),
     "active_periods": NonNullList(NonNullNested(calendar_period)),
     "exception": NonNullList(NonNullNested(calendar_exception)),
+    "validity_pattern": NonNullNested(validity_pattern)
 }
 
 connection = {

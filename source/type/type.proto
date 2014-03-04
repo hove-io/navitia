@@ -323,6 +323,7 @@ message Calendar{
     optional WeekPattern week_pattern = 3;
     repeated CalendarPeriod active_periods = 4;
     repeated CalendarException exceptions = 5;
+    optional ValidityPattern validity_pattern = 6;
 }
 
 message ValidityPattern {

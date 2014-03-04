@@ -938,7 +938,9 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
 {
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
-
+    auto vp = pb_cal->mutable_validity_pattern();
+    vp->set_beginning_date(boost::gregorian::to_iso_extended_string(cal->validity_pattern.beginning_date));
+    vp->set_days(cal->validity_pattern.str());
     auto week = pb_cal->mutable_week_pattern();
     week->set_monday(cal->week_pattern[navitia::Monday]);
     week->set_tuesday(cal->week_pattern[navitia::Tuesday]);
