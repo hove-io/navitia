@@ -331,7 +331,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     type::EntryPoint origin = type::EntryPoint(origin_type, request.origin());
 
     if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin
-            || origin.type == type::Type_e::StopArea || origin.type == type::Type_e::StopPoint) {
+            || origin.type == type::Type_e::StopArea || origin.type == type::Type_e::StopPoint
+            || origin.type == type::Type_e::POI) {
         origin.coordinates = this->coord_of_entry_point(origin);
     }
 
@@ -340,7 +341,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         Type_e destination_type = (*data)->get_type_of_id(request.destination());
         destination = type::EntryPoint(destination_type, request.destination());
         if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
-                || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint) {
+                || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
+                || destination.type == type::Type_e::POI) {
             destination.coordinates = this->coord_of_entry_point(destination);
         }
     }
@@ -355,12 +357,12 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     /// Récupération des paramètres de rabattement au départ
     if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)
-            || (origin.type == type::Type_e::Admin)){
+            || (origin.type == type::Type_e::Admin) || (origin.type == type::Type_e::POI)){
         origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params());
     }
     /// Récupération des paramètres de rabattement à l'arrivée
     if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
-            || (destination.type == type::Type_e::Admin)){
+            || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI)){
         destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), false);
     }
 /// Accessibilité, il faut initialiser ce paramètre

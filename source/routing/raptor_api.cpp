@@ -225,7 +225,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         if(it != pt_data.stop_points_map.end()){
             result.push_back({it->second->idx, {}});
         }
-    }else if(ep.type == type::Type_e::Address
+    }else if(ep.type == type::Type_e::Address || ep.type == type::Type_e::POI
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
         result = worker.find_nearest_stop_points(
                     ep.streetnetwork_params.max_duration,
