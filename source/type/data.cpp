@@ -222,7 +222,17 @@ void Data::build_associated_calendar() {
             pt_data.associated_calendars.push_back(associated_calendar);
 
             associated_calendar->calendar = cal_bit_set.first;
-            //        associated_calendar->exceptions = TODO! //compute the exception from closest_cal.second
+            //we need to create the associated exceptions
+            for (size_t i = 0; i < cal_bit_set.second.size(); ++i) {
+                if (! cal_bit_set.second[i]) {
+                    continue; //cal_bit_set.second is the resulting differences, so 0 means no exception
+                }
+                ExceptionDate ex;
+                ex.date = vehicle_journey->validity_pattern->beginning_date + boost::gregorian::days(i);
+                //if the vj was active this day it's a removal, else an addition
+                ex.type = (vehicle_journey->validity_pattern->days[i] ? ExceptionDate::ExceptionType::sub : ExceptionDate::ExceptionType::add);
+                associated_calendar->exceptions.push_back(ex);
+            }
 
             vehicle_journey->associated_calendars.insert({associated_calendar->calendar->uri, associated_calendar});
             associated_vp.insert({vehicle_journey->validity_pattern, associated_calendar});
