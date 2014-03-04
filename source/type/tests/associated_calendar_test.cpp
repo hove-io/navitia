@@ -124,7 +124,6 @@ struct associated_cal_fixture {
             always_on_cal->active_periods.push_back(period("20140101", "20150101"));
             always_on_cal->week_pattern = std::bitset<7>("1111111");
             b.data.pt_data.calendars.push_back(always_on_cal);
-            always_on_cal->build_validity_pattern();
         }
 
         {
@@ -132,7 +131,6 @@ struct associated_cal_fixture {
             always_on_cal->active_periods.push_back(period("20140101", "20150101"));
             sunday_cal->week_pattern = std::bitset<7>("0000001");
             b.data.pt_data.calendars.push_back(sunday_cal);
-            sunday_cal->build_validity_pattern();
         }
 
         {
@@ -142,16 +140,21 @@ struct associated_cal_fixture {
             always_on_cal->active_periods.push_back(period("20141215", "20150101"));
             holidays_cal->week_pattern = std::bitset<7>("1111100");
             b.data.pt_data.calendars.push_back(holidays_cal);
-            holidays_cal->build_validity_pattern();
         }
 
 
-        b.vj("network:R", "line:A", "1111111", "", true, "vj1")
+        b.vj("network:R", "line:A", "", "", true, "vj1")
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
         b.lines["line:A"]->calendar_list.push_back(always_on_cal);
         b.lines["line:A"]->calendar_list.push_back(sunday_cal);
         b.lines["line:A"]->calendar_list.push_back(holidays_cal);
+        b.data.build_uri();
+
+        navitia::type::VehicleJourney* vj = b.data.pt_data.vehicle_journeys_map["vj1"];
+        vj->validity_pattern->add(date("20140101"), date("20150101"), std::bitset<7>("1111111"));
+
+        b.data.complete();
     }
     ed::builder b;
     navitia::type::Calendar* always_on_cal;
@@ -166,19 +169,35 @@ BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
            10/02/2014                   13/02/2014
                +----------------------------+
     */
-    // VehicleJourney à un validitypattern equivalent au validitypattern du calendrier
-//    b.data.build_associated_calendar();
+    // VehicleJourney à un validitypattern equivalent au validitypattern du calendrier    
 //    navitia::type::Calendar* cal = b.data.pt_data.calendars.front();
-//    navitia::type::VehicleJourney* vj = b.data.pt_data.vehicle_journeys.front();
-//    BOOST_REQUIRE(! vj->associated_calendars.empty());
-//    auto it_associated_cal = vj->associated_calendars.find(cal->id);
+    navitia::type::VehicleJourney* vj = b.data.pt_data.vehicle_journeys_map["vj1"];
 
-//    BOOST_REQUIRE(it_associated_cal != vj->associated_calendars.end());
+    BOOST_REQUIRE(vj);
 
-//    auto associated_cal = it_associated_cal->second;
-//    BOOST_CHECK((associated_cal->calendar == cal));
-//    BOOST_CHECK(associated_cal->calendar->exceptions.size() == 0);
-//    BOOST_CHECK(associated_cal->exceptions.size() == 0);
+//    BOOST_REQUIRE_EQUAL(vj->associated_calendars.size(), 2);
+//    //it must have been associated to the 'always active' calendar
+//    auto it_associated_always_cal = vj->associated_calendars.find(always_on_cal->uri);
+
+//    BOOST_REQUIRE(it_associated_always_cal != vj->associated_calendars.end());
+
+//    //no restriction
+//    auto associated_always_cal = it_associated_always_cal->second;
+//    BOOST_CHECK_EQUAL(associated_always_cal->calendar, always_on_cal);
+//    BOOST_CHECK(associated_always_cal->exceptions.empty());
+
+//    //and to the sunday calendar since the vj is active all the day
+//    auto it_associated_sunday_cal = vj->associated_calendars.find(sunday_cal->uri);
+
+//    BOOST_REQUIRE(it_associated_sunday_cal != vj->associated_calendars.end());
+
+//    //no restriction
+//    auto associated_sunday_cal = it_associated_sunday_cal->second;
+//    BOOST_CHECK_EQUAL(associated_sunday_cal->calendar, always_on_cal);
+//    BOOST_CHECK(associated_sunday_cal->exceptions.empty());
+
+    //as additional tests, we test the get_differences function
+
 
 }
 

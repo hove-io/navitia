@@ -211,7 +211,7 @@ void Data::build_associated_calendar() {
         auto close_cal = find_matching_calendar(*this, vehicle_journey);
 
         if (close_cal.empty()) {
-            LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->id << " has been attached to no calendar");
+            LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->uri << " has been attached to no calendar");
             nb_not_matched_vj++;
             continue;
         }
@@ -229,7 +229,7 @@ void Data::build_associated_calendar() {
             cal_uri << associated_calendar->calendar->uri << " ";
         }
 
-        LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->uri << " has been attached to " << cal_uri);
+        LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->uri << " has been attached to " << cal_uri.str());
     }
 
     if (nb_not_matched_vj) {
