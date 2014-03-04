@@ -1,3 +1,15 @@
+navitia2 (0.86.0) unstable; urgency=low
+
+ * Kraken: Avoid journey to finish by a transfer
+ * Tyr: add aggregate_places command
+ * Kraken: speed of a bike is now 20km/h (i.e 5.6m/s)
+ * Kraken: fix journey from and to poi.
+ * Jormungandr: check if both origin and destination are in the same instance
+ * Jormungandr: remove prefix from poi and admin id
+ * Jormungandr: add headsign field to v1 interface
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 04 Mar 2014 18:03:53 +0100
+
 navitia2 (0.85.0) unstable; urgency=low
 
  * Krakeni/Ed: correction on the ways fusion. Ignore those without name
