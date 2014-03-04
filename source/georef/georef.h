@@ -22,9 +22,9 @@ namespace navitia { namespace georef {
 const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     {{
                                                         1.38f, //nt::Mode_e::Walking
-                                                        8.8f, //nt::Mode_e::Bike
+                                                        5.6f, //nt::Mode_e::Bike
                                                         16.8, //nt::Mode_e::Car
-                                                        8.8f //nt::Mode_e::Vls
+                                                        5.6f //nt::Mode_e::Vls
                                                     }}
                                                     };
 
