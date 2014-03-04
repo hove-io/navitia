@@ -764,7 +764,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         }
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), component_size.size() << " connexes components found");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), component_size.size() << " connected components found");
 
     if (! principal_component) {
         LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Impossible to find a main composent in graph. Graph must be empty (nb vertices = "
