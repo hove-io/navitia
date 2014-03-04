@@ -168,13 +168,15 @@ ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_valid
 
 using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
 
-list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey) {
-    size_t threshold(15);
+list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey, double relative_threshold) {
     list_cal_bitset res;
-
     for (const auto calendar : vehicle_journey->journey_pattern->route->line->calendar_list) {
         auto diff = get_difference(calendar->validity_pattern.days, vehicle_journey->validity_pattern->days);
         size_t nb_diff = diff.count();
+
+        //we associate the calendar to the vj if the diff are below a relative threshold
+        //compared to the number of active days in the calendar
+        size_t threshold = relative_threshold * calendar->validity_pattern.days.count();
         if (nb_diff > threshold) {
             continue;
         }
@@ -191,6 +193,7 @@ void Data::complete(){
 }
 
 void Data::build_associated_calendar() {
+    auto log = log4cplus::Logger::getInstance("log");
     std::multimap<ValidityPattern*, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     for(VehicleJourney* vehicle_journey : this->pt_data.vehicle_journeys) {
@@ -200,7 +203,7 @@ void Data::build_associated_calendar() {
         auto it = associated_vp.find(vehicle_journey->validity_pattern);
         if (it != associated_vp.end()) {
             for (; it->first == vehicle_journey->validity_pattern; ++it) {
-                vehicle_journey->associated_calendars.insert({it->second->calendar->id, it->second});
+                vehicle_journey->associated_calendars.insert({it->second->calendar->uri, it->second});
             }
             continue;
         }
@@ -208,10 +211,12 @@ void Data::build_associated_calendar() {
         auto close_cal = find_matching_calendar(*this, vehicle_journey);
 
         if (close_cal.empty()) {
+            LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->id << " has been attached to no calendar");
             nb_not_matched_vj++;
             continue;
         }
 
+        std::stringstream cal_uri;
         for (auto cal_bit_set: close_cal) {
             auto associated_calendar = new AssociatedCalendar();
             pt_data.associated_calendars.push_back(associated_calendar);
@@ -219,14 +224,16 @@ void Data::build_associated_calendar() {
             associated_calendar->calendar = cal_bit_set.first;
             //        associated_calendar->exceptions = TODO! //compute the exception from closest_cal.second
 
-            vehicle_journey->associated_calendars.insert({associated_calendar->calendar->id, associated_calendar});
+            vehicle_journey->associated_calendars.insert({associated_calendar->calendar->uri, associated_calendar});
             associated_vp.insert({vehicle_journey->validity_pattern, associated_calendar});
+            cal_uri << associated_calendar->calendar->uri << " ";
         }
 
+        LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->uri << " has been attached to " << cal_uri);
     }
 
     if (nb_not_matched_vj) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "no calendar found for " << nb_not_matched_vj << " vehicle journey");
+        LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
     }
 }
 
