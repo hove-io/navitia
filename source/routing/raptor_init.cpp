@@ -95,28 +95,26 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time
                 type::idx_t jppidx = journey_pattern_point->idx;
                 auto type = labels[round][journey_pattern_point->idx].type;
                 auto& l = labels[round][jppidx];
-                if((type != boarding_type::uninitialized) &&
+                if((type == boarding_type::vj) &&
                    l.dt != DateTimeUtils::inf &&
                    l.dt != DateTimeUtils::min &&
                    improves(best_dt, clockwise, l.dt, spid_dist.second.total_seconds()) ) {
                     best_jpp = jppidx;
                     best_dt_jpp = l.dt;
-                    if(type == boarding_type::vj) {
-                        // Dans le sens horaire : lors du calcul on gardé que l’heure de départ, mais on veut l’arrivée
-                        // Il faut donc retrouver le stop_time qui nous intéresse avec best_stop_time
-                        const type::StopTime* st;
-                        DateTime dt = 0;
+                    // Dans le sens horaire : lors du calcul on gardé que l’heure de départ, mais on veut l’arrivée
+                    // Il faut donc retrouver le stop_time qui nous intéresse avec best_stop_time
+                    const type::StopTime* st;
+                    DateTime dt = 0;
 
-                        std::tie(st, dt) = best_stop_time(journey_pattern_point, l.dt, accessibilite_params.vehicle_properties, !clockwise, disruption_active, data, true);
-                        BOOST_ASSERT(st!=nullptr);
-                        if(st != nullptr) {
-                            if(clockwise) {
-                                auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(DateTimeUtils::hour(dt));
-                                DateTimeUtils::update(best_dt_jpp, arrival_time, !clockwise);
-                            } else {
-                                auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(DateTimeUtils::hour(dt));
-                                DateTimeUtils::update(best_dt_jpp, departure_time, !clockwise);
-                            }
+                    std::tie(st, dt) = best_stop_time(journey_pattern_point, l.dt, accessibilite_params.vehicle_properties, !clockwise, disruption_active, data, true);
+                    BOOST_ASSERT(st);
+                    if(st != nullptr) {
+                        if(clockwise) {
+                            auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(DateTimeUtils::hour(dt));
+                            DateTimeUtils::update(best_dt_jpp, arrival_time, !clockwise);
+                        } else {
+                            auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(DateTimeUtils::hour(dt));
+                            DateTimeUtils::update(best_dt_jpp, departure_time, !clockwise);
                         }
                     }
                     if(clockwise)

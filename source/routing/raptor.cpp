@@ -78,7 +78,6 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                 for(auto jpp : stop_point->journey_pattern_point_list) {
                     type::idx_t jpp_idx = jpp->idx;
                     if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx]) && !b_dest.is_eligible_solution(jpp_idx)) {
-                       best_labels[jpp_idx] = best_departure;
                        current_labels[jpp_idx].dt = best_departure;
                        current_labels[jpp_idx].boarding = data.pt_data.journey_pattern_points[best_jpp];
                        current_labels[jpp_idx].type = boarding_type::connection;
@@ -107,7 +106,6 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                             type::idx_t destination_jpp_idx = destination_jpp->idx;
                             if(best_jpp != destination_jpp_idx && !b_dest.is_eligible_solution(destination_jpp_idx)) {
                                 if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
-                                    best_labels[destination_jpp_idx] = next;
                                     current_labels[destination_jpp_idx].dt = next;
                                     current_labels[destination_jpp_idx].boarding = data.pt_data.journey_pattern_points[best_jpp];
                                     current_labels[destination_jpp_idx].type = boarding_type::connection;
@@ -208,7 +206,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, bt::time_duration> 
     clear_and_init(departures, calc_dest, bound, clockwise);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
-    //auto tmp = makePathes(calc_dest, bound, walking_speed, accessibilite_params, *this, clockwise);
+    //auto tmp = makePathes(calc_dest, bound, accessibilite_params, *this, clockwise, disruption_active);
     //result.insert(result.end(), tmp.begin(), tmp.end());
     // Aucune solution n’a été trouvée :'(
     if(b_dest.best_now_jpp_idx == type::invalid_idx) {
