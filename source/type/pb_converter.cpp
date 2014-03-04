@@ -666,9 +666,9 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     }
 }
 
-pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey, const navitia::georef::PathItem& first_item,
-                                           const navitia::type::Data& data,
-                                           int depth, const pt::ptime& now, const pt::time_period& action_period) {
+pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey,
+        const navitia::georef::PathItem& first_item, const navitia::type::Data& data,
+        int depth, const pt::ptime& now, const pt::time_period& action_period) {
 
     auto section = pb_journey->add_sections();
     section->set_id(response.register_section(first_item));
