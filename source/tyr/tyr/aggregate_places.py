@@ -153,6 +153,8 @@ def aggregate_places(instance_config, job_id):
 
 
 class AggregatePlacesCommand(Command):
+#A command used in development environment to run aggregate places without
+#having to run tyr
 
     def get_options(self):
         return [
