@@ -157,6 +157,7 @@ display_informations_vj = {
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
     "equipments": equipments(attribute="has_equipments"),
+    "train_identifier": fields.String(),
     "messages": NonNullList(NonNullNested(generic_message))
 }
 
