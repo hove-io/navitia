@@ -78,13 +78,6 @@ class add_address_poi_id(object):
                         lon = objects['coord']['lon']
                         lat = objects['coord']['lat']
                         objects['id'] = lon + ';' + lat
-                    if type_ == 'poi' or type_ == 'pois':
-                        old_id = objects['id']
-                        objects['id'] = 'poi:' + region + ':' + old_id
-                    if type_ == 'administrative_region' or\
-                            type_ == 'administrative_regions':
-                        old_id = objects['id']
-                        objects['id'] = 'admin:' + region + old_id[5:]
                     if 'embedded_type' in objects.keys() and\
                         (objects['embedded_type'] == 'address' or
                          objects['embedded_type'] == 'poi' or

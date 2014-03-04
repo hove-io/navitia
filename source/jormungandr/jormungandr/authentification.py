@@ -1,5 +1,5 @@
 # encoding: utf-8
-from flask_restful import reqparse
+from flask_restful import reqparse, abort
 import flask_restful
 from flask import current_app, request
 from functools import wraps
@@ -27,9 +27,16 @@ def authentification_required(func):
                                                 lat=kwargs['lat'])
             except RegionNotFound:
                 pass
-        elif 'from' in request.args: #used for journeys api
+        elif 'from' in request.args:
+            #used for journeys api
             try:
                 region = i_manager.key_of_id(request.args['from'])
+                if 'to' in request.args:
+                    region_to = i_manager.key_of_id(request.args['to'])
+                    if region != region_to:
+                        abort(503, message="Unable to compute journeys "
+                              "between to different instances (%s, %s) " %
+                              (region, region_to))
             except RegionNotFound:
                 pass
 
