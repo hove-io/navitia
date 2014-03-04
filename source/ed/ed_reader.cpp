@@ -1115,9 +1115,9 @@ void EdReader::fill_periods(navitia::type::Data& , pqxx::work& work){
         if (cal == nullptr) {
             LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unable to find calendar " << cal_id);
             continue;
-        }
-        boost::posix_time::ptime start = boost::posix_time::time_from_string(const_it["begin_date"].as<std::string>());
-        boost::posix_time::ptime end = boost::posix_time::time_from_string(const_it["end_date"].as<std::string>());
+        }         
+        boost::posix_time::ptime start(bg::from_string(const_it["begin_date"].as<std::string>()));
+        boost::posix_time::ptime end(bg::from_string(const_it["end_date"].as<std::string>()));
         cal->active_periods.push_back(boost::posix_time::time_period(start, end));
     }
 }
