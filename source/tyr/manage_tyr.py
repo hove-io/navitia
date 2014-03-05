@@ -4,7 +4,7 @@ from tyr import app, db
 import sys
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
-from tyr.aggregate_places import AggregatePlacesCommand
+from tyr.command import AggregatePlacesCommand
 
 manager = Manager(app)
 

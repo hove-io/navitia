@@ -1,0 +1,1 @@
+from tyr.command.aggregate_places import AggregatePlacesCommand
