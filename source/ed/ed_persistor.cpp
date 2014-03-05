@@ -121,11 +121,16 @@ void EdPersistor::insert_nodes(const ed::Georef& data){
 }
 
 void EdPersistor::insert_house_numbers(const ed::Georef& data){
-    this->lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side"});
+    this->lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side","way_id"});
+
     for(const auto& itm : data.house_numbers) {
+        std::string way_id("NULL");
+        if(itm.second->way != nullptr){
+            way_id = std::to_string(itm.second->way->id);
+        }
         this->lotus.insert({this->to_geographic_point(itm.second->coord),
                 itm.second->number,
-                std::to_string(str_to_int(itm.second->number) % 2 == 0)});
+                std::to_string(str_to_int(itm.second->number) % 2 == 0), way_id});
     }
     lotus.finish_bulk_insert();
 }
