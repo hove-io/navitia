@@ -4,7 +4,7 @@ from tyr import app, db
 import sys
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
-from tyr.command import AggregatePlacesCommand, ReloadAtCommand
+from tyr.command import AggregatePlacesCommand, ReloadAtCommand, AtReloader
 
 manager = Manager(app)
 
@@ -14,6 +14,7 @@ manager.add_command('db', MigrateCommand)
 #having to run tyr
 manager.add_command('aggregate_places', AggregatePlacesCommand())
 manager.add_command('reload_at', ReloadAtCommand())
+manager.add_command('at_reloader', AtReloader())
 
 if __name__ == '__main__':
     app.config['DEBUG'] = True
