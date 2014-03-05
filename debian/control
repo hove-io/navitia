@@ -71,7 +71,7 @@ Description: debugging symbols for ed
 Package: navitia-tyr
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
-Depends: python-flask, python-sqlalchemy, python-requests, python-psycopg2, python-sqlalchemy-ext, navitia-common (= ${binary:Version})
+Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, navitia-common (= ${binary:Version})
 Section: devel
 Priority: optional
 Description: Navitia-Tyr
@@ -80,7 +80,7 @@ Description: Navitia-Tyr
 Package: navitia-connector-at
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
-Depends: python-sqlalchemy, python-argparse, python-configobj, python-protobuf, python-redis, python-wsgiref, navitia-common (= ${binary:Version})
+Depends: python-sqlalchemy, python-argparse, python-requests, python-configobj, python-protobuf, python-wsgiref, navitia-common (= ${binary:Version})
 Section: devel
 Priority: optional
 Description: Navitia-connector-at
