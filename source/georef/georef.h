@@ -22,9 +22,9 @@ namespace navitia { namespace georef {
 const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     {{
                                                         1.38f, //nt::Mode_e::Walking
-                                                        4.1f, //nt::Mode_e::Bike
-                                                        16.8, //nt::Mode_e::Car
-                                                        4.1f //nt::Mode_e::Vls
+                                                        8.2f, //nt::Mode_e::Bike
+                                                        16.8f, //nt::Mode_e::Car
+                                                        8.2f //nt::Mode_e::Vls
                                                     }}
                                                     };
 
@@ -144,18 +144,18 @@ struct PathItem {
         BssPutBack //we a bike is put back
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
-    double get_length(double speed_factor) const {
+    double get_length() const {
         switch (transportation) {
         case TransportCaracteristic::BssPutBack:
         case TransportCaracteristic::BssTake:
             return 0;
         case TransportCaracteristic::Walk:
             //milliseconds to reduce rounding
-            return duration.total_milliseconds() * (default_speed[type::Mode_e::Walking] * speed_factor) / 1000;
+            return duration.total_milliseconds() * (default_speed[type::Mode_e::Walking]) / 1000;
         case TransportCaracteristic::Bike:
-            return duration.total_milliseconds() * (default_speed[type::Mode_e::Bike] * speed_factor) / 1000;
+            return duration.total_milliseconds() * (default_speed[type::Mode_e::Bike]) / 1000;
         case TransportCaracteristic::Car:
-            return duration.total_milliseconds() * (default_speed[type::Mode_e::Car] * speed_factor) / 1000;
+            return duration.total_milliseconds() * (default_speed[type::Mode_e::Car]) / 1000;
         default:
             throw navitia::exception("unhandled transportation case");
         }
