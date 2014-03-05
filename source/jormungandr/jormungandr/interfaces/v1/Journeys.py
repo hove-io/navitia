@@ -419,8 +419,8 @@ class Journeys(ResourceUri):
                                 description="maximal duration of non public \
                                 transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.68)
-        parser_get.add_argument("bike_speed", type=float, default=8.8)
-        parser_get.add_argument("bss_speed", type=float, default=8.8,)
+        parser_get.add_argument("bike_speed", type=float, default=4.1)
+        parser_get.add_argument("bss_speed", type=float, default=4.1,)
         parser_get.add_argument("car_speed", type=float, default=16.8)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
