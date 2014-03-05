@@ -1,3 +1,18 @@
+navitia2 (0.87.0) unstable; urgency=low
+
+ * ed : normalize uri edges
+ * ed : save way_id in house_number
+ * build: tyr doesn't depends of request, but it's at_connector
+ * Jormungandr: change the maximum duration a journey to 24h
+ * Tyr: add a new process launching reload_at in case of message for an instance
+ * Tyr: add a command for trigger reload of realtime information by kraken
+ * Tyr: move aggregatePlaceCommand in a "command" submodule
+ * Ed: build admin map
+ * Autocomplete : upper-case accented caracters added
+ * Jormugandr: default bike speed is 15 km/h (4.1m/s)
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 05 Mar 2014 18:03:36 +0100
+
 navitia2 (0.86.2) unstable; urgency=low
 
  * Fix bike speed (for real !)
