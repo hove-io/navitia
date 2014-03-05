@@ -63,22 +63,20 @@ void GeopalParser::fusion_ways_by_graph(const std::vector<types::Edge*>& edges){
         boost::add_edge(node_map_temp[edge->target->id], node_map_temp[edge->source->id], edge, graph);
     }
     std::vector<size_t> vertex_component(boost::num_vertices(graph));
-    size_t num = boost::connected_components(graph, &vertex_component[0]);
-    if(num != edges.size()){
-        std::map<size_t, std::vector<ed::types::Edge*>> component_edges;
-        for(size_t i = 0; i<vertex_component.size(); ++i) {
-            auto component = vertex_component[i];
-            if(component_edges.find(component) != component_edges.end()) {
-                component_edges[component] = std::vector<ed::types::Edge*>();
-            }
-            auto begin_end = boost::out_edges(i, graph);
-            for(auto it = begin_end.first; it != begin_end.second; ++it) {
-                component_edges[component].push_back(graph[*it]);
-            }
+    boost::connected_components(graph, &vertex_component[0]);
+    std::map<size_t, std::vector<ed::types::Edge*>> component_edges;
+    for(size_t i = 0; i<vertex_component.size(); ++i) {
+        auto component = vertex_component[i];
+        if(component_edges.find(component) != component_edges.end()) {
+            component_edges[component] = std::vector<ed::types::Edge*>();
         }
-        for(auto component_edges_ : component_edges) {
-            this->fusion_ways_list(component_edges_.second);
+        auto begin_end = boost::out_edges(i, graph);
+        for(auto it = begin_end.first; it != begin_end.second; ++it) {
+            component_edges[component].push_back(graph[*it]);
         }
+    }
+    for(auto component_edges_ : component_edges) {
+        this->fusion_ways_list(component_edges_.second);
     }
 }
 
@@ -101,6 +99,7 @@ void GeopalParser::fusion_ways(){
             way_it = admin_it->second.find(way.second->name);
         }
         auto &way_vector = admin_wayname_way[way.second->admin->insee][way.second->name];
+
         way_vector.insert(way_vector.begin(), way.second->edges.begin(),  way.second->edges.end());
     }
     for(auto wayname_ways_it : admin_wayname_way){
@@ -245,7 +244,6 @@ void GeopalParser::fill_ways_edges(){
                 if(admin != this->data.admins.end()){
                     std::string source  = row[x1] + row[y1];
                     std::string target  = row[x2] + row[y2];
-                    std::string edge_uri = source + target;
                     ed::types::Node* source_node;
                     ed::types::Node* target_node;
                     auto source_it = this->data.nodes.find(source);
@@ -280,7 +278,7 @@ void GeopalParser::fill_ways_edges(){
                     }else{
                         current_way = way->second;
                     }
-                    auto edge = this->data.edges.find(edge_uri);
+                    auto edge = this->data.edges.find(wayd_uri);
                     if(edge == this->data.edges.end()){
                         ed::types::Edge* edg = new ed::types::Edge;
                         edg->source = source_node;
@@ -291,7 +289,7 @@ void GeopalParser::fill_ways_edges(){
                             edg->length = str_to_int(row[l]);
                         }
                         edg->way = current_way;
-                        this->data.edges[edge_uri]= edg;
+                        this->data.edges[wayd_uri]= edg;
                         current_way->edges.push_back(edg);
                     }
                 }
