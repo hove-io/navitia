@@ -105,11 +105,11 @@ void ValidityPattern::add(int duration){
 }
 
 void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days){
-    for(long i=0; i < (end - start).days(); ++i){
-        boost::gregorian::date current_date = beginning_date + boost::gregorian::days(i);
-        if(active_days[current_date.day_of_week()]){
+    for (auto current_date = start; current_date < end; current_date = current_date + boost::gregorian::days(1)) {
+        navitia::weekdays week_day = navitia::get_weekday(current_date);
+        if (active_days[week_day]) {
             add(current_date);
-        }else{
+        } else {
             remove(current_date);
         }
     };
