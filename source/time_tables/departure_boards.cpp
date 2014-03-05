@@ -89,6 +89,7 @@ pbnavitia::Response
 render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
           DateTime datetime, DateTime max_datetime,
+          boost::optional<const std::string> calendar_id,
           const type::Data &data) {
     pbnavitia::Response response;
     auto current_time = pt::second_clock::local_time();
@@ -96,6 +97,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
     pt::time_period action_period(to_posix_time(datetime, data),
                                   to_posix_time(max_datetime, data));
 
+    bool display_date = ! calendar_id;
     for(auto id_vec : map_route_stop_point) {
         auto schedule = response.add_stop_schedules();
         //Each schedule has a stop_point and a route
@@ -118,7 +120,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
         for(auto dt_st : id_vec.second) {
             auto date_time = schedule->add_date_times();
             fill_pb_object(dt_st.second, data, date_time, 0,
-                           now, action_period, dt_st.first);
+                           now, action_period, dt_st.first, display_date);
         }
         const auto& it = response_status.find(id_vec.first.second);
         if(it != response_status.end()){
@@ -220,7 +222,8 @@ departure_board(const std::string& request,
     } else if(interface_version == 1) {
         handler.pb_response = render_v1(response_status, map_route_stop_point,
                                         handler.date_time,
-                                        handler.max_datetime, data);
+                                        handler.max_datetime,
+                                        calendar_id, data);
     }
 
 

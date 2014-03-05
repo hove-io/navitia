@@ -148,9 +148,9 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "20120615T151000"); //TODO == T151000
+    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T151000");
     stop_date_time = stop_schedule.date_times(1);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "20120615T201000"); //TODO == T201000
+    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T201000");
     //the vj 'wednesday' is never matched
 }
 
@@ -165,11 +165,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 3);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "20120615T101000"); //TODO == T151000
+    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T101000");
     stop_date_time = stop_schedule.date_times(1);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "20120615T111000"); //TODO == T201000
+    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T111000");
     stop_date_time = stop_schedule.date_times(2);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "20120615T151000"); //TODO == T201000
+    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T151000");
     //the vj 'wednesday' is never matched
 }
 

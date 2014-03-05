@@ -810,39 +810,45 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     pbnavitia::ScheduleStopTime* rs_date_time, int,
                     const boost::posix_time::ptime&,
                     const boost::posix_time::time_period&,
-                    const DateTime& date_time){
-    if(stop_time != nullptr) {
-        const auto str_datetime = iso_string(date_time, data);
-        rs_date_time->set_date_time(str_datetime);
-        pbnavitia::Properties * hn = rs_date_time->mutable_properties();
-        if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
-            hn->add_additional_informations(pbnavitia::Properties::pick_up_only);
-        }
-        if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
-            hn->add_additional_informations(pbnavitia::Properties::drop_off_only);
-        }
-        if (stop_time->odt()){
-            hn->add_additional_informations(pbnavitia::Properties::on_demand_transport);
-        }
-        if (stop_time->date_time_estimated()){
-            hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
-        }
-        if(!stop_time->comment.empty()){
+                    const DateTime& date_time, bool display_date){
+    if (stop_time == nullptr) {
+        rs_date_time->set_date_time("");
+        return;
+    }
+    std::string str_datetime;
+    if (display_date) {
+        str_datetime = iso_string(date_time, data);
+    } else {
+        str_datetime = iso_hour_string(date_time, data);
+    }
+
+    rs_date_time->set_date_time(str_datetime);
+    pbnavitia::Properties * hn = rs_date_time->mutable_properties();
+    if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
+        hn->add_additional_informations(pbnavitia::Properties::pick_up_only);
+    }
+    if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
+        hn->add_additional_informations(pbnavitia::Properties::drop_off_only);
+    }
+    if (stop_time->odt()){
+        hn->add_additional_informations(pbnavitia::Properties::on_demand_transport);
+    }
+    if (stop_time->date_time_estimated()){
+        hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
+    }
+    if (!stop_time->comment.empty()){
+        pbnavitia::Note* note = hn->add_notes();
+        std::hash<std::string> hash_fn;
+        note->set_uri("note:"+std::to_string(hash_fn(stop_time->comment)));
+        note->set_note(stop_time->comment);
+    }
+    if (stop_time->vehicle_journey != nullptr) {
+        if(!stop_time->vehicle_journey->odt_message.empty()){
             pbnavitia::Note* note = hn->add_notes();
             std::hash<std::string> hash_fn;
-            note->set_uri("note:"+std::to_string(hash_fn(stop_time->comment)));
-            note->set_note(stop_time->comment);
+            note->set_uri("note:"+std::to_string(hash_fn(stop_time->vehicle_journey->odt_message)));
+            note->set_note(stop_time->vehicle_journey->odt_message);
         }
-        if(stop_time->vehicle_journey != nullptr){
-            if(!stop_time->vehicle_journey->odt_message.empty()){
-                pbnavitia::Note* note = hn->add_notes();
-                std::hash<std::string> hash_fn;
-                note->set_uri("note:"+std::to_string(hash_fn(stop_time->vehicle_journey->odt_message)));
-                note->set_note(stop_time->vehicle_journey->odt_message);
-            }
-        }
-    }else {
-        rs_date_time->set_date_time("");
     }
 }
 
