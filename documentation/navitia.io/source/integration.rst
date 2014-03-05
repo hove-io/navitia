@@ -275,7 +275,6 @@ Parameters
 |         |               |                 | within the given admin uris            | ""                                  |
 +---------+---------------+-----------------+----------------------------------------+-------------------------------------+
 
-file:///home/vlara/workspace/documentation_v1/build/html/index.html
 Example
 #######
 
