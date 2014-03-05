@@ -283,11 +283,11 @@ struct GeoRef {
     /// Normalisation des codes externes
     void normalize_extcode_way();
     /// Normalisation des codes externes des admins
-    void normalize_extcode_admin();
+    void build_admin_map();
 
     /// Chargement de la liste map code externe idx sur poitype et poi
-    void build_poitypes();
-    void build_pois();
+    void build_poitypes_map();
+    void build_pois_map();
 
     /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
     void build_rtree();
