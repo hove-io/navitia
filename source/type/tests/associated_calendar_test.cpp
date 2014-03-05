@@ -88,8 +88,7 @@ BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test3, calendar_fixture) {
 
 BOOST_AUTO_TEST_CASE(get_differences_test) {
     std::bitset<12> cal ("111000111000");
-    std::bitset<12> vj ("101010101010");
-
+    std::bitset<12> vj  ("101010101010");
     //the dif are the differences between cal and vj restricted on the active days of the calendar
     auto res = navitia::type::get_difference(cal, vj);
 
@@ -113,94 +112,107 @@ BOOST_AUTO_TEST_CASE(get_differences_test_full_cal) {
 
     BOOST_CHECK_EQUAL(res, std::bitset<12>("010101010101"));
 }
+/*
+                                          Janvier
+                                    di lu ma me je ve sa
+                                              1  2  3  4
+                                     5  6  7  8  9 10 11
+                                    12 13 14 15 16 17 18
+                                    19 20 21 22 23 24 25
+                                    26 27 28 29 30 31
+
+*/
 
 struct associated_cal_fixture {
     associated_cal_fixture() : b("20140101"),
         always_on_cal(new navitia::type::Calendar(b.data.meta.production_date.begin())),
-        holidays_cal(new navitia::type::Calendar(b.data.meta.production_date.begin())),
-        sunday_cal(new navitia::type::Calendar(b.data.meta.production_date.begin())) {
+        wednesday_cal(new navitia::type::Calendar(b.data.meta.production_date.begin())),
+        monday_cal(new navitia::type::Calendar(b.data.meta.production_date.begin())) {
         {
             always_on_cal->uri="always_on";
-            always_on_cal->active_periods.push_back(period("20140101", "20150101"));
-            always_on_cal->week_pattern = std::bitset<7>("1111111");
+            always_on_cal->active_periods.push_back(period("20140101", "20140111"));
+            always_on_cal->week_pattern[navitia::Monday] = false;
+            always_on_cal->week_pattern[navitia::Tuesday] = true;
+            always_on_cal->week_pattern[navitia::Wednesday] = true;
+            always_on_cal->week_pattern[navitia::Thursday] = true;
+            always_on_cal->week_pattern[navitia::Friday] = true;
+            always_on_cal->week_pattern[navitia::Saturday] = false;
+            always_on_cal->week_pattern[navitia::Sunday] = false;
             b.data.pt_data.calendars.push_back(always_on_cal);
         }
 
         {
-            sunday_cal->uri="sunday";
-            always_on_cal->active_periods.push_back(period("20140101", "20150101"));
-            sunday_cal->week_pattern = std::bitset<7>("0000001");
-            b.data.pt_data.calendars.push_back(sunday_cal);
+            wednesday_cal->uri="wednesday";
+            wednesday_cal->active_periods.push_back(period("20140101", "20140111"));
+            wednesday_cal->week_pattern[navitia::Monday] = false;
+            wednesday_cal->week_pattern[navitia::Tuesday] = false;
+            wednesday_cal->week_pattern[navitia::Wednesday] = true;
+            wednesday_cal->week_pattern[navitia::Thursday] = false;
+            wednesday_cal->week_pattern[navitia::Friday] = false;
+            wednesday_cal->week_pattern[navitia::Saturday] = false;
+            wednesday_cal->week_pattern[navitia::Sunday] = false;
+            b.data.pt_data.calendars.push_back(wednesday_cal);
         }
 
         {
-            holidays_cal->uri="holidays";
-            always_on_cal->active_periods.push_back(period("20140201", "20140215"));
-            always_on_cal->active_periods.push_back(period("20140701", "20140901"));
-            always_on_cal->active_periods.push_back(period("20141215", "20150101"));
-            holidays_cal->week_pattern = std::bitset<7>("1111100");
-            b.data.pt_data.calendars.push_back(holidays_cal);
+            monday_cal->uri="monday";
+            monday_cal->active_periods.push_back(period("20140105", "20140111"));
+            monday_cal->week_pattern[navitia::Monday] = true;
+            monday_cal->week_pattern[navitia::Tuesday] = false;
+            monday_cal->week_pattern[navitia::Wednesday] = false;
+            monday_cal->week_pattern[navitia::Thursday] = false;
+            monday_cal->week_pattern[navitia::Friday] = false;
+            monday_cal->week_pattern[navitia::Saturday] = false;
+            monday_cal->week_pattern[navitia::Sunday] = false;
+            b.data.pt_data.calendars.push_back(monday_cal);
         }
-
 
         b.vj("network:R", "line:A", "", "", true, "vj1")
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
         b.lines["line:A"]->calendar_list.push_back(always_on_cal);
-        b.lines["line:A"]->calendar_list.push_back(sunday_cal);
-        b.lines["line:A"]->calendar_list.push_back(holidays_cal);
+        b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
+        b.lines["line:A"]->calendar_list.push_back(monday_cal);
         b.data.build_uri();
 
+        // Toute la semaine sauf samedi et dimanche
         navitia::type::VehicleJourney* vj = b.data.pt_data.vehicle_journeys_map["vj1"];
-        vj->validity_pattern->add(date("20140101"), date("20150101"), std::bitset<7>("1111111"));
+        vj->validity_pattern->add(date("20140101"), date("20140111"), always_on_cal->week_pattern);
 
         b.data.complete();
     }
     ed::builder b;
     navitia::type::Calendar* always_on_cal;
-    navitia::type::Calendar* holidays_cal;
-    navitia::type::Calendar* sunday_cal;
+    navitia::type::Calendar* wednesday_cal;
+    navitia::type::Calendar* monday_cal;
 };
 
 BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
 
-    /*
-    Periodes :
-           10/02/2014                   13/02/2014
-               +----------------------------+
-    */
-    // VehicleJourney à un validitypattern equivalent au validitypattern du calendrier    
-//    navitia::type::Calendar* cal = b.data.pt_data.calendars.front();
     navitia::type::VehicleJourney* vj = b.data.pt_data.vehicle_journeys_map["vj1"];
 
     BOOST_REQUIRE(vj);
 
-//    BOOST_REQUIRE_EQUAL(vj->associated_calendars.size(), 2);
-//    //it must have been associated to the 'always active' calendar
-//    auto it_associated_always_cal = vj->associated_calendars.find(always_on_cal->uri);
+    BOOST_REQUIRE_EQUAL(vj->associated_calendars.size(), 2);
 
-//    BOOST_REQUIRE(it_associated_always_cal != vj->associated_calendars.end());
-
-//    //no restriction
-//    auto associated_always_cal = it_associated_always_cal->second;
-//    BOOST_CHECK_EQUAL(associated_always_cal->calendar, always_on_cal);
-//    BOOST_CHECK(associated_always_cal->exceptions.empty());
-
-//    //and to the sunday calendar since the vj is active all the day
-//    auto it_associated_sunday_cal = vj->associated_calendars.find(sunday_cal->uri);
-
-//    BOOST_REQUIRE(it_associated_sunday_cal != vj->associated_calendars.end());
+    auto it_associated_always_cal = vj->associated_calendars.find(always_on_cal->uri);
+    BOOST_REQUIRE(it_associated_always_cal != vj->associated_calendars.end());
 
 //    //no restriction
-//    auto associated_sunday_cal = it_associated_sunday_cal->second;
-//    BOOST_CHECK_EQUAL(associated_sunday_cal->calendar, always_on_cal);
-//    BOOST_CHECK(associated_sunday_cal->exceptions.empty());
-
-    //as additional tests, we test the get_differences function
+    auto associated_always_cal = it_associated_always_cal->second;
+    BOOST_CHECK_EQUAL(associated_always_cal->calendar, always_on_cal);
+    BOOST_CHECK(associated_always_cal->exceptions.empty());
 
 
-}
+    auto it_associated_wednesday_cal = vj->associated_calendars.find(wednesday_cal->uri);
+    BOOST_REQUIRE(it_associated_wednesday_cal != vj->associated_calendars.end());
 
-BOOST_FIXTURE_TEST_CASE(associated_val_test_threshold, associated_cal_fixture) {
+//    //no restriction
+    auto associated_wednesday_cal = it_associated_wednesday_cal->second;
+    BOOST_CHECK_EQUAL(associated_wednesday_cal->calendar, wednesday_cal);
+    BOOST_CHECK(associated_wednesday_cal->exceptions.empty());
+
+    auto it_associated_monday_cal = vj->associated_calendars.find(monday_cal->uri);
+    BOOST_REQUIRE(it_associated_monday_cal == vj->associated_calendars.end());
 
 }
