@@ -123,6 +123,21 @@ def scan_instances():
             models.db.session.add(instance)
             models.db.session.commit()
 
+@celery.task()
+def reload_at(instance_id):
+    instance = models.Instance.query.get(instance_id)
+    job = models.Job()
+    job.instance = instance
+    job.state = 'pending'
+    instance_config = load_instance_config(instance.name)
+    models.db.session.add(job)
+    models.db.session.commit()
+    chain(nav2rt.si(instance_config, job.id),
+          reload_data.si(instance_config, job.id),
+          finish_job.si(job.id)
+          ).delay()
+
+
 
 @task_postrun.connect
 def close_session(*args, **kwargs):
