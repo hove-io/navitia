@@ -542,7 +542,7 @@ void GeoRef::build_autocomplete_list(){
 
 
 /** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
-void GeoRef::build_poitypes(){
+void GeoRef::build_poitypes_map(){
    this->poitype_map.clear();
    for(const POIType* ptype : poitypes){
        this->poitype_map[ptype->uri] = ptype->idx;
@@ -550,7 +550,7 @@ void GeoRef::build_poitypes(){
 }
 
 /** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
-void GeoRef::build_pois(){
+void GeoRef::build_pois_map(){
     this->poi_map.clear();
    for(const POI* poi : pois){
        this->poi_map[poi->uri] = poi->idx;
@@ -576,10 +576,9 @@ void GeoRef::normalize_extcode_way(){
 }
 
 
-void GeoRef::normalize_extcode_admin(){
+void GeoRef::build_admin_map(){
     this->admin_map.clear();
     for(Admin* admin : admins){
-        admin->uri = "admin:" + admin->uri;
         this->admin_map[admin->uri] = admin->idx;
     }
 }
