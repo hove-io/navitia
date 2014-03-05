@@ -1,3 +1,9 @@
+navitia2 (0.86.2) unstable; urgency=low
+
+ * Fix bike speed (for real !)
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 05 Mar 2014 11:03:50 +0100
+
 navitia2 (0.86.1) unstable; urgency=low
 
  * Change bike speed to 15km/h (4.1 m/s)
