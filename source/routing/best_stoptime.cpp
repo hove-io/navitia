@@ -121,11 +121,11 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
 
     //On renvoie le premier trip valide
     std::pair<const type::StopTime*, DateTime> first_st = {nullptr, 0};
-    if (calendar_id) {
+    if (! calendar_id) {
+        first_st = valid_pick_up(begin, idx, end_idx, dt, data, reconstructing_path, vehicle_properties, disruption_active);
+    } else {
         first_st.first = valid_pick_up(idx, end_idx, DateTimeUtils::hour(dt), *calendar_id, data, reconstructing_path, vehicle_properties);
         first_st.second = dt;
-    } else {
-        first_st = valid_pick_up(begin, idx, end_idx, dt, data, reconstructing_path, vehicle_properties, disruption_active);
     }
 
     if(first_st.first != nullptr) {

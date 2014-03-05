@@ -131,39 +131,21 @@ struct associated_cal_fixture {
         {
             always_on_cal->uri="always_on";
             always_on_cal->active_periods.push_back(period("20140101", "20140111"));
-            always_on_cal->week_pattern[navitia::Monday] = false;
-            always_on_cal->week_pattern[navitia::Tuesday] = true;
-            always_on_cal->week_pattern[navitia::Wednesday] = true;
-            always_on_cal->week_pattern[navitia::Thursday] = true;
-            always_on_cal->week_pattern[navitia::Friday] = true;
-            always_on_cal->week_pattern[navitia::Saturday] = false;
-            always_on_cal->week_pattern[navitia::Sunday] = false;
+            always_on_cal->week_pattern = std::bitset<7>{"0111100"};
             b.data.pt_data.calendars.push_back(always_on_cal);
         }
 
         {
             wednesday_cal->uri="wednesday";
             wednesday_cal->active_periods.push_back(period("20140101", "20140111"));
-            wednesday_cal->week_pattern[navitia::Monday] = false;
-            wednesday_cal->week_pattern[navitia::Tuesday] = false;
-            wednesday_cal->week_pattern[navitia::Wednesday] = true;
-            wednesday_cal->week_pattern[navitia::Thursday] = false;
-            wednesday_cal->week_pattern[navitia::Friday] = false;
-            wednesday_cal->week_pattern[navitia::Saturday] = false;
-            wednesday_cal->week_pattern[navitia::Sunday] = false;
+            wednesday_cal->week_pattern = std::bitset<7>{"0010000"};
             b.data.pt_data.calendars.push_back(wednesday_cal);
         }
 
         {
             monday_cal->uri="monday";
             monday_cal->active_periods.push_back(period("20140105", "20140111"));
-            monday_cal->week_pattern[navitia::Monday] = true;
-            monday_cal->week_pattern[navitia::Tuesday] = false;
-            monday_cal->week_pattern[navitia::Wednesday] = false;
-            monday_cal->week_pattern[navitia::Thursday] = false;
-            monday_cal->week_pattern[navitia::Friday] = false;
-            monday_cal->week_pattern[navitia::Saturday] = false;
-            monday_cal->week_pattern[navitia::Sunday] = false;
+            monday_cal->week_pattern = std::bitset<7>{"1000000"};
             b.data.pt_data.calendars.push_back(monday_cal);
         }
 
@@ -198,7 +180,7 @@ BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
     auto it_associated_always_cal = vj->associated_calendars.find(always_on_cal->uri);
     BOOST_REQUIRE(it_associated_always_cal != vj->associated_calendars.end());
 
-//    //no restriction
+    //no restriction
     auto associated_always_cal = it_associated_always_cal->second;
     BOOST_CHECK_EQUAL(associated_always_cal->calendar, always_on_cal);
     BOOST_CHECK(associated_always_cal->exceptions.empty());
@@ -207,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
     auto it_associated_wednesday_cal = vj->associated_calendars.find(wednesday_cal->uri);
     BOOST_REQUIRE(it_associated_wednesday_cal != vj->associated_calendars.end());
 
-//    //no restriction
+    //no restriction
     auto associated_wednesday_cal = it_associated_wednesday_cal->second;
     BOOST_CHECK_EQUAL(associated_wednesday_cal->calendar, wednesday_cal);
     BOOST_CHECK(associated_wednesday_cal->exceptions.empty());
