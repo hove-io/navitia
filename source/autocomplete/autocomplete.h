@@ -435,16 +435,26 @@ struct Autocomplete
     std::string strip_accents(std::string str) const {
         std::vector< std::pair<std::string, std::string> > vec_str;
         vec_str.push_back(std::make_pair("à","a"));
+        vec_str.push_back(std::make_pair("À","a"));
         vec_str.push_back(std::make_pair("â","a"));
+        vec_str.push_back(std::make_pair("Â","a"));
         vec_str.push_back(std::make_pair("æ","ae"));
         vec_str.push_back(std::make_pair("é","e"));
+        vec_str.push_back(std::make_pair("É","e"));
         vec_str.push_back(std::make_pair("è","e"));
+        vec_str.push_back(std::make_pair("È","e"));
         vec_str.push_back(std::make_pair("ê","e"));
+        vec_str.push_back(std::make_pair("Ê","e"));
         vec_str.push_back(std::make_pair("ô","o"));
+        vec_str.push_back(std::make_pair("Ô","o"));
         vec_str.push_back(std::make_pair("û","u"));
+        vec_str.push_back(std::make_pair("Û","u"));
         vec_str.push_back(std::make_pair("ù","u"));
+        vec_str.push_back(std::make_pair("Ù","u"));
         vec_str.push_back(std::make_pair("ç","c"));
+        vec_str.push_back(std::make_pair("Ç","c"));
         vec_str.push_back(std::make_pair("ï","i"));
+        vec_str.push_back(std::make_pair("Ï","i"));
         vec_str.push_back(std::make_pair("œ","oe"));
 
         auto vec = vec_str.begin();
