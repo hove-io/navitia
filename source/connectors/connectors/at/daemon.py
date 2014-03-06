@@ -11,7 +11,6 @@ class ConnectorAT(object):
         self.connection = None
         self.producer = None
         self.at_realtime_reader = None
-        self._init_logger()
         self.config = Config()
 
     def init(self, filename):
@@ -19,10 +18,11 @@ class ConnectorAT(object):
         initialize the service with the configuration file taken in parameters
         """
         self.config.load(filename)
+        self._init_logger(self.config.logger_file, self.config.logger_level)
         self.at_realtime_reader = AtRealtimeReader(self.config)
         self._init_rabbitmq()
 
-    def _init_logger(self, filename='', level='debug'):
+    def _init_logger(self, filename='/tmp/connector.log', level='debug'):
         """
         initialise loggers, by default to debug level and with output on stdout
         """
@@ -45,7 +45,7 @@ class ConnectorAT(object):
         self.connection = kombu.Connection(self.config.broker_url)
         exchange_name = self.config.exchange_name
         exchange = kombu.Exchange(exchange_name, 'topic', durable=True)
-        self.producer = self.connection.Producer(exchang=exchange)
+        self.producer = self.connection.Producer(exchange=exchange)
 
     def run(self):
         self.at_realtime_reader.execute()
