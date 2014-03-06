@@ -804,24 +804,43 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
     }
 }
 
+pbnavitia::ExceptionType get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exception_type){
+    pbnavitia::ExceptionType type;
+    switch (exception_type) {
+    case nt::ExceptionDate::ExceptionType::add:
+        type = pbnavitia::Add;
+        break;
+    case nt::ExceptionDate::ExceptionType::sub:
+        type = pbnavitia::Remove;
+        break;
+    default:
+        throw navitia::exception("exception date case not handled");
+    }
+    return type;
+}
 
 void fill_pb_object(const navitia::type::StopTime* stop_time,
                     const nt::Data& data,
-                    pbnavitia::ScheduleStopTime* rs_date_time, int,
-                    const boost::posix_time::ptime&,
-                    const boost::posix_time::time_period&,
-                    const DateTime& date_time, bool display_date){
+                    pbnavitia::ScheduleStopTime* rs_date_time, int max_depth,
+                    const boost::posix_time::ptime& now,
+                    const boost::posix_time::time_period& action_period,
+                    const DateTime& date_time, boost::optional<const std::string> calendar_id){
     if (stop_time == nullptr) {
         rs_date_time->set_date_time("");
         return;
     }
     std::string str_datetime;
-    if (display_date) {
+    if (!calendar_id) {
         str_datetime = iso_string(date_time, data);
     } else {
-        str_datetime = iso_hour_string(date_time, data);
+        str_datetime = iso_hour_string(date_time, data);        
     }
+    type::Calendar* calendar = nullptr;
+    if (calendar_id) {
+        const auto calendar_it = data.pt_data.calendars_map.find(*calendar_id);
+        calendar = calendar_it->second;
 
+    }
     rs_date_time->set_date_time(str_datetime);
     pbnavitia::Properties * hn = rs_date_time->mutable_properties();
     if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
@@ -850,6 +869,19 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
             note->set_note(stop_time->vehicle_journey->odt_message);
         }
     }
+    if(calendar != nullptr){
+        for(const type::ExceptionDate& excep : calendar->exceptions){
+            fill_pb_object(excep, data, hn->add_exceptions(), max_depth, now, action_period);
+        }
+    }
+}
+void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt::Data&,
+                    pbnavitia::CalendarException* calendar_exception, int,
+                    const pt::ptime&, const pt::time_period& ){
+    pbnavitia::ExceptionType type = get_pb_exception_type(exception_date.type);
+    calendar_exception->set_uri("exception:" + std::to_string(type)+boost::gregorian::to_iso_string(exception_date.date));
+    calendar_exception->set_type(type);
+    calendar_exception->set_date(boost::gregorian::to_iso_string(exception_date.date));
 }
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
@@ -938,9 +970,9 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     }
 }
 
-void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
-                    pbnavitia::Calendar* pb_cal, int,
-                    const pt::ptime&, const pt::time_period&)
+void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
+                    pbnavitia::Calendar* pb_cal, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period)
 {
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
@@ -963,20 +995,7 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
     }
 
     for (const auto& excep: cal->exceptions) {
-        auto pb_ex = pb_cal->add_exceptions();
-        pb_ex->set_date(boost::gregorian::to_iso_string(excep.date));
-        pbnavitia::ExceptionType type;
-        switch (excep.type) {
-        case nt::ExceptionDate::ExceptionType::add:
-            type = pbnavitia::Add;
-            break;
-        case nt::ExceptionDate::ExceptionType::sub:
-            type = pbnavitia::Remove;
-            break;
-        default:
-            throw navitia::exception("exception date case not handled");
-        }
-        pb_ex->set_type(type);
+        fill_pb_object(excep, data, pb_cal->add_exceptions(), max_depth, now, action_period);
     }
 }
 

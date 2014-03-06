@@ -164,6 +164,7 @@ message Properties{
     }
     repeated AdditionalInformation additional_informations= 1;
     repeated Note notes = 5;
+    repeated CalendarException exceptions = 6;
 }
 
 message hasEquipments{
@@ -298,8 +299,9 @@ enum ExceptionType {
 }
 
 message CalendarException {
-    optional string date = 1;
-    optional ExceptionType type = 2;
+    optional string uri = 1;
+    optional string date = 2;
+    optional ExceptionType type = 3;
 }
 
 message CalendarPeriod {
