@@ -1124,7 +1124,7 @@ void EdReader::fill_periods(navitia::type::Data& , pqxx::work& work){
 
 void EdReader::fill_exception_dates(navitia::type::Data& , pqxx::work& work){
     std::string request = "select id, datetime, type_ex, calendar_id ";
-                request += "from exception_date;";
+                request += "from navitia.exception_date;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::type::Calendar* cal = this->calendar_map[const_it["calendar_id"].as<idx_t>()];
