@@ -106,3 +106,13 @@ DO $$
     END;
 $$;
 
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.network ADD COLUMN website TEXT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column website already exists in navitia.network.';
+        END;
+    END;
+$$;
+
