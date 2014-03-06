@@ -205,6 +205,54 @@ class add_notes(object):
 
         return wrapper
 
+class add_exception_dates(object):
+    def __init__(self, resource):
+        self.resource = resource
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if isinstance(objects, tuple):
+                data, code, header = unpack(objects)
+            else:
+                data = objects
+
+            def add_exception(data):
+                result = []
+                if isinstance(data, list) or isinstance(data, tuple):
+                    for item in data:
+                        result.extend(add_exception(item))
+
+                elif isinstance(data, dict) or\
+                        isinstance(data, OrderedDict):
+                    if 'type' in data.keys() and data['type'] == 'exceptions':
+                        type = "Remove"
+                        if data['except_type'] == 0:
+                            type = "Add"
+                        result.append({"id": data['id'],
+                                       "date": data['date'],
+                                       "type" : type})
+                        del data["date"]
+                        del data["except_type"]
+                    else:
+                        for v in data.items():
+                            result.extend(add_exception(v))
+                return result
+            if self.resource.region:
+                if not "exceptions" in data or not isinstance(data["exceptions"], list):
+                    data["exceptions"] = []
+                    res = []
+                    note = add_exception(data)
+                    [res.append(item) for item in note if not item in res]
+                    data["exceptions"].extend(res)
+
+            if isinstance(objects, tuple):
+                return data, code, header
+            else:
+                return data
+
+        return wrapper
 
 class update_journeys_status(object):
 
