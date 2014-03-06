@@ -3,8 +3,10 @@
 #include "type/pb_converter.h"
 namespace navitia { namespace timetables {
 
-std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const DateTime &dt, const DateTime &max_dt,
+std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const DateTime &dt,
+                                               const DateTime &max_dt,
                                                const size_t max_departures, const type::Data & data, bool disruption_active,
+                                               boost::optional<const std::string> calendar_id,
                                                const type::AccessibiliteParams & accessibilite_params) {
     std::vector<datetime_stop_time> result;
     auto test_add = true;
@@ -23,7 +25,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            auto st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, disruption_active, false, accessibilite_params.vehicle_properties).first;
+            auto st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, disruption_active, false, calendar_id, accessibilite_params.vehicle_properties).first;
             if(st != nullptr) {
                 DateTime dt_temp = next_requested_datetime[jpp_idx];
                 DateTimeUtils::update(dt_temp, st->departure_time);

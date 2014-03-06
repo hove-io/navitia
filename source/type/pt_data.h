@@ -22,6 +22,9 @@ struct PT_Data : boost::noncopyable{
     std::vector<JourneyPatternPointConnection*> journey_pattern_point_connections;
     std::vector<StopPointConnection*> stop_point_connections;
 
+    //associated cal for vj
+    std::vector<AssociatedCalendar*> associated_calendars;
+
     // First letter
     autocomplete::Autocomplete<idx_t> stop_area_autocomplete;
     autocomplete::Autocomplete<idx_t> stop_point_autocomplete;

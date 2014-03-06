@@ -3,6 +3,7 @@
 #include <iostream>
 #include <boost/assign.hpp>
 #include "utils/functions.h"
+#include "utils/logger.h"
 
 namespace navitia { namespace type {
 
@@ -77,14 +78,15 @@ bool VehicleJourney::has_landing() const{
 
 }
 
-bool ValidityPattern::is_valid(int duration) const {
-    if(duration < 0){
-
-        std::cerr << "La date est avant le début de période(" << beginning_date << ")" << std::endl;
+bool ValidityPattern::is_valid(int day) const {
+    if(day < 0) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
+                       << day << " is too early");
         return false;
     }
-    else if(duration > 366){
-        std::cerr << "La date dépasse la fin de période " << duration << " " << std::endl;
+    if(day >= days.size()) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
+                       << day << " is late");
         return false;
     }
     return true;
@@ -105,11 +107,11 @@ void ValidityPattern::add(int duration){
 }
 
 void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days){
-    for(long i=0; i < (end - start).days(); ++i){
-        boost::gregorian::date current_date = beginning_date + boost::gregorian::days(i);
-        if(active_days[current_date.day_of_week()]){
+    for (auto current_date = start; current_date < end; current_date = current_date + boost::gregorian::days(1)) {
+        navitia::weekdays week_day = navitia::get_weekday(current_date);
+        if (active_days[week_day]) {
             add(current_date);
-        }else{
+        } else {
             remove(current_date);
         }
     };
@@ -267,6 +269,29 @@ template<typename T> std::vector<idx_t> indexes(std::vector<T*> elements){
         result.push_back(element->idx);
     }
     return result;
+}
+
+Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
+
+void Calendar::build_validity_pattern(boost::gregorian::date_period production_period) {
+    //initialisation of the validity pattern from the active periods and the exceptions
+    for (boost::gregorian::date_period period : this->active_periods) {
+        auto intersection_period = production_period.intersection(period);
+        if (intersection_period.is_null()) {
+            continue;
+        }
+        validity_pattern.add(intersection_period.begin(), intersection_period.end(), week_pattern);
+    }
+    for (navitia::type::ExceptionDate exd : this->exceptions) {
+        if (!production_period.contains(exd.date)) {
+            continue;
+        }
+        if (exd.type == ExceptionDate::ExceptionType::sub) {
+            validity_pattern.remove(exd.date);
+        } else if (exd.type == ExceptionDate::ExceptionType::add) {
+            validity_pattern.add(exd.date);
+        }
+    }
 }
 
 std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{

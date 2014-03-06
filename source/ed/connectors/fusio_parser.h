@@ -198,8 +198,8 @@ struct TripPropertiesFusioHandler: public GenericHandler{
 };
 
 namespace grid_calendar {
-struct GridCalPeriodFusioHandler : public GenericHandler {
-    GridCalPeriodFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+struct PeriodFusioHandler : public GenericHandler {
+    PeriodFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int calendar_c, begin_c, end_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);

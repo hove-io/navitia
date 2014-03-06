@@ -110,3 +110,42 @@ BOOST_AUTO_TEST_CASE(freq_stop_time_validation){
     BOOST_CHECK(st.valid_hour(25*3600, false));
     BOOST_CHECK(st.valid_hour(27*3600, false));
 }
+
+
+BOOST_AUTO_TEST_CASE(weekday_conversion) {
+    boost::gregorian::date today(2014, 03, 5);
+    BOOST_CHECK_EQUAL(navitia::get_weekday(today), navitia::Wednesday);
+    BOOST_CHECK_EQUAL(today.day_of_week(), boost::date_time::Wednesday);
+
+    {
+        boost::gregorian::date after(2014, 03, 6);
+        BOOST_CHECK_EQUAL(navitia::get_weekday(after), navitia::Thursday);
+        BOOST_CHECK_EQUAL(after.day_of_week(), boost::date_time::Thursday);
+    }
+    {
+        boost::gregorian::date after(2014, 03, 7);
+        BOOST_CHECK_EQUAL(navitia::get_weekday(after), navitia::Friday);
+        BOOST_CHECK_EQUAL(after.day_of_week(), boost::date_time::Friday);
+    }
+    {
+        boost::gregorian::date after(2014, 3, 8);
+        BOOST_CHECK_EQUAL(navitia::get_weekday(after), navitia::Saturday);
+        BOOST_CHECK_EQUAL(after.day_of_week(), boost::date_time::Saturday);
+    }
+    {
+        boost::gregorian::date after(2014, 3, 9);
+        BOOST_CHECK_EQUAL(navitia::get_weekday(after), navitia::Sunday);
+        BOOST_CHECK_EQUAL(after.day_of_week(), boost::date_time::Sunday);
+    }
+    {
+        boost::gregorian::date after(2014, 3, 10);
+        BOOST_CHECK_EQUAL(navitia::get_weekday(after), navitia::Monday);
+        BOOST_CHECK_EQUAL(after.day_of_week(), boost::date_time::Monday);
+    }
+    {
+        boost::gregorian::date after(2014, 3, 11);
+        BOOST_CHECK_EQUAL(navitia::get_weekday(after), navitia::Tuesday);
+        BOOST_CHECK_EQUAL(after.day_of_week(), boost::date_time::Tuesday);
+    }
+
+}

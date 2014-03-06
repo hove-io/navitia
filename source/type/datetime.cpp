@@ -27,6 +27,15 @@ std::string iso_string(const DateTime datetime, const type::Data &d){
     return boost::posix_time::to_iso_string(to_posix_time(datetime, d));
 }
 
+std::string iso_hour_string(const DateTime datetime, const type::Data &d) {
+    auto time = to_posix_time(datetime, d);
+    static std::locale loc(std::cout.getloc(), new boost::posix_time::time_facet("T%H%M%S")); //note: the destruction of the time_facet is handled by the locale
+    std::stringstream ss;
+    ss.imbue(loc);
+    ss << time;
+    return ss.str();
+}
+
 
 boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data &d){
     boost::posix_time::ptime date_time(d.meta.production_date.begin() + boost::gregorian::days(DateTimeUtils::date(datetime)));

@@ -133,6 +133,10 @@ public:
     /** Construction des validity pattern des StopTimes **/
     void build_midnight_interchange();
 
+    void build_associated_calendar();
+
+    void build_grid_validity_pattern();
+    void complete();
     Data& operator=(Data&& other);
 
     /** Retourne le type de l'id donné */
@@ -149,9 +153,27 @@ private:
     void save_lz4(const std::string & filename);
     /** Recherche d'une ValidityPattern lors de clacul du passe-minuit**/
     ValidityPattern* get_or_create_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time);
-
+    /** Get similar validitypattern **/
+    ValidityPattern* get_similar_validity_pattern(ValidityPattern* vp) const;
 };
 
+
+/**
+  * we want the resulting bit set that model the differences between
+  * the calender validity pattern and the vj validity pattern.
+  *
+  * We want to limit this differences for the days the calendar is active.
+  * we thus do a XOR to have the differences between the 2 bitsets and then do a AND on the calendar
+  * to restrict those diff on the calendar
+  */
+template <size_t N>
+std::bitset<N> get_difference(const std::bitset<N>& calendar, const std::bitset<N>& vj) {
+    auto res = (calendar ^ vj) & calendar;
+    return res;
+}
+
+std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>
+find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey, double relative_threshold = 0.1);
 
 } } //namespace navitia::type
 

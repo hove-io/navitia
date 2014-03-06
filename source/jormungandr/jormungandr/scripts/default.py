@@ -146,6 +146,8 @@ class Script(object):
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 st.forbidden_uri.append(forbidden_uri)
+        if "calendar" in request and request["calendar"]:
+            st.calendar = request["calendar"]
         resp = instance.send_and_receive(req)
         return resp
 

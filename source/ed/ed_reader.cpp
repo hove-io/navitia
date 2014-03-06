@@ -70,6 +70,8 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_periods(data, work);
     this->fill_exception_dates(data, work);
     this->fill_rel_calendars_lines(data, work);
+
+    check_coherence(data);
 }
 
 
@@ -1086,7 +1088,7 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
                 "where cal.week_pattern_id = wp.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        navitia::type::Calendar* cal = new navitia::type::Calendar();
+        navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta.production_date.begin());
         const_it["id"].to(cal->id);
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
@@ -1097,6 +1099,7 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
         cal->week_pattern[navitia::Friday] = const_it["friday"].as<bool>();
         cal->week_pattern[navitia::Saturday] = const_it["saturday"].as<bool>();
         cal->week_pattern[navitia::Sunday] = const_it["sunday"].as<bool>();
+
         data.pt_data.calendars.push_back(cal);
         calendar_map[const_it["id"].as<idx_t>()] = cal;
     }
@@ -1113,9 +1116,9 @@ void EdReader::fill_periods(navitia::type::Data& , pqxx::work& work){
             LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unable to find calendar " << cal_id);
             continue;
         }
-        boost::posix_time::ptime start = boost::posix_time::time_from_string(const_it["begin_date"].as<std::string>());
-        boost::posix_time::ptime end = boost::posix_time::time_from_string(const_it["end_date"].as<std::string>());
-        cal->active_periods.push_back(boost::posix_time::time_period(start, end));
+        boost::gregorian::date start(bg::from_string(const_it["begin_date"].as<std::string>()));
+        boost::gregorian::date end(bg::from_string(const_it["end_date"].as<std::string>()));
+        cal->active_periods.push_back(boost::gregorian::date_period(start, end));
     }
 }
 
@@ -1139,10 +1142,16 @@ void EdReader::fill_rel_calendars_lines(navitia::type::Data& , pqxx::work& work)
                             "from navitia.rel_calendar_line  rcl;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        navitia::type::Calendar* cal = this->calendar_map[const_it["calendar_id"].as<idx_t>()];
-        navitia::type::Line* line = this->line_map[const_it["line_id"].as<idx_t>()];
+        auto cal_id = const_it["calendar_id"].as<idx_t>();
+        navitia::type::Calendar* cal = this->calendar_map[cal_id];
+        auto line_id = const_it["line_id"].as<idx_t>();
+        navitia::type::Line* line = this->line_map[line_id];
         if ((cal != nullptr) && (line != nullptr)){
             line->calendar_list.push_back(cal);
+        } else {
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find "
+                           << (cal == nullptr ? "calendar " +  std::to_string(cal_id) + ", ": "")
+                            << (line == nullptr ? "line " + std::to_string(line_id) : "") );
         }
     }
 }
@@ -1153,7 +1162,7 @@ void EdReader::build_rel_stop_point_admin(navitia::type::Data& , pqxx::work& wor
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::StopPoint* sp = this->stop_point_map[const_it["stop_point_id"].as<idx_t>()];
         navitia::georef::Admin* admin = this->admin_map[const_it["admin_id"].as<idx_t>()];
-        if (admin != NULL){
+        if (admin != nullptr){
             sp->admin_list.push_back(admin);
         }
     }
@@ -1209,6 +1218,22 @@ void EdReader::build_rel_admin_admin(navitia::type::Data&, pqxx::work& work){
                 admin_master->admin_list.push_back(admin);
             }
         }
+    }
+}
+
+void EdReader::check_coherence(navitia::type::Data& data) const {
+    auto log = log4cplus::Logger::getInstance("log");
+    //check not associated lines
+    size_t non_associated_lines(0);
+    for (navitia::type::Line* line: data.pt_data.lines) {
+        if (line->calendar_list.empty()) {
+            LOG4CPLUS_DEBUG(log, "the line " << line->uri << " is not associated with any calendar");
+            non_associated_lines++;
+        }
+    }
+    if (non_associated_lines) {
+        LOG4CPLUS_WARN(log, non_associated_lines << " lines are not associated with any calendar (and "
+                        << (data.pt_data.lines.size() - non_associated_lines) << " are associated with at least one");
     }
 }
 

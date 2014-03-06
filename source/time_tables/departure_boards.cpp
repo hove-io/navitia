@@ -89,6 +89,7 @@ pbnavitia::Response
 render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
           DateTime datetime, DateTime max_datetime,
+          boost::optional<const std::string> calendar_id,
           const type::Data &data) {
     pbnavitia::Response response;
     auto current_time = pt::second_clock::local_time();
@@ -96,6 +97,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
     pt::time_period action_period(to_posix_time(datetime, data),
                                   to_posix_time(max_datetime, data));
 
+    bool display_date = ! calendar_id;
     for(auto id_vec : map_route_stop_point) {
         auto schedule = response.add_stop_schedules();
         //Each schedule has a stop_point and a route
@@ -118,7 +120,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
         for(auto dt_st : id_vec.second) {
             auto date_time = schedule->add_date_times();
             fill_pb_object(dt_st.second, data, date_time, 0,
-                           now, action_period, dt_st.first);
+                           now, action_period, dt_st.first, display_date);
         }
         const auto& it = response_status.find(id_vec.first.second);
         if(it != response_status.end()){
@@ -130,7 +132,9 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
 
 
 pbnavitia::Response
-departure_board(const std::string& request, const std::vector<std::string>& forbidden_uris,
+departure_board(const std::string& request,
+                boost::optional<const std::string> calendar_id,
+                const std::vector<std::string>& forbidden_uris,
                 const std::string& date,
                 uint32_t duration, int32_t max_date_times,
                 int interface_version,
@@ -147,6 +151,13 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
     if (max_date_times < 0) {
         fill_pb_error(pbnavitia::Error::bad_filter, "stop_schedules : value of max_date_times invalid", handler.pb_response.mutable_error());
         return handler.pb_response;
+    }
+    if (calendar_id) {
+        //check whether that calendar exists, to raise an early error
+        if (data.pt_data.calendars_map.find(*calendar_id) == data.pt_data.calendars_map.end()) {
+            fill_pb_error(pbnavitia::Error::bad_filter, "stop_schedules : calendar does not exist", handler.pb_response.mutable_error());
+            return handler.pb_response;
+        }
     }
     //  <idx_route, status>
     std::map<uint32_t, pbnavitia::ResponseStatus> response_status;
@@ -184,24 +195,32 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
         const type::Route* route = data.pt_data.routes[sp_route.second];
         auto jpps = stop_point->journey_pattern_point_list;
         for(auto jpp : jpps) {
-            if(jpp->journey_pattern->route == route) {
-                if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx){ // dans le cas de terminus
-                    response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
-                }else{
-                        auto tmp = get_stop_times({jpp->idx}, handler.date_time,
-                                                         handler.max_datetime,
-                                                         max_date_times, data, disruption_active);
-                        if(tmp.size() == 0){
-                            response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
-                        }else{
-                            stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
-                        }
-                }
+            if(jpp->journey_pattern->route != route) {
+                continue;
+            }
+            if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx){ // dans le cas de terminus
+                response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
+                continue;
+            }
+            auto tmp = get_stop_times({jpp->idx}, handler.date_time,
+                                      handler.max_datetime,
+                                      max_date_times, data, disruption_active, calendar_id);
+            if (! tmp.empty()) {
+                stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             }
         }
         std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
         auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
         map_route_stop_point.insert(to_insert);
+    }
+
+    //we check if we have at least one departure for each route (and no other error)
+    for(auto sp_route : sps_routes) {
+        const type::Route* route = data.pt_data.routes[sp_route.second];
+        if (map_route_stop_point[sp_route].empty() &&
+                response_status[route->idx] == pbnavitia::ResponseStatus::none) {
+            response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
+        }
     }
 
     if(interface_version == 0) {
@@ -211,7 +230,8 @@ departure_board(const std::string& request, const std::vector<std::string>& forb
     } else if(interface_version == 1) {
         handler.pb_response = render_v1(response_status, map_route_stop_point,
                                         handler.date_time,
-                                        handler.max_datetime, data);
+                                        handler.max_datetime,
+                                        calendar_id, data);
     }
 
 

@@ -137,7 +137,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         forbidden_uri.push_back(request.forbidden_uri(i));
     this->init_worker_data();
     try {
-        switch(api){
+        switch(api) {
         case pbnavitia::NEXT_DEPARTURES:
             return timetables::next_departures(request.departure_filter(),
                     forbidden_uri, request.from_datetime(),
@@ -152,11 +152,13 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     *(*this->data), false, request.count(), request.start_page());
         case pbnavitia::STOPS_SCHEDULES:
             return timetables::stops_schedule(request.departure_filter(),
-                    request.arrival_filter(), forbidden_uri,
+                                              request.arrival_filter(),
+                                              forbidden_uri,
                     request.from_datetime(), request.duration(), request.depth(),
                     *(*this->data), false);
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
+                    request.has_calendar() ? boost::optional<const std::string>(request.calendar()) : boost::optional<const std::string>(),
                     forbidden_uri, request.from_datetime(),
                     request.duration(),max_date_times, request.interface_version(),
                     request.count(), request.start_page(), *(*this->data), false);
@@ -166,7 +168,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     request.duration(), request.interface_version(), request.depth(),
                     request.count(), request.start_page(), *(*this->data), false);
         default:
-            LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
+            LOG4CPLUS_WARN(logger, "Unknown timetable query");
             pbnavitia::Response response;
             fill_pb_error(pbnavitia::Error::unknown_api, "Unknown time table api",
                     response.mutable_error());
