@@ -12,15 +12,11 @@ class Config(object):
         self.broker_url = None
 
         self.at_connection_string = None
-
         self.exchange_name = None
         self.rt_topic = None
-
-        self.redisqueque_host = None
-        self.redisqueque_port = None
-        self.redisqueque_password = None
-        self.redisqueque_db = None
         self.jormungandr_url = None
+        self.logger_file = None
+        self.logger_level = None
 
     def build_error(self, config, validate_result):
         """
@@ -53,12 +49,8 @@ class Config(object):
         confspec.append('broker-url = string()')
         confspec.append('last-exec-time-file = string(default="./last_exec_time.txt")')
         confspec.append('jormungandr-url = string()')
-
-        confspec.append('[redishelper]')
-        confspec.append('host = string(default="localhost")')
-        confspec.append('password = string(default="password")')
-        confspec.append('port = integer(default=6379)')
-        confspec.append('db = string(default=0)')
+        confspec.append('logger-file = string(default="./connector_at.log")')
+        confspec.append('logger-level = string(default="DEBUG")')
 
         config = ConfigObj(config_file, configspec=confspec, stringify=True)
 
@@ -75,8 +67,5 @@ class Config(object):
         self.rt_topic = config['connector-at']['rt-topic']
         self.last_exec_time_file = config['connector-at']['last-exec-time-file']
         self.jormungandr_url = config['connector-at']['jormungandr-url']
-
-        self.redishelper_host = config['redishelper']['host']
-        self.redishelper_password = config['redishelper']['password']
-        self.redishelper_port = config['redishelper']['port']
-        self.redishelper_db = config['redishelper']['db']
+        self.logger_file = config['connector-at']['logger-file']
+        self.logger_level = config['connector-at']['logger-level']
