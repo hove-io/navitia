@@ -99,9 +99,9 @@ $$;
 DO $$
     BEGIN
         BEGIN
-            ALTER TABLE navitia.company ADD COLUMN sort integer NOT NULL DEFAULT -1;
+            ALTER TABLE navitia.network ADD COLUMN sort integer NOT NULL DEFAULT -1;
         EXCEPTION
-            WHEN duplicate_column THEN RAISE NOTICE 'column sort already exists in navitia.company.';
+            WHEN duplicate_column THEN RAISE NOTICE 'column sort already exists in navitia.network.';
         END;
     END;
 $$;
