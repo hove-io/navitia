@@ -810,39 +810,45 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     pbnavitia::ScheduleStopTime* rs_date_time, int,
                     const boost::posix_time::ptime&,
                     const boost::posix_time::time_period&,
-                    const DateTime& date_time){
-    if(stop_time != nullptr) {
-        const auto str_datetime = iso_string(date_time, data);
-        rs_date_time->set_date_time(str_datetime);
-        pbnavitia::Properties * hn = rs_date_time->mutable_properties();
-        if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
-            hn->add_additional_informations(pbnavitia::Properties::pick_up_only);
-        }
-        if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
-            hn->add_additional_informations(pbnavitia::Properties::drop_off_only);
-        }
-        if (stop_time->odt()){
-            hn->add_additional_informations(pbnavitia::Properties::on_demand_transport);
-        }
-        if (stop_time->date_time_estimated()){
-            hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
-        }
-        if(!stop_time->comment.empty()){
+                    const DateTime& date_time, bool display_date){
+    if (stop_time == nullptr) {
+        rs_date_time->set_date_time("");
+        return;
+    }
+    std::string str_datetime;
+    if (display_date) {
+        str_datetime = iso_string(date_time, data);
+    } else {
+        str_datetime = iso_hour_string(date_time, data);
+    }
+
+    rs_date_time->set_date_time(str_datetime);
+    pbnavitia::Properties * hn = rs_date_time->mutable_properties();
+    if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
+        hn->add_additional_informations(pbnavitia::Properties::pick_up_only);
+    }
+    if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
+        hn->add_additional_informations(pbnavitia::Properties::drop_off_only);
+    }
+    if (stop_time->odt()){
+        hn->add_additional_informations(pbnavitia::Properties::on_demand_transport);
+    }
+    if (stop_time->date_time_estimated()){
+        hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
+    }
+    if (!stop_time->comment.empty()){
+        pbnavitia::Note* note = hn->add_notes();
+        std::hash<std::string> hash_fn;
+        note->set_uri("note:"+std::to_string(hash_fn(stop_time->comment)));
+        note->set_note(stop_time->comment);
+    }
+    if (stop_time->vehicle_journey != nullptr) {
+        if(!stop_time->vehicle_journey->odt_message.empty()){
             pbnavitia::Note* note = hn->add_notes();
             std::hash<std::string> hash_fn;
-            note->set_uri("note:"+std::to_string(hash_fn(stop_time->comment)));
-            note->set_note(stop_time->comment);
+            note->set_uri("note:"+std::to_string(hash_fn(stop_time->vehicle_journey->odt_message)));
+            note->set_note(stop_time->vehicle_journey->odt_message);
         }
-        if(stop_time->vehicle_journey != nullptr){
-            if(!stop_time->vehicle_journey->odt_message.empty()){
-                pbnavitia::Note* note = hn->add_notes();
-                std::hash<std::string> hash_fn;
-                note->set_uri("note:"+std::to_string(hash_fn(stop_time->vehicle_journey->odt_message)));
-                note->set_note(stop_time->vehicle_journey->odt_message);
-            }
-        }
-    }else {
-        rs_date_time->set_date_time("");
     }
 }
 
@@ -938,7 +944,9 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
 {
     pb_cal->set_uri(cal->uri);
     pb_cal->set_name(cal->name);
-
+    auto vp = pb_cal->mutable_validity_pattern();
+    vp->set_beginning_date(boost::gregorian::to_iso_string(cal->validity_pattern.beginning_date));
+    vp->set_days(cal->validity_pattern.str());
     auto week = pb_cal->mutable_week_pattern();
     week->set_monday(cal->week_pattern[navitia::Monday]);
     week->set_tuesday(cal->week_pattern[navitia::Tuesday]);
@@ -950,13 +958,13 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
 
     for (const auto& p: cal->active_periods) {
         auto pb_period = pb_cal->add_active_periods();
-        pb_period->set_begin(navitia::to_iso_string_no_fractional(p.begin()));
-        pb_period->set_end(navitia::to_iso_string_no_fractional(p.last()));
+        pb_period->set_begin(boost::gregorian::to_iso_string(p.begin()));
+        pb_period->set_end(boost::gregorian::to_iso_string(p.end()));
     }
 
     for (const auto& excep: cal->exceptions) {
         auto pb_ex = pb_cal->add_exceptions();
-        pb_ex->set_date(boost::gregorian::to_iso_extended_string(excep.date));
+        pb_ex->set_date(boost::gregorian::to_iso_string(excep.date));
         pbnavitia::ExceptionType type;
         switch (excep.type) {
         case nt::ExceptionDate::ExceptionType::add:

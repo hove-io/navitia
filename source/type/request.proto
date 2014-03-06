@@ -32,6 +32,7 @@ message NextStopTimeRequest {
     required int32 count                = 10;
     optional int32 max_date_times       = 11;
     repeated string forbidden_uri       = 12;
+    optional string calendar            = 13;
 }
 
 message StreetNetworkParams{

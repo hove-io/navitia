@@ -3,6 +3,7 @@
 #include <string>
 #include <limits>
 #include <fstream>
+#include "utils/flat_enum_map.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_config.hpp>
@@ -58,6 +59,8 @@ class Data;
 //std::ostream & operator<<(std::ostream & os, const DateTime &dt);
 std::string str(const DateTime &dt);
 std::string iso_string(const DateTime dt, const type::Data &d);
+std::string iso_hour_string(const DateTime dt, const type::Data &d);
+
 
 boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data &d);
 DateTime to_datetime(boost::posix_time::ptime ptime, const type::Data &d);
@@ -86,6 +89,38 @@ inline std::string to_iso_string_no_fractional(Time t) {
 /**
  * weekday enum (because boost::date_time::weekdays start on sunday and we want monday to be the first day)
  */
-enum weekdays {Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday};
+enum weekdays {Monday = 0, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday};
+
+/*
+ * boost week day start from sunday to saturday
+ * and we want a week day to start on monday
+ * so here is the conversion
+ *
+ * */
+template <>
+struct enum_size_trait<boost::date_time::weekdays> {
+    inline static constexpr typename get_enum_type<boost::date_time::weekdays>::type size() {
+        return 7;
+    }
+};
+
+inline const flat_enum_map<boost::date_time::weekdays, weekdays> build_conversion() {
+    flat_enum_map<boost::date_time::weekdays, weekdays> map;
+    map[boost::date_time::Monday] = weekdays::Monday;
+    map[boost::date_time::Tuesday] = weekdays::Tuesday;
+    map[boost::date_time::Wednesday] = weekdays::Wednesday;
+    map[boost::date_time::Thursday] = weekdays::Thursday;
+    map[boost::date_time::Friday] = weekdays::Friday;
+    map[boost::date_time::Saturday] = weekdays::Saturday;
+    map[boost::date_time::Sunday] = weekdays::Sunday;
+    return map;
+}
+
+const auto weekday_conversion_ = build_conversion();
+
+inline weekdays get_weekday(const boost::gregorian::date& date) {
+    auto boost_week = date.day_of_week();
+    return weekday_conversion_[boost_week];
+}
 
 }

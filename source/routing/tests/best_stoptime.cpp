@@ -1637,3 +1637,137 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
 /// Tests fréquence et pas fréquence sur le meme journey pattern
 
 
+/**
+ * Test calendars
+ * ========== ===== =====
+ * stop point sp1   sp2
+ * ========== ===== =====
+ * arrivee          8100
+ * ========== ===== =====
+ * depart     8000
+ * ========== ===== =====
+ *
+ * Validity pattern: Not valid the first and third day, valid the second and fourth day
+ *
+ * 2 calendars: one valid for the vj one not valid
+ *
+ *
+ */
+BOOST_AUTO_TEST_CASE(test_calendar) {
+    ed::builder b("20120614");
+    DateTime sp1_departure = 8000;
+    DateTime sp2_arrival = 8100;
+    std::string spa1 = "stop1";
+    std::string spa2 = "stop2";
+    b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)
+                             (spa2, sp2_arrival, sp2_arrival);
+
+    auto cal(new type::Calendar(b.data.meta.production_date.begin()));
+    cal->uri="cal1";
+    auto associated_cal = new type::AssociatedCalendar();
+    associated_cal->calendar = cal;
+    b.data.pt_data.vehicle_journeys[0]->associated_calendars.insert({cal->uri, associated_cal});
+
+    b.finish();
+    b.data.pt_data.index();
+    b.data.build_uri();
+    b.data.build_raptor();
+
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+                ->stop_point_list.front()
+                ->journey_pattern_point_list.front();
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+                ->stop_point_list.front()
+                ->journey_pattern_point_list.front();
+    const type::StopTime* st1;
+    uint32_t dt1;
+
+    boost::optional<const std::string> cal_id (cal->uri);
+    //calendar is not associated to stop time => no answer
+    {
+        DateTime dt_test = DateTimeUtils::set(0, sp1_departure - 1);
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, b.data, false, false, cal_id);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure));
+        BOOST_REQUIRE(st1 != nullptr);
+        BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
+        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+    }
+    {
+        DateTime dt_test = DateTimeUtils::set(0, sp1_departure);
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, b.data, false, false, cal_id);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure));
+        BOOST_REQUIRE(st1 != nullptr);
+        BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
+        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+    }
+    {
+        DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, b.data, false, false, cal_id);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
+        BOOST_REQUIRE(st1 != nullptr);
+        BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
+        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
+    }
+}
+
+
+/**
+ * Test calendars
+ * ========== ===== =====
+ * stop point sp1   sp2
+ * ========== ===== =====
+ * arrivee          8100
+ * ========== ===== =====
+ * depart     8000
+ * ========== ===== =====
+ *
+ * Validity pattern: Not valid the first and third day, valid the second and fourth day
+ *
+ * no calendar associated => no answer
+ *
+ *
+ */
+BOOST_AUTO_TEST_CASE(test_no_calendar) {
+    ed::builder b("20120614");
+    DateTime sp1_departure = 8000;
+    DateTime sp2_arrival = 8100;
+    std::string spa1 = "stop1";
+    std::string spa2 = "stop2";
+    b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)
+                             (spa2, sp2_arrival, sp2_arrival);
+    b.finish();
+    b.data.pt_data.index();
+    b.data.build_uri();
+    b.data.build_raptor();
+
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+                ->stop_point_list.front()
+                ->journey_pattern_point_list.front();
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+                ->stop_point_list.front()
+                ->journey_pattern_point_list.front();
+    const type::StopTime*st1;
+    uint32_t dt1;
+
+    boost::optional<const std::string> calendar {"calendar_bob"};
+    //calendar is not associated to stop time => no answer
+    {
+        DateTime dt_test = DateTimeUtils::set(0, sp1_departure - 1);
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, b.data, false, false, calendar);
+        BOOST_CHECK_EQUAL(dt1, 0);
+        BOOST_CHECK(st1 == nullptr);
+    }
+    {
+        DateTime dt_test = DateTimeUtils::set(0, sp1_departure);
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, b.data, false, false, calendar);
+        BOOST_CHECK_EQUAL(dt1, 0);
+        BOOST_CHECK(st1 == nullptr);
+    }
+    {
+        DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, b.data, false, false, calendar);
+        BOOST_CHECK_EQUAL(dt1, 0);
+        BOOST_CHECK(st1 == nullptr);
+    }
+}
+

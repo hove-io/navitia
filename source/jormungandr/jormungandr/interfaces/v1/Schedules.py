@@ -39,6 +39,8 @@ class Schedules(ResourceUri):
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",
                                 action="append")
+        parser_get.add_argument("calendar", type=str,
+                                description="Id of the calendar")
         self.method_decorators.append(add_notes(self))
 
     def get(self, uri=None, region=None, lon=None, lat=None):

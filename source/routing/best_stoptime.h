@@ -10,7 +10,8 @@ namespace navitia { namespace routing {
 std::pair<const type::StopTime*, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
               const DateTime dt,
-              const type::Data &data, bool disruption_active, bool reconstructing_path = false,
+              const type::Data &data, bool disruption_active, bool reconstructing_path,
+              boost::optional<const std::string> calendar_id = {},
               const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
 ///Cherche le premier stop_time partant avant dt sur la journey_pattern au journey_pattern point order
 /// Renvoie la première heure d'arrivée avant dt

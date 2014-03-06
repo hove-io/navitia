@@ -114,13 +114,13 @@ void Thermometer::generate_thermometer(const std::vector<vector_idx> &journey_pa
 }
 
 
-vector_idx Thermometer::get_thermometer() {
+vector_idx Thermometer::get_thermometer() const {
     return thermometer;
 }
 
 
 
-std::vector<uint32_t> Thermometer::match_journey_pattern(const type::JourneyPattern & journey_pattern) {
+std::vector<uint32_t> Thermometer::match_journey_pattern(const type::JourneyPattern & journey_pattern) const {
     std::vector<type::idx_t> tmp;
     for(auto jpp : journey_pattern.journey_pattern_point_list)
         tmp.push_back(jpp->stop_point->idx);
@@ -128,7 +128,7 @@ std::vector<uint32_t> Thermometer::match_journey_pattern(const type::JourneyPatt
     return match_journey_pattern(tmp);
 }
 
-std::vector<uint32_t> Thermometer::match_journey_pattern(const vector_idx &stop_point_list) {
+std::vector<uint32_t> Thermometer::match_journey_pattern(const vector_idx &stop_point_list) const {
     std::vector<uint32_t> result;
     auto it = thermometer.begin();
     for(type::idx_t spidx : stop_point_list) {

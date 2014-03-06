@@ -46,6 +46,18 @@ def check_valid_calendar(cal):
     pattern = get_not_null(cal, "week_pattern")
     is_valid_bool(get_not_null(pattern, "monday"))  # check one field in pattern
 
+    validity_pattern = get_not_null(cal, "validity_pattern")
+    assert len(validity_pattern) > 0
+
+    beginning_date = get_not_null(validity_pattern, "beginning_date")
+    assert is_valid_date(beginning_date)
+
+    days = get_not_null(validity_pattern, "days")
+    assert is_valid_days(days)
+
+    exceptions = get_not_null(cal, "exceptions")
+    assert len(exceptions) > 0
+
     active_periods = get_not_null(cal, "active_periods")
     assert len(active_periods) > 0
 

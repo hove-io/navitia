@@ -4,6 +4,7 @@ import json
 from navitiacommon import request_pb2, response_pb2
 from datetime import datetime
 import logging
+import re
 
 """
 some small functions to check the service responses
@@ -36,6 +37,13 @@ def get_not_null(dict, field):
     assert val
     return val
 
+days_regexp = re.compile("^(0|1){366}$")
+
+def is_valid_days(days):
+   match = days_regexp.match(days)
+   if not match:
+        return None
+   return match
 
 def is_valid_date(str):
     """

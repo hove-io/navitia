@@ -435,19 +435,6 @@ inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
     throw navitia::exception("unhandled exception type: " + str);
 }
 
-struct Calendar : public Nameable, public Header {
-    const static Type_e type = Type_e::Calendar;
-    typedef std::bitset<7> Week;
-    Week week_pattern;
-    std::vector<boost::posix_time::time_period> active_periods;
-    std::vector<ExceptionDate> exceptions;
-    bool operator<(const Calendar & other) const { return this < &other; }
-
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & name & idx & uri & week_pattern & active_periods & exceptions;
-    }
-};
 
 struct StopArea : public Header, Nameable, hasProperties, HasMessages{
     const static Type_e type = Type_e::StopArea;
@@ -544,6 +531,8 @@ struct PhysicalMode : public Header, Nameable{
 
 };
 
+struct Calendar;
+
 struct Line : public Header, Nameable, HasMessages{
     const static Type_e type = Type_e::Line;
     std::string code;
@@ -603,7 +592,7 @@ struct JourneyPattern : public Header, Nameable{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
 
-    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {};
+    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & is_frequence & route & commercial_mode
@@ -616,9 +605,17 @@ struct JourneyPattern : public Header, Nameable{
 };
 
 struct AssociatedCalendar {
-    Calendar* calendar;
+    ///calendar matched
+    const Calendar* calendar;
 
+    ///exceptions to this association (not to be mixed up with the exceptions in the calendar)
+    ///the calendar exceptions change it's validity pattern
+    /// the AssociatedCalendar exceptions are the differences between the vj validity pattern and the calendar's
     std::vector<ExceptionDate> exceptions;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & calendar & exceptions;
+    }
 };
 
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages{
@@ -629,7 +626,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
-    AssociatedCalendar associated_calendar;
+    ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
+    std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;
@@ -644,10 +642,10 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
-            & idx /*& wheelchair_boarding*/ & stop_time_list & is_adapted
+            & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages;
+            & odt_message & _vehicle_properties & messages & associated_calendars;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -670,7 +668,8 @@ struct ValidityPattern : public Header {
 private:
     bool is_valid(int duration) const;
 public:
-    std::bitset<366> days;
+    using year_bitset = std::bitset<366>;
+    year_bitset days;
     boost::gregorian::date beginning_date;
 
     ValidityPattern()  {}
@@ -863,6 +862,31 @@ struct StopTime : public Nameable {
         }
     }
 
+};
+
+
+struct Calendar : public Nameable, public Header {
+    const static Type_e type = Type_e::Calendar;
+    typedef std::bitset<7> Week;
+    Week week_pattern;
+    std::vector<boost::gregorian::date_period> active_periods;
+    std::vector<ExceptionDate> exceptions;
+
+    ValidityPattern validity_pattern; //computed validity pattern
+
+    Calendar() {}
+    Calendar(boost::gregorian::date beginning_date);
+
+    //we limit the validity pattern to the production period
+    void build_validity_pattern(boost::gregorian::date_period production_period);
+
+
+    bool operator<(const Calendar & other) const { return this < &other; }
+
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & id & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern;
+    }
 };
 
 

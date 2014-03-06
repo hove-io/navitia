@@ -137,28 +137,143 @@ void Data::build_raptor() {
     dataRaptor.load(this->pt_data);
 }
 
+ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
+    auto find_vp_predicate = [&](ValidityPattern* vp1) { return ((*vp) == (*vp1));};
+    auto it = std::find_if(this->pt_data.validity_patterns.begin(),
+                        this->pt_data.validity_patterns.end(), find_vp_predicate);
+    if(it != this->pt_data.validity_patterns.end()) {
+        return *(it);
+    } else {
+        return nullptr;
+    }
+}
+
 ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time){
 
     if(time > 24*3600) {
-        std::bitset<366> tmp_days = ref_validity_pattern->days;
-        tmp_days <<= 1;
-        auto find_vp_predicate = [&](ValidityPattern* vp1) { return ((tmp_days == vp1->days) && (ref_validity_pattern->beginning_date == vp1->beginning_date));};
-        auto it = std::find_if(this->pt_data.validity_patterns.begin(),
-                            this->pt_data.validity_patterns.end(), find_vp_predicate);
-        if(it != this->pt_data.validity_patterns.end()) {
-            return *(it);
-        } else {
-            ValidityPattern* tmp_vp = new ValidityPattern(ref_validity_pattern->beginning_date, tmp_days.to_string());
+        ValidityPattern vp(ref_validity_pattern->beginning_date,ref_validity_pattern->str());
+        //we copy the validity pattern and since we want the same validity pattern for the day after
+        //we shift the bitset
+        vp.days <<= 1;
+        ValidityPattern* vp_similar = this->get_similar_validity_pattern(&vp);
+        if (vp_similar == nullptr) {
+            ValidityPattern* tmp_vp = new ValidityPattern(vp);
             tmp_vp->idx = this->pt_data.validity_patterns.size();
             this->pt_data.validity_patterns.push_back(tmp_vp);
             return tmp_vp;
+        } else {
+            return vp_similar;
         }
     }
     return ref_validity_pattern;
 }
 
-void Data::build_midnight_interchange(){
-    for(VehicleJourney* vj : this->pt_data.vehicle_journeys){
+using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
+
+list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey, double relative_threshold) {
+    list_cal_bitset res;
+    //for the moment we keep lot's of trace, but they will be removed after a while
+    auto log = log4cplus::Logger::getInstance("kraken::type::Data::Calendar");
+    LOG4CPLUS_DEBUG(log, "vj " << vehicle_journey->uri << " :" << vehicle_journey->validity_pattern->days.to_string());
+
+    for (const auto calendar : vehicle_journey->journey_pattern->route->line->calendar_list) {
+        auto diff = get_difference(calendar->validity_pattern.days, vehicle_journey->validity_pattern->days);
+        size_t nb_diff = diff.count();
+
+        LOG4CPLUS_DEBUG(log, "cal " << calendar->uri << " :" <<calendar->validity_pattern.days.to_string());
+
+        //we associate the calendar to the vj if the diff are below a relative threshold
+        //compared to the number of active days in the calendar
+        size_t threshold = std::round(relative_threshold * calendar->validity_pattern.days.count());
+        LOG4CPLUS_DEBUG(log, "**** diff: " << nb_diff << " and threshold: " << threshold << (nb_diff <= threshold ? ", we keep it!!":""));
+
+        if (nb_diff > threshold) {
+            continue;
+        }
+        res.push_back({calendar, diff});
+    }
+
+    return res;
+}
+
+void Data::complete(){
+    this->build_midnight_interchange();
+    this->build_grid_validity_pattern();
+    this->build_associated_calendar();
+}
+
+void Data::build_associated_calendar() {
+    auto log = log4cplus::Logger::getInstance("kraken::type::Data");
+    std::multimap<ValidityPattern*, AssociatedCalendar*> associated_vp;
+    size_t nb_not_matched_vj(0);
+    size_t nb_matched(0);
+    for(VehicleJourney* vehicle_journey : this->pt_data.vehicle_journeys) {
+
+        if (vehicle_journey->journey_pattern->route->line->calendar_list.empty()) {
+            LOG4CPLUS_TRACE(log, "the line of the vj " << vehicle_journey->uri << " is associated to no calendar");
+            nb_not_matched_vj++;
+            continue;
+        }
+
+        //we check if we already computed the associated val for this validity pattern
+        //since a validity pattern can be shared by many vj
+        auto it = associated_vp.find(vehicle_journey->validity_pattern);
+        if (it != associated_vp.end()) {
+            for (; it->first == vehicle_journey->validity_pattern; ++it) {
+                vehicle_journey->associated_calendars.insert({it->second->calendar->uri, it->second});
+            }
+            continue;
+        }
+
+        auto close_cal = find_matching_calendar(*this, vehicle_journey);
+
+        if (close_cal.empty()) {
+            LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->uri << " has been attached to no calendar");
+            nb_not_matched_vj++;
+            continue;
+        }
+        nb_matched++;
+
+        std::stringstream cal_uri;
+        for (auto cal_bit_set: close_cal) {
+            auto associated_calendar = new AssociatedCalendar();
+            pt_data.associated_calendars.push_back(associated_calendar);
+
+            associated_calendar->calendar = cal_bit_set.first;
+            //we need to create the associated exceptions
+            for (size_t i = 0; i < cal_bit_set.second.size(); ++i) {
+                if (! cal_bit_set.second[i]) {
+                    continue; //cal_bit_set.second is the resulting differences, so 0 means no exception
+                }
+                ExceptionDate ex;
+                ex.date = vehicle_journey->validity_pattern->beginning_date + boost::gregorian::days(i);
+                //if the vj was active this day it's a removal, else an addition
+                ex.type = (vehicle_journey->validity_pattern->days[i] ? ExceptionDate::ExceptionType::sub : ExceptionDate::ExceptionType::add);
+                associated_calendar->exceptions.push_back(ex);
+            }
+
+            vehicle_journey->associated_calendars.insert({associated_calendar->calendar->uri, associated_calendar});
+            associated_vp.insert({vehicle_journey->validity_pattern, associated_calendar});
+            cal_uri << associated_calendar->calendar->uri << " ";
+        }
+
+        LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->uri << " has been attached to " << cal_uri.str());
+    }
+
+    LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one calendar");
+    if (nb_not_matched_vj) {
+        LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
+    }
+}
+
+void Data::build_grid_validity_pattern() {
+    for(Calendar* cal : this->pt_data.calendars){
+        cal->build_validity_pattern(meta.production_date);
+    }
+}
+
+void Data::build_midnight_interchange() {
+    for(VehicleJourney* vj : this->pt_data.vehicle_journeys) {
         for(StopTime* stop : vj->stop_time_list){
             // Théorique
             stop->departure_validity_pattern = get_or_create_validity_pattern(vj->validity_pattern, stop->departure_time);
