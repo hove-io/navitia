@@ -1,3 +1,9 @@
+navitia2 (0.88.1) unstable; urgency=low
+
+ * corrections on at loggers 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Mar 2014 16:03:08 +0100
+
 navitia2 (0.88.0) unstable; urgency=low
 
  * Stop schedule for calendars
