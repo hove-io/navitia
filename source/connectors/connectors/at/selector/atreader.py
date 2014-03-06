@@ -131,9 +131,9 @@ class AtRealtimeReader(object):
             request_jormun = requests.get(url,
                                           params={"external_code": externalcode})
             if request_jormun:
-                json = request_jormun.json()
+                json = request_jormun.json
                 if collection in json and len(json[collection]) > 0:
-                    uri = request_jormun.json()[0]['id']
+                    uri = json[collection][0]['id']
         return uri
 
     def create_pertubation(self, message):
