@@ -52,7 +52,7 @@ class AtRealtimeReader(object):
     This class load messages and perturbation from the "alerte trafic" database
     """
 
-    def __init__(self, config, redis_helper):
+    def __init__(self, config):
         self.message_list = []
         self.perturbation_list = []
         url = url_engine.make_url(config.at_connection_string)
@@ -62,7 +62,6 @@ class AtRealtimeReader(object):
         except:
             raise ValueError("AT : Connecting at server failed")
         self.jormungandr_url = config.jormungandr_url
-        self._redis_helper = redis_helper
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
 
@@ -104,11 +103,11 @@ class AtRealtimeReader(object):
 
         self.last_exec_file_name = config.last_exec_time_file
         self.datetime_format = '%Y-%m-%d %H:%M:%S'
-        self._collections = {"StopPoint": "stop_point",
-                             "VehicleJourney": "vehicle_journey",
-                             "Line": "line",
-                             "Network": "network",
-                             "StopArea": "stop_area"}
+        self._collections = {"StopPoint": "stop_points",
+                             "VehicleJourney": "vehicle_journeys",
+                             "Line": "lines",
+                             "Network": "networks",
+                             "StopArea": "stop_areas"}
 
     def get_last_execution_time(self):
         if os.path.exists(self.last_exec_file_name):
@@ -132,9 +131,9 @@ class AtRealtimeReader(object):
             request_jormun = requests.get(url,
                                           params={"external_code": externalcode})
             if request_jormun:
-                json = request_jormun.json()
+                json = request_jormun.json
                 if collection in json and len(json[collection]) > 0:
-                    uri = request_jormun.json()[0]['id']
+                    uri = json[collection][0]['id']
         return uri
 
     def create_pertubation(self, message):

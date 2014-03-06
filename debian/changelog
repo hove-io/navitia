@@ -1,3 +1,10 @@
+navitia2 (0.87.1) unstable; urgency=low
+
+ * Several fixes on connector at
+ * Fix an url_for on the build of disruption link
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Mar 2014 12:03:31 +0100
+
 navitia2 (0.87.0) unstable; urgency=low
 
  * ed : normalize uri edges
