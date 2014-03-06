@@ -52,7 +52,7 @@ class AtRealtimeReader(object):
     This class load messages and perturbation from the "alerte trafic" database
     """
 
-    def __init__(self, config, redis_helper):
+    def __init__(self, config):
         self.message_list = []
         self.perturbation_list = []
         url = url_engine.make_url(config.at_connection_string)
@@ -62,7 +62,6 @@ class AtRealtimeReader(object):
         except:
             raise ValueError("AT : Connecting at server failed")
         self.jormungandr_url = config.jormungandr_url
-        self._redis_helper = redis_helper
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
 

@@ -19,7 +19,6 @@ class ConnectorAT(object):
         initialize the service with the configuration file taken in parameters
         """
         self.config.load(filename)
-        self._init_redishelper()
         self.at_realtime_reader = AtRealtimeReader(self.config)
         self._init_rabbitmq()
 
