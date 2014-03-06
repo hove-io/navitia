@@ -3,7 +3,7 @@ from connectors.config import Config
 from connectors.at.selector.atreader import AtRealtimeReader
 import logging
 import kombu
-import navitiacommon.task_pb2
+import connectors.task_pb2
 
 
 class ConnectorAT(object):
