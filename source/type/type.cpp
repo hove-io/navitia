@@ -3,6 +3,7 @@
 #include <iostream>
 #include <boost/assign.hpp>
 #include "utils/functions.h"
+#include "utils/logger.h"
 
 namespace navitia { namespace type {
 
@@ -77,14 +78,15 @@ bool VehicleJourney::has_landing() const{
 
 }
 
-bool ValidityPattern::is_valid(int duration) const {
-    if(duration < 0){
-
-        std::cerr << "La date est avant le début de période(" << beginning_date << ")" << std::endl;
+bool ValidityPattern::is_valid(int day) const {
+    if(day < 0) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
+                       << day << " is too early");
         return false;
     }
-    else if(duration > 366){
-        std::cerr << "La date dépasse la fin de période " << duration << " " << std::endl;
+    if(day > 366) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
+                       << day << " is late");
         return false;
     }
     return true;
@@ -271,12 +273,19 @@ template<typename T> std::vector<idx_t> indexes(std::vector<T*> elements){
 
 Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
 
-void Calendar::build_validity_pattern() {
+void Calendar::build_validity_pattern(boost::gregorian::date_period production_period) {
     //initialisation of the validity pattern from the active periods and the exceptions
-    for (boost::posix_time::time_period period : this->active_periods) {
-        validity_pattern.add(period.begin().date(), period.end().date(), week_pattern);
+    for (boost::gregorian::date_period period : this->active_periods) {
+        auto intersection_period = production_period.intersection(period);
+        if (intersection_period.is_null()) {
+            continue;
+        }
+        validity_pattern.add(intersection_period.begin(), intersection_period.end(), week_pattern);
     }
     for (navitia::type::ExceptionDate exd : this->exceptions) {
+        if (!production_period.contains(exd.date)) {
+            continue;
+        }
         if (exd.type == ExceptionDate::ExceptionType::sub) {
             validity_pattern.remove(exd.date);
         } else if (exd.type == ExceptionDate::ExceptionType::add) {

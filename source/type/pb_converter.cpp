@@ -958,8 +958,8 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data&,
 
     for (const auto& p: cal->active_periods) {
         auto pb_period = pb_cal->add_active_periods();
-        pb_period->set_begin(boost::gregorian::to_iso_string((p.begin()).date()));
-        pb_period->set_end(boost::gregorian::to_iso_string((p.end()).date()));
+        pb_period->set_begin(boost::gregorian::to_iso_string(p.begin()));
+        pb_period->set_end(boost::gregorian::to_iso_string(p.end()));
     }
 
     for (const auto& excep: cal->exceptions) {

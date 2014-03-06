@@ -866,7 +866,7 @@ struct Calendar : public Nameable, public Header {
     const static Type_e type = Type_e::Calendar;
     typedef std::bitset<7> Week;
     Week week_pattern;
-    std::vector<boost::posix_time::time_period> active_periods;
+    std::vector<boost::gregorian::date_period> active_periods;
     std::vector<ExceptionDate> exceptions;
 
     ValidityPattern validity_pattern; //computed validity pattern
@@ -874,7 +874,8 @@ struct Calendar : public Nameable, public Header {
     Calendar() {}
     Calendar(boost::gregorian::date beginning_date);
 
-    void build_validity_pattern();
+    //we limit the validity pattern to the production period
+    void build_validity_pattern(boost::gregorian::date_period production_period);
 
 
     bool operator<(const Calendar & other) const { return this < &other; }

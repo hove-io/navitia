@@ -14,9 +14,9 @@ boost::gregorian::date date(std::string str) {
     return boost::gregorian::from_undelimited_string(str);
 }
 
-boost::posix_time::time_period period(std::string beg, std::string end) {
-    boost::posix_time::ptime start_date = boost::posix_time::from_iso_string(beg + "T000000");
-    boost::posix_time::ptime end_date = boost::posix_time::from_iso_string(end + "T000000"); //end is not in the period
+boost::gregorian::date_period period(std::string beg, std::string end) {
+    boost::gregorian::date start_date = boost::gregorian::from_undelimited_string(beg);
+    boost::gregorian::date end_date = boost::gregorian::from_undelimited_string(end); //end is not in the period
     return {start_date, end_date};
 }
 
@@ -24,8 +24,8 @@ struct calendar_fixture {
     calendar_fixture() : b("20140210"),
         cal(new navitia::type::Calendar(b.data.meta.production_date.begin())) {
         cal->uri="cal1";
-        boost::posix_time::ptime start = boost::posix_time::from_iso_string("20140210T000010");
-        boost::posix_time::ptime end = boost::posix_time::from_iso_string("20140214T000000"); //end is not in the period
+        boost::gregorian::date start = boost::gregorian::from_undelimited_string("20140210");
+        boost::gregorian::date end = boost::gregorian::from_undelimited_string("20140214"); //end is not in the period
         cal->active_periods.push_back({start, end});
         cal->week_pattern = std::bitset<7>("1111111");
         b.data.pt_data.calendars.push_back(cal);
@@ -40,7 +40,7 @@ BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test1, calendar_fixture) {
            10/02/2014                    13/02/2014
                +-----------------------------+
     */
-    cal->build_validity_pattern();
+    cal->build_validity_pattern(b.data.meta.production_date);
     BOOST_CHECK(cal->validity_pattern.check(date("20140210")));
     BOOST_CHECK(cal->validity_pattern.check(date("20140211")));
     BOOST_CHECK(cal->validity_pattern.check(date("20140212")));
@@ -60,7 +60,7 @@ BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test2, calendar_fixture) {
     exd.type = navitia::type::ExceptionDate::ExceptionType::sub;
     cal->exceptions.push_back(exd);
 
-    cal->build_validity_pattern();
+    cal->build_validity_pattern(b.data.meta.production_date);
 
     BOOST_CHECK(cal->validity_pattern.check(date("20140210")));
     BOOST_CHECK(cal->validity_pattern.check(date("20140211")));
@@ -79,7 +79,7 @@ BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test3, calendar_fixture) {
     exd.type = navitia::type::ExceptionDate::ExceptionType::add;
     cal->exceptions.push_back(exd);
 
-    cal->build_validity_pattern();
+    cal->build_validity_pattern(b.data.meta.production_date);
 
     BOOST_CHECK(cal->validity_pattern.check(date("20140210")));
     BOOST_CHECK(cal->validity_pattern.check(date("20140211")));

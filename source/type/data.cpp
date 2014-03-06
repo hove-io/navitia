@@ -170,13 +170,21 @@ using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::
 
 list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey, double relative_threshold) {
     list_cal_bitset res;
+    //for the moment we keep lot's of trace, but they will be removed after a while
+    auto log = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_DEBUG(log, "vj " << vehicle_journey->uri << " :" << vehicle_journey->validity_pattern->days.to_string());
+
     for (const auto calendar : vehicle_journey->journey_pattern->route->line->calendar_list) {
         auto diff = get_difference(calendar->validity_pattern.days, vehicle_journey->validity_pattern->days);
         size_t nb_diff = diff.count();
 
+        LOG4CPLUS_DEBUG(log, "cal " << calendar->uri << " :" <<calendar->validity_pattern.days.to_string());
+
         //we associate the calendar to the vj if the diff are below a relative threshold
         //compared to the number of active days in the calendar
-        size_t threshold = relative_threshold * calendar->validity_pattern.days.count();
+        size_t threshold = std::round(relative_threshold * calendar->validity_pattern.days.count());
+        LOG4CPLUS_DEBUG(log, "**** diff: " << nb_diff << " and threshold: " << threshold << (nb_diff <= threshold ? ", we keep it!!":""));
+
         if (nb_diff > threshold) {
             continue;
         }
@@ -196,7 +204,14 @@ void Data::build_associated_calendar() {
     auto log = log4cplus::Logger::getInstance("log");
     std::multimap<ValidityPattern*, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
+    size_t nb_matched(0);
     for(VehicleJourney* vehicle_journey : this->pt_data.vehicle_journeys) {
+
+        if (vehicle_journey->journey_pattern->route->line->calendar_list.empty()) {
+            LOG4CPLUS_TRACE(log, "the line of the vj " << vehicle_journey->uri << " is associated to no calendar");
+            nb_not_matched_vj++;
+            continue;
+        }
 
         //we check if we already computed the associated val for this validity pattern
         //since a validity pattern can be shared by many vj
@@ -215,6 +230,7 @@ void Data::build_associated_calendar() {
             nb_not_matched_vj++;
             continue;
         }
+        nb_matched++;
 
         std::stringstream cal_uri;
         for (auto cal_bit_set: close_cal) {
@@ -242,6 +258,7 @@ void Data::build_associated_calendar() {
         LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->uri << " has been attached to " << cal_uri.str());
     }
 
+    LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one calendar");
     if (nb_not_matched_vj) {
         LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
     }
@@ -249,7 +266,7 @@ void Data::build_associated_calendar() {
 
 void Data::build_grid_validity_pattern() {
     for(Calendar* cal : this->pt_data.calendars){
-        cal->build_validity_pattern();
+        cal->build_validity_pattern(meta.production_date);
     }
 }
 

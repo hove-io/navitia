@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(test1) {
 
 struct calendar_fixture {
     ed::builder b;
-    boost::posix_time::ptime beg_time;
-    boost::posix_time::ptime eoy_time;
+    boost::gregorian::date beg;
+    boost::gregorian::date end_of_year;
     calendar_fixture() : b("20120614") {
         //2 vj during the week
         b.vj("network:R", "line:A", "1", "", true, "week")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
@@ -68,10 +68,8 @@ struct calendar_fixture {
         b.vj("network:R", "line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
 
         b.data.build_uri();
-        boost::gregorian::date beg = b.data.meta.production_date.begin();
-        auto end_of_year = beg + boost::gregorian::years(1) + boost::gregorian::days(1);
-        beg_time = {beg, {}};
-        eoy_time = {end_of_year, {}};
+        beg = b.data.meta.production_date.begin();
+        end_of_year = beg + boost::gregorian::years(1) + boost::gregorian::days(1);
 
         navitia::type::VehicleJourney* vj_week = b.data.pt_data.vehicle_journeys_map["week"];
         vj_week->validity_pattern->add(beg, end_of_year, std::bitset<7>{"1111100"});
@@ -87,19 +85,19 @@ struct calendar_fixture {
         //we now add 2 similar calendars
         auto week_cal = new navitia::type::Calendar(b.data.meta.production_date.begin());
         week_cal->uri = "week_cal";
-        week_cal->active_periods.push_back({beg_time, eoy_time});
+        week_cal->active_periods.push_back({beg, end_of_year});
         week_cal->week_pattern = std::bitset<7>{"1111100"};
         b.data.pt_data.calendars.push_back(week_cal);
 
         auto weekend_cal = new navitia::type::Calendar(b.data.meta.production_date.begin());
         weekend_cal->uri = "weekend_cal";
-        weekend_cal->active_periods.push_back({beg_time, eoy_time});
+        weekend_cal->active_periods.push_back({beg, end_of_year});
         weekend_cal->week_pattern = std::bitset<7>{"0000011"};
         b.data.pt_data.calendars.push_back(weekend_cal);
 
         auto not_associated_cal = new navitia::type::Calendar(b.data.meta.production_date.begin());
         not_associated_cal->uri = "not_associated_cal";
-        not_associated_cal->active_periods.push_back({beg_time, eoy_time});
+        not_associated_cal->active_periods.push_back({beg, end_of_year});
         not_associated_cal->week_pattern = std::bitset<7>{"0010000"};
         b.data.pt_data.calendars.push_back(not_associated_cal); //not associated to the line
 
@@ -194,7 +192,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     //we add a new calendar that nearly match a vj
     auto nearly_cal = new navitia::type::Calendar(b.data.meta.production_date.begin());
     nearly_cal->uri = "nearly_cal";
-    nearly_cal->active_periods.push_back({beg_time, eoy_time});
+    nearly_cal->active_periods.push_back({beg, end_of_year});
     nearly_cal->week_pattern = std::bitset<7>{"1111111"};
     //we add 6 exceptions (3 add and 3 remove), one by week
     for (size_t i = 0; i < 6; ++i) {

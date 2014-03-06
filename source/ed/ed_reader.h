@@ -113,6 +113,8 @@ private:
     void build_rel_poi_admin(navitia::type::Data& data, pqxx::work& work);
     void build_rel_admin_admin(navitia::type::Data& data, pqxx::work& work);
 
+    /// coherence check for logging purpose
+    void check_coherence(navitia::type::Data& data) const;
 };
 
 }
