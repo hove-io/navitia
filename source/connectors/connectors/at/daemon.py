@@ -45,12 +45,12 @@ class ConnectorAT(object):
         self.connection = kombu.Connection(self.config.broker_url)
         exchange_name = self.config.exchange_name
         exchange = kombu.Exchange(exchange_name, 'topic', durable=True)
-        self.producer = self.connection.Producer(exchange)
+        self.producer = self.connection.Producer(exchang=exchange)
 
     def run(self):
         self.at_realtime_reader.execute()
         logging.getLogger('connector').info("put message to following topics: "
-                                            "%s", self.config.rt_topics)
+                                            "%s", self.config.rt_topic)
         for message in self.at_realtime_reader.message_list:
             task = connectors.task_pb2.Task()
             task.action = connectors.task_pb2.MESSAGE
