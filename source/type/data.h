@@ -154,7 +154,7 @@ private:
     /** Recherche d'une ValidityPattern lors de clacul du passe-minuit**/
     ValidityPattern* get_or_create_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time);
     /** Get similar validitypattern **/
-    ValidityPattern* get_similar_validity_appetrn(ValidityPattern* vp) const;
+    ValidityPattern* get_similar_validity_pattern(ValidityPattern* vp) const;
 };
 
 

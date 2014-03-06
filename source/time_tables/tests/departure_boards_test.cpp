@@ -126,6 +126,9 @@ struct calendar_fixture {
     }
 };
 
+/*
+ * unknown calendar in request => error
+ */
 BOOST_FIXTURE_TEST_CASE(test_no_weekend, calendar_fixture) {
 
     //when asked on non existent calendar, we get an error
@@ -137,8 +140,11 @@ BOOST_FIXTURE_TEST_CASE(test_no_weekend, calendar_fixture) {
     BOOST_REQUIRE(! resp.error().message().empty());
 }
 
+/*
+ * For this test we want to get the schedule for the week end
+ * we thus will get the 'week end' vj + the 'all' vj
+ */
 BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
-
     boost::optional<const std::string> calendar_id{"weekend_cal"};
 
     pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, "20120615T080000", 86400, std::numeric_limits<int>::max(), 1, 10, 0, b.data, false);
@@ -154,6 +160,10 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
     //the vj 'wednesday' is never matched
 }
 
+/*
+ * For this test we want to get the schedule for the week
+ * we thus will get the 2 'week' vj + the 'all' vj
+ */
 BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
 
     boost::optional<const std::string> calendar_id{"week_cal"};
@@ -173,7 +183,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
     //the vj 'wednesday' is never matched
 }
 
-/**
+/*
  * when asked with a calendar not associated with the line, we got an empty schedule
  */
 BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {

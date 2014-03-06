@@ -605,7 +605,12 @@ struct JourneyPattern : public Header, Nameable{
 };
 
 struct AssociatedCalendar {
+    ///calendar matched
     const Calendar* calendar;
+
+    ///exceptions to this association (not to be mixed up with the exceptions in the calendar)
+    ///the calendar exceptions change it's validity pattern
+    /// the AssociatedCalendar exceptions are the differences between the vj validity pattern and the calendar's
     std::vector<ExceptionDate> exceptions;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -859,9 +864,7 @@ struct StopTime : public Nameable {
 
 };
 
-/**
- * @brief The Calendar struct
- */
+
 struct Calendar : public Nameable, public Header {
     const static Type_e type = Type_e::Calendar;
     typedef std::bitset<7> Week;

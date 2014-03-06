@@ -195,24 +195,32 @@ departure_board(const std::string& request,
         const type::Route* route = data.pt_data.routes[sp_route.second];
         auto jpps = stop_point->journey_pattern_point_list;
         for(auto jpp : jpps) {
-            if(jpp->journey_pattern->route == route) {
-                if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx){ // dans le cas de terminus
-                    response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
-                    continue;
-                }
-                auto tmp = get_stop_times({jpp->idx}, handler.date_time,
-                                          handler.max_datetime,
-                                          max_date_times, data, disruption_active, calendar_id);
-                if(tmp.size() == 0){
-                    response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
-                }else{
-                    stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
-                }
+            if(jpp->journey_pattern->route != route) {
+                continue;
+            }
+            if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx){ // dans le cas de terminus
+                response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
+                continue;
+            }
+            auto tmp = get_stop_times({jpp->idx}, handler.date_time,
+                                      handler.max_datetime,
+                                      max_date_times, data, disruption_active, calendar_id);
+            if (! tmp.empty()) {
+                stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             }
         }
         std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
         auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
         map_route_stop_point.insert(to_insert);
+    }
+
+    //we check if we have at least one departure for each route (and no other error)
+    for(auto sp_route : sps_routes) {
+        const type::Route* route = data.pt_data.routes[sp_route.second];
+        if (map_route_stop_point[sp_route].empty() &&
+                response_status[route->idx] == pbnavitia::ResponseStatus::none) {
+            response_status[route->idx] = pbnavitia::ResponseStatus::no_departure_this_day;
+        }
     }
 
     if(interface_version == 0) {

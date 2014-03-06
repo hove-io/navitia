@@ -662,13 +662,13 @@ boost::gregorian::date parse_date(const std::string& str) {
 
 namespace grid_calendar {
 
-void GridCalPeriodFusioHandler::init(Data&) {
+void PeriodFusioHandler::init(Data&) {
     calendar_c = csv.get_pos_col("calendar_id");
     begin_c = csv.get_pos_col("begin_date");
     end_c = csv.get_pos_col("end_date");
 }
 
-void GridCalPeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
+void PeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
     if(! is_first_line && ! has_col(calendar_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename <<
                         "  file has more than one period and no calendar_id column");
@@ -839,7 +839,7 @@ void FusioParser::parse_files(Data& data) {
     parse<StopTimeFusioHandler>(data, "stop_times.txt", true);
     parse<FrequenciesGtfsHandler>(data, "frequencies.txt");
     parse<grid_calendar::GridCalendarFusioHandler>(data, "grid_calendars.txt");
-    parse<grid_calendar::GridCalPeriodFusioHandler>(data, "grid_periods.txt");
+    parse<grid_calendar::PeriodFusioHandler>(data, "grid_periods.txt");
     parse<grid_calendar::ExceptionDatesFusioHandler>(data, "grid_exception_dates.txt");
     parse<grid_calendar::CalendarLineFusioHandler>(data, "grid_rel_calendar_line.txt");
 }

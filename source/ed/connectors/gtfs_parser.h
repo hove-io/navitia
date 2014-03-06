@@ -255,7 +255,7 @@ protected:
     std::string path;///< Chemin vers les fichiers
     log4cplus::Logger logger;
     template <typename Handler>
-    void parse(Data&, std::string file_name, bool = false);
+    void parse(Data&, std::string file_name, bool fail_if_no_file = false);
     template <typename Handler>
     void parse(Data&); //some parser do not need a file since they just add default data
 

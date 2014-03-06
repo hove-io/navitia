@@ -137,7 +137,7 @@ void Data::build_raptor() {
     dataRaptor.load(this->pt_data);
 }
 
-ValidityPattern* Data::get_similar_validity_appetrn(ValidityPattern* vp) const{
+ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
     auto find_vp_predicate = [&](ValidityPattern* vp1) { return ((*vp) == (*vp1));};
     auto it = std::find_if(this->pt_data.validity_patterns.begin(),
                         this->pt_data.validity_patterns.end(), find_vp_predicate);
@@ -152,14 +152,16 @@ ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_valid
 
     if(time > 24*3600) {
         ValidityPattern vp(ref_validity_pattern->beginning_date,ref_validity_pattern->str());
+        //we copy the validity pattern and since we want the same validity pattern for the day after
+        //we shift the bitset
         vp.days <<= 1;
-        ValidityPattern* vp_similar = this->get_similar_validity_appetrn(&vp);
-        if(vp_similar == nullptr){
+        ValidityPattern* vp_similar = this->get_similar_validity_pattern(&vp);
+        if (vp_similar == nullptr) {
             ValidityPattern* tmp_vp = new ValidityPattern(vp);
             tmp_vp->idx = this->pt_data.validity_patterns.size();
             this->pt_data.validity_patterns.push_back(tmp_vp);
             return tmp_vp;
-        }else{
+        } else {
             return vp_similar;
         }
     }
@@ -171,7 +173,7 @@ using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::
 list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey, double relative_threshold) {
     list_cal_bitset res;
     //for the moment we keep lot's of trace, but they will be removed after a while
-    auto log = log4cplus::Logger::getInstance("log");
+    auto log = log4cplus::Logger::getInstance("kraken::type::Data::Calendar");
     LOG4CPLUS_DEBUG(log, "vj " << vehicle_journey->uri << " :" << vehicle_journey->validity_pattern->days.to_string());
 
     for (const auto calendar : vehicle_journey->journey_pattern->route->line->calendar_list) {
@@ -201,7 +203,7 @@ void Data::complete(){
 }
 
 void Data::build_associated_calendar() {
-    auto log = log4cplus::Logger::getInstance("log");
+    auto log = log4cplus::Logger::getInstance("kraken::type::Data");
     std::multimap<ValidityPattern*, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     size_t nb_matched(0);

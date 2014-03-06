@@ -80,12 +80,12 @@ bool VehicleJourney::has_landing() const{
 
 bool ValidityPattern::is_valid(int day) const {
     if(day < 0) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
                        << day << " is too early");
         return false;
     }
-    if(day > 366) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
+    if(day >= days.size()) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
                        << day << " is late");
         return false;
     }
