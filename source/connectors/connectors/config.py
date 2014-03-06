@@ -14,7 +14,7 @@ class Config(object):
         self.at_connection_string = None
 
         self.exchange_name = None
-        self.rt_topic = []
+        self.rt_topic = None
 
         self.redisqueque_host = None
         self.redisqueque_port = None
@@ -72,9 +72,9 @@ class Config(object):
         self.broker_url = config['connector-at']['broker-url']
         self.at_connection_string = config['connector-at']['at-connection-string']
         self.exchange_name = config['connector-at']['exchange-name']
-        self.rt_topics = config['connector-at']['rt-topic']
+        self.rt_topic = config['connector-at']['rt-topic']
         self.last_exec_time_file = config['connector-at']['last-exec-time-file']
-	self.jormungandr_url = config['connector-at']['jormungandr-url']
+        self.jormungandr_url = config['connector-at']['jormungandr-url']
 
         self.redishelper_host = config['redishelper']['host']
         self.redishelper_password = config['redishelper']['password']
