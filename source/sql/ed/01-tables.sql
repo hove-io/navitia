@@ -190,7 +190,8 @@ CREATE TABLE IF NOT EXISTS navitia.company (
     phone_number TEXT,
     mail TEXT,
     website TEXT,
-    fax TEXT
+    fax TEXT,
+    sort integer NOT NULL DEFAULT -1
 );
 
 CREATE TABLE IF NOT EXISTS navitia.network (
@@ -210,7 +211,8 @@ CREATE TABLE IF NOT EXISTS navitia.line (
     external_code TEXT NOT NULL,
     name TEXT NOT NULL,
     code TEXT,
-    color TEXT
+    color TEXT,
+    sort integer NOT NULL DEFAULT -1
 );
 
 CREATE TABLE IF NOT EXISTS navitia.rel_line_company (

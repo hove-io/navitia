@@ -83,5 +83,26 @@ BEGIN
     ELSE
         RAISE NOTICE 'column boundary already type MULTIPOLYGON, skipping';
     END CASE;
-END$$;
+END
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.line ADD COLUMN sort integer NOT NULL DEFAULT -1;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column sort already exists in navitia.line.';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.company ADD COLUMN sort integer NOT NULL DEFAULT -1;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column sort already exists in navitia.company.';
+        END;
+    END;
+$$;
 
