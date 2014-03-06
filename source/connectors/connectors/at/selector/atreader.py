@@ -221,10 +221,6 @@ class AtRealtimeReader(object):
                     if row[self.label_impact_state] == 'Disrupt':
                         self.perturbation_list.append(
                             self.create_pertubation(message))
-
-                    print str(
-                        row[self.label_active_days]) + ' - ' +\
-                        message.active_days
             except google.protobuf.message.DecodeError as e:
                 logging.getLogger('connector').warn(
                     "message is not a valid "
