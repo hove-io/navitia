@@ -13,11 +13,11 @@
   */
 namespace ed { namespace connectors {
 
-struct AgencyFusioHandler : public GenericHandler {
-    AgencyFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c,
-        name_c,
-        ext_code_c;
+struct AgencyFusioHandler : public AgencyGtfsHandler {
+    AgencyFusioHandler(GtfsData& gdata, CsvReader& reader) : AgencyGtfsHandler(gdata, reader) {}
+    int ext_code_c,
+        sort_c,
+        agency_url_c;
     void init(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"agency_id", "agency_name", "agency_url", "agency_timezone"}; }

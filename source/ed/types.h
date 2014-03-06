@@ -106,6 +106,8 @@ struct Network : public Header, Nameable{
     std::string mail;
     std::string website;
     std::string fax;
+    int sort;
+
 
     navitia::type::Network* get_navitia_type() const;
 

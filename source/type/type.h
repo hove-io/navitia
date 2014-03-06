@@ -477,6 +477,7 @@ struct Network : public Header, Nameable, HasMessages{
     std::string mail;
     std::string website;
     std::string fax;
+    int sort;
 
     std::vector<Line*> line_list;
 

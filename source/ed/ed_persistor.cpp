@@ -372,7 +372,7 @@ void EdPersistor::clean_db(){
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
     this->lotus.prepare_bulk_insert("navitia.network", {"id", "uri",
-            "external_code", "name", "comment"});
+                                    "external_code", "name", "comment", "sort", "website"});
     for(types::Network* net : networks){
         std::vector<std::string> values;
         values.push_back(std::to_string(net->idx));
@@ -380,6 +380,8 @@ void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
         values.push_back(net->external_code);
         values.push_back(net->name);
         values.push_back(net->comment);
+        values.push_back(std::to_string(net->sort));
+        values.push_back(net->website);
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
@@ -564,7 +566,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     this->lotus.prepare_bulk_insert("navitia.line",
             {"id", "uri", "external_code", "name", "comment", "color", "code",
-            "commercial_mode_id", "network_id"});
+            "commercial_mode_id", "network_id", "sort"});
 
     for(types::Line* line : lines){
         std::vector<std::string> values;
@@ -586,6 +588,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         }else{
             values.push_back(lotus.null_value);
         }
+        values.push_back(std::to_string(line->sort));
         this->lotus.insert(values);
     }
 
