@@ -1,3 +1,9 @@
+navitia2 (0.87.2) unstable; urgency=low
+
+ * Fix connector_at
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Mar 2014 14:03:25 +0100
+
 navitia2 (0.87.1) unstable; urgency=low
 
  * Several fixes on connector at
