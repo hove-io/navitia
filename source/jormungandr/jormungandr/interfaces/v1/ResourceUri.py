@@ -148,7 +148,7 @@ class add_computed_resources(object):
                     "rel": "lines",
                     "templated": templated
                 })
-            if collection in ['stop_areas', 'lines', 'networks']:
+            if collection in ['stop_areas', 'lines', 'networks'] and "region" in kwargs:
                 data['links'].append({
                     "href": url_for("v1/disruptions", **kwargs),
                     "rel": "disruptions",

@@ -52,7 +52,7 @@ class Config(object):
         confspec.append('at-connection-string = string()')
         confspec.append('broker-url = string()')
         confspec.append('last-exec-time-file = string(default="./last_exec_time.txt")')
-        confspec.append('jormungandr_url = string()')
+        confspec.append('jormungandr-url = string()')
 
         confspec.append('[redishelper]')
         confspec.append('host = string(default="localhost")')
@@ -74,6 +74,7 @@ class Config(object):
         self.exchange_name = config['connector-at']['exchange-name']
         self.rt_topics = config['connector-at']['rt-topic']
         self.last_exec_time_file = config['connector-at']['last-exec-time-file']
+	self.jormungandr_url = config['connector-at']['jormungandr-url']
 
         self.redishelper_host = config['redishelper']['host']
         self.redishelper_password = config['redishelper']['password']
