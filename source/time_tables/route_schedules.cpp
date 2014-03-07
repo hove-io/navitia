@@ -71,7 +71,7 @@ make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
 
 
 std::vector<type::VehicleJourney*>
-get_vehicle_jorney(const std::vector<std::vector<datetime_stop_time> >& stop_times){
+get_vehicle_journey(const std::vector<std::vector<datetime_stop_time> >& stop_times){
     std::vector<type::VehicleJourney*> result;
     for(const std::vector<datetime_stop_time> vec : stop_times){
         type::VehicleJourney* vj = vec.front().second->vehicle_journey;
@@ -109,7 +109,7 @@ route_schedule(const std::string& filter,
     routes_idx = paginate(routes_idx, count, start_page);
     for(type::idx_t route_idx : routes_idx) {
         auto route = d.pt_data.routes[route_idx];
-        auto jps = route->get(type::Type_e::JourneyPattern, d.pt_data);
+        auto jps =  ptref::make_query(type::Type_e::JourneyPattern, filter+" and route.uri="+route->uri, forbidden_uris, d);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(jps, handler.date_time,
                                              handler.max_datetime, d, disruption_active);
@@ -125,7 +125,7 @@ route_schedule(const std::string& filter,
         //On génère la matrice
         auto  matrice = make_matrice(stop_times, thermometer, d);
          //On récupère les vehicleJourny de manière unique
-        auto vehicle_journy_list = get_vehicle_jorney(stop_times);
+        auto vehicle_journy_list = get_vehicle_journey(stop_times);
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
         auto m_pt_display_informations = schedule->mutable_pt_display_informations();
