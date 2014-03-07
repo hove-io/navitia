@@ -5,6 +5,7 @@ collections_to_resource_type = {
     "stop_areas": "stop_area", "lines": "line",
     "addresses": "address", "coords": "coord",
     "journey_pattern_points": "journey_pattern_point",
+    "journey_patterns": "journey_pattern",
     "pois": "poi", "poi_types": "poi_type",
     "calendars": "calendar",
     "connections": "connection", "vehicle_journeys": "vehicle_journey"}
