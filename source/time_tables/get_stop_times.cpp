@@ -29,7 +29,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
             if(st.first != nullptr) {
                 DateTime dt_temp = st.second;
                 if(dt_temp <= max_dt && result.size() < max_departures) {
-                    result.push_back(std::make_pair(dt_temp, st));
+                    result.push_back(std::make_pair(dt_temp, st.first));
                     test_add = true;
                     // Le prochain horaire observé doit être au minimum une seconde après
                     if(st.first->is_frequency()) {
