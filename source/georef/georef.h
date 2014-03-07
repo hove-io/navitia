@@ -296,10 +296,10 @@ struct GeoRef {
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
 
 
-    /** Projete chaque stop_point sur le filaire de voirie
-     *  Retourne le nombre de stop_points effectivement accrochés
+    /**
+     * Project each stop_point on the georef network
      */
-    std::map<std::string, int> project_stop_points(const std::vector<type::StopPoint*> & stop_points);
+    void project_stop_points(const std::vector<type::StopPoint*> & stop_points);
 
     /** project the stop point on all transportation mode
       * return a pair with :

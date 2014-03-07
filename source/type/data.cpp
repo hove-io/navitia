@@ -119,28 +119,9 @@ ITERATE_NAVITIA_PT_TYPES(CLEAR_EXT_CODE)
 
 void Data::build_proximity_list(){
     this->pt_data.build_proximity_list();
-        this->geo_ref.build_proximity_list();
-        auto sp_matched = this->geo_ref.project_stop_points(this->pt_data.stop_points);
-
-        auto result = sp_matched.find("matched");
-        if (result->second > 0) {
-            std::cout << "Nombre de stop_points accrochés au filaire de voirie : "
-                      << result->second << " sur " << this->pt_data.stop_points.size() << std::endl;
-        }
-        result = sp_matched.find("notinitialized");
-        if (result->second > 0) {
-            std::cout << "Nombre de stop_points rejeté (X=0 ou Y=0): " << result->second << std::endl;
-        }
-        result = sp_matched.find("notvalid");
-        if (result->second > 0) {
-            std::cout << "Nombre de stop_points rejeté (non-valide): " << result->second << std::endl;
-        }
-        result = sp_matched.find("outside");
-        if (result->second > 0) {
-            std::cout << "Nombre de stop_points rejeté (en d'hors du périmètre): "
-                      << result->second << std::endl;
-        }
-    }
+    this->geo_ref.build_proximity_list();
+    this->geo_ref.project_stop_points(this->pt_data.stop_points);
+}
 
 
 void Data::build_autocomplete(){
