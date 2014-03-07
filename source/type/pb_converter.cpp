@@ -805,18 +805,14 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
 }
 
 pbnavitia::ExceptionType get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exception_type){
-    pbnavitia::ExceptionType type;
     switch (exception_type) {
     case nt::ExceptionDate::ExceptionType::add:
-        type = pbnavitia::Add;
-        break;
+        return pbnavitia::Add;
     case nt::ExceptionDate::ExceptionType::sub:
-        type = pbnavitia::Remove;
-        break;
+        return pbnavitia::Remove;
     default:
         throw navitia::exception("exception date case not handled");
-    }
-    return type;
+    } 
 }
 
 void fill_pb_object(const navitia::type::StopTime* stop_time,
@@ -833,13 +829,7 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     if (!calendar_id) {
         str_datetime = iso_string(date_time, data);
     } else {
-        str_datetime = iso_hour_string(date_time, data);        
-    }
-    type::Calendar* calendar = nullptr;
-    if (calendar_id) {
-        const auto calendar_it = data.pt_data.calendars_map.find(*calendar_id);
-        calendar = calendar_it->second;
-
+        str_datetime = iso_hour_string(date_time, data);
     }
     rs_date_time->set_date_time(str_datetime);
     pbnavitia::Properties * hn = rs_date_time->mutable_properties();
@@ -869,9 +859,13 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
             note->set_note(stop_time->vehicle_journey->odt_message);
         }
     }
-    if(calendar != nullptr){
-        for(const type::ExceptionDate& excep : calendar->exceptions){
-            fill_pb_object(excep, data, hn->add_exceptions(), max_depth, now, action_period);
+
+    if((calendar_id) && (stop_time->vehicle_journey != nullptr)) {
+        auto asso_cal_it = stop_time->vehicle_journey->associated_calendars.find(*calendar_id);
+        if(asso_cal_it != stop_time->vehicle_journey->associated_calendars.end()){
+            for(const type::ExceptionDate& excep : asso_cal_it->second->exceptions){
+                fill_pb_object(excep, data, hn->add_exceptions(), max_depth, now, action_period);
+            }
         }
     }
 }
