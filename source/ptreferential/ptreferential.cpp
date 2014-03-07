@@ -162,7 +162,6 @@ std::vector<Filter> parse(std::string request){
     return filters;
 }
 
-
 std::vector<idx_t> make_query(Type_e requested_type, std::string request,
                               const std::vector<std::string>& forbidden_uris,
                               const Data & data) {
@@ -253,6 +252,37 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         //throw ptref_error("404");
         throw ptref_error("Filters: Unable to find object");
     }
+    auto sort_networks = [&](type::idx_t n1_, type::idx_t n2_) {
+        auto n1 = data.pt_data.networks[n1_];
+        auto n2 = data.pt_data.networks[n2_];
+        return n1->sort < n2->sort;
+    };
+
+    auto sort_lines = [&](type::idx_t l1_, type::idx_t l2_) {
+            auto l1 = data.pt_data.lines[l1_];
+            auto l2 = data.pt_data.lines[l2_];
+            if (l1->network->sort == l2->network->sort){
+                if (l1->sort == l2->sort){
+                    return l1->name < l2->name;
+                } else {
+                    return l1->sort < l2->sort;
+                };
+            } else {
+                return l1->network->sort < l2->network->sort;
+            };
+    };
+
+    switch(requested_type){
+        case Type_e::Network:
+            std::sort(final_indexes.begin(), final_indexes.end(), sort_networks);
+            break;
+        case Type_e::Line:
+            std::sort(final_indexes.begin(), final_indexes.end(), sort_lines);
+            break;
+        default:
+            break;
+    }
+
     return final_indexes;
 }
 std::vector<type::idx_t> make_query(type::Type_e requested_type,

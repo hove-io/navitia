@@ -483,7 +483,7 @@ struct Network : public Header, Nameable, HasMessages{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & id & name & uri & address_name & address_number & address_type_name
-            & mail & website & fax & line_list & messages;
+            & mail & website & fax & sort & line_list & messages;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
