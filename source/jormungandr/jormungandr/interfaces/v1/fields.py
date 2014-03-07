@@ -116,7 +116,8 @@ class stop_time_properties_links(fields.Raw):
         for note_ in properties.notes:
             r.append({"id": note_.uri, "type": "notes", "value": note_.note})
         for exception in properties.exceptions:
-            r.append({"type": "exceptions", "id": exception.uri, "date": exception.date, "except_type": exception.type})
+            r.append({"type": "exceptions", "id": exception.uri, "date": exception.date,
+                      "except_type": exception.type})
         return r
 
 
