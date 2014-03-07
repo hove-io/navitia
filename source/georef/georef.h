@@ -21,7 +21,7 @@ namespace navitia { namespace georef {
 /// default speed (in m/s) by transportation mode, defined at compile time
 const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     {{
-                                                        1.38f, //nt::Mode_e::Walking
+                                                        1.12f, //nt::Mode_e::Walking
                                                         4.1f, //nt::Mode_e::Bike
                                                         16.8f, //nt::Mode_e::Car
                                                         4.1f //nt::Mode_e::Vls
