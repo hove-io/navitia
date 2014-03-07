@@ -627,7 +627,7 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
        matched = 0,
        not_initialized,
        not_valid,
-       outside,
+       other,
        size
    };
    navitia::flat_enum_map<error, int> messages;
@@ -648,7 +648,7 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
            } else if (! stop_point->coord.is_valid()) {
                messages[error::not_valid] += 1;
            } else {
-               messages[error::outside] += 1;
+               messages[error::other] += 1;
            }
        }
    }
@@ -666,9 +666,9 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
        LOG4CPLUS_DEBUG(log, "Number of stop point rejected (not valid)"
                        << messages[error::not_valid]);
    }
-   if (messages[error::outside]) {
-       LOG4CPLUS_DEBUG(log, "Number of stop point rejected (outside perimeter)"
-                       << messages[error::outside]);
+   if (messages[error::other]) {
+       LOG4CPLUS_DEBUG(log, "Number of stop point rejected (other issues)"
+                       << messages[error::other]);
    }
 }
 
