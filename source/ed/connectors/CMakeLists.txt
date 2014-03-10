@@ -11,6 +11,7 @@ SET(SOURCE_LIB
     geopal_parser.cpp
     conv_coord.cpp
     external_parser.cpp
+    data_cleaner.cpp
 )
 
 add_library(connectors ${SOURCE_LIB})
