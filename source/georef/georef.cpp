@@ -242,74 +242,6 @@ GeoRef::GeoRef(): word_weight(0)
 {
 }
 
-Path GeoRef::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const {
-    Path p;
-
-    // On reparcourt tout dans le bon ordre
-    nt::idx_t last_way = type::invalid_idx;
-    boost::optional<PathItem::TransportCaracteristic> last_transport_carac{};
-    PathItem path_item;
-    path_item.coordinates.push_back(graph[reverse_path.back()].coord);
-
-    for (size_t i = reverse_path.size(); i > 1; --i) {
-        bool path_item_changed = false;
-        vertex_t v = reverse_path[i-2];
-        vertex_t u = reverse_path[i-1];
-
-        auto edge_pair = boost::edge(u, v, graph);
-        //patch temporaire, A VIRER en refactorant toute la notion de direct_path!
-        if (! edge_pair.second) {
-            //for one way way, the reverse path obviously cannot work
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find edge between "
-                           << u << " -> " << v << ", we try the reverse one");
-            //if it still not work we cannot do anything
-            edge_pair = boost::edge(v, u, graph);
-            if (! edge_pair.second) {
-                throw navitia::exception("impossible to find reverse edge");
-            }
-        }
-        edge_t e = edge_pair.first;
-
-        Edge edge = graph[e];
-        PathItem::TransportCaracteristic transport_carac = get_caracteristic(e);
-        if ((edge.way_idx != last_way && last_way != type::invalid_idx) || (last_transport_carac && transport_carac != *last_transport_carac)) {
-            p.path_items.push_back(path_item);
-            path_item = PathItem();
-            path_item_changed = true;
-        }
-
-        nt::GeographicalCoord coord = graph[v].coord;
-        path_item.coordinates.push_back(coord);
-        last_way = edge.way_idx;
-        last_transport_carac = transport_carac;
-        path_item.way_idx = edge.way_idx;
-        path_item.transportation = transport_carac;
-        path_item.duration += edge.duration;
-        p.duration += edge.duration;
-        if (path_item_changed) {
-            //we update the last path item
-            path_item.angle = compute_directions(p, coord);
-        }
-    }
-    //in some case we want to add even if we have only one vertex (which means there is no valid edge)
-    size_t min_nb_elt_to_add = add_one_elt ? 1 : 2;
-    if (reverse_path.size() >= min_nb_elt_to_add)
-        p.path_items.push_back(path_item);
-
-    return p;
-}
-
-Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) const {
-    std::vector<vertex_t> reverse_path;
-    while (best_destination != preds[best_destination]){
-        reverse_path.push_back(best_destination);
-        best_destination = preds[best_destination];
-    }
-    reverse_path.push_back(best_destination);
-
-    return build_path(reverse_path, true);
-}
-
 type::Mode_e GeoRef::get_mode(vertex_t vertex) const {
     return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
 }
@@ -339,33 +271,6 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
 
     throw navitia::exception("unhandled path item caracteristic");
 }
-
-Path GeoRef::combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
-    //used for the direct path, we need to reverse the second part and concatenate the 2 'predecessors' list
-    //to get the path
-    std::vector<vertex_t> reverse_path;
-
-    vertex_t current = best_destination;
-    while (current != successors[current]) {
-        reverse_path.push_back(current);
-        current = successors[current];
-    }
-    reverse_path.push_back(current);
-    std::reverse(reverse_path.begin(), reverse_path.end());
-
-    if (best_destination == preds[best_destination])
-        return build_path(reverse_path, false);
-
-    current = preds[best_destination]; //we skip the middle point since it has already been added
-    while (current != preds[current]) {
-        reverse_path.push_back(current);
-        current = preds[current];
-    }
-    reverse_path.push_back(current);
-
-    return build_path(reverse_path, false);
-}
-
 
 void GeoRef::add_way(const Way& w){
     Way* to_add = new Way;

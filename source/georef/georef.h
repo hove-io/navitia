@@ -141,7 +141,8 @@ struct PathItem {
         Bike,
         Car,
         BssTake, //when a bike is taken
-        BssPutBack //we a bike is put back
+        BssPutBack, //when a bike is put back
+        CrowFly //for the projections on the georef network
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
     double get_length() const {
@@ -324,14 +325,6 @@ struct GeoRef {
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode, const proximitylist::ProximityList<vertex_t>& prox) const {
         return nearest_edge(coordinates, offsets[mode], prox);
     }
-
-    /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
-    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
-
-    /// Combine 2 pathes
-    Path combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const;
-    /// Build a path from a reverse path list
-    Path build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const;
 
     void add_way(const Way& w);
 

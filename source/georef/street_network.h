@@ -145,7 +145,7 @@ private:
     std::pair<bt::time_duration, vertex_t> find_nearest_vertex(const ProjectionData& target) const;
 
     ///return the time the travel the distance at the current speed (used for projections)
-    bt::time_duration distance_to_duration(const double val) const;
+    bt::time_duration crow_fly_duration(const double val) const;
 
     void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection) const;
 
@@ -176,6 +176,15 @@ struct StreetNetwork {
      * If the 2 sub path does not connect return an empty path
      **/
     Path get_direct_path();
+
+    /// Build a path with a destination and the predecessors list
+    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
+
+    /// Combine 2 pathes
+    Path combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const;
+    /// Build a path from a reverse path list
+    Path build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const;
+
 
     const GeoRef & geo_ref;
     PathFinder departure_path_finder;
