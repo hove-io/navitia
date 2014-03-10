@@ -487,7 +487,15 @@ struct Network : public Header, Nameable, HasMessages{
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Network & other) const { return this < &other; }
+    bool operator<(const Network & other) const {
+        if(this->sort == other.sort) {
+            if(this->name == other.name) {
+                return this < &other;
+            }
+            return this->name < other.name;
+        }
+        return this->sort < other.sort;
+    }
 
 };
 
@@ -574,8 +582,18 @@ struct Line : public Header, Nameable, HasMessages{
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-    bool operator<(const Line & other) const { return this < &other; }
-
+    bool operator<(const Line & other) const {
+        if(this->network ==  other.network){
+            if(this->sort == other.sort) {
+                if(this->name == other.name) {
+                    return this < &other;
+                }
+                return this->name < other.name;
+            }
+            return this->sort < other.sort;
+        }
+        return this->network < other.network;
+    };
 };
 
 struct Route : public Header, Nameable, HasMessages{
