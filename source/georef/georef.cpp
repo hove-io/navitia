@@ -630,7 +630,7 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
        other,
        size
    };
-   navitia::flat_enum_map<error, int> messages;
+   navitia::flat_enum_map<error, int> messages {{{}}};
 
    this->projected_stop_points.clear();
    this->projected_stop_points.reserve(stop_points.size());
