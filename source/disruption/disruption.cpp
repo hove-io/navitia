@@ -108,6 +108,27 @@ void Disruption::add_lines(const std::string& filter,
     }
 }
 
+void Disruption::sort_disruptions(const type::Data &d){
+
+    auto sort_disruption = [&](disrupt d1, disrupt d2){
+        const auto & n1 = *(d.pt_data.networks[d1.network_idx]);
+        const auto & n2 = *(d.pt_data.networks[d2.network_idx]);
+            return n1 < n2;
+    };
+
+    auto sort_lines = [&](type::idx_t l1_, type::idx_t l2_) {
+        const auto & l1 = *(d.pt_data.lines[l1_]);
+        const auto & l2 = *(d.pt_data.lines[l2_]);
+        return l1 < l2;
+    };
+
+    std::sort(this->disrupts.begin(), this->disrupts.end(), sort_disruption);
+    for(auto disrupt : this->disrupts){
+        std::sort(disrupt.line_idx.begin(), disrupt.line_idx.end(), sort_lines);
+    }
+
+}
+
 void Disruption::disruptions_list(const std::string& filter,
                         const std::vector<std::string>& forbidden_uris,
                         const type::Data &d,
@@ -119,6 +140,7 @@ void Disruption::disruptions_list(const std::string& filter,
     add_networks(network_idx, d, action_period, now);
     add_lines(filter, forbidden_uris, d, action_period, now);
     add_stop_areas(network_idx, filter, forbidden_uris, d, action_period, now);
+    sort_disruptions(d);
 }
 const std::vector<disrupt>& Disruption::get_disrupts() const{
     return this->disrupts;
