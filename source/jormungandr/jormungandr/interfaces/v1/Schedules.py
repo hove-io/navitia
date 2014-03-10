@@ -3,8 +3,9 @@ from flask.ext.restful import fields, marshal_with, reqparse
 from jormungandr import i_manager
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
-    display_informations_route, additional_informations_vj, UrisToLinks, error
-from ResourceUri import ResourceUri, add_notes, manage_response_status
+    display_informations_route, additional_informations_vj, UrisToLinks, error, \
+    enum_type
+from ResourceUri import ResourceUri, add_notes, add_exception_dates
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from errors import ManageError
@@ -135,7 +136,6 @@ class StopSchedules(Schedules):
         super(StopSchedules, self).__init__("departure_boards")
         self.parsers["get"].add_argument("interface_version", type=int,
                                          default=1, hidden=True)
-        self.method_decorators.append(manage_response_status(self))
 
     @marshal_with(stop_schedules)
     @ManageError()
