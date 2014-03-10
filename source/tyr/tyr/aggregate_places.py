@@ -115,37 +115,44 @@ def aggregate_places(instance_config, job_id):
         #the name of existing classes, I don't know how to access this dictionnary
         class StopAreaEd(Base_ed):
             __table__ = Table("stop_area", meta_ed,
-                         autoload=True, autoload_with=engine_ed)
+                         autoload=True, autoload_with=engine_ed,
+                         schema='navitia')
         handle_object_instance("stop_area", StopAreaEd)
 
         class StopPointEd(Base_ed):
             __table__ = Table("stop_point", meta_ed,
-                        autoload=True, autoload_with=engine_ed)
+                        autoload=True, autoload_with=engine_ed,
+                        schema='navitia')
         handle_object_instance("stop_point", StopPointEd)
 
         class PoiEd(Base_ed):
             __table__ = Table("poi", meta_ed,
-                        autoload=True, autoload_with=engine_ed)
+                        autoload=True, autoload_with=engine_ed,
+                        schema='navitia')
         handle_object_instance("poi", PoiEd)
 
         class AdminEd(Base_ed):
             __table__ = Table("admin", meta_ed,
-                         autoload=True, autoload_with=engine_ed)
+                         autoload=True, autoload_with=engine_ed,
+                         schema='navitia')
         handle_object_instance("admin", AdminEd)
 
         class LineEd(Base_ed):
             __table__ = Table("line", meta_ed,
-                         autoload=True, autoload_with=engine_ed)
+                         autoload=True, autoload_with=engine_ed,
+                         schema='navitia')
         handle_object_instance("line", LineEd)
 
         class RouteEd(Base_ed):
             __table__ = Table("route", meta_ed,
-                        autoload=True, autoload_with=engine_ed)
+                        autoload=True, autoload_with=engine_ed,
+                        schema='navitia')
         handle_object_instance("route", RouteEd)
 
         class NetworkEd(Base_ed):
             __table__ = Table("network", meta_ed,
-                        autoload=True, autoload_with=engine_ed)
+                        autoload=True, autoload_with=engine_ed,
+                        schema='navitia')
         handle_object_instance("network", NetworkEd)
     finally:
         session_ed.close()
