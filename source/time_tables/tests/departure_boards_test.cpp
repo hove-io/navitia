@@ -13,6 +13,10 @@ BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 using namespace navitia::timetables;
 
+boost::gregorian::date date(std::string str) {
+    return boost::gregorian::from_undelimited_string(str);
+}
+
 BOOST_AUTO_TEST_CASE(test1) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 36000, 36100)("stop2", 36150,362000);
@@ -203,14 +207,17 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     auto nearly_cal = new navitia::type::Calendar(b.data.meta.production_date.begin());
     nearly_cal->uri = "nearly_cal";
     nearly_cal->active_periods.push_back({beg, end_of_year});
-    nearly_cal->week_pattern = std::bitset<7>{"1111111"};
-    //we add 6 exceptions (3 add and 3 remove), one by week
-    for (size_t i = 0; i < 6; ++i) {
-        navitia::type::ExceptionDate exception_date;
-        exception_date.date = b.data.meta.production_date.begin() + boost::gregorian::weeks(i);
-        exception_date.type = (i % 2 ? navitia::type::ExceptionDate::ExceptionType::add : navitia::type::ExceptionDate::ExceptionType::sub);
-        nearly_cal->exceptions.push_back(exception_date);
-    }
+    nearly_cal->week_pattern = std::bitset<7>{"1111100"};
+    //we add 2 exceptions (2 add), one by week
+    navitia::type::ExceptionDate exception_date;
+    exception_date.date = date("20120618");
+    exception_date.type = navitia::type::ExceptionDate::ExceptionType::add;
+    nearly_cal->exceptions.push_back(exception_date);
+    exception_date.date = date("20120619");
+    exception_date.type = navitia::type::ExceptionDate::ExceptionType::add;
+    nearly_cal->exceptions.push_back(exception_date);
+
+
     b.data.pt_data.calendars.push_back(nearly_cal);
     b.lines["line:A"]->calendar_list.push_back(nearly_cal);
 
@@ -229,9 +236,20 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     BOOST_REQUIRE(! resp.has_error());
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
-    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 3);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T151000");
+    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T101000");
 
-    //TODO check exceptions
+    auto properties = stop_date_time.properties();
+    BOOST_REQUIRE_EQUAL(properties.exceptions_size(), 2);
+    auto exception = properties.exceptions(0);
+    BOOST_REQUIRE_EQUAL(exception.uri(), "exception:020120618");
+    BOOST_REQUIRE_EQUAL(exception.date(), "20120618");
+    BOOST_REQUIRE_EQUAL(exception.type(), pbnavitia::ExceptionType::Add);
+
+    exception = properties.exceptions(1);
+    BOOST_REQUIRE_EQUAL(exception.uri(), "exception:020120619");
+    BOOST_REQUIRE_EQUAL(exception.date(), "20120619");
+    BOOST_REQUIRE_EQUAL(exception.type(), pbnavitia::ExceptionType::Add);
+
 }

@@ -125,8 +125,11 @@ BOOST_AUTO_TEST_CASE(get_differences_test_full_cal) {
 
 struct associated_cal_fixture {
     associated_cal_fixture() : b("20140101"),
+        // Same vehicleJourney.validity_pattern : Associated vehicle_journey
         always_on_cal(new navitia::type::Calendar(b.data.meta.production_date.begin())),
+        // 2 days of period 01/04/2014 - 11/04/2014 : Associated vehicle_journey
         wednesday_cal(new navitia::type::Calendar(b.data.meta.production_date.begin())),
+        // monday where vehiclejourney.validity_pattern not valide for this day : Not Associated vehicle_journey
         monday_cal(new navitia::type::Calendar(b.data.meta.production_date.begin())) {
         {
             always_on_cal->uri="always_on";
