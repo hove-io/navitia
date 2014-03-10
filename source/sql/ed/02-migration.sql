@@ -89,7 +89,7 @@ $$;
 DO $$
     BEGIN
         BEGIN
-            ALTER TABLE navitia.line ADD COLUMN sort integer NOT NULL DEFAULT -1;
+            ALTER TABLE navitia.line ADD COLUMN sort integer NOT NULL DEFAULT 2147483647;
         EXCEPTION
             WHEN duplicate_column THEN RAISE NOTICE 'column sort already exists in navitia.line.';
         END;
@@ -99,7 +99,7 @@ $$;
 DO $$
     BEGIN
         BEGIN
-            ALTER TABLE navitia.network ADD COLUMN sort integer NOT NULL DEFAULT -1;
+            ALTER TABLE navitia.network ADD COLUMN sort integer NOT NULL DEFAULT 2147483647;
         EXCEPTION
             WHEN duplicate_column THEN RAISE NOTICE 'column sort already exists in navitia.network.';
         END;
