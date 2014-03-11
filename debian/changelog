@@ -1,3 +1,28 @@
+navitia2 (0.89.0) unstable; urgency=low
+
+ * Jormungandr: add status API to v1
+ * Jormungandr: fix resource uri
+ * connecteur_at : filter modified.
+ * kraken: add sort disruption by line and network
+ * kraken: add sort line and network by weigth
+ * Tyr: add navitia schema to ed tables.
+ * Jormungandr: we always compare with lower case
+ * kraken : return exceptions dates of associated_calendar
+ * jormungandr : manage exceptions dates in stop_schedule
+ * kraken : add calendar_exceptions in stop_schedule
+ * kraken: add sort line and network by weigth
+ * georef : Show reasons why stop points are excluded.
+ * Buid fix on get_stop_times
+ * Route_schedules: fix for frequency routes
+ * Jormungandr: Add journey_pattern API
+ * Kraken&Jormungandr: change walking default speed
+ * jormungandr : status of stop_time is in response
+ * Kraken: add schema navitia during query
+ * Ed: Add column "sort" to tables company, network, and "website"
+ * Ed: Add column "website" to the table "network"
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 11 Mar 2014 17:03:49 +0100
+
 navitia2 (0.88.1) unstable; urgency=low
 
  * corrections on at loggers 
