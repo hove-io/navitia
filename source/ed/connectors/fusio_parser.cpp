@@ -2,10 +2,11 @@
 
 namespace ed { namespace connectors {
 
-void AgencyFusioHandler::init(Data& ) {
-    id_c = csv.get_pos_col("agency_id");
-    name_c = csv.get_pos_col("agency_name");
+void AgencyFusioHandler::init(Data& data) {
+    AgencyGtfsHandler::init(data);
     ext_code_c = csv.get_pos_col("external_code");
+    sort_c = csv.get_pos_col("agency_sort");
+    agency_url_c = csv.get_pos_col("agency_url");
 }
 
 void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
@@ -23,6 +24,15 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     network->name = row[name_c];
+
+    if (is_valid(sort_c, row)) {
+        network->sort =  boost::lexical_cast<int>(row[sort_c]);
+    }
+
+    if (is_valid(agency_url_c, row)) {
+        network->website = row[agency_url_c];
+    }
+
     data.networks.push_back(network);
     gtfs_data.agency_map[network->uri] = network;
 }
@@ -191,7 +201,7 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     }
 
     if(is_valid(itl_c, row)){
-        int local_traffic_zone = str_to_int(row[itl_c]);
+        int local_traffic_zone =  boost::lexical_cast<int>(row[itl_c]);
         if (local_traffic_zone > 0)
             stop_time->local_traffic_zone = local_traffic_zone;
         else
@@ -374,6 +384,7 @@ void LineFusioHandler::init(Data &){
     network_c = csv.get_pos_col("network_id");
     comment_c = csv.get_pos_col("comment_id");
     commercial_mode_c = csv.get_pos_col("commercial_mode_id");
+    sort_c = csv.get_pos_col("line_sort");
 }
 void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(! is_first_line && ! has_col(id_c, row)) {
@@ -439,6 +450,9 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if(line->commercial_mode == nullptr){
         auto itm = gtfs_data.commercial_mode_map.find("default_commercial_mode");
         line->commercial_mode = itm->second;
+    }
+    if (is_valid(sort_c, row)) {
+        line->sort =  boost::lexical_cast<int>(row[sort_c]);
     }
 
     data.lines.push_back(line);
@@ -820,7 +834,7 @@ void FusioParser::parse_files(Data& data) {
     fill_default_agency(data);
     fill_default_commercial_mode(data);
     fill_default_physical_mode(data);
-    parse<AgencyGtfsHandler>(data, "agency.txt", true);
+    parse<AgencyFusioHandler>(data, "agency.txt", true);
     parse<ContributorFusioHandler>(data, "contributors.txt");
     parse<CompanyFusioHandler>(data, "company.txt");
     parse<PhysicalModeFusioHandler>(data, "physical_modes.txt");

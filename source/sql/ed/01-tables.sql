@@ -198,7 +198,9 @@ CREATE TABLE IF NOT EXISTS navitia.network (
     comment TEXT,
     name TEXT NOT NULL,
     uri TEXT NOT NULL,
-    external_code TEXT NOT NULL
+    external_code TEXT NOT NULL,
+    sort integer NOT NULL DEFAULT 2147483647,
+    website TEXT
 );
 
 CREATE TABLE IF NOT EXISTS navitia.line (
@@ -210,7 +212,8 @@ CREATE TABLE IF NOT EXISTS navitia.line (
     external_code TEXT NOT NULL,
     name TEXT NOT NULL,
     code TEXT,
-    color TEXT
+    color TEXT,
+    sort integer NOT NULL DEFAULT 2147483647
 );
 
 CREATE TABLE IF NOT EXISTS navitia.rel_line_company (
