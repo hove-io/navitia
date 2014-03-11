@@ -68,7 +68,7 @@ pbnavitia::Response Worker::status() {
     status->set_end_production_date(bg::to_iso_string(d->meta.production_date.end()));
     status->set_data_version(d->version);
     status->set_navimake_version(d->meta.navimake_version);
-    status->set_navitia_version(NAVITIA_VERSION);
+    status->set_navitia_version(KRAKEN_VERSION);
     status->set_loaded(d->loaded);
     status->set_last_load_status(d->last_load);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
