@@ -510,7 +510,25 @@ void fill_pb_placemark(navitia::georef::Admin* admin,
                    now, action_period);
     place->set_name(admin->name);
     if (!admin->post_code.empty()){
-        place->set_name(place->name() + " (" + admin->post_code + ")");
+        if (admin->post_code.find(";") != std::string::npos){
+            std::vector<std::string> str_vec;
+            boost::algorithm::split(str_vec, admin->post_code, boost::algorithm::is_any_of(";"));
+            if (str_vec.size() != 0){
+                int min_value = std::numeric_limits<int>::max();
+                int int_post_code;
+                auto str_post_code = str_vec.begin();
+                while(str_post_code != str_vec.end()){
+                    int_post_code = boost::lexical_cast<int>(*str_post_code);
+                    if (int_post_code < min_value)
+                        min_value = int_post_code;
+                    ++str_post_code;
+                }
+                place->set_name(place->name() + " (" + boost::lexical_cast<std::string>(min_value) + ")");
+            }
+        }
+        else{
+            place->set_name(place->name() + " (" + admin->post_code + ")");
+        }
     }
 
     place->set_uri(admin->uri);
