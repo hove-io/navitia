@@ -477,7 +477,7 @@ struct Network : public Header, Nameable, HasMessages{
     std::string mail;
     std::string website;
     std::string fax;
-    int sort;
+    int sort = std::numeric_limits<int>::max();
 
     std::vector<Line*> line_list;
 
@@ -561,7 +561,7 @@ struct Line : public Header, Nameable, HasMessages{
 
     std::string additional_data;
     std::string color;
-    int sort;
+    int sort = std::numeric_limits<int>::max();
 
     CommercialMode* commercial_mode;
 
