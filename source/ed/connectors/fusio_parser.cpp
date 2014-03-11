@@ -26,7 +26,7 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     network->name = row[name_c];
 
     if (is_valid(sort_c, row)) {
-        network->sort = str_to_int(row[sort_c]);
+        network->sort =  boost::lexical_cast<int>(row[sort_c]);
     }
 
     if (is_valid(agency_url_c, row)) {
@@ -201,7 +201,7 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     }
 
     if(is_valid(itl_c, row)){
-        int local_traffic_zone = str_to_int(row[itl_c]);
+        int local_traffic_zone =  boost::lexical_cast<int>(row[itl_c]);
         if (local_traffic_zone > 0)
             stop_time->local_traffic_zone = local_traffic_zone;
         else
@@ -452,7 +452,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
         line->commercial_mode = itm->second;
     }
     if (is_valid(sort_c, row)) {
-        line->sort = str_to_int(row[sort_c]);
+        line->sort =  boost::lexical_cast<int>(row[sort_c]);
     }
 
     data.lines.push_back(line);

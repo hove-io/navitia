@@ -488,13 +488,13 @@ struct Network : public Header, Nameable, HasMessages{
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Network & other) const {
-        if(this->sort == other.sort) {
-            if(this->name == other.name) {
-                return this < &other;
-            }
-            return this->name < other.name;
+        if(this->sort != other.sort) {
+            return this->sort < other.sort;
         }
-        return this->sort < other.sort;
+        if(this->name != other.name) {
+             return this->name < other.name;
+        }
+        return this < &other;
     }
 
 };
@@ -583,16 +583,16 @@ struct Line : public Header, Nameable, HasMessages{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const Line & other) const {
-        if(this->network ==  other.network){
-            if(this->sort == other.sort) {
-                if(this->name == other.name) {
-                    return this < &other;
-                }
-                return this->name < other.name;
-            }
+        if(this->network != other.network){
+            return this->network < other.network;
+        }
+        if(this->sort != other.sort) {
             return this->sort < other.sort;
         }
-        return this->network < other.network;
+        if(this->name != other.name) {
+            return this->name < other.name;
+        }
+        return this < &other;
     };
 };
 
