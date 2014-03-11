@@ -1,3 +1,9 @@
+navitia2 (0.89.1) unstable; urgency=low
+
+ * Fix kraken version
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 11 Mar 2014 18:03:56 +0100
+
 navitia2 (0.89.0) unstable; urgency=low
 
  * Jormungandr: add status API to v1
