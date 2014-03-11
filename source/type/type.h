@@ -464,16 +464,25 @@ struct Network : public Header, Nameable, HasMessages{
     std::string mail;
     std::string website;
     std::string fax;
+    int sort = std::numeric_limits<int>::max();
 
     std::vector<Line*> line_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & id & name & uri & address_name & address_number & address_type_name
-            & mail & website & fax & line_list & messages;
+            & mail & website & fax & sort & line_list & messages;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Network & other) const { return this < &other; }
+    bool operator<(const Network & other) const {
+        if(this->sort != other.sort) {
+            return this->sort < other.sort;
+        }
+        if(this->name != other.name) {
+             return this->name < other.name;
+        }
+        return this < &other;
+    }
 
 };
 
@@ -541,7 +550,7 @@ struct Line : public Header, Nameable, HasMessages{
 
     std::string additional_data;
     std::string color;
-    int sort;
+    int sort = std::numeric_limits<int>::max();
 
     CommercialMode* commercial_mode;
 
@@ -562,8 +571,18 @@ struct Line : public Header, Nameable, HasMessages{
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-    bool operator<(const Line & other) const { return this < &other; }
-
+    bool operator<(const Line & other) const {
+        if(this->network != other.network){
+            return this->network < other.network;
+        }
+        if(this->sort != other.sort) {
+            return this->sort < other.sort;
+        }
+        if(this->name != other.name) {
+            return this->name < other.name;
+        }
+        return this < &other;
+    };
 };
 
 struct Route : public Header, Nameable, HasMessages{

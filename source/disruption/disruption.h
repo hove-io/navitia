@@ -37,6 +37,7 @@ private:
                       const type::Data &d,
                       const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
+    void sort_disruptions(const type::Data &d);
 public:
     Disruption():logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){};
 

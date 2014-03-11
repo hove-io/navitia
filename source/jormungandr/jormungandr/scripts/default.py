@@ -229,7 +229,7 @@ class Script(object):
                 if it is the case a modified version of the request to be rerun
                 else None"""
         if not "cheap_journey" in self.functional_params \
-            or self.functional_params["cheap_journey"] != "True":
+            or self.functional_params["cheap_journey"].lower() != "true":
             return
 
         #we want to check if all journeys use the TER network

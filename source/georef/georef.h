@@ -21,7 +21,7 @@ namespace navitia { namespace georef {
 /// default speed (in m/s) by transportation mode, defined at compile time
 const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     {{
-                                                        1.38f, //nt::Mode_e::Walking
+                                                        1.12f, //nt::Mode_e::Walking
                                                         4.1f, //nt::Mode_e::Bike
                                                         16.8f, //nt::Mode_e::Car
                                                         4.1f //nt::Mode_e::Vls
@@ -296,10 +296,10 @@ struct GeoRef {
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
 
 
-    /** Projete chaque stop_point sur le filaire de voirie
-     *  Retourne le nombre de stop_points effectivement accrochés
+    /**
+     * Project each stop_point on the georef network
      */
-    int project_stop_points(const std::vector<type::StopPoint*> & stop_points);
+    void project_stop_points(const std::vector<type::StopPoint*> & stop_points);
 
     /** project the stop point on all transportation mode
       * return a pair with :

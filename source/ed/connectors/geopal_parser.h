@@ -19,8 +19,6 @@ private:
     std::vector<std::string> files;
     ed::connectors::ConvCoord conv_coord;
 
-    size_t ways_fusionned;
-
     ed::types::Node* add_node(const navitia::type::GeographicalCoord& coord, const std::string& uri);
     void fill_admins();
     void fill_nodes();

@@ -106,6 +106,8 @@ struct Network : public Header, Nameable{
     std::string mail;
     std::string website;
     std::string fax;
+    int sort = std::numeric_limits<int>::max();
+
 
     navitia::type::Network* get_navitia_type() const;
 
@@ -152,13 +154,13 @@ struct Line : public Header, Nameable {
 
     std::string additional_data;
     std::string color;
-    int sort;
+    int sort = std::numeric_limits<int>::max();
 
     CommercialMode* commercial_mode;
     Network* network;
     Company* company;
 
-    Line(): color(""), sort(0), commercial_mode(NULL), network(NULL), company(NULL){}
+    Line(): color(""), commercial_mode(NULL), network(NULL), company(NULL){}
 
     nt::Line* get_navitia_type() const;
 

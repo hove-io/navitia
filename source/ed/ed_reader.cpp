@@ -122,7 +122,7 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment FROM navitia.network";
+    std::string request = "SELECT id, name, uri, comment, sort, website FROM navitia.network";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -130,6 +130,8 @@ void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
         const_it["comment"].to(network->comment);
         const_it["uri"].to(network->uri);
         const_it["name"].to(network->name);
+        const_it["sort"].to(network->sort);
+        const_it["website"].to(network->website);
 
         network->idx = data.pt_data.networks.size();
 
@@ -187,7 +189,7 @@ void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment FROM navitia.company";
+    std::string request = "SELECT id, name, uri, comment, website FROM navitia.company";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -195,6 +197,7 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
         const_it["uri"].to(company->uri);
         const_it["name"].to(company->name);
         const_it["comment"].to(company->comment);
+        const_it["website"].to(company->website);
 
         company->idx = data.pt_data.companies.size();
 
@@ -328,7 +331,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, code, color, "
-        "network_id, commercial_mode_id FROM navitia.line";
+        "network_id, commercial_mode_id, sort FROM navitia.line";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -338,6 +341,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         const_it["comment"].to(line->comment);
         const_it["code"].to(line->code);
         const_it["color"].to(line->color);
+        const_it["sort"].to(line->sort);
 
         line->network = network_map[const_it["network_id"].as<idx_t>()];
         line->network->line_list.push_back(line);
@@ -1124,7 +1128,7 @@ void EdReader::fill_periods(navitia::type::Data& , pqxx::work& work){
 
 void EdReader::fill_exception_dates(navitia::type::Data& , pqxx::work& work){
     std::string request = "select id, datetime, type_ex, calendar_id ";
-                request += "from exception_date;";
+                request += "from navitia.exception_date;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::type::Calendar* cal = this->calendar_map[const_it["calendar_id"].as<idx_t>()];

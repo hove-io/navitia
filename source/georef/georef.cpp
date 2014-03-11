@@ -622,19 +622,54 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
     return to_return;
 }
 
-int GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points){
-    int matched = 0;
-    this->projected_stop_points.clear();
-    this->projected_stop_points.reserve(stop_points.size());
+void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points) {
+   enum class error {
+       matched = 0,
+       not_initialized,
+       not_valid,
+       other,
+       size
+   };
+   navitia::flat_enum_map<error, int> messages {{{}}};
 
-    for(const type::StopPoint* stop_point : stop_points) {
-        std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
+   this->projected_stop_points.clear();
+   this->projected_stop_points.reserve(stop_points.size());
 
-        this->projected_stop_points.push_back(pair.first);
-        if(pair.second)
-            matched++;
-    }
-    return matched;
+   for(const type::StopPoint* stop_point : stop_points) {
+       std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
+
+       this->projected_stop_points.push_back(pair.first);
+       if (pair.second) {
+           messages[error::matched] += 1;
+       } else {
+           //verify if coordinate is not valid:
+           if (! stop_point->coord.is_initialized()) {
+               messages[error::not_initialized] += 1;
+           } else if (! stop_point->coord.is_valid()) {
+               messages[error::not_valid] += 1;
+           } else {
+               messages[error::other] += 1;
+           }
+       }
+   }
+
+   auto log = log4cplus::Logger::getInstance("kraken::type::Data::project_stop_point");
+   if (messages[error::matched]) {
+       LOG4CPLUS_DEBUG(log, "Number of stop point projected on the georef network : "
+                       << messages[error::matched] << " (on " << stop_points.size() << ")");
+   }
+   if (messages[error::not_initialized]) {
+       LOG4CPLUS_DEBUG(log, "Number of stop point rejected (X=0 or Y=0)"
+                       << messages[error::not_initialized]);
+   }
+   if (messages[error::not_valid]) {
+       LOG4CPLUS_DEBUG(log, "Number of stop point rejected (not valid)"
+                       << messages[error::not_valid]);
+   }
+   if (messages[error::other]) {
+       LOG4CPLUS_DEBUG(log, "Number of stop point rejected (other issues)"
+                       << messages[error::other]);
+   }
 }
 
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {

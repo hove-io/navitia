@@ -134,26 +134,27 @@ class add_computed_resources(object):
                     "rel": "journeys",
                     "templated": templated
                 })
-            #for lines we add the link to the calendars
-            if collection == 'lines':
-                data['links'].append({
-                    "href": url_for("v1.calendars.collection", **kwargs),
-                    "rel": "calendars",
-                    "templated": templated
-                })
-            #for calendars we add the link to the lines
-            if collection == 'calendars':
-                data['links'].append({
-                    "href": url_for("v1.lines.collection", **kwargs),
-                    "rel": "lines",
-                    "templated": templated
-                })
-            if collection in ['stop_areas', 'lines', 'networks'] and "region" in kwargs:
-                data['links'].append({
-                    "href": url_for("v1/disruptions", **kwargs),
-                    "rel": "disruptions",
-                    "templated": templated
-                })
+            if "region" in kwargs:
+                #for lines we add the link to the calendars
+                if collection == 'lines':
+                    data['links'].append({
+                        "href": url_for("v1.calendars.collection", **kwargs),
+                        "rel": "calendars",
+                        "templated": templated
+                    })
+                #for calendars we add the link to the lines
+                if collection == 'calendars':
+                    data['links'].append({
+                        "href": url_for("v1.lines.collection", **kwargs),
+                        "rel": "lines",
+                        "templated": templated
+                    })
+                if collection in ['stop_areas', 'lines', 'networks']:
+                    data['links'].append({
+                        "href": url_for("v1/disruptions", **kwargs),
+                        "rel": "disruptions",
+                        "templated": templated
+                    })
             if isinstance(response, tuple):
                 return data, code, header
             else:
@@ -205,6 +206,54 @@ class add_notes(object):
 
         return wrapper
 
+class add_exception_dates(object):
+    def __init__(self, resource):
+        self.resource = resource
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if isinstance(objects, tuple):
+                data, code, header = unpack(objects)
+            else:
+                data = objects
+
+            def add_exception(data):
+                result = []
+                if isinstance(data, list) or isinstance(data, tuple):
+                    for item in data:
+                        result.extend(add_exception(item))
+
+                elif isinstance(data, dict) or\
+                        isinstance(data, OrderedDict):
+                    if 'type' in data.keys() and data['type'] == 'exceptions':
+                        type = "Remove"
+                        if data['except_type'] == 0:
+                            type = "Add"
+                        result.append({"id": data['id'],
+                                       "date": data['date'],
+                                       "type" : type})
+                        del data["date"]
+                        del data["except_type"]
+                    else:
+                        for v in data.items():
+                            result.extend(add_exception(v))
+                return result
+            if self.resource.region:
+                if not "exceptions" in data or not isinstance(data["exceptions"], list):
+                    data["exceptions"] = []
+                    res = []
+                    note = add_exception(data)
+                    [res.append(item) for item in note if not item in res]
+                    data["exceptions"].extend(res)
+
+            if isinstance(objects, tuple):
+                return data, code, header
+            else:
+                return data
+
+        return wrapper
 
 class update_journeys_status(object):
 
@@ -247,37 +296,6 @@ class update_journeys_status(object):
             if self.resource.region and "journeys" in data:
                 for journey in data["journeys"]:
                     update_status(journey, journey)
-
-            if isinstance(objects, tuple):
-                return data, code, header
-            else:
-                return data
-
-        return wrapper
-
-
-class manage_response_status(object):
-
-    def __init__(self, resource):
-        self.resource = resource
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-            if isinstance(objects, tuple):
-                data, code, header = unpack(objects)
-            else:
-                data = objects
-
-            if 'stop_schedules' in data.keys():
-                stop_schedules = data["stop_schedules"]
-                for one_schedule in stop_schedules:
-                    if 'date_times' in one_schedule.keys():
-                        if len(one_schedule["date_times"]) == 0:
-                            one_schedule["status"] = "no_departure_this_day"
-                    else:
-                        one_schedule["status"] = "no_departure_this_day"
 
             if isinstance(objects, tuple):
                 return data, code, header

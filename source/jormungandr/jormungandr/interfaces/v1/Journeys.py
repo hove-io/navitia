@@ -262,9 +262,13 @@ class add_journey_pagination(object):
                 if not "links" in objects[0]:
                     objects[0]["links"] = []
 
-                args = request.args.copy()
+                args = dict()
+                for item in request.args.iteritems():
+                    args[item[0]] = item[1]
                 args["datetime"] = datetime_before.strftime(f_datetime)
                 args["datetime_represents"] = "arrival"
+                if "region" in kwargs:
+                    args["region"] = kwargs["region"]
                 objects[0]["links"].append({
                     "href": url_for("v1.journeys", _external=True, **args),
                     "templated": False,
@@ -283,9 +287,13 @@ class add_journey_pagination(object):
                 if not "links" in objects[0]:
                     objects[0]["links"] = []
 
-                args = request.args.copy()
+                args = dict()
+                for item in request.args.iteritems():
+                    args[item[0]] = item[1]
                 args["datetime"] = datetime_first.strftime(f_datetime)
                 args["datetime_represents"] = "departure"
+                if "region" in kwargs:
+                    args["region"] = kwargs["region"]
                 objects[0]["links"].append({
                     "href": url_for("v1.journeys", _external=True, **args),
                     "templated": False,
@@ -418,7 +426,7 @@ class Journeys(ResourceUri):
         parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
                                 description="maximal duration of non public \
                                 transport in second")
-        parser_get.add_argument("walking_speed", type=float, default=1.68)
+        parser_get.add_argument("walking_speed", type=float, default=1.12)
         parser_get.add_argument("bike_speed", type=float, default=4.1)
         parser_get.add_argument("bss_speed", type=float, default=4.1,)
         parser_get.add_argument("car_speed", type=float, default=16.8)

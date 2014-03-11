@@ -105,7 +105,7 @@ void fill_pb_object(navitia::georef::Admin* adm, const nt::Data& data, pbnavitia
 void fill_pb_object(const navitia::type::StopTime* st, const nt::Data& data, pbnavitia::ScheduleStopTime* row, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period,
-                    const DateTime& date_time = DateTime(), bool display_date = true);
+                    const DateTime& date_time = DateTime(), boost::optional<const std::string> calendar_id = boost::optional<const std::string>());
 
 void fill_pb_object(const type::StopPointConnection* c, const type::Data& data,
                     pbnavitia::Connection* connection, int max_depth,
@@ -129,5 +129,9 @@ void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comme
                     pbnavitia::Error* error, int max_depth = 0 ,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period  = null_time_period);
+
+void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt::Data& data,
+                    pbnavitia::CalendarException* calendar_exception, int max_depth,
+                    const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 
 }//namespace navitia
