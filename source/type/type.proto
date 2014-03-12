@@ -38,6 +38,7 @@ enum API {
     place_uri = 15;
     UNKNOWN_API = 16;
     disruptions = 17;
+    calendars = 18;
 }
 
 enum VehicleJourneyType{
