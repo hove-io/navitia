@@ -6,6 +6,7 @@ from v1 import Schedules
 from v1 import Places
 from v1 import Coord
 from v1 import Disruptions
+from v1 import Calendars
 from v1 import converters_collection_type
 from v1 import Status
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter,\
@@ -172,8 +173,4 @@ def v1_routing(api):
     api.add_resource(Disruptions.Disruptions,
                      region + 'disruptions',
                      region + '<uri:uri>/disruptions',
-                     endpoint='v1.disruptions')
-
-    api.add_resource(Status.Status,
-                     region + 'status',
-                     endpoint='v1.status')
+                     endpoint='v1/disruptions')
