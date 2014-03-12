@@ -173,4 +173,14 @@ def v1_routing(api):
     api.add_resource(Disruptions.Disruptions,
                      region + 'disruptions',
                      region + '<uri:uri>/disruptions',
-                     endpoint='v1/disruptions')
+                     endpoint='v1.disruptions')
+
+    api.add_resource(Status.Status,
+                     region + 'status',
+                     endpoint='v1.status')
+
+    api.add_resource(Calendars.Calendars,
+                     region + 'calendars',
+                     region + '<uri:uri>/calendars',
+                     region + "calendars/<id:id>",
+                     endpoint="v1.calendars")
