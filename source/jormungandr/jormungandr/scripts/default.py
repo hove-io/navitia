@@ -513,7 +513,3 @@ class Script(object):
     def poi_types(self, request, instance):
         return self.__on_ptref("poi_types", type_pb2.POITYPE, request,
                                instance)
-
-    def calendars(self, request, instance):
-        return self.__on_ptref("calendars", type_pb2.CALENDAR,
-                               request, instance)
