@@ -32,7 +32,10 @@ class ResourceUri(Resource):
         for item in items:
             if not type_:
                 if item != "coord":
-                    type_ = collections_to_resource_type[item]
+                    if(item == "calendars"):
+                        type_ = 'calendar'
+                    else:
+                        type_ = collections_to_resource_type[item]
                 else:
                     type_ = "coord"
             else:
@@ -135,9 +138,9 @@ class add_computed_resources(object):
                     "templated": templated
                 })
             #for lines we add the link to the calendars
-            if collection == 'lines':
+            if collection in ['lines']:
                 data['links'].append({
-                    "href": url_for("v1.calendars.collection", **kwargs),
+                    "href": url_for("v1.calendars", **kwargs),
                     "rel": "calendars",
                     "templated": templated
                 })

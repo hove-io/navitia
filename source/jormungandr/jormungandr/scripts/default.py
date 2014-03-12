@@ -66,6 +66,22 @@ class Script(object):
         resp = instance.send_and_receive(req)
         return resp
 
+    def calendars(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.calendars
+        req.calendars.depth = request['depth']
+        req.calendars.filter = request['filter']
+        req.calendars.count = request['count']
+        req.calendars.start_page = request['start_page']
+        req.calendars.start_date = request['start_date']
+        req.calendars.end_date = request['end_date']
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.ptref.forbidden_uri.append(forbidden_uri)
+
+        resp = instance.send_and_receive(req)
+        return resp
+
     def disruptions(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.disruptions
