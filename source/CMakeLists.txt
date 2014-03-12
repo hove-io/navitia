@@ -65,6 +65,7 @@ add_subdirectory(time_tables)
 add_subdirectory(jormungandr)
 add_subdirectory(sql)
 add_subdirectory(disruption)
+add_subdirectory(calendar)
 
 add_subdirectory(scripts)
 
