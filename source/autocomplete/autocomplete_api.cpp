@@ -85,25 +85,35 @@ void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>
     }
 }
 
+bool has_admin_level8(const std::vector<georef::Admin*>& admins){
+    bool admin_level8 = false;
+    for(const navitia::georef::Admin* admin : admins){
+        if (admin->level == 8){
+            admin_level8 = true;
+        }
+    }
+    return admin_level8;
+}
+
 
 ///Ajouter une pénalité aux objects sans admin par au moin d.geo_ref.word_weight
 void update_quality_for_missing_admin(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
         const navitia::type::Data &d, navitia::type::Type_e ntype){
-    const int penalty = d.geo_ref.word_weight * 2;
+    const int penalty = d.geo_ref.word_weight * 8;
     for (auto &item : ac_result){
         bool apply_penalty = false;
         switch(ntype){
         case navitia::type::Type_e::StopArea:
-            apply_penalty = !d.pt_data.stop_areas[item.idx]->admin_list.empty();
+            apply_penalty = !has_admin_level8(d.pt_data.stop_areas[item.idx]->admin_list);
             break;
         case navitia::type::Type_e::POI:
-            apply_penalty = !d.geo_ref.pois[item.idx]->admin_list.empty();
+            apply_penalty = !has_admin_level8(d.geo_ref.pois[item.idx]->admin_list);
             break;
         case navitia::type::Type_e::Address:
-            apply_penalty = !d.geo_ref.ways[item.idx]->admin_list.empty();
+            apply_penalty = !has_admin_level8(d.geo_ref.ways[item.idx]->admin_list);
             break;
         case navitia::type::Type_e::StopPoint:
-            apply_penalty = !d.pt_data.stop_points[item.idx]->admin_list.empty();
+            apply_penalty = !has_admin_level8(d.pt_data.stop_points[item.idx]->admin_list);
             break;
         default:
             break;
