@@ -50,15 +50,16 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     size_t total_result = calendar_list.size();
     calendar_list = paginate(calendar_list, count, start_page);
 
+    for(type::idx_t cal_idx : calendar_list){
+        type::Calendar* cal = d.pt_data.calendars[cal_idx];
+        fill_pb_object(cal, d,pb_response.add_calendars(), depth, now);
+    }
+
     auto pagination = pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);
     pagination->set_startpage(start_page);
     pagination->set_itemsperpage(count);
     pagination->set_itemsonpage(pb_response.calendars_size());
-    for(type::idx_t cal_idx : calendar_list){
-        type::Calendar* cal = d.pt_data.calendars[cal_idx];
-        fill_pb_object(cal, d,pb_response.add_calendars(), depth, now);
-    }
 
     if (pb_response.calendars_size() == 0) {
         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this calendars",
