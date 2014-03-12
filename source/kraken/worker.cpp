@@ -128,6 +128,21 @@ pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &req
                                                 forbidden_uris);
 }
 
+pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request){
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    std::vector<std::string> forbidden_uris;
+    for(int i = 0; i < request.forbidden_uris_size(); ++i)
+        forbidden_uris.push_back(request.forbidden_uris(i));
+    return navitia::calendar::calendars(*(*this->data),
+                                        request.start_date(),
+                                        request.end_date(),
+                                        request.depth(),
+                                        request.count(),
+                                        request.start_page(),
+                                        request.filter(),
+                                        forbidden_uris);
+}
+
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
         pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
@@ -421,6 +436,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
         case pbnavitia::METADATAS : return metadatas(); break;
         case pbnavitia::disruptions : return disruptions(request.disruptions()); break;
+        case pbnavitia::calendars : return calendars(request.calendars()); break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", result.mutable_error());
