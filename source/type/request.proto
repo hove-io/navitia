@@ -1,9 +1,19 @@
 import "type.proto";
 package pbnavitia;
 
+message CalendarsRequest {
+    optional string start_date    	= 1;
+    optional string end_date        = 2;
+    optional int32 depth            = 3;
+    optional int32 start_page       = 4;
+    optional int32 count            = 5;
+    optional string filter          = 6;
+    repeated string forbidden_uris  = 7;
+}
+
 message DisruptionsRequest {
     optional string datetime        = 1;
-    optional int32 period		= 2;
+    optional int32 period           = 2;
     optional int32 depth            = 3;
     optional int32 start_page       = 4;
     optional int32 count            = 5;
@@ -94,4 +104,5 @@ message Request {
     optional PTRefRequest ptref                     = 6;
     optional PlaceUriRequest place_uri              = 7;
     optional DisruptionsRequest disruptions         = 8;
+    optional CalendarsRequest calendars             = 9;
 }
