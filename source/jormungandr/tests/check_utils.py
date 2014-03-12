@@ -45,6 +45,29 @@ def is_valid_days(days):
         return None
    return match
 
+def is_valid_datetime(str):
+    """
+    Check is the string is a valid date
+    >>> is_valid_datetime("bob")
+    False
+    >>> is_valid_datetime("")
+    Traceback (most recent call last):
+    AssertionError
+    >>> is_valid_datetime("20123101T215030")  # month is badly set
+    False
+    >>> is_valid_datetime("20120131T215030")
+    True
+    """
+    assert str
+
+    try:
+        datetime.strptime(str, "%Y%m%dT%H%M%S")
+    except ValueError:
+        logging.error("string '{}' is no valid date".format(str))
+        return False
+    return True
+
+
 def is_valid_date(str):
     """
     Check is the string is a valid date
@@ -53,15 +76,15 @@ def is_valid_date(str):
     >>> is_valid_date("")
     Traceback (most recent call last):
     AssertionError
-    >>> is_valid_date("20123101T215030")  # month is badly set
+    >>> is_valid_date("20123101")  # month is badly set
     False
-    >>> is_valid_date("20120131T215030")
+    >>> is_valid_date("20120131")
     True
     """
     assert str
 
     try:
-        datetime.strptime(str, "%Y%m%dT%H%M%S")
+        datetime.strptime(str, "%Y%m%d")
     except ValueError:
         logging.error("string '{}' is no valid date".format(str))
         return False

@@ -151,7 +151,7 @@ class add_computed_resources(object):
                     })
                 if collection in ['stop_areas', 'lines', 'networks']:
                     data['links'].append({
-                        "href": url_for("v1/disruptions", **kwargs),
+                        "href": url_for("v1.disruptions", **kwargs),
                         "rel": "disruptions",
                         "templated": templated
                     })

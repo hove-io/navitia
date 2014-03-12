@@ -1,3 +1,9 @@
+navitia2 (0.89.2) unstable; urgency=low
+
+ * Fix jormungandr unit tests
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 12 Mar 2014 09:03:53 +0100
+
 navitia2 (0.89.1) unstable; urgency=low
 
  * Fix kraken version
