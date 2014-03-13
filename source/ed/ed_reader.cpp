@@ -208,7 +208,7 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, "
-     "sa.comment as comment,"
+     "sa.comment as comment, sa.visible as visible,"
      "ST_X(sa.coord::geometry) as lon, ST_Y(sa.coord::geometry) as lat,"
      "pr.wheelchair_boarding as wheelchair_boarding, pr.sheltered as sheltered,"
      "pr.elevator as elevator, pr.escalator as escalator,"
@@ -228,6 +228,7 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
         const_it["comment"].to(sa->comment);
         sa->coord.set_lon(const_it["lon"].as<double>());
         sa->coord.set_lat(const_it["lat"].as<double>());
+        sa->visible = const_it["visible"].as<bool>();
         if (const_it["wheelchair_boarding"].as<bool>()){
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
         }
@@ -661,8 +662,11 @@ void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, ST_Y(poi.coord::geometry) as lat,";
-    request += " poi.name, poi.uri, poi.poi_type_id FROM navitia.poi poi, navitia.poi_type poi_type where poi.poi_type_id=poi_type.id and poi_type.uri <> 'bicycle_rental';";
+    std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, "
+            "ST_Y(poi.coord::geometry) as lat, poi.visible as visible, "
+            "poi.name, poi.uri, poi.poi_type_id FROM navitia.poi poi, "
+            "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id "
+            "and poi_type.uri <> 'bicycle_rental';";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::POI* poi = new navitia::georef::POI();
@@ -671,6 +675,7 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
         const_it["id"].to(poi->id);
         poi->coord.set_lon(const_it["lon"].as<double>());
         poi->coord.set_lat(const_it["lat"].as<double>());
+        poi->visible = const_it["visible"].as<bool>();
         const_it["weight"].to(poi->weight);
         navitia::georef::POIType* poi_type = this->poi_type_map[const_it["poi_type_id"].as<idx_t>()];
         if(poi_type != NULL ){
