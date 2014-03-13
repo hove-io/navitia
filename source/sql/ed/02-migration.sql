@@ -116,3 +116,23 @@ DO $$
     END;
 $$;
 
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.stop_area ADD visible BOOLEAN NOT NULL DEFAULT True;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column visible already exists in navitia.stop_area.';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.poi ADD COLUMN visible BOOLEAN NOT NULL DEFAULT True;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column visible already exists in navitia.poi.';
+        END;
+    END;
+$$;
+
