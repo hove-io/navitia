@@ -52,7 +52,7 @@ struct Vertex {
 /** Propriétés des arcs : (anciennement "segment")*/
 
 struct Edge {
-    nt::idx_t way_idx = 0; //< indexe vers le nom de rue
+    nt::idx_t way_idx = nt::invalid_idx; //< indexe vers le nom de rue
     boost::posix_time::time_duration duration = {}; // duration of the edge
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
