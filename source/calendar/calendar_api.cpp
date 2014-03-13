@@ -6,13 +6,13 @@
 namespace navitia { namespace calendar {
 
 pbnavitia::Response calendars(const navitia::type::Data &d,
-                                const std::string &start_date,
-                                const std::string &end_date,
-                                const size_t depth,
-                                size_t count,
-                                size_t start_page,
-                                const std::string &filter,
-                                const std::vector<std::string>& forbidden_uris){
+    const std::string &start_date,
+    const std::string &end_date,
+    const size_t depth,
+    size_t count,
+    size_t start_page,
+    const std::string &filter,
+    const std::vector<std::string>& forbidden_uris) {
     pbnavitia::Response pb_response;
     std::vector<type::idx_t> calendar_list;
     auto now = boost::posix_time::second_clock::local_time();
@@ -62,7 +62,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     pagination->set_itemsonpage(pb_response.calendars_size());
 
     if (pb_response.calendars_size() == 0) {
-        fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this calendars",
+        fill_pb_error(pbnavitia::Error::no_solution, "no solution found for calendars API",
         pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
     }

@@ -5,12 +5,10 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 namespace navitia { namespace calendar {
-struct Calendar{
-private:
-    log4cplus::Logger logger;
+class Calendar{
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 public:
-    Calendar():logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){};
-
+    // Return idx calendars list
     std::vector<type::idx_t> get_calendars(const std::string& filter,
                     const std::vector<std::string>& forbidden_uris,
                     const type::Data &d,
