@@ -512,17 +512,15 @@ void GeoRef::build_autocomplete_list(){
     for(const POI* poi : pois){
         // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
         //if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
-        if (!poi->name.empty()) {
+        if ((!poi->name.empty()) && (poi->visible)) {
             std::string key="";
-            if (poi->visible){
-                for(Admin* admin : poi->admin_list){
-                    if (admin->level == 8)
-                    {
-                        key += " " + admin->name;
-                    }
+            for(Admin* admin : poi->admin_list){
+                if (admin->level == 8)
+                {
+                    key += " " + admin->name;
                 }
-                fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
             }
+            fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
         }
     }
     fl_poi.build();
