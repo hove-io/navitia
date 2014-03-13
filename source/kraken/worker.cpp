@@ -359,12 +359,12 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     /// Récupération des paramètres de rabattement au départ
     if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)
-            || (origin.type == type::Type_e::Admin) || (origin.type == type::Type_e::POI)){
+            || (origin.type == type::Type_e::Admin) || (origin.type == type::Type_e::POI) || (origin.type == type::Type_e::StopArea)){
         origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params());
     }
     /// Récupération des paramètres de rabattement à l'arrivée
     if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
-            || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI)){
+            || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI) || (origin.type == type::Type_e::StopArea)){
         destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), false);
     }
 /// Accessibilité, il faut initialiser ce paramètre
@@ -387,7 +387,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 }
 
 
-pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
+pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     std::vector<std::string> forbidden_uri;
     for(int i = 0; i < request.forbidden_uri_size(); ++i)
