@@ -184,7 +184,7 @@ void EdPersistor::insert_poi_types(const ed::Georef& data){
 
 void EdPersistor::insert_pois(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("navitia.poi",
-            {"id", "weight", "coord", "name", "uri", "poi_type_id"});
+    {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible"});
     for(const auto& itm : data.pois) {
         std::string poi_type("NULL");
         if(itm.second->poi_type != nullptr){
@@ -193,7 +193,7 @@ void EdPersistor::insert_pois(const ed::Georef& data){
         this->lotus.insert({std::to_string(itm.second->id),
                 std::to_string(itm.second->weight),
                 this->to_geographic_point(itm.second->coord),
-                itm.second->name, "poi:" + itm.first, poi_type});
+                itm.second->name, "poi:" + itm.first, poi_type, std::to_string(itm.second->visible)});
     }
     lotus.finish_bulk_insert();
 }
@@ -520,7 +520,7 @@ void EdPersistor::insert_sa_sp_properties(const ed::Data& data){
 void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_areas){
     this->lotus.prepare_bulk_insert("navitia.stop_area",
             {"id", "uri", "external_code", "name", "coord", "comment",
-            "properties_id"});
+             "properties_id", "visible"});
 
     for(types::StopArea* sa : stop_areas){
         std::vector<std::string> values;
@@ -531,6 +531,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
         values.push_back("POINT(" + std::to_string(sa->coord.lon()) + " " + std::to_string(sa->coord.lat()) + ")");
         values.push_back(sa->comment);
         values.push_back(std::to_string(sa->to_ulog()));
+        values.push_back(std::to_string(sa->visible));
         this->lotus.insert(values);
     }
 
