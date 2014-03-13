@@ -445,7 +445,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & uri & name & coord & stop_point_list & admin_list
-        & _properties & wheelchair_boarding & messages;
+        & _properties & wheelchair_boarding & messages & visible;
     }
 
     StopArea(): wheelchair_boarding(false) {}
