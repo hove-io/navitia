@@ -90,7 +90,7 @@ class Uri:
         resource_types = ["connections", "stop_points", "networks",
                           "commercial_modes", "physical_modes", "companies",
                           "stop_areas", "routes", "lines", "addresses",
-                          "administrative_regions", "coords"]
+                          "administrative_regions", "coords", "pois"]
 
         return resource_type in resource_types
 
