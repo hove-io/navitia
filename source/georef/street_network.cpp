@@ -313,6 +313,11 @@ std::pair<bt::time_duration, vertex_t> PathFinder::update_path(const ProjectionD
             LOG4CPLUS_WARN(log4cplus::Logger::getInstance("Logger"), "unable to find a way from start edge ["
                            << starting_edge.source << "-" << starting_edge.target
                            << "] to [" << target.source << "-" << target.target << "]");
+
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+            dump_dijkstra_for_quantum(target);
+#endif
+
             return {max, {}};
         }
         try {
@@ -325,5 +330,85 @@ std::pair<bt::time_duration, vertex_t> PathFinder::update_path(const ProjectionD
 
     return find_nearest_vertex(target);
 }
+
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+/**
+ * Visitor to dump the visited edges and vertexes
+ */
+struct printer_all_visitor : public target_all_visitor {
+    std::ofstream file_vertex, file_edge;
+    size_t cpt_v = 0, cpt_e = 0;
+
+    void init_files() {
+        file_vertex.open ("vertexes.csv");
+        file_vertex << "idx; lat; lon; vertex_id" << std::endl;
+        file_edge.open ("edges.csv");
+        file_edge << "idx; lat from; lon from; lat to; long to" << std::endl;
+    }
+
+    printer_all_visitor(std::vector<vertex_t> destinations) :
+        target_all_visitor(destinations) {
+        init_files();
+    }
+
+    ~printer_all_visitor() {
+        file_vertex.close();
+        file_edge.close();
+    }
+
+    printer_all_visitor(const printer_all_visitor& o) : target_all_visitor(o) {
+        init_files();
+    }
+
+    template <typename graph_type>
+    void finish_vertex(vertex_t u, const graph_type& g) {
+        file_vertex << cpt_v++ << ";" << g[u].coord << ";" << u << std::endl;
+        target_all_visitor::finish_vertex(u, g);
+    }
+
+    template <typename graph_type>
+    void examine_edge(edge_t e, graph_type& g) {
+        file_edge << cpt_e++ << ";" << g[boost::source(e, g)].coord << ";" << g[boost::target(e, g)].coord
+                  << "; LINESTRING(" << g[boost::source(e, g)].coord.lon() << " " << g[boost::source(e, g)].coord.lat()
+                  << ", " << g[boost::target(e, g)].coord.lon() << " " << g[boost::target(e, g)].coord.lat() << ")"
+                     << ";" << e
+                  << std::endl;
+        target_all_visitor::examine_edge(e, g);
+    }
+};
+
+void PathFinder::dump_dijkstra_for_quantum(const ProjectionData& target) {
+    /* for debug in quantum gis, we dump 4 files :
+     * - one for the start edge (start.csv)
+     * - one for the destination edge (desitination.csv)
+     * - one with all visited edges (edges.csv)
+     * - one with all visited vertex (vertex.csv)
+     * - one with the out edges of the target (out_edges.csv)
+     *
+     * the files are to be open in quantum with the csv layer
+     * */
+    std::ofstream start, destination, out_edge;
+    start.open("start.csv");
+    destination.open("destination.csv");
+    start << "x;y;mode transport" << std::endl
+          << geo_ref.graph[starting_edge.source].coord << ";" << (int)(mode) << std::endl
+          << geo_ref.graph[starting_edge.target].coord << ";" << (int)(mode) << std::endl;
+    destination << "x;y;" << std::endl
+          << geo_ref.graph[target.source].coord << std::endl
+          << geo_ref.graph[target.target].coord << std::endl;
+
+    out_edge.open("out_edges.csv");
+    out_edge << "target;x;y;" << std::endl;
+    BOOST_FOREACH(edge_t e, boost::out_edges(target.source, geo_ref.graph)) {
+        out_edge << "source;" << geo_ref.graph[boost::target(e, geo_ref.graph)].coord << std::endl;
+    }
+    BOOST_FOREACH(edge_t e, boost::out_edges(target.target, geo_ref.graph)) {
+        out_edge << "target;" << geo_ref.graph[boost::target(e, geo_ref.graph)].coord << std::endl;
+    }
+    try {
+        dijkstra(starting_edge.source, printer_all_visitor({target.source, target.target}));
+    } catch(DestinationFound) { }
+}
+#endif
 
 }}
