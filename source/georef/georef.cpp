@@ -491,11 +491,11 @@ void GeoRef::build_autocomplete_list(){
         if (!way->name.empty()) {
             std::string key="";
             for(Admin* admin : way->admin_list){
-                //Ajout du nom de l'admin de niveau 8
+                //Ajout du nom de l'admin de niveau 8  : commune
                 if (admin->level == 8) {
                     key+= " " + admin->name;
                 }
-                //Ajoute le code postal si ça existe
+                //Level Admin 8  : City
                 if ((!admin->post_code.empty()) && (admin->level == 8))
                 {
                     key += " "+ admin->post_code;
@@ -514,9 +514,9 @@ void GeoRef::build_autocomplete_list(){
         //if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
         if ((!poi->name.empty()) && (poi->visible)) {
             std::string key="";
-            for(Admin* admin : poi->admin_list){
-                if (admin->level == 8)
-                {
+            for(Admin* admin : poi->admin_list) {
+                //Level Admin 8  : City
+                if (admin->level == 8) {
                     key += " " + admin->name;
                 }
             }
