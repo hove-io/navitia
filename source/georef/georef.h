@@ -402,7 +402,7 @@ struct POI : public nt::Nameable, nt::Header{
     POI(): weight(0), poitype_idx(type::invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri &name & weight & coord & admin_list & poitype_idx;
+        ar &idx & uri &name & weight & coord & admin_list & poitype_idx & visible;
     }
 
     std::vector<type::idx_t> get(type::Type_e type, const GeoRef &) const;
