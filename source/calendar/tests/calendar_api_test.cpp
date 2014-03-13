@@ -13,36 +13,10 @@
                                     16 17 18 19 20 21 22
                                     23 24 25 26 27 28 29
                                     30 31
+2 calendars used :
 
 calA        1***************5---------------10**************14
 calB                            7*******9------------12**************16-------21*******25
-
-1) test_count_calendar : No filter
-    => Result 2 calendars
-
-2) test_forbidden_uris : forbidden_uris(line:B)
-    => Result 1 calendar : calA
-
-3) test_filter : filter(line.uri=line:A)
-    => Result 1 calendar : calA
-
-4) test_filter_period_no_solution : Period filter  ("20140201", "20140210")
-    => Result No solution
-
-5) test_filter_period_1 : Period filter  ("20140302", "20140303")
-    => Result 1 calendar : calA
-
-6) test_filter_period_2 : Period filter  ("20140307", "20140308")
-    => Result 1 calendar : calB
-
-7) test_filter_period_3 : Period filter  ("20140312", "20140313")
-    => Result 2 calendar : calA and calB
-
-8) test_filter_period_4 : Period filter  ("20140322", "20140324")
-    => Result 1 calendar : calB
-
-9) test_filter_period_5 : Period of one day ("20140301", "20140301")
-    => Result 1 calendar : calA
 */
 
 boost::gregorian::date date(std::string str) {
@@ -85,13 +59,21 @@ struct calendar_fixture {
         b.data.pt_data.index();
     }
 };
-
+/*
+    test_count_calendar : No filter
+        => Result 2 calendars
+*/
 BOOST_FIXTURE_TEST_CASE(test_count_calendar, calendar_fixture) {
 
     pbnavitia::Response resp = navitia::calendar::calendars(b.data, "", "", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 2);
 }
+/*
 
+    Test_forbidden_uris : forbidden_uris(line:B)
+        => Result 1 calendar : calA
+
+  */
 BOOST_FIXTURE_TEST_CASE(test_forbidden_uris, calendar_fixture) {
 
     pbnavitia::Response resp = navitia::calendar::calendars(b.data, "", "", 1, 10, 0, "", {"line:B"});
@@ -100,7 +82,10 @@ BOOST_FIXTURE_TEST_CASE(test_forbidden_uris, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calA");
     BOOST_REQUIRE_EQUAL(pb_cal.active_periods_size(), 2);
 }
-
+/*
+    Test_filter : filter(line.uri=line:A)
+        => Result 1 calendar : calA
+*/
 BOOST_FIXTURE_TEST_CASE(test_filter, calendar_fixture) {
 
     pbnavitia::Response resp = navitia::calendar::calendars(b.data, "", "", 1, 10, 0, "line.uri=line:A", {});
@@ -109,12 +94,19 @@ BOOST_FIXTURE_TEST_CASE(test_filter, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calA");
     BOOST_REQUIRE_EQUAL(pb_cal.active_periods_size(), 2);
 }
-
+/*
+    test_filter_period_no_solution : Period filter  ("20140201", "20140210")
+        => Result No solution
+  */
 BOOST_FIXTURE_TEST_CASE(test_filter_period_no_solution, calendar_fixture) {
 
     pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140201", "20140210", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
+/*
+    Test_filter_period_1 : Period filter  ("20140302", "20140303")
+        => Result 1 calendar : calA
+  */
 
 // Response calA
 BOOST_FIXTURE_TEST_CASE(test_filter_period_1, calendar_fixture) {
@@ -125,7 +117,11 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_1, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calA");
     BOOST_REQUIRE_EQUAL(pb_cal.active_periods_size(), 2);
 }
+/*
 
+    test_filter_period_2 : Period filter  ("20140307", "20140308")
+        => Result 1 calendar : calB
+  */
 // Response calB
 BOOST_FIXTURE_TEST_CASE(test_filter_period_2, calendar_fixture) {
 
@@ -135,7 +131,10 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_2, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calB");
     BOOST_REQUIRE_EQUAL(pb_cal.active_periods_size(), 3);
 }
-
+/*
+    test_filter_period_3 : Period filter  ("20140312", "20140313")
+        => Result 2 calendar : calA and calB
+  */
 // Response calA et calB
 BOOST_FIXTURE_TEST_CASE(test_filter_period_3, calendar_fixture) {
 
@@ -148,7 +147,11 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_3, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calB");
     BOOST_REQUIRE_EQUAL(pb_cal.active_periods_size(), 3);
 }
+/*
 
+    test_filter_period_4 : Period filter  ("20140322", "20140324")
+        => Result 1 calendar : calB
+*/
 // Response calB
 BOOST_FIXTURE_TEST_CASE(test_filter_period_4, calendar_fixture) {
 
@@ -158,7 +161,11 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_4, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calB");
     BOOST_REQUIRE_EQUAL(pb_cal.active_periods_size(), 3);
 }
+/*
 
+    test_filter_period_5 : Period of one day ("20140301", "20140301")
+        => Result 1 calendar : calA
+  */
 // Response calA
 BOOST_FIXTURE_TEST_CASE(test_filter_period_5, calendar_fixture) {
 

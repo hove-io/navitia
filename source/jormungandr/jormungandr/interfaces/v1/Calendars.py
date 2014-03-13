@@ -75,6 +75,7 @@ class Calendars(ResourceUri):
         if(id):
             args["filter"] = "calendar.uri=" + id
         elif(uri):
+            # Calendars of line
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
