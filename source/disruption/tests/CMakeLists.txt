@@ -8,4 +8,4 @@ add_executable(disruption_test disruption_test.cpp)
 target_link_libraries(disruption_test disruption_api types ptreferential pb_lib data fare routing ed georef autocomplete utils ${BOOST_LIBS})
 
 
-ADD_TEST(disruption_test ${EXECUTABLE_OUTPUT_PATH}/disruption_test --report_level=no)
+ADD_BOOST_TEST(disruption_test)

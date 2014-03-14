@@ -6,5 +6,5 @@ add_library(vptranslator ${vptranslator_src})
 
 add_executable (vptranslator_test test.cpp)
 target_link_libraries(vptranslator_test ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} vptranslator)
-ADD_TEST(vptranslator_test ${EXECUTABLE_OUTPUT_PATH}/vptranslator_test --report_level=no)
+ADD_BOOST_TEST(vptranslator_test)
 
