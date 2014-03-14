@@ -6,4 +6,4 @@ target_link_libraries(ptref_test ed ptreferential data fare routing types pb_lib
     ${Boost_SERIALIZATION_LIBRARY} ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} log4cplus)
 
-ADD_TEST(ptref_test ${EXECUTABLE_OUTPUT_PATH}/ptref_test --report_level=no)
+ADD_BOOST_TEST(ptref_test)
