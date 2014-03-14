@@ -32,7 +32,10 @@ class ResourceUri(Resource):
         for item in items:
             if not type_:
                 if item != "coord":
-                    type_ = collections_to_resource_type[item]
+                    if(item == "calendars"):
+                        type_ = 'calendar'
+                    else:
+                        type_ = collections_to_resource_type[item]
                 else:
                     type_ = "coord"
             else:
@@ -134,27 +137,19 @@ class add_computed_resources(object):
                     "rel": "journeys",
                     "templated": templated
                 })
-            if "region" in kwargs:
-                #for lines we add the link to the calendars
-                if collection == 'lines':
-                    data['links'].append({
-                        "href": url_for("v1.calendars.collection", **kwargs),
-                        "rel": "calendars",
-                        "templated": templated
-                    })
-                #for calendars we add the link to the lines
-                if collection == 'calendars':
-                    data['links'].append({
-                        "href": url_for("v1.lines.collection", **kwargs),
-                        "rel": "lines",
-                        "templated": templated
-                    })
-                if collection in ['stop_areas', 'lines', 'networks']:
-                    data['links'].append({
-                        "href": url_for("v1.disruptions", **kwargs),
-                        "rel": "disruptions",
-                        "templated": templated
-                    })
+            #for lines we add the link to the calendars
+            if collection in ['lines']:
+                data['links'].append({
+                    "href": url_for("v1.calendars", **kwargs),
+                    "rel": "calendars",
+                    "templated": templated
+                })
+            if collection in ['stop_areas', 'lines', 'networks'] and "region" in kwargs:
+                data['links'].append({
+                    "href": url_for("v1.disruptions", **kwargs),
+                    "rel": "disruptions",
+                    "templated": templated
+                })
             if isinstance(response, tuple):
                 return data, code, header
             else:
