@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS navitia.poi (
     coord GEOGRAPHY(POINT, 4326),
     name TEXT NOT NULL,
     uri TEXT NOT NULL,
+    visible BOOLEAN NOT NULL DEFAULT True,
     poi_type_id BIGINT NOT NULL REFERENCES navitia.poi_type
 );
 
@@ -311,7 +312,8 @@ CREATE TABLE IF NOT EXISTS navitia.stop_area (
     external_code TEXT NOT NULL,
     name TEXT NOT NULL,
     coord GEOGRAPHY(POINT, 4326),
-    comment TEXT
+    comment TEXT,
+    visible BOOLEAN NOT NULL DEFAULT True
 );
 
 CREATE TABLE IF NOT EXISTS navitia.rel_stop_area_admin (

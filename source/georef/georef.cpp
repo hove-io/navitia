@@ -466,7 +466,7 @@ void GeoRef::init() {
 }
 
 void GeoRef::build_proximity_list(){
-    pl.clear(); // vider avant de reconstruire
+    pl.clear();
 
     //do not build the proximitylist with the edge of other transportation mode than walking (and walking HAS to be the first graph)
     for(vertex_t v = 0; v < nb_vertex_by_mode; ++v){
@@ -487,17 +487,14 @@ void GeoRef::build_autocomplete_list(){
     int pos = 0;
     fl_way.clear();
     for(Way* way : ways){
-        // A ne pas ajouter dans le disctionnaire si pas ne nom
         if (!way->name.empty()) {
             std::string key="";
             for(Admin* admin : way->admin_list){
-                //Ajout du nom de l'admin de niveau 8
+                //Level Admin 8  : City
                 if (admin->level == 8) {
                     key+= " " + admin->name;
                 }
-                //Ajoute le code postal si ça existe
-                if ((!admin->post_code.empty()) && (admin->level == 8))
-                {
+                if ((!admin->post_code.empty()) && (admin->level == 8)) {
                     key += " "+ admin->post_code;
                 }
             }
@@ -508,21 +505,17 @@ void GeoRef::build_autocomplete_list(){
     fl_way.build();
 
     fl_poi.clear();
-    //Remplir les poi dans la liste autocompletion
+    //Autocomplete poi list
     for(const POI* poi : pois){
-        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
-        //if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
-        if (!poi->name.empty()) {
+        if ((!poi->name.empty()) && (poi->visible)) {
             std::string key="";
-            if (poi->visible){
-                for(Admin* admin : poi->admin_list){
-                    if (admin->level == 8)
-                    {
-                        key += " " + admin->name;
-                    }
+            for(Admin* admin : poi->admin_list) {
+                //Level Admin 8  : City
+                if (admin->level == 8) {
+                    key += " " + admin->name;
                 }
-                fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
             }
+            fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
         }
     }
     fl_poi.build();
