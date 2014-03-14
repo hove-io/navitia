@@ -71,8 +71,7 @@ class Schedules(ResourceUri):
 date_time = {
     "date_time": fields.String(),
     "additional_informations": additional_informations(),
-    "links": stop_time_properties_links(),
-    "status" : enum_type(attribute="response_status")
+    "links": stop_time_properties_links()
 }
 row = {
     "stop_point": PbField(stop_point),
@@ -118,6 +117,7 @@ class RouteSchedules(Schedules):
 stop_schedule = {
     "stop_point": PbField(stop_point),
     "route": PbField(route, attribute="route"),
+    "additional_informations": enum_type(attribute="response_status"),
     "display_informations": PbField(display_informations_route,
                                     attribute='pt_display_informations'),
     "date_times": fields.List(fields.Nested(date_time)),
