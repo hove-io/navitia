@@ -38,6 +38,9 @@ void fill_pb_object(const nt::StopArea * sa,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_area->set_uri(sa->uri);
     stop_area->set_name(sa->name);
+    if(!sa->comment.empty()) {
+        stop_area->set_comment(sa->comment);
+    }
     if(sa->coord.is_initialized()) {
         stop_area->mutable_coord()->set_lon(sa->coord.lon());
         stop_area->mutable_coord()->set_lat(sa->coord.lat());
@@ -63,6 +66,9 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
+    if(!sp->comment.empty()) {
+        stop_point->set_comment(sp->comment);
+    }
     if(sp->coord.is_initialized()) {
         stop_point->mutable_coord()->set_lon(sp->coord.lon());
         stop_point->mutable_coord()->set_lat(sp->coord.lat());
@@ -149,6 +155,9 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         return ;
 
     int depth = (max_depth <= 3) ? max_depth : 3;
+    if(!l->comment.empty()) {
+        line->set_comment(l->comment);
+    }
     if(l->code != "")
         line->set_code(l->code);
     if(l->color != "")
@@ -327,6 +336,9 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
+    if(!vj->comment.empty()) {
+        vehicle_journey->set_comment(vj->comment);
+    }
     vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->is_adapted);
     vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
