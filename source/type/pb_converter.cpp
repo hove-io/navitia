@@ -509,22 +509,32 @@ void fill_pb_placemark(navitia::georef::Admin* admin,
     fill_pb_object(admin, data, place->mutable_administrative_region(), depth,
                    now, action_period);
     place->set_name(admin->name);
+    //If city contains multi postal code(37000;37100;37200), we show only the smallest one in the result.
+    //"name": "Tours(37000;37100;37200)" becomes "name": "Tours(37000)"
     if (!admin->post_code.empty()){
         if (admin->post_code.find(";") != std::string::npos){
             std::vector<std::string> str_vec;
             boost::algorithm::split(str_vec, admin->post_code, boost::algorithm::is_any_of(";"));
-            if (str_vec.size() != 0){
-                int min_value = std::numeric_limits<int>::max();
+            assert(!str_vec.empty());
+            int min_value = std::numeric_limits<int>::max();
+            for (const std::string &str_post_code : str_vec){
                 int int_post_code;
-                auto str_post_code = str_vec.begin();
-                while(str_post_code != str_vec.end()){
-                    int_post_code = boost::lexical_cast<int>(*str_post_code);
-                    if (int_post_code < min_value)
-                        min_value = int_post_code;
-                    ++str_post_code;
+                try{
+                    int_post_code = boost::lexical_cast<int>(str_post_code);
                 }
+                catch (boost::bad_lexical_cast){
+                    continue;
+                }
+                if (int_post_code < min_value)
+                    min_value = int_post_code;
+            }
+            if (min_value != std::numeric_limits<int>::max()){
                 place->set_name(place->name() + " (" + boost::lexical_cast<std::string>(min_value) + ")");
             }
+            else{
+                place->set_name(place->name() + " ()");
+            }
+
         }
         else{
             place->set_name(place->name() + " (" + admin->post_code + ")");
