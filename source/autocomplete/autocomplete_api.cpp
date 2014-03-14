@@ -85,14 +85,14 @@ void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>
     }
 }
 
+///Find out if the list of cities(admins) contains at least one city with level=8
 bool has_admin_level8(const std::vector<georef::Admin*>& admins){
-    bool admin_level8 = false;
     for(const navitia::georef::Admin* admin : admins){
         if (admin->level == 8){
-            admin_level8 = true;
+            return true;
         }
     }
-    return admin_level8;
+    return false;
 }
 
 
