@@ -18,21 +18,21 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     auto now = boost::posix_time::second_clock::local_time();
     boost::gregorian::date start_period(boost::gregorian::not_a_date_time);
     boost::gregorian::date end_period(boost::gregorian::not_a_date_time);
-    if((!start_date.empty()) && (!end_date.empty())){
+    if((!start_date.empty()) && (!end_date.empty())) {
         try{
             start_period = boost::gregorian::from_undelimited_string(start_date);
-        }catch(boost::bad_lexical_cast){
-               fill_pb_error(pbnavitia::Error::unable_to_parse,
-                       "Unable to parse start_date", pb_response.mutable_error());
-               return pb_response;
+        }catch(boost::bad_lexical_cast) {
+           fill_pb_error(pbnavitia::Error::unable_to_parse,
+                   "Unable to parse start_date", pb_response.mutable_error());
+           return pb_response;
         }
 
         try{
             end_period = boost::gregorian::from_undelimited_string(end_date);
-        }catch(boost::bad_lexical_cast){
-               fill_pb_error(pbnavitia::Error::unable_to_parse,
-                       "Unable to parse end_date", pb_response.mutable_error());
-               return pb_response;
+        }catch(boost::bad_lexical_cast) {
+           fill_pb_error(pbnavitia::Error::unable_to_parse,
+                   "Unable to parse end_date", pb_response.mutable_error());
+           return pb_response;
         }
     }
     auto period = boost::gregorian::date_period(start_period, end_period);
@@ -50,7 +50,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     size_t total_result = calendar_list.size();
     calendar_list = paginate(calendar_list, count, start_page);
 
-    for(type::idx_t cal_idx : calendar_list){
+    for(type::idx_t cal_idx : calendar_list) {
         type::Calendar* cal = d.pt_data.calendars[cal_idx];
         fill_pb_object(cal, d,pb_response.add_calendars(), depth, now);
     }
