@@ -44,6 +44,9 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 )
 link_directories(${Boost_LIBRARY_DIRS})
 
+MACRO(ADD_BOOST_TEST EXE_NAME)
+    ADD_TEST(${EXE_NAME} ${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME} --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no)
+ENDMACRO(ADD_BOOST_TEST)
 
 ENABLE_TESTING()
 
@@ -76,6 +79,7 @@ CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 CHECK_INCLUDE_FILE_CXX("log4cplus/loggingmacros.h" HAVE_LOGGINGMACROS_H)
 
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+
 
 ## TEST
 add_test(connectors nosetests --where=${CMAKE_CURRENT_SOURCE_DIR}/connectors)

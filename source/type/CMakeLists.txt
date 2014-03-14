@@ -47,18 +47,18 @@ SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
 
 add_executable(associated_calendar_test tests/associated_calendar_test.cpp)
 target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus)
-ADD_TEST(associated_calendar_test ${EXECUTABLE_OUTPUT_PATH}/associated_calendar_test --report_level=no)
+ADD_BOOST_TEST(associated_calendar_test)
 
 add_executable(type_test tests/test.cpp)
 target_link_libraries(type_test types data utils ${BOOST_LIBS} log4cplus)
 
-ADD_TEST(type_test ${EXECUTABLE_OUTPUT_PATH}/type_test --report_level=no)
+ADD_BOOST_TEST(type_test)
 
 add_executable(datetime_test tests/datetime.cpp)
 target_link_libraries(datetime_test ${BOOST_LIBS} log4cplus)
-ADD_TEST(datetime_test ${EXECUTABLE_OUTPUT_PATH}/datetime_test --report_level=no)
+ADD_BOOST_TEST(datetime_test)
 
 
 add_executable(accessible_test tests/accessible.cpp)
 target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
-ADD_TEST(accessible_test ${EXECUTABLE_OUTPUT_PATH}/accessible_test --report_level=no)
+ADD_BOOST_TEST(accessible_test)
