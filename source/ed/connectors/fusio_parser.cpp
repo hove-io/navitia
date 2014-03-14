@@ -99,7 +99,7 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         }
     }
 
-    if (( return_wrapper.second != nullptr) && (is_valid(visible_c, row))) {
+    if (( return_wrapper.second != nullptr) && is_valid(visible_c, row)) {
             return_wrapper.second->visible = (row[visible_c] == "1");
     }else{
         return_wrapper.second->visible = true;
