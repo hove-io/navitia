@@ -1000,7 +1000,9 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
     pb_cal->set_name(cal->name);
     auto vp = pb_cal->mutable_validity_pattern();
     vp->set_beginning_date(boost::gregorian::to_iso_string(cal->validity_pattern.beginning_date));
-    vp->set_days(cal->validity_pattern.str());
+    std::string vp_str = cal->validity_pattern.str();
+    std::reverse(vp_str.begin(), vp_str.end());
+    vp->set_days(vp_str);
     auto week = pb_cal->mutable_week_pattern();
     week->set_monday(cal->week_pattern[navitia::Monday]);
     week->set_tuesday(cal->week_pattern[navitia::Tuesday]);
