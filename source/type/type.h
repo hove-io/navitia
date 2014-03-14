@@ -445,7 +445,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & uri & name & coord & stop_point_list & admin_list
-        & _properties & wheelchair_boarding & messages & visible;
+        & _properties & wheelchair_boarding & messages & visible & comment;
     }
 
     StopArea(): wheelchair_boarding(false) {}
@@ -731,7 +731,8 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         journey_pattern_point_list.resize(0);
         ar & uri & name & stop_area & coord & fare_zone & idx
-            & journey_pattern_point_list & admin_list & _properties & messages & stop_point_connection_list;
+            & journey_pattern_point_list & admin_list & _properties & messages
+            & stop_point_connection_list & comment;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
