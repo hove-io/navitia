@@ -16,6 +16,7 @@ Dependencies
    * libpqxx 3
    * libgoogle-perftools-dev
    * protobuf
+   * proj4
 
 #. Python
 
