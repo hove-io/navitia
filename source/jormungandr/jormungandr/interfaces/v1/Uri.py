@@ -67,10 +67,7 @@ class Uri(ResourceUri):
 
         if(collection and id):
             args["filter"] = collections_to_resource_type[collection] + ".uri="
-            if collection != 'pois':
-                args["filter"] += id
-            else:
-                args["filter"] += id.split(":")[-1]
+            args["filter"] += id
         elif(uri):
             if uri[-1] == "/":
                 uri = uri[:-1]

@@ -130,8 +130,6 @@ class PlacesNearby(ResourceUri):
                         args["uri"] += str(float(lat))
                     except ValueError:
                         pass
-                elif id[:3] == "poi":
-                    args["uri"] = id.split(":")[-1]
                 elif id[:5] == "admin":
                     args["uri"] = "admin:" + id.split(":")[-1]
                 else:
