@@ -485,6 +485,9 @@ class Journeys(ResourceUri):
         else:
             api = 'isochrone'
 
+        if not args["origin"]:
+            abort(400, message="from argument is required")
+
         response = i_manager.dispatch(args, api, instance_name=self.region)
         return response
 
