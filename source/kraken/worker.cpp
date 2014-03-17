@@ -379,7 +379,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     }
     /// Récupération des paramètres de rabattement à l'arrivée
     if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
-            || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI) || (origin.type == type::Type_e::StopArea)){
+            || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI) || (destination.type == type::Type_e::StopArea)){
         destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), false);
     }
 /// Accessibilité, il faut initialiser ce paramètre
