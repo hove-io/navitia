@@ -78,8 +78,8 @@ void Data::complete(){
                         connection->departure = sp1->second;
                         connection->destination  = sp2->second;
                         connection->connection_kind = types::ConnectionType::StopArea;
-                        connection->duration = 120;
-                        connection->display_duration = connection->duration;
+                        connection->duration = 240;
+                        connection->display_duration = connection->duration - 120;
                         connection->uri = sp1->second->uri +"=>"+sp2->second->uri;
                         stop_point_connections.push_back(connection);
                         conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
@@ -99,8 +99,8 @@ void Data::complete(){
                         connection->departure = sp2->second;
                         connection->destination  = sp1->second;
                         connection->connection_kind = types::ConnectionType::StopArea;
-                        connection->duration = 120;
-                        connection->display_duration = connection->duration;
+                        connection->duration = 240;
+                        connection->display_duration = connection->duration - 120;
                         connection->uri = sp2->second->uri +"=>"+sp1->second->uri;
                         stop_point_connections.push_back(connection);
                         conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
