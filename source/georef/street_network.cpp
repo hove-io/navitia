@@ -331,6 +331,11 @@ std::pair<bt::time_duration, vertex_t> PathFinder::update_path(const ProjectionD
     return find_nearest_vertex(target);
 }
 
+/**
+  The _DEBUG_DIJKSTRA_QUANTUM_ activate at compil time some dump used in quantum to analyze
+  the street network.
+  WARNING, it will slow A LOT the djisktra and must be used only for debug
+  */
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
 /**
  * Visitor to dump the visited edges and vertexes
@@ -340,9 +345,9 @@ struct printer_all_visitor : public target_all_visitor {
     size_t cpt_v = 0, cpt_e = 0;
 
     void init_files() {
-        file_vertex.open ("vertexes.csv");
+        file_vertex.open("vertexes.csv");
         file_vertex << "idx; lat; lon; vertex_id" << std::endl;
-        file_edge.open ("edges.csv");
+        file_edge.open("edges.csv");
         file_edge << "idx; lat from; lon from; lat to; long to" << std::endl;
     }
 

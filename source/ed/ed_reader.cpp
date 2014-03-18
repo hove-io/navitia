@@ -862,12 +862,6 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
         auto it_source = node_map.find(const_it["source_node_id"].as<uint64_t>());
         auto it_target = node_map.find(const_it["target_node_id"].as<uint64_t>());
 
-        if ( const_it["source_node_id"].as<uint64_t>() == 27286654) {
-
-            std::cout << "bob : " << const_it["target_node_id"].as<uint64_t>()
-                      << " : " << const_it["bike"].as<std::string>() << std::endl;
-        }
-
         if (it_source == node_map.end() || it_target == node_map.end())
             continue;
 
