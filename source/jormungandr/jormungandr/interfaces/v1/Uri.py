@@ -48,12 +48,18 @@ class Uri(ResourceUri):
         args = self.parsers["get"].parse_args()
         if region is None and lat is None and lon is None:
             if "external_code" in args and args["external_code"]:
-                res = PtObject.get_from_external_code(args["external_code"])
+                type_ = collections_to_resource_type[collection]
+                try:
+                    res = PtObject.get_from_external_code(args["external_code"],
+                                                          type_)
+                except:
+                    abort(400, message="Unable to query this type of object"
+                          " with external code")
                 if res:
                     id = res.uri
-                    instances = res.instances()
+                    instances = res.instances
                     if len(instances) > 0:
-                        region = res.instances()[0].name
+                        region = res.instances[0].name
                 else:
                     abort(404, message="Unable to find an object for the uri %s"
                           % args["external_code"])
