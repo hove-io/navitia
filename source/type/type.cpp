@@ -387,6 +387,29 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
+idx_t Route::principal_destination(){
+   // StopPoint_idx, count
+    std::map<idx_t, size_t> stop_point_map;
+    std::pair<idx_t, size_t> best{invalid_idx, 0};
+    for(const JourneyPattern* jp : this->journey_pattern_list) {
+        for(const VehicleJourney* vj : jp->vehicle_journey_list) {
+            if(vj->stop_time_list.size() > 0) {
+                const StopPoint* sp = vj->stop_time_list.back()->journey_pattern_point->stop_point;
+                stop_point_map[sp->idx] += 1;
+                size_t val = stop_point_map[sp->idx];
+                if ( best.first == invalid_idx){
+                    best = {sp->idx, val};
+                }else{
+                    if(best.second < val){
+                        best = {sp->idx, val};
+                    }
+                }
+            }
+        }
+    }
+    return best.first;
+}
+
 std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
