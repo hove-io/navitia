@@ -145,6 +145,7 @@ struct PathItem {
         CrowFly //for the projections on the georef network
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
+
     double get_length() const {
         switch (transportation) {
         case TransportCaracteristic::BssPutBack:
@@ -157,6 +158,9 @@ struct PathItem {
             return duration.total_milliseconds() * (default_speed[type::Mode_e::Bike]) / 1000;
         case TransportCaracteristic::Car:
             return duration.total_milliseconds() * (default_speed[type::Mode_e::Car]) / 1000;
+        case TransportCaracteristic::CrowFly:
+            //crow fly is done at the default walking speed
+            return duration.total_milliseconds() * (default_speed[type::Mode_e::Walking]) / 1000;
         default:
             throw navitia::exception("unhandled transportation case");
         }
@@ -337,6 +341,7 @@ struct GeoRef {
     ~GeoRef();
 };
 
+
 /** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche
   *
   * Elle consiste en deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
@@ -344,6 +349,12 @@ struct GeoRef {
   * Les distances entre le projeté les les nœuds
   */
 struct ProjectionData {
+
+    enum class Direction {
+        Source = 0,
+        Target,
+        size
+    };
     /// deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
     vertex_t source;
     vertex_t target;

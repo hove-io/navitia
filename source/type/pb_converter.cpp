@@ -698,6 +698,9 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     case georef::PathItem::TransportCaracteristic::BssPutBack:
         section->set_type(pbnavitia::landing);
         break;
+    case georef::PathItem::TransportCaracteristic::CrowFly:
+        section->mutable_street_network()->set_mode(pbnavitia::Walking); //TODO! add a crow fly sectin in next commit
+        break;
     default:
         throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
     }
@@ -712,10 +715,13 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
     section->set_type(pbnavitia::STREET_NETWORK);
 
     pbnavitia::Place* orig_place = section->mutable_origin();
-    auto way = data.geo_ref.ways[first_item.way_idx];
-    type::GeographicalCoord departure_coord = first_item.coordinates.front();
-    fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
-                      depth, now, action_period);
+    if (first_item.way_idx != nt::invalid_idx) {
+        auto way = data.geo_ref.ways[first_item.way_idx];
+        type::GeographicalCoord departure_coord = first_item.coordinates.front();
+        fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
+                          depth, now, action_period);
+    }
+    //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way)
 
     return section;
 }

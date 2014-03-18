@@ -67,7 +67,7 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
 }
 
 Path StreetNetwork::get_direct_path() {
-    if(!departure_launched() || !arrival_launched())
+    if (!departure_launched() || !arrival_launched())
         return {};
     //Cherche s'il y a des nœuds en commun, et retient le chemin le plus court
     size_t num_vertices = boost::num_vertices(geo_ref.graph);
@@ -84,7 +84,7 @@ Path StreetNetwork::get_direct_path() {
     }
 
     //Construit l'itinéraire
-    if(min_dist == bt::pos_infin)
+    if (min_dist == bt::pos_infin)
         return {};
 
     Path result = combine_path(target, departure_path_finder.predecessors, arrival_path_finder.predecessors);
@@ -119,6 +119,17 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
         distances[starting_edge.target] = crow_fly_duration(starting_edge.target_distance);
         predecessors[starting_edge.source] = starting_edge.source;
         predecessors[starting_edge.target] = starting_edge.target;
+
+        //small enchancement, if the projection is done on a node, we disable the crow fly
+        if (starting_edge.source_distance < 0.001) {
+            predecessors[starting_edge.target] = starting_edge.source;
+            auto e = boost::edge(starting_edge.source, starting_edge.target, geo_ref.graph).first;
+            distances[starting_edge.target] = geo_ref.graph[e].duration;
+        } else if (starting_edge.target_distance < 0.001) {
+            predecessors[starting_edge.source] = starting_edge.target;
+            auto e = boost::edge(starting_edge.target, starting_edge.source, geo_ref.graph).first;
+            distances[starting_edge.source] = geo_ref.graph[e].duration;
+        }
     }
 }
 
@@ -176,24 +187,24 @@ bt::time_duration PathFinder::get_distance(type::idx_t target_idx) {
 
     auto nearest_edge = update_path(target);
 
-    return nearest_edge.first;
+    return std::get<0>(nearest_edge);
 }
 
-std::pair<bt::time_duration, vertex_t> PathFinder::find_nearest_vertex(const ProjectionData& target) const {
+std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> PathFinder::find_nearest_vertex(const ProjectionData& target) const {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
-        return {max, {}};
+        return std::make_tuple(max, 0, ProjectionData::Direction::Source);
 
     if (distances[target.source] == max) //if one distance has not been reached, both have not been reached
-        return {max, {}};
+        return std::make_tuple(max, 0, ProjectionData::Direction::Source);
 
     auto source_dist = distances[target.source] + crow_fly_duration(target.source_distance);
     auto target_dist = distances[target.target] + crow_fly_duration(target.target_distance);
 
     if (target_dist < source_dist)
-        return {target_dist, target.target};
+        return std::make_tuple(target_dist, target.target, ProjectionData::Direction::Target);
 
-    return {source_dist, target.source};
+    return std::make_tuple(source_dist, target.source, ProjectionData::Direction::Source);
 }
 
 Path PathFinder::get_path(type::idx_t idx) {
@@ -206,13 +217,45 @@ Path PathFinder::get_path(type::idx_t idx) {
     return get_path(projection, nearest_edge);
 }
 
-void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection) const {
+void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection, ProjectionData::Direction d) const {
+
     edge_t start_e = boost::edge(projection.source, projection.target, geo_ref.graph).first;
     Edge start_edge = geo_ref.graph[start_e];
+
+    //we check if the projection is usefull
+    if ((d == ProjectionData::Direction::Source && std::abs(projection.source_distance) < 0.0001) ||
+            (d == ProjectionData::Direction::Target && std::abs(projection.target_distance) < 0.0001)) {
+        const auto coord_to_add = (d == ProjectionData::Direction::Source ? geo_ref.graph[projection.source].coord : geo_ref.graph[projection.target].coord);
+        // we just have to add the projection in the path item
+        if (p.path_items.empty()) {
+              PathItem item;
+              item.way_idx = start_edge.way_idx;
+              item.transportation = geo_ref.get_caracteristic(start_e);
+              item.coordinates.push_back(coord_to_add);
+              if (append_to_begin) {
+                  p.path_items.push_front(item);
+              } else {
+                  p.path_items.push_back(item);
+              }
+            return;
+        }
+        auto& path_to_update = append_to_begin ? p.path_items.front() : p.path_items.back();
+        const auto& coord = append_to_begin ? path_to_update.coordinates.front() : path_to_update.coordinates.back();
+
+        if (coord != coord_to_add) {
+            if (append_to_begin) {
+                path_to_update.coordinates.push_front(coord_to_add);
+            } else {
+                path_to_update.coordinates.push_back(coord_to_add);
+            }
+        }
+        return;
+    }
 
     //we add a new path item that will make a 'crow fly' section
     PathItem item;
     item.way_idx = start_edge.way_idx;
+    item.duration = crow_fly_duration(d == ProjectionData::Direction::Source ? projection.source_distance : projection.target_distance);
     item.transportation = PathItem::TransportCaracteristic::CrowFly;
     //we only add the projected point for the moment (not the projection since it is on the next item)
     item.coordinates.push_front(projection.projected);
@@ -224,17 +267,17 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
     }
 }
 
-Path PathFinder::get_path(const ProjectionData& target, std::pair<bt::time_duration, vertex_t> nearest_edge) {
-    if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
+Path PathFinder::get_path(const ProjectionData& target, std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> nearest_edge) {
+    if (! computation_launch || ! target.found || std::get<0>(nearest_edge) == bt::pos_infin)
         return {};
 
-    auto result = build_path(nearest_edge.second, this->predecessors);
+    auto result = this->build_path(std::get<1>(nearest_edge));
     add_projections_to_path(result, true);
 
-    result.duration = nearest_edge.first;
+    result.duration = std::get<0>(nearest_edge);
 
     //we need to put the end projections too
-    add_custom_projections_to_path(result, false, target);
+    add_custom_projections_to_path(result, false, target, std::get<2>(nearest_edge));
 
     return result;
 }
@@ -250,13 +293,38 @@ Path PathFinder::compute_path(const type::GeographicalCoord& target_coord) {
 
 
 void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
-    add_custom_projections_to_path(p, append_to_begin, starting_edge);
+    //we need to find out which side of the projection has been used to compute the right length
+
+    //we check if the we already are the the arrival
+    if (predecessors[starting_edge.source] == starting_edge.source ||
+            predecessors[starting_edge.target] == starting_edge.target) {
+        //and we add the closer starting edge
+        ProjectionData::Direction dir = starting_edge.source_distance < starting_edge.target_distance
+                ? ProjectionData::Direction::Source : ProjectionData::Direction::Target;
+        add_custom_projections_to_path(p, append_to_begin, starting_edge, dir);
+        return;
+    }
+    assert(! p.path_items.empty());
+
+    const auto& path_item_to_consider = append_to_begin ? p.path_items.front(): p.path_items.back();
+    const auto& coord_to_consider = append_to_begin ? path_item_to_consider.coordinates.front(): path_item_to_consider.coordinates.back();
+
+    ProjectionData::Direction dir;
+    if (coord_to_consider == geo_ref.graph[starting_edge.source].coord) {
+        dir = ProjectionData::Direction::Source;
+    } else if (coord_to_consider == geo_ref.graph[starting_edge.target].coord) {
+        dir = ProjectionData::Direction::Target;
+    } else {
+        throw navitia::exception("by construction, should never happen");
+    }
+
+    add_custom_projections_to_path(p, append_to_begin, starting_edge, dir);
 }
 
-std::pair<bt::time_duration, vertex_t> PathFinder::update_path(const ProjectionData& target) {
+std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> PathFinder::update_path(const ProjectionData& target) {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
-        return {max, {}};
+        return std::make_tuple(max, 0, ProjectionData::Direction::Source);
     assert(boost::edge(target.source, target.target, geo_ref.graph).second );
 
     computation_launch = true;
@@ -277,7 +345,7 @@ std::pair<bt::time_duration, vertex_t> PathFinder::update_path(const ProjectionD
             dump_dijkstra_for_quantum(target);
 #endif
 
-            return {max, {}};
+            return std::make_tuple(max, 0, ProjectionData::Direction::Source);
         }
         try {
             dijkstra(starting_edge.target, target_all_visitor({target.source, target.target}));
@@ -290,14 +358,26 @@ std::pair<bt::time_duration, vertex_t> PathFinder::update_path(const ProjectionD
     return find_nearest_vertex(target);
 }
 
-Path StreetNetwork::build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const {
+Path PathFinder::build_path(vertex_t best_destination) const {
+    std::vector<vertex_t> reverse_path;
+    while (best_destination != predecessors[best_destination]){
+        reverse_path.push_back(best_destination);
+        best_destination = predecessors[best_destination];
+    }
+    reverse_path.push_back(best_destination);
+
+    return create_path(geo_ref, reverse_path, false);
+}
+
+
+Path create_path(const GeoRef& geo_ref, std::vector<vertex_t> reverse_path, bool add_one_elt) {
     Path p;
 
     // On reparcourt tout dans le bon ordre
     nt::idx_t last_way = type::invalid_idx;
     boost::optional<PathItem::TransportCaracteristic> last_transport_carac{};
     PathItem path_item;
-    path_item.coordinates.push_back(graph[reverse_path.back()].coord);
+    path_item.coordinates.push_back(geo_ref.graph[reverse_path.back()].coord);
 
     for (size_t i = reverse_path.size(); i > 1; --i) {
         bool path_item_changed = false;
@@ -347,16 +427,6 @@ Path StreetNetwork::build_path(std::vector<vertex_t> reverse_path, bool add_one_
     return p;
 }
 
-Path StreetNetwork::build_path(vertex_t best_destination, std::vector<vertex_t> preds) const {
-    std::vector<vertex_t> reverse_path;
-    while (best_destination != preds[best_destination]){
-        reverse_path.push_back(best_destination);
-        best_destination = preds[best_destination];
-    }
-    reverse_path.push_back(best_destination);
-
-    return build_path(reverse_path, true);
-}
 
 Path StreetNetwork::combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const {
     //used for the direct path, we need to reverse the second part and concatenate the 2 'predecessors' list
@@ -372,7 +442,7 @@ Path StreetNetwork::combine_path(const vertex_t best_destination, std::vector<ve
     std::reverse(reverse_path.begin(), reverse_path.end());
 
     if (best_destination == preds[best_destination])
-        return build_path(reverse_path, false);
+        return create_path(geo_ref, reverse_path, false);
 
     current = preds[best_destination]; //we skip the middle point since it has already been added
     while (current != preds[current]) {
@@ -381,7 +451,73 @@ Path StreetNetwork::combine_path(const vertex_t best_destination, std::vector<ve
     }
     reverse_path.push_back(current);
 
-    return build_path(reverse_path, false);
+    return create_path(geo_ref, reverse_path, false);
+}
+
+/**
+  * Compute the angle between the last segment of the path and the next point
+  *
+  * A-------B
+  *  \)
+  *   \
+  *    \
+  *     C
+  *
+  *                       l(AB)² + l(AC)² - l(BC)²
+  *the angle ABC = cos-1(_________________________)
+  *                          2 * l(AB) * l(AC)
+  *
+  * with l(AB) = length OF AB
+  *
+  * The computed angle is 180 - the angle ABC, ie we compute the turn angle of the path
+ */
+int compute_directions(const navitia::georef::Path& path, const nt::GeographicalCoord& c_coord) {
+    if (path.path_items.empty()) {
+        return 0;
+    }
+    nt::GeographicalCoord b_coord, a_coord;
+    const PathItem& last_item = path.path_items.back();
+    a_coord = last_item.coordinates.back();
+    if (last_item.coordinates.size() > 1) {
+        b_coord = last_item.coordinates[last_item.coordinates.size() - 2];
+    } else {
+        if ( path.path_items.size() < 2 ) {
+            return 0; //we don't have 2 previous coordinate, we can't compute an angle
+        }
+        const PathItem& previous_item = *(++(path.path_items.rbegin()));
+        b_coord = previous_item.coordinates.back();
+    }
+    if (a_coord == b_coord || b_coord == c_coord) {
+        return 0;
+    }
+
+    double len_ab = a_coord.distance_to(b_coord);
+    double len_bc = b_coord.distance_to(c_coord);
+    double len_ac = a_coord.distance_to(c_coord);
+
+    double numerator = pow(len_ab, 2) + pow(len_ac, 2) - pow(len_bc, 2);
+    double ab_lon = b_coord.lon() - a_coord.lon();
+    double bc_lat = c_coord.lat() - b_coord.lat();
+    double ab_lat = b_coord.lat() - a_coord.lat();
+    double bc_lon = c_coord.lon() - b_coord.lon();
+
+    double denominator =  2 * len_ab * len_ac;
+    double raw_angle = acos(numerator / denominator);
+
+    double det = ab_lon * bc_lat - ab_lat * bc_lon;
+
+    //conversion into angle
+    raw_angle *= 360 / (2 * boost::math::constants::pi<double>());
+
+    int rounded_angle = std::round(raw_angle);
+
+    rounded_angle = 180 - rounded_angle;
+    if ( det < 0 )
+        rounded_angle *= -1.0;
+
+//    std::cout << "angle : " << rounded_angle << std::endl;
+
+    return rounded_angle;
 }
 
 /**
@@ -468,6 +604,4 @@ void PathFinder::dump_dijkstra_for_quantum(const ProjectionData& target) {
     } catch(DestinationFound) { }
 }
 #endif
-
-
 }}

@@ -31,7 +31,7 @@ void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_i
         for (int i = 0; i < section.street_network().path_items_size(); ++i)
             std::cout << "- " << section.street_network().path_items(i).name()
                       << " with " << section.street_network().path_items(i).length()
-                      << " | " << section.street_network().path_items(i).duration() << "s"
+                      << "m | " << section.street_network().path_items(i).duration() << "s"
                       <<std::endl;
     }
 
@@ -516,26 +516,28 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
 
     pbnavitia::Response resp = make_response();
 
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+    dump_response(resp, "walking");
+
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4); //1 direct path by date and 1 path with bus by date
     pbnavitia::Journey journey = resp.journeys(0);
     BOOST_CHECK_EQUAL(journey.departure_date_time(), "20120614T090000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20120614T090320");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20120614T090510");
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
 
-    dump_response(resp, "walking");
-
     BOOST_CHECK_EQUAL(section.street_network().coordinates_size(), 4);
     BOOST_CHECK(! section.id().empty());
-    BOOST_CHECK_EQUAL(section.street_network().duration(), 200);
+    BOOST_CHECK_EQUAL(section.street_network().duration(), 310);
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 3);
     BOOST_CHECK_EQUAL(section.street_network().path_items(0).name(), "rue bs");
+    BOOST_CHECK_EQUAL(section.street_network().path_items(0).duration(), 20);
     BOOST_CHECK_EQUAL(section.street_network().path_items(1).name(), "rue ab");
     BOOST_CHECK_EQUAL(section.street_network().path_items(1).duration(), 200);
     BOOST_CHECK_EQUAL(section.street_network().path_items(2).name(), "rue ar");
+    BOOST_CHECK_EQUAL(section.street_network().path_items(2).duration(), 90);
 }
 
 //biking
@@ -559,7 +561,7 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
 
-    dump_response(resp, "biking");
+    dump_response(resp, "biking", true);
 
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
