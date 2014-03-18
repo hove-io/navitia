@@ -138,10 +138,14 @@ def qualifier_one(journeys):
 
         return not has_train
 
+    def is_possible_cheap(journey):
+        return journey.type == "possible_cheap"
+
     #definition of the journeys to qualify
     trip_caracs = [
         #the cheap journey, is the fastest one without train
         ("cheap", trip_carac([
+            partial(is_possible_cheap),
             partial(no_train),
             #partial(journey_length_constraint, max_evolution=.50),
             #partial(journey_arrival_constraint, max_mn_shift=40),
