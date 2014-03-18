@@ -200,6 +200,26 @@ class mixin_get_from_uri():
             return cache_res[0]
 
 
+
+class mixin_get_from_external_code():
+
+    @classmethod
+    def get_from_external_code(cls, external_code):
+        prefix = cls.prefix_ext_code
+        cache_res = cache.get(prefix, external_code)
+        if cache_res is None: # we store a tuple to be able to distinguish
+        #  if we have already look for this element
+            res = cls.query.filter(cls.external_code == external_code)
+            if res:
+                cache.set(prefix, external_code, (res.first(),))
+                return res.first()
+            else:
+                cache.set(prefix, external_code, (None,))
+                return None
+        else:
+            return cache_res[0]
+
+
 class StopAreaInstance(db.Model):
     __tablename__ = "rel_stop_area_instance"
     object_id = db.Column(db.Integer, db.ForeignKey("stop_area.id", ondelete="CASCADE"),
@@ -216,7 +236,7 @@ class StopAreaInstance(db.Model):
 
 
 
-class StopArea(db.Model, mixin_get_from_uri):
+class StopArea(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
     coord = db.Column(Geography(geometry_type="POINT", srid=4326,
@@ -229,6 +249,8 @@ class StopArea(db.Model, mixin_get_from_uri):
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = StopAreaInstance
+    prefix_ext_code = "external_code_sa"
+
 
 
     def __init__(self, id=None, uri=None, coord=None, external_code=None,
@@ -259,7 +281,7 @@ class StopPointInstance(db.Model):
         return '<StopPointInstance %r, %r>' % (self.object_id, self.instance_id)
 
 
-class StopPoint(db.Model, mixin_get_from_uri):
+class StopPoint(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
     coord = db.Column(Geography(geometry_type="POINT", srid=4326,
@@ -272,6 +294,7 @@ class StopPoint(db.Model, mixin_get_from_uri):
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = StopPointInstance
+    prefix_ext_code = "external_code_sp"
 
 
     def __init__(self, id=None, uri=None, coord=None, external_code=None,
@@ -302,7 +325,7 @@ class PoiInstance(db.Model):
         return '<PoiInstance %r, %r>' % (self.object_id, self.instance_id)
 
 
-class Poi(db.Model, mixin_get_from_uri):
+class Poi(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
     coord = db.Column(Geography(geometry_type="POINT", srid=4326,
@@ -315,6 +338,7 @@ class Poi(db.Model, mixin_get_from_uri):
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = PoiInstance
+    prefix_ext_code = "external_code_poi"
 
 
     def __init__(self, id=None, uri=None, coord=None, external_code=None,
@@ -346,7 +370,7 @@ class AdminInstance(db.Model):
         return '<AdminInstance %r, %r>' % (self.object_id, self.instance_id)
 
 
-class Admin(db.Model, mixin_get_from_uri):
+class Admin(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
     instances = db.relationship("Instance",
@@ -357,6 +381,7 @@ class Admin(db.Model, mixin_get_from_uri):
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = AdminInstance
+    prefix_ext_code = "external_code_poi"
 
     def __init__(self, id=None, uri=None, coord=None, external_code=None,
                  name=None):
@@ -386,7 +411,7 @@ class LineInstance(db.Model):
         return '<LineInstance %r, %r>' % (self.object_id, self.instance_id)
 
 
-class Line(db.Model, mixin_get_from_uri):
+class Line(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
     instances = db.relationship("Instance",
@@ -397,6 +422,7 @@ class Line(db.Model, mixin_get_from_uri):
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = LineInstance
+    prefix_ext_code = "external_code_line"
 
 
     def __init__(self, id=None, uri=None, coord=None, external_code=None,
@@ -427,7 +453,7 @@ class RouteInstance(db.Model):
         return '<RouteInstance %r, %r>' % (self.object_id, self.instance_id)
 
 
-class Route(db.Model, mixin_get_from_uri):
+class Route(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
     instances = db.relationship("Instance",
@@ -438,6 +464,7 @@ class Route(db.Model, mixin_get_from_uri):
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = RouteInstance
+    prefix_ext_code = "external_code_route"
 
 
     def __init__(self, id=None, uri=None, coord=None, external_code=None,
@@ -467,7 +494,7 @@ class NetworkInstance(db.Model):
         return '<NetworkInstance %r, %r>' % (self.object_id, self.instance_id)
 
 
-class Network(db.Model, mixin_get_from_uri):
+class Network(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
     instances = db.relationship("Instance",
@@ -478,6 +505,7 @@ class Network(db.Model, mixin_get_from_uri):
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = NetworkInstance
+    prefix_ext_code = "external_code_network"
 
 
     def __init__(self, id=None, uri=None, coord=None, external_code=None,
@@ -531,7 +559,10 @@ class PtObject(db.Model, mixin_get_from_uri):
         else:
             return None
     @classmethod
-    def get_from_external_code(cls, external_code):
+    def get_from_external_code(cls, external_code, typename=None):
+        if typename:
+            type_ = get_class_type(typename)
+            return type_.get_from_external_code(external_code)
         prefix = "external_code"
         cache_res = cache.get(prefix, external_code)
         if cache_res is None: # we store a tuple to be able to distinguish
