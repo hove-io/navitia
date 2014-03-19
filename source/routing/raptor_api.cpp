@@ -387,10 +387,15 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     for(const type::StopPoint* sp : raptor.data.pt_data.stop_points) {
         DateTime best = bound;
         type::idx_t best_rp = type::invalid_idx;
+        int best_round = -1;
         for(auto jpp : sp->journey_pattern_point_list) {
             if(raptor.best_labels[jpp->idx] < best) {
-                best = raptor.best_labels[jpp->idx];
-                best_rp = jpp->idx;
+                int round = raptor.best_round(jpp->idx);
+                if(round != -1 && raptor.labels[round][jpp->idx].type == boarding_type::vj) {
+                    best = raptor.best_labels[jpp->idx];
+                    best_rp = jpp->idx;
+                    best_round = round;
+                }
             }
         }
 
@@ -398,8 +403,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             auto label = raptor.best_labels[best_rp];
             type::idx_t initial_rp;
             DateTime initial_dt;
-            int round = raptor.best_round(best_rp);
-            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, clockwise, raptor.labels);
+            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(best_round, best_rp, clockwise, raptor.labels);
 
             int duration = ::abs(label - init_dt);
 
@@ -412,7 +416,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 pb_journey->set_departure_date_time(str_departure);
                 pb_journey->set_requested_date_time(str_requested);
                 pb_journey->set_duration(duration);
-                pb_journey->set_nb_transfers(round);
+                pb_journey->set_nb_transfers(best_round);
                 fill_pb_placemark(raptor.data.pt_data.journey_pattern_points[best_rp]->stop_point, raptor.data, pb_journey->mutable_destination(), 0);
             }
         }
