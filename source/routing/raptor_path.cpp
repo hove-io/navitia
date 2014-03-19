@@ -16,7 +16,7 @@ makePathes(std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> 
         for(auto spid_dist : destinations) {
             for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first]->journey_pattern_point_list) {
                 type::idx_t dest_idx = dest->idx;
-                if(raptor_.get_type(i, dest_idx) != boarding_type::uninitialized) {
+                if(raptor_.get_type(i, dest_idx) == boarding_type::vj) {
                     DateTime current_dt = raptor_.labels[i][dest_idx].dt;
                     if(clockwise)
                         current_dt = current_dt + spid_dist.second.total_seconds();
