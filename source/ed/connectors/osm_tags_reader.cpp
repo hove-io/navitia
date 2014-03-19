@@ -33,10 +33,17 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
         std::string key = pair.first, val = pair.second;
 
         if(key == "highway") {
-            if(val == "cycleway" || val == "path" || val == "footway" || val == "pedestrian"){
+            if(val == "footway" || val == "pedestrian") {
+                foot = foot_allowed;
+            } else if(val == "cycleway") {
                 bike_direct = bike_track;
                 foot = foot_allowed;
-            } if(val == "steps"){
+            } else if(val == "path") {
+                //http://www.cyclestreets.net/journey/help/osmconversion/#toc6
+                //highway = path => might mean lots of different things, so we allow bike and foot
+                bike_direct = bike_track;
+                foot = foot_allowed;
+            } else if(val == "steps") {
                 foot = foot_allowed;
             } else if(val == "primary" || val == "primary_link") {
                 car_direct = car_primary;
