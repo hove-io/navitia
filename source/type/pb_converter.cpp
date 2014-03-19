@@ -437,10 +437,7 @@ void fill_pb_object(const nt::StopTime* st, const type::Data&,
         hp->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
     if(!st->comment.empty()){
-        pbnavitia::Note* note = hp->add_notes();
-        std::hash<std::string> hash_fn;
-        note->set_uri("note:"+std::to_string(hash_fn(st->comment)));
-        note->set_note(st->comment);
+        fill_pb_object(st->comment, data,  hn->add_notes(),max_depth,now,action_period);
     }
 }
 
@@ -885,18 +882,25 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     if (stop_time->date_time_estimated()){
         hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
-    if (!stop_time->comment.empty()){
-        pbnavitia::Note* note = hn->add_notes();
+    navitia::type::StopPoint* spt = nullptr;
+    if ((stop_time->vehicle_journey != nullptr)
+        && (stop_time->vehicle_journey->stop_time_list.size() > 0)
+        && (stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point != nullptr)){
+        spt = stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point->stop_point;
+    }
+
+    if((destination != nullptr) && (spt != nullptr) && (spt->idx != destination->idx)){
+        pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
-        note->set_uri("note:"+std::to_string(hash_fn(stop_time->comment)));
-        note->set_note(stop_time->comment);
+        destination->set_uri("destination:"+std::to_string(hash_fn(spt->name)));
+        destination->set_destination(spt->name);
+    }
+    if (!stop_time->comment.empty()){
+        fill_pb_object(stop_time->comment, data,  hn->add_notes(),max_depth,now,action_period);
     }
     if (stop_time->vehicle_journey != nullptr) {
         if(!stop_time->vehicle_journey->odt_message.empty()){
-            pbnavitia::Note* note = hn->add_notes();
-            std::hash<std::string> hash_fn;
-            note->set_uri("note:"+std::to_string(hash_fn(stop_time->vehicle_journey->odt_message)));
-            note->set_note(stop_time->vehicle_journey->odt_message);
+            fill_pb_object(stop_time->vehicle_journey->odt_message, data, hn->add_notes(),max_depth,now,action_period);
         }
     }
 
@@ -1051,5 +1055,13 @@ void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& messa
                     const boost::posix_time::ptime& , const boost::posix_time::time_period& ){
     error->set_id(id);
     error->set_message(message);
+}
+
+void fill_pb_object(const std::string comment, const nt::Data&,
+                    pbnavitia::Note* note, int,
+                    const boost::posix_time::ptime&, const boost::posix_time::time_period&){
+    std::hash<std::string> hash_fn;
+    note->set_uri("note:"+std::to_string(hash_fn(comment)));
+    note->set_note(comment);
 }
 }//namespace navitia
