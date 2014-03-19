@@ -196,11 +196,11 @@ class complete_links(object):
             if self.resource.region:
                 collection = {
                     "notes" : {"type" : "notes",
-                              "del":{"value"}},
+                              "del":["value"]},
                     "destinations" : {"type" : "destinations",
-                              "del":{"value"}},
+                              "del":["value"]},
                     "exceptions" : {"type" : "exceptions",
-                              "del":{"date","except_type"}}
+                              "del":["date","except_type"]}
                 }
                 # Add notes, destinations and exceptions
                 for col in collection:
