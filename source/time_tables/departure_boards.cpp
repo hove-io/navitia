@@ -114,7 +114,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
                                    m_line, 0, current_time, action_period);
         }
         auto pt_display_information = schedule->mutable_pt_display_informations();
-        navitia::type::idx_t spt_idx= data.pt_data.routes[id_vec.first.second]->principal_destination();
+        navitia::type::idx_t spt_idx = data.pt_data.routes[id_vec.first.second]->main_destination();
         const navitia::type::StopPoint* destination = nullptr;
         if(spt_idx != navitia::type::invalid_idx){
             destination = data.pt_data.stop_points[spt_idx];

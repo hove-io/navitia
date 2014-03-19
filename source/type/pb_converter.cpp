@@ -886,12 +886,12 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     }
     navitia::type::StopPoint* spt = nullptr;
     if ((stop_time->vehicle_journey != nullptr)
-        && (stop_time->vehicle_journey->stop_time_list.size() > 0)
+        && (!stop_time->vehicle_journey->stop_time_list.empty())
         && (stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point != nullptr)){
         spt = stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point->stop_point;
     }
 
-    if((destination != nullptr) && (spt != nullptr) && (spt->idx != destination->idx)){
+    if(destination && spt && (spt->idx != destination->idx)){
         pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
         destination->set_uri("destination:"+std::to_string(hash_fn(spt->name)));
