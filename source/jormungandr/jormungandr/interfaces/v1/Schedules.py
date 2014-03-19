@@ -1,9 +1,9 @@
 # coding=utf-8
 from flask.ext.restful import fields, marshal_with, reqparse
 from jormungandr import i_manager
-from fields import stop_point, route, pagination, PbField, stop_date_time, \
-    additional_informations, stop_time_properties_links, display_informations_vj, \
-    display_informations_route, additional_informations_vj, UrisToLinks, error, \
+from fields import stop_point, route, pagination, PbField, stop_date_time,\
+    additional_informations, stop_time_properties_links, display_informations_vj,\
+    display_informations_route, additional_informations_vj, UrisToLinks, error,\
     enum_type
 from ResourceUri import ResourceUri, complete_links
 from datetime import datetime

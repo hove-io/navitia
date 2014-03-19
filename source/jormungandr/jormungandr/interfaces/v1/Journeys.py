@@ -81,9 +81,17 @@ class TicketLinks(fields.Raw):
 
 
 class GeoJson(fields.Raw):
-
     def __init__(self, **kwargs):
         super(GeoJson, self).__init__(**kwargs)
+
+    def is_regular(self, obj):
+        if obj.pt_display_informations:
+            desc = obj.pt_display_informations.DESCRIPTOR
+            vj_type = desc.fields_by_name['vehicle_journey_type'].\
+                enum_type.values_by_name
+            return (obj.pt_display_informations.vehicle_journey_type
+                    == vj_type['regular'].number)
+        return False
 
     def output(self, key, obj):
         coords = []
@@ -98,7 +106,11 @@ class GeoJson(fields.Raw):
             except ValueError:
                 return None
         elif obj.type == enum['PUBLIC_TRANSPORT'].number:
-            coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
+            if self.is_regular(obj):
+                coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
+            else:
+                coords.append(obj.origin.stop_point.coord)
+                coords.append(obj.destination.stop_point.coord)
         elif obj.type == enum['TRANSFER'].number:
             coords.append(obj.origin.stop_point.coord)
             coords.append(obj.destination.stop_point.coord)
