@@ -160,6 +160,29 @@ class add_computed_resources(object):
 class complete_links(object):
     def __init__(self, resource):
         self.resource = resource
+    def complete(self, data, collect):
+        result = []
+        if isinstance(data, list) or isinstance(data, tuple):
+            for item in data:
+                result.extend(self.complete(item, collect))
+
+        elif isinstance(data, dict) or\
+                isinstance(data, OrderedDict):
+            if 'type' in data and data['type'] == collect["type"]:
+                if collect["type"] in {"notes", "destinations"}:
+                    result.append({"id": data['id'], "value": data['value']})
+                if collect["type"] in {"exceptions"}:
+                    type = "Remove"
+                    if data['except_type'] == 0:
+                        type = "Add"
+                    result.append({"id": data['id'], "date": data['date'], "type" : type})
+                to_del = collect["del"]
+                for del_ in to_del:
+                    del data[del_]
+            else:
+                for v in data.items():
+                    result.extend(self.complete(v, collect))
+        return result
 
     def __call__(self, f):
         @wraps(f)
@@ -169,43 +192,22 @@ class complete_links(object):
                 data, code, header = unpack(objects)
             else:
                 data = objects
-            def add(data, collect):
-                result = []
-                if isinstance(data, list) or isinstance(data, tuple):
-                    for item in data:
-                        result.extend(add(item, collect))
 
-                elif isinstance(data, dict) or\
-                        isinstance(data, OrderedDict):
-                    if 'type' in data and data['type'] == collect["type"]:
-                        if collect["type"] in {"notes", "destinations"}:
-                            result.append({"id": data['id'], "value": data['value']})
-                        if collect["type"] in {"exceptions"}:
-                            type = "Remove"
-                            if data['except_type'] == 0:
-                                type = "Add"
-                            result.append({"id": data['id'], "date": data['date'], "type" : type})
-                        to_del = collect["del"]
-                        for del_ in to_del:
-                            del data[to_del[del_]]
-                    else:
-                        for v in data.items():
-                            result.extend(add(v, collect))
-                return result
             if self.resource.region:
                 collection = {
                     "notes" : {"type" : "notes",
-                              "del":{"val1": "value"}},
+                              "del":{"value"}},
                     "destinations" : {"type" : "destinations",
-                              "del":{"val1": "value"}},
+                              "del":{"value"}},
                     "exceptions" : {"type" : "exceptions",
-                              "del":{"val1": "date", "val2": "except_type"}}
+                              "del":{"date","except_type"}}
                 }
+                # Add notes, destinations and exceptions
                 for col in collection:
                     if not col in data or not isinstance(data[col], list):
                         data[col] = []
                         res = []
-                        note = add(data, collection[col])
+                        note = self.complete(data, collection[col])
                         [res.append(item) for item in note if not item in res]
                         data[col].extend(res)
 
