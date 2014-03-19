@@ -417,9 +417,9 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
 }
 
 
-void fill_pb_object(const nt::StopTime* st, const type::Data&,
-                    pbnavitia::StopDateTime * stop_date_time, int ,
-                    const pt::ptime& , const pt::time_period& ) {
+void fill_pb_object(const nt::StopTime* st, const type::Data& data,
+                    pbnavitia::StopDateTime * stop_date_time, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period) {
     if(st == nullptr)
         return ;
 
@@ -437,7 +437,7 @@ void fill_pb_object(const nt::StopTime* st, const type::Data&,
         hp->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
     if(!st->comment.empty()){
-        fill_pb_object(st->comment, data,  hn->add_notes(),max_depth,now,action_period);
+        fill_pb_object(st->comment, data,  hp->add_notes(),max_depth,now,action_period);
     }
 }
 
@@ -857,7 +857,9 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     pbnavitia::ScheduleStopTime* rs_date_time, int max_depth,
                     const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period,
-                    const DateTime& date_time, boost::optional<const std::string> calendar_id){
+                    const DateTime& date_time,
+                    boost::optional<const std::string> calendar_id,
+                    const navitia::type::StopPoint* destination){
     if (stop_time == nullptr) {
         rs_date_time->set_date_time("");
         return;
@@ -913,6 +915,7 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         }
     }
 }
+
 void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt::Data&,
                     pbnavitia::CalendarException* calendar_exception, int,
                     const pt::ptime&, const pt::time_period& ){
@@ -924,7 +927,8 @@ void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
+                    const pt::ptime& now, const pt::time_period& action_period,
+                    const navitia::type::StopPoint* destination){
     if(r == nullptr)
         return ;
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
@@ -932,7 +936,11 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     for(auto message : r->get_applicable_messages(now, action_period)){
         fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
     }
-    pt_display_info->set_direction(r->name);
+    if(destination != nullptr){
+        pt_display_info->set_direction(destination->name);
+    }else{
+        pt_display_info->set_direction(r->name);
+    }
     if (r->line != nullptr){
         pt_display_info->set_color(r->line->color);
         pt_display_info->set_code(r->line->code);
