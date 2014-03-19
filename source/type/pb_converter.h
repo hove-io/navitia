@@ -134,4 +134,7 @@ void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt
                     pbnavitia::CalendarException* calendar_exception, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 
+void fill_pb_object(const std::string comment, const nt::Data& data,
+                    pbnavitia::Note* note, int max_depth,
+                    const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 }//namespace navitia
