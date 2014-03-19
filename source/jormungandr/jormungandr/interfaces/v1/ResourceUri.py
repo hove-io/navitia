@@ -138,18 +138,19 @@ class add_computed_resources(object):
                     "templated": templated
                 })
             #for lines we add the link to the calendars
-            if collection in ['lines']:
-                data['links'].append({
-                    "href": url_for("v1.calendars", **kwargs),
-                    "rel": "calendars",
-                    "templated": templated
-                })
-            if collection in ['stop_areas', 'lines', 'networks'] and "region" in kwargs:
-                data['links'].append({
-                    "href": url_for("v1.disruptions", **kwargs),
-                    "rel": "disruptions",
-                    "templated": templated
-                })
+            if 'region' in kwargs:
+                if collection == 'lines':
+                    data['links'].append({
+                        "href": url_for("v1.calendars", **kwargs),
+                        "rel": "calendars",
+                        "templated": templated
+                    })
+                if collection in ['stop_areas', 'lines', 'networks']:
+                    data['links'].append({
+                        "href": url_for("v1.disruptions", **kwargs),
+                        "rel": "disruptions",
+                        "templated": templated
+                    })
             if isinstance(response, tuple):
                 return data, code, header
             else:
