@@ -43,9 +43,6 @@ class Schedules(ResourceUri):
         parser_get.add_argument("calendar", type=str,
                                 description="Id of the calendar")
         self.method_decorators.append(complete_links(self))
-        #self.method_decorators.append(add_notes(self))
-        #self.method_decorators.append(add_exception_dates(self))
-        #self.method_decorators.append(add_destinations(self))
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
