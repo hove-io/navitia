@@ -177,7 +177,7 @@ class complete_links(object):
 
                 elif isinstance(data, dict) or\
                         isinstance(data, OrderedDict):
-                    if 'type' in data.keys() and data['type'] == collect["type"]:
+                    if 'type' in data and data['type'] == collect["type"]:
                         if collect["type"] in {"notes", "destinations"}:
                             result.append({"id": data['id'], "value": data['value']})
                         if collect["type"] in {"exceptions"}:
