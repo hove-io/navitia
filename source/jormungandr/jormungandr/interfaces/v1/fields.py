@@ -119,7 +119,7 @@ class stop_time_properties_links(fields.Raw):
             r.append({"type": "exceptions", "id": exception.uri, "date": exception.date,
                       "except_type": exception.type})
         if properties.destination and properties.destination.uri:
-            r.append({"type": "destinations", "id": properties.destination.uri, "value": properties.destination.destination})
+            r.append({"type": "notes", "id": properties.destination.uri, "value": properties.destination.destination})
         return r
 
 
