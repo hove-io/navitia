@@ -154,6 +154,11 @@ message JourneyPattern {
     repeated Message messages = 9;
 }
 
+message Destination{
+    required string uri = 1;
+    optional string destination = 2;
+}
+
 message Note{
     required string uri = 1;
     optional string note = 2;
@@ -169,6 +174,7 @@ message Properties{
     repeated AdditionalInformation additional_informations= 1;
     repeated Note notes = 5;
     repeated CalendarException exceptions = 6;
+    optional Destination destination = 7;
 }
 
 message hasEquipments{

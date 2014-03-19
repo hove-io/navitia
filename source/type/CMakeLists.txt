@@ -44,6 +44,9 @@ SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY}  ${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY})
 
+add_executable(main_destination_test tests/main_destination_test.cpp)
+target_link_libraries(main_destination_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(main_destination_test)
 
 add_executable(associated_calendar_test tests/associated_calendar_test.cpp)
 target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus)

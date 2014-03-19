@@ -591,6 +591,7 @@ struct Route : public Header, Nameable, HasMessages{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     Route() : line(nullptr) {}
+    idx_t main_destination();
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & line & journey_pattern_list & messages;

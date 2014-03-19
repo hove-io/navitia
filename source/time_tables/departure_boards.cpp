@@ -114,13 +114,18 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
                                    m_line, 0, current_time, action_period);
         }
         auto pt_display_information = schedule->mutable_pt_display_informations();
+        navitia::type::idx_t spt_idx = data.pt_data.routes[id_vec.first.second]->main_destination();
+        const navitia::type::StopPoint* destination = nullptr;
+        if(spt_idx != navitia::type::invalid_idx){
+            destination = data.pt_data.stop_points[spt_idx];
+        }
         fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
-                               pt_display_information, 0, current_time, action_period);
+                               pt_display_information, 0, current_time, action_period, destination);
         //Now we fill the date_times
         for(auto dt_st : id_vec.second) {
             auto date_time = schedule->add_date_times();
             fill_pb_object(dt_st.second, data, date_time, 0,
-                           now, action_period, dt_st.first, calendar_id);
+                           now, action_period, dt_st.first, calendar_id, destination);
         }
         const auto& it = response_status.find(id_vec.first.second);
         if(it != response_status.end()){

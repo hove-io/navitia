@@ -5,7 +5,7 @@ from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, additional_informations_vj, UrisToLinks, error, \
     enum_type
-from ResourceUri import ResourceUri, add_notes, add_exception_dates
+from ResourceUri import ResourceUri, complete_links
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from errors import ManageError
@@ -42,8 +42,7 @@ class Schedules(ResourceUri):
                                 action="append")
         parser_get.add_argument("calendar", type=str,
                                 description="Id of the calendar")
-        self.method_decorators.append(add_notes(self))
-        self.method_decorators.append(add_exception_dates(self))
+        self.method_decorators.append(complete_links(self))
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
