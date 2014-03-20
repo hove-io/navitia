@@ -241,6 +241,19 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise, bool 
 }
 
 void patch_datetimes(Path &path){
+
+    for(auto &item : path.items) {
+        //if the vehicle journeys of a public transport section isn't of type regular
+        //We keep only the first and the last stop time
+        if(item.type == public_transport && item.stop_times.size() > 2
+                && item.stop_times.front()->vehicle_journey->is_odt()) {
+            item.stop_times.erase(item.stop_times.begin()+1, item.stop_times.end()-1);
+            item.stop_points.erase(item.stop_points.begin()+1, item.stop_points.end()-1);
+            item.arrivals.erase(item.arrivals.begin()+1, item.arrivals.end()-1);
+            item.departures.erase(item.departures.begin()+1, item.departures.end()-1);
+        }
+    }
+
     PathItem previous_item = *path.items.begin();
     std::vector<std::pair<int, PathItem>> to_insert;
     for(auto item = path.items.begin() + 1; item!= path.items.end(); ++item) {
