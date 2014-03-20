@@ -682,7 +682,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
         }
     }
 
-    bool is_odt() {
+    bool is_odt()  const{
         return vehicle_journey_type != VehicleJourneyType::regular;
     }
 };

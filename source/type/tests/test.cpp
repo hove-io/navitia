@@ -271,3 +271,27 @@ BOOST_AUTO_TEST_CASE(message_is_applicable_daily_passe_minuit){
     BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 23:30:00"), pt::hours(10))));
 
 }
+
+
+BOOST_AUTO_TEST_CASE(vj_is_odt) {
+    navitia::type::VehicleJourney vj_odt, vj_regular;
+
+    vj_regular.vehicle_journey_type = VehicleJourneyType::regular;
+    vj_regular.has_landing();
+    BOOST_CHECK_NOT(vj_regular.is_odt());
+
+    vj_odt.vehicle_journey_type = VehicleJourneyType::virtual_with_stop_time;
+    BOOST_CHECK(vj_odt.is_odt());
+
+    vj_odt.vehicle_journey_type = VehicleJourneyType::virtual_without_stop_time;
+    BOOST_CHECK(vj_odt.is_odt());
+
+    vj_odt.vehicle_journey_type = VehicleJourneyType::stop_point_to_stop_point;
+    BOOST_CHECK(vj_odt.is_odt());
+
+    vj_odt.vehicle_journey_type = VehicleJourneyType::adress_to_stop_point;
+    BOOST_CHECK(vj_odt.is_odt());
+
+    vj_odt.vehicle_journey_type = VehicleJourneyType::odt_point_to_point;
+    BOOST_CHECK(vj_odt.is_odt());
+}
