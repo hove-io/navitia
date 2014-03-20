@@ -169,8 +169,8 @@ class complete_links(object):
         elif isinstance(data, dict) or\
                 isinstance(data, OrderedDict):
             if 'type' in data and data['type'] == collect["type"]:
-                if collect["type"] in {"notes", "destinations"}:
-                    result.append({"id": data['id'], "value": data['value']})
+                if collect["type"] in {"notes"}:
+                    result.append({"id": data['id'], "value": data['value'], "type": collect["type"]})
                 if collect["type"] in {"exceptions"}:
                     type = "Remove"
                     if data['except_type'] == 0:
@@ -179,6 +179,7 @@ class complete_links(object):
                 to_del = collect["del"]
                 for del_ in to_del:
                     del data[del_]
+
             else:
                 for v in data.items():
                     result.extend(self.complete(v, collect))
@@ -197,12 +198,10 @@ class complete_links(object):
                 collection = {
                     "notes" : {"type" : "notes",
                               "del":["value"]},
-                    "destinations" : {"type" : "destinations",
-                              "del":["value"]},
                     "exceptions" : {"type" : "exceptions",
                               "del":["date","except_type"]}
                 }
-                # Add notes, destinations and exceptions
+                # Add notes exceptions
                 for col in collection:
                     if not col in data or not isinstance(data[col], list):
                         data[col] = []
