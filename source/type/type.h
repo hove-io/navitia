@@ -681,6 +681,10 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             return this->journey_pattern->uri < other.journey_pattern->uri;
         }
     }
+
+    bool is_odt() {
+        return vehicle_journey_type != VehicleJourneyType::regular;
+    }
 };
 
 struct ValidityPattern : public Header {
