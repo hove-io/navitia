@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
 SET(KRAKEN_VERSION_MAJOR 0)
-SET(KRAKEN_VERSION_MINOR 89)
-SET(KRAKEN_VERSION_PATCH 2)
+SET(KRAKEN_VERSION_MINOR 90)
+SET(KRAKEN_VERSION_PATCH 0)
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
@@ -44,6 +44,9 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 )
 link_directories(${Boost_LIBRARY_DIRS})
 
+MACRO(ADD_BOOST_TEST EXE_NAME)
+    ADD_TEST(${EXE_NAME} ${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME} --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no)
+ENDMACRO(ADD_BOOST_TEST)
 
 ENABLE_TESTING()
 
@@ -65,6 +68,7 @@ add_subdirectory(time_tables)
 add_subdirectory(jormungandr)
 add_subdirectory(sql)
 add_subdirectory(disruption)
+add_subdirectory(calendar)
 
 add_subdirectory(scripts)
 
@@ -75,6 +79,7 @@ CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 CHECK_INCLUDE_FILE_CXX("log4cplus/loggingmacros.h" HAVE_LOGGINGMACROS_H)
 
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+
 
 ## TEST
 add_test(connectors nosetests --where=${CMAKE_CURRENT_SOURCE_DIR}/connectors)

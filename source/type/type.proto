@@ -38,6 +38,7 @@ enum API {
     place_uri = 15;
     UNKNOWN_API = 16;
     disruptions = 17;
+    calendars = 18;
 }
 
 enum VehicleJourneyType{
@@ -103,6 +104,7 @@ message StopArea {
     repeated AdministrativeRegion administrative_regions = 10;
     repeated StopPoint stop_points = 8;
     repeated Message messages = 9;
+    optional string comment = 11;
 }
 
 message StopPoint {
@@ -114,6 +116,7 @@ message StopPoint {
     optional hasEquipments has_equipments = 8;
 
     repeated Message messages = 9;
+    optional string comment = 11;
 }
 
 message Line {
@@ -127,6 +130,7 @@ message Line {
     optional Network network = 13;
 
     repeated Message messages = 14;
+    optional string comment = 15;
 }
 
 message Route {
@@ -150,6 +154,11 @@ message JourneyPattern {
     repeated Message messages = 9;
 }
 
+message Destination{
+    required string uri = 1;
+    optional string destination = 2;
+}
+
 message Note{
     required string uri = 1;
     optional string note = 2;
@@ -165,6 +174,7 @@ message Properties{
     repeated AdditionalInformation additional_informations= 1;
     repeated Note notes = 5;
     repeated CalendarException exceptions = 6;
+    optional Destination destination = 7;
 }
 
 message hasEquipments{
@@ -226,6 +236,7 @@ message VehicleJourney {
     optional bool appropriate_escort = 21;
     optional bool appropriate_signage = 22;
     optional bool school_vehicle = 23;
+    optional string comment = 24;
 }
 
 message JourneyPatternPoint{

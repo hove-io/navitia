@@ -148,6 +148,10 @@ private:
     bt::time_duration distance_to_duration(const double val) const;
 
     void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection) const;
+
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+    void dump_dijkstra_for_quantum(const ProjectionData& target);
+#endif
 };
 
 /** Structure managing the computation on the streetnetwork */

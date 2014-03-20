@@ -38,6 +38,9 @@ void fill_pb_object(const nt::StopArea * sa,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_area->set_uri(sa->uri);
     stop_area->set_name(sa->name);
+    if(!sa->comment.empty()) {
+        stop_area->set_comment(sa->comment);
+    }
     if(sa->coord.is_initialized()) {
         stop_area->mutable_coord()->set_lon(sa->coord.lon());
         stop_area->mutable_coord()->set_lat(sa->coord.lat());
@@ -63,6 +66,9 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
+    if(!sp->comment.empty()) {
+        stop_point->set_comment(sp->comment);
+    }
     if(sp->coord.is_initialized()) {
         stop_point->mutable_coord()->set_lon(sp->coord.lon());
         stop_point->mutable_coord()->set_lat(sp->coord.lat());
@@ -149,6 +155,9 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         return ;
 
     int depth = (max_depth <= 3) ? max_depth : 3;
+    if(!l->comment.empty()) {
+        line->set_comment(l->comment);
+    }
     if(l->code != "")
         line->set_code(l->code);
     if(l->color != "")
@@ -327,6 +336,9 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
+    if(!vj->comment.empty()) {
+        vehicle_journey->set_comment(vj->comment);
+    }
     vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->is_adapted);
     vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
@@ -405,9 +417,9 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
 }
 
 
-void fill_pb_object(const nt::StopTime* st, const type::Data&,
-                    pbnavitia::StopDateTime * stop_date_time, int ,
-                    const pt::ptime& , const pt::time_period& ) {
+void fill_pb_object(const nt::StopTime* st, const type::Data& data,
+                    pbnavitia::StopDateTime * stop_date_time, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period) {
     if(st == nullptr)
         return ;
 
@@ -425,10 +437,7 @@ void fill_pb_object(const nt::StopTime* st, const type::Data&,
         hp->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
     if(!st->comment.empty()){
-        pbnavitia::Note* note = hp->add_notes();
-        std::hash<std::string> hash_fn;
-        note->set_uri("note:"+std::to_string(hash_fn(st->comment)));
-        note->set_note(st->comment);
+        fill_pb_object(st->comment, data,  hp->add_notes(),max_depth,now,action_period);
     }
 }
 
@@ -509,8 +518,36 @@ void fill_pb_placemark(navitia::georef::Admin* admin,
     fill_pb_object(admin, data, place->mutable_administrative_region(), depth,
                    now, action_period);
     place->set_name(admin->name);
+    //If city contains multi postal code(37000;37100;37200), we show only the smallest one in the result.
+    //"name": "Tours(37000;37100;37200)" becomes "name": "Tours(37000)"
     if (!admin->post_code.empty()){
-        place->set_name(place->name() + " (" + admin->post_code + ")");
+        if (admin->post_code.find(";") != std::string::npos){
+            std::vector<std::string> str_vec;
+            boost::algorithm::split(str_vec, admin->post_code, boost::algorithm::is_any_of(";"));
+            assert(!str_vec.empty());
+            int min_value = std::numeric_limits<int>::max();
+            for (const std::string &str_post_code : str_vec){
+                int int_post_code;
+                try{
+                    int_post_code = boost::lexical_cast<int>(str_post_code);
+                }
+                catch (boost::bad_lexical_cast){
+                    continue;
+                }
+                if (int_post_code < min_value)
+                    min_value = int_post_code;
+            }
+            if (min_value != std::numeric_limits<int>::max()){
+                place->set_name(place->name() + " (" + boost::lexical_cast<std::string>(min_value) + ")");
+            }
+            else{
+                place->set_name(place->name() + " ()");
+            }
+
+        }
+        else{
+            place->set_name(place->name() + " (" + admin->post_code + ")");
+        }
     }
 
     place->set_uri(admin->uri);
@@ -820,7 +857,9 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     pbnavitia::ScheduleStopTime* rs_date_time, int max_depth,
                     const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period,
-                    const DateTime& date_time, boost::optional<const std::string> calendar_id){
+                    const DateTime& date_time,
+                    boost::optional<const std::string> calendar_id,
+                    const navitia::type::StopPoint* destination){
     if (stop_time == nullptr) {
         rs_date_time->set_date_time("");
         return;
@@ -845,18 +884,25 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     if (stop_time->date_time_estimated()){
         hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
-    if (!stop_time->comment.empty()){
-        pbnavitia::Note* note = hn->add_notes();
+    navitia::type::StopPoint* spt = nullptr;
+    if ((stop_time->vehicle_journey != nullptr)
+        && (!stop_time->vehicle_journey->stop_time_list.empty())
+        && (stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point != nullptr)){
+        spt = stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point->stop_point;
+    }
+
+    if(destination && spt && (spt->idx != destination->idx)){
+        pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
-        note->set_uri("note:"+std::to_string(hash_fn(stop_time->comment)));
-        note->set_note(stop_time->comment);
+        destination->set_uri("destination:"+std::to_string(hash_fn(spt->name)));
+        destination->set_destination(spt->name);
+    }
+    if (!stop_time->comment.empty()){
+        fill_pb_object(stop_time->comment, data,  hn->add_notes(),max_depth,now,action_period);
     }
     if (stop_time->vehicle_journey != nullptr) {
         if(!stop_time->vehicle_journey->odt_message.empty()){
-            pbnavitia::Note* note = hn->add_notes();
-            std::hash<std::string> hash_fn;
-            note->set_uri("note:"+std::to_string(hash_fn(stop_time->vehicle_journey->odt_message)));
-            note->set_note(stop_time->vehicle_journey->odt_message);
+            fill_pb_object(stop_time->vehicle_journey->odt_message, data, hn->add_notes(),max_depth,now,action_period);
         }
     }
 
@@ -869,6 +915,7 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         }
     }
 }
+
 void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt::Data&,
                     pbnavitia::CalendarException* calendar_exception, int,
                     const pt::ptime&, const pt::time_period& ){
@@ -880,7 +927,8 @@ void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
+                    const pt::ptime& now, const pt::time_period& action_period,
+                    const navitia::type::StopPoint* destination){
     if(r == nullptr)
         return ;
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
@@ -888,7 +936,11 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     for(auto message : r->get_applicable_messages(now, action_period)){
         fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
     }
-    pt_display_info->set_direction(r->name);
+    if(destination != nullptr){
+        pt_display_info->set_direction(destination->name);
+    }else{
+        pt_display_info->set_direction(r->name);
+    }
     if (r->line != nullptr){
         pt_display_info->set_color(r->line->color);
         pt_display_info->set_code(r->line->code);
@@ -972,7 +1024,9 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
     pb_cal->set_name(cal->name);
     auto vp = pb_cal->mutable_validity_pattern();
     vp->set_beginning_date(boost::gregorian::to_iso_string(cal->validity_pattern.beginning_date));
-    vp->set_days(cal->validity_pattern.str());
+    std::string vp_str = cal->validity_pattern.str();
+    std::reverse(vp_str.begin(), vp_str.end());
+    vp->set_days(vp_str);
     auto week = pb_cal->mutable_week_pattern();
     week->set_monday(cal->week_pattern[navitia::Monday]);
     week->set_tuesday(cal->week_pattern[navitia::Tuesday]);
@@ -1009,5 +1063,13 @@ void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& messa
                     const boost::posix_time::ptime& , const boost::posix_time::time_period& ){
     error->set_id(id);
     error->set_message(message);
+}
+
+void fill_pb_object(const std::string comment, const nt::Data&,
+                    pbnavitia::Note* note, int,
+                    const boost::posix_time::ptime&, const boost::posix_time::time_period&){
+    std::hash<std::string> hash_fn;
+    note->set_uri("note:"+std::to_string(hash_fn(comment)));
+    note->set_note(comment);
 }
 }//namespace navitia

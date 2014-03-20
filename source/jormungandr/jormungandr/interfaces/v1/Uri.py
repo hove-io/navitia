@@ -6,7 +6,7 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
     commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
-    journey_pattern, vehicle_journey, connection, error, calendar, PbField
+    journey_pattern, vehicle_journey, connection, error, PbField
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -48,12 +48,18 @@ class Uri(ResourceUri):
         args = self.parsers["get"].parse_args()
         if region is None and lat is None and lon is None:
             if "external_code" in args and args["external_code"]:
-                res = PtObject.get_from_external_code(args["external_code"])
+                type_ = collections_to_resource_type[collection]
+                try:
+                    res = PtObject.get_from_external_code(args["external_code"],
+                                                          type_)
+                except:
+                    abort(400, message="Unable to query this type of object"
+                          " with external code")
                 if res:
                     id = res.uri
-                    instances = res.instances()
+                    instances = res.instances
                     if len(instances) > 0:
-                        region = res.instances()[0].name
+                        region = res.instances[0].name
                 else:
                     abort(404, message="Unable to find an object for the uri %s"
                           % args["external_code"])
@@ -67,10 +73,7 @@ class Uri(ResourceUri):
 
         if(collection and id):
             args["filter"] = collections_to_resource_type[collection] + ".uri="
-            if collection != 'pois':
-                args["filter"] += id
-            else:
-                args["filter"] += id.split(":")[-1]
+            args["filter"] += id
         elif(uri):
             if uri[-1] == "/":
                 uri = uri[:-1]
@@ -380,28 +383,6 @@ def networks(is_collection):
                             description="original uri of the object you"
                                     "want to query")
     return Networks
-
-
-def calendars(is_collection):
-    class Calendars(Uri):
-
-        """ Retrieves calendars"""
-
-        def __init__(self):
-            super(Calendars, self).__init__(is_collection, "calendars")
-            self.collections = [
-                ("calendars", NonNullList(fields.Nested(calendar,
-                                           display_null=False))),
-                ("pagination", PbField(pagination)),
-                ("error", PbField(error))
-            ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
-            self.method_decorators.insert(1, collections)
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
-    return Calendars
 
 
 def addresses(is_collection):

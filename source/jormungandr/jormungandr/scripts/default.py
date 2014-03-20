@@ -66,6 +66,22 @@ class Script(object):
         resp = instance.send_and_receive(req)
         return resp
 
+    def calendars(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.calendars
+        req.calendars.depth = request['depth']
+        req.calendars.filter = request['filter']
+        req.calendars.count = request['count']
+        req.calendars.start_page = request['start_page']
+        req.calendars.start_date = request['start_date']
+        req.calendars.end_date = request['end_date']
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.ptref.forbidden_uri.append(forbidden_uri)
+
+        resp = instance.send_and_receive(req)
+        return resp
+
     def disruptions(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.disruptions
@@ -230,7 +246,7 @@ class Script(object):
                 else None"""
         if not "cheap_journey" in self.functional_params \
             or self.functional_params["cheap_journey"].lower() != "true":
-            return
+            return (None, None)
 
         #we want to check if all journeys use the TER network
         #if it is true, we want to call kraken and forbid this network
@@ -244,13 +260,13 @@ class Script(object):
         )
 
         if not only_ter:
-            return None
+            return (None, None)
 
         req = copy.deepcopy(initial_request)
         for uri in ter_uris:
             req.journeys.forbidden_uris.append(uri)
 
-        return req
+        return (req, "possible_cheap")
 
     def places_nearby(self, request, instance):
         req = request_pb2.Request()
@@ -303,11 +319,14 @@ class Script(object):
         if not resp or (pb_req.requested_api != type_pb2.PLANNER and pb_req.requested_api != type_pb2.ISOCHRONE):
             return
 
-        new_request = self.check_missing_journey(resp.journeys, pb_req)
+        new_request, tag = self.check_missing_journey(resp.journeys, pb_req)
 
         if new_request:
             #we have to call kraken again with a modified version of the request
             new_resp = self.call_kraken(new_request, instance)
+            #We tag every journey with the new request's tag
+            for journey in journeys:
+                journey.type = tag
             self.merge_response(resp, new_resp)
 
         #we qualify the journeys
@@ -416,7 +435,8 @@ class Script(object):
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
         else:
             #by default, we filter non tagged journeys
-            to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type == ""])
+            tag_to_delete = ["", "possible_cheap"]
+            to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 
         # list comprehension does not work with repeated field, so we have to delete them manually
         to_delete.sort(reverse=True)
@@ -513,7 +533,3 @@ class Script(object):
     def poi_types(self, request, instance):
         return self.__on_ptref("poi_types", type_pb2.POITYPE, request,
                                instance)
-
-    def calendars(self, request, instance):
-        return self.__on_ptref("calendars", type_pb2.CALENDAR,
-                               request, instance)

@@ -81,6 +81,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                        current_labels[jpp_idx].dt = best_departure;
                        current_labels[jpp_idx].boarding = data.pt_data.journey_pattern_points[best_jpp];
                        current_labels[jpp_idx].type = boarding_type::connection;
+                       best_labels[jpp_idx] = best_departure;
 
                        if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
                            Q[jpp->journey_pattern->idx] = jpp->order;
@@ -109,6 +110,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                                     current_labels[destination_jpp_idx].dt = next;
                                     current_labels[destination_jpp_idx].boarding = data.pt_data.journey_pattern_points[best_jpp];
                                     current_labels[destination_jpp_idx].type = boarding_type::connection;
+                                    best_labels[destination_jpp_idx] = next;
 
                                     if(v.comp(destination_jpp->order, Q[destination_jpp->journey_pattern->idx])) {
                                         Q[destination_jpp->journey_pattern->idx] = destination_jpp->order;

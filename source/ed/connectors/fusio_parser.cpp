@@ -42,6 +42,7 @@ void StopsFusioHandler::init(Data& data) {
         ext_code_c = csv.get_pos_col("external_code");
         property_id_c = csv.get_pos_col("property_id");
         comment_id_c =  csv.get_pos_col("comment_id");
+        visible_c =  csv.get_pos_col("visible");
 }
 
 //in fusio we want to delete all stop points without stop area
@@ -98,6 +99,9 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         }
     }
 
+    if (return_wrapper.second != nullptr && is_valid(visible_c, row)) {
+        return_wrapper.second->visible = (row[visible_c] == "1");
+    }
     return return_wrapper;
 }
 

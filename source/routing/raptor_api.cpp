@@ -213,11 +213,25 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
-    if(ep.type == type::Type_e::StopArea){
-        auto it = pt_data.stop_areas_map.find(ep.uri);
-        if(it!= pt_data.stop_areas_map.end()) {
-            for(auto stop_point : it->second->stop_point_list) {
-                result.push_back({stop_point->idx, {}});
+    if(ep.type == type::Type_e::Address
+                || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin
+                || ep.type == type::Type_e::StopArea){
+        result = worker.find_nearest_stop_points(
+                    ep.streetnetwork_params.max_duration,
+                    pt_data.stop_point_proximity_list,
+                    use_second);
+        std::set<type::idx_t> stop_points;
+        for(auto idx_duration : result) {
+            stop_points.insert(idx_duration.first);
+        }
+        if(ep.type == type::Type_e::StopArea){
+            auto it = pt_data.stop_areas_map.find(ep.uri);
+            if(it!= pt_data.stop_areas_map.end()) {
+                for(auto stop_point : it->second->stop_point_list) {
+                    if(stop_points.find(stop_point->idx) == stop_points.end()) {
+                        result.push_back({stop_point->idx, {}});
+                    }
+                }
             }
         }
     }else if(ep.type == type::Type_e::StopPoint){
@@ -225,48 +239,8 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         if(it != pt_data.stop_points_map.end()){
             result.push_back({it->second->idx, {}});
         }
-    }else if(ep.type == type::Type_e::Address || ep.type == type::Type_e::POI
-                || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
-        result = worker.find_nearest_stop_points(
-                    ep.streetnetwork_params.max_duration,
-                    pt_data.stop_point_proximity_list,
-                    use_second);
-    }
-    //On va chercher tous les stop_points en correspondance
-    //avec ceux déjà trouvés.
-    std::vector<std::pair<type::idx_t, bt::time_duration> > tmp_result;
-    std::unordered_set<type::idx_t> visited_stop_points;
-    for (const auto & sp_idx_distance : result) { visited_stop_points.insert(sp_idx_distance.first); }
-
-    for(const auto & sp_idx_distance : result) {
-        const auto sp_idx = sp_idx_distance.first;
-        const auto stop_point = pt_data.stop_points[sp_idx];
-        const auto connections_idx = stop_point->get(type::Type_e::StopPointConnection, pt_data);
-        for(const auto connection_idx : connections_idx) {
-            const auto* connection = pt_data.stop_point_connections[connection_idx];
-
-            const auto destination = connection->destination;
-            if (visited_stop_points.find(destination->idx) != visited_stop_points.end()) {
-                continue;
-            }
-            visited_stop_points.insert(destination->idx);
-
-            auto duration = worker.get_distance(destination->idx, use_second);
-            /*
-             * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
-             * if(distance == std::numeric_limits<double>::max()) {
-            //Fallback si le stop point n'est pas rattaché au filaire de voirie
-            //On recalcule une distance en pensant qu'on marche à 1.68 m/s
-                distance = connection.duration * 1.68
-            }*/
-            if (duration == bt::pos_infin)
-                continue;
-
-            tmp_result.push_back({destination->idx, duration});
-        }
     }
 
-    result.insert(result.end(), tmp_result.begin(), tmp_result.end());
     return result;
 }
 
@@ -413,10 +387,15 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     for(const type::StopPoint* sp : raptor.data.pt_data.stop_points) {
         DateTime best = bound;
         type::idx_t best_rp = type::invalid_idx;
+        int best_round = -1;
         for(auto jpp : sp->journey_pattern_point_list) {
             if(raptor.best_labels[jpp->idx] < best) {
-                best = raptor.best_labels[jpp->idx];
-                best_rp = jpp->idx;
+                int round = raptor.best_round(jpp->idx);
+                if(round != -1 && raptor.labels[round][jpp->idx].type == boarding_type::vj) {
+                    best = raptor.best_labels[jpp->idx];
+                    best_rp = jpp->idx;
+                    best_round = round;
+                }
             }
         }
 
@@ -424,8 +403,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             auto label = raptor.best_labels[best_rp];
             type::idx_t initial_rp;
             DateTime initial_dt;
-            int round = raptor.best_round(best_rp);
-            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, clockwise, raptor.labels);
+            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(best_round, best_rp, clockwise, raptor.labels);
 
             int duration = ::abs(label - init_dt);
 
@@ -438,7 +416,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 pb_journey->set_departure_date_time(str_departure);
                 pb_journey->set_requested_date_time(str_requested);
                 pb_journey->set_duration(duration);
-                pb_journey->set_nb_transfers(round);
+                pb_journey->set_nb_transfers(best_round);
                 fill_pb_placemark(raptor.data.pt_data.journey_pattern_points[best_rp]->stop_point, raptor.data, pb_journey->mutable_destination(), 0);
             }
         }

@@ -118,6 +118,8 @@ class stop_time_properties_links(fields.Raw):
         for exception in properties.exceptions:
             r.append({"type": "exceptions", "id": exception.uri, "date": exception.date,
                       "except_type": exception.type})
+        if properties.destination and properties.destination.uri:
+            r.append({"type": "notes", "id": properties.destination.uri, "value": properties.destination.destination})
         return r
 
 
@@ -185,8 +187,10 @@ generic_type_admin["administrative_regions"] = admins
 
 stop_point = deepcopy(generic_type_admin)
 stop_point["messages"] = NonNullList(NonNullNested(generic_message))
+stop_point["comment"] = fields.String()
 stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
+stop_area["comment"] = fields.String()
 journey_pattern_point = deepcopy(generic_type)
 journey_pattern = deepcopy(generic_type)
 jpps = NonNullList(NonNullNested(journey_pattern_point))
@@ -200,10 +204,12 @@ vehicle_journey = deepcopy(generic_type)
 vehicle_journey["messages"] = NonNullList(NonNullNested(generic_message))
 vehicle_journey["journey_pattern"] = PbField(journey_pattern)
 vehicle_journey["stop_times"] = NonNullList(NonNullNested(stop_time))
+vehicle_journey["comment"] = fields.String()
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
 line["code"] = fields.String()
 line["color"] = fields.String()
+line["comment"] = fields.String()
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))
@@ -234,38 +240,6 @@ stop_area["stop_point"] = PbField(deepcopy(stop_point))
 journey_pattern_point["stop_point"] = PbField(deepcopy(stop_point))
 address = deepcopy(generic_type_admin)
 address["house_number"] = fields.Integer()
-
-week_pattern = {
-    "monday": fields.Boolean(),
-    "tuesday": fields.Boolean(),
-    "wednesday": fields.Boolean(),
-    "thursday": fields.Boolean(),
-    "friday": fields.Boolean(),
-    "saturday": fields.Boolean(),
-    "sunday": fields.Boolean(),
-}
-
-calendar_period = {
-    "begin": fields.String(),
-    "end": fields.String(),
-}
-
-calendar_exception = {
-    "datetime": fields.String(attribute="date"),
-    "type": enum_type(),
-}
-validity_pattern = {
-    'beginning_date': fields.String(),
-    'days': fields.String(),
-}
-calendar = {
-    "id": fields.String(attribute="uri"),
-    "name": fields.String(),
-    "week_pattern": NonNullNested(week_pattern),
-    "active_periods": NonNullList(NonNullNested(calendar_period)),
-    "exceptions": NonNullList(NonNullNested(calendar_exception)),
-    "validity_pattern": NonNullNested(validity_pattern)
-}
 
 connection = {
     "origin": PbField(stop_point),

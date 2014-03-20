@@ -32,7 +32,10 @@ class ResourceUri(Resource):
         for item in items:
             if not type_:
                 if item != "coord":
-                    type_ = collections_to_resource_type[item]
+                    if(item == "calendars"):
+                        type_ = 'calendar'
+                    else:
+                        type_ = collections_to_resource_type[item]
                 else:
                     type_ = "coord"
             else:
@@ -134,19 +137,12 @@ class add_computed_resources(object):
                     "rel": "journeys",
                     "templated": templated
                 })
-            if "region" in kwargs:
-                #for lines we add the link to the calendars
+            #for lines we add the link to the calendars
+            if 'region' in kwargs:
                 if collection == 'lines':
                     data['links'].append({
-                        "href": url_for("v1.calendars.collection", **kwargs),
+                        "href": url_for("v1.calendars", **kwargs),
                         "rel": "calendars",
-                        "templated": templated
-                    })
-                #for calendars we add the link to the lines
-                if collection == 'calendars':
-                    data['links'].append({
-                        "href": url_for("v1.lines.collection", **kwargs),
-                        "rel": "lines",
                         "templated": templated
                     })
                 if collection in ['stop_areas', 'lines', 'networks']:
@@ -161,10 +157,33 @@ class add_computed_resources(object):
                 return data
         return wrapper
 
-class add_notes(object):
-
+class complete_links(object):
     def __init__(self, resource):
         self.resource = resource
+    def complete(self, data, collect):
+        result = []
+        if isinstance(data, list) or isinstance(data, tuple):
+            for item in data:
+                result.extend(self.complete(item, collect))
+
+        elif isinstance(data, dict) or\
+                isinstance(data, OrderedDict):
+            if 'type' in data and data['type'] == collect["type"]:
+                if collect["type"] in {"notes"}:
+                    result.append({"id": data['id'], "value": data['value'], "type": collect["type"]})
+                if collect["type"] in {"exceptions"}:
+                    type = "Remove"
+                    if data['except_type'] == 0:
+                        type = "Add"
+                    result.append({"id": data['id'], "date": data['date'], "type" : type})
+                to_del = collect["del"]
+                for del_ in to_del:
+                    del data[del_]
+
+            else:
+                for v in data.items():
+                    result.extend(self.complete(v, collect))
+        return result
 
     def __call__(self, f):
         @wraps(f)
@@ -175,78 +194,21 @@ class add_notes(object):
             else:
                 data = objects
 
-            def add_note(data):
-                result = []
-                if isinstance(data, list) or isinstance(data, tuple):
-                    for item in data:
-                        result.extend(add_note(item))
-
-                elif isinstance(data, dict) or\
-                        isinstance(data, OrderedDict):
-                    if 'type' in data.keys() and data['type'] == 'notes':
-                        result.append({"id": data['id'],
-                                       "value": data['value']})
-                        del data["value"]
-                    else:
-                        for v in data.items():
-                            result.extend(add_note(v))
-                return result
             if self.resource.region:
-                if not "notes" in data or not isinstance(data["notes"], list):
-                    data["notes"] = []
-                    res = []
-                    note = add_note(data)
-                    [res.append(item) for item in note if not item in res]
-                    data["notes"].extend(res)
-
-            if isinstance(objects, tuple):
-                return data, code, header
-            else:
-                return data
-
-        return wrapper
-
-class add_exception_dates(object):
-    def __init__(self, resource):
-        self.resource = resource
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-            if isinstance(objects, tuple):
-                data, code, header = unpack(objects)
-            else:
-                data = objects
-
-            def add_exception(data):
-                result = []
-                if isinstance(data, list) or isinstance(data, tuple):
-                    for item in data:
-                        result.extend(add_exception(item))
-
-                elif isinstance(data, dict) or\
-                        isinstance(data, OrderedDict):
-                    if 'type' in data.keys() and data['type'] == 'exceptions':
-                        type = "Remove"
-                        if data['except_type'] == 0:
-                            type = "Add"
-                        result.append({"id": data['id'],
-                                       "date": data['date'],
-                                       "type" : type})
-                        del data["date"]
-                        del data["except_type"]
-                    else:
-                        for v in data.items():
-                            result.extend(add_exception(v))
-                return result
-            if self.resource.region:
-                if not "exceptions" in data or not isinstance(data["exceptions"], list):
-                    data["exceptions"] = []
-                    res = []
-                    note = add_exception(data)
-                    [res.append(item) for item in note if not item in res]
-                    data["exceptions"].extend(res)
+                collection = {
+                    "notes" : {"type" : "notes",
+                              "del":["value"]},
+                    "exceptions" : {"type" : "exceptions",
+                              "del":["date","except_type"]}
+                }
+                # Add notes exceptions
+                for col in collection:
+                    if not col in data or not isinstance(data[col], list):
+                        data[col] = []
+                        res = []
+                        note = self.complete(data, collection[col])
+                        [res.append(item) for item in note if not item in res]
+                        data[col].extend(res)
 
             if isinstance(objects, tuple):
                 return data, code, header

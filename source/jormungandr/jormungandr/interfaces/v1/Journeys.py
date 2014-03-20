@@ -13,7 +13,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
 
 from jormungandr.interfaces.parsers import option_value
 #from exceptions import RegionNotFound
-from ResourceUri import ResourceUri, add_notes, update_journeys_status
+from ResourceUri import ResourceUri, complete_links, update_journeys_status
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
@@ -441,7 +441,7 @@ class Journeys(ResourceUri):
         parser_get.add_argument("wheelchair", type=boolean, default=False)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
-        self.method_decorators.append(add_notes(self))
+        self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
 
     @clean_links()
@@ -484,6 +484,9 @@ class Journeys(ResourceUri):
             api = 'journeys'
         else:
             api = 'isochrone'
+
+        if not args["origin"]:
+            abort(400, message="from argument is required")
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
         return response

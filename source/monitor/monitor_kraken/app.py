@@ -29,7 +29,7 @@ def monitor():
     except:
         return json.dumps({'error': ['instance invalid']}), 500
 
-    uri.replace('*', 'localhost')
+    uri = uri.replace('*', 'localhost')
     sock = context.socket(zmq.REQ)
     try:
         sock.connect(uri)
@@ -53,7 +53,7 @@ def monitor():
         response['last_load'] = resp.status.last_load_at
         response['last_load_status'] = resp.status.last_load_status
         response['loaded'] = resp.status.loaded
-        response['is_connected_to_rabbitmq'] = resp.is_connected_to_rabbitmq
+        response['is_connected_to_rabbitmq'] = resp.status.is_connected_to_rabbitmq
 
         if resp.status.last_load_status == False and 'status' not in response:
             response['status'] = 'last load failed'

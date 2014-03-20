@@ -208,7 +208,7 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, "
-     "sa.comment as comment,"
+     "sa.comment as comment, sa.visible as visible,"
      "ST_X(sa.coord::geometry) as lon, ST_Y(sa.coord::geometry) as lat,"
      "pr.wheelchair_boarding as wheelchair_boarding, pr.sheltered as sheltered,"
      "pr.elevator as elevator, pr.escalator as escalator,"
@@ -228,6 +228,7 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
         const_it["comment"].to(sa->comment);
         sa->coord.set_lon(const_it["lon"].as<double>());
         sa->coord.set_lat(const_it["lat"].as<double>());
+        sa->visible = const_it["visible"].as<bool>();
         if (const_it["wheelchair_boarding"].as<bool>()){
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
         }
@@ -661,8 +662,11 @@ void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, ST_Y(poi.coord::geometry) as lat,";
-    request += " poi.name, poi.uri, poi.poi_type_id FROM navitia.poi poi, navitia.poi_type poi_type where poi.poi_type_id=poi_type.id and poi_type.uri <> 'bicycle_rental';";
+    std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, "
+            "ST_Y(poi.coord::geometry) as lat, poi.visible as visible, "
+            "poi.name, poi.uri, poi.poi_type_id FROM navitia.poi poi, "
+            "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id "
+            "and poi_type.uri <> 'bicycle_rental';";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::POI* poi = new navitia::georef::POI();
@@ -671,6 +675,7 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
         const_it["id"].to(poi->id);
         poi->coord.set_lon(const_it["lon"].as<double>());
         poi->coord.set_lat(const_it["lat"].as<double>());
+        poi->visible = const_it["visible"].as<bool>();
         const_it["weight"].to(poi->weight);
         navitia::georef::POIType* poi_type = this->poi_type_map[const_it["poi_type_id"].as<idx_t>()];
         if(poi_type != NULL ){
@@ -695,7 +700,7 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
         const_it["uri"].to(way->uri);
         const_it["name"].to(way->name);
         way->id = id;
-        way->idx =data.geo_ref.ways.size();
+        way->idx = data.geo_ref.ways.size();
 
         const_it["type"].to(way->way_type);
         data.geo_ref.ways.push_back(way);
@@ -728,6 +733,8 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
     navitia::georef::GeoRef geo_ref_temp;
     std::unordered_map<idx_t, uint64_t> osmid_idex;
     std::unordered_map<uint64_t, idx_t> node_map_temp;
+    std::unordered_map<idx_t, size_t> way_nb_edges;
+
     // chargement des vertex
     std::string request = "select id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat from georef.node;";
     pqxx::result result = work.exec(request);
@@ -754,6 +761,8 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
             uint64_t source = node_map_temp[const_it["source_node_id"].as<uint64_t>()];
             uint64_t target = node_map_temp[const_it["target_node_id"].as<uint64_t>()];
             boost::add_edge(source, target, e, geo_ref_temp.graph);
+
+            way_nb_edges[e.way_idx]++; //we count the number of edges on each way, to be able to delete empty ways
     }
 
     std::vector<size_t> vertex_component(boost::num_vertices(geo_ref_temp.graph));
@@ -780,6 +789,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
 
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the biggest has " << principal_component->second << " nodes");
 
+    std::set<navitia::georef::edge_t> graph_edge_to_ignore;
     // we fill the node_to_ignore and edge_to_ignore lists
     // those edges and nodes will be erased
     for (navitia::georef::vertex_t vertex_idx = 0;  vertex_idx != vertex_component.size(); ++vertex_idx) {
@@ -797,32 +807,20 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
             uint64_t target = boost::target(e, geo_ref_temp.graph);
             edge_to_ignore.insert({source, target});
             node_to_ignore.insert(target);
+            graph_edge_to_ignore.insert(e); //used for the ways
         }
     }
 
-    // we fill the list of way to ignore
-    BOOST_FOREACH(navitia::georef::edge_t e, boost::edges(geo_ref_temp.graph)) {
-        navitia::georef::vertex_t source_idx = boost::source(e, geo_ref_temp.graph);
-        navitia::georef::vertex_t target_idx = boost::target(e, geo_ref_temp.graph);
-
-        auto source_component = vertex_component[source_idx];
-        auto target_component = vertex_component[source_idx];
-
-        //by construction source and target must be in the same component
-        if (source_component != target_component) {
-            throw navitia::exception("technical problem");
+    //we fill the way to ignore list
+    for (const auto& edge: graph_edge_to_ignore) {
+        auto e = geo_ref_temp.graph[edge].way_idx;
+        if (way_nb_edges[e] > 1) {
+            way_nb_edges[e] --;
+        } else {
+            assert(way_nb_edges[e] == 0); //we should not remove more edge than it got
+            //it was the last edge of the way, we add it to the ignore list
+            way_to_ignore.insert(e);
         }
-
-        auto nb_elt = component_size[source_component];
-
-        if (nb_elt / principal_component->second >= min_non_connected_graph_ratio)
-            continue; //big enough, we skip
-
-        auto edge_and_found = boost::edge(source_idx, target_idx, geo_ref_temp.graph);
-        //by construction it has to be found, no need to check
-
-        navitia::georef::Edge edge = geo_ref_temp.graph[edge_and_found.first];
-        way_to_ignore.insert(edge.way_idx);
     }
 
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), way_to_ignore.size() << " way to ignore");
@@ -857,6 +855,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
                           "ST_LENGTH(the_geog) AS leng, e.pedestrian_allowed as pede, "
                           "e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
     pqxx::result result = work.exec(request);
+    size_t nb_edges_no_way = 0;
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
 
@@ -872,15 +871,21 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
         if (source == std::numeric_limits<uint64_t>::max() || target == std::numeric_limits<uint64_t>::max())
             continue;
 
-        if (way == nullptr || edge_to_ignore.find({source, target}) != edge_to_ignore.end())
+        if (edge_to_ignore.find({source, target}) != edge_to_ignore.end())
             continue;
+
+        if (! way) {
+            nb_edges_no_way ++;
+            continue;
+        }
 
         navitia::georef::Edge e;
         float len = const_it["leng"].as<float>();
         e.way_idx = way->idx;
+        way->edges.push_back(std::make_pair(source, target));
+
         //TODO et les pietons ??!
 
-        data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
         e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
         boost::add_edge(source, target, e, data.geo_ref.graph);
         if (const_it["bike"].as<bool>()) {
@@ -893,6 +898,10 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             boost::add_edge(data.geo_ref.offsets[nt::Mode_e::Car] + source,
                 data.geo_ref.offsets[nt::Mode_e::Car] + target, e, data.geo_ref.graph);
         }
+    }
+
+    if (nb_edges_no_way) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_edges_no_way << " edges have an unkown way");
     }
 
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref.graph) << " edges added");
