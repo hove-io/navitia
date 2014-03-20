@@ -1,3 +1,31 @@
+navitia2 (0.90.0) unstable; urgency=low
+
+ * Monitor: Fix a typo
+ * Kraken: For odt vj, we want to display only the first and last stop time
+ * kraken : Add main destination to stop schedules
+ * Jormungandr: We can now request models by external_code and type
+ * Kraken: fix connection duration for intra stop area connections
+ * OSMReader: improve the osm tags handling for bike
+ * Ed2Nav: fix way filtering
+ * Kraken: add facilities for qgis debuging
+ * Jormungandr: Fix tagging of cheap journeys
+ * Kraken: Some journeys were still begginning by a transfer
+ * Kraken: fix setting of sn params of destination
+ * jormungandr : test of from argument
+ * Merge pull request #206 from l-vincent-l/fix_visible_sa
+ * Ed: set visible value only if we have the column
+ * jormungandr : add comment property
+ * kraken : add comment property
+ * CMake: python tests outputed in differents files
+ * CMake: output all test in xml for jenkins
+ * Jormungandr: manage terminus on stop schedule
+ * Kraken: reverse order of validity pattern on display
+ * Kraken: fix calendar API
+ * Kraken: Penalize objects without cities
+ * Jormungandr: filter corrected in places_nearby for POI
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 20 Mar 2014 17:03:50 +0100
+
 navitia2 (0.89.2) unstable; urgency=low
 
  * Fix jormungandr unit tests
