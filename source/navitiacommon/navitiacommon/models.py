@@ -100,6 +100,8 @@ class Instance(db.Model):
     name = db.Column(db.Text, unique=True, nullable=False)
     is_free = db.Column(db.Boolean, default=False, nullable=False)
 
+    cache_prefix = "Instance"
+
     authorizations = db.relationship('Authorization', backref='instance',
             lazy='dynamic')
 
@@ -113,6 +115,21 @@ class Instance(db.Model):
             self.authorizations = authorizations
         if jobs:
             self.jobs = jobs
+
+    @classmethod
+    def get_by_name(cls, name):
+        cache_res = get_cache().get(cls.cache_prefix, name)
+        if cache_res is None: # we store a tuple to be able to distinguish
+        #  if we have already look for this element
+            res = cls.query.filter_by(name=name).first()
+            if res:
+                get_cache().set(cls.cache_prefix, name, (res,))
+                return res
+            else:
+                get_cache().set(cls.cache_prefix, name, (None,))
+                return None
+        else:
+            return cache_res[0]
 
     def __repr__(self):
         return '<Instance %r>' % self.name
