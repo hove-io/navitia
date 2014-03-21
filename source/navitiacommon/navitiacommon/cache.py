@@ -18,7 +18,8 @@ class Cache(object):
         self._default_ttl = default_ttl
         self.logger = logging.getLogger(__name__)
         if not disabled:
-            self.logger.info('connection to redis')
+            self.logger.info('connection to redis://{host}:{port}/{db}'.format(
+                        host=host, port=port, db=db))
             from redis import Redis
             self._redis = Redis(host=host, port=port, db=db, password=password)
         else:
