@@ -1,3 +1,9 @@
+navitia2 (0.90.3) unstable; urgency=low
+
+ * Jormungandr: really fix python version problem
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 21 Mar 2014 18:03:01 +0100
+
 navitia2 (0.90.2) unstable; urgency=low
 
  * Jormungandr: fix journey tagging

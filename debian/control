@@ -24,7 +24,7 @@ Description: Navitia-Ed
 
 
 Package: navitia-common
-Build-Depends: dh-python, python (>=2.7)
+Build-Depends: dh-python
 X-Python-Version: ${python:Versions}
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
@@ -35,7 +35,7 @@ Description: navitia-common
     python module shared within module of navitia, mostlu navitia-jormungandr and navitia-tyr
 
 Package: navitia-jormungandr
-Build-Depends: dh-python, python (>=2.7)
+Build-Depends: dh-python
 X-Python-Version: ${python:Versions}
 Architecture: all
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
@@ -45,7 +45,7 @@ Priority: optional
 Description: Navitia-Jormungandr
 
 Package: navitia-sindri
-Build-Depends: dh-python, python (>=2.7)
+Build-Depends: dh-python
 X-Python-Version: ${python:Versions}
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
@@ -74,7 +74,7 @@ Depends:
 Description: debugging symbols for ed
 
 Package: navitia-tyr
-Build-Depends: dh-python, python (>=2.7)
+Build-Depends: dh-python
 X-Python-Version: ${python:Versions}
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
@@ -85,7 +85,7 @@ Description: Navitia-Tyr
     Tyr is a web service for managing ed and account used on jormungandr
 
 Package: navitia-connector-at
-Build-Depends: dh-python, python (>=2.7)
+Build-Depends: dh-python
 X-Python-Version: ${python:Versions}
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
@@ -96,7 +96,7 @@ Description: Navitia-connector-at
     This service connects to alerte trafic database, reads it and sends to rabbit mq messages
 
 Package: navitia-monitor-kraken
-Build-Depends: dh-python, python (>=2.7)
+Build-Depends: dh-python
 X-Python-Version: ${python:Versions}
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
