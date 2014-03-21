@@ -1,3 +1,9 @@
+navitia2 (0.90.2) unstable; urgency=low
+
+ * Jormungandr: fix journey tagging
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 21 Mar 2014 17:03:52 +0100
+
 navitia2 (0.90.1) unstable; urgency=low
 
  * Jormungandr: fix ResourceUri
