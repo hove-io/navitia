@@ -1,3 +1,9 @@
+navitia2 (0.90.1) unstable; urgency=low
+
+ * Jormungandr: fix ResourceUri
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 21 Mar 2014 10:03:48 +0100
+
 navitia2 (0.90.0) unstable; urgency=low
 
  * Monitor: Fix a typo
