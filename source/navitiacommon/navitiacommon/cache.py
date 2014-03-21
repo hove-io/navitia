@@ -10,11 +10,12 @@ except ImportError:
 
 class Cache(object):
 
-    def __init__(self, host='localhost', port=6379, db=0,
-                 password=None, disabled=False, separator="."):
+    def __init__(self, host='localhost', port=6379, db=0, password=None,
+                 disabled=False, separator='.', default_ttl=None):
 
         self._disabled = disabled
         self.separator = separator
+        self._default_ttl = default_ttl
         self.logger = logging.getLogger(__name__)
         if not disabled:
             self.logger.info('connection to redis')
@@ -52,6 +53,7 @@ class Cache(object):
         except ConnectionError, e:
             self.logger.error('Redis is down, cache is disabled: %s', e)
             return
+        ttl = (ttl or self._default_ttl)
         if ttl:
             self._redis.expire(full_key, ttl)
 
@@ -61,9 +63,11 @@ cache = Cache(disabled=True)
 def get_cache():
     return cache
 
-def init_cache(host='localhost', port=6379, db=0, password=None):
+def init_cache(host='localhost', port=6379, db=0, password=None,
+               default_ttl=None):
     """
     initiate the global cache object, by default it is disabled
     """
     global cache
-    cache = Cache(host=host, port=port, db=db, password=password)
+    cache = Cache(host=host, port=port, db=db, password=password,
+                  default_ttl=default_ttl)

@@ -29,7 +29,8 @@ if not app.config['CACHE_DISABLED']:
     from navitiacommon.cache import init_cache
     init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
                db=app.config['REDIS_DB'],
-               password=app.config['REDIS_PASSWORD'])
+               password=app.config['REDIS_PASSWORD'],
+               default_ttl=app.config['AUTH_CACHE_TTL'])
 
 
 from jormungandr.instance_manager import InstanceManager
