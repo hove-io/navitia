@@ -3,6 +3,11 @@
 import cPickle
 import logging
 
+try:
+    from redis.exceptions import ConnectionError
+except ImportError:
+    pass
+
 class Cache(object):
 
     def __init__(self, host='localhost', port=6379, db=0,
@@ -27,7 +32,11 @@ class Cache(object):
             return None
         full_key = self._build_key(key, prefix)
         self.logger.debug('get %s from redis', full_key)
-        cached = self._redis.get(full_key)
+        try:
+            cached = self._redis.get(full_key)
+        except ConnectionError, e:
+            self.logger.error('Redis is down, cache is disabled: %s', e)
+            return None
         if cached:
             return cPickle.loads(cached)
         else:
@@ -38,7 +47,11 @@ class Cache(object):
         if self._disabled:
             return
         self.logger.debug('set %s to redis with %s ttl', full_key, ttl)
-        self._redis.set(full_key, cPickle.dumps(obj))
+        try:
+            self._redis.set(full_key, cPickle.dumps(obj))
+        except ConnectionError, e:
+            self.logger.error('Redis is down, cache is disabled: %s', e)
+            return
         if ttl:
             self._redis.expire(full_key, ttl)
 
@@ -53,6 +66,4 @@ def init_cache(host='localhost', port=6379, db=0, password=None):
     initiate the global cache object, by default it is disabled
     """
     global cache
-    logging.debug('avant: %s', cache)
     cache = Cache(host=host, port=port, db=db, password=password)
-    logging.debug('aprés: %s', cache)
