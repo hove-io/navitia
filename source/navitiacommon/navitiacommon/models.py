@@ -1,7 +1,7 @@
 # encoding: utf-8
 import uuid
 from flask_sqlalchemy import SQLAlchemy
-from navitiacommon.cache import cache
+from navitiacommon.cache import get_cache
 from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only
@@ -45,17 +45,17 @@ class User(db.Model):
 
     @classmethod
     def get_from_token(cls, token, valid_until):
-        cache_res = cache.get(cls.cache_prefix, token)
+        cache_res = get_cache().get(cls.cache_prefix, token)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
             res = cls.query.join(Key).filter(Key.token == token,
                                               (Key.valid_until > valid_until)
                                               | (Key.valid_until == None))
             if res:
-                cache.set(cls.cache_prefix, token, (res.first(),))
+                get_cache().set(cls.cache_prefix, token, (res.first(),))
                 return res.first()
             else:
-                cache.set(cls.cache_prefix, token, (None,))
+                get_cache().set(cls.cache_prefix, token, (None,))
                 return None
         else:
             return cache_res[0]
@@ -72,10 +72,10 @@ class User(db.Model):
 
     def has_access(self, instance_name, api_name):
         key = '%d_%s_%s' % (self.id, instance_name, api_name)
-        res = cache.get(self.cache_prefix, key)
+        res = get_cache().get(self.cache_prefix, key)
         if res is None:
             res = self._has_access(instance_name, api_name)
-            cache.set(self.cache_prefix, key, res)
+            get_cache().set(self.cache_prefix, key, res)
         return res
 
 
@@ -186,15 +186,15 @@ class mixin_get_from_uri():
     @classmethod
     def get_from_uri(cls, uri):
         prefix = "uri"
-        cache_res = cache.get(prefix, uri)
+        cache_res = get_cache().get(prefix, uri)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
             res = cls.query.filter(cls.uri == uri)
             if res:
-                cache.set(prefix, uri, (res.first(),))
+                get_cache().set(prefix, uri, (res.first(),))
                 return res.first()
             else:
-                cache.set(prefix, uri, (None,))
+                get_cache().set(prefix, uri, (None,))
                 return None
         else:
             return cache_res[0]
@@ -206,15 +206,15 @@ class mixin_get_from_external_code():
     @classmethod
     def get_from_external_code(cls, external_code):
         prefix = cls.prefix_ext_code
-        cache_res = cache.get(prefix, external_code)
+        cache_res = get_cache().get(prefix, external_code)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
             res = cls.query.filter(cls.external_code == external_code)
             if res:
-                cache.set(prefix, external_code, (res.first(),))
+                get_cache().set(prefix, external_code, (res.first(),))
                 return res.first()
             else:
-                cache.set(prefix, external_code, (None,))
+                get_cache().set(prefix, external_code, (None,))
                 return None
         else:
             return cache_res[0]
@@ -564,15 +564,15 @@ class PtObject(db.Model, mixin_get_from_uri):
             type_ = get_class_type(typename)
             return type_.get_from_external_code(external_code)
         prefix = "external_code"
-        cache_res = cache.get(prefix, external_code)
+        cache_res = get_cache().get(prefix, external_code)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
             res = cls.query.filter(cls.external_code == external_code)
             if res:
-                cache.set(prefix, external_code, (res.first(),))
+                get_cache().set(prefix, external_code, (res.first(),))
                 return res.first()
             else:
-                cache.set(prefix, external_code, (None,))
+                get_cache().set(prefix, external_code, (None,))
                 return None
         else:
             return cache_res[0]
