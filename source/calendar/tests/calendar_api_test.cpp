@@ -180,14 +180,21 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_5, calendar_fixture) {
 BOOST_FIXTURE_TEST_CASE(test_parse_start_date, calendar_fixture) {
 
     pbnavitia::Response resp = navitia::calendar::calendars(b.data, "201403AA", "20140301", 1, 10, 0, "", {});
-    BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse start_date");
+    BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse start_date, bad lexical cast: source type value could not be interpreted as target");
 }
 
 // Response Error
 BOOST_FIXTURE_TEST_CASE(test_parse_end_date, calendar_fixture) {
 
     pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140301", "201403AA", 1, 10, 0, "", {});
-    BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse end_date");
+    BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse end_date, bad lexical cast: source type value could not be interpreted as target");
+}
+
+// Response Error
+BOOST_FIXTURE_TEST_CASE(test_parse_start_end_date, calendar_fixture) {
+
+    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "0000", "1111", 1, 10, 0, "", {});
+    BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse start_date, Day of month value is out of range 1..31");
 }
 
 // Response Error
