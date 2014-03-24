@@ -21,17 +21,17 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     if((!start_date.empty()) && (!end_date.empty())) {
         try{
             start_period = boost::gregorian::from_undelimited_string(start_date);
-        }catch(boost::bad_lexical_cast) {
+        }catch(const std::exception& e) {
            fill_pb_error(pbnavitia::Error::unable_to_parse,
-                   "Unable to parse start_date", pb_response.mutable_error());
+                         "Unable to parse start_date, "+ std::string(e.what()), pb_response.mutable_error());
            return pb_response;
         }
 
         try{
             end_period = boost::gregorian::from_undelimited_string(end_date);
-        }catch(boost::bad_lexical_cast) {
+        }catch(const std::exception& e) {
            fill_pb_error(pbnavitia::Error::unable_to_parse,
-                   "Unable to parse end_date", pb_response.mutable_error());
+                   "Unable to parse end_date, "+ std::string(e.what()), pb_response.mutable_error());
            return pb_response;
         }
     }
