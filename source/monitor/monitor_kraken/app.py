@@ -36,7 +36,7 @@ def monitor():
         req = request_pb2.Request()
         req.requested_api = type_pb2.STATUS
         sock.send(req.SerializeToString())
-        if sock.poll(10000) < 1:
+        if sock.poll(app.config['TIMEOUT']) < 1:
             return json.dumps({'status': 'timeout'}), 503
 
         pb = sock.recv()

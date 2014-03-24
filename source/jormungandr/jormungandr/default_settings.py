@@ -35,13 +35,16 @@ AUTH_CACHE_TTL = 300
 LOGGER = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters':{
+        'default': {
+            'format': '[%(asctime)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s',
+        },
+    },
     'handlers': {
         'default': {
             'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            "filename": "jormungandr.log",
-            "maxBytes": "20000000",
-            "backupCount": "5",
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
         },
     },
     'loggers': {

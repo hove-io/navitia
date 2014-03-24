@@ -1,0 +1,1 @@
+web: ./jormungandr/manage.py runserver
