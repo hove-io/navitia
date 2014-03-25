@@ -356,7 +356,7 @@ struct ProjectionData {
         size
     };
     /// 2 possible nodes (each end of the edge where the coordinate has been projected)
-    flat_enum_map<Direction, vertex_t> vertex;
+    flat_enum_map<Direction, vertex_t> vertices;
 
     /// has the projection been successful?
     bool found = false;
@@ -374,13 +374,13 @@ struct ProjectionData {
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & vertex & projected & distances & found;
+        ar & vertices & projected & distances & found;
     }
 
     void init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge);
 
     /// syntaxic sugar
-    vertex_t operator[] (Direction d) const { return vertex[d]; }
+    vertex_t operator[] (Direction d) const { return vertices[d]; }
 };
 
 /** Nommage d'un POI (point of interest). **/

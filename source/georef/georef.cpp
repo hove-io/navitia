@@ -222,8 +222,8 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
         edge = sn.nearest_edge(coord, prox);
     } catch(proximitylist::NotFound) {
         found = false;
-        vertex[Direction::Source] = std::numeric_limits<vertex_t>::max();
-        vertex[Direction::Target] = std::numeric_limits<vertex_t>::max();
+        vertices[Direction::Source] = std::numeric_limits<vertex_t>::max();
+        vertices[Direction::Target] = std::numeric_limits<vertex_t>::max();
     }
 
     if(found) {
@@ -238,8 +238,8 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
         edge = sn.nearest_edge(coord, offset, prox);
     } catch(proximitylist::NotFound) {
         found = false;
-        vertex[Direction::Source] = std::numeric_limits<vertex_t>::max();
-        vertex[Direction::Target] = std::numeric_limits<vertex_t>::max();
+        vertices[Direction::Source] = std::numeric_limits<vertex_t>::max();
+        vertices[Direction::Target] = std::numeric_limits<vertex_t>::max();
     }
 
     if(found) {
@@ -249,10 +249,10 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
 
 void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge) {
     // On cherche les coordonnées des extrémités de ce segment
-    vertex[Direction::Source] = boost::source(nearest_edge, sn.graph);
-    vertex[Direction::Target] = boost::target(nearest_edge, sn.graph);
-    type::GeographicalCoord vertex1_coord = sn.graph[vertex[Direction::Source]].coord;
-    type::GeographicalCoord vertex2_coord = sn.graph[vertex[Direction::Target]].coord;
+    vertices[Direction::Source] = boost::source(nearest_edge, sn.graph);
+    vertices[Direction::Target] = boost::target(nearest_edge, sn.graph);
+    const type::GeographicalCoord& vertex1_coord = sn.graph[vertices[Direction::Source]].coord;
+    const type::GeographicalCoord& vertex2_coord = sn.graph[vertices[Direction::Target]].coord;
     // On projette le nœud sur le segment
     this->projected = coord.project(vertex1_coord, vertex2_coord).first;
     // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
