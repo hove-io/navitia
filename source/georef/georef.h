@@ -141,9 +141,10 @@ struct PathItem {
         Bike,
         Car,
         BssTake, //when a bike is taken
-        BssPutBack //we a bike is put back
+        BssPutBack //when a bike is put back
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
+
     double get_length() const {
         switch (transportation) {
         case TransportCaracteristic::BssPutBack:
@@ -325,14 +326,6 @@ struct GeoRef {
         return nearest_edge(coordinates, offsets[mode], prox);
     }
 
-    /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
-    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
-
-    /// Combine 2 pathes
-    Path combine_path(const vertex_t best_destination, std::vector<vertex_t> preds, std::vector<vertex_t> successors) const;
-    /// Build a path from a reverse path list
-    Path build_path(std::vector<vertex_t> reverse_path, bool add_one_elt) const;
-
     void add_way(const Way& w);
 
     ///Add the projected start and end to the path
@@ -344,38 +337,50 @@ struct GeoRef {
     ~GeoRef();
 };
 
-/** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche
+/** When given a coordinate, we have to associate it with the street network.
   *
-  * Elle consiste en deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
-  * La coordonnée projetée
-  * Les distances entre le projeté les les nœuds
+  * This structure handle this.
+  *
+  * It contains
+  *   - 2 possible nodes (each end of the edge where the coordinate has been projected)
+  *   - the coordinate of the projection
+  *   - the 2 distances between the projected point and the ends (NOTE, this is not the distance between the coordinate and the ends)
+  *
   */
 struct ProjectionData {
-    /// deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
-    vertex_t source;
-    vertex_t target;
 
-    /// Est-ce que la projection a réussi ?
-    bool found;
+    /// enum used to acces the nodes and the distances
+    enum class Direction {
+        Source = 0,
+        Target,
+        size
+    };
+    /// 2 possible nodes (each end of the edge where the coordinate has been projected)
+    flat_enum_map<Direction, vertex_t> vertices;
 
-    /// La coordonnée projetée sur le segment
+    /// has the projection been successful?
+    bool found = false;
+
+    /// The coordinate projected on the edge
     type::GeographicalCoord projected;
 
-    /// Distance entre le projeté et les nœuds du segment
-    double source_distance;
-    double target_distance;
+    /// Distance between the projected point and the ends
+    flat_enum_map<Direction, double> distances {{{-1, -1}}};
 
-    ProjectionData() : found(false), source_distance(-1), target_distance(-1){}
+    ProjectionData() {}
     /// Project the coordinate on the graph
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
     /// Project the coordinate on the graph corresponding to the transportation mode of the offset
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & source & target & projected & source_distance & target_distance & found;
+        ar & vertices & projected & distances & found;
     }
 
     void init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge);
+
+    /// syntaxic sugar
+    vertex_t operator[] (Direction d) const { return vertices[d]; }
 };
 
 /** Nommage d'un POI (point of interest). **/
