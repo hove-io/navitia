@@ -5,6 +5,9 @@
 
 namespace navitia { namespace georef {
 
+//a bit of sugar
+const auto source_e = ProjectionData::Direction::Source;
+const auto target_e = ProjectionData::Direction::Target;
 
 bt::time_duration PathFinder::crow_fly_duration(const double distance) const {
     return bt::seconds(distance / (default_speed[mode] * speed_factor));
@@ -115,20 +118,20 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
 
     if (starting_edge.found) {
         //durations initializations
-        distances[starting_edge.source] = crow_fly_duration(starting_edge.source_distance); //for the projection, we use the default walking speed.
-        distances[starting_edge.target] = crow_fly_duration(starting_edge.target_distance);
-        predecessors[starting_edge.source] = starting_edge.source;
-        predecessors[starting_edge.target] = starting_edge.target;
+        distances[starting_edge[source_e]] = crow_fly_duration(starting_edge.distances[source_e]); //for the projection, we use the default walking speed.
+        distances[starting_edge[target_e]] = crow_fly_duration(starting_edge.distances[target_e]);
+        predecessors[starting_edge[source_e]] = starting_edge[source_e];
+        predecessors[starting_edge[target_e]] = starting_edge[target_e];
 
         //small enchancement, if the projection is done on a node, we disable the crow fly
-        if (starting_edge.source_distance < 0.01) {
-            predecessors[starting_edge.target] = starting_edge.source;
-            auto e = boost::edge(starting_edge.source, starting_edge.target, geo_ref.graph).first;
-            distances[starting_edge.target] = geo_ref.graph[e].duration;
-        } else if (starting_edge.target_distance < 0.01) {
-            predecessors[starting_edge.source] = starting_edge.target;
-            auto e = boost::edge(starting_edge.target, starting_edge.source, geo_ref.graph).first;
-            distances[starting_edge.source] = geo_ref.graph[e].duration;
+        if (starting_edge.distances[source_e] < 0.01) {
+            predecessors[starting_edge[target_e]] = starting_edge[source_e];
+            auto e = boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph).first;
+            distances[starting_edge[target_e]] = geo_ref.graph[e].duration;
+        } else if (starting_edge.distances[target_e] < 0.01) {
+            predecessors[starting_edge[source_e]] = starting_edge[target_e];
+            auto e = boost::edge(starting_edge[target_e], starting_edge[source_e], geo_ref.graph).first;
+            distances[starting_edge[source_e]] = geo_ref.graph[e].duration;
         }
     }
 }
@@ -149,11 +152,11 @@ PathFinder::find_nearest_stop_points(bt::time_duration radius, const proximityli
 
     // On lance un dijkstra depuis les deux nœuds de départ
     try {
-        dijkstra(starting_edge.source, distance_visitor(radius, distances));
+        dijkstra(starting_edge[source_e], distance_visitor(radius, distances));
     } catch(DestinationFound){}
 
     try {
-        dijkstra(starting_edge.target, distance_visitor(radius, distances));
+        dijkstra(starting_edge[target_e], distance_visitor(radius, distances));
     } catch(DestinationFound){}
 
     const auto max = bt::pos_infin;
@@ -163,10 +166,10 @@ PathFinder::find_nearest_stop_points(bt::time_duration radius, const proximityli
         // Est-ce que le stop point a pu être raccroché au street network
         if(projection.found){
             bt::time_duration best_dist = max;
-            if (distances[projection.source] < max) {
-                best_dist = distances[projection.source] + crow_fly_duration(projection.source_distance); }
-            if (distances[projection.target] < max) {
-                best_dist = std::min(best_dist, distances[projection.target] + crow_fly_duration(projection.target_distance));
+            if (distances[projection[source_e]] < max) {
+                best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]); }
+            if (distances[projection[target_e]] < max) {
+                best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
             }
             if (best_dist < radius) {
                 result.push_back(std::make_pair(element.first, best_dist));
@@ -181,30 +184,30 @@ bt::time_duration PathFinder::get_distance(type::idx_t target_idx) {
 
     if (! starting_edge.found)
         return max;
-    assert(boost::edge(starting_edge.source, starting_edge.target, geo_ref.graph).second);
+    assert(boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph).second);
 
     ProjectionData target = this->geo_ref.projected_stop_points[target_idx][mode];
 
     auto nearest_edge = update_path(target);
 
-    return std::get<0>(nearest_edge);
+    return nearest_edge.first;
 }
 
-std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> PathFinder::find_nearest_vertex(const ProjectionData& target) const {
+std::pair<bt::time_duration, ProjectionData::Direction> PathFinder::find_nearest_vertex(const ProjectionData& target) const {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
-        return std::make_tuple(max, 0, ProjectionData::Direction::Source);
+        return {max, source_e};
 
-    if (distances[target.source] == max) //if one distance has not been reached, both have not been reached
-        return std::make_tuple(max, 0, ProjectionData::Direction::Source);
+    if (distances[target[source_e]] == max) //if one distance has not been reached, both have not been reached
+        return {max, source_e};
 
-    auto source_dist = distances[target.source] + crow_fly_duration(target.source_distance);
-    auto target_dist = distances[target.target] + crow_fly_duration(target.target_distance);
+    auto source_dist = distances[target[source_e]] + crow_fly_duration(target.distances[source_e]);
+    auto target_dist = distances[target[target_e]] + crow_fly_duration(target.distances[target_e]);
 
     if (target_dist < source_dist)
-        return std::make_tuple(target_dist, target.target, ProjectionData::Direction::Target);
+        return {target_dist, target_e};
 
-    return std::make_tuple(source_dist, target.source, ProjectionData::Direction::Source);
+    return {source_dist, source_e};
 }
 
 Path PathFinder::get_path(type::idx_t idx) {
@@ -223,10 +226,10 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
         return (append_to_begin ? p.path_items.push_front(item) : p.path_items.push_back(item));
     };
 
-    edge_t start_e = boost::edge(projection.source, projection.target, geo_ref.graph).first;
+    edge_t start_e = boost::edge(projection[source_e], projection[target_e], geo_ref.graph).first;
     Edge start_edge = geo_ref.graph[start_e];
 
-    auto duration = crow_fly_duration(d == ProjectionData::Direction::Source ? projection.source_distance : projection.target_distance);
+    auto duration = crow_fly_duration(projection.distances[d]);
 
     //we aither add the starting coordinate to the first path item or create a new path item if it was another way
     nt::idx_t first_way_idx = (p.path_items.empty() ? type::invalid_idx : item_to_update(p).way_idx);
@@ -279,17 +282,17 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
     }
 }
 
-Path PathFinder::get_path(const ProjectionData& target, std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> nearest_edge) {
-    if (! computation_launch || ! target.found || std::get<0>(nearest_edge) == bt::pos_infin)
+Path PathFinder::get_path(const ProjectionData& target, std::pair<bt::time_duration, ProjectionData::Direction> nearest_edge) {
+    if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
         return {};
 
-    auto result = this->build_path(std::get<1>(nearest_edge));
+    auto result = this->build_path(target[nearest_edge.second]);
     add_projections_to_path(result, true);
 
-    result.duration = std::get<0>(nearest_edge);
+    result.duration = nearest_edge.first;
 
     //we need to put the end projections too
-    add_custom_projections_to_path(result, false, target, std::get<2>(nearest_edge));
+    add_custom_projections_to_path(result, false, target, nearest_edge.second);
 
     return result;
 }
@@ -308,12 +311,12 @@ void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
     //we need to find out which side of the projection has been used to compute the right length
 
     //we check if the we already are the the arrival
-    if (predecessors[starting_edge.source] == starting_edge.source ||
-            predecessors[starting_edge.target] == starting_edge.target) {
+    if (predecessors[starting_edge[source_e]] == starting_edge[source_e] ||
+            predecessors[starting_edge[target_e]] == starting_edge[target_e]) {
         //and we add the closer starting edge
-        ProjectionData::Direction dir = starting_edge.source_distance < starting_edge.target_distance
-                ? ProjectionData::Direction::Source : ProjectionData::Direction::Target;
-        add_custom_projections_to_path(p, append_to_begin, starting_edge, dir);
+        ProjectionData::Direction direction = starting_edge.distances[source_e] < starting_edge.distances[target_e]
+                ? source_e : target_e;
+        add_custom_projections_to_path(p, append_to_begin, starting_edge, direction);
         return;
     }
     assert(! p.path_items.empty());
@@ -321,51 +324,51 @@ void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
     const auto& path_item_to_consider = append_to_begin ? p.path_items.front(): p.path_items.back();
     const auto& coord_to_consider = append_to_begin ? path_item_to_consider.coordinates.front(): path_item_to_consider.coordinates.back();
 
-    ProjectionData::Direction dir;
-    if (coord_to_consider == geo_ref.graph[starting_edge.source].coord) {
-        dir = ProjectionData::Direction::Source;
-    } else if (coord_to_consider == geo_ref.graph[starting_edge.target].coord) {
-        dir = ProjectionData::Direction::Target;
+    ProjectionData::Direction direction;
+    if (coord_to_consider == geo_ref.graph[starting_edge[source_e]].coord) {
+        direction = source_e;
+    } else if (coord_to_consider == geo_ref.graph[starting_edge[target_e]].coord) {
+        direction = target_e;
     } else {
         throw navitia::exception("by construction, should never happen");
     }
 
-    add_custom_projections_to_path(p, append_to_begin, starting_edge, dir);
+    add_custom_projections_to_path(p, append_to_begin, starting_edge, direction);
 }
 
-std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> PathFinder::update_path(const ProjectionData& target) {
+std::pair<bt::time_duration, ProjectionData::Direction> PathFinder::update_path(const ProjectionData& target) {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
-        return std::make_tuple(max, 0, ProjectionData::Direction::Source);
-    assert(boost::edge(target.source, target.target, geo_ref.graph).second );
+        return {max, source_e};
+    assert(boost::edge(target[source_e], target[target_e], geo_ref.graph).second );
 
     computation_launch = true;
 
-    if (distances[target.source] == max || distances[target.target] == max) {
+    if (distances[target[source_e]] == max || distances[target[target_e]] == max) {
         bool found = false;
         try {
-            dijkstra(starting_edge.source, target_all_visitor({target.source, target.target}));
+            dijkstra(starting_edge[source_e], target_all_visitor({target[source_e], target[target_e]}));
         } catch(DestinationFound) { found = true; }
 
         //if no way has been found, we can stop the search
         if ( ! found ) {
             LOG4CPLUS_WARN(log4cplus::Logger::getInstance("Logger"), "unable to find a way from start edge ["
-                           << starting_edge.source << "-" << starting_edge.target
-                           << "] to [" << target.source << "-" << target.target << "]");
+                           << starting_edge[source_e] << "-" << starting_edge[target_e]
+                           << "] to [" << target[source_e] << "-" << target[target_e] << "]");
 
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
             dump_dijkstra_for_quantum(target);
 #endif
-
-            return std::make_tuple(max, 0, ProjectionData::Direction::Source);
+            
+			return {max, source_e};
         }
         try {
-            dijkstra(starting_edge.target, target_all_visitor({target.source, target.target}));
+            dijkstra(starting_edge[target_e], target_all_visitor({target[source_e], target[target_e]}));
         } catch(DestinationFound) { found = true; }
 
     }
     //if we succeded in the first search, we must have found one of the other distances
-    assert(distances[target.source] != max && distances[target.target] != max);
+    assert(distances[target[source_e]] != max && distances[target[target_e]] != max);
 
     return find_nearest_vertex(target);
 }

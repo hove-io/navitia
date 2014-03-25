@@ -352,27 +352,27 @@ struct ProjectionData {
         size
     };
     /// deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
-    vertex_t source;
-    vertex_t target;
+    flat_enum_map<Direction, vertex_t> vertex;
 
     /// Est-ce que la projection a réussi ?
-    bool found;
+    bool found = false;
 
     /// La coordonnée projetée sur le segment
     type::GeographicalCoord projected;
 
     /// Distance entre le projeté et les nœuds du segment
-    double source_distance;
-    double target_distance;
+    flat_enum_map<Direction, double> distances {{{-1, -1}}};
 
-    ProjectionData() : found(false), source_distance(-1), target_distance(-1){}
+    vertex_t operator[] (Direction d) const { return vertex[d]; }
+
+    ProjectionData() {}
     /// Project the coordinate on the graph
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
     /// Project the coordinate on the graph corresponding to the transportation mode of the offset
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & source & target & projected & source_distance & target_distance & found;
+        ar & vertex & projected & distances & found;
     }
 
     void init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge);

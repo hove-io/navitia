@@ -134,15 +134,15 @@ struct PathFinder {
                                                );
     }
 private:
-    Path get_path(const ProjectionData& target, std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> nearest_edge);
+    Path get_path(const ProjectionData& target, std::pair<bt::time_duration, ProjectionData::Direction> nearest_edge);
 
     /** compute the path to the target and update the distances/pred
      *  return a pair with the edge corresponding to the target and the distance
      */
-    std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> update_path(const ProjectionData& target);
+    std::pair<bt::time_duration, ProjectionData::Direction> update_path(const ProjectionData& target);
 
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
-    std::tuple<bt::time_duration, vertex_t, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target) const;
+    std::pair<bt::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target) const;
 
     ///return the time the travel the distance at the current speed (used for projections)
     bt::time_duration crow_fly_duration(const double val) const;
