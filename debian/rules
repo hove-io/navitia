@@ -2,7 +2,7 @@
 
 export DH_VERBOSE = 1
 %:
-	dh $@  --with python2 --sourcedirectory=source --builddirectory=build_package --parallel --max-parallel=4
+	dh $@  --with python2.7 --sourcedirectory=source --builddirectory=build_package --parallel --max-parallel=4
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release

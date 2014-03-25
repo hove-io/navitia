@@ -25,7 +25,7 @@ Description: Navitia-Ed
 
 Package: navitia-common
 Build-Depends: dh-python
-X-Python-Version: ${python:Versions}
+X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
 Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-protobuf
@@ -36,7 +36,7 @@ Description: navitia-common
 
 Package: navitia-jormungandr
 Build-Depends: dh-python
-X-Python-Version: ${python:Versions}
+X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-redis, navitia-common (= ${binary:Version}), ${python:Depends}
