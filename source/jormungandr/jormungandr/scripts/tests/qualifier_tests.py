@@ -25,7 +25,7 @@ def qualifier_one_direct_test():
     journey_direct.sections[1].duration = 4 * 60
     journeys.append(journey_direct)
 
-    qualifier.qualifier_one(journeys)
+    qualifier.qualifier_one(journeys, "departure")
 
     assert(journey_direct.type == "rapid")
 
@@ -103,7 +103,7 @@ def qualifier_two_test():
     journey_confort.sections[-1].duration = 5 * 60
     journeys.append(journey_confort)
 
-    qualifier.qualifier_one(journeys)
+    qualifier.qualifier_one(journeys, "departure")
 
     eq_(journey_standard.type, "none")  # the standard shouldnt be selected
     eq_(journey_rapid.type, "rapid")
@@ -176,7 +176,7 @@ def standard_choice_test():
 
     journeys.append(journey_2)
 
-    standard = qualifier.choose_standard(journeys)
+    standard = qualifier.choose_standard(journeys, qualifier.arrival_crit)
 
     print qualifier.has_car(standard)
     print "standard ", standard.arrival_date_time

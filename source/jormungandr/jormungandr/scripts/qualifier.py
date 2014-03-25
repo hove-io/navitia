@@ -77,7 +77,7 @@ def choose_standard(journeys, best_criteria):
         if standard is None or has_car(standard) and not car:
             standard = journey  # the standard shouldnt use the car if possible
             continue
-        if not car and best_criteria(standard, journey):
+        if not car and best_criteria(journey, standard):
             standard = journey
     return standard
 
@@ -91,24 +91,16 @@ def compare_minus(field_1, field_2):
     else:
         return -1
 
-def compare_greater(field_1, field_2):
-    if field_1 == field_2:
-        return 0
-    elif field_1 > field_2:
-        return 1
-    else:
-        return -1
-
 #criteria
 transfers_crit = lambda j_1, j_2: compare_minus(j_1.nb_transfers, j_2.nb_transfers)
 
 
 def arrival_crit(j_1, j_2):
-    return compare_minus(j_1.arrival_date_time, j_2.arrival_date_time)
+    return j_1.arrival_date_time < j_2.arrival_date_time
 
 
 def departure_crit(j_1, j_2):
-    return compare_greater(j_1.departure_date_time, j_2.departure_date_time)
+    return j_1.departure_date_time > j_2.departure_date_time
 
 
 def nonTC_crit(j_1, j_2):
@@ -117,16 +109,18 @@ def nonTC_crit(j_1, j_2):
     return compare_minus(duration1, duration2)
 
 
-def qualifier_one(journeys, request_type="arrival"):
+def qualifier_one(journeys, request_type):
 
     if not journeys:
         logging.info("no journeys to qualify")
         return
 
-    best_criteria = arrival_crit if request_type == "arrival" else departure_crit
+    #The request type is made from the datetime_represents params of the request
+    #If it's departure, we want the earliest arrival time
+    #If it's arrival, we want the tardiest departure time
+    best_crit = departure_crit if request_type == "arrival" else arrival_crit
 
-
-    standard = choose_standard(journeys, best_criteria)
+    standard = choose_standard(journeys, best_crit)
     assert standard is not None
 
     #constraints
@@ -138,6 +132,17 @@ def qualifier_one(journeys, request_type="arrival"):
         arrival_date_time = get_arrival_datetime(standard)
         max_date_time = arrival_date_time + timedelta(minutes=max_mn_shift)
         return get_arrival_datetime(journey) <= max_date_time
+
+    def journey_departure_constraint(journey, max_mn_shift):
+        arrival_date_time = get_arrival_datetime(standard)
+        max_date_time = arrival_date_time + timedelta(minutes=max_mn_shift)
+        return get_arrival_datetime(journey) <= max_date_time
+
+    def journey_goal_constraint(journey, max_mn_shift, r_type):
+        if r_type == "arrival":
+            return journey_arrival_constraint(journey, max_mn_shift)
+        else:
+            return journey_departure_constraint(journey, max_mn_shift)
 
     def nonTC_relative_constraint(journey, evol):
         transport_duration = get_nontransport_duration(standard)
@@ -170,39 +175,39 @@ def qualifier_one(journeys, request_type="arrival"):
         ],
             [
                 transfers_crit,
-                arrival_crit,
+                best_crit,
                 nonTC_crit
             ]
         )),
         ("healthy", trip_carac([
             partial(journey_length_constraint, max_evolution=.20),
-            partial(journey_arrival_constraint, max_mn_shift=20),
+            partial(journey_goal_constraint, max_mn_shift=20, r_type=request_type),
             partial(nonTC_abs_constraint, max_mn_shift=20 * 60),
         ],
             [
                 transfers_crit,
-                arrival_crit,
+                best_crit,
                 nonTC_crit
             ]
         )),
         ("comfort", trip_carac([
             partial(journey_length_constraint, max_evolution=.40),
-            partial(journey_arrival_constraint, max_mn_shift=40),
+            partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
             partial(nonTC_relative_constraint, evol=-.1),
         ],
             [
                 transfers_crit,
                 nonTC_crit,
-                arrival_crit,
+                best_crit,
             ]
         )),
         ("rapid", trip_carac([
             partial(journey_length_constraint, max_evolution=.10),
-            partial(journey_arrival_constraint, max_mn_shift=10),
+            partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
         ],
             [
                 transfers_crit,
-                arrival_crit,
+                best_crit,
                 nonTC_crit
             ]
         )),
