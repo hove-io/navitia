@@ -67,20 +67,23 @@ def get_arrival_datetime(journey):
     return datetime.strptime(journey.arrival_date_time, "%Y%m%dT%H%M%S")
 
 
-def choose_standard(journeys):
+def get_departure_datetime(journey):
+    return datetime.strptime(journey.arrival_date_time, "%Y%m%dT%H%M%S")
+
+def choose_standard(journeys, best_criteria):
     standard = None
     for journey in journeys:
         car = has_car(journey)
         if standard is None or has_car(standard) and not car:
             standard = journey  # the standard shouldnt use the car if possible
             continue
-        if not car and standard.arrival_date_time > journey.arrival_date_time:
+        if not car and best_criteria(standard, journey):
             standard = journey
     return standard
 
 
 #comparison of 2 fields. 0=>equality, 1=>1 better than 2
-def compare(field_1, field_2):
+def compare_minus(field_1, field_2):
     if field_1 == field_2:
         return 0
     elif field_1 < field_2:
@@ -88,27 +91,42 @@ def compare(field_1, field_2):
     else:
         return -1
 
+def compare_greater(field_1, field_2):
+    if field_1 == field_2:
+        return 0
+    elif field_1 > field_2:
+        return 1
+    else:
+        return -1
+
 #criteria
-transfers_crit = lambda j_1, j_2: compare(j_1.nb_transfers, j_2.nb_transfers)
+transfers_crit = lambda j_1, j_2: compare_minus(j_1.nb_transfers, j_2.nb_transfers)
 
 
 def arrival_crit(j_1, j_2):
-    return compare(j_1.arrival_date_time, j_2.arrival_date_time)
+    return compare_minus(j_1.arrival_date_time, j_2.arrival_date_time)
+
+
+def departure_crit(j_1, j_2):
+    return compare_greater(j_1.departure_date_time, j_2.departure_date_time)
 
 
 def nonTC_crit(j_1, j_2):
     duration1 = get_nontransport_duration(j_1)
     duration2 = get_nontransport_duration(j_2)
-    return compare(duration1, duration2)
+    return compare_minus(duration1, duration2)
 
 
-def qualifier_one(journeys):
+def qualifier_one(journeys, request_type="arrival"):
 
     if not journeys:
         logging.info("no journeys to qualify")
         return
 
-    standard = choose_standard(journeys)
+    best_criteria = arrival_crit if request_type == "arrival" else departure_crit
+
+
+    standard = choose_standard(journeys, best_criteria)
     assert standard is not None
 
     #constraints

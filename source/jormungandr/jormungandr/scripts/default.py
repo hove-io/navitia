@@ -325,16 +325,17 @@ class Script(object):
             #we have to call kraken again with a modified version of the request
             new_resp = self.call_kraken(new_request, instance)
             #We tag every journey with the new request's tag
-	    journeys = None
-	    if new_resp.journeys:
+            journeys = None
+            if new_resp.journeys:
                 journeys = new_resp.journeys
-	    if journeys:
+            if journeys:
                 for journey in journeys:
                     journey.type = tag
             self.merge_response(resp, new_resp)
 
         #we qualify the journeys
-        qualifier_one(resp.journeys)
+        request_type = "arrival" if original_request['clockwise'] else "departure"
+        qualifier_one(resp.journeys, request_type)
 
         #we filter the journeys
         self.delete_journeys(resp, original_request)
