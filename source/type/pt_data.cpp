@@ -121,17 +121,18 @@ void PT_Data::build_proximity_list() {
 
 void PT_Data::build_admins_stop_areas(){
     for(navitia::type::StopPoint* stop_point : this->stop_points){
-        if(stop_point->stop_area != nullptr){
-            for(navitia::georef::Admin* admin : stop_point->admin_list){
-                auto find_predicate = [&](navitia::georef::Admin* adm) {
-                    return adm->idx == admin->idx;
-                };
-                auto it = std::find_if(stop_point->stop_area->admin_list.begin(),
-                                       stop_point->stop_area->admin_list.end(),
-                                       find_predicate);
-                if(it == stop_point->stop_area->admin_list.end()){
-                    stop_point->stop_area->admin_list.push_back(admin);
-                }
+        if(!stop_point->stop_area){
+            continue;
+        }
+        for(navitia::georef::Admin* admin : stop_point->admin_list){
+            auto find_predicate = [&](navitia::georef::Admin* adm) {
+                return adm->idx == admin->idx;
+            };
+            auto it = std::find_if(stop_point->stop_area->admin_list.begin(),
+                                   stop_point->stop_area->admin_list.end(),
+                                   find_predicate);
+            if(it == stop_point->stop_area->admin_list.end()){
+                stop_point->stop_area->admin_list.push_back(admin);
             }
         }
     }
