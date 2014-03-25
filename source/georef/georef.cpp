@@ -503,6 +503,41 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
    }
 }
 
+void GeoRef::fill_admins_stop_points(std::vector<type::StopPoint*> & stop_points){
+    auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_stop_points");
+    int count = 0;
+    for(type::StopPoint* stop_point : stop_points) {
+        ProjectionData projection = this->projected_stop_points[stop_point->idx][type::Mode_e::Walking];
+        if(projection.found){
+            edge_t start_e = boost::edge(projection.source, projection.target, this->graph).first;
+            georef::Way *way = this->ways[this->graph[start_e].way_idx];
+            stop_point->admin_list.insert(stop_point->admin_list.begin(),
+                                          way->admin_list.begin(), way->admin_list.end());
+        }else{
+            count++;
+        }
+    }
+    LOG4CPLUS_DEBUG(log, count<<"/"<<stop_points.size() << " stop_points are not associated with any admins");
+}
+
+void GeoRef::fill_admins_pois(){
+    auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_pois");
+    int count = 0;
+    for(POI* poi : this->pois){
+        if(poi->coord.is_initialized()){
+            try{
+                edge_t edge = this->nearest_edge(poi->coord);
+                georef::Way *way = this->ways[this->graph[edge].way_idx];
+                poi->admin_list.insert(poi->admin_list.begin(),
+                                       way->admin_list.begin(), way->admin_list.end());
+            }catch(proximitylist::NotFound){
+                count++;
+            }
+        }
+    }
+    LOG4CPLUS_DEBUG(log, count<<"/"<<this->pois.size() << " pois are not associated with any admins");
+}
+
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
     bool one_proj_found = false;
     ProjectionByMode projections;
