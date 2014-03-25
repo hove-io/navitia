@@ -107,10 +107,7 @@ private:
     void fill_rel_calendars_lines(navitia::type::Data& data, pqxx::work& work);
 
     /// les relations admin et les autres objets
-    void build_rel_stop_point_admin(navitia::type::Data& data, pqxx::work& work);
-    void build_rel_stop_area_admin(navitia::type::Data& data, pqxx::work& work);
     void build_rel_way_admin(navitia::type::Data& data, pqxx::work& work);
-    void build_rel_poi_admin(navitia::type::Data& data, pqxx::work& work);
     void build_rel_admin_admin(navitia::type::Data& data, pqxx::work& work);
 
     /// coherence check for logging purpose

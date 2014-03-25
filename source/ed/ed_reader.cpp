@@ -55,10 +55,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_synonyms(data, work);
 
     /// les relations admin et les autres objets
-    this->build_rel_stop_point_admin(data, work);
-    this->build_rel_stop_area_admin(data, work);
     this->build_rel_way_admin(data, work);
-    this->build_rel_poi_admin(data, work);
     this->build_rel_admin_admin(data, work);
 
     this->fill_prices(data, work);
@@ -1169,29 +1166,6 @@ void EdReader::fill_rel_calendars_lines(navitia::type::Data& , pqxx::work& work)
     }
 }
 
-void EdReader::build_rel_stop_point_admin(navitia::type::Data& , pqxx::work& work){
-    std::string request = "select admin_id, stop_point_id from navitia.rel_stop_point_admin;";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nt::StopPoint* sp = this->stop_point_map[const_it["stop_point_id"].as<idx_t>()];
-        navitia::georef::Admin* admin = this->admin_map[const_it["admin_id"].as<idx_t>()];
-        if (admin != nullptr){
-            sp->admin_list.push_back(admin);
-        }
-    }
-}
-
-void EdReader::build_rel_stop_area_admin(navitia::type::Data& , pqxx::work& work){
-    std::string request = "select admin_id, stop_area_id from navitia.rel_stop_area_admin;";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nt::StopArea* sa = this->stop_area_map[const_it["stop_area_id"].as<idx_t>()];
-        navitia::georef::Admin* admin = this->admin_map[const_it["admin_id"].as<idx_t>()];
-        if (admin!= NULL){
-            sa->admin_list.push_back(admin);
-        }
-    }
-}
 void EdReader::build_rel_way_admin(navitia::type::Data&, pqxx::work& work){
     std::string request = "select admin_id, way_id from georef.rel_way_admin;";
     pqxx::result result = work.exec(request);
@@ -1201,20 +1175,6 @@ void EdReader::build_rel_way_admin(navitia::type::Data&, pqxx::work& work){
             navitia::georef::Admin* admin = this->admin_map[const_it["admin_id"].as<idx_t>()];
             if (admin != NULL){
                 way->admin_list.push_back(admin);
-            }
-        }
-    }
-}
-
-void EdReader::build_rel_poi_admin(navitia::type::Data&, pqxx::work& work){
-    std::string request = "select admin_id, poi_id from navitia.rel_poi_admin;";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        navitia::georef::POI* poi = this->poi_map[const_it["poi_id"].as<idx_t>()];
-        if (poi != NULL){
-            navitia::georef::Admin* admin = this->admin_map[const_it["admin_id"].as<idx_t>()];
-            if ((admin != NULL)){
-                poi->admin_list.push_back(admin);
             }
         }
     }
