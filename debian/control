@@ -24,8 +24,11 @@ Description: Navitia-Ed
 
 
 Package: navitia-common
-Build-Depends: dh-python
-X-Python-Version: ${python:Versions}
+Build-Depends:
+    dh-python
+    python
+    python-all
+X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
 Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-protobuf
@@ -35,8 +38,11 @@ Description: navitia-common
     python module shared within module of navitia, mostlu navitia-jormungandr and navitia-tyr
 
 Package: navitia-jormungandr
-Build-Depends: dh-python
-X-Python-Version: ${python:Versions}
+Build-Depends:
+    dh-python
+    python
+    python-all
+X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, python-redis, navitia-common (= ${binary:Version}), ${python:Depends}
@@ -45,8 +51,11 @@ Priority: optional
 Description: Navitia-Jormungandr
 
 Package: navitia-sindri
-Build-Depends: dh-python
-X-Python-Version: ${python:Versions}
+Build-Depends:
+    dh-python
+    python
+    python-all
+X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
 Depends: python-protobuf, python-sqlalchemy, python-configobj
@@ -74,8 +83,11 @@ Depends:
 Description: debugging symbols for ed
 
 Package: navitia-tyr
-Build-Depends: dh-python
-X-Python-Version: ${python:Versions}
+Build-Depends:
+    dh-python
+    python
+    python-all
+X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
 Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext, navitia-common (= ${binary:Version})
@@ -85,8 +97,11 @@ Description: Navitia-Tyr
     Tyr is a web service for managing ed and account used on jormungandr
 
 Package: navitia-connector-at
-Build-Depends: dh-python
-X-Python-Version: ${python:Versions}
+Build-Depends:
+    dh-python
+    python
+    python-all
+X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
 Depends: python-sqlalchemy, python-argparse, python-requests, python-configobj, python-protobuf, python-wsgiref, navitia-common (= ${binary:Version})
@@ -96,8 +111,11 @@ Description: Navitia-connector-at
     This service connects to alerte trafic database, reads it and sends to rabbit mq messages
 
 Package: navitia-monitor-kraken
-Build-Depends: dh-python
-X-Python-Version: ${python:Versions}
+Build-Depends:
+    dh-python
+    python
+    python-all
+X-Python-Version: >=2.7
 Architecture: all
 Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
 Depends: python-flask, python-protobuf, python-zmq
