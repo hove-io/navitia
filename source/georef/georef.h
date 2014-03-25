@@ -141,8 +141,7 @@ struct PathItem {
         Bike,
         Car,
         BssTake, //when a bike is taken
-        BssPutBack, //when a bike is put back
-        CrowFly //for the projections on the georef network
+        BssPutBack //when a bike is put back
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
 
@@ -158,9 +157,6 @@ struct PathItem {
             return duration.total_milliseconds() * (default_speed[type::Mode_e::Bike]) / 1000;
         case TransportCaracteristic::Car:
             return duration.total_milliseconds() * (default_speed[type::Mode_e::Car]) / 1000;
-        case TransportCaracteristic::CrowFly:
-            //crow fly is done at the default walking speed
-            return duration.total_milliseconds() * (default_speed[type::Mode_e::Walking]) / 1000;
         default:
             throw navitia::exception("unhandled transportation case");
         }

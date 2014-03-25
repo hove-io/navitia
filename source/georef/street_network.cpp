@@ -121,11 +121,11 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
         predecessors[starting_edge.target] = starting_edge.target;
 
         //small enchancement, if the projection is done on a node, we disable the crow fly
-        if (starting_edge.source_distance < 0.001) {
+        if (starting_edge.source_distance < 0.01) {
             predecessors[starting_edge.target] = starting_edge.source;
             auto e = boost::edge(starting_edge.source, starting_edge.target, geo_ref.graph).first;
             distances[starting_edge.target] = geo_ref.graph[e].duration;
-        } else if (starting_edge.target_distance < 0.001) {
+        } else if (starting_edge.target_distance < 0.01) {
             predecessors[starting_edge.source] = starting_edge.target;
             auto e = boost::edge(starting_edge.target, starting_edge.source, geo_ref.graph).first;
             distances[starting_edge.source] = geo_ref.graph[e].duration;
@@ -218,52 +218,64 @@ Path PathFinder::get_path(type::idx_t idx) {
 }
 
 void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection, ProjectionData::Direction d) const {
+    auto item_to_update = [append_to_begin](Path& p) -> PathItem& { return (append_to_begin ? p.path_items.front() : p.path_items.back()); };
+    auto add_in_path = [append_to_begin](Path& p, const PathItem& item) {
+        return (append_to_begin ? p.path_items.push_front(item) : p.path_items.push_back(item));
+    };
 
     edge_t start_e = boost::edge(projection.source, projection.target, geo_ref.graph).first;
     Edge start_edge = geo_ref.graph[start_e];
 
-    //we check if the projection is usefull
-    if ((d == ProjectionData::Direction::Source && std::abs(projection.source_distance) < 0.0001) ||
-            (d == ProjectionData::Direction::Target && std::abs(projection.target_distance) < 0.0001)) {
-        const auto coord_to_add = (d == ProjectionData::Direction::Source ? geo_ref.graph[projection.source].coord : geo_ref.graph[projection.target].coord);
-        // we just have to add the projection in the path item
-        if (p.path_items.empty()) {
-              PathItem item;
-              item.way_idx = start_edge.way_idx;
-              item.transportation = geo_ref.get_caracteristic(start_e);
-              item.coordinates.push_back(coord_to_add);
-              if (append_to_begin) {
-                  p.path_items.push_front(item);
-              } else {
-                  p.path_items.push_back(item);
-              }
-            return;
-        }
-        auto& path_to_update = append_to_begin ? p.path_items.front() : p.path_items.back();
-        const auto& coord = append_to_begin ? path_to_update.coordinates.front() : path_to_update.coordinates.back();
+    auto duration = crow_fly_duration(d == ProjectionData::Direction::Source ? projection.source_distance : projection.target_distance);
 
-        if (coord != coord_to_add) {
-            if (append_to_begin) {
-                path_to_update.coordinates.push_front(coord_to_add);
-            } else {
-                path_to_update.coordinates.push_back(coord_to_add);
+    //we aither add the starting coordinate to the first path item or create a new path item if it was another way
+    nt::idx_t first_way_idx = (p.path_items.empty() ? type::invalid_idx : item_to_update(p).way_idx);
+    if (start_edge.way_idx != first_way_idx || first_way_idx == type::invalid_idx) {
+        if (! p.path_items.empty() && item_to_update(p).way_idx == type::invalid_idx) { //there can be an item with no way, so we will update this item
+            item_to_update(p).way_idx = start_edge.way_idx;
+            item_to_update(p).duration += duration;
+        }
+        else {
+            PathItem item;
+            item.way_idx = start_edge.way_idx;
+            item.duration = duration;
+
+            if (!p.path_items.empty()) {
+                //still complexifying stuff... TODO: simplify this
+                //we want the projection to be done with the previous transportation mode
+                switch (item_to_update(p).transportation) {
+                case georef::PathItem::TransportCaracteristic::Walk:
+                case georef::PathItem::TransportCaracteristic::Car:
+                case georef::PathItem::TransportCaracteristic::Bike:
+                    item.transportation = item_to_update(p).transportation;
+                    break;
+                    //if we were switching between walking and biking, we need to take either
+                    //the previous or the next transportation mode depending on 'append_to_begin'
+                case georef::PathItem::TransportCaracteristic::BssTake:
+                    item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
+                                                           : georef::PathItem::TransportCaracteristic::Bike);
+                    break;
+                case georef::PathItem::TransportCaracteristic::BssPutBack:
+                    item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Bike
+                                                           : georef::PathItem::TransportCaracteristic::Walk);
+                    break;
+                default:
+                    throw navitia::exception("unhandled transportation carac case");
+                }
             }
+            add_in_path(p, item);
         }
-        return;
     }
-
-    //we add a new path item that will make a 'crow fly' section
-    PathItem item;
-    item.way_idx = start_edge.way_idx;
-    item.duration = crow_fly_duration(d == ProjectionData::Direction::Source ? projection.source_distance : projection.target_distance);
-    item.transportation = PathItem::TransportCaracteristic::CrowFly;
-    //we only add the projected point for the moment (not the projection since it is on the next item)
-    item.coordinates.push_front(projection.projected);
-
+    auto& coord_list = item_to_update(p).coordinates;
     if (append_to_begin) {
-        p.path_items.push_front(item);
-    } else {
-        p.path_items.push_back(item);
+        if (coord_list.empty() || coord_list.front() != projection.projected) {
+            coord_list.push_front(projection.projected);
+        }
+    }
+    else {
+        if (coord_list.empty() || coord_list.back() != projection.projected) {
+            coord_list.push_back(projection.projected);
+        }
     }
 }
 
@@ -366,7 +378,7 @@ Path PathFinder::build_path(vertex_t best_destination) const {
     }
     reverse_path.push_back(best_destination);
 
-    return create_path(geo_ref, reverse_path, false);
+    return create_path(geo_ref, reverse_path, true);
 }
 
 

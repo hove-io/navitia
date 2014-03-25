@@ -698,9 +698,6 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     case georef::PathItem::TransportCaracteristic::BssPutBack:
         section->set_type(pbnavitia::landing);
         break;
-    case georef::PathItem::TransportCaracteristic::CrowFly:
-        section->mutable_street_network()->set_mode(pbnavitia::Walking); //TODO! add a crow fly sectin in next commit
-        break;
     default:
         throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
     }

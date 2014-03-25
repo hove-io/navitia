@@ -25,14 +25,14 @@ void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_i
         for (int i = 0; i < section.street_network().coordinates_size(); ++i)
             std::cout << "coord: " << section.street_network().coordinates(i).lon() / type::GeographicalCoord::N_M_TO_DEG
                       << ", " << section.street_network().coordinates(i).lat() / type::GeographicalCoord::N_M_TO_DEG
-                      <<std::endl;
+                      << std::endl;
 
         std::cout << "dump item : " << std::endl;
         for (int i = 0; i < section.street_network().path_items_size(); ++i)
             std::cout << "- " << section.street_network().path_items(i).name()
                       << " with " << section.street_network().path_items(i).length()
                       << "m | " << section.street_network().path_items(i).duration() << "s"
-                      <<std::endl;
+                      << std::endl;
     }
 
 
@@ -561,15 +561,14 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
 
-    dump_response(resp, "biking", true);
+    dump_response(resp, "biking");
 
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ag");
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 8);
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
-//    BOOST_CHECK_EQUAL(section.street_network().duration(), 130); //it's the biking distance / biking speed (but there can be rounding pb)
-    BOOST_CHECK_EQUAL(section.street_network().duration(), 110);  // BUG projections to be corrected (cf biking_length_test)
+    BOOST_CHECK_EQUAL(section.street_network().duration(), 130); //it's the biking distance / biking speed (but there can be rounding pb)
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 7);
 
     auto pathitem = section.street_network().path_items(0);
@@ -619,13 +618,13 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ag");
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 8);
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
-    BOOST_CHECK_EQUAL(section.street_network().duration(), 130*2 - 20 - 20); //it's the biking distance / biking speed
-//    BOOST_CHECK_EQUAL(section.street_network().duration(), 130*2);
+    BOOST_CHECK_EQUAL(section.street_network().duration(), 130*2);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 7);
 
     auto pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
-    BOOST_CHECK_EQUAL(pathitem.length(), 0); //since the biker si slower than usual, the projection of the starting point is done on B
+    //NOTE: we cannot check length here, it has to be checked in a separate test (below), since the used faked speed in the test
+    BOOST_CHECK_CLOSE(pathitem.duration(), S.distance_to(B) / (get_default_speed()[nt::Mode_e::Bike] * .5), 1);
     pathitem = section.street_network().path_items(1);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
     pathitem = section.street_network().path_items(2);
@@ -638,7 +637,7 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
     pathitem = section.street_network().path_items(6);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
-    BOOST_CHECK_EQUAL(pathitem.length(), 0); //same here the projection is done on G
+    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(G) / (get_default_speed()[nt::Mode_e::Bike] * .5), 1);
 }
 
 // Car
@@ -670,8 +669,7 @@ BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture<test_speed_provider>) {
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ef");
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 5);
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Car);
-    //    BOOST_CHECK_EQUAL(section.street_network().duration(), 18); // (20+50+20)/5
-    BOOST_CHECK_EQUAL(section.street_network().duration(), 18 - 4); // BUG projections to be corrected (cf biking_length_test)
+    BOOST_CHECK_EQUAL(section.street_network().duration(), 18); // (20+50+20)/5
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 4);
     //since R is not accessible by car, we project R in the closest edge in the car graph
     //this edge is F-C, so this is the end of the journey (the rest of it is as the crow flies)
@@ -778,7 +776,8 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
     pathitem = section.street_network().path_items(1);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ar");
-    BOOST_CHECK_EQUAL(pathitem.duration(), 0); //projection
+//    BOOST_CHECK_EQUAL(pathitem.duration(), 0); //projection
+    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(R) / (get_default_speed()[nt::Mode_e::Walking]), 1);
 }
 
 /**
@@ -819,44 +818,48 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     int cpt(0);
     auto pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
-    BOOST_CHECK_EQUAL(pathitem.duration(), 0);
-    BOOST_CHECK_CLOSE(pathitem.length(), 0, 1);
-    //BUG: for the moment the projections are not taken into account, we have to work on that
-//    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(B.distance_to(S), type::Mode_e::Bike).total_seconds());
-//    BOOST_CHECK_CLOSE(pathitem.length(), B.distance_to(S), 1);
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(B.distance_to(S), type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_CLOSE(pathitem.length(), B.distance_to(S), 1);
 
-    pathitem = section.street_network().path_items(cpt++);
+    pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
     BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(K.distance_to(B), type::Mode_e::Bike).total_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), B.distance_to(K), 1);
 
-    pathitem = section.street_network().path_items(cpt++);
+    pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue jk");
     BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(K.distance_to(J), type::Mode_e::Bike).total_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), J.distance_to(K), 1);
 
-    pathitem = section.street_network().path_items(cpt++);
+    pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ij");
     BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(I.distance_to(J), type::Mode_e::Bike).total_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), I.distance_to(J), 1);
 
-    pathitem = section.street_network().path_items(cpt++);
+    pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue hi");
     BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(I.distance_to(H), type::Mode_e::Bike).total_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), I.distance_to(H), 1);
 
-    pathitem = section.street_network().path_items(cpt++);
+    pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
     BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(G.distance_to(H), type::Mode_e::Bike).total_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), G.distance_to(H), 1);
 
-    pathitem = section.street_network().path_items(cpt++);
+    pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
-    BOOST_CHECK_EQUAL(pathitem.duration(), 0);
-    BOOST_CHECK_CLOSE(pathitem.length(), 0, 1);
-    //same as above, it's a bug
-//    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(distance_ag, type::Mode_e::Bike).total_seconds());
-//    BOOST_CHECK_CLOSE(pathitem.length(), distance_ag, 1);
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(distance_ag, type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_CLOSE(pathitem.length(), distance_ag, 1);
+
+    //we check the total
+    int total_dur(0);
+    double total_distance(0);
+    for (const auto& item : path_items) {
+        total_dur += item.duration();
+        total_distance += item.length();
+    }
+    BOOST_CHECK_CLOSE(section.length(), total_distance, 1);
+    BOOST_CHECK_EQUAL(section.duration(), total_dur);
 }
 
 /*
