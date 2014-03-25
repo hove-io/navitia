@@ -123,6 +123,11 @@ void Data::build_proximity_list(){
     this->geo_ref.project_stop_points(this->pt_data.stop_points);
 }
 
+void  Data::build_administrative_regions(){
+    this->geo_ref.build_admins_stop_points(this->pt_data.stop_points);
+    this->geo_ref.build_admins_pois();
+    this->pt_data.build_admins_stop_areas();
+}
 
 void Data::build_autocomplete(){
     pt_data.build_autocomplete(geo_ref);
@@ -194,9 +199,35 @@ list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* v
 }
 
 void Data::complete(){
+    auto logger = log4cplus::Logger::getInstance("log");
+    pt::ptime start;
+    int sort, autocomplete;
+
     this->build_midnight_interchange();
     this->build_grid_validity_pattern();
     this->build_associated_calendar();
+
+    start = pt::microsec_clock::local_time();
+    this->pt_data.sort();
+    sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    start = pt::microsec_clock::local_time();
+    LOG4CPLUS_INFO(logger, "Building proximity list");
+    this->build_proximity_list();
+    LOG4CPLUS_INFO(logger, "Building administrative regions");
+    this->build_administrative_regions();
+    LOG4CPLUS_INFO(logger, "Building uri maps");
+    this->build_uri();
+    LOG4CPLUS_INFO(logger, "Building autocomplete");
+    this->build_autocomplete();
+
+    /* ça devrait etre fait avant, à vérifier
+    LOG4CPLUS_INFO(logger, "On va construire les correspondances");
+    {Timer t("Construction des correspondances");  data.pt_data.build_connections();}
+    */
+    autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    LOG4CPLUS_INFO(logger, "\t Sorting data: " << sort << "ms");
+    LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
 }
 
 void Data::build_associated_calendar() {

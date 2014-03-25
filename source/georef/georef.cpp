@@ -503,6 +503,48 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
    }
 }
 
+void GeoRef::build_admins_stop_points(std::vector<type::StopPoint*> & stop_points){
+    auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_stop_points");
+    int cpt_no_projected = 0;
+    for(type::StopPoint* stop_point : stop_points) {
+        ProjectionData projection = this->projected_stop_points[stop_point->idx][type::Mode_e::Walking];
+        if(projection.found){
+            const edge_t edge = boost::edge(projection[ProjectionData::Direction::Source],
+                                         projection[ProjectionData::Direction::Target],
+                                         this->graph).first;
+            const georef::Way *way = this->ways[this->graph[edge].way_idx];
+            stop_point->admin_list.insert(stop_point->admin_list.end(),
+                                          way->admin_list.begin(),
+                                          way->admin_list.end());
+        }else{
+            cpt_no_projected++;
+        }
+    }
+    LOG4CPLUS_DEBUG(log, cpt_no_projected<<"/"<<stop_points.size() << " stop_points are not associated with any admins");
+}
+
+void GeoRef::build_admins_pois(){
+    auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_pois");
+    int cpt_no_projected = 0;
+    int cpt_no_initialized = 0;
+    for(POI* poi : this->pois){
+        if(poi->coord.is_initialized()){
+            try{
+                edge_t edge = this->nearest_edge(poi->coord);
+                georef::Way *way = this->ways[this->graph[edge].way_idx];
+                poi->admin_list.insert(poi->admin_list.end(),
+                                       way->admin_list.begin(), way->admin_list.end());
+            }catch(proximitylist::NotFound){
+                cpt_no_projected++;
+            }
+        }else{
+            cpt_no_initialized++;
+        }
+    }
+    LOG4CPLUS_DEBUG(log, cpt_no_projected<<"/"<<this->pois.size() << " pois are not associated with any admins");
+    LOG4CPLUS_DEBUG(log, cpt_no_initialized<<"/"<<this->pois.size() << " pois with coordinates not initialized");
+}
+
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
     bool one_proj_found = false;
     ProjectionByMode projections;

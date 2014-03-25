@@ -37,12 +37,6 @@ void EdPersistor::persist(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, "Begin: update boundary admins");
     this->update_boundary();
     LOG4CPLUS_INFO(logger, "End: update boundary admins");
-    LOG4CPLUS_INFO(logger, "Begin: Relations stop_area, stop_point and admins");
-    this->build_stop_admin_relation();
-    LOG4CPLUS_INFO(logger, "End: Relations stop_area, stop_point and admins");
-    LOG4CPLUS_INFO(logger, "Begin: Relation poi and admins");
-    this->build_poi_admin_relation();
-    LOG4CPLUS_INFO(logger, "End: Relation poi and admins");
     LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -305,9 +299,6 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert relation calendar line");
     this->insert_rel_calendar_line(data.calendars);
     LOG4CPLUS_INFO(logger, "End: insert relation calendar line");
-    LOG4CPLUS_INFO(logger, "Begin: build stops admin relations");
-    this->build_stop_admin_relation();
-    LOG4CPLUS_INFO(logger, "End: build stops admin relations");
     LOG4CPLUS_INFO(logger, "Begin: commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -336,21 +327,6 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
                           "VALUES ('" + bg::to_iso_extended_string(meta.production_date.begin()) +
                           "', '" + bg::to_iso_extended_string(meta.production_date.end()) + "');";
     PQclear(this->lotus.exec(request));
-}
-
-void EdPersistor::build_stop_admin_relation(){
-    LOG4CPLUS_INFO(logger, "Begin: execute georef.match_stop_area_to_admin()");
-    PQclear(this->lotus.exec("SELECT georef.match_stop_area_to_admin()", "", PGRES_TUPLES_OK));
-    LOG4CPLUS_INFO(logger, "End: execute georef.match_stop_area_to_admin()\n"
-                           "Begin: execute georef.match_stop_point_to_admin");
-    PQclear(this->lotus.exec("SELECT georef.match_stop_point_to_admin();", "", PGRES_TUPLES_OK));
-    LOG4CPLUS_INFO(logger, "End: execute georef.match_stop_point_to_admin\n");
-}
-
-void EdPersistor::build_poi_admin_relation() {
-    LOG4CPLUS_INFO(logger, "Begin: execute georef.match_poi_to_admin\n");
-    PQclear(this->lotus.exec("SELECT georef.match_poi_to_admin();", "", PGRES_TUPLES_OK));
-    LOG4CPLUS_INFO(logger, "End: execute georef.match_poi_to_admin\n");
 }
 
 void EdPersistor::clean_georef(){
