@@ -337,33 +337,35 @@ struct GeoRef {
     ~GeoRef();
 };
 
-
-/** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche
+/** When given a coordinate, we have to associate it with the street network.
   *
-  * Elle consiste en deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
-  * La coordonnée projetée
-  * Les distances entre le projeté les les nœuds
+  * This structure handle this.
+  *
+  * It contains
+  *   - 2 possible nodes (each end of the edge where the coordinate has been projected)
+  *   - the coordinate of the projection
+  *   - the 2 distances between the projected point and the ends (NOTE, this is not the distance between the coordinate and the ends)
+  *
   */
 struct ProjectionData {
 
+    /// enum used to acces the nodes and the distances
     enum class Direction {
         Source = 0,
         Target,
         size
     };
-    /// deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
+    /// 2 possible nodes (each end of the edge where the coordinate has been projected)
     flat_enum_map<Direction, vertex_t> vertex;
 
-    /// Est-ce que la projection a réussi ?
+    /// has the projection been successful?
     bool found = false;
 
-    /// La coordonnée projetée sur le segment
+    /// The coordinate projected on the edge
     type::GeographicalCoord projected;
 
-    /// Distance entre le projeté et les nœuds du segment
+    /// Distance between the projected point and the ends
     flat_enum_map<Direction, double> distances {{{-1, -1}}};
-
-    vertex_t operator[] (Direction d) const { return vertex[d]; }
 
     ProjectionData() {}
     /// Project the coordinate on the graph
@@ -376,6 +378,9 @@ struct ProjectionData {
     }
 
     void init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge);
+
+    /// syntaxic sugar
+    vertex_t operator[] (Direction d) const { return vertex[d]; }
 };
 
 /** Nommage d'un POI (point of interest). **/
