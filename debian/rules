@@ -36,3 +36,6 @@ override_dh_auto_clean:
 override_dh_strip:
 	dh_strip -pnavitia-kraken --dbg-package=navitia-kraken-dbg
 	dh_strip -pnavitia-ed --dbg-package=navitia-ed-dbg
+
+override_dh_python2:
+	dh_python2 -V 2.7
