@@ -509,10 +509,13 @@ void GeoRef::fill_admins_stop_points(std::vector<type::StopPoint*> & stop_points
     for(type::StopPoint* stop_point : stop_points) {
         ProjectionData projection = this->projected_stop_points[stop_point->idx][type::Mode_e::Walking];
         if(projection.found){
-            edge_t start_e = boost::edge(projection.source, projection.target, this->graph).first;
-            georef::Way *way = this->ways[this->graph[start_e].way_idx];
+            const edge_t start_e = boost::edge(projection[ProjectionData::Direction::Source],
+                                         projection[ProjectionData::Direction::Target],
+                                         this->graph).first;
+            const georef::Way *way = this->ways[this->graph[start_e].way_idx];
             stop_point->admin_list.insert(stop_point->admin_list.begin(),
-                                          way->admin_list.begin(), way->admin_list.end());
+                                          way->admin_list.begin(),
+                                          way->admin_list.end());
         }else{
             count++;
         }
