@@ -121,7 +121,7 @@ void PT_Data::build_proximity_list() {
 
 void PT_Data::build_admins_stop_areas(){
     for(navitia::type::StopPoint* stop_point : this->stop_points){
-        if((!stop_point->admin_list.empty()) && (stop_point->stop_area != nullptr)){
+        if(stop_point->stop_area != nullptr){
             for(navitia::georef::Admin* admin : stop_point->admin_list){
                 auto find_predicate = [&](navitia::georef::Admin* adm) {
                     return adm->idx == admin->idx;
