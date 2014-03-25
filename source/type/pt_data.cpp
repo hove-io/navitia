@@ -119,7 +119,7 @@ void PT_Data::build_proximity_list() {
     this->stop_point_proximity_list.build();
 }
 
-void PT_Data::fill_admins_stop_areas(){
+void PT_Data::build_admins_stop_areas(){
     for(navitia::type::StopPoint* stop_point : this->stop_points){
         if((!stop_point->admin_list.empty()) && (stop_point->stop_area != nullptr)){
             for(navitia::georef::Admin* admin : stop_point->admin_list){

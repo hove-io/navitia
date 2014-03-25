@@ -123,10 +123,10 @@ void Data::build_proximity_list(){
     this->geo_ref.project_stop_points(this->pt_data.stop_points);
 }
 
-void  Data::set_administrative_regions(){
-    this->geo_ref.fill_admins_stop_points(this->pt_data.stop_points);
-    this->geo_ref.fill_admins_pois();
-    this->pt_data.fill_admins_stop_areas();
+void  Data::build_administrative_regions(){
+    this->geo_ref.build_admins_stop_points(this->pt_data.stop_points);
+    this->geo_ref.build_admins_pois();
+    this->pt_data.build_admins_stop_areas();
 }
 
 void Data::build_autocomplete(){

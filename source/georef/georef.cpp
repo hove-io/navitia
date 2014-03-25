@@ -503,7 +503,7 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
    }
 }
 
-void GeoRef::fill_admins_stop_points(std::vector<type::StopPoint*> & stop_points){
+void GeoRef::build_admins_stop_points(std::vector<type::StopPoint*> & stop_points){
     auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_stop_points");
     int count = 0;
     for(type::StopPoint* stop_point : stop_points) {
@@ -523,7 +523,7 @@ void GeoRef::fill_admins_stop_points(std::vector<type::StopPoint*> & stop_points
     LOG4CPLUS_DEBUG(log, count<<"/"<<stop_points.size() << " stop_points are not associated with any admins");
 }
 
-void GeoRef::fill_admins_pois(){
+void GeoRef::build_admins_pois(){
     auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_pois");
     int count = 0;
     for(POI* poi : this->pois){

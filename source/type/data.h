@@ -128,7 +128,7 @@ public:
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
     /** Set admins*/
-    void set_administrative_regions();
+    void build_administrative_regions();
     /** Construit les données raptor */
     void build_raptor();
     /** Construction des validity pattern des StopTimes **/

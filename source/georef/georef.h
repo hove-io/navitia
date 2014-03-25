@@ -301,8 +301,8 @@ struct GeoRef {
      * Project each stop_point on the georef network
      */
     void project_stop_points(const std::vector<type::StopPoint*> & stop_points);
-    void fill_admins_stop_points(std::vector<type::StopPoint*> & stop_points);
-    void fill_admins_pois();
+    void build_admins_stop_points(std::vector<type::StopPoint*> & stop_points);
+    void build_admins_pois();
     /** project the stop point on all transportation mode
       * return a pair with :
       * - the projected array

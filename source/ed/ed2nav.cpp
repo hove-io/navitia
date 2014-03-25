@@ -103,8 +103,8 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building proximity list");
     data.build_proximity_list();
-    LOG4CPLUS_INFO(logger, "set administrative regions");
-    data.set_administrative_regions();
+    LOG4CPLUS_INFO(logger, "Building administrative regions");
+    data.build_administrative_regions();
     LOG4CPLUS_INFO(logger, "Building uri maps");
     //construction des map uri => idx
     data.build_uri();
