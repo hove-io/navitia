@@ -49,8 +49,11 @@ class ConnectorAT(object):
 
     def run(self):
         self.at_realtime_reader.execute()
-        logging.getLogger('connector').info("put message to following topics: "
-                                            "%s", self.config.rt_topic)
+        logging.getLogger('connector').info("put %i message and %i disruptions"
+                    "to following topics: %s" %\
+                    (len(self.at_realtime_reader.message_list),
+                     len(self.at_realtime_reader.perturbation_list),
+                     self.config.rt_topic))
         for message in self.at_realtime_reader.message_list:
             task = connectors.task_pb2.Task()
             task.action = connectors.task_pb2.MESSAGE
