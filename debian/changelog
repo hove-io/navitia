@@ -1,3 +1,9 @@
+navitia2 (0.90.7) unstable; urgency=low
+
+ * Sindri: add number of messages pushed
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 26 Mar 2014 10:03:14 +0100
+
 navitia2 (0.90.6) unstable; urgency=low
 
  * Debian: override dh_python2
@@ -101,7 +107,7 @@ navitia2 (0.89.0) unstable; urgency=low
 
 navitia2 (0.88.1) unstable; urgency=low
 
- * corrections on at loggers 
+ * corrections on at loggers
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Mar 2014 16:03:08 +0100
 
