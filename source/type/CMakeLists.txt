@@ -7,7 +7,13 @@ target_link_libraries(pb_lib ${PROTOBUF_LIBRARY})
 add_custom_command (TARGET pb_lib
     PRE_BUILD
     COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/navitiacommon/navitiacommon" type.proto
-    response.proto request.proto task.proto realtime.proto
+    response.proto request.proto task.proto realtime.proto stat.proto
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
+
+add_custom_command (TARGET pb_lib
+    PRE_BUILD
+    COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/stat_persistor/stat_persistor" type.proto
+    task.proto realtime.proto stat.proto 
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
 add_custom_command (TARGET pb_lib

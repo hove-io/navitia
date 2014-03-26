@@ -35,9 +35,10 @@ from flask import current_app, request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 from jormungandr import i_manager
-import datetime
+import datetime, time
 import base64
 from navitiacommon.models import User, Instance, db
+from jormungandr.stat_manager import StatManager
 
 
 def authentification_required(func):
@@ -71,7 +72,14 @@ def authentification_required(func):
                 pass
 
         if not region or authenticate(region, 'ALL', abort=True):
-            return func(*args, **kwargs)
+            start_time = time.time()
+            func_call = func(*args, **kwargs)
+            i_manager.stat_manager.manage_stat(start_time, func_call)
+            return func_call
+
+            #return func(*args, **kwargs)
+        #Appeler la méthode (decorator) qui envoi les informations: flask.request contient des paramètres.
+        #STAT-2
 
     return wrapper
 
@@ -126,6 +134,7 @@ def authenticate(region, api, abort=False):
 
     user = get_user()
     if user:
+        #STAT-1 Ajouter flask variable (global) pour pouvoir garder les valeurs
         if user.has_access(region, api):
             return True
         else:
