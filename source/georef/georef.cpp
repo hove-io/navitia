@@ -300,7 +300,6 @@ void GeoRef::init() {
             boost::add_vertex(graph[v], graph);
         }
     }
-
 }
 
 void GeoRef::build_proximity_list(){

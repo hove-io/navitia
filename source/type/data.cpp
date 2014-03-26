@@ -203,23 +203,25 @@ void Data::complete(){
     pt::ptime start;
     int sort, autocomplete;
 
-    this->build_midnight_interchange();
-    this->build_grid_validity_pattern();
-    this->build_associated_calendar();
+    geo_ref.init();
+
+    build_midnight_interchange();
+    build_grid_validity_pattern();
+    build_associated_calendar();
 
     start = pt::microsec_clock::local_time();
-    this->pt_data.sort();
+    pt_data.sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building proximity list");
-    this->build_proximity_list();
+    build_proximity_list();
     LOG4CPLUS_INFO(logger, "Building administrative regions");
-    this->build_administrative_regions();
+    build_administrative_regions();
     LOG4CPLUS_INFO(logger, "Building uri maps");
-    this->build_uri();
+    build_uri();
     LOG4CPLUS_INFO(logger, "Building autocomplete");
-    this->build_autocomplete();
+    build_autocomplete();
 
     /* ça devrait etre fait avant, à vérifier
     LOG4CPLUS_INFO(logger, "On va construire les correspondances");
