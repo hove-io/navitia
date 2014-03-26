@@ -1,3 +1,21 @@
+navitia2 (0.90.6) unstable; urgency=low
+
+ * Debian: override dh_python2
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Mar 2014 17:03:20 +0100
+
+navitia2 (0.90.5) unstable; urgency=low
+
+ * Jormungandr: add debian/navitia-jormungandr.pydist
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Mar 2014 15:03:40 +0100
+
+navitia2 (0.90.4) unstable; urgency=low
+
+ * Jormungandr: python version >= 2.7
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Mar 2014 11:03:09 +0100
+
 navitia2 (0.90.3) unstable; urgency=low
 
  * Jormungandr: really fix python version problem
