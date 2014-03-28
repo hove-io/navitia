@@ -7,6 +7,7 @@
 #include "type/request.pb.h"
 #include "disruption/disruption_api.h"
 #include "calendar/calendar_api.h"
+#include "kraken/data_manager.h"
 
 #include <memory>
 
@@ -16,20 +17,23 @@ class Worker {
     private:
         std::unique_ptr<navitia::routing::RAPTOR> planner;
         std::unique_ptr<navitia::georef::StreetNetwork> street_network_worker;
-        navitia::type::Data** data;
+        DataManager<navitia::type::Data>& data_manager;
 
         log4cplus::Logger logger;
         boost::posix_time::ptime last_load_at;
 
     public:
-        Worker(navitia::type::Data** data) : data(data), logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
+        Worker(DataManager<navitia::type::Data>& data_manager) :
+                data_manager(data_manager),
+                logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
 
         pbnavitia::Response dispatch(const pbnavitia::Request & request);
 
-        type::GeographicalCoord coord_of_entry_point(const type::EntryPoint & entry_point);
-        type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const bool use_second = true);
+        type::GeographicalCoord coord_of_entry_point(const type::EntryPoint & entry_point,
+                const std::shared_ptr<navitia::type::Data> data);
+        type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const std::shared_ptr<navitia::type::Data> data, const bool use_second = true);
 
-        void init_worker_data();
+        void init_worker_data(const std::shared_ptr<navitia::type::Data> data);
 
         pbnavitia::Response status();
         pbnavitia::Response metadatas();

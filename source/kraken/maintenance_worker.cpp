@@ -14,36 +14,18 @@ namespace bg = boost::gregorian;
 namespace navitia {
 
 
-bool MaintenanceWorker::load_and_switch(){
-    type::Data * tmp_data = new type::Data();
+void MaintenanceWorker::load(){
     Configuration * conf = Configuration::get();
     std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
     LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
+    if(this->data_manager.load(database)){
+        auto data = data_manager.get_data();
 
-    bool return_= false;
-    if(!tmp_data->load(database)) {
-        LOG4CPLUS_ERROR(logger, "Erreur lors du chargement des données: " + database);
-        return_= false;
-    } else {
-        tmp_data->loaded = true;
-        LOG4CPLUS_TRACE(logger, "déplacement de data");
-        boost::unique_lock<boost::shared_mutex> lock((*data)->load_mutex);
-        std::swap(*data, tmp_data);
-        LOG4CPLUS_TRACE(logger, "Chargement des données terminé");
-        return_ = true;
+        LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
+                % data->pt_data.stop_times.size() % data->dataRaptor.arrival_times.size()
+                % data->dataRaptor.foot_path_forward.size() % data->pt_data.stop_points.size()
+                );
     }
-    delete tmp_data;
-    return return_;
-
-}
-
-void MaintenanceWorker::load(){
-    load_and_switch();
-
-    LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-            % (*data)->pt_data.stop_times.size() % (*data)->dataRaptor.arrival_times.size()
-            % (*data)->dataRaptor.foot_path_forward.size() % (*data)->pt_data.stop_points.size()
-            );
 }
 
 
@@ -58,7 +40,7 @@ void MaintenanceWorker::operator()(){
         }catch(const std::runtime_error& ex){
             LOG4CPLUS_ERROR(logger, std::string("connection to rabbitmq fail: ")
                     + ex.what());
-            (*data)->is_connected_to_rabbitmq = false;
+            data_manager.get_data()->is_connected_to_rabbitmq = false;
             sleep(10);
         }
     }
@@ -68,7 +50,7 @@ void MaintenanceWorker::listen_rabbitmq(){
     auto consumer_tag = this->channel->BasicConsume(this->queue_name);
 
     LOG4CPLUS_INFO(logger, "start event loop");
-    (*data)->is_connected_to_rabbitmq = true;
+    data_manager.get_data()->is_connected_to_rabbitmq = true;
     while(true){
         auto envelope = this->channel->BasicConsumeMessage(consumer_tag);
         LOG4CPLUS_TRACE(logger, "Message received");
@@ -109,7 +91,8 @@ void MaintenanceWorker::init_rabbitmq(){
     LOG4CPLUS_DEBUG(logger, "connected to rabbitmq");
 }
 
-MaintenanceWorker::MaintenanceWorker(type::Data** data) : data(data),
+MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager) :
+        data_manager(data_manager),
         logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))){}
 
 }
