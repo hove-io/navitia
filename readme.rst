@@ -8,6 +8,12 @@ Navitia
 
 [![Build Status](https://ci.navitia.io/buildStatus/icon?job=navitia_release)](https://ci.navitia.io/job/navitia_release/)
 
+|build_status|_
+.. _|build_status|: https://ci.navitia.io/job/navitia_release/ 
+.. _|buildStatus| image::  https://ci.navitia.io/buildStatus/icon?job=navitia_releasei 
+    :alt: build status
+    
+
 Presentation
 ============
 This is the Navitia repository.
