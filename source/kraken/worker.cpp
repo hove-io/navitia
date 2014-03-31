@@ -9,6 +9,9 @@
 #include "time_tables/next_passages.h"
 #include "time_tables/2stops_schedules.h"
 #include "time_tables/departure_boards.h"
+#include "disruption/disruption_api.h"
+#include "calendar/calendar_api.h"
+#include "routing/raptor.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -56,6 +59,12 @@ std::vector<std::string> vector_of_admins(const T & admin){
     }
     return result;
 }
+
+Worker::Worker(DataManager<navitia::type::Data>& data_manager) :
+    data_manager(data_manager),
+    logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
+
+Worker::~Worker(){}
 
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
