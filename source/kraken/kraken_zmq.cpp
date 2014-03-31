@@ -11,16 +11,17 @@
 #include "utils/logger.h"
 #include "utils/init.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <kraken/data_manager.h>
 
 namespace pt = boost::posix_time;
 
-void doWork(zmq::context_t & context, navitia::type::Data** data) {
+void doWork(zmq::context_t & context, DataManager<navitia::type::Data>& data_manager) {
     auto logger = log4cplus::Logger::getInstance("worker");
     try{
         zmq::socket_t socket (context, ZMQ_REP);
         socket.connect ("inproc://workers");
         bool run = true;
-        navitia::Worker w(data);
+        navitia::Worker w(data_manager);
         while(run) {
             zmq::message_t request;
             try{
@@ -73,7 +74,7 @@ int main(int, char** argv){
     char buf[256];
     if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");
 
-    navitia::type::Data* data = new navitia::type::Data();
+    DataManager<navitia::type::Data> data_manager;
 
     boost::thread_group threads;
     // Prepare our context and sockets
@@ -85,10 +86,10 @@ int main(int, char** argv){
     workers.bind("inproc://workers");
 
     // Launch pool of worker threads
-    for(int thread_nbr = 0; thread_nbr < data->nb_threads; ++thread_nbr) {
-        threads.create_thread(std::bind(&doWork, std::ref(context), &data));
+    for(int thread_nbr = 0; thread_nbr < data_manager.get_data()->nb_threads; ++thread_nbr) {
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager)));
     }
-    threads.create_thread(navitia::MaintenanceWorker(&data));
+    threads.create_thread(navitia::MaintenanceWorker(data_manager));
 
     // Connect work threads to client threads via a queue
     do{

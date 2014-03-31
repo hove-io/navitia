@@ -2,6 +2,8 @@
 Navitia
 ********
 
+[![Build Status](https://ci.navitia.io/buildStatus/icon?job=navitia_release)](https://ci.navitia.io/job/navitia_release/)
+
 Presentation
 ============
 This is the Navitia repository.

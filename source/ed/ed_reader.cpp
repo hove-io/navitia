@@ -814,7 +814,6 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         if (way_nb_edges[e] > 1) {
             way_nb_edges[e] --;
         } else {
-            assert(way_nb_edges[e] == 0); //we should not remove more edge than it got
             //it was the last edge of the way, we add it to the ignore list
             way_to_ignore.insert(e);
         }

@@ -2,6 +2,7 @@
 
 #include <SimpleAmqpClient/SimpleAmqpClient.h>
 #include "type/data.h"
+#include "kraken/data_manager.h"
 
 #include <memory>
 
@@ -10,7 +11,7 @@ namespace navitia {
 
 class MaintenanceWorker{
     private:
-        navitia::type::Data** data;
+        DataManager<type::Data>& data_manager;
         log4cplus::Logger logger;
 
         AmqpClient::Channel::ptr_t channel;
@@ -21,7 +22,7 @@ class MaintenanceWorker{
         void listen_rabbitmq();
 
     public:
-        MaintenanceWorker(type::Data** data);
+        MaintenanceWorker(DataManager<type::Data>& data_manager);
 
         bool load_and_switch();
 
