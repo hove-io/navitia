@@ -4,8 +4,6 @@ Navitia
 
 [![Build Status](https://ci.navitia.io/buildStatus/icon?job=navitia_release)] (https://ci.navitia.io/job/navitia_release/)
 
-[![Build Status](https://jenkins.ci.cloudbees.com/buildStatus/icon?job=plugins/ghprb-plugin)](https://jenkins.ci.cloudbees.com/job/plugins/job/ghprb-plugin/)
-
 Presentation
 ============
 This is the Navitia repository.
