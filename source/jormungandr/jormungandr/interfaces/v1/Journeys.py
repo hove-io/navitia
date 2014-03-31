@@ -152,7 +152,7 @@ class section_place(PbField):
         else:
             return super(PbField, self).output(key, obj)
 section = {
-    "type": section_type(stop_date_time),
+    "type": section_type(attribute='stop_date_time'),
     "id": fields.String(),
     "mode": enum_type(attribute="street_network.mode"),
     "duration": fields.Integer(),
