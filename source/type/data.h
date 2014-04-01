@@ -136,7 +136,6 @@ public:
 
     void build_grid_validity_pattern();
     void complete();
-    Data& operator=(Data&& other);
 
     /** Retourne le type de l'id donné */
     Type_e get_type_of_id(const std::string & id) const;

@@ -37,22 +37,8 @@ Data::Data() : meta(std::make_unique<MetaData>()),
         geo_ref->word_weight =  conf->get_as<int>("AUTOCOMPLETE", "wordweight", 5);
     }
 }
- Data::~Data(){}
 
-Data& Data::operator=(Data&& other){
-    version = other.version;
-    loaded.store(other.loaded.load());
-    meta = std::move(other.meta);
-    pt_data = std::move(other.pt_data);
-    geo_ref = std::move(other.geo_ref);
-    dataRaptor = std::move(other.dataRaptor);
-    last_load = other.last_load;
-    last_load_at = other.last_load_at;
-    is_connected_to_rabbitmq.store(other.is_connected_to_rabbitmq.load());
-
-    return *this;
-}
-
+Data::~Data(){}
 
 bool Data::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
