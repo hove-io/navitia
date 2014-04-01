@@ -10,7 +10,7 @@ target_link_libraries(gtfs_parser_test ed connectors types utils ${BOOST_LIBS} l
 ADD_BOOST_TEST(gtfs_parser_test)
 
 add_executable(adapted_test adapted_test.cpp)
-target_link_libraries(adapted_test ed fare types connectors  pq pqxx data georef
+target_link_libraries(adapted_test ed types connectors  pq pqxx data fare georef
     routing utils autocomplete ${BOOST_LIBS} log4cplus)
 
 ADD_BOOST_TEST(adapted_test)

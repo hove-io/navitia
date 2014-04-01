@@ -21,7 +21,7 @@ get_all_stop_times(const vector_idx &journey_patterns,
     //de tous les journey_patterns
     std::vector<type::idx_t> first_journey_pattern_points;
     for(type::idx_t jp_idx : journey_patterns) {
-        auto jpp = d.pt_data.journey_patterns[jp_idx];
+        auto jpp = d.pt_data->journey_patterns[jp_idx];
         auto first_jpp_idx = jpp->journey_pattern_point_list.front()->idx;
         first_journey_pattern_points.push_back(first_jpp_idx);
     }
@@ -113,14 +113,14 @@ route_schedule(const std::string& filter,
     size_t total_result = routes_idx.size();
     routes_idx = paginate(routes_idx, count, start_page);
     for(type::idx_t route_idx : routes_idx) {
-        auto route = d.pt_data.routes[route_idx];
+        auto route = d.pt_data->routes[route_idx];
         auto jps =  ptref::make_query(type::Type_e::JourneyPattern, filter+" and route.uri="+route->uri, forbidden_uris, d);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(jps, handler.date_time,
                                              handler.max_datetime, d, disruption_active);
         std::vector<vector_idx> stop_points;
         for(auto jp_idx : jps) {
-            auto jp = d.pt_data.journey_patterns[jp_idx];
+            auto jp = d.pt_data->journey_patterns[jp_idx];
             stop_points.push_back(vector_idx());
             for(auto jpp : jp->journey_pattern_point_list) {
                 stop_points.back().push_back(jpp->stop_point->idx);
@@ -146,7 +146,7 @@ route_schedule(const std::string& filter,
 
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
-            const type::StopPoint* sp = d.pt_data.stop_points[spidx];
+            const type::StopPoint* sp = d.pt_data->stop_points[spidx];
             //version v1
             pbnavitia::RouteScheduleRow* row = table->add_rows();
             fill_pb_object(sp, d, row->mutable_stop_point(), max_depth,

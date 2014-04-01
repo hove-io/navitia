@@ -3,6 +3,7 @@
 
 #include "type/type.h"
 #include "type/data.h"
+#include "fare/fare.h"
 #include "type/datetime.h"
 
 namespace nt = navitia::type;

@@ -1,6 +1,7 @@
 #include "ptreferential.h"
 #include "type/pb_converter.h"
 #include "type/data.h"
+#include "type/pt_data.h"
 
 namespace pt = boost::posix_time;
 
@@ -16,67 +17,67 @@ pbnavitia::Response extract_data(const type::Data & data,
     for(auto idx : rows){
         switch(requested_type){
         case Type_e::ValidityPattern:
-            fill_pb_object(data.pt_data.validity_patterns[idx], data,
+            fill_pb_object(data.pt_data->validity_patterns[idx], data,
                            result.add_validity_patterns(), depth, today);
             break;
         case Type_e::Line:
-            fill_pb_object(data.pt_data.lines[idx], data, result.add_lines(),
+            fill_pb_object(data.pt_data->lines[idx], data, result.add_lines(),
                            depth, today);
             break;
         case Type_e::JourneyPattern:
-            fill_pb_object(data.pt_data.journey_patterns[idx], data,
+            fill_pb_object(data.pt_data->journey_patterns[idx], data,
                            result.add_journey_patterns(), depth, today);
             break;
         case Type_e::StopPoint:
-            fill_pb_object(data.pt_data.stop_points[idx], data,
+            fill_pb_object(data.pt_data->stop_points[idx], data,
                            result.add_stop_points(), depth, today);
             break;
         case Type_e::StopArea:
-            fill_pb_object(data.pt_data.stop_areas[idx], data,
+            fill_pb_object(data.pt_data->stop_areas[idx], data,
                            result.add_stop_areas(), depth, today);
             break;
         case Type_e::Network:
-            fill_pb_object(data.pt_data.networks[idx], data,
+            fill_pb_object(data.pt_data->networks[idx], data,
                            result.add_networks(), depth, today);
             break;
         case Type_e::PhysicalMode:
-            fill_pb_object(data.pt_data.physical_modes[idx], data,
+            fill_pb_object(data.pt_data->physical_modes[idx], data,
                            result.add_physical_modes(), depth, today);
             break;
         case Type_e::CommercialMode:
-            fill_pb_object(data.pt_data.commercial_modes[idx], data,
+            fill_pb_object(data.pt_data->commercial_modes[idx], data,
                            result.add_commercial_modes(), depth, today);
             break;
         case Type_e::JourneyPatternPoint:
-            fill_pb_object(data.pt_data.journey_pattern_points[idx], data,
+            fill_pb_object(data.pt_data->journey_pattern_points[idx], data,
                            result.add_journey_pattern_points(), depth, today);
             break;
         case Type_e::Company:
-            fill_pb_object(data.pt_data.companies[idx], data,
+            fill_pb_object(data.pt_data->companies[idx], data,
                            result.add_companies(), depth, today);
             break;
         case Type_e::Route:
-            fill_pb_object(data.pt_data.routes[idx], data,
+            fill_pb_object(data.pt_data->routes[idx], data,
                     result.add_routes(), depth, today);
             break;
         case Type_e::POI:
-            fill_pb_object(data.geo_ref.pois[idx], data,
+            fill_pb_object(data.geo_ref->pois[idx], data,
                            result.add_pois(), depth, today);
             break;
         case Type_e::POIType:
-            fill_pb_object(data.geo_ref.poitypes[idx], data,
+            fill_pb_object(data.geo_ref->poitypes[idx], data,
                            result.add_poi_types(), depth, today);
             break;
         case Type_e::Connection:
-            fill_pb_object(data.pt_data.stop_point_connections[idx], data,
+            fill_pb_object(data.pt_data->stop_point_connections[idx], data,
                            result.add_connections(), depth, today);
             break;
         case Type_e::VehicleJourney:
-            fill_pb_object(data.pt_data.vehicle_journeys[idx], data,
+            fill_pb_object(data.pt_data->vehicle_journeys[idx], data,
                            result.add_vehicle_journeys(), depth, today);
             break;
         case Type_e::Calendar:
-            fill_pb_object(data.pt_data.calendars[idx], data,
+            fill_pb_object(data.pt_data->calendars[idx], data,
                            result.add_calendars(), depth, today);
             break;
         default: break;

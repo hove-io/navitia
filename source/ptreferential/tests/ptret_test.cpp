@@ -8,6 +8,7 @@
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
+#include "type/pt_data.h"
 
 namespace navitia{namespace ptref {
 template<typename T> std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d);
@@ -167,7 +168,7 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
-    b.data.pt_data.index();
+    b.data.pt_data->index();
 
     // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
     Filter filter;
@@ -237,7 +238,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri) {
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
-    b.data.pt_data.build_uri();
+    b.data.pt_data->build_uri();
 
     BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Line, "stop_point.uri=stop1", {"A"}, b.data), ptref_error);
 }
@@ -254,7 +255,7 @@ BOOST_AUTO_TEST_CASE(after_filter) {
     BOOST_REQUIRE_EQUAL(indexes.size(), 3);
     auto expected_uris = {"stop3", "stop4", "stop7"};
     for(auto stop_area_idx : indexes) {
-        auto stop_area = b.data.pt_data.stop_areas[stop_area_idx];
+        auto stop_area = b.data.pt_data->stop_areas[stop_area_idx];
         BOOST_REQUIRE(std::find(expected_uris.begin(), expected_uris.end(),
                             stop_area->uri) != expected_uris.end());
     }

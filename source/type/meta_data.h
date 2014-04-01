@@ -11,10 +11,7 @@ namespace navitia { namespace type {
 
 struct MetaData{
 
-    static const unsigned int data_version = 1; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
-    unsigned int version; //< Numéro de version des données chargées
-
-    boost::gregorian::date_period production_date;  
+    boost::gregorian::date_period production_date;
     boost::posix_time::ptime publication_date;
 
 
@@ -24,19 +21,14 @@ struct MetaData{
 
     std::string shape;
 
-    MetaData() : version(0), production_date(boost::gregorian::date(), boost::gregorian::date()),
+    MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()),
     navimake_version(KRAKEN_VERSION) {}
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
       * Elle est appelée par boost et pas directement
       */
-    template<class Archive> void serialize(Archive & ar, const unsigned int version) {
-        this->version = version;
-        if(this->version != data_version){
-            std::cerr << "Attention le fichier de données est à la version " << version << " (version actuelle : " << data_version << ")" << std::endl;
-        }
-
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & production_date & publication_date & navimake_version & data_sources & shape;
     }
 
@@ -44,4 +36,3 @@ struct MetaData{
 
 };
 }}
-BOOST_CLASS_VERSION(navitia::type::MetaData, navitia::type::MetaData::data_version)

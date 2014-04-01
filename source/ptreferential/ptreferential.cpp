@@ -17,6 +17,7 @@
 #include <boost/spirit/include/phoenix_stl.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/home/phoenix/object/construct.hpp>
+#include "type/pt_data.h"
 
 
 namespace navitia{ namespace ptref{
@@ -107,9 +108,9 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             }
             std::vector<std::pair<idx_t, GeographicalCoord> > tmp;
             switch(filter.navitia_type){
-            case Type_e::StopPoint: tmp = d.pt_data.stop_point_proximity_list.find_within(coord, distance); break;
-            case Type_e::StopArea: tmp = d.pt_data.stop_area_proximity_list.find_within(coord, distance);break;
-            case Type_e::POI: tmp = d.geo_ref.poi_proximity_list.find_within(coord, distance);break;
+            case Type_e::StopPoint: tmp = d.pt_data->stop_point_proximity_list.find_within(coord, distance); break;
+            case Type_e::StopArea: tmp = d.pt_data->stop_area_proximity_list.find_within(coord, distance);break;
+            case Type_e::POI: tmp = d.geo_ref->poi_proximity_list.find_within(coord, distance);break;
             default: throw ptref_error("The requested object can not be used a DWITHIN clause");
             }
             for(auto pair : tmp) {
@@ -126,7 +127,7 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
 
         //On ajoute à indexes tous les journey_patterns qui sont apres
         for(auto first_jpp : tmp_indexes) {
-            auto jpp = d.pt_data.journey_pattern_points[first_jpp];
+            auto jpp = d.pt_data->journey_pattern_points[first_jpp];
             for(auto other_jpp : jpp->journey_pattern->journey_pattern_point_list) {
                 if(other_jpp->order > jpp->order) {
                     indexes.push_back(other_jpp->idx);
@@ -253,14 +254,14 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         throw ptref_error("Filters: Unable to find object");
     }
     auto sort_networks = [&](type::idx_t n1_, type::idx_t n2_) {
-        const Network & n1 = *(data.pt_data.networks[n1_]);
-        const Network & n2 = *(data.pt_data.networks[n2_]);
+        const Network & n1 = *(data.pt_data->networks[n1_]);
+        const Network & n2 = *(data.pt_data->networks[n2_]);
         return n1 < n2;
     };
 
     auto sort_lines = [&](type::idx_t l1_, type::idx_t l2_) {
-        const Line & l1 = *(data.pt_data.lines[l1_]);
-        const Line & l2 = *(data.pt_data.lines[l2_]);
+        const Line & l1 = *(data.pt_data->lines[l1_]);
+        const Line & l2 = *(data.pt_data->lines[l2_]);
         return l1 < l2;
     };
 

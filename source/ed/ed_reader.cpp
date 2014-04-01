@@ -1,5 +1,7 @@
 #include "ed_reader.h"
 #include "ed/connectors/fare_utils.h"
+#include "type/meta_data.h"
+#include <boost/foreach.hpp>
 
 namespace ed{
 
@@ -90,9 +92,9 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
         admin->coord.set_lon(const_it["lon"].as<double>());
         admin->coord.set_lat(const_it["lat"].as<double>());
 
-        admin->idx = nav_data.geo_ref.admins.size();
+        admin->idx = nav_data.geo_ref->admins.size();
 
-        nav_data.geo_ref.admins.push_back(admin);
+        nav_data.geo_ref->admins.push_back(admin);
         this->admin_map[const_it["id"].as<idx_t>()] = admin;
     }
 
@@ -106,7 +108,7 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     //on ajoute un jour car "end" n'est pas inclus dans la période
     bg::date end = bg::from_string(const_it["end_date"].as<std::string>()) + bg::days(1);
 
-    nav_data.meta.production_date = bg::date_period(begin, end);
+    nav_data.meta->production_date = bg::date_period(begin, end);
     request = "SELECT ST_AsText(ST_MakeEnvelope("
               "(select min(ST_X(coord::geometry)) from georef.node),"
               "(select min(ST_Y(coord::geometry)) from georef.node),"
@@ -115,7 +117,7 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
               "4326)) as shape;";
     result = work.exec(request);
     const_it = result.begin();
-    const_it["shape"].to(nav_data.meta.shape);
+    const_it["shape"].to(nav_data.meta->shape);
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
@@ -130,9 +132,9 @@ void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
         const_it["sort"].to(network->sort);
         const_it["website"].to(network->website);
 
-        network->idx = data.pt_data.networks.size();
+        network->idx = data.pt_data->networks.size();
 
-        data.pt_data.networks.push_back(network);
+        data.pt_data->networks.push_back(network);
         this->network_map[const_it["id"].as<idx_t>()] = network;
     }
 }
@@ -146,9 +148,9 @@ void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
         const_it["uri"].to(mode->uri);
         const_it["name"].to(mode->name);
 
-        mode->idx = data.pt_data.commercial_modes.size();
+        mode->idx = data.pt_data->commercial_modes.size();
 
-        data.pt_data.commercial_modes.push_back(mode);
+        data.pt_data->commercial_modes.push_back(mode);
         this->commercial_mode_map[const_it["id"].as<idx_t>()] = mode;
     }
 }
@@ -162,9 +164,9 @@ void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
         const_it["uri"].to(mode->uri);
         const_it["name"].to(mode->name);
 
-        mode->idx = data.pt_data.physical_modes.size();
+        mode->idx = data.pt_data->physical_modes.size();
 
-        data.pt_data.physical_modes.push_back(mode);
+        data.pt_data->physical_modes.push_back(mode);
         this->physical_mode_map[const_it["id"].as<idx_t>()] = mode;
     }
 }
@@ -178,9 +180,9 @@ void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
         const_it["uri"].to(contributor->uri);
         const_it["name"].to(contributor->name);
 
-        contributor->idx = data.pt_data.contributors.size();
+        contributor->idx = data.pt_data->contributors.size();
 
-        data.pt_data.contributors.push_back(contributor);
+        data.pt_data->contributors.push_back(contributor);
         this->contributor_map[const_it["id"].as<idx_t>()] = contributor;
     }
 }
@@ -196,9 +198,9 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
         const_it["comment"].to(company->comment);
         const_it["website"].to(company->website);
 
-        company->idx = data.pt_data.companies.size();
+        company->idx = data.pt_data->companies.size();
 
-        data.pt_data.companies.push_back(company);
+        data.pt_data->companies.push_back(company);
         this->company_map[const_it["id"].as<idx_t>()] = company;
     }
 }
@@ -257,9 +259,9 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
             sa->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
         }
 
-        sa->idx = data.pt_data.stop_areas.size();
+        sa->idx = data.pt_data->stop_areas.size();
 
-        data.pt_data.stop_areas.push_back(sa);
+        data.pt_data->stop_areas.push_back(sa);
         this->stop_area_map[const_it["id"].as<idx_t>()] = sa;
     }
 }
@@ -322,7 +324,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
         sp->stop_area = stop_area_map[const_it["stop_area_id"].as<idx_t>()];
         sp->stop_area->stop_point_list.push_back(sp);
 
-        data.pt_data.stop_points.push_back(sp);
+        data.pt_data->stop_points.push_back(sp);
         this->stop_point_map[const_it["id"].as<idx_t>()] = sp;
     }
 }
@@ -347,7 +349,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         line->commercial_mode = commercial_mode_map[const_it["commercial_mode_id"].as<idx_t>()];
         line->commercial_mode->line_list.push_back(line);
 
-        data.pt_data.lines.push_back(line);
+        data.pt_data->lines.push_back(line);
         this->line_map[const_it["id"].as<idx_t>()] = line;
     }
 }
@@ -366,7 +368,7 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
         route->line = line_map[const_it["line_id"].as<idx_t>()];
         route->line->route_list.push_back(route);
 
-        data.pt_data.routes.push_back(route);
+        data.pt_data->routes.push_back(route);
         this->route_map[const_it["id"].as<idx_t>()] = route;
     }
 }
@@ -393,7 +395,7 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
         // get commercial mode from the line of the route of the journey_pattern
         journey_pattern->commercial_mode = journey_pattern->route->line->commercial_mode;
 
-        data.pt_data.journey_patterns.push_back(journey_pattern);
+        data.pt_data->journey_patterns.push_back(journey_pattern);
         this->journey_pattern_map[const_it["id"].as<idx_t>()] = journey_pattern;
     }
 }
@@ -415,9 +417,9 @@ void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
 
         jpp->stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
 
-        jpp->idx = data.pt_data.journey_pattern_points.size();
+        jpp->idx = data.pt_data->journey_pattern_points.size();
 
-        data.pt_data.journey_pattern_points.push_back(jpp);
+        data.pt_data->journey_pattern_points.push_back(jpp);
         this->journey_pattern_point_map[const_it["id"].as<idx_t>()] = jpp;
     }
 }
@@ -429,11 +431,11 @@ void EdReader::fill_validity_patterns(nt::Data& data, pqxx::work& work){
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::ValidityPattern* validity_pattern = NULL;
-        validity_pattern = new nt::ValidityPattern(data.meta.production_date.begin(), const_it["days"].as<std::string>());
+        validity_pattern = new nt::ValidityPattern(data.meta->production_date.begin(), const_it["days"].as<std::string>());
 
-        validity_pattern->idx = data.pt_data.validity_patterns.size();
+        validity_pattern->idx = data.pt_data->validity_patterns.size();
 
-        data.pt_data.validity_patterns.push_back(validity_pattern);
+        data.pt_data->validity_patterns.push_back(validity_pattern);
         this->validity_pattern_map[const_it["id"].as<idx_t>()] = validity_pattern;
     }
 }
@@ -501,7 +503,7 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
                 stop_point_connection->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
             }
 
-            data.pt_data.stop_point_connections.push_back(stop_point_connection);
+            data.pt_data->stop_point_connections.push_back(stop_point_connection);
 
             //add the connection in the stop points
             stop_point_connection->departure->stop_point_connection_list.push_back(stop_point_connection);
@@ -528,7 +530,7 @@ void EdReader::fill_journey_pattern_point_connections(nt::Data& data, pqxx::work
             jppc->destination = it_destination->second;
             jppc->connection_type = static_cast<nt::ConnectionType>(const_it["connection_kind_id"].as<int>());
             jppc->duration = const_it["length"].as<int>();
-            data.pt_data.journey_pattern_point_connections.push_back(jppc);
+            data.pt_data->journey_pattern_point_connections.push_back(jppc);
         }
     }
 }
@@ -602,7 +604,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         if (const_it["school_vehicle"].as<bool>()){
             vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
         }
-        data.pt_data.vehicle_journeys.push_back(vj);
+        data.pt_data->vehicle_journeys.push_back(vj);
         this->vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
     }
 }
@@ -639,7 +641,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         auto vj = vehicle_journey_map[const_it["vehicle_journey_id"].as<idx_t>()];
         vj->stop_time_list.push_back(stop);
         stop->vehicle_journey = vj;
-        data.pt_data.stop_times.push_back(stop);
+        data.pt_data->stop_times.push_back(stop);
     }
 
 }
@@ -652,8 +654,8 @@ void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
         const_it["uri"].to(poi_type->uri);
         const_it["name"].to(poi_type->name);
         const_it["id"].to(poi_type->id);
-        poi_type->idx = data.geo_ref.poitypes.size();
-        data.geo_ref.poitypes.push_back(poi_type);
+        poi_type->idx = data.geo_ref->poitypes.size();
+        data.geo_ref->poitypes.push_back(poi_type);
         this->poi_type_map[const_it["id"].as<idx_t>()] = poi_type;
     }
 }
@@ -679,8 +681,8 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
             poi->poitype_idx = poi_type->idx;
         }
         this->poi_map[const_it["id"].as<idx_t>()] = poi;
-        poi->idx = data.geo_ref.pois.size();
-        data.geo_ref.pois.push_back(poi);
+        poi->idx = data.geo_ref->pois.size();
+        data.geo_ref->pois.push_back(poi);
     }
 }
 
@@ -697,10 +699,10 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
         const_it["uri"].to(way->uri);
         const_it["name"].to(way->name);
         way->id = id;
-        way->idx = data.geo_ref.ways.size();
+        way->idx = data.geo_ref->ways.size();
 
         const_it["type"].to(way->way_type);
-        data.geo_ref.ways.push_back(way);
+        data.geo_ref->ways.push_back(way);
         this->way_map[const_it["id"].as<idx_t>()] = way;
     }
 }
@@ -814,7 +816,6 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         if (way_nb_edges[e] > 1) {
             way_nb_edges[e] --;
         } else {
-            assert(way_nb_edges[e] == 0); //we should not remove more edge than it got
             //it was the last edge of the way, we add it to the ignore list
             way_to_ignore.insert(e);
         }
@@ -840,11 +841,11 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::Vertex v;
         v.coord.set_lon(const_it["lon"].as<double>());
         v.coord.set_lat(const_it["lat"].as<double>());
-        boost::add_vertex(v, data.geo_ref.graph);
+        boost::add_vertex(v, data.geo_ref->graph);
         this->node_map[id] = idx;
         idx++;
     }
-    data.geo_ref.init();
+    data.geo_ref->init();
 }
 
 void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
@@ -884,16 +885,16 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
         //TODO et les pietons ??!
 
         e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
-        boost::add_edge(source, target, e, data.geo_ref.graph);
+        boost::add_edge(source, target, e, data.geo_ref->graph);
         if (const_it["bike"].as<bool>()) {
             e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
-            boost::add_edge(data.geo_ref.offsets[nt::Mode_e::Bike] + source,
-                 data.geo_ref.offsets[nt::Mode_e::Bike] + target, e, data.geo_ref.graph);
+            boost::add_edge(data.geo_ref->offsets[nt::Mode_e::Bike] + source,
+                 data.geo_ref->offsets[nt::Mode_e::Bike] + target, e, data.geo_ref->graph);
         }
         if (const_it["car"].as<bool>()) {
             e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Car]);
-            boost::add_edge(data.geo_ref.offsets[nt::Mode_e::Car] + source,
-                data.geo_ref.offsets[nt::Mode_e::Car] + target, e, data.geo_ref.graph);
+            boost::add_edge(data.geo_ref->offsets[nt::Mode_e::Car] + source,
+                data.geo_ref->offsets[nt::Mode_e::Car] + target, e, data.geo_ref->graph);
         }
     }
 
@@ -901,23 +902,23 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_edges_no_way << " edges have an unkown way");
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref.graph) << " edges added");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref->graph) << " edges added");
 }
 
 //get the minimum distance and the vertex to start from between 2 edges
 std::tuple<float, navitia::georef::vertex_t, navitia::georef::vertex_t>
 get_min_distance(navitia::type::Data& data, navitia::georef::edge_t walking_e, navitia::georef::edge_t biking_e) {
-    navitia::georef::vertex_t source_a_idx = boost::source(walking_e, data.geo_ref.graph);
-    navitia::georef::Vertex source_a = data.geo_ref.graph[source_a_idx];
+    navitia::georef::vertex_t source_a_idx = boost::source(walking_e, data.geo_ref->graph);
+    navitia::georef::Vertex source_a = data.geo_ref->graph[source_a_idx];
 
-    navitia::georef::vertex_t target_a_idx = boost::target(walking_e, data.geo_ref.graph);
-    navitia::georef::Vertex target_a = data.geo_ref.graph[target_a_idx];
+    navitia::georef::vertex_t target_a_idx = boost::target(walking_e, data.geo_ref->graph);
+    navitia::georef::Vertex target_a = data.geo_ref->graph[target_a_idx];
 
-    navitia::georef::vertex_t source_b_idx = boost::source(biking_e, data.geo_ref.graph);
-    navitia::georef::Vertex source_b = data.geo_ref.graph[source_b_idx];
+    navitia::georef::vertex_t source_b_idx = boost::source(biking_e, data.geo_ref->graph);
+    navitia::georef::Vertex source_b = data.geo_ref->graph[source_b_idx];
 
-    navitia::georef::vertex_t target_b_idx = boost::target(biking_e, data.geo_ref.graph);
-    navitia::georef::Vertex target_b = data.geo_ref.graph[target_b_idx];
+    navitia::georef::vertex_t target_b_idx = boost::target(biking_e, data.geo_ref->graph);
+    navitia::georef::Vertex target_b = data.geo_ref->graph[target_b_idx];
 
     auto res = std::make_tuple(source_a.coord.distance_to(source_b.coord), source_a_idx, source_b_idx);
     auto tmp = std::make_tuple(target_a.coord.distance_to(target_b.coord), target_a_idx, target_b_idx);
@@ -936,7 +937,7 @@ get_min_distance(navitia::type::Data& data, navitia::georef::edge_t walking_e, n
 }
 
 void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
-    data.geo_ref.build_proximity_list();
+    data.geo_ref->build_proximity_list();
     std::string request = "SELECT poi.id as id, ST_X(poi.coord::geometry) as lon,";
                 request += "ST_Y(poi.coord::geometry) as lat";
                 request += " FROM navitia.poi poi, navitia.poi_type poi_type";
@@ -952,8 +953,8 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::edge_t nearest_biking_edge, nearest_walking_edge;
         try {
             //we need to find the nearest edge in the walking graph and the nearest edge in the biking graph
-            nearest_biking_edge = data.geo_ref.nearest_edge(coord, navitia::type::Mode_e::Bike, data.geo_ref.pl);
-            nearest_walking_edge = data.geo_ref.nearest_edge(coord, navitia::type::Mode_e::Walking, data.geo_ref.pl);
+            nearest_biking_edge = data.geo_ref->nearest_edge(coord, navitia::type::Mode_e::Bike, data.geo_ref->pl);
+            nearest_walking_edge = data.geo_ref->nearest_edge(coord, navitia::type::Mode_e::Walking, data.geo_ref->pl);
         } catch(navitia::proximitylist::NotFound) {
              LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "Impossible to find the nearest edge for the bike sharing station poi_id = " << const_it["id"].as<std::string>());
             continue;
@@ -966,15 +967,15 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
         boost::posix_time::time_duration dur_between_edges = boost::posix_time::seconds(std::get<0>(min_dist) / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
 
         navitia::georef::Edge edge;
-        edge.way_idx = data.geo_ref.graph[nearest_walking_edge].way_idx; //arbitrarily we assume the way is the walking way
+        edge.way_idx = data.geo_ref->graph[nearest_walking_edge].way_idx; //arbitrarily we assume the way is the walking way
 
         // time needed to take the bike + time to walk between the edges
         edge.duration = dur_between_edges + navitia::georef::default_time_bss_pickup;
-        boost::add_edge(walking_v, biking_v, edge, data.geo_ref.graph);
+        boost::add_edge(walking_v, biking_v, edge, data.geo_ref->graph);
 
         // time needed to hang the bike back + time to walk between the edges
         edge.duration = dur_between_edges + navitia::georef::default_time_bss_putback;
-        boost::add_edge(biking_v, walking_v, edge, data.geo_ref.graph);
+        boost::add_edge(biking_v, walking_v, edge, data.geo_ref->graph);
         cpt_bike_sharing++;
     }
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_bike_sharing << " bike sharing stations added");
@@ -987,7 +988,7 @@ void EdReader::fill_alias(navitia::type::Data& data, pqxx::work& work){
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         const_it["key"].to(key);
         const_it["value"].to(value);
-        data.geo_ref.alias[key]=value;
+        data.geo_ref->alias[key]=value;
     }
 }
 
@@ -998,7 +999,7 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         const_it["key"].to(key);
         const_it["value"].to(value);
-        data.geo_ref.synonymes[key]=value;
+        data.geo_ref->synonymes[key]=value;
     }
 }
 
@@ -1020,7 +1021,7 @@ void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
         bg::date start = bg::from_string(const_it["valid_from"].as<std::string>());
         bg::date end = bg::from_string(const_it["valid_to"].as<std::string>());
 
-        nf::DateTicket& date_ticket = data.fare.fare_map[ticket.key];
+        nf::DateTicket& date_ticket = data.fare->fare_map[ticket.key];
 
         date_ticket.add(start, end, ticket);
     }
@@ -1030,7 +1031,7 @@ void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
     //we build the transition graph
     std::map<nf::State, nf::Fare::vertex_t> state_map;
     nf::State begin; // Start is an empty node (and the node is already is the fare graph, since it has been added in the constructor with the default ticket)
-    state_map[begin] = data.fare.begin_v;
+    state_map[begin] = data.fare->begin_v;
 
     std::string request = "select id, before_change, after_change, start_trip, "
         "end_trip, global_condition, ticket_id from navitia.transition ";
@@ -1057,19 +1058,19 @@ void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
 
         nf::Fare::vertex_t start_v, end_v;
         if(state_map.find(start) == state_map.end()){
-            start_v = boost::add_vertex(start, data.fare.g);
+            start_v = boost::add_vertex(start, data.fare->g);
             state_map[start] = start_v;
         }
         else start_v = state_map[start];
 
         if(state_map.find(end) == state_map.end()) {
-            end_v = boost::add_vertex(end, data.fare.g);
+            end_v = boost::add_vertex(end, data.fare->g);
             state_map[end] = end_v;
         }
         else end_v = state_map[end];
 
         //add the edge the the fare graph
-        boost::add_edge(start_v, end_v, transition, data.fare.g);
+        boost::add_edge(start_v, end_v, transition, data.fare->g);
     }
 }
 
@@ -1086,7 +1087,7 @@ void EdReader::fill_origin_destinations(navitia::type::Data& data, pqxx::work& w
         nf::OD_key destination(destination_mode, const_it["destination_id"].as<std::string>());
 
         std::string ticket = const_it["ticket_id"].as<std::string>();
-        data.fare.od_tickets[origin][destination].push_back(ticket);
+        data.fare->od_tickets[origin][destination].push_back(ticket);
     }
 }
 
@@ -1098,7 +1099,7 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
                 "where cal.week_pattern_id = wp.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta.production_date.begin());
+        navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta->production_date.begin());
         const_it["id"].to(cal->id);
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
@@ -1110,7 +1111,7 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
         cal->week_pattern[navitia::Saturday] = const_it["saturday"].as<bool>();
         cal->week_pattern[navitia::Sunday] = const_it["sunday"].as<bool>();
 
-        data.pt_data.calendars.push_back(cal);
+        data.pt_data->calendars.push_back(cal);
         calendar_map[const_it["id"].as<idx_t>()] = cal;
     }
 }
@@ -1198,7 +1199,7 @@ void EdReader::check_coherence(navitia::type::Data& data) const {
     auto log = log4cplus::Logger::getInstance("log");
     //check not associated lines
     size_t non_associated_lines(0);
-    for (navitia::type::Line* line: data.pt_data.lines) {
+    for (navitia::type::Line* line: data.pt_data->lines) {
         if (line->calendar_list.empty()) {
             LOG4CPLUS_DEBUG(log, "the line " << line->uri << " is not associated with any calendar");
             non_associated_lines++;
@@ -1206,7 +1207,7 @@ void EdReader::check_coherence(navitia::type::Data& data) const {
     }
     if (non_associated_lines) {
         LOG4CPLUS_WARN(log, non_associated_lines << " lines are not associated with any calendar (and "
-                        << (data.pt_data.lines.size() - non_associated_lines) << " are associated with at least one");
+                        << (data.pt_data->lines.size() - non_associated_lines) << " are associated with at least one");
     }
 }
 

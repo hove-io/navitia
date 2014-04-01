@@ -39,13 +39,13 @@ struct RAPTOR
     queue_t Q;
 
     //Constructeur
-    RAPTOR(const navitia::type::Data &data) :  
-        data(data), best_labels(data.pt_data.journey_pattern_points.size()), count(0),
-        marked_rp(data.pt_data.journey_pattern_points.size()),
-        marked_sp(data.pt_data.stop_points.size()),
-        journey_patterns_valides(data.pt_data.journey_patterns.size()),
-        Q(data.pt_data.journey_patterns.size()) {
-            labels.assign(20, data.dataRaptor.labels_const);
+    RAPTOR(const navitia::type::Data &data) :
+        data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
+        marked_rp(data.pt_data->journey_pattern_points.size()),
+        marked_sp(data.pt_data->stop_points.size()),
+        journey_patterns_valides(data.pt_data->journey_patterns.size()),
+        Q(data.pt_data->journey_patterns.size()) {
+            labels.assign(20, data.dataRaptor->labels_const);
     }
 
 

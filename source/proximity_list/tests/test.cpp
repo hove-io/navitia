@@ -6,6 +6,7 @@
 #include "proximity_list/proximitylist_api.h"
 #include "type/data.h"
 #include "georef/georef.h"
+#include "type/pt_data.h"
 
 using namespace navitia::type;
 using namespace navitia::proximitylist;
@@ -145,13 +146,13 @@ BOOST_AUTO_TEST_CASE(test_api) {
     sa->coord.set_lon(-1.554514);
     sa->coord.set_lat(47.218515);
     sa->idx = 0;
-    data.pt_data.stop_areas.push_back(sa);
+    data.pt_data->stop_areas.push_back(sa);
     sa = new navitia::type::StopArea();
     sa->coord.set_lon(-1.554384);
     sa->coord.set_lat(47.217804);
     sa->idx = 1;
-    data.pt_data.stop_areas.push_back(sa);
-    data.geo_ref.init();
+    data.pt_data->stop_areas.push_back(sa);
+    data.geo_ref->init();
     data.build_proximity_list();
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
@@ -165,7 +166,7 @@ BOOST_AUTO_TEST_CASE(test_api) {
     sa->coord.set_lon(-1.556949);
     sa->coord.set_lat(47.217231);
     sa->idx = 2;
-    data.pt_data.stop_areas.push_back(sa);
+    data.pt_data->stop_areas.push_back(sa);
     data.build_proximity_list();
     result.Clear();
     result = find(c, 200,
@@ -181,13 +182,13 @@ BOOST_AUTO_TEST_CASE(test_api_type) {
     sa->coord.set_lon(-1.554514);
     sa->coord.set_lat(47.218515);
     sa->idx = 0;
-    data.pt_data.stop_areas.push_back(sa);
+    data.pt_data->stop_areas.push_back(sa);
 
     auto poi  = new navitia::georef::POI();
     poi->coord.set_lon(-1.554514);
     poi->coord.set_lat(47.218515);
-    data.geo_ref.pois.push_back(poi);
-    data.geo_ref.init();
+    data.geo_ref->pois.push_back(poi);
+    data.geo_ref->init();
     data.build_proximity_list();
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
@@ -206,7 +207,7 @@ BOOST_AUTO_TEST_CASE(test_filter) {
     sa->coord.set_lat(47.218515);
     sa->idx = 0;
     sa->name = "pouet";
-    data.pt_data.stop_areas.push_back(sa);
+    data.pt_data->stop_areas.push_back(sa);
     data.build_proximity_list();
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);

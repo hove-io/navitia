@@ -42,11 +42,11 @@ public:
         b.vj("network:M","line:M","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.vj("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.generate_dummy_basis();
-        b.data.pt_data.index();
-        for(navitia::type::Line *line : b.data.pt_data.lines){
+        b.data.pt_data->index();
+        for(navitia::type::Line *line : b.data.pt_data->lines){
             line->network->line_list.push_back(line);
         }
-        navitia::type::Line* line =  b.data.pt_data.lines[0];
+        navitia::type::Line* line =  b.data.pt_data->lines[0];
         boost::shared_ptr<navitia::type::Message> message;
         message = boost::make_shared<navitia::type::Message>();
         message->uri = "mess1";
@@ -61,7 +61,7 @@ public:
         message->application_daily_end_hour = pt::duration_from_string("23:59");
         line->messages.push_back(message);
 
-        line =  b.data.pt_data.lines[1];
+        line =  b.data.pt_data->lines[1];
         message = boost::make_shared<navitia::type::Message>();
         message->uri = "mess0";
         message->object_uri="line:S";
@@ -75,7 +75,7 @@ public:
         message->application_daily_end_hour = pt::duration_from_string("23:59");
         line->messages.push_back(message);
 
-        line =  b.data.pt_data.lines[2];
+        line =  b.data.pt_data->lines[2];
         message = boost::make_shared<navitia::type::Message>();
         message->uri = "mess2";
         message->object_uri="line:B";
@@ -89,7 +89,7 @@ public:
         message->application_daily_end_hour = pt::duration_from_string("23:59");
         line->messages.push_back(message);
 
-        line =  b.data.pt_data.lines[3];
+        line =  b.data.pt_data->lines[3];
         message = boost::make_shared<navitia::type::Message>();
         message->uri = "mess3";
         message->object_uri="network:M";
@@ -105,7 +105,7 @@ public:
 
         /// Cette ligne est pour effectuer les tests : Test1, ..., test5
 
-        line =  b.data.pt_data.lines[4];
+        line =  b.data.pt_data->lines[4];
         message = boost::make_shared<navitia::type::Message>();
         message->uri = "mess4";
         message->object_uri="network:Test";
