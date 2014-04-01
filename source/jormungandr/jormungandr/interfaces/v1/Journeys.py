@@ -428,11 +428,11 @@ class Journeys(ResourceUri):
                                 dest="max_transfers")
         parser_get.add_argument("first_section_mode",
                                 type=option_value(modes),
-                                default=["walking", "bike", "car"],
+                                default=["bss"],
                                 dest="origin_mode", action="append")
         parser_get.add_argument("last_section_mode",
                                 type=option_value(modes),
-                                default=["walking", "bike", "car"],
+                                default=["bss"],
                                 dest="destination_mode", action="append")
         parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
                                 description="maximal duration of non public \
