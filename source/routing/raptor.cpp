@@ -16,8 +16,8 @@ RAPTOR::journey_pattern_path_connections(const Visitor & visitor/*,
                                          const std::bitset<7> & required_properties*/) {
     std::vector<type::idx_t> to_mark;
     for(auto jpp_departure_idx = marked_rp.find_first(); jpp_departure_idx != marked_rp.npos; jpp_departure_idx = marked_rp.find_next(jpp_departure_idx)) {
-        const auto* jpp_departure = data.pt_data.journey_pattern_points[jpp_departure_idx];
-        BOOST_FOREACH(auto &idx_rpc, data.dataRaptor.footpath_rp(visitor.clockwise()).equal_range(jpp_departure_idx)) {
+        const auto* jpp_departure = data.pt_data->journey_pattern_points[jpp_departure_idx];
+        BOOST_FOREACH(auto &idx_rpc, data.dataRaptor->footpath_rp(visitor.clockwise()).equal_range(jpp_departure_idx)) {
             const auto & rpc = idx_rpc.second;
             const type::JourneyPatternPoint* jpp = rpc->*visitor.journey_pattern_point();
 
@@ -35,7 +35,7 @@ RAPTOR::journey_pattern_path_connections(const Visitor & visitor/*,
 
     for(auto rp : to_mark) {
         marked_rp.set(rp);
-        const auto* journey_pattern_point = data.pt_data.journey_pattern_points[rp];
+        const auto* journey_pattern_point = data.pt_data->journey_pattern_points[rp];
         if(visitor.comp(journey_pattern_point->order, Q[journey_pattern_point->journey_pattern->idx]) ) {
             Q[journey_pattern_point->journey_pattern->idx] = journey_pattern_point->order;
         }
@@ -47,14 +47,14 @@ template<typename Visitor>
 void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_properties) {
 
     int last = 0;
-    const auto foot_path_list = v.clockwise() ? data.dataRaptor.foot_path_forward :
-                                                data.dataRaptor.foot_path_backward;
+    const auto foot_path_list = v.clockwise() ? data.dataRaptor->foot_path_forward :
+                                                data.dataRaptor->foot_path_backward;
     auto it = foot_path_list.begin();
     auto &current_labels = labels[count];
     for(auto stop_point_idx = marked_sp.find_first(); stop_point_idx != marked_sp.npos;
         stop_point_idx = marked_sp.find_next(stop_point_idx)) {
         //On cherche le meilleur jpp du stop point
-        const type::StopPoint* stop_point = data.pt_data.stop_points[stop_point_idx];
+        const type::StopPoint* stop_point = data.pt_data->stop_points[stop_point_idx];
         if(stop_point->accessible(required_properties)) {
             DateTime best_arrival = v.worst_datetime();
             type::idx_t best_jpp = type::invalid_idx;
@@ -79,7 +79,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                     type::idx_t jpp_idx = jpp->idx;
                     if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx]) && !b_dest.is_eligible_solution(jpp_idx)) {
                        current_labels[jpp_idx].dt = best_departure;
-                       current_labels[jpp_idx].boarding = data.pt_data.journey_pattern_points[best_jpp];
+                       current_labels[jpp_idx].boarding = data.pt_data->journey_pattern_points[best_jpp];
                        current_labels[jpp_idx].type = boarding_type::connection;
                        best_labels[jpp_idx] = best_departure;
 
@@ -90,8 +90,8 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                 }
                 //On va maintenant chercher toutes les connexions et on marque tous les journey_pattern_points concernés
                 //On récupère l'index dans les footpath
-                const pair_int & index = (v.clockwise()) ? data.dataRaptor.footpath_index_forward[stop_point_idx] :
-                                                         data.dataRaptor.footpath_index_backward[stop_point_idx];
+                const pair_int & index = (v.clockwise()) ? data.dataRaptor->footpath_index_forward[stop_point_idx] :
+                                                         data.dataRaptor->footpath_index_backward[stop_point_idx];
                 //int prec_duration = -1;
                 DateTime next = v.worst_datetime(),
                          previous = current_labels[best_jpp].dt;
@@ -108,7 +108,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                             if(best_jpp != destination_jpp_idx && !b_dest.is_eligible_solution(destination_jpp_idx)) {
                                 if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
                                     current_labels[destination_jpp_idx].dt = next;
-                                    current_labels[destination_jpp_idx].boarding = data.pt_data.journey_pattern_points[best_jpp];
+                                    current_labels[destination_jpp_idx].boarding = data.pt_data->journey_pattern_points[best_jpp];
                                     current_labels[destination_jpp_idx].type = boarding_type::connection;
                                     best_labels[destination_jpp_idx] = next;
 
@@ -128,23 +128,23 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 
 void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
     if(clockwise) {
-        //Q.assign(data.pt_data.journey_patterns.size(), std::numeric_limits<int>::max());
-        memset32<int>(&Q[0], data.pt_data.journey_patterns.size(), std::numeric_limits<int>::max());
+        //Q.assign(data.pt_data->journey_patterns.size(), std::numeric_limits<int>::max());
+        memset32<int>(&Q[0], data.pt_data->journey_patterns.size(), std::numeric_limits<int>::max());
         labels.resize(1);
-        labels[0] = data.dataRaptor.labels_const;
+        labels[0] = data.dataRaptor->labels_const;
     } else {
-        //Q.assign(data.pt_data.journey_patterns.size(), -1);
-        memset32<int>(&Q[0], data.pt_data.journey_patterns.size(), -1);
+        //Q.assign(data.pt_data->journey_patterns.size(), -1);
+        memset32<int>(&Q[0], data.pt_data->journey_patterns.size(), -1);
         labels.resize(1);
-        labels[0] = data.dataRaptor.labels_const_reverse;
+        labels[0] = data.dataRaptor->labels_const_reverse;
     }
 
-    b_dest.reinit(data.pt_data.journey_pattern_points.size(), borne);
+    b_dest.reinit(data.pt_data->journey_pattern_points.size(), borne);
     this->make_queue();
     if(clockwise)
-        best_labels.assign(data.pt_data.journey_pattern_points.size(), DateTimeUtils::inf);
+        best_labels.assign(data.pt_data->journey_pattern_points.size(), DateTimeUtils::inf);
     else
-        best_labels.assign(data.pt_data.journey_pattern_points.size(), DateTimeUtils::min);
+        best_labels.assign(data.pt_data->journey_pattern_points.size(), DateTimeUtils::min);
 }
 
 void RAPTOR::clear_and_init(std::vector<Departure_Type> departs,
@@ -155,7 +155,7 @@ void RAPTOR::clear_and_init(std::vector<Departure_Type> departs,
     this->clear(data, clockwise, bound);
 
     for(Departure_Type item : departs) {
-        const type::JourneyPatternPoint* journey_pattern_point = data.pt_data.journey_pattern_points[item.rpidx];
+        const type::JourneyPatternPoint* journey_pattern_point = data.pt_data->journey_pattern_points[item.rpidx];
         const type::StopPoint* stop_point = journey_pattern_point->stop_point;
         if(stop_point->accessible(required_properties)) {
             labels[0][item.rpidx].dt = item.arrival;
@@ -173,7 +173,7 @@ void RAPTOR::clear_and_init(std::vector<Departure_Type> departs,
     }
 
     for(auto item : destinations) {
-        const type::StopPoint* sp = data.pt_data.stop_points[item.first];
+        const type::StopPoint* sp = data.pt_data->stop_points[item.first];
         if(sp->accessible(required_properties)) {
             for(auto journey_pattern_point : sp->journey_pattern_point_list) {
                 type::idx_t jppidx = journey_pattern_point->idx;
@@ -251,12 +251,12 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, bt::time_duration> > 
 void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden, bool disruption_active) {
 
     if(disruption_active){
-        journey_patterns_valides = data.dataRaptor.jp_adapted_validity_pattern[date];
+        journey_patterns_valides = data.dataRaptor->jp_adapted_validity_pattern[date];
     }else{
-        journey_patterns_valides = data.dataRaptor.jp_validity_patterns[date];
+        journey_patterns_valides = data.dataRaptor->jp_validity_patterns[date];
     }
-    boost::dynamic_bitset<> forbidden_journey_patterns(data.pt_data.journey_patterns.size());
-    for(const type::JourneyPattern* journey_pattern : data.pt_data.journey_patterns) {
+    boost::dynamic_bitset<> forbidden_journey_patterns(data.pt_data->journey_patterns.size());
+    for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
         const type::Line* line = journey_pattern->route->line;
         // On gère la liste des interdits
         for(auto forbid_uri : forbidden){
@@ -362,16 +362,16 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
         end = true;
         if(count == labels.size()) {
             if(visitor.clockwise()) {
-                this->labels.push_back(this->data.dataRaptor.labels_const);
+                this->labels.push_back(this->data.dataRaptor->labels_const);
             } else {
-                this->labels.push_back(this->data.dataRaptor.labels_const_reverse);
+                this->labels.push_back(this->data.dataRaptor->labels_const_reverse);
             }
-       	}
+        }
         const auto & prec_labels=labels[count -1];
         auto & working_labels = labels[this->count];
         this->make_queue();
 
-        for(const auto & journey_pattern : data.pt_data.journey_patterns) {
+        for(const auto & journey_pattern : data.pt_data->journey_patterns) {
             if(Q[journey_pattern->idx] != std::numeric_limits<int>::max()
                     && Q[journey_pattern->idx] != -1
                     && journey_patterns_valides.test(journey_pattern->idx)) {
@@ -380,7 +380,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                 workingDt = visitor.worst_datetime();
                 typename Visitor::stop_time_iterator it_st;
                 const auto & jpp_to_explore = visitor.journey_pattern_points(
-                                                this->data.pt_data.journey_pattern_points,
+                                                this->data.pt_data->journey_pattern_points,
                                                 journey_pattern,Q[journey_pattern->idx]);
                 BOOST_FOREACH(const type::JourneyPatternPoint* jpp, jpp_to_explore) {
                     if(!jpp->stop_point->accessible(accessibilite_params.properties)) {

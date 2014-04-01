@@ -152,7 +152,7 @@ impact-3
                                                                    ("stop_area:stopP2", 23 * 3600 + 10 * 60 ,23 * 3600 + 10 * 60)
                                                                    ("stop_area:stopP3", 24 * 3600 + 10 * 60 ,24 * 3600 + 10 * 60);
 
-        navitia::type::VehicleJourney* vj2 =  b.data.pt_data.vehicle_journeys[1];
+        navitia::type::VehicleJourney* vj2 =  b.data.pt_data->vehicle_journeys[1];
         //Impact-1 on vj2 from 2014-01-14 08:32:00 à 08h40 to 2014-01-14 18:32:00 à 18h00
         boost::shared_ptr<navitia::type::Message> message;
         navitia::type::StopPoint* spt;
@@ -201,7 +201,7 @@ impact-3
         add_perturbation(message);
 
         //Impact-4 on stop_area:stop02 from 2014-01-18 00:00:00 à 11h00 to 2014-01-18 23:59:59 à 18h00
-        spt =  b.data.pt_data.stop_points[3];
+        spt =  b.data.pt_data->stop_points[3];
         message = boost::make_shared<navitia::type::Message>();
         message->uri = "mess4";
         message->object_uri="stop_area:stop02";
@@ -216,7 +216,7 @@ impact-3
         spt->messages.push_back(message);
         add_perturbation(message);
 // PASS MINUIT
-        spt =  b.data.pt_data.stop_points.back();
+        spt =  b.data.pt_data->stop_points.back();
         message = boost::make_shared<navitia::type::Message>();
         message->uri = "mess5";
         message->object_uri="stop_area:stopP3";
@@ -232,21 +232,21 @@ impact-3
         add_perturbation(message);
 
         ed::AtAdaptedLoader adapter;
-        adapter.apply(perturbations, b.data.pt_data);
+        adapter.apply(perturbations, *b.data.pt_data);
         b.data.build_midnight_interchange();
-        b.build_relations(b.data.pt_data);
+        b.build_relations(*b.data.pt_data);
         b.generate_dummy_basis();
-        b.data.pt_data.index();
-        b.data.pt_data.sort();
+        b.data.pt_data->index();
+        b.data.pt_data->sort();
         b.data.build_raptor();
         b.data.build_uri();
 
         origin = navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop1");
         destination = navitia::type::EntryPoint (navitia::type::Type_e::StopPoint, "stop_area:stop2");
-        street_network = std::make_unique<navitia::georef::StreetNetwork>(b.data.geo_ref);
+        street_network = std::make_unique<navitia::georef::StreetNetwork>(*b.data.geo_ref);
         raptor = std::make_unique<navitia::routing::RAPTOR>(b.data);
 
-        b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2014,01,13), boost::gregorian::date(2014,01,25));
+        b.data.meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2014,01,13), boost::gregorian::date(2014,01,25));
     }
     pbnavitia::Response make_response(const std::vector<std::string> &datetimes_str, bool disruption_active) {
         return ::make_response(*raptor, origin, destination,

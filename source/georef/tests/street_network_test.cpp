@@ -3,6 +3,7 @@
 #include "georef/georef.h"
 #include "builder.h"
 #include "type/data.h"
+#include "type/pt_data.h"
 
 #include"georef/street_network.h"
 #include <boost/test/unit_test.hpp>
@@ -80,9 +81,9 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     type::StopPoint* sp = new type::StopPoint();
     sp->coord.set_xy(8., 8.);
     sp->idx = 0;
-    data.pt_data.stop_points.push_back(sp);
+    data.pt_data->stop_points.push_back(sp);
     geo_ref.init();
-    geo_ref.project_stop_points(data.pt_data.stop_points);
+    geo_ref.project_stop_points(data.pt_data->stop_points);
 
     const GeoRef::ProjectionByMode& projections = geo_ref.projected_stop_points[sp->idx];
     const ProjectionData proj = projections[type::Mode_e::Walking];

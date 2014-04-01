@@ -23,7 +23,7 @@ const type::StopTime* next_valid_pick_up(type::idx_t idx, const type::idx_t end,
     const auto date = DateTimeUtils::date(dt);
     const auto hour = DateTimeUtils::hour(dt);
     for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor.st_idx_forward[idx];
+        const type::StopTime* st = data.dataRaptor->st_idx_forward[idx];
         if (st->valid_end(reconstructing_path) && st->valid_hour(hour, true) &&
             ((disruption_active && st->arrival_adapted_validity_pattern->check(date)) || ((!disruption_active) && st->arrival_validity_pattern->check(date)))
             && st->vehicle_journey->accessible(required_vehicle_properties) ){
@@ -51,7 +51,7 @@ valid_pick_up(const std::vector<uint32_t>::const_iterator begin, type::idx_t idx
     if(first_st != nullptr) {
         return {first_st, dt};
     }
-    idx = begin - data.dataRaptor.departure_times.begin();
+    idx = begin - data.dataRaptor->departure_times.begin();
     auto working_dt = DateTimeUtils::set(DateTimeUtils::date(dt)+1, 0);
     first_st = next_valid_pick_up(idx, end, working_dt,
         data, reconstructing_path, vehicle_properties,disruption_active);
@@ -64,7 +64,7 @@ const type::StopTime* valid_pick_up(type::idx_t idx, const type::idx_t end, cons
         const type::Data& data, bool reconstructing_path,
         const type::VehicleProperties& required_vehicle_properties) {
     for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor.st_idx_forward[idx];
+        const type::StopTime* st = data.dataRaptor->st_idx_forward[idx];
         if (! st->valid_end(reconstructing_path)) {
             continue; //we must be able to stop is this stop point
         }
@@ -89,7 +89,7 @@ const type::StopTime* valid_drop_off(type::idx_t idx, const type::idx_t end, con
     const auto date = DateTimeUtils::date(dt);
     const auto hour = DateTimeUtils::hour(dt);
     for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor.st_idx_backward[idx];
+        const type::StopTime* st = data.dataRaptor->st_idx_backward[idx];
         if (st->valid_end(!reconstructing_path) && st->valid_hour(hour, false) &&
             ((disruption_active && st->arrival_adapted_validity_pattern->check(date)) || ((!disruption_active) && st->arrival_validity_pattern->check(date)))
             && st->vehicle_journey->accessible(required_vehicle_properties) ){
@@ -108,16 +108,16 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
                    boost::optional<const std::string> calendar_id,
                    const type::VehicleProperties& vehicle_properties) {
     //On cherche le plus petit stop time de la journey_pattern >= dt.hour()
-    auto begin = data.dataRaptor.departure_times.begin() +
-            data.dataRaptor.first_stop_time[jpp->journey_pattern->idx] +
-            jpp->order * data.dataRaptor.nb_trips[jpp->journey_pattern->idx];
-    auto end = begin + data.dataRaptor.nb_trips[jpp->journey_pattern->idx];
+    auto begin = data.dataRaptor->departure_times.begin() +
+            data.dataRaptor->first_stop_time[jpp->journey_pattern->idx] +
+            jpp->order * data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
+    auto end = begin + data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
     auto it = std::lower_bound(begin, end, DateTimeUtils::hour(dt),
                                bound_predicate_earliest);
 
-    type::idx_t idx = it - data.dataRaptor.departure_times.begin();
-    type::idx_t end_idx = (begin - data.dataRaptor.departure_times.begin()) +
-                           data.dataRaptor.nb_trips[jpp->journey_pattern->idx];
+    type::idx_t idx = it - data.dataRaptor->departure_times.begin();
+    type::idx_t end_idx = (begin - data.dataRaptor->departure_times.begin()) +
+                           data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
 
     //On renvoie le premier trip valide
     std::pair<const type::StopTime*, DateTime> first_st = {nullptr, 0};
@@ -148,15 +148,15 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
                    bool reconstructing_path,
                    const type::VehicleProperties& vehicle_properties) {
     //On cherche le plus grand stop time de la journey_pattern <= dt.hour()
-    const auto begin = data.dataRaptor.arrival_times.begin() +
-                       data.dataRaptor.first_stop_time[jpp->journey_pattern->idx] +
-                       jpp->order * data.dataRaptor.nb_trips[jpp->journey_pattern->idx];
-    const auto end = begin + data.dataRaptor.nb_trips[jpp->journey_pattern->idx];
+    const auto begin = data.dataRaptor->arrival_times.begin() +
+                       data.dataRaptor->first_stop_time[jpp->journey_pattern->idx] +
+                       jpp->order * data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
+    const auto end = begin + data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
     auto it = std::lower_bound(begin, end, DateTimeUtils::hour(dt), bound_predicate_tardiest);
 
-    type::idx_t idx = it - data.dataRaptor.arrival_times.begin();
-    type::idx_t end_idx = (begin - data.dataRaptor.arrival_times.begin()) +
-                           data.dataRaptor.nb_trips[jpp->journey_pattern->idx];
+    type::idx_t idx = it - data.dataRaptor->arrival_times.begin();
+    type::idx_t end_idx = (begin - data.dataRaptor->arrival_times.begin()) +
+                           data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
 
     const type::StopTime* first_st = valid_drop_off(idx, end_idx,
             dt, data,
@@ -165,7 +165,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
     auto working_dt = dt;
     // If no trip was found, we look for one the day before
     if(first_st == nullptr && DateTimeUtils::date(dt) > 0){
-        idx = begin - data.dataRaptor.arrival_times.begin();
+        idx = begin - data.dataRaptor->arrival_times.begin();
         working_dt = DateTimeUtils::set(DateTimeUtils::date(working_dt) - 1,
                                         DateTimeUtils::SECONDS_PER_DAY - 1);
         first_st = valid_drop_off(idx, end_idx, working_dt, data, reconstructing_path,

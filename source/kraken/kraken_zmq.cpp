@@ -68,11 +68,15 @@ void doWork(zmq::context_t & context, DataManager<navitia::type::Data>& data_man
 
 int main(int, char** argv){
     navitia::init_app();
-    Configuration * conf = Configuration::get();
+    Configuration* conf = Configuration::get();
+
     std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );
     conf->set_string("application", std::string(argv[0]).substr(posSlash+1));
     char buf[256];
     if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");
+    std::string conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
+    conf->load_ini(conf_file);
+    init_logger(conf_file);
 
     DataManager<navitia::type::Data> data_manager;
 
@@ -85,11 +89,13 @@ int main(int, char** argv){
     zmq::socket_t workers(context, ZMQ_DEALER);
     workers.bind("inproc://workers");
 
+    threads.create_thread(navitia::MaintenanceWorker(data_manager));
+
+    int nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
     // Launch pool of worker threads
-    for(int thread_nbr = 0; thread_nbr < data_manager.get_data()->nb_threads; ++thread_nbr) {
+    for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager)));
     }
-    threads.create_thread(navitia::MaintenanceWorker(data_manager));
 
     // Connect work threads to client threads via a queue
     do{

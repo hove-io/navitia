@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include "ed/build_helper.h"
 #include "calendar/calendar_api.h"
+#include "type/pt_data.h"
 
 /*
                                             Mars 2014
@@ -36,27 +37,27 @@ struct calendar_fixture {
         b.vj("network:R", "line:B", "1", "", true, "VJB")("stop11", 11 * 3600, 11 * 3600 + 10 * 60)("stop22", 14 * 3600, 14 * 3600 + 10 * 60);
         b.data.build_uri();
 
-        auto calA = new navitia::type::Calendar(b.data.meta.production_date.begin());
+        auto calA = new navitia::type::Calendar(b.data.meta->production_date.begin());
         calA->uri = "calA";
         calA->active_periods.push_back({date("20140301"), date("20140305")});
         calA->active_periods.push_back({date("20140310"), date("20140314")});
         calA->week_pattern = std::bitset<7>{"1111100"};
-        b.data.pt_data.calendars.push_back(calA);
+        b.data.pt_data->calendars.push_back(calA);
 
-        auto calB = new navitia::type::Calendar(b.data.meta.production_date.begin());
+        auto calB = new navitia::type::Calendar(b.data.meta->production_date.begin());
         calB->uri = "calB";
         calB->active_periods.push_back({date("20140307"), date("20140309")});
         calB->active_periods.push_back({date("20140312"), date("20140316")});
         calB->active_periods.push_back({date("20140321"), date("20140325")});
         calB->week_pattern = std::bitset<7>{"0000011"};
-        b.data.pt_data.calendars.push_back(calB);
+        b.data.pt_data->calendars.push_back(calB);
 
         //both calendars are associated to the line
         b.lines["line:A"]->calendar_list.push_back(calA);
         b.lines["line:B"]->calendar_list.push_back(calB);
 
         b.data.build_uri();
-        b.data.pt_data.index();
+        b.data.pt_data->index();
     }
 };
 /*

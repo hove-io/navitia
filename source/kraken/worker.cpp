@@ -12,6 +12,7 @@
 #include "disruption/disruption_api.h"
 #include "calendar/calendar_api.h"
 #include "routing/raptor.h"
+#include "type/meta_data.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -72,18 +73,19 @@ pbnavitia::Response Worker::status() {
     auto status = result.mutable_status();
     const auto d = data_manager.get_data();
     boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
-    status->set_publication_date(pt::to_iso_string(d->meta.publication_date));
-    status->set_start_production_date(bg::to_iso_string(d->meta.production_date.begin()));
-    status->set_end_production_date(bg::to_iso_string(d->meta.production_date.end()));
+    status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
+    status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
+    status->set_end_production_date(bg::to_iso_string(d->meta->production_date.end()));
     status->set_data_version(d->version);
-    status->set_navimake_version(d->meta.navimake_version);
+    status->set_navimake_version(d->meta->navimake_version);
     status->set_navitia_version(KRAKEN_VERSION);
     status->set_loaded(d->loaded);
     status->set_last_load_status(d->last_load);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
-    status->set_nb_threads(d->nb_threads);
+    Configuration* conf = Configuration::get();
+    status->set_nb_threads(conf->get_as<int>("GENERAL", "nb_threads", 1));
     status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
-    for(auto data_sources: d->meta.data_sources){
+    for(auto data_sources: d->meta->data_sources){
         status->add_data_sources(data_sources);
     }
     return result;
@@ -94,11 +96,11 @@ pbnavitia::Response Worker::metadatas() {
     auto metadatas = result.mutable_metadatas();
     const auto d = data_manager.get_data();
     boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
-    metadatas->set_start_production_date(bg::to_iso_string(d->meta.production_date.begin()));
-    metadatas->set_end_production_date(bg::to_iso_string(d->meta.production_date.end()));
-    metadatas->set_shape(d->meta.shape);
+    metadatas->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
+    metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.end()));
+    metadatas->set_shape(d->meta->shape);
     metadatas->set_status("running");
-    for(const type::Contributor* contributor : d->pt_data.contributors){
+    for(const type::Contributor* contributor : d->pt_data->contributors){
         metadatas->add_contributors(contributor->uri);
     }
     return result;
@@ -108,7 +110,7 @@ void Worker::init_worker_data(const std::shared_ptr<navitia::type::Data> data){
     //@TODO should be done in data_manager
     if(data->last_load_at != this->last_load_at || !planner){
         planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*data));
-        street_network_worker = std::unique_ptr<georef::StreetNetwork>(new georef::StreetNetwork(data->geo_ref));
+        street_network_worker = std::unique_ptr<georef::StreetNetwork>(new georef::StreetNetwork(*data->geo_ref));
         this->last_load_at = data->last_load_at;
 
         LOG4CPLUS_INFO(logger, "instanciation du planner");
@@ -230,34 +232,34 @@ type::GeographicalCoord Worker::coord_of_entry_point(
         const std::shared_ptr<navitia::type::Data> data) {
     type::GeographicalCoord result;
     if(entry_point.type == Type_e::Address){
-        auto way = data->geo_ref.way_map.find(entry_point.uri);
-        if (way != data->geo_ref.way_map.end()){
-            const auto geo_way = data->geo_ref.ways[way->second];
-            result = geo_way->nearest_coord(entry_point.house_number, data->geo_ref.graph);
+        auto way = data->geo_ref->way_map.find(entry_point.uri);
+        if (way != data->geo_ref->way_map.end()){
+            const auto geo_way = data->geo_ref->ways[way->second];
+            result = geo_way->nearest_coord(entry_point.house_number, data->geo_ref->graph);
         }
     } else if (entry_point.type == Type_e::StopPoint) {
-        auto sp_it = data->pt_data.stop_points_map.find(entry_point.uri);
-        if(sp_it != data->pt_data.stop_points_map.end()) {
+        auto sp_it = data->pt_data->stop_points_map.find(entry_point.uri);
+        if(sp_it != data->pt_data->stop_points_map.end()) {
             result = sp_it->second->coord;
         }
     } else if (entry_point.type == Type_e::StopArea) {
-           auto sa_it = data->pt_data.stop_areas_map.find(entry_point.uri);
-           if(sa_it != data->pt_data.stop_areas_map.end()) {
+           auto sa_it = data->pt_data->stop_areas_map.find(entry_point.uri);
+           if(sa_it != data->pt_data->stop_areas_map.end()) {
                result = sa_it->second->coord;
            }
     } else if (entry_point.type == Type_e::Coord) {
         result = entry_point.coordinates;
     } else if (entry_point.type == Type_e::Admin) {
-        auto it_admin = data->geo_ref.admin_map.find(entry_point.uri);
-        if (it_admin != data->geo_ref.admin_map.end()) {
-            const auto admin = data->geo_ref.admins[it_admin->second];
+        auto it_admin = data->geo_ref->admin_map.find(entry_point.uri);
+        if (it_admin != data->geo_ref->admin_map.end()) {
+            const auto admin = data->geo_ref->admins[it_admin->second];
             result = admin->coord;
         }
 
     } else if(entry_point.type == Type_e::POI){
-        auto poi = data->geo_ref.poi_map.find(entry_point.uri);
-        if (poi != data->geo_ref.poi_map.end()){
-            const auto geo_poi = data->geo_ref.pois[poi->second];
+        auto poi = data->geo_ref->poi_map.find(entry_point.uri);
+        if (poi != data->geo_ref->poi_map.end()){
+            const auto geo_poi = data->geo_ref->pois[poi->second];
             result = geo_poi->coord;
         }
     }
@@ -280,19 +282,19 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
     }
     switch(result.mode){
         case type::Mode_e::Bike:
-            result.offset = data->geo_ref.offsets[type::Mode_e::Bike];
+            result.offset = data->geo_ref->offsets[type::Mode_e::Bike];
             result.speed_factor = request.bike_speed() / georef::default_speed[type::Mode_e::Bike];
             break;
         case type::Mode_e::Car:
-            result.offset = data->geo_ref.offsets[type::Mode_e::Car];
+            result.offset = data->geo_ref->offsets[type::Mode_e::Car];
             result.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
             break;
         case type::Mode_e::Bss:
-            result.offset = data->geo_ref.offsets[type::Mode_e::Bss];
+            result.offset = data->geo_ref->offsets[type::Mode_e::Bss];
             result.speed_factor = request.bss_speed() / georef::default_speed[type::Mode_e::Bss];
             break;
         default:
-            result.offset = data->geo_ref.offsets[type::Mode_e::Walking];
+            result.offset = data->geo_ref->offsets[type::Mode_e::Walking];
             result.speed_factor = request.walking_speed() / georef::default_speed[type::Mode_e::Walking];
             break;
     }
@@ -318,35 +320,35 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
         }
         return pb_response;
     }
-    auto it_sa = data->pt_data.stop_areas_map.find(request.uri());
-    if(it_sa != data->pt_data.stop_areas_map.end()) {
+    auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
+    if(it_sa != data->pt_data->stop_areas_map.end()) {
         pbnavitia::Place* place = pb_response.add_places();
         fill_pb_object(it_sa->second, *data, place->mutable_stop_area(), 1);
         place->set_embedded_type(pbnavitia::STOP_AREA);
         place->set_name(place->stop_area().name());
         place->set_uri(place->stop_area().uri());
     } else {
-        auto it_sp = data->pt_data.stop_points_map.find(request.uri());
-        if(it_sp != data->pt_data.stop_points_map.end()) {
+        auto it_sp = data->pt_data->stop_points_map.find(request.uri());
+        if(it_sp != data->pt_data->stop_points_map.end()) {
             pbnavitia::Place* place = pb_response.add_places();
             fill_pb_object(it_sp->second, *data, place->mutable_stop_point(), 1);
             place->set_embedded_type(pbnavitia::STOP_POINT);
             place->set_name(place->stop_point().name());
             place->set_uri(place->stop_point().uri());
         } else {
-            auto it_poi = data->geo_ref.poi_map.find(request.uri());
-            if(it_poi != data->geo_ref.poi_map.end()) {
+            auto it_poi = data->geo_ref->poi_map.find(request.uri());
+            if(it_poi != data->geo_ref->poi_map.end()) {
                 pbnavitia::Place* place = pb_response.add_places();
-                fill_pb_object(data->geo_ref.pois[it_poi->second], *data,
+                fill_pb_object(data->geo_ref->pois[it_poi->second], *data,
                         place->mutable_poi(), 1);
                 place->set_embedded_type(pbnavitia::POI);
                 place->set_name(place->poi().name());
                 place->set_uri(place->poi().uri());
             } else {
-                auto it_admin = data->geo_ref.admin_map.find(request.uri());
-                if(it_admin != data->geo_ref.admin_map.end()) {
+                auto it_admin = data->geo_ref->admin_map.find(request.uri());
+                if(it_admin != data->geo_ref->admin_map.end()) {
                     pbnavitia::Place* place = pb_response.add_places();
-                    fill_pb_object(data->geo_ref.admins[it_admin->second],
+                    fill_pb_object(data->geo_ref->admins[it_admin->second],
                             *data, place->mutable_administrative_region(), 1);
                     place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
                     place->set_name(place->administrative_region().name());

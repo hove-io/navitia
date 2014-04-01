@@ -21,7 +21,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
     while(test_add && result.size() < max_departures) {
         test_add = false;
         for(auto jpp_idx : journey_pattern_points) {
-            const type::JourneyPatternPoint* jpp = data.pt_data.journey_pattern_points[jpp_idx];
+            const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx];
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }

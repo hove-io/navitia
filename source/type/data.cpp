@@ -15,17 +15,37 @@
 #include "utils/functions.h"
 #include "utils/exception.h"
 
+#include "pt_data.h"
+#include "routing/dataraptor.h"
+#include "georef/georef.h"
+#include "fare/fare.h"
+#include "type/meta_data.h"
+
 namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
 
+Data::Data() : meta(std::make_unique<MetaData>()),
+        pt_data(std::make_unique<PT_Data>()),
+        geo_ref(std::make_unique<navitia::georef::GeoRef>()),
+        dataRaptor(std::make_unique<navitia::routing::dataRAPTOR>()),
+        fare(std::make_unique<navitia::fare::Fare>()){
+    this->is_connected_to_rabbitmq = false;
+    this->loaded = false;
+    if(Configuration::is_instanciated()){
+        Configuration * conf = Configuration::get();
+        geo_ref->word_weight =  conf->get_as<int>("AUTOCOMPLETE", "wordweight", 5);
+    }
+}
+ Data::~Data(){}
+
 Data& Data::operator=(Data&& other){
     version = other.version;
     loaded.store(other.loaded.load());
-    meta = other.meta;
+    meta = std::move(other.meta);
     pt_data = std::move(other.pt_data);
-    geo_ref = other.geo_ref;
-    dataRaptor = other.dataRaptor;
+    geo_ref = std::move(other.geo_ref);
+    dataRaptor = std::move(other.dataRaptor);
     last_load = other.last_load;
     last_load_at = other.last_load_at;
     is_connected_to_rabbitmq.store(other.is_connected_to_rabbitmq.load());
@@ -42,6 +62,10 @@ bool Data::load(const std::string & filename) {
         last_load_at = pt::microsec_clock::local_time();
         last_load = true;
         loaded = true;
+        LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
+                % pt_data->stop_times.size() % dataRaptor->arrival_times.size()
+                % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
+                );
     } catch(const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
         last_load = false;
@@ -109,41 +133,41 @@ void Data::save_lz4(const std::string & filename) {
 }
 
 void Data::build_uri(){
-#define CLEAR_EXT_CODE(type_name, collection_name) this->pt_data.collection_name##_map.clear();
+#define CLEAR_EXT_CODE(type_name, collection_name) this->pt_data->collection_name##_map.clear();
 ITERATE_NAVITIA_PT_TYPES(CLEAR_EXT_CODE)
-    this->pt_data.build_uri();
-    geo_ref.build_pois_map();
-    geo_ref.build_poitypes_map();
-    geo_ref.build_admin_map();
+    this->pt_data->build_uri();
+    geo_ref->build_pois_map();
+    geo_ref->build_poitypes_map();
+    geo_ref->build_admin_map();
 }
 
 void Data::build_proximity_list(){
-    this->pt_data.build_proximity_list();
-    this->geo_ref.build_proximity_list();
-    this->geo_ref.project_stop_points(this->pt_data.stop_points);
+    this->pt_data->build_proximity_list();
+    this->geo_ref->build_proximity_list();
+    this->geo_ref->project_stop_points(this->pt_data->stop_points);
 }
 
 void  Data::build_administrative_regions(){
-    this->geo_ref.build_admins_stop_points(this->pt_data.stop_points);
-    this->geo_ref.build_admins_pois();
-    this->pt_data.build_admins_stop_areas();
+    this->geo_ref->build_admins_stop_points(this->pt_data->stop_points);
+    this->geo_ref->build_admins_pois();
+    this->pt_data->build_admins_stop_areas();
 }
 
 void Data::build_autocomplete(){
-    pt_data.build_autocomplete(geo_ref);
-    geo_ref.build_autocomplete_list();
-    pt_data.compute_score_autocomplete(geo_ref);
+    pt_data->build_autocomplete(*geo_ref);
+    geo_ref->build_autocomplete_list();
+    pt_data->compute_score_autocomplete(*geo_ref);
 }
 
 void Data::build_raptor() {
-    dataRaptor.load(this->pt_data);
+    dataRaptor->load(*this->pt_data);
 }
 
 ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
     auto find_vp_predicate = [&](ValidityPattern* vp1) { return ((*vp) == (*vp1));};
-    auto it = std::find_if(this->pt_data.validity_patterns.begin(),
-                        this->pt_data.validity_patterns.end(), find_vp_predicate);
-    if(it != this->pt_data.validity_patterns.end()) {
+    auto it = std::find_if(this->pt_data->validity_patterns.begin(),
+                        this->pt_data->validity_patterns.end(), find_vp_predicate);
+    if(it != this->pt_data->validity_patterns.end()) {
         return *(it);
     } else {
         return nullptr;
@@ -160,8 +184,8 @@ ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_valid
         ValidityPattern* vp_similar = this->get_similar_validity_pattern(&vp);
         if (vp_similar == nullptr) {
             ValidityPattern* tmp_vp = new ValidityPattern(vp);
-            tmp_vp->idx = this->pt_data.validity_patterns.size();
-            this->pt_data.validity_patterns.push_back(tmp_vp);
+            tmp_vp->idx = this->pt_data->validity_patterns.size();
+            this->pt_data->validity_patterns.push_back(tmp_vp);
             return tmp_vp;
         } else {
             return vp_similar;
@@ -172,7 +196,7 @@ ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_valid
 
 using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
 
-list_cal_bitset find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey, double relative_threshold) {
+list_cal_bitset find_matching_calendar(const Data&, const VehicleJourney* vehicle_journey, double relative_threshold) {
     list_cal_bitset res;
     //for the moment we keep lot's of trace, but they will be removed after a while
     auto log = log4cplus::Logger::getInstance("kraken::type::Data::Calendar");
@@ -203,14 +227,14 @@ void Data::complete(){
     pt::ptime start;
     int sort, autocomplete;
 
-    geo_ref.init();
+    geo_ref->init();
 
     build_midnight_interchange();
     build_grid_validity_pattern();
     build_associated_calendar();
 
     start = pt::microsec_clock::local_time();
-    pt_data.sort();
+    pt_data->sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
@@ -237,7 +261,7 @@ void Data::build_associated_calendar() {
     std::multimap<ValidityPattern*, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     size_t nb_matched(0);
-    for(VehicleJourney* vehicle_journey : this->pt_data.vehicle_journeys) {
+    for(VehicleJourney* vehicle_journey : this->pt_data->vehicle_journeys) {
 
         if (vehicle_journey->journey_pattern->route->line->calendar_list.empty()) {
             LOG4CPLUS_TRACE(log, "the line of the vj " << vehicle_journey->uri << " is associated to no calendar");
@@ -267,7 +291,7 @@ void Data::build_associated_calendar() {
         std::stringstream cal_uri;
         for (auto cal_bit_set: close_cal) {
             auto associated_calendar = new AssociatedCalendar();
-            pt_data.associated_calendars.push_back(associated_calendar);
+            pt_data->associated_calendars.push_back(associated_calendar);
 
             associated_calendar->calendar = cal_bit_set.first;
             //we need to create the associated exceptions
@@ -297,13 +321,13 @@ void Data::build_associated_calendar() {
 }
 
 void Data::build_grid_validity_pattern() {
-    for(Calendar* cal : this->pt_data.calendars){
-        cal->build_validity_pattern(meta.production_date);
+    for(Calendar* cal : this->pt_data->calendars){
+        cal->build_validity_pattern(meta->production_date);
     }
 }
 
 void Data::build_midnight_interchange() {
-    for(VehicleJourney* vj : this->pt_data.vehicle_journeys) {
+    for(VehicleJourney* vj : this->pt_data->vehicle_journeys) {
         for(StopTime* stop : vj->stop_time_list){
             // Théorique
             stop->departure_validity_pattern = get_or_create_validity_pattern(vj->validity_pattern, stop->departure_time);
@@ -318,39 +342,39 @@ void Data::build_midnight_interchange() {
 #define GET_DATA(type_name, collection_name)\
 template<> std::vector<type_name*> & \
 Data::get_data<type_name>() {\
-    return this->pt_data.collection_name;\
+    return this->pt_data->collection_name;\
 }\
 template<> std::vector<type_name *> \
 Data::get_data<type_name>() const {\
-    return this->pt_data.collection_name;\
+    return this->pt_data->collection_name;\
 }
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
 
 template<> std::vector<georef::POI*> &
 Data::get_data<georef::POI>() {
-    return this->geo_ref.pois;
+    return this->geo_ref->pois;
 }
 template<> std::vector<georef::POI*>
 Data::get_data<georef::POI>() const {
-    return this->geo_ref.pois;
+    return this->geo_ref->pois;
 }
 
 template<> std::vector<georef::POIType*> &
 Data::get_data<georef::POIType>() {
-    return this->geo_ref.poitypes;
+    return this->geo_ref->poitypes;
 }
 template<> std::vector<georef::POIType*>
 Data::get_data<georef::POIType>() const {
-    return this->geo_ref.poitypes;
+    return this->geo_ref->poitypes;
 }
 
 template<> std::vector<StopPointConnection*> &
 Data::get_data<StopPointConnection>() {
-    return this->pt_data.stop_point_connections;
+    return this->pt_data->stop_point_connections;
 }
 template<> std::vector<StopPointConnection*>
 Data::get_data<StopPointConnection>() const {
-    return this->pt_data.stop_point_connections;
+    return this->pt_data->stop_point_connections;
 }
 
 
@@ -359,12 +383,12 @@ std::vector<idx_t> Data::get_all_index(Type_e type) const {
     switch(type){
     #define GET_NUM_ELEMENTS(type_name, collection_name)\
     case Type_e::type_name:\
-        num_elements = this->pt_data.collection_name.size();break;
+        num_elements = this->pt_data->collection_name.size();break;
     ITERATE_NAVITIA_PT_TYPES(GET_NUM_ELEMENTS)
-    case Type_e::POI: num_elements = this->geo_ref.pois.size(); break;
-    case Type_e::POIType: num_elements = this->geo_ref.poitypes.size(); break;
+    case Type_e::POI: num_elements = this->geo_ref->pois.size(); break;
+    case Type_e::POIType: num_elements = this->geo_ref->poitypes.size(); break;
     case Type_e::Connection:
-        num_elements = this->pt_data.stop_point_connections.size(); break;
+        num_elements = this->pt_data->stop_point_connections.size(); break;
     default:  break;
     }
     std::vector<idx_t> indexes(num_elements);
@@ -401,13 +425,13 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     switch(source) {
     #define GET_INDEXES(type_name, collection_name)\
         case Type_e::type_name:\
-            result = pt_data.collection_name[source_idx]->get(target, pt_data);\
+            result = pt_data->collection_name[source_idx]->get(target, *pt_data);\
             break;
     ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
         case Type_e::POI:
-            result = geo_ref.pois[source_idx]->get(target, geo_ref);
+            result = geo_ref->pois[source_idx]->get(target, *geo_ref);
         case Type_e::POIType:
-            result = geo_ref.poitypes[source_idx]->get(target, geo_ref);
+            result = geo_ref->poitypes[source_idx]->get(target, *geo_ref);
         default: break;
     }
     return result;
@@ -421,17 +445,17 @@ Type_e Data::get_type_of_id(const std::string & id) const {
     if(id.size()>6 && id.substr(0,6) == "admin:")
         return Type_e::Admin;
     #define GET_TYPE(type_name, collection_name) \
-    auto collection_name##_map = pt_data.collection_name##_map;\
+    auto collection_name##_map = pt_data->collection_name##_map;\
     if(collection_name##_map.find(id) != collection_name##_map.end())\
         return Type_e::type_name;
     ITERATE_NAVITIA_PT_TYPES(GET_TYPE)
-    if(geo_ref.poitype_map.find(id) != geo_ref.poitype_map.end())
+    if(geo_ref->poitype_map.find(id) != geo_ref->poitype_map.end())
         return Type_e::POIType;
-    if(geo_ref.poi_map.find(id) != geo_ref.poi_map.end())
+    if(geo_ref->poi_map.find(id) != geo_ref->poi_map.end())
         return Type_e::POI;
-    if(geo_ref.way_map.find(id) != geo_ref.way_map.end())
+    if(geo_ref->way_map.find(id) != geo_ref->way_map.end())
         return Type_e::Address;
-    if(geo_ref.admin_map.find(id) != geo_ref.admin_map.end())
+    if(geo_ref->admin_map.find(id) != geo_ref->admin_map.end())
         return Type_e::Admin;
     return Type_e::Unknown;
 }

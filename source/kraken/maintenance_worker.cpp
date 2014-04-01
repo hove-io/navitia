@@ -21,10 +21,6 @@ void MaintenanceWorker::load(){
     if(this->data_manager.load(database)){
         auto data = data_manager.get_data();
 
-        LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-                % data->pt_data.stop_times.size() % data->dataRaptor.arrival_times.size()
-                % data->dataRaptor.foot_path_forward.size() % data->pt_data.stop_points.size()
-                );
     }
 }
 

@@ -3,6 +3,23 @@
 #include "type/type.pb.h"
 #include "type/response.pb.h"
 
+//forward declare
+namespace navitia{
+    namespace routing{
+        class PathItem;
+    }
+    namespace georef{
+        class PathItem;
+        class Way;
+        class POI;
+        class Path;
+        class POIType;
+    }
+    namespace fare{
+        class results;
+        class Ticket;
+    }
+}
 #define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
 
 namespace navitia {
@@ -34,7 +51,7 @@ struct EnhancedResponse {
 };
 
 #define FILL_PB_CONSTRUCTOR(type_name, collection_name)\
-void fill_pb_object(const nt::type_name* item, const nt::Data& data, pbnavitia::type_name *, int max_depth = 0,\
+void fill_pb_object(const navitia::type::type_name* item, const navitia::type::Data& data, pbnavitia::type_name *, int max_depth = 0,\
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,\
         const boost::posix_time::time_period& action_period = null_time_period);
     ITERATE_NAVITIA_PT_TYPES(FILL_PB_CONSTRUCTOR)
@@ -98,11 +115,11 @@ void fill_pb_object(const georef::POIType*, const type::Data &data, pbnavitia::P
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(navitia::georef::Admin* adm, const nt::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
+void fill_pb_object(navitia::georef::Admin* adm, const type::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period );
 
-void fill_pb_object(const navitia::type::StopTime* st, const nt::Data& data, pbnavitia::ScheduleStopTime* row, int max_depth = 0,
+void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data, pbnavitia::ScheduleStopTime* row, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period,
                     const DateTime& date_time = DateTime(), boost::optional<const std::string> calendar_id = boost::optional<const std::string>(),
@@ -113,17 +130,17 @@ void fill_pb_object(const type::StopPointConnection* c, const type::Data& data,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(const nt::Route* r, const nt::Data& data,
+void fill_pb_object(const type::Route* r, const type::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
                     const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period = null_time_period,
                     const navitia::type::StopPoint* destination = nullptr);
 
-void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
+void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
                     pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
+void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 
@@ -133,11 +150,11 @@ void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comme
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period  = null_time_period);
 
-void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const nt::Data& data,
+void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const type::Data& data,
                     pbnavitia::CalendarException* calendar_exception, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 
-void fill_pb_object(const std::string comment, const nt::Data& data,
+void fill_pb_object(const std::string comment, const type::Data& data,
                     pbnavitia::Note* note, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 }//namespace navitia

@@ -2,6 +2,8 @@
 
 #include "type/data.h"
 #include <boost/date_time/gregorian_calendar.hpp>
+#include "georef/georef.h"
+#include "type/meta_data.h"
 
 /** Ce connecteur permet de faciliter la construction d'un réseau en code
  *
@@ -60,7 +62,7 @@ struct builder{
 
     /// Il faut préciser là date de début des différents validity patterns
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
-        data.meta.production_date = {begin, begin + boost::gregorian::years(1)};
+        data.meta->production_date = {begin, begin + boost::gregorian::years(1)};
     }
 
     /// Crée un vehicle journey

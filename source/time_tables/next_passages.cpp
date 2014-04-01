@@ -84,7 +84,7 @@ pbnavitia::Response next_departures(const std::string &request,
             type::Data &data;
             predicate_t(type::Data& data) : data(data){}
             bool operator()(const type::idx_t jppidx) const {
-                auto jpp = data.pt_data.journey_pattern_points[jppidx];
+                auto jpp = data.pt_data->journey_pattern_points[jppidx];
                 auto last_jpp = jpp->journey_pattern->journey_pattern_point_list.back();
                 return jpp == last_jpp;
             }
@@ -112,7 +112,7 @@ pbnavitia::Response next_arrivals(const std::string &request,
             type::Data &data;
             predicate_t(type::Data& data) : data(data){}
             bool operator()(const type::idx_t jppidx) const{
-                return data.pt_data.journey_pattern_points[jppidx]->order == 0;
+                return data.pt_data->journey_pattern_points[jppidx]->order == 0;
             }
         };
         std::string api_str;

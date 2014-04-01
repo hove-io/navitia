@@ -1,9 +1,4 @@
 #pragma once
-#include "pt_data.h"
-#include "routing/dataraptor.h"
-#include "georef/georef.h"
-#include "fare/fare.h"
-#include "meta_data.h"
 #include "utils/logger.h"
 #include "utils/configuration.h"
 #include <boost/utility.hpp>
@@ -11,8 +6,27 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/format.hpp>
 #include <atomic>
+#include "type/type.h"
+#include "utils/serialization_unique_ptr.h"
+
+//forward declare
+namespace navitia{
+    namespace georef{
+        class GeoRef;
+    }
+    namespace fare{
+        class Fare;
+    }
+    namespace routing{
+        class dataRAPTOR;
+    }
+    namespace type{
+        class MetaData;
+    }
+}
 
 namespace navitia { namespace type {
+
 
 /** Contient toutes les données théoriques du référentiel transport en communs
   *
@@ -23,25 +37,24 @@ namespace navitia { namespace type {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 19; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
-    int nb_threads; //< Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
-    unsigned int version; //< Numéro de version des données chargées
+    static const unsigned int data_version = 20; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
+    unsigned int version = 0; //< Numéro de version des données chargées
     std::atomic<bool> loaded; //< Est-ce que lse données ont été chargées
 
-    MetaData meta;
+    std::unique_ptr<MetaData> meta;
 
     // Référentiels de données
 
     /// Référentiel de transport en commun
-    PT_Data pt_data;
+    std::unique_ptr<PT_Data> pt_data;
 
-    navitia::georef::GeoRef geo_ref;
+    std::unique_ptr<navitia::georef::GeoRef> geo_ref;
 
     /// Données précalculées pour le raptor
-    navitia::routing::dataRAPTOR dataRaptor;
+    std::unique_ptr<navitia::routing::dataRAPTOR> dataRaptor;
 
     /// Fare data
-    navitia::fare::Fare fare;
+    std::unique_ptr<navitia::fare::Fare> fare;
 
     /** Retourne la structure de données associée au type */
     /// TODO : attention aux perfs à faire la copie
@@ -75,27 +88,12 @@ public:
 
     friend class boost::serialization::access;
 
-    bool last_load;
+    bool last_load = true;
     boost::posix_time::ptime last_load_at;
     std::atomic<bool> is_connected_to_rabbitmq;
 
-    /// Constructeur de data, définit le nombre de threads, charge les données
-    Data() : nb_threads(8), version(0), loaded(false), last_load(true){
-        this->is_connected_to_rabbitmq = false;
-        if(Configuration::is_instanciated()){
-            init_logger();
-            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-            LOG4CPLUS_TRACE(logger, "Chargement de l'application");
-            Configuration * conf = Configuration::get();
-            std::string conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
-            LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration pour les logs : " + conf_file);
-            init_logger(conf_file);
-            LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration général : " + conf_file);
-            conf->load_ini(conf_file);
-            nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
-            geo_ref.word_weight =  conf->get_as<int>("AUTOCOMPLETE", "wordweight", 5);
-        }
-    }
+    Data();
+    ~Data();
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
@@ -176,6 +174,6 @@ std::bitset<N> get_difference(const std::bitset<N>& calendar, const std::bitset<
 std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>
 find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey, double relative_threshold = 0.1);
 
-} } //namespace navitia::type
+}} //namespace navitia::type
 
 BOOST_CLASS_VERSION(navitia::type::Data, navitia::type::Data::data_version)

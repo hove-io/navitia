@@ -6,6 +6,7 @@
 #include <functional>
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/date_defs.hpp>
+#include "fare/fare.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -677,7 +678,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
 
     //add the destination as a placemark
     pbnavitia::Place* dest_place = section->mutable_destination();
-    auto way = data.geo_ref.ways[last_item.way_idx];
+    auto way = data.geo_ref->ways[last_item.way_idx];
     type::GeographicalCoord coord = last_item.coordinates.back();
     fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
                             depth, now, action_period);
@@ -713,7 +714,7 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
 
     pbnavitia::Place* orig_place = section->mutable_origin();
     if (first_item.way_idx != nt::invalid_idx) {
-        auto way = data.geo_ref.ways[first_item.way_idx];
+        auto way = data.geo_ref->ways[first_item.way_idx];
         type::GeographicalCoord departure_coord = first_item.coordinates.front();
         fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
                           depth, now, action_period);
@@ -792,11 +793,11 @@ void fill_message(const boost::shared_ptr<type::Message> message,
 
 void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem& item,
                     const type::EntryPoint &ori_dest, const navitia::type::Data& data) {
-    if(item.way_idx >= data.geo_ref.ways.size())
+    if(item.way_idx >= data.geo_ref->ways.size())
         throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
 
     pbnavitia::PathItem* path_item = sn->add_path_items();
-    path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
+    path_item->set_name(data.geo_ref->ways[item.way_idx]->name);
     path_item->set_length(item.get_length());
     path_item->set_duration(item.duration.total_seconds() / ori_dest.streetnetwork_params.speed_factor);
     path_item->set_direction(item.angle);
@@ -834,7 +835,7 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
     }
 
     if(depth > 0){
-        fill_pb_object(data.geo_ref.poitypes[geopoi->poitype_idx], data,
+        fill_pb_object(data.geo_ref->poitypes[geopoi->poitype_idx], data,
                        poi->mutable_poi_type(), depth-1,
                        now, action_period);
         for(georef::Admin * admin : geopoi->admin_list){

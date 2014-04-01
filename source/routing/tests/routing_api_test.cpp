@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     type::Data data;
     b.generate_dummy_basis();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_raptor();
     b.data.build_uri();
-    b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    b.data.meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     RAPTOR raptor(b.data);
 
     type::Type_e origin_type = b.data.get_type_of_id("stop_area:stop1");
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     type::EntryPoint origin(origin_type, "stop_area:stop1");
     type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    georef::StreetNetwork sn_worker(data.geo_ref);
+    georef::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -81,12 +81,12 @@ BOOST_AUTO_TEST_CASE(journey_array){
     b.vj("A")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2",  9*3600 + 20 * 60 ,9*3600 + 21*60);
     type::Data data;
     b.generate_dummy_basis();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_raptor();
     b.data.build_uri();
-    b.data.geo_ref.init();
+    b.data.geo_ref->init();
     b.data.build_proximity_list();
-    b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    b.data.meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     RAPTOR raptor(b.data);
 
     type::Type_e origin_type = b.data.get_type_of_id("stop_area:stop1");
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     type::EntryPoint origin(origin_type, "stop_area:stop1");
     type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    georef::StreetNetwork sn_worker(data.geo_ref);
+    georef::StreetNetwork sn_worker(*data.geo_ref);
 
     // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
     std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
@@ -222,193 +222,193 @@ struct streetnetworkmode_fixture {
 
         */
 
-        boost::add_vertex(georef::Vertex(A),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(G),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(H),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(I),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(J),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(K),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(B),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(C),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(F),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(E),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(R),b.data.geo_ref.graph);
-        boost::add_vertex(georef::Vertex(S),b.data.geo_ref.graph);
+        boost::add_vertex(georef::Vertex(A),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(G),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(H),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(I),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(J),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(K),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(B),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(C),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(F),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(E),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(R),b.data.geo_ref->graph);
+        boost::add_vertex(georef::Vertex(S),b.data.geo_ref->graph);
 
-        b.data.geo_ref.init();
+        b.data.geo_ref->init();
 
         georef::Way* way;
         way = new georef::Way();
         way->name = "rue ab"; // A->B
         way->idx = 0;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue ae"; // A->E
         way->idx = 1;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue ef"; // E->F
         way->idx = 2;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue fc"; // F->C
         way->idx = 3;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue cb"; // C->B
         way->idx = 4;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue ag"; // A->G
         way->idx = 5;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue gh"; // G->H
         way->idx = 6;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue hi"; // H->I
         way->idx = 7;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue ij"; // I->J
         way->idx = 8;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue jk"; // J->K
         way->idx = 9;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue kb"; // K->B
         way->idx = 10;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue ar"; // A->R
         way->idx = 11;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         way = new georef::Way();
         way->name = "rue bs"; // B->S
         way->idx = 12;
         way->way_type = "rue";
-        b.data.geo_ref.ways.push_back(way);
+        b.data.geo_ref->ways.push_back(way);
 
         // A->B
-        add_edges(0, b.data.geo_ref, AA, BB, 200, type::Mode_e::Walking);
-        b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
-        b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
+        add_edges(0, *b.data.geo_ref, AA, BB, 200, type::Mode_e::Walking);
+        b.data.geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
+        b.data.geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
 
         // A->E
-        add_edges(1, b.data.geo_ref, AA, EE, A, E, type::Mode_e::Walking);
-        add_edges(1, b.data.geo_ref, AA, EE, A, E, type::Mode_e::Car);
-        b.data.geo_ref.ways[1]->edges.push_back(std::make_pair(AA, EE));
-        b.data.geo_ref.ways[1]->edges.push_back(std::make_pair(EE, AA));
+        add_edges(1, *b.data.geo_ref, AA, EE, A, E, type::Mode_e::Walking);
+        add_edges(1, *b.data.geo_ref, AA, EE, A, E, type::Mode_e::Car);
+        b.data.geo_ref->ways[1]->edges.push_back(std::make_pair(AA, EE));
+        b.data.geo_ref->ways[1]->edges.push_back(std::make_pair(EE, AA));
 
         // E->F
-        add_edges(2, b.data.geo_ref, FF, EE, F, E, type::Mode_e::Car);
-        add_edges(2, b.data.geo_ref, FF, EE, F, E, type::Mode_e::Walking);
-        b.data.geo_ref.ways[2]->edges.push_back(std::make_pair(EE , FF));
-        b.data.geo_ref.ways[2]->edges.push_back(std::make_pair(FF , EE));
+        add_edges(2, *b.data.geo_ref, FF, EE, F, E, type::Mode_e::Car);
+        add_edges(2, *b.data.geo_ref, FF, EE, F, E, type::Mode_e::Walking);
+        b.data.geo_ref->ways[2]->edges.push_back(std::make_pair(EE , FF));
+        b.data.geo_ref->ways[2]->edges.push_back(std::make_pair(FF , EE));
 
         // F->C
-        add_edges(3, b.data.geo_ref, FF, CC, F, C, type::Mode_e::Walking);
-        add_edges(3, b.data.geo_ref, FF, CC, F, C, type::Mode_e::Car);
-        b.data.geo_ref.ways[3]->edges.push_back(std::make_pair(FF , CC));
-        b.data.geo_ref.ways[3]->edges.push_back(std::make_pair(CC , FF));
+        add_edges(3, *b.data.geo_ref, FF, CC, F, C, type::Mode_e::Walking);
+        add_edges(3, *b.data.geo_ref, FF, CC, F, C, type::Mode_e::Car);
+        b.data.geo_ref->ways[3]->edges.push_back(std::make_pair(FF , CC));
+        b.data.geo_ref->ways[3]->edges.push_back(std::make_pair(CC , FF));
 
         // C->B
-        add_edges(4, b.data.geo_ref, BB, CC, B, C, type::Mode_e::Walking);
-        add_edges(4, b.data.geo_ref, BB, CC, 50, type::Mode_e::Car);
-        b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(CC , BB));
-        b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(BB , CC));
+        add_edges(4, *b.data.geo_ref, BB, CC, B, C, type::Mode_e::Walking);
+        add_edges(4, *b.data.geo_ref, BB, CC, 50, type::Mode_e::Car);
+        b.data.geo_ref->ways[4]->edges.push_back(std::make_pair(CC , BB));
+        b.data.geo_ref->ways[4]->edges.push_back(std::make_pair(BB , CC));
 
         // A->G
         distance_ag = A.distance_to(G) - .5;//the cost of the edge is a bit less than the distance not to get a conflict with the projection
-        add_edges(5, b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Walking);
-        add_edges(5, b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Bike);
-        b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(AA , GG));
-        b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(GG , AA));
+        add_edges(5, *b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Walking);
+        add_edges(5, *b.data.geo_ref, AA, GG, distance_ag, type::Mode_e::Bike);
+        b.data.geo_ref->ways[5]->edges.push_back(std::make_pair(AA , GG));
+        b.data.geo_ref->ways[5]->edges.push_back(std::make_pair(GG , AA));
 
         // G->H
-        add_edges(6, b.data.geo_ref, HH, GG, G, H, type::Mode_e::Walking);
-        add_edges(6, b.data.geo_ref, HH, GG, G, H, type::Mode_e::Bike);
-        b.data.geo_ref.ways[6]->edges.push_back(std::make_pair(GG , HH));
-        b.data.geo_ref.ways[6]->edges.push_back(std::make_pair(HH , GG));
+        add_edges(6, *b.data.geo_ref, HH, GG, G, H, type::Mode_e::Walking);
+        add_edges(6, *b.data.geo_ref, HH, GG, G, H, type::Mode_e::Bike);
+        b.data.geo_ref->ways[6]->edges.push_back(std::make_pair(GG , HH));
+        b.data.geo_ref->ways[6]->edges.push_back(std::make_pair(HH , GG));
 
         // H->I
-        add_edges(7, b.data.geo_ref, HH, II, H, I, type::Mode_e::Walking);
-        add_edges(7, b.data.geo_ref, HH, II, H, I, type::Mode_e::Bike);
-        b.data.geo_ref.ways[7]->edges.push_back(std::make_pair(HH , II));
-        b.data.geo_ref.ways[7]->edges.push_back(std::make_pair(II , HH));
+        add_edges(7, *b.data.geo_ref, HH, II, H, I, type::Mode_e::Walking);
+        add_edges(7, *b.data.geo_ref, HH, II, H, I, type::Mode_e::Bike);
+        b.data.geo_ref->ways[7]->edges.push_back(std::make_pair(HH , II));
+        b.data.geo_ref->ways[7]->edges.push_back(std::make_pair(II , HH));
 
         // I->J
-        add_edges(8, b.data.geo_ref, II, JJ, I, J, type::Mode_e::Walking);
-        add_edges(8, b.data.geo_ref, II, JJ, I, J, type::Mode_e::Bike);
-        b.data.geo_ref.ways[8]->edges.push_back(std::make_pair(II , JJ));
-        b.data.geo_ref.ways[8]->edges.push_back(std::make_pair(JJ , II));
+        add_edges(8, *b.data.geo_ref, II, JJ, I, J, type::Mode_e::Walking);
+        add_edges(8, *b.data.geo_ref, II, JJ, I, J, type::Mode_e::Bike);
+        b.data.geo_ref->ways[8]->edges.push_back(std::make_pair(II , JJ));
+        b.data.geo_ref->ways[8]->edges.push_back(std::make_pair(JJ , II));
 
         // J->K
-        add_edges(9, b.data.geo_ref, KK, JJ, K, J, type::Mode_e::Walking);
-        add_edges(9, b.data.geo_ref, KK, JJ, K, J, type::Mode_e::Bike);
-        b.data.geo_ref.ways[9]->edges.push_back(std::make_pair(JJ , KK));
-        b.data.geo_ref.ways[9]->edges.push_back(std::make_pair(KK , JJ));
+        add_edges(9, *b.data.geo_ref, KK, JJ, K, J, type::Mode_e::Walking);
+        add_edges(9, *b.data.geo_ref, KK, JJ, K, J, type::Mode_e::Bike);
+        b.data.geo_ref->ways[9]->edges.push_back(std::make_pair(JJ , KK));
+        b.data.geo_ref->ways[9]->edges.push_back(std::make_pair(KK , JJ));
 
         // K->B
-        add_edges(10, b.data.geo_ref, KK, BB, K, B, type::Mode_e::Walking);
-        add_edges(10, b.data.geo_ref, KK, BB, K, B, type::Mode_e::Bike);
-        b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(KK , BB));
-        b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(BB , KK));
+        add_edges(10, *b.data.geo_ref, KK, BB, K, B, type::Mode_e::Walking);
+        add_edges(10, *b.data.geo_ref, KK, BB, K, B, type::Mode_e::Bike);
+        b.data.geo_ref->ways[10]->edges.push_back(std::make_pair(KK , BB));
+        b.data.geo_ref->ways[10]->edges.push_back(std::make_pair(BB , KK));
 
         // A->R
-        add_edges(11, b.data.geo_ref, AA, RR, A, R, type::Mode_e::Walking);
-        b.data.geo_ref.ways[11]->edges.push_back(std::make_pair(AA, RR));
-        b.data.geo_ref.ways[11]->edges.push_back(std::make_pair(RR, AA));
+        add_edges(11, *b.data.geo_ref, AA, RR, A, R, type::Mode_e::Walking);
+        b.data.geo_ref->ways[11]->edges.push_back(std::make_pair(AA, RR));
+        b.data.geo_ref->ways[11]->edges.push_back(std::make_pair(RR, AA));
 
         // B->S
-        add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Walking);
-        add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Bike);
-        add_edges(12, b.data.geo_ref, BB, SS, B, S, type::Mode_e::Car);
-        b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(BB, SS));
-        b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(SS, BB));
+        add_edges(12, *b.data.geo_ref, BB, SS, B, S, type::Mode_e::Walking);
+        add_edges(12, *b.data.geo_ref, BB, SS, B, S, type::Mode_e::Bike);
+        add_edges(12, *b.data.geo_ref, BB, SS, B, S, type::Mode_e::Car);
+        b.data.geo_ref->ways[12]->edges.push_back(std::make_pair(BB, SS));
+        b.data.geo_ref->ways[12]->edges.push_back(std::make_pair(SS, BB));
 
         //add bike sharing edges
-        add_bike_sharing_edge(10, b.data.geo_ref, BB, BB);
-        b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(BB, BB)); //on way BK
-        add_bike_sharing_edge(5, b.data.geo_ref, GG, GG);
-        b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(GG, GG)); //on way AG
+        add_bike_sharing_edge(10, *b.data.geo_ref, BB, BB);
+        b.data.geo_ref->ways[10]->edges.push_back(std::make_pair(BB, BB)); //on way BK
+        add_bike_sharing_edge(5, *b.data.geo_ref, GG, GG);
+        b.data.geo_ref->ways[5]->edges.push_back(std::make_pair(GG, GG)); //on way AG
 
         b.sa("stopA", A.lon(), A.lat());
         b.sa("stopR", R.lon(), R.lat());
         b.vj("A")("stopA", 8*3600 +10*60, 8*3600 + 11 * 60)("stopR", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.generate_dummy_basis();
-        b.data.pt_data.index();
+        b.data.pt_data->index();
         b.data.build_raptor();
         b.data.build_uri();
         b.data.build_proximity_list();
-        b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+        b.data.meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
 
         std::string origin_lon = boost::lexical_cast<std::string>(S.lon()),
                 origin_lat = boost::lexical_cast<std::string>(S.lat()),
@@ -425,7 +425,7 @@ struct streetnetworkmode_fixture {
     }
 
     pbnavitia::Response make_response() {
-        georef::StreetNetwork sn_worker(b.data.geo_ref);
+        georef::StreetNetwork sn_worker(*b.data.geo_ref);
         RAPTOR raptor(b.data);
         return ::make_response(raptor, origin, destination, datetimes, true, type::AccessibiliteParams(), forbidden, sn_worker, false);
     }
@@ -543,13 +543,13 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
 //biking
 BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
-    origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bike];
+    origin.streetnetwork_params.offset = b.data.geo_ref->offsets[navitia::type::Mode_e::Bike];
     double total_distance = S.distance_to(B) + B.distance_to(K) + K.distance_to(J) + J.distance_to(I)
             + I.distance_to(H) + H.distance_to(G) + G.distance_to(A) + A.distance_to(R) + 1;
     origin.streetnetwork_params.max_duration = seconds(total_distance / get_default_speed()[type::Mode_e::Bike]);
     origin.streetnetwork_params.speed_factor = 1;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
-    destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bike];
+    destination.streetnetwork_params.offset = b.data.geo_ref->offsets[navitia::type::Mode_e::Bike];
     destination.streetnetwork_params.max_duration = seconds(total_distance / get_default_speed()[type::Mode_e::Bike]);
     destination.streetnetwork_params.speed_factor = 1;
 
@@ -595,11 +595,11 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
 // Biking with a different speed
 BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<test_speed_provider>) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
-    origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bike];
+    origin.streetnetwork_params.offset = b.data.geo_ref->offsets[navitia::type::Mode_e::Bike];
     origin.streetnetwork_params.max_duration = bt::pos_infin;
     origin.streetnetwork_params.speed_factor = .5;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
-    destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bike];
+    destination.streetnetwork_params.offset = b.data.geo_ref->offsets[navitia::type::Mode_e::Bike];
     destination.streetnetwork_params.max_duration = bt::pos_infin;
     destination.streetnetwork_params.speed_factor = .5;
 
@@ -645,12 +645,12 @@ BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture<test_speed_provider>) {
     auto total_distance = S.distance_to(B) + B.distance_to(C) + C.distance_to(F) + F.distance_to(E) + E.distance_to(A) + 1;
 
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Car;
-    origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Car];
+    origin.streetnetwork_params.offset = b.data.geo_ref->offsets[navitia::type::Mode_e::Car];
     origin.streetnetwork_params.max_duration = seconds(total_distance / get_default_speed()[type::Mode_e::Car]);
     origin.streetnetwork_params.speed_factor = 1;
 
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Car;
-    destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Car];
+    destination.streetnetwork_params.offset = b.data.geo_ref->offsets[navitia::type::Mode_e::Car];
     destination.streetnetwork_params.max_duration = seconds(total_distance / get_default_speed()[type::Mode_e::Car]);
     destination.streetnetwork_params.speed_factor = 1;
 
@@ -688,11 +688,11 @@ BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture<test_speed_provider>) {
 BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>) {
 
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bss;
-    origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bss];
+    origin.streetnetwork_params.offset = b.data.geo_ref->offsets[navitia::type::Mode_e::Bss];
     origin.streetnetwork_params.max_duration = bt::pos_infin;
     origin.streetnetwork_params.speed_factor = 1;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bss;
-    destination.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Bss];
+    destination.streetnetwork_params.offset = b.data.geo_ref->offsets[navitia::type::Mode_e::Bss];
     destination.streetnetwork_params.max_duration = bt::pos_infin;
     destination.streetnetwork_params.speed_factor = 1;
 
@@ -865,7 +865,7 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
 /*
  *     A(0,0)             B(0,0.01)                       C(0,0.020)           D(0,0.03)
  *       x-------------------x                            x-----------------x
- *           SP1______ SP2                                   SP3_______SP4
+zsh:1: command not found: :325
  *          (0,0.005)     (0,0.007)                        (0,021)   (0,0.025)
  *
  *
@@ -890,31 +890,31 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     type::GeographicalCoord SP3(0, 0.021, false);
     type::GeographicalCoord SP4(0, 0.025, false);
 
-    b.data.geo_ref.init_offset(0);
+    b.data.geo_ref->init_offset(0);
     georef::Way* way;
 
     way = new georef::Way();
     way->name = "rue ab"; // A->B
     way->idx = 0;
     way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
+    b.data.geo_ref->ways.push_back(way);
 
     way = new georef::Way();
     way->name = "rue cd"; // C->D
     way->idx = 1;
     way->way_type = "rue";
-    b.data.geo_ref.ways.push_back(way);
+    b.data.geo_ref->ways.push_back(way);
 
 
-    boost::add_edge(AA, BB, georef::Edge(0,10), b.data.geo_ref.graph);
-    boost::add_edge(BB, AA, georef::Edge(0,10), b.data.geo_ref.graph);
-    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
-    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
+    boost::add_edge(AA, BB, georef::Edge(0,10), b.data.geo_ref->graph);
+    boost::add_edge(BB, AA, georef::Edge(0,10), b.data.geo_ref->graph);
+    b.data.geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
+    b.data.geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
 
-    boost::add_edge(CC, DD, georef::Edge(0,50), b.data.geo_ref.graph);
-    boost::add_edge(DD, CC, georef::Edge(0,50), b.data.geo_ref.graph);
-    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
-    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
+    boost::add_edge(CC, DD, georef::Edge(0,50), b.data.geo_ref->graph);
+    boost::add_edge(DD, CC, georef::Edge(0,50), b.data.geo_ref->graph);
+    b.data.geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
+    b.data.geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
 
     b.sa("stop_area:stop1", SP1.lon(), SP2.lat());
     b.sa("stop_area:stop2", SP2.lon(), SP2.lat());
@@ -928,11 +928,11 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     b.vj("A")("stop_point:stop_area:stop2", 8*3600 +10*60, 8*3600 + 11 * 60)
             ("stop_point:stop_area:stop3", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     b.generate_dummy_basis();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_raptor();
     b.data.build_uri();
     b.data.build_proximity_list();
-    b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    b.data.meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     georef::StreetNetwork sn_worker(b.data.geo_ref);
 
     RAPTOR raptor(b.data);

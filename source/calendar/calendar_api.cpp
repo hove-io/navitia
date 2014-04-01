@@ -51,7 +51,7 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
     calendar_list = paginate(calendar_list, count, start_page);
 
     for(type::idx_t cal_idx : calendar_list) {
-        type::Calendar* cal = d.pt_data.calendars[cal_idx];
+        type::Calendar* cal = d.pt_data->calendars[cal_idx];
         fill_pb_object(cal, d,pb_response.add_calendars(), depth, now);
     }
 

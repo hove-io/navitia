@@ -29,7 +29,7 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
                       const boost::posix_time::ptime now){
 
     for(auto idx : network_idx){
-        const auto* network = d.pt_data.networks[idx];
+        const auto* network = d.pt_data->networks[idx];
         std::string new_filter = "network.uri=" + network->uri;
         if(!filter.empty()){
             new_filter  += " and " + filter;
@@ -46,7 +46,7 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
             LOG4CPLUS_WARN(logger, "Disruption::add_stop_areas : ptref : "  + ptref_error.more);
         }
         for(auto stop_area_idx : line_list){
-            const auto* stop_area = d.pt_data.stop_areas[stop_area_idx];
+            const auto* stop_area = d.pt_data->stop_areas[stop_area_idx];
             if (stop_area->has_applicable_message(now, action_period)){
                 disrupt& dist = this->disrupts[this->find_or_create(network)];
                 auto find_predicate = [&](type::idx_t idx ) {
@@ -69,7 +69,7 @@ void Disruption::add_networks(const std::vector<type::idx_t>& network_idx,
                       const boost::posix_time::ptime now){
 
     for(auto idx : network_idx){
-        const auto* network = d.pt_data.networks[idx];
+        const auto* network = d.pt_data->networks[idx];
         if (network->has_applicable_message(now, action_period)){
             this->disrupts[this->find_or_create(network)];
         }
@@ -92,7 +92,7 @@ void Disruption::add_lines(const std::string& filter,
         LOG4CPLUS_WARN(logger, "Disruption::add_lines : ptref : "  + ptref_error.more);
     }
     for(auto idx : line_list){
-        const auto* line = d.pt_data.lines[idx];
+        const auto* line = d.pt_data->lines[idx];
         if (line->has_applicable_message(now, action_period)){
             disrupt& dist = this->disrupts[this->find_or_create(line->network)];
             auto find_predicate = [&](type::idx_t idx ) {
@@ -111,14 +111,14 @@ void Disruption::add_lines(const std::string& filter,
 void Disruption::sort_disruptions(const type::Data &d){
 
     auto sort_disruption = [&](disrupt d1, disrupt d2){
-        const auto & n1 = *(d.pt_data.networks[d1.network_idx]);
-        const auto & n2 = *(d.pt_data.networks[d2.network_idx]);
+        const auto & n1 = *(d.pt_data->networks[d1.network_idx]);
+        const auto & n2 = *(d.pt_data->networks[d2.network_idx]);
             return n1 < n2;
     };
 
     auto sort_lines = [&](type::idx_t l1_, type::idx_t l2_) {
-        const auto & l1 = *(d.pt_data.lines[l1_]);
-        const auto & l2 = *(d.pt_data.lines[l2_]);
+        const auto & l1 = *(d.pt_data->lines[l1_]);
+        const auto & l2 = *(d.pt_data->lines[l2_]);
         return l1 < l2;
     };
 

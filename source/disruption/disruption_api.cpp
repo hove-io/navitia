@@ -42,14 +42,14 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
     for(disrupt dist: disrupts){
         pbnavitia::Disruption* pb_disruption = pb_response.add_disruptions();
         pbnavitia::Network* pb_network = pb_disruption->mutable_network();
-        navitia::fill_pb_object(d.pt_data.networks[dist.network_idx], d, pb_network, depth, now, action_period);
+        navitia::fill_pb_object(d.pt_data->networks[dist.network_idx], d, pb_network, depth, now, action_period);
         for(type::idx_t idx : dist.line_idx){
             pbnavitia::Line* pb_line = pb_disruption->add_lines();
-            navitia::fill_pb_object(d.pt_data.lines[idx], d, pb_line, depth-1, now, action_period);
+            navitia::fill_pb_object(d.pt_data->lines[idx], d, pb_line, depth-1, now, action_period);
         }
         for(type::idx_t idx : dist.stop_area_idx){
             pbnavitia::StopArea* pb_stop_area = pb_disruption->add_stop_areas();
-            navitia::fill_pb_object(d.pt_data.stop_areas[idx], d, pb_stop_area, depth-1, now, action_period);
+            navitia::fill_pb_object(d.pt_data->stop_areas[idx], d, pb_stop_area, depth-1, now, action_period);
         }
     }
     auto pagination = pb_response.mutable_pagination();
