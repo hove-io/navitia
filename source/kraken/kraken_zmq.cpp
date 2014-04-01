@@ -73,7 +73,13 @@ int main(int, char** argv){
     std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );
     conf->set_string("application", std::string(argv[0]).substr(posSlash+1));
     char buf[256];
-    if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");
+    if(getcwd(buf, sizeof(buf))){
+        conf->set_string("path",std::string(buf) + "/");
+    }else{
+        perror("getcwd");
+        return 1;
+    }
+
     std::string conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
     conf->load_ini(conf_file);
     init_logger(conf_file);
