@@ -3,7 +3,6 @@
 #include "utils/configuration.h"
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/format.hpp>
 #include <atomic>
 #include "type/type.h"
@@ -83,9 +82,6 @@ public:
     // les admins des objets
 //    void set_admins();
 
-    /// Mutex servant à protéger le load des données
-    boost::shared_mutex load_mutex;
-
     friend class boost::serialization::access;
 
     bool last_load = true;
@@ -136,7 +132,6 @@ public:
 
     void build_grid_validity_pattern();
     void complete();
-    Data& operator=(Data&& other);
 
     /** Retourne le type de l'id donné */
     Type_e get_type_of_id(const std::string & id) const;

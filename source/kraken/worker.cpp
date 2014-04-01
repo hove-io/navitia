@@ -72,7 +72,6 @@ pbnavitia::Response Worker::status() {
 
     auto status = result.mutable_status();
     const auto d = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
     status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
     status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
     status->set_end_production_date(bg::to_iso_string(d->meta->production_date.end()));
@@ -95,7 +94,6 @@ pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
     auto metadatas = result.mutable_metadatas();
     const auto d = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
     metadatas->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
     metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.end()));
     metadatas->set_shape(d->meta->shape);
@@ -120,7 +118,6 @@ void Worker::init_worker_data(const std::shared_ptr<navitia::type::Data> data){
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     const auto data = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(data->load_mutex);
     return navitia::autocomplete::autocomplete(request.q(),
             vector_of_pb_types(request), request.depth(), request.count(),
             vector_of_admins(request), request.search_type(), *data);
@@ -128,7 +125,6 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
 
 pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &request){
     const auto data = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(data->load_mutex);
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
@@ -144,7 +140,6 @@ pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &req
 
 pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request){
     const auto data = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(data->load_mutex);
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
@@ -161,7 +156,6 @@ pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
         pbnavitia::API api) {
     const auto data = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(data->load_mutex);
     int32_t max_date_times = request.has_max_date_times() ? request.max_date_times() : std::numeric_limits<int>::max();
     std::vector<std::string> forbidden_uri;
     for(int i = 0; i < request.forbidden_uri_size(); ++i)
@@ -218,7 +212,6 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
     const auto data = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(data->load_mutex);
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
     auto coord = this->coord_of_entry_point(ep, data);
     return proximitylist::find(coord, request.distance(), vector_of_pb_types(request),
@@ -306,7 +299,6 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
 
 pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
     const auto data = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(data->load_mutex);
     this->init_worker_data(data);
     pbnavitia::Response pb_response;
 
@@ -364,7 +356,6 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
 
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
     const auto data = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(data->load_mutex);
     this->init_worker_data(data);
 
     Type_e origin_type = data->get_type_of_id(request.origin());
@@ -427,7 +418,6 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
 pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
     const auto data = data_manager.get_data();
-    boost::shared_lock<boost::shared_mutex> lock(data->load_mutex);
     std::vector<std::string> forbidden_uri;
     for(int i = 0; i < request.forbidden_uri_size(); ++i)
         forbidden_uri.push_back(request.forbidden_uri(i));
