@@ -70,6 +70,7 @@ add_subdirectory(sql)
 add_subdirectory(disruption)
 add_subdirectory(calendar)
 
+add_subdirectory(tests)
 add_subdirectory(scripts)
 
 INCLUDE (CheckIncludeFiles)
