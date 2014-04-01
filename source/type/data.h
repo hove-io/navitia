@@ -3,7 +3,6 @@
 #include "utils/configuration.h"
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/format.hpp>
 #include <atomic>
 #include "type/type.h"
@@ -82,9 +81,6 @@ public:
     /// Fixe les villes des voiries du filaire
     // les admins des objets
 //    void set_admins();
-
-    /// Mutex servant à protéger le load des données
-    boost::shared_mutex load_mutex;
 
     friend class boost::serialization::access;
 
