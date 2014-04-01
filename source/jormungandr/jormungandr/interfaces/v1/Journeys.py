@@ -119,17 +119,25 @@ class GeoJson(fields.Raw):
 
 class section_type(enum_type):
 
+    def if_on_demand_stop_time(self, stop):
+        properties = stop.properties
+        descriptor = properties.DESCRIPTOR
+        enum = descriptor.enum_types_by_name["AdditionalInformation"]
+        for v in properties.additional_informations:
+            if enum.values_by_number[v].name == 'on_demand_transport':
+                return True
+        return False
+
     def output(self, key, obj):
         try:
-            if obj.HasField("pt_display_informations"):
-                infos = obj.pt_display_informations
-                if infos.HasField("vehicle_journey_type"):
-                    infos_desc = infos.DESCRIPTOR
-                    fields = infos_desc.fields_by_name['vehicle_journey_type']
-                    odt_enum = fields.enum_type
-                    regular = odt_enum.values_by_name['regular'].number
-                    if infos.vehicle_journey_type != regular:
-                        return "on_demand_transport"
+            if obj.stop_date_times:
+                first_stop = obj.stop_date_times[0]
+                last_stop = obj.stop_date_times[-1]
+                if self.if_on_demand_stop_time(first_stop):
+                    return 'on_demand_transport'
+                elif self.if_on_demand_stop_time(last_stop):
+                    return 'on_demand_transport'
+                return 'public_transport'
         except ValueError:
             pass
         return super(section_type, self).output(key, obj)
@@ -144,7 +152,7 @@ class section_place(PbField):
         else:
             return super(PbField, self).output(key, obj)
 section = {
-    "type": section_type(attribute="type"),
+    "type": section_type(attribute='stop_date_time'),
     "id": fields.String(),
     "mode": enum_type(attribute="street_network.mode"),
     "duration": fields.Integer(),
