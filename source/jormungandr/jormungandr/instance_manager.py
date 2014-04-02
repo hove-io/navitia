@@ -43,7 +43,6 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
 from jormungandr import app
 from jormungandr.instance import Instance
-from jormungandr.stat_manager import StatManager
 import traceback
 
 
@@ -71,7 +70,6 @@ class InstanceManager(object):
         self.instances = {}
         self.context = zmq.Context()
         self.default_socket = None
-        self.stat_manager = StatManager()
 
         # if a .ini file is defined in the settings we take it
         # else we load all .ini file found in the INSTANCES_DIR
@@ -101,9 +99,6 @@ class InstanceManager(object):
 
 
             self.instances[conf.get('instance', 'key')] = instance
-
-        #Configuration of StatManager:
-        self.stat_manager.init("amqp://guest:guest@localhost:5672//","navitia","stat.sender")
 
         self.thread_event = Event()
         self.thread = Thread(target=self.thread_ping)
