@@ -90,7 +90,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
           DateTime datetime, DateTime max_datetime,
           boost::optional<const std::string> calendar_id,
-          const type::Data &data) {
+          const type::Data &data, uint32_t depth) {
     pbnavitia::Response response;
     auto current_time = pt::second_clock::local_time();
     auto now = pt::second_clock::local_time();
@@ -102,12 +102,12 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
         auto schedule = response.add_stop_schedules();
         //Each schedule has a stop_point and a route
         fill_pb_object(data.pt_data->stop_points[id_vec.first.first], data,
-                       schedule->mutable_stop_point(), 0,
+                       schedule->mutable_stop_point(), depth,
                        current_time, action_period);
 
         auto m_route = schedule->mutable_route();
         fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
-                               m_route, 0, current_time, action_period);
+                               m_route, depth, current_time, action_period);
         if (data.pt_data->routes[id_vec.first.second]->line != nullptr){
             auto m_line = m_route->mutable_line();
             fill_pb_object(data.pt_data->routes[id_vec.first.second]->line, data,
@@ -141,7 +141,8 @@ departure_board(const std::string& request,
                 boost::optional<const std::string> calendar_id,
                 const std::vector<std::string>& forbidden_uris,
                 const std::string& date,
-                uint32_t duration, int32_t max_date_times,
+                uint32_t duration, uint32_t depth,
+                int32_t max_date_times,
                 int interface_version,
                 int count, int start_page, const type::Data &data, bool disruption_active) {
 
@@ -236,7 +237,7 @@ departure_board(const std::string& request,
         handler.pb_response = render_v1(response_status, map_route_stop_point,
                                         handler.date_time,
                                         handler.max_datetime,
-                                        calendar_id, data);
+                                        calendar_id, data, depth);
     }
 
 
