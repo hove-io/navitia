@@ -28,8 +28,10 @@
 # www.navitia.io
 
 from flask.ext.restful import Resource
+from jormungandr import i_stat_manager
 from converters_collection_type import collections_to_resource_type
 from converters_collection_type import resource_type_to_collection
+from jormungandr.stat_manager import manage_stat_caller
 from make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
 from collections import OrderedDict, deque
@@ -51,6 +53,7 @@ class ResourceUri(Resource):
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
         self.method_decorators.append(authentification_required)
+        self.method_decorators.append(manage_stat_caller(i_stat_manager))
 
     def get_filter(self, items):
         filters = []
