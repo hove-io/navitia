@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import kombu
-from stat_persistor import stat_pb2
+from navitiacommon import stat_pb2
 import datetime
 import time
 
@@ -23,7 +23,50 @@ stat_request.query_string = '/v1/coverage/centre/places?q=gare'
 stat_request.host = 'http://navitia2-ws.ctp.dev.canaltp.fr'
 stat_request.client = '127.0.0.1'
 stat_request.response_size = 400
-stat_request.region_id = 'paris'
+
+#Coverages:
+stat_coverage = stat_request.coverages.add()
+stat_coverage.region_id = 'paris'
+
+#parameters:
+stat_parameter = stat_request.parameters.add()
+stat_parameter.key = 'param_key_1'
+stat_parameter.value = 'param_value_1'
+stat_parameter = stat_request.parameters.add()
+stat_parameter.key = 'param_key_2'
+stat_parameter.value = 'param_value_2'
+
+#Journey
+stat_journey = stat_request.journeys.add()
+stat_journey.requested_date_time = int(time.mktime(dt.timetuple()))
+stat_journey.departure_date_time = int(time.mktime(dt.timetuple()))
+stat_journey.arrival_date_time = int(time.mktime(dt.timetuple()))
+stat_journey.duration = 1234
+stat_journey.nb_transfers = 3
+stat_journey.type = 'rapid'
+
+#section
+stat_section = stat_journey.sections.add()
+stat_section.departure_date_time = int(time.mktime(dt.timetuple()))
+stat_section.arrival_date_time = int(time.mktime(dt.timetuple()))
+stat_section.duration = 255
+stat_section.type = 'street_network'
+stat_section.from_embedded_type = 'stop_point'
+stat_section.from_id = 'from_stop_point_id'
+stat_section.from_coord.lat = 47.252525
+stat_section.from_coord.lon = 2.1515151
+stat_section.to_embedded_type = 'address'
+stat_section.to_id = 'to_address_id'
+stat_section.to_coord.lat = 48.253335
+stat_section.to_coord.lon = 2.2545015
+stat_section.vehicle_journey_id = 'vehicle_journey_id'
+stat_section.line_id = 'line_id'
+stat_section.route_id = 'route_id'
+stat_section.network_id = 'network_id'
+stat_section.physical_mode_id = 'physical_mode_id'
+stat_section.commercial_mode_id = 'commercial_mode_id'
+
+
 producer.publish(stat_request.SerializeToString(), routing_key= topic_name)
 
 connection.close()

@@ -1,7 +1,7 @@
 # encoding: utf-8
 from stat_persistor.config import Config
 import logging
-import stat_persistor.stat_pb2
+import navitiacommon.stat_pb2
 import google
 from stat_persistor.saver.statsaver import StatSaver
 from stat_persistor.saver.utils import TechnicalError, FunctionalError
@@ -59,18 +59,16 @@ class StatPersistor(ConsumerMixin):
         connect to rabbitmq and init the queues
         """
         self.connection = kombu.Connection(self.config.broker_url)
-        instance_name = self.config.instance_name
         exchange_name = self.config.exchange_name
         exchange = kombu.Exchange(exchange_name, 'topic', durable=True)
 
         logging.getLogger('stat_persistor').info("listen following topics: %s",
-                                         self.config.rt_topics)
+                                         self.config.rt_topic)
 
-        for topic in self.config.rt_topics:
-            queue_name = instance_name + '_stat_persistor_' + topic
-            queue = kombu.Queue(queue_name, exchange=exchange, durable=True,
-                                routing_key=topic)
-            self.queues.append(queue)
+        queue_name = self.config.queue_name + '_' + self.config.rt_topic
+        queue = kombu.Queue(queue_name, exchange=exchange, durable=True,
+            routing_key=self.config.rt_topic)
+        self.queues.append(queue)
 
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=self.queues, callbacks=[self.process_task])]
@@ -87,7 +85,7 @@ class StatPersistor(ConsumerMixin):
 
     def process_task(self, body, message):
         logging.getLogger('stat_persistor').debug("Message received")
-        stat_request = stat_persistor.stat_pb2.StatRequest()
+        stat_request = navitiacommon.stat_pb2.StatRequest()
         try:
             stat_request.ParseFromString(body)
             logging.getLogger('stat_persistor').debug('%s', str(stat_request))

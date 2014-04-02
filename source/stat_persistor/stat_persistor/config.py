@@ -10,12 +10,10 @@ class Config(object):
     """
     def __init__(self):
         self.broker_url = None
-        self.ed_connection_string = None
-
+        self.stat_connection_string = None
         self.exchange_name = None
-        self.instance_name = None
-        self.rt_topics = []
-
+        self.rt_topic =None
+        self.queue_name = None
         self.log_file = None
         self.log_level = None
         self.stat_file = None
@@ -44,10 +42,13 @@ class Config(object):
         si elle n'est pas valide une ValueError est levé
         """
         confspec = []
+        confspec.append('[stat]')
+        confspec.append('connection-string = string()')
+
         confspec.append('[stat_persistor]')
         confspec.append('exchange-name = string(default="navitia")')
-        confspec.append('instance-name = string()')
-        confspec.append('rt-topics = string_list()')
+        confspec.append('rt-topic = string(default="stat.sender")')
+        confspec.append('queue-name = string(default="stat_persistor")')
         confspec.append('broker-url = string(default="amqp://guest:guest@localhost:5672//")')
         confspec.append('log-file = string(default=None)')
         confspec.append('log-level = string(default="debug")')
@@ -63,10 +64,11 @@ class Config(object):
             error = self.build_error(config, res)
             raise ValueError("Config is not valid: " + error)
 
+        self.stat_connection_string = config['stat']['connection-string']
         self.broker_url = config['stat_persistor']['broker-url']
-        self.rt_topics = config['stat_persistor']['rt-topics']
+        self.rt_topic = config['stat_persistor']['rt-topic']
+        self.queue_name = config['stat_persistor']['queue-name']
         self.exchange_name = config['stat_persistor']['exchange-name']
-        self.instance_name = config['stat_persistor']['instance-name']
 
         self.log_level = config['stat_persistor']['log-level']
         self.log_file = config['stat_persistor']['log-file']

@@ -1,13 +1,14 @@
 # encoding: utf-8
 import logging
 import datetime
+from sqlalchemy import Table, MetaData, select, create_engine
+import sqlalchemy
 from stat_persistor.saver.stat_Request import persist_stat_request
 from stat_persistor.saver.utils import FunctionalError, TechnicalError
 from stat_persistor.config import Config
 
 
 class StatSaver(object):
-
     """
     Classe responsable de l'enregistrement en base de donnée des statistiques
     (dans un fichier pour le moments)
@@ -15,6 +16,20 @@ class StatSaver(object):
 
     def __init__(self, config):
         self.file_name = config.stat_file
+
+        self.__engine = create_engine(config.stat_connection_string)
+        self.meta = MetaData(self.__engine)
+        self.request_table = Table('requests', self.meta, autoload=True,
+                                   schema='stat')
+        self.coverage_table = Table('coverages', self.meta, autoload=True,
+                                    schema='stat')
+        self.parameter_table = Table('parameters', self.meta,
+                                             autoload=True, schema='stat')
+        self.journey_table = Table('journeys', self.meta,
+                                           autoload=True, schema='stat')
+
+        self.journey_section_table = Table('journey_sections', self.meta,
+                                           autoload=True, schema='stat')
     def persist_stat(self, config, stat_request):
         self.__persist(stat_request, config, persist_stat_request)
 
@@ -32,4 +47,35 @@ class StatSaver(object):
         """
         logger = logging.getLogger('stat_persistor')
         conn = None
-        callback(item, config)
+        try:
+            conn = self.__engine.connect()
+            transaction = conn.begin()
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            logger.exception('error durring transaction')
+            raise TechnicalError('problem with databases: ' + str(e))
+
+        try:
+            callback(self.meta, conn, item)
+            #callback(item, config)
+            transaction.commit()
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.DataError) as e:
+            logger.exception('error durring transaction')
+            transaction.rollback()
+            raise FunctionalError(str(e))
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            logger.exception('error durring transaction')
+            if not hasattr(e, 'connection_invalidated') \
+                    or not e.connection_invalidated:
+                transaction.rollback()
+            raise TechnicalError('problem with databases: ' + str(e))
+        except:
+            logger.exception('error durring transaction')
+            try:
+                transaction.rollback()
+            except:
+                pass
+            raise
+        finally:
+            if conn:
+                conn.close()
+
