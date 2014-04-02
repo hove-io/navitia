@@ -90,7 +90,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
           DateTime datetime, DateTime max_datetime,
           boost::optional<const std::string> calendar_id,
-          const type::Data &data, uint32_t depth) {
+          uint32_t depth, const type::Data &data) {
     pbnavitia::Response response;
     auto current_time = pt::second_clock::local_time();
     auto now = pt::second_clock::local_time();
@@ -237,7 +237,7 @@ departure_board(const std::string& request,
         handler.pb_response = render_v1(response_status, map_route_stop_point,
                                         handler.date_time,
                                         handler.max_datetime,
-                                        calendar_id, data, depth);
+                                        calendar_id, depth, data);
     }
 
 
