@@ -302,13 +302,17 @@ class Script(object):
     def call_kraken(self, req, instance):
         resp = None
 
+        """
+            for all combinaison of departure and arrival mode we call kraken
+        """
+        # filter walking if vls in mode ?
         for o_mode, d_mode in itertools.product(
                 self.origin_modes, self.destination_modes):
             req.journeys.streetnetwork_params.origin_mode = o_mode
             req.journeys.streetnetwork_params.destination_mode = d_mode
-            resp = instance.send_and_receive(req)
-            if resp.response_type == response_pb2.ITINERARY_FOUND:
-                break  # result found, no need to inspect other fallback mode
+            local_resp = instance.send_and_receive(req)
+            if local_resp.response_type == response_pb2.ITINERARY_FOUND:
+                self.merge_response(resp, local_resp)
 
         self.__fill_uris(resp)
         return resp
