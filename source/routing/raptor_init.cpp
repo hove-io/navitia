@@ -167,13 +167,17 @@ getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt:
             for(auto journey_pattern_point : data.pt_data->stop_points[spid_dist.first]->journey_pattern_point_list) {
                 type::idx_t jppidx = journey_pattern_point->idx;
                 if(labels[i][journey_pattern_point->idx].type != boarding_type::uninitialized) {
-                    int lost_time;
+                    bt::time_duration walking_time = getWalkingTime(i, jppidx, departs, destinations, clockwise, labels, data);
+                    if(best.walking_time <= walking_time) {
+                        continue;
+                    }
+                    float lost_time;
                     if(clockwise)
                         lost_time = labels[i][jppidx].dt - (spid_dist.second.total_seconds()) - best.arrival;
                     else
                         lost_time = labels[i][jppidx].dt + (spid_dist.second.total_seconds()) - best.arrival;
 
-                    bt::time_duration walking_time = getWalkingTime(i, jppidx, departs, destinations, clockwise, labels, data);
+
 
                     //Si je gagne 5 minutes de marche a pied, je suis pret à perdre jusqu'à 10 minutes.
                     int walking_time_diff_in_s = (best.walking_time - walking_time).total_seconds();
