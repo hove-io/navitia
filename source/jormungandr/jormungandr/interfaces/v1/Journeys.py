@@ -321,23 +321,28 @@ class add_journey_pagination(object):
         datetime_before = None
         datetime_after = None
         try:
+            section_is_pt = lambda section : section['type'] == "public_transport"\
+                               or section['type'] == "on_demand_transport"
+            or_func = lambda a,b : a or b
+            journey_as_pt = lambda journey : reduce(or_func, journey['sections'])
             list_journeys = [journey for journey in resp['journeys']
                              if 'arrival_date_time' in journey.keys() and
-                             journey['arrival_date_time'] != '']
+                             journey['arrival_date_time'] != '' and
+                             journey.has_key("sections") and
+                             journey_as_pt(journey)]
             asap_journey = min(list_journeys,
                                key=itemgetter('arrival_date_time'))
         except:
             return (None, None)
         if asap_journey['arrival_date_time'] \
                 and asap_journey['departure_date_time']:
-            minute = timedelta(minutes=1)
+            second = timedelta(seconds=1)
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             s_arrival = asap_journey['arrival_date_time']
-            f_departure = datetime.strptime(s_arrival, f_datetime)
-            datetime_after = f_departure + minute
             f_arrival = datetime.strptime(s_arrival, f_datetime)
-            datetime_before = f_arrival - minute
+            datetime_after = f_departure + second
+            datetime_before = f_arrival - second
 
         return (datetime_before, datetime_after)
 
