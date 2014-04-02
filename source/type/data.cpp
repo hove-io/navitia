@@ -213,7 +213,7 @@ void Data::complete(){
     pt::ptime start;
     int sort, autocomplete;
 
-    geo_ref->init();
+//    geo_ref->init();
 
     build_midnight_interchange();
     build_grid_validity_pattern();
