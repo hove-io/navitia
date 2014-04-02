@@ -455,6 +455,9 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
 void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points) {
    enum class error {
        matched = 0,
+       matched_walking,
+       matched_bike,
+       matched_car,
        not_initialized,
        not_valid,
        other,
@@ -481,13 +484,29 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
                messages[error::other] += 1;
            }
        }
+       if (pair.first[nt::Mode_e::Walking].found) {
+           messages[error::matched_walking] += 1;
+       }
+       if (pair.first[nt::Mode_e::Bike].found) {
+           messages[error::matched_bike] += 1;
+       }
+       if (pair.first[nt::Mode_e::Car].found) {
+           messages[error::matched_car] += 1;
+       }
    }
 
    auto log = log4cplus::Logger::getInstance("kraken::type::Data::project_stop_point");
-   if (messages[error::matched]) {
-       LOG4CPLUS_DEBUG(log, "Number of stop point projected on the georef network : "
-                       << messages[error::matched] << " (on " << stop_points.size() << ")");
-   }
+   LOG4CPLUS_DEBUG(log, "Number of stop point projected on the georef network : "
+                   << messages[error::matched] << " (on " << stop_points.size() << ")");
+
+
+   LOG4CPLUS_DEBUG(log, "Number of stop point projected on the walking georef network : "
+                   << messages[error::matched_walking] << " (on " << stop_points.size() << ")");
+   LOG4CPLUS_DEBUG(log, "Number of stop point projected on the biking georef network : "
+                   << messages[error::matched_bike] << " (on " << stop_points.size() << ")");
+   LOG4CPLUS_DEBUG(log, "Number of stop point projected on the car georef network : "
+                   << messages[error::matched_car] << " (on " << stop_points.size() << ")");
+
    if (messages[error::not_initialized]) {
        LOG4CPLUS_DEBUG(log, "Number of stop point rejected (X=0 or Y=0)"
                        << messages[error::not_initialized]);
