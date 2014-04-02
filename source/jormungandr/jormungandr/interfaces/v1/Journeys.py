@@ -426,11 +426,11 @@ class Journeys(ResourceUri):
                                 type=dt_represents, default=True)
         parser_get.add_argument("max_nb_transfers", type=int, default=10,
                                 dest="max_transfers")
-        parser_get.add_argument("first_section_mode",
+        parser_get.add_argument("first_section_mode[]",
                                 type=option_value(modes),
                                 default=["bss"],
                                 dest="origin_mode", action="append")
-        parser_get.add_argument("last_section_mode",
+        parser_get.add_argument("last_section_mode[]",
                                 type=option_value(modes),
                                 default=["bss"],
                                 dest="destination_mode", action="append")
@@ -452,6 +452,15 @@ class Journeys(ResourceUri):
         parser_get.add_argument("wheelchair", type=boolean, default=False)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
+        # for retrocompatibility purpose, we duplicate (without []):
+        parser_get.add_argument("first_section_mode",
+                                type=option_value(modes),
+                                default=["bss"],
+                                dest="origin_mode", action="append")
+        parser_get.add_argument("last_section_mode",
+                                type=option_value(modes),
+                                default=["bss"],
+                                dest="destination_mode", action="append")
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
 
