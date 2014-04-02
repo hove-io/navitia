@@ -15,13 +15,28 @@ def get_nontransport_duration(journey):
             current_duration += section.duration
     return current_duration
 
+def has_fall_back_mode(journey, mode):
+    return any(s.type == response_pb2.STREET_NETWORK and
+            s.street_network.mode == mode for s in journey.sections)
+
 
 def has_car(journey):
-    for section in journey.sections:
-        if section.type == response_pb2.STREET_NETWORK:
-            if section.street_network.mode == response_pb2.Car:
-                return True
-    return False
+    return has_fall_back_mode(journey, response_pb2.Car)
+
+
+def has_no_car(journey):
+    return not has_fall_back_mode(journey, response_pb2.Car)
+
+
+def has_bike(journey):
+    return has_fall_back_mode(journey, response_pb2.Bike)
+
+
+    # check if the journey has not public transport section
+def non_pt_journey(journey):
+    has_pt = all(section.type == response_pb2.STREET_NETWORK
+                 for section in journey.sections)
+    return has_pt
 
 
 def min_from_criteria(journey_list, criteria):
@@ -69,6 +84,7 @@ def get_arrival_datetime(journey):
 
 def get_departure_datetime(journey):
     return datetime.strptime(journey.arrival_date_time, "%Y%m%dT%H%M%S")
+
 
 def choose_standard(journeys, best_criteria):
     standard = None
@@ -164,10 +180,13 @@ def qualifier_one(journeys, request_type):
     def is_possible_cheap(journey):
         return journey.type == "possible_cheap"
 
-    #definition of the journeys to qualify
+    # definition of the journeys to qualify
+    # the last defined carac will take over the first one
+    # if a journey is eligible to multiple tags
     trip_caracs = [
         #the cheap journey, is the fastest one without train
         ("cheap", trip_carac([
+            partial(has_no_car),
             partial(is_possible_cheap),
             partial(no_train),
             #partial(journey_length_constraint, max_evolution=.50),
@@ -180,6 +199,7 @@ def qualifier_one(journeys, request_type):
             ]
         )),
         ("healthy", trip_carac([
+            partial(has_no_car),
             partial(journey_length_constraint, max_evolution=.20),
             partial(journey_goal_constraint, max_mn_shift=20, r_type=request_type),
             partial(nonTC_abs_constraint, max_mn_shift=20 * 60),
@@ -191,6 +211,7 @@ def qualifier_one(journeys, request_type):
             ]
         )),
         ("comfort", trip_carac([
+            partial(has_no_car),
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
             partial(nonTC_relative_constraint, evol=-.1),
@@ -199,6 +220,23 @@ def qualifier_one(journeys, request_type):
                 transfers_crit,
                 nonTC_crit,
                 best_crit,
+            ]
+        )),
+        # the non_pt journey is the earliest journey without any public transport
+        # only walking, biking or driving
+        ("non_pt", trip_carac([
+            partial(non_pt_journey),
+        ],
+            [
+                best_crit
+            ]
+        )),
+        # for car we want at most one journey, the earliest one
+        ("car", trip_carac([
+            partial(has_car)
+        ],
+            [
+                best_crit
             ]
         )),
         ("rapid", trip_carac([
