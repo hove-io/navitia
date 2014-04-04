@@ -519,23 +519,23 @@ struct Company : public Header, Nameable, Codes{
     bool operator<(const Company & other) const { return this < &other; }
 };
 
-struct CommercialMode : public Header, Nameable, Codes{
+struct CommercialMode : public Header, Nameable{
     const static Type_e type = Type_e::CommercialMode;
     std::vector<Line*> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & line_list & codes;
+        ar & idx & id & name & uri & line_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const CommercialMode & other) const { return this < &other; }
 
 };
 
-struct PhysicalMode : public Header, Nameable, Codes{
+struct PhysicalMode : public Header, Nameable{
     const static Type_e type = Type_e::PhysicalMode;
     std::vector<JourneyPattern*> journey_pattern_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & journey_pattern_list & codes;
+        ar & id & idx & name & uri & journey_pattern_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
