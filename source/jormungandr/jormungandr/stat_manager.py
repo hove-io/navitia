@@ -8,6 +8,7 @@ from navitiacommon import stat_pb2
 from navitiacommon import request_pb2
 from datetime import datetime, timedelta
 from datetime import datetime
+import logging
 
 import time
 import sys
@@ -69,7 +70,7 @@ class StatManager(object):
             stat_request.host = request.host_url
             stat_request.response_size = 400
             stat_request.client = request.remote_addr
-        except:
+        except Exception:
             pass
 
     def fill_parameters(self, stat_request, func_call):
@@ -78,15 +79,17 @@ class StatManager(object):
             try:
                 stat_parameter.key = item[0]
                 stat_parameter.value = item[1]
-            except:
+            except Exception:
                 pass
+
 
     def fill_coverages(self, stat_request, func_call):
         stat_coverage = stat_request.coverages.add()
         try:
             stat_coverage.region_id = request.view_args['region']
-        except:
+        except Exception:
             pass
+
 
 
     def init_journey(self, stat_journey):
@@ -102,26 +105,39 @@ class StatManager(object):
         Fill journey and all sections:
         """
         try:
-            req_date_time = resp_journey["requested_date_time"]
-            if len(req_date_time) > 0:
-                stat_journey.requested_date_time = int(time.mktime(datetime.strptime(req_date_time, f_datetime).timetuple()))
+            self.init_journey(stat_journey)
+            key_name = 'requested_date_time'
+            if key_name in resp_journey:
+                req_date_time = resp_journey[key_name]
+                if len(req_date_time) > 0:
+                    stat_journey.requested_date_time = int(time.mktime(datetime.strptime(req_date_time, f_datetime).timetuple()))
 
-            dep_date_time = resp_journey["departure_date_time"]
-            if len(dep_date_time) > 0:
-                stat_journey.departure_date_time = int(time.mktime(datetime.strptime(dep_date_time, f_datetime).timetuple()))
+            key_name = 'departure_date_time'
+            if key_name in resp_journey:
+                dep_date_time = resp_journey[key_name]
+                if len(dep_date_time) > 0:
+                    stat_journey.departure_date_time = int(time.mktime(datetime.strptime(dep_date_time, f_datetime).timetuple()))
 
-            arr_date_time = resp_journey["arrival_date_time"]
-            if len(arr_date_time) > 0:
-                stat_journey.arrival_date_time = int(time.mktime(datetime.strptime(arr_date_time, f_datetime).timetuple()))
+            key_name = 'arrival_date_time'
+            if key_name in resp_journey:
+                arr_date_time = resp_journey["arrival_date_time"]
+                if len(arr_date_time) > 0:
+                    stat_journey.arrival_date_time = int(time.mktime(datetime.strptime(arr_date_time, f_datetime).timetuple()))
 
-            stat_journey.duration = resp_journey["duration"]
-            stat_journey.nb_transfers = resp_journey["nb_transfers"]
-            stat_journey.type = resp_journey["type"]
+            key_name = 'duration'
+            if key_name in resp_journey:
+                stat_journey.duration = resp_journey[key_name]
 
-        except:
+            key_name = 'nb_transfers'
+            if key_name in resp_journey:
+                stat_journey.nb_transfers = resp_journey[key_name]
+
+            key_name = 'type'
+            if key_name in resp_journey:
+                stat_journey.type = resp_journey[key_name]
+
+        except Exception:
             pass
-
-        self.fill_sections(stat_journey, resp_journey)
 
 
     def fill_journeys(self, stat_request, func_call):
@@ -131,6 +147,7 @@ class StatManager(object):
         for resp_journey in func_call[0]['journeys']:
             stat_journey = stat_request.journeys.add()
             self.fill_journey(stat_journey, resp_journey)
+            self.fill_sections(stat_journey, resp_journey)
 
 
     def get_section_link(self, resp_section,link_type):
@@ -145,16 +162,36 @@ class StatManager(object):
 
     def fill_section(self, stat_section, resp_section):
         try:
-            dep_time = resp_section['departure_date_time']
-            if len(dep_time) > 0:
-                stat_section.departure_date_time = int(time.mktime(datetime.strptime(dep_time, f_datetime).timetuple()))
-            arr_time = resp_section['arrival_date_time']
-            if len(arr_time) > 0:
-                stat_section.arrival_date_time = int(time.mktime(datetime.strptime(arr_time, f_datetime).timetuple()))
-            stat_section.duration = resp_section['duration']
-            stat_section.type = resp_section['type']
+            key_name = 'departure_date_time'
+            if key_name in resp_section:
+                dep_time = resp_section[key_name]
+                if len(dep_time) > 0:
+                    stat_section.departure_date_time = int(time.mktime(datetime.strptime(dep_time, f_datetime).timetuple()))
+
+            key_name = 'arrival_date_time'
+            if key_name in resp_section:
+                arr_time = resp_section[key_name]
+                if len(arr_time) > 0:
+                    stat_section.arrival_date_time = int(time.mktime(datetime.strptime(arr_time, f_datetime).timetuple()))
+
+            key_name = 'duration'
+            if key_name in resp_section:
+                stat_section.duration = resp_section[key_name]
+
+            key_name = 'mode'
+            if key_name in resp_section:
+                stat_section.mode = resp_section[key_name]
+
+            key_name = 'type'
+            if key_name in resp_section:
+                stat_section.type = resp_section[key_name]
+        except Exception:
+            pass
+
+        try:
             stat_section.from_embedded_type = resp_section['from']['embedded_type']
             stat_section.from_id = resp_section['from']['id']
+            stat_section.from_name = resp_section['from']['name']
 
             from_lat = resp_section['from'][stat_section.from_embedded_type]['coord']['lat']
             if len(from_lat) > 0:
@@ -162,9 +199,13 @@ class StatManager(object):
             from_lon = resp_section['from'][stat_section.from_embedded_type]['coord']['lon']
             if len(from_lon) > 0:
                 stat_section.from_coord.lon = float(from_lon)
+        except Exception:
+            pass
 
+        try:
             stat_section.to_embedded_type = resp_section['to']['embedded_type']
             stat_section.to_id = resp_section['to']['id']
+            stat_section.to_name = resp_section['to']['name']
 
             to_lat = resp_section['to'][stat_section.to_embedded_type]['coord']['lat']
             if len(to_lat) > 0:
@@ -173,15 +214,23 @@ class StatManager(object):
             if len(to_lon) > 0:
                 stat_section.to_coord.lon = float(to_lon)
 
+        except Exception:
+            pass
+
+        #Ajouter les communes de départ et arrivé
+        self.fill_admin_from_to(stat_section, resp_section)
+
+        try:
             stat_section.vehicle_journey_id = self.get_section_link(resp_section, 'vehicle_journey')
             stat_section.line_id = self.get_section_link(resp_section, 'line')
             stat_section.route_id = self.get_section_link(resp_section, 'route')
             stat_section.network_id = self.get_section_link(resp_section, 'network')
             stat_section.physical_mode_id = self.get_section_link(resp_section, 'physical_mode')
             stat_section.commercial_mode_id = self.get_section_link(resp_section, 'commercial_mode')
-
-        except:
+        except Exception:
             pass
+
+        self.fill_section_display_informations(stat_section, resp_section)
 
     def fill_sections(self, stat_journey, resp_journey):
 
@@ -193,6 +242,31 @@ class StatManager(object):
     def publish_request(self, stat_request):
         self.producer.publish(stat_request.SerializeToString(), routing_key=self.topic_name)
 
+
+    def fill_admin_from_to(self, stat_section, resp_section):
+        try:
+            for admin in resp_section['from'][stat_section.from_embedded_type]['administrative_regions']:
+                if (admin['level'] == 8):
+                    stat_section.from_admin_id = admin['id']
+                    stat_section.from_admin_name = admin['name']
+                    pass
+
+            for admin in resp_section['to'][stat_section.from_embedded_type]['administrative_regions']:
+                if (admin['level'] == 8):
+                    stat_section.to_admin_id = admin['id']
+                    stat_section.to_admin_name = admin['name']
+                    pass
+        except Exception:
+            pass
+
+    def fill_section_display_informations(self, stat_section, resp_section):
+        try:
+            stat_section.line_code = resp_section['display_informations']['code']
+            stat_section.network_name = resp_section['display_informations']['network']
+            stat_section.physical_mode_name = resp_section['display_informations']['physical_mode']
+            stat_section.commercial_mode_name = resp_section['display_informations']['commercial_mode']
+        except Exception:
+            pass
 
 class manage_stat_caller:
 
