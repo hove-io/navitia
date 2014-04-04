@@ -28,12 +28,6 @@ void EdPersistor::persist(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, "Begin: relation admin way");
     this->build_relation_way_admin(data);
     LOG4CPLUS_INFO(logger, "End: relation admin way");
-    LOG4CPLUS_INFO(logger, "Begin: add poitypes data");
-    this->insert_poi_types(data);
-    LOG4CPLUS_INFO(logger, "End: add poitypes data");
-    LOG4CPLUS_INFO(logger, "Begin: add pois data");
-    this->insert_pois(data);
-    LOG4CPLUS_INFO(logger, "End: add pois data");
     LOG4CPLUS_INFO(logger, "Begin: update boundary admins");
     this->update_boundary();
     LOG4CPLUS_INFO(logger, "End: update boundary admins");
@@ -168,7 +162,6 @@ void EdPersistor::insert_edges(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
 }
 
-void EdPersistor::insert_poi_types(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
         this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
@@ -176,7 +169,6 @@ void EdPersistor::insert_poi_types(const ed::Georef& data){
     lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_pois(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("navitia.poi",
     {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible"});
     for(const auto& itm : data.pois) {
