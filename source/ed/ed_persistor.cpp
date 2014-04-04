@@ -5,6 +5,21 @@ namespace bg = boost::gregorian;
 
 namespace ed{
 
+void EdPersistor::persist(const ed::PoiPoiType& data){
+    this->lotus.start_transaction();
+    LOG4CPLUS_INFO(logger, "Begin: TRUNCATE data!");
+    this->clean_poi();
+    LOG4CPLUS_INFO(logger, "Begin: add poitypes data");
+    this->insert_poi_types(data);
+    LOG4CPLUS_INFO(logger, "End: add poitypes data");
+    LOG4CPLUS_INFO(logger, "Begin: add pois data");
+    this->insert_pois(data);
+    LOG4CPLUS_INFO(logger, "End: add pois data");
+    LOG4CPLUS_INFO(logger, "Begin commit");
+    this->lotus.commit();
+    LOG4CPLUS_INFO(logger, "End: commit");
+}
+
 void EdPersistor::persist(const ed::Georef& data){
 
     this->lotus.start_transaction();
@@ -162,6 +177,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
 }
 
+void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
     this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
         this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
@@ -169,6 +185,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
     lotus.finish_bulk_insert();
 }
 
+void EdPersistor::insert_pois(const ed::PoiPoiType& data){
     this->lotus.prepare_bulk_insert("navitia.poi",
     {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible"});
     for(const auto& itm : data.pois) {
@@ -325,6 +342,11 @@ void EdPersistor::clean_georef(){
     PQclear(this->lotus.exec(
                 "TRUNCATE georef.node, georef.house_number, navitia.admin, "
                 "georef.way, navitia.poi_type, navitia.poi CASCADE;"));
+}
+
+void EdPersistor::clean_poi(){
+    PQclear(this->lotus.exec(
+                "TRUNCATE  navitia.poi_type, navitia.poi CASCADE;"));
 }
 
 void EdPersistor::clean_db(){
