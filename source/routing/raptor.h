@@ -10,7 +10,7 @@
 #include "dataraptor.h"
 #include "best_stoptime.h"
 #include "raptor_path.h"
-#include "raptor_init.h"
+#include "raptor_solutions.h"
 #include "raptor_utils.h"
 
 namespace navitia { namespace routing {

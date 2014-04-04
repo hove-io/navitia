@@ -1,31 +1,21 @@
-#include "raptor_init.h"
+#include "raptor_solutions.h"
 
 namespace bt = boost::posix_time;
 namespace navitia { namespace routing {
 
-std::vector<Departure_Type>
-getDepartures(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
+std::vector<Solution>
+getSolutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
               bool clockwise, const std::vector<label_vector_t> &labels,
               const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active) {
-      std::vector<Departure_Type> result;
+      std::vector<Solution> result;
 
       auto pareto_front = getParetoFront(clockwise, departs, destinations, labels, accessibilite_params, data, disruption_active);
       result.insert(result.end(), pareto_front.begin(), pareto_front.end());
 
       if(!pareto_front.empty()) {
           auto walking_solutions = getWalkingSolutions(clockwise, departs, destinations, pareto_front.back(), labels, data);
-
-          for(auto s : walking_solutions) {
-              bool find = false;
-              for(auto s2 : result) {
-                  if(s.rpidx == s2.rpidx && s.count == s2.count) {
-                      find = true;
-                      break;
-                  }
-              }
-              if(!find) {
-                  result.push_back(s);
-              }
+          if(!walking_solutions.empty()) {
+            result.insert(result.end(), walking_solutions.begin(), walking_solutions.end());
           }
       }
       auto unique_func = [](const Departure_Type &departure1, const Departure_Type departure2){
@@ -43,12 +33,12 @@ getDepartures(const std::vector<std::pair<type::idx_t, bt::time_duration> > &dep
 }
 
 
-std::vector<Departure_Type>
-getDepartures(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const DateTime &dep, bool clockwise, const type::Data & data, bool) {
-    std::vector<Departure_Type> result;
+std::vector<Solution>
+getSolutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const DateTime &dep, bool clockwise, const type::Data & data, bool) {
+    std::vector<Solution> result;
     for(auto dep_dist : departs) {
         for(auto journey_pattern : data.pt_data->stop_points[dep_dist.first]->journey_pattern_point_list) {
-            Departure_Type d;
+            Solution d;
             d.count = 0;
             d.rpidx = journey_pattern->idx;
             d.walking_time = dep_dist.second;
@@ -71,12 +61,12 @@ bool improves(const DateTime & best_so_far, bool clockwise, const DateTime & cur
     }
 }
 
-std::vector<Departure_Type>
+std::vector<Solution>
 getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs,
                const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
-               const std::vector<label_vector_t> &labels, 
+               const std::vector<label_vector_t> &labels,
                const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active){
-    std::vector<Departure_Type> result;
+    std::vector<Solution> result;
 
     DateTime best_dt, best_dt_jpp;
     if(clockwise) {
@@ -125,11 +115,12 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time
             }
         }
         if(best_jpp != type::invalid_idx) {
-            Departure_Type s;
+            Solution s;
             s.rpidx = best_jpp;
             s.count = round;
             s.walking_time = getWalkingTime(round, best_jpp, departs, destinations, clockwise, labels, data);
             s.arrival = best_dt_jpp;
+            s.ratio = 0;
             type::idx_t final_rpidx;
             std::tie(final_rpidx, s.upper_bound) = getFinalRpidAndDate(round, best_jpp, clockwise, labels);
             for(auto spid_dep : departs) {
@@ -152,16 +143,16 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time
 
 
 
-std::vector<Departure_Type>
-getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations, Departure_Type best,
+std::vector<Solution>
+getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations, Solution best,
                     const std::vector<label_vector_t> &labels, const type::Data &data){
-    std::vector<Departure_Type> result;
+    std::vector<Solution> result;
 
-    std::/*unordered_*/map<type::idx_t, Departure_Type> tmp;
+    std::/*unordered_*/map<type::idx_t, Solution> tmp;
 
     for(uint32_t i=0; i<labels.size(); ++i) {
         for(auto spid_dist : destinations) {
-            Departure_Type best_departure;
+            Solution best_departure;
             best_departure.ratio = 2;
             best_departure.rpidx = type::invalid_idx;
             for(auto journey_pattern_point : data.pt_data->stop_points[spid_dist.first]->journey_pattern_point_list) {
@@ -181,10 +172,10 @@ getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt:
 
                     //Si je gagne 5 minutes de marche a pied, je suis pret à perdre jusqu'à 10 minutes.
                     int walking_time_diff_in_s = (best.walking_time - walking_time).total_seconds();
-                    if (walking_time_diff_in_s) {
+                    if (walking_time_diff_in_s > 0) {
                         float ratio = lost_time / walking_time_diff_in_s;
                         if( ratio < best_departure.ratio) {
-                            Departure_Type s;
+                            Solution s;
                             s.rpidx = jppidx;
                             s.count = i;
                             s.ratio = ratio;
@@ -230,7 +221,7 @@ getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt:
     for(auto p : tmp) {
         result.push_back(p.second);
     }
-    std::sort(result.begin(), result.end(), [](Departure_Type s1, Departure_Type s2) {return s1.ratio > s2.ratio;});
+    std::sort(result.begin(), result.end(), [](Solution s1, Solution s2) {return s1.ratio > s2.ratio;});
 
     if(result.size() > 2)
         result.resize(2);

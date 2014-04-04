@@ -1,4 +1,5 @@
 #include "raptor_path.h"
+#include "raptor_solutions.h"
 #include "raptor.h"
 
 
