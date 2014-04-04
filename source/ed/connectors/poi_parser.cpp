@@ -13,7 +13,7 @@ PoiParser::PoiParser(const std::string & path, const ed::connectors::ConvCoord& 
 void PoiParser::fill_poi_type(){
     CsvReader reader(this->path + "/poi_type.txt" , ';', true, true);
     if(!reader.is_open()) {
-        throw PoiParserException("Error on open file " + reader.filename);
+        throw PoiParserException("Cannot open file : " + reader.filename);
     }
     std::vector<std::string> mandatory_headers = {"poi_type_id" , "poi_type_name"};
     if(!reader.validate(mandatory_headers)) {
@@ -38,7 +38,7 @@ void PoiParser::fill_poi_type(){
 void PoiParser::fill_poi(){
     CsvReader reader(this->path + "/poi.txt", ';', true, true);
     if(!reader.is_open()) {
-        throw PoiParserException("Error on open file " + reader.filename);
+        throw PoiParserException("Cannot open file : " + reader.filename);
     }
     std::vector<std::string> mandatory_headers = {"poi_id", "poi_name", "poi_weight", "poi_visible", "poi_lat", "poi_lon", "poi_type_id"};
     if(!reader.validate(mandatory_headers)) {
