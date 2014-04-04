@@ -23,6 +23,9 @@ Projection::~Projection() {
 }
 
 navitia::type::GeographicalCoord ConvCoord::convert_to(navitia::type::GeographicalCoord coord) const{
+    if(this->origin.definition == this->destination.definition){
+        return coord;
+    }
     if(this->origin.is_degree){
         coord.set_lon(coord.lon() * DEG_TO_RAD);
         coord.set_lat(coord.lat() * DEG_TO_RAD);
