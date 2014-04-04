@@ -77,7 +77,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                 //On marque tous les journey_pattern points du stop point
                 for(auto jpp : stop_point->journey_pattern_point_list) {
                     type::idx_t jpp_idx = jpp->idx;
-                    if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx]) && !b_dest.is_eligible_solution(jpp_idx)) {
+                    if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx])) {
                        current_labels[jpp_idx].dt = best_departure;
                        current_labels[jpp_idx].boarding = data.pt_data->journey_pattern_points[best_jpp];
                        current_labels[jpp_idx].type = boarding_type::connection;
@@ -105,7 +105,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                     if(destination->accessible(required_properties)) {
                         for(auto destination_jpp : destination->journey_pattern_point_list) {
                             type::idx_t destination_jpp_idx = destination_jpp->idx;
-                            if(best_jpp != destination_jpp_idx && !b_dest.is_eligible_solution(destination_jpp_idx)) {
+                            if(best_jpp != destination_jpp_idx) {
                                 if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
                                     current_labels[destination_jpp_idx].dt = next;
                                     current_labels[destination_jpp_idx].boarding = data.pt_data->journey_pattern_points[best_jpp];
