@@ -52,16 +52,26 @@ message StatJourneySection {
     optional string   mode = 5;
     optional string 	from_embedded_type = 6;
     optional string 	from_id = 7;
-    optional Coord 	from_coord = 8;
-    optional string 	to_embedded_type = 9;
-    optional string 	to_id = 10;
-    optional Coord 	to_coord = 11;
-    optional string 	vehicle_journey_id = 12;
-    optional string 	line_id = 13;
-    optional string 	route_id = 14;
-    optional string 	network_id = 15;
-    optional string 	physical_mode_id = 16;
-    optional string 	commercial_mode_id = 17;
+    optional string 	from_name = 8;
+    optional Coord 	from_coord = 9;
+    optional string 	from_admin_id = 10;
+    optional string 	from_admin_name = 11;
+    optional string 	to_embedded_type = 12;
+    optional string 	to_id = 13;
+    optional string 	to_name = 14;
+    optional Coord 	to_coord = 15;
+    optional string 	to_admin_id = 16;
+    optional string 	to_admin_name = 17;
+    optional string 	vehicle_journey_id = 18;
+    optional string 	line_id = 19;
+    optional string 	line_code = 20;
+    optional string 	route_id = 21;
+    optional string 	network_id = 22;
+    optional string 	network_name = 23;
+    optional string 	physical_mode_id = 24;
+    optional string 	physical_mode_name = 25;
+    optional string 	commercial_mode_id = 26;
+    optional string 	commercial_mode_name = 27;
 }
 
 

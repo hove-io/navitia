@@ -29,14 +29,13 @@ def persist_stat_request(meta, conn, stat):
 
     #Inserer dans la table stat.parameters
     query = parameter_table.insert()
-
     for param in stat.parameters:
         conn.execute(query.values(
             build_stat_parameter_dict(param)))
 
     #Inserer les journeys dans la table stat.journeys
-    query = journey_table.insert()
     for journey in stat.journeys:
+        query = journey_table.insert()
         conn.execute(query.values(build_stat_journey_dict(journey)))
 
         #Inserer les sections de la journey dans la table stat.journey_sections:
@@ -110,21 +109,32 @@ def build_stat_section_dict(section):
     result['departure_date_time'] = from_timestamp(section.departure_date_time).strftime('%Y%m%d %H:%M:%S')
     result['arrival_date_time'] = from_timestamp(section.arrival_date_time).strftime('%Y%m%d %H:%M:%S')
     result['duration'] = section.duration
+    result['mode'] = section.mode
     result['type'] = section.type
     result['from_embedded_type'] = section.from_embedded_type
     result['from_id'] = section.from_id
+    result['from_name'] = section.from_name
     from_point = "POINT(%.20f %.20f)" %(section.from_coord.lon, section.from_coord.lat)
     result['from_coord'] = func.ST_GeomFromtext(from_point, 4326)
+    result['from_admin_id'] = section.from_admin_id
+    result['from_admin_name'] = section.from_admin_name
     result['to_embedded_type'] = section.to_embedded_type
     result['to_id'] = section.to_id
+    result['to_name'] = section.to_name
     to_point = "POINT(%.20f %.20f)" %(section.to_coord.lon, section.to_coord.lat)
     result['to_coord'] = func.ST_GeomFromtext(to_point, 4326)
+    result['to_admin_id'] = section.to_admin_id
+    result['to_admin_name'] = section.to_admin_name
     result['vehicle_journey_id'] = section.vehicle_journey_id
     result['line_id'] = section.line_id
+    result['line_code'] = section.line_code
     result['route_id'] = section.route_id
     result['network_id'] = section.network_id
+    result['network_name'] = section.network_name
     result['commercial_mode_id'] = section.commercial_mode_id
+    result['commercial_mode_name'] = section.commercial_mode_name
     result['physical_mode_id'] = section.physical_mode_id
+    result['physical_mode_name'] = section.physical_mode_name
     return result
 
 

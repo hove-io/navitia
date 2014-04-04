@@ -50,22 +50,33 @@ stat_section = stat_journey.sections.add()
 stat_section.departure_date_time = int(time.mktime(dt.timetuple()))
 stat_section.arrival_date_time = int(time.mktime(dt.timetuple()))
 stat_section.duration = 255
+stat_section.mode = 'car'
 stat_section.type = 'street_network'
 stat_section.from_embedded_type = 'stop_point'
 stat_section.from_id = 'from_stop_point_id'
+stat_section.from_name = 'from_stop_point_name'
 stat_section.from_coord.lat = 47.252525
 stat_section.from_coord.lon = 2.1515151
+stat_section.from_admin_id = 'from_admin_id'
+stat_section.from_admin_name = 'from_admin_name'
 stat_section.to_embedded_type = 'address'
 stat_section.to_id = 'to_address_id'
+stat_section.to_name = 'to_address_name'
 stat_section.to_coord.lat = 48.253335
 stat_section.to_coord.lon = 2.2545015
+stat_section.to_admin_id = 'to_admin_id'
+stat_section.to_admin_name = 'to_admin_name'
+
 stat_section.vehicle_journey_id = 'vehicle_journey_id'
 stat_section.line_id = 'line_id'
+stat_section.line_code = 'line_code'
 stat_section.route_id = 'route_id'
 stat_section.network_id = 'network_id'
+stat_section.network_name = 'network_name'
 stat_section.physical_mode_id = 'physical_mode_id'
+stat_section.physical_mode_name = 'physical_mode_name'
 stat_section.commercial_mode_id = 'commercial_mode_id'
-
+stat_section.commercial_mode_name = 'commercial_mode_name'
 
 producer.publish(stat_request.SerializeToString(), routing_key= topic_name)
 
