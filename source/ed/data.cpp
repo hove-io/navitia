@@ -540,6 +540,9 @@ Georef::~Georef(){
          delete itm.second;
     for(auto itm : this->admins)
          delete itm.second;
+}
+
+PoiPoiType::~PoiPoiType(){
     for(auto itm : this->poi_types)
          delete itm.second;
     for(auto itm : this->pois)
