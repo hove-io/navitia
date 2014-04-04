@@ -132,6 +132,11 @@ class get_label(fields.Raw):
             if obj.name != '':
                 return obj.name
 
+code = {
+    "type": fields.String(),
+    "value": fields.String()
+}
+
 generic_message = {
     "level": enum_type(attribute="message_status"),
     "value": fields.String(attribute="message"),
@@ -188,9 +193,11 @@ generic_type_admin["administrative_regions"] = admins
 stop_point = deepcopy(generic_type_admin)
 stop_point["messages"] = NonNullList(NonNullNested(generic_message))
 stop_point["comment"] = fields.String()
+stop_point["codes"] = NonNullList(NonNullNested(code))
 stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area["comment"] = fields.String()
+stop_area["codes"] = NonNullList(NonNullNested(code))
 journey_pattern_point = deepcopy(generic_type)
 journey_pattern = deepcopy(generic_type)
 jpps = NonNullList(NonNullNested(journey_pattern_point))
@@ -205,22 +212,26 @@ vehicle_journey["messages"] = NonNullList(NonNullNested(generic_message))
 vehicle_journey["journey_pattern"] = PbField(journey_pattern)
 vehicle_journey["stop_times"] = NonNullList(NonNullNested(stop_time))
 vehicle_journey["comment"] = fields.String()
+vehicle_journey["codes"] = NonNullList(NonNullNested(code))
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
 line["code"] = fields.String()
 line["color"] = fields.String()
 line["comment"] = fields.String()
+line["codes"] = NonNullList(NonNullNested(code))
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
+route["codes"] = NonNullList(NonNullNested(code))
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
 network["messages"] = NonNullList(NonNullNested(generic_message))
 network["lines"] = NonNullList(NonNullNested(line))
+network["codes"] = NonNullList(NonNullNested(code))
 line["network"] = PbField(network)
 
 commercial_mode = deepcopy(generic_type)
@@ -234,6 +245,7 @@ poi = deepcopy(generic_type)
 poi["poi_type"] = PbField(poi_type)
 
 company = deepcopy(generic_type)
+company["codes"] = NonNullList(NonNullNested(code))
 stop_point["equipments"] = equipments(attribute="has_equipments")
 stop_point["stop_area"] = PbField(deepcopy(stop_area))
 stop_area["stop_point"] = PbField(deepcopy(stop_point))
