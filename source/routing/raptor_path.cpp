@@ -7,32 +7,14 @@ namespace navitia { namespace routing {
 
 
 std::vector<Path>
-makePathes(std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > destinations,
-           DateTime dt,
-           const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_, bool clockwise, bool disruption_active) {
+makePathes(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departures,
+           const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations,
+           const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_,
+           bool clockwise, bool disruption_active) {
     std::vector<Path> result;
-    DateTime best_dt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
-    for(unsigned int i=1;i<=raptor_.count;++i) {
-        type::idx_t best_jpp = type::invalid_idx;
-        for(auto spid_dist : destinations) {
-            for(auto dest : raptor_.data.pt_data->stop_points[spid_dist.first]->journey_pattern_point_list) {
-                type::idx_t dest_idx = dest->idx;
-                if(raptor_.get_type(i, dest_idx) == boarding_type::vj) {
-                    DateTime current_dt = raptor_.labels[i][dest_idx].dt;
-                    if(clockwise)
-                        current_dt = current_dt + spid_dist.second.total_seconds();
-                    else
-                        current_dt = current_dt - spid_dist.second.total_seconds();
-                    if((clockwise && ((best_dt == DateTimeUtils::inf && current_dt <= dt) || (best_dt != DateTimeUtils::inf && current_dt < best_dt)))
-                       ||(!clockwise && ((best_dt == DateTimeUtils::min && current_dt >= dt) || (best_dt != DateTimeUtils::min && current_dt > best_dt))) ){
-                        best_dt = current_dt ;
-                        best_jpp = dest_idx;
-                    }
-                }
-            }
-        }
-        if(best_jpp != type::invalid_idx)
-            result.push_back(makePath(best_jpp, i, clockwise, disruption_active, accessibilite_params, raptor_));
+    auto solutions = getSolutions(departures, destinations, !clockwise, raptor_.labels, accessibilite_params, raptor_.data, disruption_active);
+    for(Solution solution : solutions) {
+        result.push_back(makePath(solution.rpidx, solution.count, clockwise, disruption_active, accessibilite_params, raptor_));
     }
 
     return result;
