@@ -80,8 +80,6 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
         stop_point->mutable_coord()->set_lat(sp->coord.lat());
     }
 
-    fill_pb_object(sp->coord, data, stop_point->mutable_address());
-
     pbnavitia::hasEquipments* has_equipments =  stop_point->mutable_has_equipments();
     if (sp->wheelchair_boarding()){
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_boarding);
@@ -118,6 +116,7 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
             fill_pb_object(adm, data,  stop_point->add_administrative_regions(),
                            depth-1, now, action_period);
         }
+        fill_pb_object(sp->coord, data, stop_point->mutable_address(), depth - 1, now, action_period);
     }
 
     if(depth > 0 && sp->stop_area != nullptr)
@@ -908,8 +907,8 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
             fill_pb_object(admin, data,  poi->add_administrative_regions(),
                            depth-1, now, action_period);
         }
+        fill_pb_object(geopoi->coord, data, poi->mutable_address(), depth - 1, now, action_period);
     }
-    fill_pb_object(geopoi->coord, data, poi->mutable_address());
 }
 
 pbnavitia::ExceptionType get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exception_type){
