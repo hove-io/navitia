@@ -1,3 +1,10 @@
+navitia2 (0.91.1) unstable; urgency=low
+
+ * Jormungandr: fix bugs in scripts
+ * Kraken: Fix init of wordweight
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 07 Apr 2014 18:04:11 +0100
+
 navitia2 (0.91.0) unstable; urgency=low
 
  * Jormungandr: log improvements
