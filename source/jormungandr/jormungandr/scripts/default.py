@@ -308,7 +308,7 @@ class Script(object):
         """
             for all combinaison of departure and arrival mode we call kraken
         """
-        # filter walking if vls in mode ?
+        # filter walking if bss in mode ?
         for o_mode, d_mode in itertools.product(
                 self.origin_modes, self.destination_modes):
             req.journeys.streetnetwork_params.origin_mode = o_mode
