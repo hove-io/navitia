@@ -165,6 +165,7 @@ struct associated_cal_fixture {
         navitia::type::VehicleJourney* vj = b.data.pt_data->vehicle_journeys_map["vj1"];
         vj->validity_pattern->add(date("20140101"), date("20140111"), always_on_cal->week_pattern);
 
+        b.data.geo_ref->init();
         b.data.complete();
     }
     ed::builder b;

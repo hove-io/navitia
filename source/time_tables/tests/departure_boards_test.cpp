@@ -112,7 +112,7 @@ struct calendar_fixture {
         b.data.build_uri();
         b.data.pt_data->index();
         b.data.build_raptor();
-
+        b.data.geo_ref->init();
         b.data.complete();
 
         //we chack that each vj is associated with the right calendar
