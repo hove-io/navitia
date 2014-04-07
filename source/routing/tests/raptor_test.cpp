@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
 
-    auto res = res1.back();
+    auto res = res1.front();
 
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
 
-    res = res1.back();
+    res = res1.front();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
     BOOST_REQUIRE_EQUAL(res.items[0].stop_points.size(), 2);
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    res = res1.back();
+    res = res1.front();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
     BOOST_REQUIRE_EQUAL(res.items[0].stop_points.size(), 2);
