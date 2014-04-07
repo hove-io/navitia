@@ -320,16 +320,14 @@ class add_journey_pagination(object):
     def extremes(self, resp):
         datetime_before = None
         datetime_after = None
+        section_is_pt = lambda section: section['type'] == "public_transport"\
+                           or section['type'] == "on_demand_transport"
+        filter_journey = lambda journey: 'arrival_date_time' in journey and\
+                             journey['arrival_date_time'] != '' and\
+                             "sections" in journey and\
+                             any(section_is_pt(section) for section in journey['sections'])
         try:
-            section_is_pt = lambda section : section['type'] == "public_transport"\
-                               or section['type'] == "on_demand_transport"
-            or_func = lambda a,b : a or b
-            journey_as_pt = lambda journey : reduce(or_func, journey['sections'])
-            list_journeys = [journey for journey in resp['journeys']
-                             if 'arrival_date_time' in journey.keys() and
-                             journey['arrival_date_time'] != '' and
-                             journey.has_key("sections") and
-                             journey_as_pt(journey)]
+            list_journeys = filter(filter_journey, resp['journeys'])
             asap_journey = min(list_journeys,
                                key=itemgetter('arrival_date_time'))
         except:
