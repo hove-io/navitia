@@ -4,5 +4,6 @@ usr/bin/osm2ed usr/bin
 usr/bin/ed2nav usr/bin
 usr/bin/fare2ed usr/bin
 usr/bin/geopal2ed usr/bin
+usr/bin/poi2ed usr/bin
 usr/share/ed/* usr/share/ed
 usr/bin/nav2rt usr/bin

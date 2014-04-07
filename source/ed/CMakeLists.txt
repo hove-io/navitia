@@ -46,5 +46,8 @@ target_link_libraries(nav2rt ed types connectors pq pqxx data fare georef routin
 add_executable(geopal2ed geopal2ed.cpp)
 
 target_link_libraries(geopal2ed transportation_data_import ed connectors types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
+add_executable(poi2ed poi2ed.cpp)
 
-INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed fare2ed geopal2ed)
+target_link_libraries(poi2ed transportation_data_import ed connectors types pq pqxx data utils hiredis ${BOOST_LIBS} log4cplus)
+
+INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed fare2ed geopal2ed poi2ed)

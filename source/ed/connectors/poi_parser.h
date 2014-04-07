@@ -1,26 +1,29 @@
 #pragma once
-#include <string>
-#include "type/data.h"
+#include "ed/data.h"
 #include <utils/logger.h>
+#include "ed/connectors/conv_coord.h"
 
 namespace ed{ namespace connectors{
+
+struct PoiParserException: public navitia::exception{
+    PoiParserException(const std::string& message): navitia::exception(message){};
+};
+
 
 class PoiParser
 {
 private:
     std::string path;///< Chemin vers les fichiers
     log4cplus::Logger logger;
+    ed::connectors::ConvCoord conv_coord;
 
+    void fill_poi_type();
+    void fill_poi();
 public:
-    PoiParser(const std::string & path);
-    PoiParser(): path(){}
+    ed::PoiPoiType data;
 
-    void fill_poi_type(navitia::georef::GeoRef & georef_to_fill);
-    void fill_poi(navitia::georef::GeoRef & georef_to_fill);
-    void fill(navitia::georef::GeoRef & georef_to_fill);
-    void fill_aliases(navitia::georef::GeoRef & georef_to_fill);
-    void fill_synonyms(navitia::georef::GeoRef & georef_to_fill);
-    void fill_alias_synonyme(navitia::georef::GeoRef & georef_to_fill);
+    PoiParser(const std::string & path, const ed::connectors::ConvCoord& conv_coord);
+    void fill();
 };
 }}
 
