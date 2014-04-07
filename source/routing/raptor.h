@@ -53,7 +53,7 @@ struct RAPTOR
     void clear(const type::Data & data, bool clockwise, DateTime borne);
 
     ///Initialise les structure retour et b_dest
-    void clear_and_init(std::vector<Solution> departures,
+    void clear_and_init(Solutions departures,
               std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > destinations,
               navitia::DateTime bound, const bool clockwise,
               const type::Properties &properties = 0);

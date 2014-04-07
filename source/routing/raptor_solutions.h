@@ -38,24 +38,25 @@ struct Solution {
     }
 
 };
+typedef std::set<Solution> Solutions;
 
-std::vector<Solution>
+Solutions
 getSolutions(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
              const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations, bool clockwise,
              const std::vector<label_vector_t> &labels, const type::AccessibiliteParams & accessibilite_params,
              const type::Data &data, bool disruption_active);
 
 //This one is hacky, it's used to retrieve the departures.
-std::vector<Solution>
+Solutions
 getSolutions(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
              const DateTime &dep, bool clockwise, const type::Data & data, bool disruption_active);
 
-std::vector<Solution>
+Solutions
 getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
                     const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations, Solution best,
                     const std::vector<label_vector_t> &labels, const type::Data &data);
 
-std::vector<Solution>
+Solutions
 getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
                const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations,
                const std::vector<label_vector_t> &labels,

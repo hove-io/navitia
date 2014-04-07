@@ -148,7 +148,7 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
         best_labels.assign(data.pt_data->journey_pattern_points.size(), DateTimeUtils::min);
 }
 
-void RAPTOR::clear_and_init(std::vector<Solution> departs,
+void RAPTOR::clear_and_init(Solutions departs,
                   std::vector<std::pair<type::idx_t, bt::time_duration> > destinations,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
@@ -205,7 +205,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, bt::time_duration> 
     auto calc_dep = clockwise ? departures_ : destinations;
     auto calc_dest = clockwise ? destinations : departures_;
 
-    std::vector<Solution> departures = getSolutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
+    auto departures = getSolutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
     clear_and_init(departures, calc_dest, bound, clockwise);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);

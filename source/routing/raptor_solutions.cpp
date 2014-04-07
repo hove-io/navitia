@@ -3,39 +3,31 @@
 namespace bt = boost::posix_time;
 namespace navitia { namespace routing {
 
-std::vector<Solution>
-getSolutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
-              bool clockwise, const std::vector<label_vector_t> &labels,
-              const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active) {
-      std::vector<Solution> result;
-
-      auto pareto_front = getParetoFront(clockwise, departs, destinations, labels, accessibilite_params, data, disruption_active);
-      result.insert(result.end(), pareto_front.begin(), pareto_front.end());
+Solutions
+getSolutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs,
+             const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
+             bool clockwise, const std::vector<label_vector_t> &labels,
+             const type::AccessibiliteParams & accessibilite_params, const type::Data &data,
+             bool disruption_active) {
+      Solutions result;
+      auto pareto_front = getParetoFront(clockwise, departs, destinations, labels,
+              accessibilite_params, data, disruption_active);
+      result.insert(pareto_front.begin(), pareto_front.end());
 
       if(!pareto_front.empty()) {
-          auto walking_solutions = getWalkingSolutions(clockwise, departs, destinations, pareto_front.back(), labels, data);
+          auto walking_solutions = getWalkingSolutions(clockwise, departs, destinations,
+                  *pareto_front.rbegin(), labels, data);
           if(!walking_solutions.empty()) {
             result.insert(result.end(), walking_solutions.begin(), walking_solutions.end());
           }
       }
-      auto unique_func = [](const Departure_Type &departure1, const Departure_Type departure2){
-        return departure1.rpidx == departure2.rpidx &&
-               departure1.count == departure2.count &&
-               departure1.arrival == departure2.arrival &&
-               departure1.upper_bound == departure2.upper_bound &&
-               departure1.walking_time == departure2.walking_time &&
-               departure1.ratio == departure2.ratio;
-      };
-
-      auto it = std::unique(result.begin(), result.end(), unique_func);
-      result.resize(std::distance(result.begin(), it));
       return result;
 }
 
 
-std::vector<Solution>
+Solutions
 getSolutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const DateTime &dep, bool clockwise, const type::Data & data, bool) {
-    std::vector<Solution> result;
+    Solutions result;
     for(auto dep_dist : departs) {
         for(auto journey_pattern : data.pt_data->stop_points[dep_dist.first]->journey_pattern_point_list) {
             Solution d;
@@ -46,7 +38,7 @@ getSolutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &depa
                 d.arrival = dep + d.walking_time.total_seconds();
             else
                 d.arrival = dep - d.walking_time.total_seconds();
-            result.push_back(d);
+            result.insert(d);
         }
     }
     return result;
@@ -61,12 +53,12 @@ bool improves(const DateTime & best_so_far, bool clockwise, const DateTime & cur
     }
 }
 
-std::vector<Solution>
+Solutions
 getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs,
                const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
                const std::vector<label_vector_t> &labels,
                const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active){
-    std::vector<Solution> result;
+    Solutions result;
 
     DateTime best_dt, best_dt_jpp;
     if(clockwise) {
@@ -132,7 +124,7 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time
                     }
                 }
             }
-            result.push_back(s);
+            result.insert(s);
         }
     }
 
@@ -143,10 +135,10 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time
 
 
 
-std::vector<Solution>
+Solutions
 getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations, Solution best,
                     const std::vector<label_vector_t> &labels, const type::Data &data){
-    std::vector<Solution> result;
+    Solutions result;
 
     std::/*unordered_*/map<type::idx_t, Solution> tmp;
 
@@ -167,7 +159,6 @@ getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt:
                         lost_time = labels[i][jppidx].dt - (spid_dist.second.total_seconds()) - best.arrival;
                     else
                         lost_time = labels[i][jppidx].dt + (spid_dist.second.total_seconds()) - best.arrival;
-
 
 
                     //Si je gagne 5 minutes de marche a pied, je suis pret à perdre jusqu'à 10 minutes.
@@ -218,13 +209,16 @@ getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt:
     }
 
 
+    std::vector<Solution> to_sort;
     for(auto p : tmp) {
-        result.push_back(p.second);
+        to_sort.push_back(p.second);
     }
-    std::sort(result.begin(), result.end(), [](Solution s1, Solution s2) {return s1.ratio > s2.ratio;});
+    std::sort(to_sort.begin(), to_sort.end(),
+            [](const Solution s1, const Solution s2) { return s1.ratio < s2.ratio;});
 
-    if(result.size() > 2)
-        result.resize(2);
+    if(to_sort.size() > 2)
+        to_sort.resize(2);
+    result.insert(to_sort.begin(), to_sort.end());
 
     return result;
 }
