@@ -140,7 +140,7 @@ class section_type(enum_type):
                 return 'public_transport'
         except ValueError:
             pass
-        return super(section_type, self).output(key, obj)
+        return super(section_type, self).output("type", obj)
 
 
 class section_place(PbField):
@@ -152,7 +152,7 @@ class section_place(PbField):
         else:
             return super(PbField, self).output(key, obj)
 section = {
-    "type": section_type(attribute='stop_date_time'),
+    "type": section_type(),
     "id": fields.String(),
     "mode": enum_type(attribute="street_network.mode"),
     "duration": fields.Integer(),
