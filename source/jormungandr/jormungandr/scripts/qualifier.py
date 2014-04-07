@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 
 
-#compute the duration to get to the transport plus que transfert
+#compute the duration to get to the transport plus the transfers duration
 def get_nontransport_duration(journey):
     sections = journey.sections
     current_duration = 0
@@ -14,6 +14,7 @@ def get_nontransport_duration(journey):
                 or section.type == response_pb2.TRANSFER:
             current_duration += section.duration
     return current_duration
+
 
 def has_fall_back_mode(journey, mode):
     return any(s.type == response_pb2.STREET_NETWORK and
@@ -125,6 +126,10 @@ def nonTC_crit(j_1, j_2):
     return compare_minus(duration1, duration2)
 
 
+def duration_crit(j_1, j_2):
+    return compare_minus(j_1.duration, j_2.duration)
+
+
 def qualifier_one(journeys, request_type):
 
     if not journeys:
@@ -165,6 +170,9 @@ def qualifier_one(journeys, request_type):
         max_allow_duration = transport_duration * (1 + evol)
         return get_nontransport_duration(journey) <= max_allow_duration
 
+    def nb_transfers_constraint(journey, delta_transfers):
+        return journey.nb_transfers <= standard.nb_transfers + delta_transfers
+
     def nonTC_abs_constraint(journey, max_mn_shift):
         transport_duration = get_nontransport_duration(standard)
         max_allow_duration = transport_duration + max_mn_shift
@@ -189,8 +197,9 @@ def qualifier_one(journeys, request_type):
             partial(has_no_car),
             partial(is_possible_cheap),
             partial(no_train),
-            #partial(journey_length_constraint, max_evolution=.50),
-            #partial(journey_arrival_constraint, max_mn_shift=40),
+            partial(journey_length_constraint, max_evolution=1.20),
+            partial(journey_goal_constraint, max_mn_shift=120, r_type=request_type),
+            partial(nb_transfers_constraint, delta_transfers=2),
         ],
             [
                 transfers_crit,
@@ -198,28 +207,17 @@ def qualifier_one(journeys, request_type):
                 nonTC_crit
             ]
         )),
-        ("healthy", trip_carac([
-            partial(has_no_car),
-            partial(journey_length_constraint, max_evolution=.20),
-            partial(journey_goal_constraint, max_mn_shift=20, r_type=request_type),
-            partial(nonTC_abs_constraint, max_mn_shift=20 * 60),
-        ],
-            [
-                transfers_crit,
-                best_crit,
-                nonTC_crit
-            ]
-        )),
+        # comfort tends to limit the number of transfers and fallback
         ("comfort", trip_carac([
             partial(has_no_car),
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
-            partial(nonTC_relative_constraint, evol=-.1),
         ],
             [
                 transfers_crit,
                 nonTC_crit,
                 best_crit,
+                duration_crit
             ]
         )),
         # the non_pt journey is the earliest journey without any public transport
@@ -236,10 +234,40 @@ def qualifier_one(journeys, request_type):
             partial(has_car)
         ],
             [
-                best_crit
+                best_crit,
+                transfers_crit
             ]
         )),
+        # less_fallback tends to limit the fallback (walking/biking)
+        ("less_fallback", trip_carac([
+            partial(has_no_car),
+            partial(journey_length_constraint, max_evolution=.40),
+            partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
+            partial(nb_transfers_constraint, delta_transfers=1),
+        ],
+            [
+                nonTC_crit,
+                transfers_crit,
+                duration_crit,
+                best_crit,
+            ]
+        )),
+        # the fastest is quite explicit
+        ("fastest", trip_carac([
+            partial(has_no_car),
+            partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
+            partial(nb_transfers_constraint, delta_transfers=1),
+        ],
+            [
+                duration_crit,
+                transfers_crit,
+                nonTC_crit,
+                best_crit,
+            ]
+        )),
+        # the rapid is what we consider to be the best one
         ("rapid", trip_carac([
+            partial(has_no_car),
             partial(journey_length_constraint, max_evolution=.10),
             partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
         ],
