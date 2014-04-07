@@ -18,6 +18,25 @@ struct Solution {
                        arrival(DateTimeUtils::inf), upper_bound(DateTimeUtils::inf),
                        ratio(std::numeric_limits<float>::min()) {}
 
+    bool operator<(const Solution& s) const {
+        if (this->arrival != s.arrival) {
+            return this->arrival < s.arrival;
+        }
+        if(this->count != s.count) {
+            return this->count < s.count;
+        }
+        if (this->rpidx != s.rpidx) {
+            return this->rpidx < s.rpidx;
+        }
+        if(this->upper_bound != s.upper_bound) {
+            return this->upper_bound < s.upper_bound;
+        }
+        if(this->walking_time != s.walking_time) {
+            return this->walking_time < s.walking_time;
+        }
+        return this->ratio < s.ratio;
+    }
+
 };
 
 std::vector<Solution>
