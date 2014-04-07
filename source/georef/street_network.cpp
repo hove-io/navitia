@@ -359,7 +359,7 @@ std::pair<bt::time_duration, ProjectionData::Direction> PathFinder::update_path(
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
             dump_dijkstra_for_quantum(target);
 #endif
-            
+
 			return {max, source_e};
         }
         try {

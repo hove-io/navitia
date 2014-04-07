@@ -179,7 +179,7 @@ def geopal2ed(instance_config, filename, job_id):
         raise
     finally:
         lock.release()
-        
+
 @celery.task()
 def poi2ed(instance_config, filename, job_id):
     """ launch poi2ed """

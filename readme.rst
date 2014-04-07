@@ -2,10 +2,10 @@
 Navitia
 ********
 
-.. image::  https://ci.navitia.io/buildStatus/icon?job=navitia_release 
+.. image::  https://ci.navitia.io/buildStatus/icon?job=navitia_release
     :alt: build status
-    :target: https://ci.navitia.io/job/navitia_release/ 
-    
+    :target: https://ci.navitia.io/job/navitia_release/
+
 
 Presentation
 ============
