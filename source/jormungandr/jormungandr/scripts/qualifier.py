@@ -79,6 +79,18 @@ class and_filters:
         return True
 
 
+class and_functors:
+    def __init__(self, filters):
+        self.filters = filters
+
+    def __call__(self, v1, v2):
+        for f in self.filters:
+            val = f(v1, v2)
+            if val != 0:
+                return val
+        return 1
+
+
 def get_arrival_datetime(journey):
     return datetime.strptime(journey.arrival_date_time, "%Y%m%dT%H%M%S")
 
@@ -94,7 +106,7 @@ def choose_standard(journeys, best_criteria):
         if standard is None or has_car(standard) and not car:
             standard = journey  # the standard shouldnt use the car if possible
             continue
-        if not car and best_criteria(journey, standard):
+        if not car and best_criteria(journey, standard) > 0:
             standard = journey
     return standard
 
@@ -141,7 +153,11 @@ def qualifier_one(journeys, request_type):
     #If it's arrival, we want the tardiest departure time
     best_crit = departure_crit if request_type == "arrival" else arrival_crit
 
-    standard = choose_standard(journeys, best_crit)
+    standard = choose_standard(journeys, and_functors([
+        best_crit,
+        duration_crit,
+        transfers_crit,
+        nonTC_crit]))
     assert standard is not None
 
     #constraints
@@ -188,6 +204,9 @@ def qualifier_one(journeys, request_type):
     def is_possible_cheap(journey):
         return journey.type == "possible_cheap"
 
+    def is_not_possible_cheap(journey):
+        return not is_possible_cheap(journey) and journey.type != "cheap"
+
     # definition of the journeys to qualify
     # the last defined carac will take over the first one
     # if a journey is eligible to multiple tags
@@ -209,6 +228,7 @@ def qualifier_one(journeys, request_type):
         )),
         # comfort tends to limit the number of transfers and fallback
         ("comfort", trip_carac([
+            partial(is_not_possible_cheap),
             partial(has_no_car),
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
@@ -223,6 +243,7 @@ def qualifier_one(journeys, request_type):
         # the non_pt journey is the earliest journey without any public transport
         # only walking, biking or driving
         ("non_pt", trip_carac([
+            partial(is_not_possible_cheap),
             partial(non_pt_journey),
         ],
             [
@@ -231,6 +252,7 @@ def qualifier_one(journeys, request_type):
         )),
         # for car we want at most one journey, the earliest one
         ("car", trip_carac([
+            partial(is_not_possible_cheap),
             partial(has_car)
         ],
             [
@@ -240,6 +262,7 @@ def qualifier_one(journeys, request_type):
         )),
         # less_fallback tends to limit the fallback (walking/biking)
         ("less_fallback", trip_carac([
+            partial(is_not_possible_cheap),
             partial(has_no_car),
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
@@ -254,6 +277,7 @@ def qualifier_one(journeys, request_type):
         )),
         # the fastest is quite explicit
         ("fastest", trip_carac([
+            partial(is_not_possible_cheap),
             partial(has_no_car),
             partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
             partial(nb_transfers_constraint, delta_transfers=1),
@@ -267,12 +291,14 @@ def qualifier_one(journeys, request_type):
         )),
         # the rapid is what we consider to be the best one
         ("rapid", trip_carac([
+            partial(is_not_possible_cheap),
             partial(has_no_car),
             partial(journey_length_constraint, max_evolution=.10),
             partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
         ],
             [
                 transfers_crit,
+                duration_crit,
                 best_crit,
                 nonTC_crit
             ]

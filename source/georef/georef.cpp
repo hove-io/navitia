@@ -172,9 +172,6 @@ int Way::nearest_number(const nt::GeographicalCoord& coord){
     return to_return;
 }
 
-GeoRef::GeoRef(): word_weight(0)
-{
-}
 
 type::Mode_e GeoRef::get_mode(vertex_t vertex) const {
     return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
