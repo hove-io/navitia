@@ -61,17 +61,17 @@ int main(int argc, char * argv[])
     ed::connectors::PoiParser poi_parser(input, origin);
 
     try{
-            poi_parser.fill();
-            LOG4CPLUS_TRACE(logger, "On a  " << poi_parser.data.poi_types.size() << " POITypes");
-            LOG4CPLUS_TRACE(logger, "On a  " << poi_parser.data.pois.size() << " POIs");
-        }catch(const ed::connectors::PoiParserException& e){
-            LOG4CPLUS_FATAL(logger, "Erreur :"+ std::string(e.what()) + "  backtrace :" + e.backtrace());
-            return -1;
-        }
+        poi_parser.fill();
+        LOG4CPLUS_TRACE(logger, "On a  " << poi_parser.data.poi_types.size() << " POITypes");
+        LOG4CPLUS_TRACE(logger, "On a  " << poi_parser.data.pois.size() << " POIs");
+    }catch(const ed::connectors::PoiParserException& e){
+        LOG4CPLUS_FATAL(logger, "Erreur :"+ std::string(e.what()) + "  backtrace :" + e.backtrace());
+        return -1;
+    }
 
     ed::EdPersistor p(connection_string);
     p.persist(poi_parser.data);
-    std::cout<<std::endl<<"temps :"<<to_simple_string(pt::microsec_clock::local_time() - start)<<std::endl;
+    LOG4CPLUS_FATAL(logger, "temps :"<<to_simple_string(pt::microsec_clock::local_time() - start));
 
     return 0;
 }

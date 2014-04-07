@@ -139,7 +139,6 @@ struct Georef{
     std::unordered_map<std::string, types::Admin *> admins;
                       // Old uri way, New uri way
     std::unordered_map<std::string, types::Way*> fusion_ways;
-    Georef(){};
     ~Georef();
 };
 
