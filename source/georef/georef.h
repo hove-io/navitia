@@ -29,7 +29,7 @@ const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     };
 
 const boost::posix_time::seconds default_time_bss_pickup(120);
-const boost::posix_time::seconds default_time_bss_putback(180);
+const boost::posix_time::seconds default_time_bss_putback(60);
 
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {

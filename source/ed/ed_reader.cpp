@@ -893,15 +893,20 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
 
         e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
         boost::add_edge(source, target, e, data.geo_ref->graph);
+
         if (const_it["bike"].as<bool>()) {
             e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
-            boost::add_edge(data.geo_ref->offsets[nt::Mode_e::Bike] + source,
-                 data.geo_ref->offsets[nt::Mode_e::Bike] + target, e, data.geo_ref->graph);
+            auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
+            auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
+            boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
+            way->edges.push_back(std::make_pair(bike_source, bike_target));
         }
         if (const_it["car"].as<bool>()) {
             e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Car]);
-            boost::add_edge(data.geo_ref->offsets[nt::Mode_e::Car] + source,
-                data.geo_ref->offsets[nt::Mode_e::Car] + target, e, data.geo_ref->graph);
+            auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
+            auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
+            boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
+            way->edges.push_back(std::make_pair(car_source, car_target));
         }
     }
 

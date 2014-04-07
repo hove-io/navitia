@@ -8,6 +8,7 @@ from jormungandr.renderers import render_from_protobuf
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
+import logging
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
@@ -285,6 +286,8 @@ class Script(object):
         return resp
 
     def __fill_uris(self, resp):
+        if not resp:
+            return
         for journey in resp.journeys:
             for section in journey.sections:
                 if section.type != response_pb2.PUBLIC_TRANSPORT:
@@ -299,16 +302,37 @@ class Script(object):
                     uris.physical_mode = pt_infos.uris.physical_mode
                     uris.network = pt_infos.uris.network
 
-    def call_kraken(self, req, instance):
+    def call_kraken(self, req, instance, tag=None):
         resp = None
 
+        """
+            for all combinaison of departure and arrival mode we call kraken
+        """
+        # filter walking if bss in mode ?
         for o_mode, d_mode in itertools.product(
                 self.origin_modes, self.destination_modes):
             req.journeys.streetnetwork_params.origin_mode = o_mode
             req.journeys.streetnetwork_params.destination_mode = d_mode
-            resp = instance.send_and_receive(req)
-            if resp.response_type == response_pb2.ITINERARY_FOUND:
-                break  # result found, no need to inspect other fallback mode
+            local_resp = instance.send_and_receive(req)
+
+            if local_resp.response_type == response_pb2.ITINERARY_FOUND:
+
+                #if a specific tag was provided, we tag the journeys before the qualifier
+                if tag:
+                    for j in local_resp.journeys:
+                        j.type = tag
+
+                #we qualify the journeys
+                request_type = "arrival" if req.journeys.clockwise else "departure"
+                qualifier_one(local_resp.journeys, request_type)
+
+                if not resp:
+                    resp = local_resp
+                else:
+                    self.merge_response(resp, local_resp)
+            if not resp:
+                resp = local_resp
+            logging.getLogger(__name__).debug("for mode {}|{} we have found {} journeys".format(o_mode, d_mode, len(local_resp.journeys)))
 
         self.__fill_uris(resp)
         return resp
@@ -323,24 +347,12 @@ class Script(object):
 
         if new_request:
             #we have to call kraken again with a modified version of the request
-            new_resp = self.call_kraken(new_request, instance)
-            #We tag every journey with the new request's tag
-            journeys = None
-            if new_resp.journeys:
-                journeys = new_resp.journeys
-            if journeys:
-                for journey in journeys:
-                    journey.type = tag
+            new_resp = self.call_kraken(new_request, instance, tag)
             self.merge_response(resp, new_resp)
-
-        #we qualify the journeys
-        request_type = "arrival" if original_request['clockwise'] else "departure"
-        qualifier_one(resp.journeys, request_type)
 
         #we filter the journeys
         self.delete_journeys(resp, original_request)
         return resp
-
 
     def journey_compare(self, j1, j2):
         arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
