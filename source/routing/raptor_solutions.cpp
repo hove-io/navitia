@@ -18,7 +18,7 @@ getSolutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &depa
           auto walking_solutions = getWalkingSolutions(clockwise, departs, destinations,
                   *pareto_front.rbegin(), labels, data);
           if(!walking_solutions.empty()) {
-            result.insert(result.end(), walking_solutions.begin(), walking_solutions.end());
+            result.insert(walking_solutions.begin(), walking_solutions.end());
           }
       }
       return result;
