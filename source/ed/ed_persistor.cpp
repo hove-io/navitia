@@ -5,6 +5,21 @@ namespace bg = boost::gregorian;
 
 namespace ed{
 
+void EdPersistor::persist(const ed::PoiPoiType& data){
+    this->lotus.start_transaction();
+    LOG4CPLUS_INFO(logger, "Begin: TRUNCATE data!");
+    this->clean_poi();
+    LOG4CPLUS_INFO(logger, "Begin: add poitypes data");
+    this->insert_poi_types(data);
+    LOG4CPLUS_INFO(logger, "End: add poitypes data");
+    LOG4CPLUS_INFO(logger, "Begin: add pois data");
+    this->insert_pois(data);
+    LOG4CPLUS_INFO(logger, "End: add pois data");
+    LOG4CPLUS_INFO(logger, "Begin commit");
+    this->lotus.commit();
+    LOG4CPLUS_INFO(logger, "End: commit");
+}
+
 void EdPersistor::persist(const ed::Georef& data){
 
     this->lotus.start_transaction();
@@ -28,21 +43,9 @@ void EdPersistor::persist(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, "Begin: relation admin way");
     this->build_relation_way_admin(data);
     LOG4CPLUS_INFO(logger, "End: relation admin way");
-    LOG4CPLUS_INFO(logger, "Begin: add poitypes data");
-    this->insert_poi_types(data);
-    LOG4CPLUS_INFO(logger, "End: add poitypes data");
-    LOG4CPLUS_INFO(logger, "Begin: add pois data");
-    this->insert_pois(data);
-    LOG4CPLUS_INFO(logger, "End: add pois data");
     LOG4CPLUS_INFO(logger, "Begin: update boundary admins");
     this->update_boundary();
     LOG4CPLUS_INFO(logger, "End: update boundary admins");
-    LOG4CPLUS_INFO(logger, "Begin: Relations stop_area, stop_point and admins");
-    this->build_stop_admin_relation();
-    LOG4CPLUS_INFO(logger, "End: Relations stop_area, stop_point and admins");
-    LOG4CPLUS_INFO(logger, "Begin: Relation poi and admins");
-    this->build_poi_admin_relation();
-    LOG4CPLUS_INFO(logger, "End: Relation poi and admins");
     LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -174,7 +177,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
 }
 
-void EdPersistor::insert_poi_types(const ed::Georef& data){
+void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
     this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
         this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
@@ -182,7 +185,7 @@ void EdPersistor::insert_poi_types(const ed::Georef& data){
     lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_pois(const ed::Georef& data){
+void EdPersistor::insert_pois(const ed::PoiPoiType& data){
     this->lotus.prepare_bulk_insert("navitia.poi",
     {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible"});
     for(const auto& itm : data.pois) {
@@ -305,9 +308,6 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert relation calendar line");
     this->insert_rel_calendar_line(data.calendars);
     LOG4CPLUS_INFO(logger, "End: insert relation calendar line");
-    LOG4CPLUS_INFO(logger, "Begin: build stops admin relations");
-    this->build_stop_admin_relation();
-    LOG4CPLUS_INFO(logger, "End: build stops admin relations");
     LOG4CPLUS_INFO(logger, "Begin: commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -338,25 +338,15 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
     PQclear(this->lotus.exec(request));
 }
 
-void EdPersistor::build_stop_admin_relation(){
-    LOG4CPLUS_INFO(logger, "Begin: execute georef.match_stop_area_to_admin()");
-    PQclear(this->lotus.exec("SELECT georef.match_stop_area_to_admin()", "", PGRES_TUPLES_OK));
-    LOG4CPLUS_INFO(logger, "End: execute georef.match_stop_area_to_admin()\n"
-                           "Begin: execute georef.match_stop_point_to_admin");
-    PQclear(this->lotus.exec("SELECT georef.match_stop_point_to_admin();", "", PGRES_TUPLES_OK));
-    LOG4CPLUS_INFO(logger, "End: execute georef.match_stop_point_to_admin\n");
-}
-
-void EdPersistor::build_poi_admin_relation() {
-    LOG4CPLUS_INFO(logger, "Begin: execute georef.match_poi_to_admin\n");
-    PQclear(this->lotus.exec("SELECT georef.match_poi_to_admin();", "", PGRES_TUPLES_OK));
-    LOG4CPLUS_INFO(logger, "End: execute georef.match_poi_to_admin\n");
-}
-
 void EdPersistor::clean_georef(){
     PQclear(this->lotus.exec(
                 "TRUNCATE georef.node, georef.house_number, navitia.admin, "
                 "georef.way, navitia.poi_type, navitia.poi CASCADE;"));
+}
+
+void EdPersistor::clean_poi(){
+    PQclear(this->lotus.exec(
+                "TRUNCATE  navitia.poi_type, navitia.poi CASCADE;"));
 }
 
 void EdPersistor::clean_db(){

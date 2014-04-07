@@ -108,6 +108,10 @@ struct Header{
 
 };
 
+struct Codes {
+    std::map<std::string, std::string> codes;
+};
+
 
 typedef std::bitset<10> Properties;
 struct hasProperties {
@@ -436,7 +440,7 @@ inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
 }
 
 
-struct StopArea : public Header, Nameable, hasProperties, HasMessages{
+struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     const static Type_e type = Type_e::StopArea;
     GeographicalCoord coord;
     std::string additional_data;
@@ -445,7 +449,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & uri & name & coord & stop_point_list & admin_list
-        & _properties & wheelchair_boarding & messages & visible & comment;
+        & _properties & wheelchair_boarding & messages & visible & comment & codes;
     }
 
     StopArea(): wheelchair_boarding(false) {}
@@ -455,7 +459,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages{
     bool operator<(const StopArea & other) const { return this < &other; }
 };
 
-struct Network : public Header, Nameable, HasMessages{
+struct Network : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Network;
     std::string address_name;
     std::string address_number;
@@ -470,7 +474,7 @@ struct Network : public Header, Nameable, HasMessages{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & id & name & uri & address_name & address_number & address_type_name
-            & mail & website & fax & sort & line_list & messages;
+            & mail & website & fax & sort & line_list & messages & codes;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -495,7 +499,7 @@ struct Contributor : public Header, Nameable{
     bool operator<(const Contributor & other) const { return this < &other; }
 };
 
-struct Company : public Header, Nameable{
+struct Company : public Header, Nameable, Codes{
     const static Type_e type = Type_e::Company;
     std::string address_name;
     std::string address_number;
@@ -508,8 +512,8 @@ struct Company : public Header, Nameable{
     std::vector<Line*> line_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & address_name & address_number & address_type_name & phone_number
-                & mail & website & fax;
+        ar & idx & id & name & uri & address_name & address_number &
+        address_type_name & phone_number & mail & website & fax & codes;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Company & other) const { return this < &other; }
@@ -542,7 +546,7 @@ struct PhysicalMode : public Header, Nameable{
 
 struct Calendar;
 
-struct Line : public Header, Nameable, HasMessages{
+struct Line : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Line;
     std::string code;
     std::string forward_name;
@@ -567,7 +571,7 @@ struct Line : public Header, Nameable, HasMessages{
         ar & id & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & messages & calendar_list;
+                & messages & calendar_list & codes;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -585,7 +589,7 @@ struct Line : public Header, Nameable, HasMessages{
     };
 };
 
-struct Route : public Header, Nameable, HasMessages{
+struct Route : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Route;
     Line* line;
     std::vector<JourneyPattern*> journey_pattern_list;
@@ -594,7 +598,7 @@ struct Route : public Header, Nameable, HasMessages{
     idx_t main_destination();
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & line & journey_pattern_list & messages;
+        ar & id & idx & name & uri & line & journey_pattern_list & messages & codes;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -638,7 +642,7 @@ struct AssociatedCalendar {
     }
 };
 
-struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages{
+struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes{
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
@@ -665,7 +669,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages & associated_calendars;
+            & odt_message & _vehicle_properties & messages & associated_calendars
+            & codes;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -722,7 +727,7 @@ public:
     bool operator==(const ValidityPattern & other) const { return (this->beginning_date == other.beginning_date) && (this->days == other.days);}
 };
 
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
+struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;
@@ -737,7 +742,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
         journey_pattern_point_list.resize(0);
         ar & uri & name & stop_area & coord & fare_zone & idx
             & journey_pattern_point_list & admin_list & _properties & messages
-            & stop_point_connection_list & comment;
+            & stop_point_connection_list & comment & codes;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
@@ -890,7 +895,7 @@ struct StopTime : public Nameable {
 };
 
 
-struct Calendar : public Nameable, public Header {
+struct Calendar : public Nameable, public Header, public Codes {
     const static Type_e type = Type_e::Calendar;
     typedef std::bitset<7> Week;
     Week week_pattern;
@@ -910,7 +915,7 @@ struct Calendar : public Nameable, public Header {
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern;
+        ar & id & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern & codes;
     }
 };
 

@@ -35,14 +35,14 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     b.vj("A")(spa1, sp1_departure, sp1_departure, 0, false, false)
              (spa2, sp2_arrival, sp2_arrival, 0, false, false);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -127,17 +127,17 @@ BOOST_AUTO_TEST_CASE(base) {
              (spa2, sp2_arrival, sp2_departure)
              (spa3, sp3_arrival);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp3 = b.data.pt_data.stop_areas_map[spa3]
+    auto jpp3 = b.data.pt_data->stop_areas_map[spa3]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -292,14 +292,14 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     b.vj("A")(spa1, sp1_departure)
              (spa2, sp2_arrival);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -414,17 +414,17 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
              (spa2, sp2_arrival, sp2_departure)
              (spa3, sp3_arrival);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp3 = b.data.pt_data.stop_areas_map[spa3]
+    auto jpp3 = b.data.pt_data->stop_areas_map[spa3]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -596,14 +596,14 @@ BOOST_AUTO_TEST_CASE(base_vp) {
     b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)
                              (spa2, sp2_arrival, sp2_arrival);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -692,14 +692,14 @@ BOOST_AUTO_TEST_CASE(vj2) {
     b.vj("A")(spa1, sp1_departure2)
                              (spa2, sp2_arrival2);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1;
@@ -830,14 +830,14 @@ BOOST_AUTO_TEST_CASE(vp2) {
     b.vj("A", "10", "", true)(spa1, sp1_departure2)
                              (spa2, sp2_arrival2);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -912,17 +912,17 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
                              (spa2, sp2_arrival, sp2_departure)
                              (spa3, sp3_arrival);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp3 = b.data.pt_data.stop_areas_map[spa3]
+    auto jpp3 = b.data.pt_data->stop_areas_map[spa3]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -1074,17 +1074,17 @@ BOOST_AUTO_TEST_CASE(freq_base) {
              (spa3, sp3_arrival).frequency(start_time, end_time, headway_sec);
 
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp3 = b.data.pt_data.stop_areas_map[spa3]
+    auto jpp3 = b.data.pt_data->stop_areas_map[spa3]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -1272,14 +1272,14 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
              (spa2, sp2_arrival).frequency(start_time, end_time, headway_sec);
 
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -1410,14 +1410,14 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
              (spa2, sp2_arrival).frequency(start_time2, end_time2, headway_sec);
 
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp2 = b.data.pt_data->stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime *st1, *st2;
@@ -1662,21 +1662,18 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
     b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)
                              (spa2, sp2_arrival, sp2_arrival);
 
-    auto cal(new type::Calendar(b.data.meta.production_date.begin()));
+    auto cal(new type::Calendar(b.data.meta->production_date.begin()));
     cal->uri="cal1";
     auto associated_cal = new type::AssociatedCalendar();
     associated_cal->calendar = cal;
-    b.data.pt_data.vehicle_journeys[0]->associated_calendars.insert({cal->uri, associated_cal});
+    b.data.pt_data->vehicle_journeys[0]->associated_calendars.insert({cal->uri, associated_cal});
 
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
-                ->stop_point_list.front()
-                ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime* st1;
@@ -1736,14 +1733,11 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
     b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)
                              (spa2, sp2_arrival, sp2_arrival);
     b.finish();
-    b.data.pt_data.index();
+    b.data.pt_data->index();
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
-                ->stop_point_list.front()
-                ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
+    auto jpp1 = b.data.pt_data->stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     const type::StopTime*st1;

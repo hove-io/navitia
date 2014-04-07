@@ -64,7 +64,7 @@ int main(int argc, char * argv[])
     po::notify(vm);
 
     pt::ptime start, now;
-    int read, sort, autocomplete, save;
+    int read, save;
 
     navitia::type::Data data;
 
@@ -73,48 +73,28 @@ int main(int argc, char * argv[])
 
     ed::EdReader reader(connection_string);
     reader.fill(data, min_non_connected_graph_ratio);
+    read = (pt::microsec_clock::local_time() - start).total_milliseconds();
     data.complete();
 
-    read = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    LOG4CPLUS_INFO(logger, "line: " << data.pt_data->lines.size());
+    LOG4CPLUS_INFO(logger, "route: " << data.pt_data->routes.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern: " << data.pt_data->journey_patterns.size());
+    LOG4CPLUS_INFO(logger, "stoparea: " << data.pt_data->stop_areas.size());
+    LOG4CPLUS_INFO(logger, "stoppoint: " << data.pt_data->stop_points.size());
+    LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.pt_data->vehicle_journeys.size());
+    LOG4CPLUS_INFO(logger, "stop: " << data.pt_data->stop_times.size());
+    LOG4CPLUS_INFO(logger, "connection: " << data.pt_data->stop_point_connections.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.pt_data->journey_pattern_points.size());
+    LOG4CPLUS_INFO(logger, "modes: " << data.pt_data->physical_modes.size());
+    LOG4CPLUS_INFO(logger, "validity pattern : " << data.pt_data->validity_patterns.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.pt_data->journey_pattern_point_connections.size());
+    LOG4CPLUS_INFO(logger, "calendars: " << data.pt_data->calendars.size());
+    LOG4CPLUS_INFO(logger, "alias : " << data.geo_ref->alias.size());
+    LOG4CPLUS_INFO(logger, "synonyms : " << data.geo_ref->synonymes.size());
+    LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare->fare_map.size());
+    LOG4CPLUS_INFO(logger, "fare transitions: " << data.fare->nb_transitions());
+    LOG4CPLUS_INFO(logger, "fare od: " << data.fare->od_tickets.size());
 
-    LOG4CPLUS_INFO(logger, "line: " << data.pt_data.lines.size());
-    LOG4CPLUS_INFO(logger, "route: " << data.pt_data.routes.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern: " << data.pt_data.journey_patterns.size());
-    LOG4CPLUS_INFO(logger, "stoparea: " << data.pt_data.stop_areas.size());
-    LOG4CPLUS_INFO(logger, "stoppoint: " << data.pt_data.stop_points.size());
-    LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.pt_data.vehicle_journeys.size());
-    LOG4CPLUS_INFO(logger, "stop: " << data.pt_data.stop_times.size());
-    LOG4CPLUS_INFO(logger, "connection: " << data.pt_data.stop_point_connections.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.pt_data.journey_pattern_points.size());
-    LOG4CPLUS_INFO(logger, "modes: " << data.pt_data.physical_modes.size());
-    LOG4CPLUS_INFO(logger, "validity pattern : " << data.pt_data.validity_patterns.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.pt_data.journey_pattern_point_connections.size());
-    LOG4CPLUS_INFO(logger, "calendars: " << data.pt_data.calendars.size());
-    LOG4CPLUS_INFO(logger, "alias : " << data.geo_ref.alias.size());
-    LOG4CPLUS_INFO(logger, "synonyms : " << data.geo_ref.synonymes.size());
-    LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare.fare_map.size());
-    LOG4CPLUS_INFO(logger, "fare transitions: " << data.fare.nb_transitions());
-    LOG4CPLUS_INFO(logger, "fare od: " << data.fare.od_tickets.size());
-
-    start = pt::microsec_clock::local_time();
-    data.pt_data.sort();
-    sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    start = pt::microsec_clock::local_time();
-    LOG4CPLUS_INFO(logger, "Building proximity list");
-    data.build_proximity_list();
-    LOG4CPLUS_INFO(logger, "Building uri maps");
-    //construction des map uri => idx
-    data.build_uri();
-
-    LOG4CPLUS_INFO(logger, "Building autocomplete");
-    data.build_autocomplete();
-
-    /* ça devrait etre fait avant, à vérifier
-    LOG4CPLUS_INFO(logger, "On va construire les correspondances");
-    {Timer t("Construction des correspondances");  data.pt_data.build_connections();}
-    */
-    autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
     LOG4CPLUS_INFO(logger, "Begin to save ...");
 
     start = pt::microsec_clock::local_time();
@@ -129,8 +109,6 @@ int main(int argc, char * argv[])
 
     LOG4CPLUS_INFO(logger, "Computing times");
     LOG4CPLUS_INFO(logger, "\t File reading: " << read << "ms");
-    LOG4CPLUS_INFO(logger, "\t Sorting data: " << sort << "ms");
-    LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
     LOG4CPLUS_INFO(logger, "\t Data writing: " << save << "ms");
 
     return 0;

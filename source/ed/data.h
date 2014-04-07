@@ -3,6 +3,7 @@
 
 #include "type/type.h"
 #include "type/data.h"
+#include "fare/fare.h"
 #include "type/datetime.h"
 
 namespace nt = navitia::type;
@@ -122,17 +123,22 @@ public:
 
 };
 
+struct PoiPoiType{
+    std::unordered_map<std::string, types::PoiType *> poi_types;
+    std::unordered_map<std::string, types::Poi *> pois;
+
+    PoiPoiType(){};
+    ~PoiPoiType();
+};
+
 struct Georef{
     std::unordered_map<std::string, types::Node* > nodes;
     std::unordered_map<std::string, types::Edge* > edges;
     std::unordered_map<std::string, types::Way* > ways;
     std::unordered_map<std::string, types::HouseNumber* > house_numbers;
     std::unordered_map<std::string, types::Admin *> admins;
-    std::unordered_map<std::string, types::PoiType *> poi_types;
-    std::unordered_map<std::string, types::Poi *> pois;
                       // Old uri way, New uri way
     std::unordered_map<std::string, types::Way*> fusion_ways;
-    Georef(){};
     ~Georef();
 };
 

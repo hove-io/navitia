@@ -72,6 +72,11 @@ enum ResponseStatus{
 	date_out_of_bound = 7;
 }
 
+
+message Code {
+    required string type = 1;
+    required string value = 2;
+}
 message Message{
     optional string uri 							= 1;
     optional string message 						= 2;
@@ -105,6 +110,7 @@ message StopArea {
     repeated StopPoint stop_points = 8;
     repeated Message messages = 9;
     optional string comment = 11;
+    repeated Code codes = 12;
 }
 
 message StopPoint {
@@ -117,6 +123,8 @@ message StopPoint {
 
     repeated Message messages = 9;
     optional string comment = 11;
+    repeated Code codes = 12;
+	optional Address address = 13;
 }
 
 message Line {
@@ -131,6 +139,7 @@ message Line {
 
     repeated Message messages = 14;
     optional string comment = 15;
+    repeated Code codes = 16;
 }
 
 message Route {
@@ -140,6 +149,7 @@ message Route {
     optional Line line = 7;
     repeated JourneyPattern journey_patterns = 8;
     repeated Message messages = 9;
+    repeated Code codes = 10;
 }
 
 message JourneyPattern {
@@ -237,6 +247,7 @@ message VehicleJourney {
     optional bool appropriate_signage = 22;
     optional bool school_vehicle = 23;
     optional string comment = 24;
+    repeated Code codes = 25;
 }
 
 message JourneyPatternPoint{
@@ -264,6 +275,7 @@ message Poi {
     optional GeographicalCoord coord = 6;
     optional PoiType poi_type = 7;
     repeated AdministrativeRegion administrative_regions = 10;
+    optional Address address = 11;
 }
 
 message Network {
@@ -271,6 +283,7 @@ message Network {
     optional string name 		= 4;
     repeated Line lines 		= 5;
     repeated Message messages 	= 6;
+    repeated Code codes         = 7;
 }
 
 message PhysicalMode {
@@ -294,6 +307,7 @@ message Connection {
 message Company {
     optional string uri = 3;
     optional string name = 4;
+    repeated Code codes   = 8;
 }
 
 message Address {
@@ -337,6 +351,7 @@ message Calendar{
     repeated CalendarPeriod active_periods = 4;
     repeated CalendarException exceptions = 5;
     optional ValidityPattern validity_pattern = 6;
+    repeated Code codes = 7;
 }
 
 message ValidityPattern {

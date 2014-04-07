@@ -6,8 +6,8 @@
 namespace navitia {
 
 namespace type {
-struct Data;
-enum class Type_e;
+    struct Data;
+    enum class Type_e;
 }
 
 namespace autocomplete {

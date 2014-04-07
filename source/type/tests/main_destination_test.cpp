@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include "type/type.h"
 #include "ed/build_helper.h"
+#include "type/pt_data.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -23,16 +24,16 @@ struct principal_destination_fixture {
                                                          ("stop3", 22 * 3600, 22 * 3600 + 10 * 60);
         b.vj("network:K", "line:B", "1", "", true, "VJJ");
         b.data.build_uri();
-        b.data.pt_data.index();
+        b.data.pt_data->index();
     }
 };
 
 BOOST_FIXTURE_TEST_CASE(principal_destination_found, principal_destination_fixture) {
-    navitia::type::Route* route = b.data.pt_data.routes_map["line:A:0"];
-    BOOST_CHECK_EQUAL(b.data.pt_data.stop_points[route->main_destination()]->uri, "stop3");
+    navitia::type::Route* route = b.data.pt_data->routes_map["line:A:0"];
+    BOOST_CHECK_EQUAL(b.data.pt_data->stop_points[route->main_destination()]->uri, "stop3");
 }
 
 BOOST_FIXTURE_TEST_CASE(principal_destination_not_found, principal_destination_fixture) {
-    navitia::type::Route* route = b.data.pt_data.routes_map["line:B:1"];
+    navitia::type::Route* route = b.data.pt_data->routes_map["line:B:1"];
     BOOST_CHECK_EQUAL(route->main_destination(), navitia::type::invalid_idx);
 }

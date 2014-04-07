@@ -1,5 +1,6 @@
 #include "type/datetime.h"
 #include "type/data.h"
+#include "type/meta_data.h"
 
 namespace navitia {
 /*
@@ -38,14 +39,14 @@ std::string iso_hour_string(const DateTime datetime, const type::Data &d) {
 
 
 boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data &d){
-    boost::posix_time::ptime date_time(d.meta.production_date.begin() + boost::gregorian::days(DateTimeUtils::date(datetime)));
+    boost::posix_time::ptime date_time(d.meta->production_date.begin() + boost::gregorian::days(DateTimeUtils::date(datetime)));
     date_time += boost::posix_time::seconds(DateTimeUtils::hour(datetime));
     return date_time;
 }
 
 
 DateTime to_datetime(boost::posix_time::ptime ptime, const type::Data &d) {
-    int day = (ptime.date() - d.meta.production_date.begin()).days();
+    int day = (ptime.date() - d.meta->production_date.begin()).days();
     int time = ptime.time_of_day().total_seconds();
     return DateTimeUtils::set(day, time);
 }

@@ -14,6 +14,7 @@ from jormungandr.interfaces.parsers import depth_argument
 from errors import ManageError
 from Coord import Coord
 from navitiacommon.models import PtObject
+from flask.ext.restful.types import boolean
 
 
 class Uri(ResourceUri):
@@ -37,6 +38,8 @@ class Uri(ResourceUri):
                             action="append")
         parser.add_argument("external_code", type=unicode,
                             description="An external code to query")
+        parser.add_argument("show_codes", type=boolean, default=False,
+                            description="show more identification codes")
         if is_collection:
             parser.add_argument("filter", type=str, default="",
                                 description="The filter parameter")

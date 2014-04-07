@@ -17,7 +17,7 @@ std::vector<type::idx_t> Calendar::get_calendars(const std::string& filter,
     }
     std::vector<type::idx_t> indexes;
     for(type::idx_t idx : to_return){
-        navitia::type::Calendar* cal = d.pt_data.calendars[idx];
+        navitia::type::Calendar* cal = d.pt_data->calendars[idx];
         for(const boost::gregorian::date_period per : cal->active_periods){
             if(filter_period.begin() == filter_period.end()){
                 if (per.contains(filter_period.begin())){

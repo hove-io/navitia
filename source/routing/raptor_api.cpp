@@ -4,6 +4,8 @@
 #include "type/datetime.h"
 #include <unordered_set>
 #include <chrono>
+#include "type/meta_data.h"
+#include "fare/fare.h"
 
 
 namespace navitia { namespace routing {
@@ -192,11 +194,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_journey->set_duration((arrival_time - departure_time).total_seconds());
 
         //fare computation, done at the end for the journey to be complete
-        auto fare = d.fare.compute_fare(path);
+        auto fare = d.fare->compute_fare(path);
         fill_fare_section(enhanced_response, pb_journey, fare);
     }
 
-	if (pb_response.journeys().size() == 0) {
+    if (pb_response.journeys().size() == 0) {
         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this journey",
         pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
@@ -254,7 +256,7 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
         try {
             bt::ptime ptime;
             ptime = bt::from_iso_string(datetime);
-            if(!raptor.data.meta.production_date.contains(ptime.date())) {
+            if(!raptor.data.meta->production_date.contains(ptime.date())) {
                 fill_pb_error(pbnavitia::Error::date_out_of_bounds,
                                 "date is not in data production period",
                                 response.mutable_error());
@@ -294,8 +296,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         return response;
     }
     worker.init(origin, {destination});
-    auto departures = get_stop_points(origin, raptor.data.pt_data, worker);
-    auto destinations = get_stop_points(destination, raptor.data.pt_data, worker, true);
+    auto departures = get_stop_points(origin, *raptor.data.pt_data, worker);
+    auto destinations = get_stop_points(destination, *raptor.data.pt_data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
         fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point nor destination point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
@@ -319,7 +321,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
 
     for(bt::ptime datetime : datetimes) {
-        int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
+        int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
         int time = datetime.time_of_day().total_seconds();
         DateTime init_dt = DateTimeUtils::set(day, time);
 
@@ -368,14 +370,14 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     }
     datetime = tmp_datetime.front();
     worker.init(origin);
-    auto departures = get_stop_points(origin, raptor.data.pt_data, worker);
+    auto departures = get_stop_points(origin, *raptor.data.pt_data, worker);
 
     if(departures.size() == 0){
         response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return response;
     }
 
-    int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
+    int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     DateTime init_dt = DateTimeUtils::set(day, time);
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
@@ -384,7 +386,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                            accessibilite_params/*wheelchair*/, forbidden, clockwise, disruption_active);
 
 
-    for(const type::StopPoint* sp : raptor.data.pt_data.stop_points) {
+    for(const type::StopPoint* sp : raptor.data.pt_data->stop_points) {
         DateTime best = bound;
         type::idx_t best_rp = type::invalid_idx;
         int best_round = -1;
@@ -403,7 +405,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             auto label = raptor.best_labels[best_rp];
             type::idx_t initial_rp;
             DateTime initial_dt;
-            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(best_round, best_rp, clockwise, raptor.labels);
+            boost::tie(initial_rp, initial_dt) = get_final_jppidx_and_date(best_round, best_rp, clockwise, raptor.labels);
 
             int duration = ::abs(label - init_dt);
 
@@ -417,7 +419,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 pb_journey->set_requested_date_time(str_requested);
                 pb_journey->set_duration(duration);
                 pb_journey->set_nb_transfers(best_round);
-                fill_pb_placemark(raptor.data.pt_data.journey_pattern_points[best_rp]->stop_point, raptor.data, pb_journey->mutable_destination(), 0);
+                fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_rp]->stop_point, raptor.data, pb_journey->mutable_destination(), 0);
             }
         }
     }

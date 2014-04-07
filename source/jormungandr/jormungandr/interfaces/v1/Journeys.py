@@ -119,20 +119,28 @@ class GeoJson(fields.Raw):
 
 class section_type(enum_type):
 
+    def if_on_demand_stop_time(self, stop):
+        properties = stop.properties
+        descriptor = properties.DESCRIPTOR
+        enum = descriptor.enum_types_by_name["AdditionalInformation"]
+        for v in properties.additional_informations:
+            if enum.values_by_number[v].name == 'on_demand_transport':
+                return True
+        return False
+
     def output(self, key, obj):
         try:
-            if obj.HasField("pt_display_informations"):
-                infos = obj.pt_display_informations
-                if infos.HasField("vehicle_journey_type"):
-                    infos_desc = infos.DESCRIPTOR
-                    fields = infos_desc.fields_by_name['vehicle_journey_type']
-                    odt_enum = fields.enum_type
-                    regular = odt_enum.values_by_name['regular'].number
-                    if infos.vehicle_journey_type != regular:
-                        return "on_demand_transport"
+            if obj.stop_date_times:
+                first_stop = obj.stop_date_times[0]
+                last_stop = obj.stop_date_times[-1]
+                if self.if_on_demand_stop_time(first_stop):
+                    return 'on_demand_transport'
+                elif self.if_on_demand_stop_time(last_stop):
+                    return 'on_demand_transport'
+                return 'public_transport'
         except ValueError:
             pass
-        return super(section_type, self).output(key, obj)
+        return super(section_type, self).output("type", obj)
 
 
 class section_place(PbField):
@@ -144,7 +152,7 @@ class section_place(PbField):
         else:
             return super(PbField, self).output(key, obj)
 section = {
-    "type": section_type(attribute="type"),
+    "type": section_type(),
     "id": fields.String(),
     "mode": enum_type(attribute="street_network.mode"),
     "duration": fields.Integer(),
@@ -312,24 +320,27 @@ class add_journey_pagination(object):
     def extremes(self, resp):
         datetime_before = None
         datetime_after = None
+        section_is_pt = lambda section: section['type'] == "public_transport"\
+                           or section['type'] == "on_demand_transport"
+        filter_journey = lambda journey: 'arrival_date_time' in journey and\
+                             journey['arrival_date_time'] != '' and\
+                             "sections" in journey and\
+                             any(section_is_pt(section) for section in journey['sections'])
         try:
-            list_journeys = [journey for journey in resp['journeys']
-                             if 'arrival_date_time' in journey.keys() and
-                             journey['arrival_date_time'] != '']
+            list_journeys = filter(filter_journey, resp['journeys'])
             asap_journey = min(list_journeys,
                                key=itemgetter('arrival_date_time'))
         except:
             return (None, None)
         if asap_journey['arrival_date_time'] \
                 and asap_journey['departure_date_time']:
-            minute = timedelta(minutes=1)
+            second = timedelta(seconds=1)
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             s_arrival = asap_journey['arrival_date_time']
-            f_departure = datetime.strptime(s_arrival, f_datetime)
-            datetime_after = f_departure + minute
             f_arrival = datetime.strptime(s_arrival, f_datetime)
-            datetime_before = f_arrival - minute
+            datetime_after = f_departure + second
+            datetime_before = f_arrival - second
 
         return (datetime_before, datetime_after)
 
@@ -415,15 +426,15 @@ class Journeys(ResourceUri):
                                 type=dt_represents, default=True)
         parser_get.add_argument("max_nb_transfers", type=int, default=10,
                                 dest="max_transfers")
-        parser_get.add_argument("first_section_mode",
+        parser_get.add_argument("first_section_mode[]",
                                 type=option_value(modes),
-                                default=["walking", "bike", "car"],
+                                default=["bss"],
                                 dest="origin_mode", action="append")
-        parser_get.add_argument("last_section_mode",
+        parser_get.add_argument("last_section_mode[]",
                                 type=option_value(modes),
-                                default=["walking", "bike", "car"],
+                                default=["bss"],
                                 dest="destination_mode", action="append")
-        parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
+        parser_get.add_argument("max_duration_to_pt", type=int, default=15*60,
                                 description="maximal duration of non public \
                                 transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.12)
@@ -441,6 +452,15 @@ class Journeys(ResourceUri):
         parser_get.add_argument("wheelchair", type=boolean, default=False)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
+        # for retrocompatibility purpose, we duplicate (without []):
+        parser_get.add_argument("first_section_mode",
+                                type=option_value(modes),
+                                default=["bss"],
+                                dest="origin_mode", action="append")
+        parser_get.add_argument("last_section_mode",
+                                type=option_value(modes),
+                                default=["bss"],
+                                dest="destination_mode", action="append")
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
 

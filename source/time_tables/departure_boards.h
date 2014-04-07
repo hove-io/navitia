@@ -13,7 +13,8 @@ pbnavitia::Response departure_board(const std::string &filter,
                                     boost::optional<const std::string> calendar_id,
                                     const std::vector<std::string>& forbidden_uris,
                                     const std::string &date,
-                                    uint32_t duration, int32_t max_date_times,
+                                    uint32_t duration,
+                                    uint32_t depth, int32_t max_date_times,
                                     int interface_version,
                                     int count, int start_page, const type::Data &data, bool disruption_active);
 }

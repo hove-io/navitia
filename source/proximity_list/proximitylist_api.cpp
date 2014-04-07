@@ -2,6 +2,7 @@
 #include "type/pb_converter.h"
 #include "utils/paginate.h"
 #include "ptreferential/ptreferential.h"
+#include "type/pt_data.h"
 
 
 namespace navitia { namespace proximitylist {
@@ -23,34 +24,34 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
         auto type = std::get<2>(result_item);
         switch(type){
         case nt::Type_e::StopArea:
-            fill_pb_object(data.pt_data.stop_areas[idx], data, place->mutable_stop_area(), depth,
+            fill_pb_object(data.pt_data->stop_areas[idx], data, place->mutable_stop_area(), depth,
                            current_date);
-            place->set_name(data.pt_data.stop_areas[idx]->name);
-            place->set_uri(data.pt_data.stop_areas[idx]->uri);
+            place->set_name(data.pt_data->stop_areas[idx]->name);
+            place->set_uri(data.pt_data->stop_areas[idx]->uri);
             place->set_distance(coord.distance_to(coord_item));
             place->set_embedded_type(pbnavitia::STOP_AREA);
             break;
         case nt::Type_e::StopPoint:
-            fill_pb_object(data.pt_data.stop_points[idx], data, place->mutable_stop_point(), depth,
+            fill_pb_object(data.pt_data->stop_points[idx], data, place->mutable_stop_point(), depth,
                            current_date);
-            place->set_name(data.pt_data.stop_points[idx]->name);
-            place->set_uri(data.pt_data.stop_points[idx]->uri);
+            place->set_name(data.pt_data->stop_points[idx]->name);
+            place->set_uri(data.pt_data->stop_points[idx]->uri);
             place->set_distance(coord.distance_to(coord_item));
             place->set_embedded_type(pbnavitia::STOP_POINT);
             break;
         case nt::Type_e::POI:
-            fill_pb_object(data.geo_ref.pois[idx], data, place->mutable_poi(), depth,
+            fill_pb_object(data.geo_ref->pois[idx], data, place->mutable_poi(), depth,
                            current_date);
-            place->set_name(data.geo_ref.pois[idx]->name);
-            place->set_uri(data.geo_ref.pois[idx]->uri);
+            place->set_name(data.geo_ref->pois[idx]->name);
+            place->set_uri(data.geo_ref->pois[idx]->uri);
             place->set_distance(coord.distance_to(coord_item));
             place->set_embedded_type(pbnavitia::POI);
             break;
         case nt::Type_e::Address:
-            fill_pb_object(data.geo_ref.ways[idx], data, place->mutable_address(),
-                           data.geo_ref.ways[idx]->nearest_number(coord), coord , depth);
-            place->set_name(data.geo_ref.ways[idx]->name);
-            place->set_uri(data.geo_ref.ways[idx]->uri + ":" + boost::lexical_cast<std::string>(data.geo_ref.ways[idx]->nearest_number(coord)));
+            fill_pb_object(data.geo_ref->ways[idx], data, place->mutable_address(),
+                           data.geo_ref->ways[idx]->nearest_number(coord), coord , depth);
+            place->set_name(data.geo_ref->ways[idx]->name);
+            place->set_uri(data.geo_ref->ways[idx]->uri + ":" + boost::lexical_cast<std::string>(data.geo_ref->ways[idx]->nearest_number(coord)));
             place->set_distance(coord.distance_to(coord_item));
             place->set_embedded_type(pbnavitia::ADDRESS);
         default:
@@ -82,9 +83,9 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
     for(nt::Type_e type : types){
         if(type == nt::Type_e::Address) {
            try {
-               georef::edge_t e = data.geo_ref.nearest_edge(coord, data.geo_ref.pl);
+               georef::edge_t e = data.geo_ref->nearest_edge(coord, data.geo_ref->pl);
                ++total_result;
-               georef::Way *way = data.geo_ref.ways[data.geo_ref.graph[e].way_idx];
+               georef::Way *way = data.geo_ref->ways[data.geo_ref->graph[e].way_idx];
                result.push_back(t_result(way->idx, coord, type));
            } catch(proximitylist::NotFound) {}
         } else{
@@ -105,13 +106,13 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
             }
             switch(type){
             case nt::Type_e::StopArea:
-                list = data.pt_data.stop_area_proximity_list.find_within(coord, distance);
+                list = data.pt_data->stop_area_proximity_list.find_within(coord, distance);
                 break;
             case nt::Type_e::StopPoint:
-                list = data.pt_data.stop_point_proximity_list.find_within(coord, distance);
+                list = data.pt_data->stop_point_proximity_list.find_within(coord, distance);
                 break;
             case nt::Type_e::POI:
-                list = data.geo_ref.poi_proximity_list.find_within(coord, distance);
+                list = data.geo_ref->poi_proximity_list.find_within(coord, distance);
                 break;
             default: break;
             }

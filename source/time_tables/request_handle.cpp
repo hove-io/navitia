@@ -1,5 +1,6 @@
 #include "request_handle.h"
 #include "ptreferential/ptreferential.h"
+#include "type/meta_data.h"
 
 namespace navitia { namespace timetables {
 
@@ -10,14 +11,14 @@ RequestHandle::RequestHandle(const std::string& /*api*/, const std::string &requ
     date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf){
     try {
         auto ptime = boost::posix_time::from_iso_string(str_dt);
-        if( !data.meta.production_date.contains(ptime.date()) ) {
+        if( !data.meta->production_date.contains(ptime.date()) ) {
             fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is out of bound",pb_response.mutable_error());
-        } else if( !data.meta.production_date.contains((ptime + boost::posix_time::seconds(duration)).date()) ) {
+        } else if( !data.meta->production_date.contains((ptime + boost::posix_time::seconds(duration)).date()) ) {
              // On regarde si la date + duration ne déborde pas de la période de production
             fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is not in data production period",pb_response.mutable_error());
         }
         if(! pb_response.has_error()){
-            date_time = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+            date_time = DateTimeUtils::set((ptime.date() - data.meta->production_date.begin()).days(), ptime.time_of_day().total_seconds());
             max_datetime = date_time + duration;
             const auto jpp_t = type::Type_e::JourneyPatternPoint;
             journey_pattern_points = ptref::make_query(jpp_t, request, forbidden_uris, data);

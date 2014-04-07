@@ -12,6 +12,7 @@ SET(SOURCE_LIB
     conv_coord.cpp
     external_parser.cpp
     data_cleaner.cpp
+    poi_parser.cpp
 )
 
 add_library(connectors ${SOURCE_LIB})

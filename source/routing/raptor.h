@@ -10,7 +10,7 @@
 #include "dataraptor.h"
 #include "best_stoptime.h"
 #include "raptor_path.h"
-#include "raptor_init.h"
+#include "raptor_solutions.h"
 #include "raptor_utils.h"
 
 namespace navitia { namespace routing {
@@ -39,13 +39,13 @@ struct RAPTOR
     queue_t Q;
 
     //Constructeur
-    RAPTOR(const navitia::type::Data &data) :  
-        data(data), best_labels(data.pt_data.journey_pattern_points.size()), count(0),
-        marked_rp(data.pt_data.journey_pattern_points.size()),
-        marked_sp(data.pt_data.stop_points.size()),
-        journey_patterns_valides(data.pt_data.journey_patterns.size()),
-        Q(data.pt_data.journey_patterns.size()) {
-            labels.assign(20, data.dataRaptor.labels_const);
+    RAPTOR(const navitia::type::Data &data) :
+        data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
+        marked_rp(data.pt_data->journey_pattern_points.size()),
+        marked_sp(data.pt_data->stop_points.size()),
+        journey_patterns_valides(data.pt_data->journey_patterns.size()),
+        Q(data.pt_data->journey_patterns.size()) {
+            labels.assign(20, data.dataRaptor->labels_const);
     }
 
 
@@ -53,7 +53,7 @@ struct RAPTOR
     void clear(const type::Data & data, bool clockwise, DateTime borne);
 
     ///Initialise les structure retour et b_dest
-    void clear_and_init(std::vector<Departure_Type> departures,
+    void clear_and_init(Solutions departures,
               std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > destinations,
               navitia::DateTime bound, const bool clockwise,
               const type::Properties &properties = 0);

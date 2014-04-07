@@ -2,6 +2,11 @@
 Navitia
 ********
 
+.. image::  https://ci.navitia.io/buildStatus/icon?job=navitia_release
+    :alt: build status
+    :target: https://ci.navitia.io/job/navitia_release/
+
+
 Presentation
 ============
 This is the Navitia repository.

@@ -71,6 +71,8 @@ class InstanceManager(object):
             self.instances[conf.get('instance', 'key')] = instance
         self.thread_event = Event()
         self.thread = Thread(target=self.thread_ping)
+        #daemon thread does'nt block the exit of a process
+        self.thread.daemon = True
         if start_ping:
             self.thread.start()
 

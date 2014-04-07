@@ -91,6 +91,7 @@ message PTRefRequest {
     required int32 depth                = 3;
     required int32 start_page           = 4;
     required int32 count                = 5;
+    optional bool show_codes            = 7;
     repeated string forbidden_uri       = 6;
 }
 

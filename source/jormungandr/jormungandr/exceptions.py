@@ -1,4 +1,5 @@
 from flask import request
+import logging
 
 
 __all__ = ["RegionNotFound", "DeadSocketException", "ApiNotFound",
@@ -66,4 +67,4 @@ def log_exception(sender, exception, **extra):
     if hasattr(exception, "data") and "message" in exception.data:
         message = exception.data['message']
     error = exception.__class__.__name__ + " " + message + " " + request.url
-    sender.logger.exception(exception)
+    logging.exception(error)

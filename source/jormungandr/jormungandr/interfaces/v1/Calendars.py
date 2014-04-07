@@ -5,7 +5,7 @@ from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from errors import ManageError
 from fields import fields, enum_type, NonNullList,\
-    NonNullNested, PbField, error, pagination
+    NonNullNested, PbField, error, pagination, code
 
 week_pattern = {
     "monday": fields.Boolean(),
@@ -42,7 +42,8 @@ calendar = {
 calendars = {
     "calendars": NonNullList(NonNullNested(calendar)),
     "error": PbField(error, attribute='error'),
-    "pagination": NonNullNested(pagination)
+    "pagination": NonNullNested(pagination),
+    "codes" : NonNullList(NonNullNested(code))
 }
 
 class Calendars(ResourceUri):

@@ -24,8 +24,6 @@ private:
     void fill_nodes();
     void fill_ways_edges();
     void fill_house_numbers();
-    void fill_poi_types();
-    void fill_pois();
     bool starts_with(std::string filename, const std::string& prefex);
     void fusion_ways();
     void fusion_ways_by_graph(const std::vector<types::Edge*>& edges);

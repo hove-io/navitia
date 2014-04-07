@@ -1,6 +1,6 @@
 from celery import chain, group
 from celery.signals import task_postrun
-from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed, fare2ed
+from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed, fare2ed, poi2ed
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr.aggregate_places import aggregate_places
 from flask import current_app
@@ -33,6 +33,8 @@ def type_of_data(filename):
             return 'gtfs'
     if filename.endswith('.geopal'):
         return 'geopal'
+    if filename.endswith('.poi'):
+        return 'poi'
     return None
 
 
@@ -82,6 +84,10 @@ def update_data():
                 filename = move_to_backupdirectory(_file,
                         instance_config.backup_directory)
                 actions.append(fare2ed.si(instance_config, filename))
+            elif dataset.type == 'poi':
+                filename = move_to_backupdirectory(_file,
+                        instance_config.backup_directory)
+                actions.append(poi2ed.si(instance_config, filename))
             else:
                 #unknown type, we skip it
                 continue

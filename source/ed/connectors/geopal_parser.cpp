@@ -41,10 +41,6 @@ void GeopalParser::fill(){
 
     this->fill_house_numbers();
     LOG4CPLUS_INFO(logger, "House number count: " << this->data.house_numbers.size());
-    this->fill_poi_types();
-    LOG4CPLUS_INFO(logger, "PoiTypes count: " << this->data.poi_types.size());
-    this->fill_pois();
-    LOG4CPLUS_INFO(logger, "Pois count: " << this->data.pois.size());
 }
 
 ed::types::Node* GeopalParser::add_node(const navitia::type::GeographicalCoord& coord, const std::string& uri){
@@ -250,91 +246,6 @@ void GeopalParser::fill_house_numbers(){
                         current_hn->number = row[numero_c];
                         current_hn->way = it->second;
                         this->data.house_numbers[hn_uri] = current_hn;
-                    }
-                }
-            }
-        }
-    }
-}
-
-void GeopalParser::fill_poi_types(){
-    for(const std::string file_name : this->files){
-        if (! this->starts_with(file_name, "poi_type")){
-            continue;
-        }
-        CsvReader reader(this->path + "/" + file_name, ';', true, true);
-        if(!reader.is_open()) {
-            throw GeopalParserException("Error on open file " + reader.filename);
-        }
-        std::vector<std::string> mandatory_headers = {"poi_type_id" , "poi_type_name"};
-        if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
-        }
-        int id_c = reader.get_pos_col("poi_type_id");
-        int name_c = reader.get_pos_col("poi_type_name");
-        while(!reader.eof()){
-            std::vector<std::string> row = reader.next();
-            if (reader.is_valid(id_c, row) && reader.is_valid(name_c, row)){
-                const auto& itm = this->data.poi_types.find(row[id_c]);
-                if(itm == this->data.poi_types.end()){
-                    ed::types::PoiType* poi_type = new ed::types::PoiType;
-                    poi_type->id = this->data.poi_types.size() + 1;
-                    poi_type->name = row[name_c];
-                    this->data.poi_types[row[id_c]] = poi_type;
-                }
-            }
-        }
-    }
-}
-void GeopalParser::fill_pois(){
-    for(const std::string file_name : this->files){
-        if (! this->starts_with(file_name, "poi.txt")){
-            continue;
-        }
-        CsvReader reader(this->path + "/" + file_name, ';', true, true);
-        if(!reader.is_open()) {
-            throw GeopalParserException("Error on open file " + reader.filename);
-        }
-        std::vector<std::string> mandatory_headers = {"poi_id", "poi_name", "poi_weight", "poi_visible", "poi_lat", "poi_lon", "poi_type_id"};
-        if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
-        }
-        int id_c = reader.get_pos_col("poi_id");
-        int name_c = reader.get_pos_col("poi_name");
-        int weight_c = reader.get_pos_col("poi_weight");
-        int visible_c = reader.get_pos_col("poi_visible");
-        int lat_c = reader.get_pos_col("poi_lat");
-        int lon_c = reader.get_pos_col("poi_lon");
-        int type_id_c = reader.get_pos_col("poi_type_id");
-
-        while(!reader.eof()){
-            std::vector<std::string> row = reader.next();
-            if (reader.is_valid(id_c, row) && reader.is_valid(name_c, row)
-                && reader.is_valid(weight_c, row) && reader.is_valid(visible_c, row)
-                && reader.is_valid(lat_c, row) && reader.is_valid(lon_c, row)
-                && reader.is_valid(type_id_c, row)){
-                const auto& itm = this->data.pois.find(row[id_c]);
-                if(itm == this->data.pois.end()){
-                    const auto& poi_type = this->data.poi_types.find(row[type_id_c]);
-                    if(poi_type != this->data.poi_types.end()){
-                        ed::types::Poi* poi = new ed::types::Poi;
-                        poi->id = this->data.pois.size() + 1;
-                        poi->name = row[name_c];
-                        try{
-                            poi->visible = boost::lexical_cast<bool>(row[visible_c]);
-                        }catch(boost::bad_lexical_cast ) {
-                            LOG4CPLUS_WARN(logger, "Impossible to parse the visible for " + row[id_c] + " " + row[name_c]);
-                            poi->visible = true;
-                        }
-                        try{
-                            poi->weight = boost::lexical_cast<int>(row[weight_c]);
-                        }catch(boost::bad_lexical_cast ) {
-                            LOG4CPLUS_WARN(logger, "Impossible to parse the weight for " + row[id_c] + " " + row[name_c]);
-                            poi->weight = 0;
-                        }
-                        poi->poi_type = poi_type->second;
-                        poi->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[lon_c]), str_to_double(row[lat_c])));
-                        this->data.pois[row[id_c]] = poi;
                     }
                 }
             }

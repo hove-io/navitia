@@ -20,10 +20,11 @@ struct EdPersistor{
     void persist_fare(const ed::Data& data);
     /// Données Georef
     void persist(const ed::Georef& data);
+    /// Poi
+    void persist(const ed::PoiPoiType& data);
     void build_ways();
     void clean_georef();
-    void build_stop_admin_relation();
-    void build_poi_admin_relation();
+    void clean_poi();
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
@@ -74,10 +75,12 @@ private:
     void insert_nodes(const ed::Georef& data);
     void insert_house_numbers(const ed::Georef& data);
     void insert_edges(const ed::Georef& data);
-    void insert_poi_types(const ed::Georef& data);
-    void insert_pois(const ed::Georef& data);
     void build_relation_way_admin(const ed::Georef& data);
     void update_boundary();
+
+    /// Données POI
+    void insert_poi_types(const ed::PoiPoiType& data);
+    void insert_pois(const ed::PoiPoiType& data);
 
     std::string to_geographic_point(const navitia::type::GeographicalCoord& coord) const;
 

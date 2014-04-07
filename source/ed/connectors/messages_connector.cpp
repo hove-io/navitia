@@ -4,6 +4,7 @@
 #include "utils/exception.h"
 #include "utils/logger.h"
 #include "type/data.h"
+#include "type/pt_data.h"
 
 namespace ed{ namespace connectors{
 
@@ -93,46 +94,46 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
 }
 
 void apply_messages(navitia::type::Data& data){
-    for(const auto message_pair : data.pt_data.message_holder.messages){
+    for(const auto message_pair : data.pt_data->message_holder.messages){
         if(message_pair.second->object_type ==  navitia::type::Type_e::StopArea){
-            auto it = data.pt_data.stop_areas_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data.stop_areas_map.end()){
+            auto it = data.pt_data->stop_areas_map.find(message_pair.second->object_uri);
+            if(it != data.pt_data->stop_areas_map.end()){
                 it->second->messages.push_back(message_pair.second);
             }
 
         }
 
         if(message_pair.second->object_type ==  navitia::type::Type_e::StopPoint){
-            auto it = data.pt_data.stop_points_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data.stop_points_map.end()){
+            auto it = data.pt_data->stop_points_map.find(message_pair.second->object_uri);
+            if(it != data.pt_data->stop_points_map.end()){
                 it->second->messages.push_back(message_pair.second);
             }
         }
 
         if(message_pair.second->object_type ==  navitia::type::Type_e::Route){
-            auto it = data.pt_data.routes_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data.routes_map.end()){
+            auto it = data.pt_data->routes_map.find(message_pair.second->object_uri);
+            if(it != data.pt_data->routes_map.end()){
                 it->second->messages.push_back(message_pair.second);
             }
         }
 
         if(message_pair.second->object_type ==  navitia::type::Type_e::VehicleJourney){
-            auto it = data.pt_data.vehicle_journeys_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data.vehicle_journeys_map.end()){
+            auto it = data.pt_data->vehicle_journeys_map.find(message_pair.second->object_uri);
+            if(it != data.pt_data->vehicle_journeys_map.end()){
                 it->second->messages.push_back(message_pair.second);
             }
         }
 
         if(message_pair.second->object_type ==  navitia::type::Type_e::Line){
-            auto it = data.pt_data.lines_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data.lines_map.end()){
+            auto it = data.pt_data->lines_map.find(message_pair.second->object_uri);
+            if(it != data.pt_data->lines_map.end()){
                 it->second->messages.push_back(message_pair.second);
             }
         }
 
         if(message_pair.second->object_type ==  navitia::type::Type_e::Network){
-            auto it = data.pt_data.networks_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data.networks_map.end()){
+            auto it = data.pt_data->networks_map.find(message_pair.second->object_uri);
+            if(it != data.pt_data->networks_map.end()){
                 it->second->messages.push_back(message_pair.second);
             }
         }
@@ -166,7 +167,7 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
 
     std::vector<navitia::type::AtPerturbation> perturbations;
     for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
-        nt::AtPerturbation perturbation;
+        navitia::type::AtPerturbation perturbation;
         cursor["uri"].to(perturbation.uri);
         //on construit le message
         cursor["object_uri"].to(perturbation.object_uri);

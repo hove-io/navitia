@@ -338,10 +338,10 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     GeoRef sn;
     GraphBuilder b(sn);
 
-    /*       1             2
-     *       +             +
-     *    o------o---o---o------o
-     *    a      b   c   d      e
+    /*       1                    2
+     *       +                    +
+     *    o------o------o------o------o
+     *    a      b      c      d      e
      */
 
     b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
@@ -388,11 +388,8 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / (default_speed[Mode_e::Walking] * 2)));
     BOOST_CHECK_EQUAL(res[1].first , 1);
-    //a bit strange but logical:
-    //since the walking travel speed (1.38 * 2) is greater than the travel on the edge (2m/s),
-    //the algorithm goes to b with the projection
-    BOOST_CHECK_EQUAL(res[1].second, bt::seconds(100 / (default_speed[Mode_e::Walking] * 2)) +
-            bt::seconds(50 / (default_speed[Mode_e::Walking] * 2)) + 100_s); //travel (300 at 2m/s) + projection
+    //1 projections at the arrival, and 3 edges (100s each but at twice the speed)
+    BOOST_CHECK_EQUAL(res[1].second, bt::seconds(50 / (default_speed[Mode_e::Walking] * 2)) + 150_s);
 }
 
 // Récupérer les cordonnées d'un numéro impair :

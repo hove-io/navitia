@@ -1,3 +1,27 @@
+navitia2 (0.91.0) unstable; urgency=low
+
+ * Jormungandr: log improvements
+ * Jormungandr: Improve exception management of calendars
+ * Jormungandr: Adapt scenarios for a arrival before request
+ * Jormungandr: Fix typing of sections
+ * Jormungandr: New script configuration for call to planner
+ * Kraken: Add crowfly projection in streetnetwork sections
+ * Kraken: Add parameter depth in departure_board
+ * Kraken: Fix get_walking_solutions
+ * Kraken: Change raptor_init to raptor solution
+ * Kraken: Add external codes
+ * Kraken: Add addresses in POI and stop_point
+ * Kraken: Fix retrieval of direct path
+ * Ed: Compute relation between objects and admins in binarisation
+ * Ed: New connector for POIs
+ * Ed: Fix graph loading
+ * All: Use forward declare in data
+ * All: Use of share_ptr
+ * All: Remove lock
+ * Jormungandr: Fix next link
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 07 Apr 2014 15:04:08 +0100
+
 navitia2 (0.90.8) unstable; urgency=low
 
  * Connector_at: add number of messages and Disruptions send

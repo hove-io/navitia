@@ -76,14 +76,14 @@ SIZE_EXT_CODE(CLEAR_EXT_CODE)
     ed::connectors::RealtimeLoaderConfig config(connection_string, shift_days);
     try{
         start = pt::microsec_clock::local_time();
-        data.pt_data.message_holder.messages = ed::connectors::load_messages(
+        data.pt_data->message_holder.messages = ed::connectors::load_messages(
                 config, now);
         load = (pt::microsec_clock::local_time() - start).total_milliseconds();
     }catch(const navitia::exception& ex){
         std::cout << ex.what() << std::endl;
         return 1;
     }
-    std::cout << data.pt_data.message_holder.messages.size() << " messages chargés" << std::endl;
+    std::cout << data.pt_data->message_holder.messages.size() << " messages chargés" << std::endl;
     std::cout << "application des messages sur data" << std::endl;
     ed::connectors::apply_messages(data);
 
@@ -101,12 +101,12 @@ SIZE_EXT_CODE(CLEAR_EXT_CODE)
 
     start = pt::microsec_clock::local_time();
     ed::AtAdaptedLoader adapter;
-    adapter.apply(perturbations, data.pt_data);
+    adapter.apply(perturbations, *data.pt_data);
     if (perturbations.size() > 0){
         data.build_midnight_interchange();
     }
     //aprés avoir modifié les graphs; on retrie
-    data.pt_data.sort();
+    data.pt_data->sort();
 #define COMP_SIZE1(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
 ITERATE_NAVITIA_PT_TYPES(COMP_SIZE1)
     apply_adapted = (pt::microsec_clock::local_time() - start).total_milliseconds();

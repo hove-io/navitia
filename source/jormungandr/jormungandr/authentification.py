@@ -75,9 +75,9 @@ def authenticate(region, api, abort=False):
     token = get_token()
 
     if not token:
-        instance = Instance.query.filter_by(name=region)
+        instance = Instance.get_by_name(region)
         if abort:
-            if instance and instance.first().is_free:
+            if instance and instance.is_free:
                 return True
             else:
                 flask_restful.abort(401)

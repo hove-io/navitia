@@ -73,10 +73,10 @@ int main(int argc, char** argv){
         // Génération des instances
         std::random_device rd;
         std::mt19937 rng(31442);
-        std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size()-1);
+        std::uniform_int_distribution<> gen(0,data.pt_data->stop_areas.size()-1);
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
         std::vector<unsigned int> days({7});
-        if(data.pt_data.validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
+        if(data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
             days.push_back(8);
         else
             days.push_back(13);
@@ -114,7 +114,7 @@ int main(int argc, char** argv){
         Timer t2;
                     CALLGRIND_START_INSTRUMENTATION;
 
-        auto res = router.compute(data.pt_data.stop_areas[demand.start], data.pt_data.stop_areas[demand.target], demand.hour, demand.date, navitia::DateTimeUtils::inf,false);
+        auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target], demand.hour, demand.date, navitia::DateTimeUtils::inf,false);
                     CALLGRIND_STOP_INSTRUMENTATION;
 
         Path path;
@@ -143,9 +143,9 @@ int main(int argc, char** argv){
 
     for(size_t i = 0; i < demands.size(); ++i){
         PathDemand demand = demands[i];
-        out_file << data.pt_data.stop_areas[demand.start]->uri
+        out_file << data.pt_data->stop_areas[demand.start]->uri
                  << ", " << demand.start
-                 << ", " << data.pt_data.stop_areas[demand.target]->uri
+                 << ", " << data.pt_data->stop_areas[demand.target]->uri
                  << ", " << demand.target
                  << ", " << demand.date
                  << ", " << demand.hour;

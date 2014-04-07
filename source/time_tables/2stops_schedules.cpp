@@ -1,4 +1,5 @@
 #include "2stops_schedules.h"
+#include "type/meta_data.h"
 
 namespace pt = boost::posix_time;
 namespace navitia { namespace timetables {
@@ -18,12 +19,12 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 
     std::unordered_map<type::idx_t, size_t> departure_idx_arrival_order;
     for(type::idx_t idx : departure_journey_pattern_points) {
-        const auto & jpp = data.pt_data.journey_pattern_points[idx];
+        const auto & jpp = data.pt_data->journey_pattern_points[idx];
         auto it_idx = std::find_if(arrival_journey_pattern_points.begin(), arrival_journey_pattern_points.end(),
                                   [&](type::idx_t idx2)
-                                  {return data.pt_data.journey_pattern_points[idx2]->journey_pattern == jpp->journey_pattern;});
-        if(it_idx != arrival_journey_pattern_points.end() && jpp->order < data.pt_data.journey_pattern_points[*it_idx]->order)
-            departure_idx_arrival_order.insert(std::make_pair(idx, data.pt_data.journey_pattern_points[*it_idx]->order));
+                                  {return data.pt_data->journey_pattern_points[idx2]->journey_pattern == jpp->journey_pattern;});
+        if(it_idx != arrival_journey_pattern_points.end() && jpp->order < data.pt_data->journey_pattern_points[*it_idx]->order)
+            departure_idx_arrival_order.insert(std::make_pair(idx, data.pt_data->journey_pattern_points[*it_idx]->order));
     }
     //On ne garde que departure qui sont dans les deux sets, et dont l'ordre est bon.
     std::remove_if(departure_journey_pattern_points.begin(), departure_journey_pattern_points.end(),
@@ -62,7 +63,7 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         return pb_response;
     }
 
-    DateTime dt = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+    DateTime dt = DateTimeUtils::set((ptime.date() - data.meta->production_date.begin()).days(), ptime.time_of_day().total_seconds());
 
     DateTime max_dt;
     max_dt = dt + duration;

@@ -73,7 +73,7 @@ struct PT_Data : boost::noncopyable{
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
-
+    void build_admins_stop_areas();
     /// tris les collections et affecte un idx a chaque élément
     void sort();
 
