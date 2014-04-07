@@ -424,7 +424,8 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
         forbidden_uri.push_back(request.forbidden_uri(i));
     return navitia::ptref::query_pb(get_type(request.requested_type()),
                                     request.filter(), forbidden_uri,
-                                    request.depth(), request.start_page(),
+                                    request.depth(), request.show_codes(),
+                                    request.start_page(),
                                     request.count(), *data);
 }
 

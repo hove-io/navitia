@@ -478,6 +478,7 @@ class Script(object):
         req.ptref.depth = request["depth"]
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
+        req.ptref.show_codes = request["show_codes"]
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
