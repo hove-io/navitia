@@ -79,6 +79,9 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
         stop_point->mutable_coord()->set_lon(sp->coord.lon());
         stop_point->mutable_coord()->set_lat(sp->coord.lat());
     }
+
+    fill_pb_object(sp->coord, data, stop_point->mutable_address());
+
     pbnavitia::hasEquipments* has_equipments =  stop_point->mutable_has_equipments();
     if (sp->wheelchair_boarding()){
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_boarding);
@@ -135,7 +138,7 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
 
 void fill_pb_object(navitia::georef::Way* way, const nt::Data& data,
                     pbnavitia::Address * address, int house_number,
-                    type::GeographicalCoord& coord, int max_depth,
+                    const type::GeographicalCoord& coord, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
     if(way == nullptr)
         return ;
@@ -158,6 +161,23 @@ void fill_pb_object(navitia::georef::Way* way, const nt::Data& data,
     }
 }
 
+void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::Data &data, pbnavitia::Address* address,
+        int max_depth, const boost::posix_time::ptime& now,
+        const boost::posix_time::time_period& action_period){
+    if (!coord.is_initialized()) {
+        return;
+    }
+
+    try{
+        georef::edge_t edge = data.geo_ref->nearest_edge(coord);
+        georef::Way *way = data.geo_ref->ways[data.geo_ref->graph[edge].way_idx];
+        int house_number = way->nearest_number(coord);
+        fill_pb_object(way, data, address, house_number, coord, max_depth, now, action_period);
+    }catch(proximitylist::NotFound){
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("Logger"),
+                       "unable to find a way from coord ["<< coord.lon() << "-" << coord.lat() << "]");
+    }
+}
 
 void fill_pb_object(nt::Line const* l, const nt::Data& data,
         pbnavitia::Line * line, int max_depth, const pt::ptime& now,
@@ -889,6 +909,7 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
                            depth-1, now, action_period);
         }
     }
+    fill_pb_object(geopoi->coord, data, poi->mutable_address());
 }
 
 pbnavitia::ExceptionType get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exception_type){

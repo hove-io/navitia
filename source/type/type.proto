@@ -20,6 +20,7 @@ enum NavitiaType {
     CALENDAR = 25;
 }
 
+
 enum API {
     places = 1;
     PTREFERENTIAL = 2;
@@ -123,6 +124,7 @@ message StopPoint {
     repeated Message messages = 9;
     optional string comment = 11;
     repeated Code codes = 12;
+	optional Address address = 13;
 }
 
 message Line {
@@ -273,6 +275,7 @@ message Poi {
     optional GeographicalCoord coord = 6;
     optional PoiType poi_type = 7;
     repeated AdministrativeRegion administrative_regions = 10;
+    optional Address address = 11;
 }
 
 message Network {
