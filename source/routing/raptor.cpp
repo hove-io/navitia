@@ -205,7 +205,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, bt::time_duration> 
     auto calc_dep = clockwise ? departures_ : destinations;
     auto calc_dest = clockwise ? destinations : departures_;
 
-    auto departures = getSolutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
+    auto departures = get_solutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
     clear_and_init(departures, calc_dest, bound, clockwise);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
@@ -217,7 +217,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, bt::time_duration> 
     } else {
 
         //Second passe : permet d’optimiser les temps de correspondance
-        departures = getSolutions(calc_dep, calc_dest, !clockwise,
+        departures = get_solutions(calc_dep, calc_dest, !clockwise,
                                    labels,
                                    accessibilite_params, data, disruption_active);
         for(auto departure : departures) {
@@ -242,7 +242,7 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, bt::time_duration> > 
           const std::vector<std::string> & forbidden,
           bool clockwise, bool disruption_active) {
     set_journey_patterns_valides(DateTimeUtils::date(departure_datetime), forbidden, disruption_active);
-    auto departures = getSolutions(departures_, departure_datetime, true, data, disruption_active);
+    auto departures = get_solutions(departures_, departure_datetime, true, data, disruption_active);
     clear_and_init(departures, {}, bound, true);
 
     boucleRAPTOR(accessibilite_params, clockwise, true, max_transfers);

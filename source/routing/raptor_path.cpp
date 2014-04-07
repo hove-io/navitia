@@ -12,7 +12,7 @@ makePathes(const std::vector<std::pair<type::idx_t, boost::posix_time::time_dura
            const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_,
            bool clockwise, bool disruption_active) {
     std::vector<Path> result;
-    auto solutions = getSolutions(departures, destinations, !clockwise, raptor_.labels, accessibilite_params, raptor_.data, disruption_active);
+    auto solutions = get_solutions(departures, destinations, !clockwise, raptor_.labels, accessibilite_params, raptor_.data, disruption_active);
     for(Solution solution : solutions) {
         result.push_back(makePath(solution.rpidx, solution.count, clockwise, disruption_active, accessibilite_params, raptor_));
     }
