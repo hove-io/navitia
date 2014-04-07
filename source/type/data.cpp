@@ -32,10 +32,6 @@ Data::Data() : meta(std::make_unique<MetaData>()),
         fare(std::make_unique<navitia::fare::Fare>()){
     this->is_connected_to_rabbitmq = false;
     this->loaded = false;
-    if(Configuration::is_instanciated()){
-        Configuration * conf = Configuration::get();
-        geo_ref->word_weight =  conf->get_as<int>("AUTOCOMPLETE", "wordweight", 5);
-    }
 }
 
 Data::~Data(){}
