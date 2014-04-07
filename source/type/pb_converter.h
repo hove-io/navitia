@@ -57,7 +57,12 @@ struct EnhancedResponse {
     ITERATE_NAVITIA_PT_TYPES(FILL_PB_CONSTRUCTOR)
 #undef FILL_PB_CONSTRUCTOR
 
-void fill_pb_object(navitia::georef::Way* way, const type::Data &data, pbnavitia::Address* address, int house_number,type::GeographicalCoord& coord,
+void fill_pb_object(navitia::georef::Way* way, const type::Data &data, pbnavitia::Address* address, int house_number,
+        const type::GeographicalCoord& coord, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::Data &data, pbnavitia::Address* address,
         int max_depth = 0, const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 

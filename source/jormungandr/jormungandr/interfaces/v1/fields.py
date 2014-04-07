@@ -253,6 +253,9 @@ journey_pattern_point["stop_point"] = PbField(deepcopy(stop_point))
 address = deepcopy(generic_type_admin)
 address["house_number"] = fields.Integer()
 
+stop_point["address"] = PbField(address)
+poi["address"] = PbField(address)
+
 connection = {
     "origin": PbField(stop_point),
     "destination": PbField(stop_point),
