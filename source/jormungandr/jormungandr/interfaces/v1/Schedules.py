@@ -9,7 +9,7 @@ from ResourceUri import ResourceUri, complete_links
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from errors import ManageError
-from flask.ext.restful.types import natural
+from flask.ext.restful.types import natural, boolean
 
 
 class Schedules(ResourceUri):
@@ -42,6 +42,8 @@ class Schedules(ResourceUri):
                                 action="append")
         parser_get.add_argument("calendar", type=str,
                                 description="Id of the calendar")
+        parser_get.add_argument("show_codes", type=boolean, default=False,
+                            description="show more identification codes")
         self.method_decorators.append(complete_links(self))
 
     def get(self, uri=None, region=None, lon=None, lat=None):

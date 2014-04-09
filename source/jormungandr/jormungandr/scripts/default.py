@@ -145,6 +145,7 @@ class Script(object):
         st.from_datetime = request["from_datetime"]
         st.duration = request["duration"]
         st.depth = request["depth"]
+        st.show_codes = request["show_codes"]
         if not "nb_stoptimes" in request:
             st.nb_stoptimes = 0
         else:
