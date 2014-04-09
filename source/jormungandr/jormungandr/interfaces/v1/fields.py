@@ -241,7 +241,7 @@ physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
 line["commercial_mode"] = PbField(commercial_mode)
 
 poi_type = deepcopy(generic_type)
-poi = deepcopy(generic_type)
+poi = deepcopy(generic_type_admin)
 poi["poi_type"] = PbField(poi_type)
 
 company = deepcopy(generic_type)
