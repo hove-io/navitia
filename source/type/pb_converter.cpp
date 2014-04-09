@@ -537,12 +537,12 @@ void fill_codes(const std::string& type, const std::string& value, pbnavitia::Co
 void fill_pb_placemark(const type::StopPoint* stop_point,
                        const type::Data &data, pbnavitia::Place* place,
                        int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period){
+                       const pt::time_period& action_period, const bool show_codes){
     if(stop_point == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
     fill_pb_object(stop_point, data, place->mutable_stop_point(), depth,
-                   now, action_period);
+                   now, action_period, show_codes);
     place->set_name(stop_point->name);
 
     for(auto admin : place->stop_point().administrative_regions()) {
@@ -769,9 +769,9 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     }
 }
 
-pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey, const navitia::georef::PathItem& first_item,
-                                           const navitia::type::Data& data,
-                                           int depth, const pt::ptime& now, const pt::time_period& action_period) {
+pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey,
+        const navitia::georef::PathItem& first_item, const navitia::type::Data& data,
+        int depth, const pt::ptime& now, const pt::time_period& action_period) {
 
     auto section = pb_journey->add_sections();
     section->set_id(response.register_section(first_item));
@@ -792,8 +792,7 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
 void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,
                             const georef::Path& path, const type::Data& data,
                             pbnavitia::Journey* pb_journey, const boost::posix_time::ptime departure,
-                            int max_depth, const pt::ptime& now,
-                            const pt::time_period& action_period) {
+                            int max_depth, const pt::ptime& now, const pt::time_period& action_period) {
     int depth = std::min(max_depth, 3);
     if (path.path_items.empty())
         return;
@@ -801,7 +800,8 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
     auto session_departure = departure;
 
     boost::optional<georef::PathItem::TransportCaracteristic> last_transportation_carac = {};
-    auto section = create_section(response, pb_journey, path.path_items.front(), data, depth, now, action_period);
+    auto section = create_section(response, pb_journey, path.path_items.front(), data,
+            depth, now, action_period);
     georef::PathItem last_item;
 
     //we create 1 section by mean of transport
