@@ -1,7 +1,8 @@
 # encoding: utf-8
 import logging
 import datetime
-from sqlalchemy import Table, MetaData, select, create_engine
+from sqlalchemy import Column, Table, MetaData, select, create_engine, \
+    ForeignKey, bindparam, and_, or_, exc
 import sqlalchemy
 from stat_persistor.saver.stat_Request import persist_stat_request
 from stat_persistor.saver.utils import FunctionalError, TechnicalError
@@ -21,15 +22,33 @@ class StatSaver(object):
         self.meta = MetaData(self.__engine)
         self.request_table = Table('requests', self.meta, autoload=True,
                                    schema='stat')
-        self.coverage_table = Table('coverages', self.meta, autoload=True,
+
+        self.coverage_table = Table('coverages', self.meta,
+                                    Column('request_id', None,
+                                           ForeignKey('requests.id')),
+                                    autoload=True,
                                     schema='stat')
+
         self.parameter_table = Table('parameters', self.meta,
-                                             autoload=True, schema='stat')
+                                     Column('request_id', None,
+                                            ForeignKey('requests.id')),
+                                     autoload=True,
+                                     schema='stat')
+
         self.journey_table = Table('journeys', self.meta,
-                                           autoload=True, schema='stat')
+                                   Column('request_id', None,
+                                          ForeignKey('id')),
+                                   autoload=True,
+                                   schema='stat')
 
         self.journey_section_table = Table('journey_sections', self.meta,
-                                           autoload=True, schema='stat')
+                                           Column('request_id', None,
+                                                  ForeignKey('requests.id')),
+                                           Column('journey_id', None,
+                                                  ForeignKey('journeys.id')),
+                                           autoload=True,
+                                           schema='stat')
+
     def persist_stat(self, config, stat_request):
         self.__persist(stat_request, config, persist_stat_request)
 

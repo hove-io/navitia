@@ -18,30 +18,34 @@ def persist_stat_request(meta, conn, stat):
 
     #Inserer dans la table stat.requests
     query = request_table.insert()
-    conn.execute(query.values(build_stat_request_dict(stat)))
-
+    request_id = conn.execute(query.values(build_stat_request_dict(stat)))
 
     #Inserer dans la tables stat.coverages
     query = coverage_table.insert()
     for coverage in stat.coverages:
         conn.execute(query.values(
-            build_stat_coverage_dict(coverage)))
+            build_stat_coverage_dict(coverage, request_id.inserted_primary_key[0])))
 
     #Inserer dans la table stat.parameters
     query = parameter_table.insert()
     for param in stat.parameters:
         conn.execute(query.values(
-            build_stat_parameter_dict(param)))
+            build_stat_parameter_dict(param, request_id.inserted_primary_key[0])))
 
     #Inserer les journeys dans la table stat.journeys
+
     for journey in stat.journeys:
         query = journey_table.insert()
-        conn.execute(query.values(build_stat_journey_dict(journey)))
+        journey_id = conn.execute(
+            query.values(build_stat_journey_dict(journey,
+                                                 request_id.inserted_primary_key[0])))
 
         #Inserer les sections de la journey dans la table stat.journey_sections:
         query = journey_section_table.insert()
         for section in journey.sections:
-            conn.execute(query.values(build_stat_section_dict(section)))
+            conn.execute(query.values(build_stat_section_dict(section,
+                                                              request_id.inserted_primary_key[0],
+                                                              journey_id.inserted_primary_key[0])))
 
 def build_stat_request_dict(stat):
     """
@@ -67,31 +71,34 @@ def build_stat_request_dict(stat):
     result['response_size'] = stat.response_size
     return result
 
-def build_stat_parameter_dict(param):
+def build_stat_parameter_dict(param, request_id):
     """
     Construit à partir d'un object protobuf pbnavitia.stat.HitStat.parameters
     Utilisé pour l'insertion dans la table stat.parameters
     """
     result = {}
+    result['request_id'] = request_id
     result['param_key'] = param.key
     result['param_value'] = param.value
     return result
 
-def build_stat_coverage_dict(coverage):
+def build_stat_coverage_dict(coverage, request_id):
     """
     Construit à partir d'un object protobuf pbnavitia.stat.HitStat.coverages
     Utilisé pour l'insertion dans la table stat.coverages
     """
     result = {}
     result['region_id'] = coverage.region_id
+    result['request_id'] = request_id
     return result
 
-def build_stat_journey_dict(journey):
+def build_stat_journey_dict(journey, request_id):
     """
     Construit à partir d'un object protobuf pbnavitia.stat.HitStat.journeys
     Utilisé pour l'insertion dans la table stat.journeys
     """
     result = {}
+    result['request_id'] = request_id
     result['requested_date_time'] = from_timestamp(journey.requested_date_time).strftime('%Y%m%d %H:%M:%S')
     result['departure_date_time'] = from_timestamp(journey.departure_date_time).strftime('%Y%m%d %H:%M:%S')
     result['arrival_date_time'] = from_timestamp(journey.arrival_date_time).strftime('%Y%m%d %H:%M:%S')
@@ -100,12 +107,14 @@ def build_stat_journey_dict(journey):
     result['type'] = journey.type
     return result
 
-def build_stat_section_dict(section):
+def build_stat_section_dict(section, request_id, journey_id):
     """
     Construit à partir d'un object protobuf pbnavitia.stat.HitStat.journey.sections
     Utilisé pour l'insertion dans la table stat.sections
     """
     result = {}
+    result['request_id'] = request_id
+    result['journey_id'] = journey_id
     result['departure_date_time'] = from_timestamp(section.departure_date_time).strftime('%Y%m%d %H:%M:%S')
     result['arrival_date_time'] = from_timestamp(section.arrival_date_time).strftime('%Y%m%d %H:%M:%S')
     result['duration'] = section.duration
