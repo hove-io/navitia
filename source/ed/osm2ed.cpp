@@ -382,6 +382,7 @@ int main(int argc, char** argv) {
     v.persistor.lotus.start_transaction();
 
     v.persistor.clean_georef();
+    v.persistor.clean_poi();
     v.fill_PoiTypes();
     v.persistor.lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri"});
     CanalTP::read_osm_pbf(input, v);

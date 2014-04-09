@@ -341,7 +341,7 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
 void EdPersistor::clean_georef(){
     PQclear(this->lotus.exec(
                 "TRUNCATE georef.node, georef.house_number, navitia.admin, "
-                "georef.way, navitia.poi_type, navitia.poi CASCADE;"));
+                "georef.way CASCADE;"));
 }
 
 void EdPersistor::clean_poi(){
