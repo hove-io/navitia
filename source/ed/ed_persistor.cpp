@@ -15,6 +15,9 @@ void EdPersistor::persist(const ed::PoiPoiType& data){
     LOG4CPLUS_INFO(logger, "Begin: add pois data");
     this->insert_pois(data);
     LOG4CPLUS_INFO(logger, "End: add pois data");
+    LOG4CPLUS_INFO(logger, "Begin: add pois data");
+    this->insert_poi_properties(data);
+    LOG4CPLUS_INFO(logger, "End: add pois data");
     LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -197,6 +200,16 @@ void EdPersistor::insert_pois(const ed::PoiPoiType& data){
                 std::to_string(itm.second->weight),
                 this->to_geographic_point(itm.second->coord),
                 itm.second->name, "poi:" + itm.first, poi_type, std::to_string(itm.second->visible)});
+    }
+    lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_poi_properties(const ed::PoiPoiType& data){
+    this->lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
+    for(const auto& itm : data.pois){
+        for(auto property : itm.second->properties){
+            this->lotus.insert({std::to_string(itm.second->id),property.key, property.value});
+        }
     }
     lotus.finish_bulk_insert();
 }

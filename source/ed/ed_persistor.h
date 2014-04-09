@@ -81,6 +81,7 @@ private:
     /// Données POI
     void insert_poi_types(const ed::PoiPoiType& data);
     void insert_pois(const ed::PoiPoiType& data);
+    void insert_poi_properties(const ed::PoiPoiType& data);
 
     std::string to_geographic_point(const navitia::type::GeographicalCoord& coord) const;
 
