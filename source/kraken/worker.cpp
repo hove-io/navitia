@@ -187,7 +187,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     forbidden_uri, request.from_datetime(),
                     request.duration(),
                     request.depth(), max_date_times, request.interface_version(),
-                    request.count(), request.start_page(), *data, false);
+                    request.count(), request.start_page(), *data, false, request.show_codes());
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
                     forbidden_uri, request.from_datetime(),
