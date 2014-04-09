@@ -301,14 +301,27 @@ void Visitor::insert_poitypes(){
 
 void Visitor::insert_pois(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id"});
-    int32_t count =0;
     for(auto poi : pois){
         try{
             Node n = nodes.at(poi.first);
-            count++;
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->persistor.lotus.insert({std::to_string(count),std::to_string(poi.second.weight),
+            this->persistor.lotus.insert({std::to_string(poi.second.id),std::to_string(poi.second.weight),
                                         point, poi.second.name, std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
+        }catch(...){
+            LOG4CPLUS_INFO(logger, "Attention, le noued  : [" << poi.first << " est introuvable].");
+        }
+    }
+    persistor.lotus.finish_bulk_insert();
+}
+
+void Visitor::insert_properties(){
+    this->persistor.lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
+    for(auto poi : pois){
+        try{
+            Node n = nodes.at(poi.first);
+            for(auto property : poi.second.properties){
+                this->persistor.lotus.insert({std::to_string(poi.second.id),property.key, property.value});
+            }
         }catch(...){
             LOG4CPLUS_INFO(logger, "Attention, le noued  : [" << poi.first << " est introuvable].");
         }
@@ -327,10 +340,16 @@ void Visitor::fill_PoiTypes(){
     poi_types["hospital"] = ed::types::PoiType(3, "hôpital");
     poi_types["post_office"] = ed::types::PoiType(4, "bureau de poste");
     poi_types["bicycle_rental"] = ed::types::PoiType(5, "station vls");
+    poi_types["bicycle_parking"] = ed::types::PoiType(6, "Parking vélo");
+    poi_types["parking"] = ed::types::PoiType(7, "Parking");
 }
 
 void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
     if(tags.find("amenity") != tags.end()){
+        auto poi_it = pois.find(osmid);
+        if (poi_it != pois.end()){
+            return;
+        }
         std::string value = tags.at("amenity");
         auto it = poi_types.find(value);
         if(it != poi_types.end()){
@@ -339,6 +358,12 @@ void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
             if(tags.find("name") != tags.end()){
                 poi.name = tags.at("name");
             }
+            for(auto st : tags){
+                if((st.first != "amenity") && (st.first != "name")){
+                    poi.properties.push_back(ed::types::Properties(st.first,st.second));
+                 }
+             }
+            poi.id = pois.size();
             pois[osmid] = poi;
         }
     }
@@ -354,6 +379,7 @@ void Visitor::set_coord_admin(){
 
 int main(int argc, char** argv) {
     navitia::init_app();
+    auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
     std::string input, connection_string;
     po::options_description desc("Allowed options");
@@ -400,6 +426,8 @@ int main(int argc, char** argv) {
     v.insert_poitypes();
     LOG4CPLUS_INFO(logger, "add pois data");
     v.insert_pois();
+    LOG4CPLUS_INFO(logger, "add pois properties data");
+    v.insert_properties();
     LOG4CPLUS_INFO(logger, "add admins data");
     v.insert_admin();
 

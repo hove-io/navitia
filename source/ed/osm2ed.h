@@ -133,6 +133,7 @@ struct Visitor{
     void fill_pois(const uint64_t osmid, const CanalTP::Tags & tags);
     void insert_poitypes();
     void insert_pois();
+    void insert_properties();
     void set_coord_admin();
     /// Ajoute le nœud à la base que s’il le mérite :
     /// 1/ être une intersaction
