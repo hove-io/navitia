@@ -227,6 +227,7 @@ class Script(object):
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
         req.journeys.disruption_active = request["disruption_active"]
+        req.journeys.show_codes = request["show_codes"]
 
         self.origin_modes = request["origin_mode"]
 
