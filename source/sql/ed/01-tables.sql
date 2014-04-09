@@ -463,8 +463,26 @@ CREATE TABLE IF NOT EXISTS georef.rel_way_admin (
 );
 
 --- Tables temporaires
--- Cette table sert à redresser les données : Fusion des voies
+CREATE UNLOGGED TABLE IF NOT EXISTS georef.admin_way (
+    way_name TEXT,
+    admin_insee TEXT,
+    way_id BIGSERIAL,
+    PRIMARY KEY (admin_insee, way_name)
+    );
+
+-- Table liant une way a une autre
+CREATE UNLOGGED TABLE IF NOT EXISTS georef.fusion_ways (
+ original_way_id BIGSERIAL PRIMARY KEY,
+ way_id BIGSERIAL
 );
+
+CREATE OR REPLACE VIEW georef.valid_ways_admins as 
+SELECT distinct on(r.way_id) min(a.level) admin_level, w.name way_name, a.insee admin_insee, r.way_id way_id
+from georef.way as w 
+JOIN georef.rel_way_admin as r ON w.id = r.way_id 
+JOIN navitia.admin AS a ON r.admin_id = a.id
+group by r.way_id, a.level, w.name, a.name, a.insee  
+HAVING a.level >= 8 and w.name != '';
 
 
 create table if NOT EXISTS navitia.object_type(
