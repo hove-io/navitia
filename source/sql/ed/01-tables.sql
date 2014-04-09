@@ -143,12 +143,6 @@ CREATE TABLE IF NOT EXISTS navitia.admin (
     uri TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS navitia.rel_poi_admin (
-    poi_id BIGINT NOT NULL REFERENCES navitia.poi,
-    admin_id BIGINT NOT NULL REFERENCES navitia.admin,
-    CONSTRAINT rel_poi_admin_pk PRIMARY KEY (poi_id, admin_id)
-);
-
 CREATE TABLE IF NOT EXISTS navitia.rel_admin_admin (
     master_admin_id BIGINT NOT NULL REFERENCES navitia.admin,
     admin_id BIGINT NOT NULL REFERENCES navitia.admin,
@@ -316,12 +310,6 @@ CREATE TABLE IF NOT EXISTS navitia.stop_area (
     visible BOOLEAN NOT NULL DEFAULT True
 );
 
-CREATE TABLE IF NOT EXISTS navitia.rel_stop_area_admin (
-    stop_area_id BIGINT NOT NULL REFERENCES navitia.stop_area,
-    admin_id BIGINT NOT NULL REFERENCES navitia.admin,
-    CONSTRAINT rel_stop_area_admin_pk PRIMARY KEY (stop_area_id, admin_id)
-);
-
 CREATE TABLE IF NOT EXISTS navitia.stop_point (
     id BIGINT PRIMARY KEY,
     properties_id BIGINT REFERENCES navitia.properties,
@@ -332,14 +320,6 @@ CREATE TABLE IF NOT EXISTS navitia.stop_point (
     name TEXT NOT NULL,
     comment TEXT,
     stop_area_id BIGINT NOT NULL REFERENCES navitia.stop_area
-);
-
-
-
-CREATE TABLE IF NOT EXISTS navitia.rel_stop_point_admin (
-    admin_id BIGINT NOT NULL REFERENCES navitia.admin,
-    stop_point_id BIGINT NOT NULL REFERENCES navitia.stop_point,
-    CONSTRAINT rel_stop_point_admin_pk PRIMARY KEY (admin_id, stop_point_id)
 );
 
 CREATE TABLE IF NOT EXISTS navitia.connection (
@@ -483,15 +463,7 @@ CREATE TABLE IF NOT EXISTS georef.rel_way_admin (
 );
 
 --- Tables temporaires
-CREATE UNLOGGED TABLE IF NOT EXISTS georef.tmp_rel_way_admin (
-                admin_id BIGINT NOT NULL,
-                way_id BIGINT NOT NULL
-);
 -- Cette table sert à redresser les données : Fusion des voies
-CREATE UNLOGGED TABLE IF NOT EXISTS georef.fusion_ways
-(
-  id bigint NOT NULL, -- le nouveau id de la voie
-  way_id bigint NOT NULL
 );
 
 

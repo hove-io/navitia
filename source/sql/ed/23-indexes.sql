@@ -130,19 +130,6 @@ BEGIN
     ELSE
         RAISE NOTICE 'relation "edge_way_id_idx" already exists, skipping';
     END CASE;
-   CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'fw_way_id_idx')
-    THEN
-        CREATE INDEX fw_way_id_idx ON georef.fusion_ways(way_id);
-    ELSE
-        RAISE NOTICE 'relation "fw_way_id_idx" already exists, skipping';
-    END CASE;
-
-   CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'fw_id_idx')
-    THEN
-        CREATE INDEX fw_id_idx ON georef.fusion_ways(id);
-    ELSE
-        RAISE NOTICE 'relation "fw_id_idx" already exists, skipping';
-    END CASE;
 
     CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'message_uri_idx')
     THEN
@@ -174,6 +161,21 @@ BEGIN
         CREATE INDEX rel_amin_way_id ON georef.rel_way_admin(admin_id, way_id);
     ELSE
         RAISE NOTICE 'relation "rel_amin_way_id" already exists, skipping';
+    END CASE;
+    
+    ----suppression des index
+   CASE WHEN (select count(*) > 0 from pg_indexes where indexname = 'fw_way_id_idx')
+    THEN
+        DROP INDEX fw_way_id_idx;
+    ELSE
+        RAISE NOTICE 'relation "fw_way_id_idx" not exists, skipping';
+    END CASE;
+
+   CASE WHEN (select count(*) > 0 from pg_indexes where indexname = 'fw_id_idx')
+    THEN
+        DROP INDEX fw_id_idx;
+    ELSE
+        RAISE NOTICE 'relation "fw_id_idx" already exists, skipping';
     END CASE;
 END$$;
 
