@@ -183,7 +183,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     *data, false);
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
-                    request.has_calendar() ? boost::optional<const std::string>(request.calendar()) : boost::optional<const std::string>(),
+                    request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
+                                             boost::optional<const std::string>(),
                     forbidden_uri, request.from_datetime(),
                     request.duration(),
                     request.depth(), max_date_times, request.interface_version(),
@@ -192,7 +193,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
             return timetables::route_schedule(request.departure_filter(),
                     forbidden_uri, request.from_datetime(),
                     request.duration(), request.interface_version(), request.depth(),
-                    request.count(), request.start_page(), *data, false);
+                    request.count(), request.start_page(), *data, false, request.show_codes());
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
             pbnavitia::Response response;
@@ -406,13 +407,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.max_duration(),
-                request.max_transfers());
+                request.max_transfers(), request.show_codes());
     } else {
         return navitia::routing::make_isochrone(*planner, origin, request.datetimes(0),
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.max_duration(),
-                request.max_transfers());
+                request.max_transfers(), request.show_codes());
     }
 }
 
