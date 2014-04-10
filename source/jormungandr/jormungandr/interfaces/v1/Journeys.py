@@ -461,6 +461,8 @@ class Journeys(ResourceUri):
                                 type=option_value(modes),
                                 default=["bss"],
                                 dest="destination_mode", action="append")
+        parser_get.add_argument("show_codes", type=boolean, default=False,
+                            description="show more identification codes")
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
 
