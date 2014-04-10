@@ -55,3 +55,11 @@ LOGGER = {
         },
     }
 }
+
+#Paramètres pour les statistiques
+SAVE_STAT = True
+BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+EXCHANGE_NAME='navitia'
+TOPIC_NAME='stat.sender'
+SQLALCHEMY_DATABASE_STAT = 'postgresql://navitia:navitia@localhost/navitia'
+
