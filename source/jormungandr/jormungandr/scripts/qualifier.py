@@ -149,9 +149,9 @@ def qualifier_one(journeys, request_type):
         return
 
     #The request type is made from the datetime_represents params of the request
-    #If it's departure, we want the earliest arrival time
-    #If it's arrival, we want the tardiest departure time
-    best_crit = departure_crit if request_type == "arrival" else arrival_crit
+    #If it's arrival, we want the earliest arrival time
+    #If it's departure, we want the tardiest departure time
+    best_crit = arrival_crit if request_type == "arrival" else departure_crit
 
     standard = choose_standard(journeys, and_functors([
         best_crit,
