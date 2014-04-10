@@ -910,9 +910,9 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
         fill_pb_object(geopoi->coord, data, poi->mutable_address(), depth - 1, now, action_period);
     }
     for(const auto& propertie : geopoi->properties){
-        pbnavitia::Propertie * pb_key_value = poi->add_properties();
-        pb_key_value->set_type(propertie.first);
-        pb_key_value->set_value(propertie.second);
+        pbnavitia::Code * pb_code = poi->add_properties();
+        pb_code->set_type(propertie.first);
+        pb_code->set_value(propertie.second);
     }
 }
 

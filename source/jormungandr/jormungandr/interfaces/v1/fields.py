@@ -181,11 +181,6 @@ generic_type = {
     "coord": NonNullNested(coord, True)
 }
 
-propertie = {
-    "type": fields.String(),
-    "value": fields.String()
-}
-
 admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
@@ -248,7 +243,7 @@ line["commercial_mode"] = PbField(commercial_mode)
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type_admin)
 poi["poi_type"] = PbField(poi_type)
-poi["properties"] = NonNullList(NonNullNested(propertie))
+poi["properties"] = NonNullList(NonNullNested(code))
 
 company = deepcopy(generic_type)
 company["codes"] = NonNullList(NonNullNested(code))

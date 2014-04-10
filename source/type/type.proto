@@ -264,11 +264,6 @@ message Contributor {
     optional string name = 2;
 }
 
-message Propertie{
-	optional string type = 1;
-	optional string value = 2;
-}
-
 message PoiType {
     optional string uri = 1;
     optional string name = 2;
@@ -281,7 +276,7 @@ message Poi {
     optional PoiType poi_type = 7;
     repeated AdministrativeRegion administrative_regions = 10;
     optional Address address = 11;
-    repeated Propertie properties = 12;
+    repeated Code properties = 12;
 }
 
 message Network {
