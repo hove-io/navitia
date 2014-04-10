@@ -106,7 +106,7 @@ void PoiParser::fill_poi_properties(){
             && reader.is_valid(value_c, row)){
             const auto& itm = this->data.pois.find(row[id_c]);
             if(itm != this->data.pois.end()){
-                itm->second->properties.push_back(ed::types::Properties(row[key_c], row[value_c]));
+                itm->second->properties[row[key_c]] = row[value_c];
             }else{
                 LOG4CPLUS_WARN(logger, "Poi "<<row[id_c]<<" not found");
             }

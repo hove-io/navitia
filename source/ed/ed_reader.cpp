@@ -45,6 +45,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_journey_pattern_point_connections(data, work);
     this->fill_poi_types(data, work);
     this->fill_pois(data, work);
+    this->fill_poi_properties(data, work);
     this->fill_ways(data, work);
     this->fill_house_numbers(data, work);
     this->fill_vertex(data, work);
@@ -684,12 +685,26 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
         poi->visible = const_it["visible"].as<bool>();
         const_it["weight"].to(poi->weight);
         navitia::georef::POIType* poi_type = this->poi_type_map[const_it["poi_type_id"].as<idx_t>()];
-        if(poi_type != NULL ){
+        if(poi_type != nullptr ){
             poi->poitype_idx = poi_type->idx;
         }
         this->poi_map[const_it["id"].as<idx_t>()] = poi;
         poi->idx = data.geo_ref->pois.size();
         data.geo_ref->pois.push_back(poi);
+    }
+}
+
+void EdReader::fill_poi_properties(navitia::type::Data&, pqxx::work& work){
+    std::string request = "select poi_id, key, value from navitia.poi_properties;";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        navitia::georef::POI* poi = this->poi_map[const_it["poi_id"].as<idx_t>()];
+        if(poi != nullptr ){
+            std::string key, value;
+            const_it["key"].to(key);
+            const_it["value"].to(value);
+            poi->properties[key] = value;
+        }
     }
 }
 

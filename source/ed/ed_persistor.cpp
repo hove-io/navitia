@@ -208,7 +208,7 @@ void EdPersistor::insert_poi_properties(const ed::PoiPoiType& data){
     this->lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
     for(const auto& itm : data.pois){
         for(auto property : itm.second->properties){
-            this->lotus.insert({std::to_string(itm.second->id),property.key, property.value});
+            this->lotus.insert({std::to_string(itm.second->id),property.first, property.second});
         }
     }
     lotus.finish_bulk_insert();

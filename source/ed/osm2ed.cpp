@@ -294,7 +294,7 @@ void Visitor::insert_admin(){
 void Visitor::insert_poitypes(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(auto pt : poi_types){
-        this->persistor.lotus.insert({std::to_string(pt.second.id), pt.first, pt.second.name});
+        this->persistor.lotus.insert({std::to_string(pt.second.id), "poi_type:" + pt.first, pt.second.name});
     }
     persistor.lotus.finish_bulk_insert();
 }
@@ -306,7 +306,7 @@ void Visitor::insert_pois(){
             Node n = nodes.at(poi.first);
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
             this->persistor.lotus.insert({std::to_string(poi.second.id),std::to_string(poi.second.weight),
-                                        point, poi.second.name, std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
+                                        point, poi.second.name, "poi:" + std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
         }catch(...){
             LOG4CPLUS_INFO(logger, "Attention, le noued  : [" << poi.first << " est introuvable].");
         }
@@ -316,11 +316,11 @@ void Visitor::insert_pois(){
 
 void Visitor::insert_properties(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
-    for(auto poi : pois){
+    for(const auto& poi : pois){
         try{
-            Node n = nodes.at(poi.first);
-            for(auto property : poi.second.properties){
-                this->persistor.lotus.insert({std::to_string(poi.second.id),property.key, property.value});
+            nodes.at(poi.first);
+            for(const auto& property : poi.second.properties){
+                this->persistor.lotus.insert({std::to_string(poi.second.id),property.first, property.second});
             }
         }catch(...){
             LOG4CPLUS_INFO(logger, "Attention, le noued  : [" << poi.first << " est introuvable].");
@@ -360,7 +360,7 @@ void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
             }
             for(auto st : tags){
                 if((st.first != "amenity") && (st.first != "name")){
-                    poi.properties.push_back(ed::types::Properties(st.first,st.second));
+                    poi.properties[st.first] = st.second;
                  }
              }
             poi.id = pois.size();

@@ -365,12 +365,6 @@ struct PoiType{
     PoiType(size_t id, const std::string& name): id(id), name(name){}
 };
 
-struct Properties{
-    std::string key;
-    std::string value;
-
-    Properties(std::string k, std::string v):key(k), value(v){};
-};
 
 struct Poi{
     size_t id;
@@ -379,7 +373,7 @@ struct Poi{
     bool visible;
     PoiType* poi_type;
     navitia::type::GeographicalCoord coord;
-    std::vector<Properties> properties;
+    std::map<std::string, std::string> properties;
     Poi(): id(0), name(""), weight(0), visible(true), poi_type(nullptr){}
 
 };
