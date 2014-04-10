@@ -33,9 +33,20 @@ def has_bike(journey):
     return has_fall_back_mode(journey, response_pb2.Bike)
 
 
-    # check if the journey has not public transport section
+def has_walk(journey):
+    return has_fall_back_mode(journey, response_pb2.Walking)
+
+
+def is_full_bss(journey):
+    """For the moment the best way to identify the bss trips is to
+    check taht there is no public ptransport and a boarding section"""
+    return non_pt_journey(journey) and \
+           any(s.type == response_pb2.boarding for s in journey.sections)
+
+
 def non_pt_journey(journey):
-    has_pt = all(section.type == response_pb2.STREET_NETWORK
+    """ check if the journey has not public transport section"""
+    has_pt = all(section.type != response_pb2.PUBLIC_TRANSPORT
                  for section in journey.sections)
     return has_pt
 
@@ -293,11 +304,30 @@ def qualifier_one(journeys, request_type):
                 nonTC_crit
             ]
         )),
-        # the non_pt journey is the earliest journey without any public transport
-        # only walking, biking or driving
-        ("non_pt", trip_carac([
+        # the non_pt journeys is the earliest journey without any public transport
+        ("non_pt_walk", trip_carac([
             partial(is_not_possible_cheap),
             partial(non_pt_journey),
+            partial(has_walk)
+        ],
+            [
+                best_crit
+            ]
+        )),
+        # the non_pt journey is the earliest journey without any public transport
+        # only walking, biking or driving
+        ("non_pt_bike", trip_carac([
+            partial(is_not_possible_cheap),
+            partial(non_pt_journey),
+            partial(has_bike)
+        ],
+            [
+                best_crit
+            ]
+        )),
+        ("non_pt_bss", trip_carac([
+            partial(is_not_possible_cheap),
+            partial(is_full_bss),
         ],
             [
                 best_crit
