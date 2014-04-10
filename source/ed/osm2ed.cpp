@@ -317,13 +317,12 @@ void Visitor::insert_pois(){
 void Visitor::insert_properties(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
     for(const auto& poi : pois){
-        try{
-            nodes.at(poi.first);
+        if (poi.first > nodes.size()){
+            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
+        }else{
             for(const auto& property : poi.second.properties){
                 this->persistor.lotus.insert({std::to_string(poi.second.id),property.first, property.second});
             }
-        }catch(...){
-            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
         }
     }
     persistor.lotus.finish_bulk_insert();
