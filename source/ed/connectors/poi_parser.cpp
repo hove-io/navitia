@@ -104,7 +104,7 @@ void PoiParser::fill_poi_properties(){
         std::vector<std::string> row = reader.next();
         if (reader.is_valid(id_c, row) && reader.is_valid(key_c, row)
             && reader.is_valid(value_c, row)){
-            const auto& itm = this->data.pois.find(row[id_c]);
+            const auto itm = this->data.pois.find(row[id_c]);
             if(itm != this->data.pois.end()){
                 itm->second->properties[row[key_c]] = row[value_c];
             }else{

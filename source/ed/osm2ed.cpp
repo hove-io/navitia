@@ -308,7 +308,7 @@ void Visitor::insert_pois(){
             this->persistor.lotus.insert({std::to_string(poi.second.id),std::to_string(poi.second.weight),
                                         point, poi.second.name, "poi:" + std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
         }catch(...){
-            LOG4CPLUS_INFO(logger, "Attention, le noued  : [" << poi.first << " est introuvable].");
+            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
         }
     }
     persistor.lotus.finish_bulk_insert();
@@ -323,7 +323,7 @@ void Visitor::insert_properties(){
                 this->persistor.lotus.insert({std::to_string(poi.second.id),property.first, property.second});
             }
         }catch(...){
-            LOG4CPLUS_INFO(logger, "Attention, le noued  : [" << poi.first << " est introuvable].");
+            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
         }
     }
     persistor.lotus.finish_bulk_insert();
@@ -438,7 +438,7 @@ int main(int argc, char** argv) {
 
     v.persistor.lotus.commit();
 
-    LOG4CPLUS_INFO(logger, "Durée d'intégration des données OSM :"<<to_simple_string(pt::microsec_clock::local_time() - start));
+    LOG4CPLUS_INFO(logger, "Integration time OSM Data :"<<to_simple_string(pt::microsec_clock::local_time() - start));
     return 0;
 }
 
