@@ -58,29 +58,17 @@ std::string EdPersistor::to_geographic_point(const navitia::type::GeographicalCo
 }
 
 void EdPersistor::build_ways(){
-    /// Add a name for the admins with an empty name
-    PQclear(this->lotus.exec("SELECT georef.add_way_name();", "", PGRES_TUPLES_OK));
-    /// Fusion ways by name and admin
-    PQclear(this->lotus.exec("SELECT georef.fusion_ways_by_admin_name();", "", PGRES_TUPLES_OK));
-    /// Moving admin and way relations, so that the pair (admin, way) is unique
-    PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// Update way_id in table edge
+    LOG4CPLUS_INFO(logger, "select distinct ways by name and insee code");
+    PQclear(this->lotus.exec("SELECT georef.admin_way();", "", PGRES_TUPLES_OK));
+    LOG4CPLUS_INFO(logger, "complete select distinct ways by name and insee code");
+    PQclear(this->lotus.exec("SELECT georef.fusion_way();", "", PGRES_TUPLES_OK));
+    LOG4CPLUS_INFO(logger, "update edges");
     PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
-    /// Add ways not in fusion table
-    PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Add ways where admin is nil
-    PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Update data in table 'rel_way_admin' by 'tmp_rel_way_admin'
-    PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// Remove duplicate data in table of ways
-    PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
-    /// Update way_id in housenumber table
-    PQclear(this->lotus.exec("SELECT georef.update_house_number();", "", PGRES_TUPLES_OK));
-    /// Update ways name
-    PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
-    /// Update of admin cordinates  : Calcul of barycentre
+    LOG4CPLUS_INFO(logger, "update relation ways admins");
+    PQclear(this->lotus.exec("SELECT georef.update_rel_way_admin();", "", PGRES_TUPLES_OK));
+    LOG4CPLUS_INFO(logger, "update of admin cordinates");
     PQclear(this->lotus.exec("SELECT navitia.update_admin_coord();", "", PGRES_TUPLES_OK));
-    /// Relation between admins
+    LOG4CPLUS_INFO(logger, "relation between admins");
     PQclear(this->lotus.exec("SELECT navitia.match_admin_to_admin();", "", PGRES_TUPLES_OK));
 }
 

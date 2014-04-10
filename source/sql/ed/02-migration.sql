@@ -135,4 +135,21 @@ DO $$
         END;
     END;
 $$;
+--- Suppression des tables, fonctions non utilisées
+DROP FUNCTION IF EXISTS georef.coord2wgs84(lon real, lat real, coord_in int);
+DROP FUNCTION IF EXISTS georef.match_stop_area_to_admin();
+DROP FUNCTION IF EXISTS georef.match_stop_point_to_admin();
+DROP FUNCTION IF EXISTS georef.match_poi_to_admin();
+DROP FUNCTION IF EXISTS georef.fusion_ways_by_admin_name();
+DROP FUNCTION IF EXISTS georef.add_fusion_ways();
+DROP FUNCTION IF EXISTS georef.complete_fusion_ways();
+DROP FUNCTION IF EXISTS georef.add_way_name();
+DROP FUNCTION IF EXISTS georef.clean_way();
+DROP FUNCTION IF EXISTS georef.clean_way_name();
+DROP FUNCTION IF EXISTS georef.insert_tmp_rel_way_admin();
+DROP FUNCTION IF EXISTS georef.insert_rel_way_admin();
+DROP TABLE IF EXISTS navitia.rel_poi_admin;
+DROP TABLE IF EXISTS navitia.rel_stop_area_admin;
+DROP TABLE IF EXISTS navitia.rel_stop_point_admin;
+DROP TABLE IF EXISTS georef.tmp_rel_way_admin;
 
