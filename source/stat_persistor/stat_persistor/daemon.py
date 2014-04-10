@@ -79,6 +79,9 @@ class StatPersistor(ConsumerMixin):
                 self.stat_saver.persist_stat(self.config, stat_hit)
             except FunctionalError as e:
                 logging.getLogger('stat_persistor').warn("%s", str(e))
+            except TechnicalError as e:
+                logging.getLogger('stat_persistor').warn("%s", str(e))
+
         else:
             logging.getLogger('stat_persistor').warn("stat task whitout "
                                              "payload")
