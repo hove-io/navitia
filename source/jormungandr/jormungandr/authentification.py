@@ -35,11 +35,9 @@ from flask import current_app, request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 from jormungandr import i_manager
-import datetime, time
+import datetime
 import base64
 from navitiacommon.models import User, Instance, db
-#from jormungandr.stat_manager import StatManager
-
 
 def authentification_required(func):
     """
