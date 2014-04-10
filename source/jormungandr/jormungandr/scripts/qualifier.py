@@ -240,16 +240,6 @@ def qualifier_one(journeys, request_type):
                 duration_crit
             ]
         )),
-        # the non_pt journey is the earliest journey without any public transport
-        # only walking, biking or driving
-        ("non_pt", trip_carac([
-            partial(is_not_possible_cheap),
-            partial(non_pt_journey),
-        ],
-            [
-                best_crit
-            ]
-        )),
         # for car we want at most one journey, the earliest one
         ("car", trip_carac([
             partial(is_not_possible_cheap),
@@ -301,6 +291,16 @@ def qualifier_one(journeys, request_type):
                 duration_crit,
                 best_crit,
                 nonTC_crit
+            ]
+        )),
+        # the non_pt journey is the earliest journey without any public transport
+        # only walking, biking or driving
+        ("non_pt", trip_carac([
+            partial(is_not_possible_cheap),
+            partial(non_pt_journey),
+        ],
+            [
+                best_crit
             ]
         )),
     ]
