@@ -479,9 +479,9 @@ class Journeys(ResourceUri):
 
         # for last and first section mode retrocompatibility
         if 'first_section_mode' in args and args['first_section_mode']:
-            args['origin_mode'].extend(args['first_section_mode'])
+            args['origin_mode'] = args['first_section_mode']
         if 'last_section_mode' in args and args['last_section_mode']:
-            args['destination_mode'].extend(args['last_section_mode'])
+            args['destination_mode'] = args['last_section_mode']
 
         if region or (lon and lat):
             self.region = i_manager.get_region(region, lon, lat)
