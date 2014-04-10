@@ -11,7 +11,7 @@
 namespace navitia { namespace routing {
 
 void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj,
-        const nt::Data & d, bt::ptime now, bt::time_period action_period, bool show_codes) {
+        const nt::Data & d, bt::ptime now, bt::time_period action_period) {
 
     if (vj->has_boarding()){
         pb_section->set_type(pbnavitia::boarding);
@@ -144,7 +144,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 pb_section->set_length(length);
                 if( item.get_vj() != nullptr) { // TODO : réfléchir si ça peut vraiment arriver
                     bt::time_period action_period(departure_ptime, arrival_ptime);
-                    fill_section(pb_section, item.get_vj(), d, now, action_period, show_codes);
+                    fill_section(pb_section, item.get_vj(), d, now, action_period);
                 }
             } else {
                 pb_section->set_type(pbnavitia::TRANSFER);
@@ -222,22 +222,27 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
     if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin
                 || ep.type == type::Type_e::StopArea || ep.type == type::Type_e::POI){
-        result = worker.find_nearest_stop_points(
-                    ep.streetnetwork_params.max_duration,
-                    pt_data.stop_point_proximity_list,
-                    use_second);
         std::set<type::idx_t> stop_points;
-        for(auto idx_duration : result) {
-            stop_points.insert(idx_duration.first);
-        }
         if(ep.type == type::Type_e::StopArea){
             auto it = pt_data.stop_areas_map.find(ep.uri);
             if(it!= pt_data.stop_areas_map.end()) {
                 for(auto stop_point : it->second->stop_point_list) {
                     if(stop_points.find(stop_point->idx) == stop_points.end()) {
                         result.push_back({stop_point->idx, {}});
+                        stop_points.insert(stop_point->idx);
                     }
                 }
+            }
+        }
+        auto tmp_sn = worker.find_nearest_stop_points(
+                    ep.streetnetwork_params.max_duration,
+                    pt_data.stop_point_proximity_list,
+                    use_second);
+        for(auto idx_duration : tmp_sn) {
+            auto sp_idx = idx_duration.first;
+            if(stop_points.find(sp_idx) == stop_points.end()) {
+                stop_points.insert(sp_idx);
+                result.push_back(idx_duration);
             }
         }
     }else if(ep.type == type::Type_e::StopPoint){
