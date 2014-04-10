@@ -454,13 +454,9 @@ class Journeys(ResourceUri):
                                 hidden=True)
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument("first_section_mode",
-                                type=option_value(modes),
-                                default=["bss"],
-                                dest="origin_mode", action="append")
+                                type=option_value(modes), action="append")
         parser_get.add_argument("last_section_mode",
-                                type=option_value(modes),
-                                default=["bss"],
-                                dest="destination_mode", action="append")
+                                type=option_value(modes), action="append")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         self.method_decorators.append(complete_links(self))
@@ -480,6 +476,13 @@ class Journeys(ResourceUri):
             args['destination_mode'] = 'bss'
         if args['origin_mode'] == 'vls':
             args['origin_mode'] = 'bss'
+
+        # for last and first section mode retrocompatibility
+        if 'first_section_mode' in args and args['first_section_mode']:
+            args['origin_mode'].extend(args['first_section_mode'])
+        if 'last_section_mode' in args and args['last_section_mode']:
+            args['destination_mode'].extend(args['last_section_mode'])
+
         if region or (lon and lat):
             self.region = i_manager.get_region(region, lon, lat)
             if uri:
