@@ -45,6 +45,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         //for each date time we add a direct street journey
         for(bt::ptime datetime : datetimes) {
             pbnavitia::Journey* pb_journey = pb_response.add_journeys();
+            pb_journey->set_requested_date_time(navitia::to_iso_string_no_fractional(datetime));
             pb_journey->set_duration(temp.duration.total_seconds());
 
             bt::ptime departure;
