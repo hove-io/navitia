@@ -69,7 +69,9 @@ class StatManager(object):
         stat_request.api = request.endpoint
         stat_request.query_string = request.url
         stat_request.host = request.host_url
-        stat_request.client = request.remote_addr
+        if request.remote_addr:
+            stat_request.client = request.remote_addr
+
 
     def fill_parameters(self, stat_request, func_call):
         for item in request.args.iteritems():
