@@ -372,37 +372,30 @@ class Script(object):
         if not resp.journeys or len(resp.journeys) == 0:
             return resp  # no journeys found, useless to call kraken again
 
+        last_best = next((j for j in resp.journeys if j.type == 'rapid'), None)
         while request["count"] > len(resp.journeys):
-            temp_datetime = None
-            if request['clockwise']:
-                str_dt = ""
-                last_journey = resp.journeys[-1]
-                if last_journey.HasField("departure_date_time"):
-                    l_date_time = last_journey.departure_date_time
-                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                    temp_datetime = l_date_time_f + timedelta(seconds=1)
-                else:
-                    duration = int(resp.journeys[-1].duration) + 1
-                    r_datetime = pb_req.journeys.datetimes[0]
-                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
-                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
-            else:
-                last_journey = resp.journeys[0]
-                if resp.journeys[-1].HasField("arrival_date_time"):
-                    l_date_time = last_journey.arrival_date_time
-                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                    temp_datetime = l_date_time_f + timedelta(seconds=-1)
-                else:
-                    duration = int(resp.journeys[-1].duration) - 1
-                    r_datetime = pb_req.journeys.datetimes[0]
-                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
-                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
+            if not last_best:  # if no rapid journey has been found, no need to continue
+                break
 
-            pb_req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
-            tmp_resp = self.get_journey(pb_req, instance, request)
+            new_datetime = None
+            if request['clockwise']:
+                l_date_time = last_best.departure_date_time
+                l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                new_datetime = l_date_time_f + timedelta(minutes=1)
+            else:
+                l_date_time = last_best.arrival_date_time
+                l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                new_datetime = l_date_time_f + timedelta(minutes=-1)
+
+            next_request = copy.deepcopy(pb_req)
+            next_request.journeys.datetimes[0] = new_datetime.strftime(f_date_time)
+            del next_request.journeys.datetimes[1:]
+            tmp_resp = self.get_journey(next_request, instance, request)
 
             if len(tmp_resp.journeys) == 0:
                 break  #no more journeys found, we stop
+
+            last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
 
             self.merge_response(resp, tmp_resp)
 
