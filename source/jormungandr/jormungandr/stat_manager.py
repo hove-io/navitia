@@ -144,10 +144,11 @@ class StatManager(object):
 
     def get_section_link(self, resp_section,link_type):
         result = ''
-        for section_link in resp_section['links']:
-            if section_link['type'] == link_type:
-                result = section_link['id']
-                break
+        if 'links' in resp_section:
+            for section_link in resp_section['links']:
+                if section_link['type'] == link_type:
+                    result = section_link['id']
+                    break
 
         return result
 
@@ -226,9 +227,10 @@ class StatManager(object):
 
     def fill_sections(self, stat_journey, resp_journey):
 
-        for resp_section in resp_journey['sections']:
-            stat_section = stat_journey.sections.add()
-            self.fill_section(stat_section, resp_section)
+        if 'sections' in resp_journey:
+            for resp_section in resp_journey['sections']:
+                stat_section = stat_journey.sections.add()
+                self.fill_section(stat_section, resp_section)
 
 
     def publish_request(self, stat_request):
@@ -237,17 +239,19 @@ class StatManager(object):
 
     def fill_admin_from_to(self, stat_section, resp_section):
         try:
-            for admin in resp_section['from'][stat_section.from_embedded_type]['administrative_regions']:
-                if (admin['level'] == 8):
-                    stat_section.from_admin_id = admin['id']
-                    stat_section.from_admin_name = admin['name']
-                    break
+            if 'administrative_regions' in resp_section['from'][stat_section.from_embedded_type]:
+                for admin in resp_section['from'][stat_section.from_embedded_type]['administrative_regions']:
+                    if (admin['level'] == 8):
+                        stat_section.from_admin_id = admin['id']
+                        stat_section.from_admin_name = admin['name']
+                        break
 
-            for admin in resp_section['to'][stat_section.from_embedded_type]['administrative_regions']:
-                if (admin['level'] == 8):
-                    stat_section.to_admin_id = admin['id']
-                    stat_section.to_admin_name = admin['name']
-                    break
+            if 'administrative_regions' in resp_section['to'][stat_section.from_embedded_type]:
+                for admin in resp_section['to'][stat_section.from_embedded_type]['administrative_regions']:
+                    if (admin['level'] == 8):
+                        stat_section.to_admin_id = admin['id']
+                        stat_section.to_admin_name = admin['name']
+                        break
 
         except ValueError as e:
             logging.getLogger(__name__).warn("%s", str(e))
