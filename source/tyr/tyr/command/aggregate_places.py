@@ -22,6 +22,12 @@ class AggregatePlacesCommand(Command):
         else:
             instances = models.Instance.query.all()
 
+        if not instances:
+            logging.getLogger(__name__).\
+                error("Unable to find any instance for name '{name}'"
+                      .format(name=name_))
+            return
+
         #TODO: create a real job
         job_id = 1
         instances_name = [instance.name for instance in instances]

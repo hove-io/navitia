@@ -457,6 +457,17 @@ class Script(object):
             tag_to_delete = ["", "possible_cheap"]
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 
+        #we want to keep only one non pt (the first one)
+        for tag in ["non_pt_bss", "non_pt_walk", "non_pt_bike"]:
+            found_direct = False
+            for idx, j in enumerate(resp.journeys):
+                if j.type != tag:
+                    continue
+                if found_direct:
+                    to_delete.append(idx)
+                else:
+                    found_direct = True
+
         # list comprehension does not work with repeated field, so we have to delete them manually
         to_delete.sort(reverse=True)
         for idx in to_delete:
