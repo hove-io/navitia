@@ -94,7 +94,9 @@ struct Visitor{
     //Pour charger les données administratives
     //navitia::georef::Levels levellist;
 
-    Visitor(const std::string & conn_str) : persistor(conn_str), total_ways(0), total_house_number(0), node_idx(0){}
+    Visitor(const std::string & conn_str) : persistor(conn_str),
+        logger(log4cplus::Logger::getInstance("log")),
+        total_ways(0), total_house_number(0), node_idx(0){}
 
     void node_callback(uint64_t osmid, double lon, double lat, const CanalTP::Tags & tags);
     void way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std::vector<uint64_t> &refs);
@@ -131,6 +133,7 @@ struct Visitor{
     void fill_pois(const uint64_t osmid, const CanalTP::Tags & tags);
     void insert_poitypes();
     void insert_pois();
+    void insert_properties();
     void set_coord_admin();
     /// Ajoute le nœud à la base que s’il le mérite :
     /// 1/ être une intersaction

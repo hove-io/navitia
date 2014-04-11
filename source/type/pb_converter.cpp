@@ -909,6 +909,11 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
         }
         fill_pb_object(geopoi->coord, data, poi->mutable_address(), depth - 1, now, action_period);
     }
+    for(const auto& propertie : geopoi->properties){
+        pbnavitia::Code * pb_code = poi->add_properties();
+        pb_code->set_type(propertie.first);
+        pb_code->set_value(propertie.second);
+    }
 }
 
 pbnavitia::ExceptionType get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exception_type){

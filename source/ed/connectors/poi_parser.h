@@ -19,6 +19,7 @@ private:
 
     void fill_poi_type();
     void fill_poi();
+    void fill_poi_properties();
 public:
     ed::PoiPoiType data;
 

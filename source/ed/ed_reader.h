@@ -84,6 +84,7 @@ private:
     void fill_journey_pattern_point_connections(navitia::type::Data& data, pqxx::work& work);
     void fill_poi_types(navitia::type::Data& data, pqxx::work& work);
     void fill_pois(navitia::type::Data& data, pqxx::work& work);
+    void fill_poi_properties(navitia::type::Data& data, pqxx::work& work);
     void fill_ways(navitia::type::Data& data, pqxx::work& work);
     void fill_house_numbers(navitia::type::Data& data, pqxx::work& work);
     void fill_vertex(navitia::type::Data& data, pqxx::work& work);
