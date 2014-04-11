@@ -265,7 +265,7 @@ def qualifier_one(journeys, request_type):
                 transfers_crit
             ]
         )),
-        # less_fallback tends to limit the fallback (walking/biking)
+        # less_fallback tends to limit the fallback while walking
         ("less_fallback_walk", trip_carac([
             partial(is_not_possible_cheap),
             partial(has_no_car),
@@ -281,7 +281,7 @@ def qualifier_one(journeys, request_type):
                 best_crit,
             ]
         )),
-        # less_fallback tends to limit the fallback (walking/biking)
+        # less_fallback tends to limit the fallback for biking and bss
         ("less_fallback_bike_bss", trip_carac([
             partial(is_not_possible_cheap),
             partial(has_no_car),
