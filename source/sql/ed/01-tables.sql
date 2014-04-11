@@ -608,5 +608,5 @@ CREATE TABLE IF NOT EXISTS navitia.poi_properties(
   poi_id bigint NOT NULL REFERENCES navitia.poi,
   key text,
   value text
-)
+);
 
