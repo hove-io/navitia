@@ -861,6 +861,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
                           "e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
     pqxx::result result = work.exec(request);
     size_t nb_edges_no_way = 0;
+    int nb_walking_edges(0), nb_biking_edges(0), nb_driving_edges(0);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
 
@@ -893,6 +894,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
 
         e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
         boost::add_edge(source, target, e, data.geo_ref->graph);
+        nb_walking_edges++;
 
         if (const_it["bike"].as<bool>()) {
             e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
@@ -900,6 +902,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
             boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
             way->edges.push_back(std::make_pair(bike_source, bike_target));
+            nb_biking_edges++;
         }
         if (const_it["car"].as<bool>()) {
             e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Car]);
@@ -907,6 +910,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
             boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
             way->edges.push_back(std::make_pair(car_source, car_target));
+            nb_driving_edges++;
         }
     }
 
@@ -914,7 +918,10 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_edges_no_way << " edges have an unkown way");
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref->graph) << " edges added");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref->graph) << " edges added ");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_walking_edges << " walking edges");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_biking_edges << " biking edges");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_driving_edges << " driving edges");
 }
 
 //get the minimum distance and the vertex to start from between 2 edges
@@ -954,7 +961,7 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
                 request += "ST_Y(poi.coord::geometry) as lat";
                 request += " FROM navitia.poi poi, navitia.poi_type poi_type";
                 request += " where poi.poi_type_id=poi_type.id";
-                request += " and poi_type.uri = 'bicycle_rental'";
+                request += " and poi_type.uri = 'poi_type:bicycle_rental'";
 
     pqxx::result result = work.exec(request);
     size_t cpt_bike_sharing(0);
