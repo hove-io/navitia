@@ -655,7 +655,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, uri, name FROM navitia.poi_type WHERE uri <> 'bicycle_rental';";
+    std::string request = "SELECT id, uri, name FROM navitia.poi_type;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::POIType* poi_type = new navitia::georef::POIType();
@@ -672,8 +672,7 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, "
             "ST_Y(poi.coord::geometry) as lat, poi.visible as visible, "
             "poi.name, poi.uri, poi.poi_type_id FROM navitia.poi poi, "
-            "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id "
-            "and poi_type.uri <> 'bicycle_rental';";
+            "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::POI* poi = new navitia::georef::POI();
