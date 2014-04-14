@@ -3,6 +3,7 @@
 #include "datetime.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
+#include "utils/functions.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <vector>
 #include <bitset>
@@ -583,10 +584,10 @@ struct Line : public Header, Nameable, HasMessages, Codes{
             return this->sort < other.sort;
         }
         if(this->name != other.name) {
-            return this->name < other.name;
+            return navitia::pseudo_natural_sort()(this->name, other.name);
         }
         return this < &other;
-    };
+    }
 };
 
 struct Route : public Header, Nameable, HasMessages, Codes{
