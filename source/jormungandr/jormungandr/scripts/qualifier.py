@@ -33,6 +33,10 @@ def has_bike(journey):
     return has_fall_back_mode(journey, response_pb2.Bike)
 
 
+def has_no_bike(journey):
+    return not has_fall_back_mode(journey, response_pb2.Bike)
+
+
 def has_walk(journey):
     return has_fall_back_mode(journey, response_pb2.Walking)
 
@@ -223,7 +227,7 @@ def qualifier_one(journeys, request_type):
     # if a journey is eligible to multiple tags
     trip_caracs = [
         #the cheap journey, is the fastest one without train
-        ("cheap", trip_carac([
+        ("no_train", trip_carac([
             partial(has_no_car),
             partial(is_possible_cheap),
             partial(no_train),
@@ -261,10 +265,27 @@ def qualifier_one(journeys, request_type):
                 transfers_crit
             ]
         )),
-        # less_fallback tends to limit the fallback (walking/biking)
-        ("less_fallback", trip_carac([
+        # less_fallback tends to limit the fallback while walking
+        ("less_fallback_walk", trip_carac([
             partial(is_not_possible_cheap),
             partial(has_no_car),
+            partial(has_no_bike),
+            partial(journey_length_constraint, max_evolution=.40),
+            partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
+            partial(nb_transfers_constraint, delta_transfers=1),
+        ],
+            [
+                nonTC_crit,
+                transfers_crit,
+                duration_crit,
+                best_crit,
+            ]
+        )),
+        # less_fallback tends to limit the fallback for biking and bss
+        ("less_fallback_bike_bss", trip_carac([
+            partial(is_not_possible_cheap),
+            partial(has_no_car),
+            partial(has_bike),
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
             partial(nb_transfers_constraint, delta_transfers=1),
