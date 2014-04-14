@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask_restful import reqparse
+from flask_restful import reqparse, abort
 import flask_restful
 from flask import current_app, request, g
 from functools import wraps
@@ -113,6 +113,7 @@ def authenticate(region, api, abort=False):
 
     #Hack to allow user not logged in...
     token = get_token()
+
     if not token:
         instance = Instance.get_by_name(region)
         if abort:
@@ -123,10 +124,12 @@ def authenticate(region, api, abort=False):
         else:
             return False if not instance else instance.first().is_free
 
-    user = get_user()
+    user = User.get_from_token(token, datetime.datetime.now())
+
     if user:
         #STAT-1 Ajouter flask variable (global) pour pouvoir garder les valeurs
         if user.has_access(region, api):
+            g.user = {"user_id": user.id}
             return True
         else:
             if abort:
