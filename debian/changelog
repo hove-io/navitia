@@ -1,3 +1,16 @@
+navitia2 (0.92.0) unstable; urgency=low
+
+ * Jormungandr: Journey's type refactoring
+ * Jormungandr: add tags to journeys to better qualify them
+ * All: change bss sections type (BSS_RENT and BSS_LANDING)
+ * Jormungandr: fix previous departure behavior
+ * Ed: fix poi type
+ * Jormungandr: add min|max_nb_journeys parameter
+ * Jormungandr: add show code param in varius apis
+ * Kraken: natural sort on lines
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 14 Apr 2014 16:04:06 +0100
+
 navitia2 (0.91.1) unstable; urgency=low
 
  * Jormungandr: fix bugs in scripts
