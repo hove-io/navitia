@@ -86,9 +86,38 @@ void PoiParser::fill_poi(){
     }
 }
 
+void PoiParser::fill_poi_properties(){
+    CsvReader reader(this->path + "/poi_properties.txt", ';', true, true);
+    if(!reader.is_open()) {
+        LOG4CPLUS_WARN(logger, "Cannot found file : " + reader.filename);
+        return;
+    }
+    std::vector<std::string> mandatory_headers = {"poi_id", "key", "value"};
+    if(!reader.validate(mandatory_headers)) {
+        throw PoiParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
+    }
+    int id_c = reader.get_pos_col("poi_id");
+    int key_c = reader.get_pos_col("key");
+    int value_c = reader.get_pos_col("value");
+
+    while(!reader.eof()){
+        std::vector<std::string> row = reader.next();
+        if (reader.is_valid(id_c, row) && reader.is_valid(key_c, row)
+            && reader.is_valid(value_c, row)){
+            const auto itm = this->data.pois.find(row[id_c]);
+            if(itm != this->data.pois.end()){
+                itm->second->properties[row[key_c]] = row[value_c];
+            }else{
+                LOG4CPLUS_WARN(logger, "Poi "<<row[id_c]<<" not found");
+            }
+        }
+    }
+}
+
 void PoiParser::fill(){
     fill_poi_type();
     fill_poi();
+    fill_poi_properties();
 }
 
 }}

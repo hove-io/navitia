@@ -90,7 +90,7 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
           DateTime datetime, DateTime max_datetime,
           boost::optional<const std::string> calendar_id,
-          uint32_t depth, const type::Data &data) {
+          uint32_t depth, const bool show_codes, const type::Data &data) {
     pbnavitia::Response response;
     auto current_time = pt::second_clock::local_time();
     auto now = pt::second_clock::local_time();
@@ -103,15 +103,15 @@ render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
         //Each schedule has a stop_point and a route
         fill_pb_object(data.pt_data->stop_points[id_vec.first.first], data,
                        schedule->mutable_stop_point(), depth,
-                       current_time, action_period);
+                       current_time, action_period, show_codes);
 
         auto m_route = schedule->mutable_route();
         fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
-                               m_route, depth, current_time, action_period);
+                               m_route, depth, current_time, action_period, show_codes);
         if (data.pt_data->routes[id_vec.first.second]->line != nullptr){
             auto m_line = m_route->mutable_line();
             fill_pb_object(data.pt_data->routes[id_vec.first.second]->line, data,
-                                   m_line, 0, current_time, action_period);
+                                   m_line, 0, current_time, action_period, show_codes);
         }
         auto pt_display_information = schedule->mutable_pt_display_informations();
         navitia::type::idx_t spt_idx = data.pt_data->routes[id_vec.first.second]->main_destination();
@@ -144,7 +144,8 @@ departure_board(const std::string& request,
                 uint32_t duration, uint32_t depth,
                 int32_t max_date_times,
                 int interface_version,
-                int count, int start_page, const type::Data &data, bool disruption_active) {
+                int count, int start_page, const type::Data &data, bool disruption_active,
+                bool show_codes) {
 
     RequestHandle handler("DEPARTURE_BOARD", request, forbidden_uris, date,  duration, data);
 
@@ -237,7 +238,7 @@ departure_board(const std::string& request,
         handler.pb_response = render_v1(response_status, map_route_stop_point,
                                         handler.date_time,
                                         handler.max_datetime,
-                                        calendar_id, depth, data);
+                                        calendar_id, depth, show_codes, data);
     }
 
 

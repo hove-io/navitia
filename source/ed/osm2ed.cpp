@@ -70,7 +70,7 @@ void Visitor::relation_callback(uint64_t osmid, const CanalTP::Tags & tags, cons
             OSMAdminRefs[osmid]=inf;
         }
     } else {
-        std::cout << "Unable to find tag admin_level" << std::endl;
+        LOG4CPLUS_INFO(logger, "Unable to find tag admin_level");
     }
 }
 
@@ -95,7 +95,7 @@ void Visitor::insert_if_needed(uint64_t ref) {
             this->persistor.lotus.insert({std::to_string(ref), line});
         }
     } else {
-        std::cout << "Unable to find node " << ref << std::endl;
+        LOG4CPLUS_INFO(logger, "Unable to find node " << ref);
     }
 }
 
@@ -157,7 +157,7 @@ void Visitor::insert_edges(){
                         geog << "LINESTRING(" << current_node.lon() << " " << current_node.lat();
                     }
                 } else {
-                    std::cout << "Unable to find node " << current_ref << std::endl;
+                    LOG4CPLUS_INFO(logger, "Unable to find node " << current_ref);
                 }
             }
         }
@@ -175,7 +175,7 @@ void Visitor::insert_house_numbers(){
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
             this->persistor.lotus.insert({point, hn.second.number, std::to_string((str_to_int(hn.second.number) % 2) == 0)});
         } else {
-            std::cout << "Unable to find node " << hn.first << std::endl;
+            LOG4CPLUS_INFO(logger, "Unable to find node " << hn.first);
         }
     }
     persistor.lotus.finish_bulk_insert();
@@ -192,7 +192,7 @@ navitia::type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::Refe
                 best.set_lat(n.lat());
                 break;
             }else{
-                std::cout << "Unable to find node" << ref.member_id << std::endl;
+                LOG4CPLUS_INFO(logger, "Unable to find node " << ref.member_id);
             }
         }
     }
@@ -249,7 +249,7 @@ std::vector<uint64_t> Visitor::nodes_of_relation(const CanalTP::References & ref
                     if(tmp_ref != references.end()) {
                         current_nodes = nodes_of_relation(tmp_ref->second);
                     } else {
-                        std::cout << "Unable to find reference " << std::endl;
+                        LOG4CPLUS_INFO(logger, "Unable to find reference ");
                     }
                 }
 
@@ -288,29 +288,41 @@ void Visitor::insert_admin(){
         }
     }
     this->persistor.lotus.finish_bulk_insert();
-    std::cout << " Admin ignorés : " << ignored << " sur " << OSMAdminRefs.size() << std::endl;
+    LOG4CPLUS_INFO(logger, "Admin ignorés : " << ignored << " sur " << OSMAdminRefs.size());
 }
 
 void Visitor::insert_poitypes(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
     for(auto pt : poi_types){
-        this->persistor.lotus.insert({std::to_string(pt.second.id), pt.first, pt.second.name});
+        this->persistor.lotus.insert({std::to_string(pt.second.id), "poi_type:" + pt.first, pt.second.name});
     }
     persistor.lotus.finish_bulk_insert();
 }
 
 void Visitor::insert_pois(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id"});
-    int32_t count =0;
     for(auto poi : pois){
         try{
             Node n = nodes.at(poi.first);
-            count++;
             std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->persistor.lotus.insert({std::to_string(count),std::to_string(poi.second.weight),
-                                        point, poi.second.name, std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
+            this->persistor.lotus.insert({std::to_string(poi.second.id),std::to_string(poi.second.weight),
+                                        point, poi.second.name, "poi:" + std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
         }catch(...){
-            std::cout << "Attention, le noued  : [" << poi.first << " est introuvable]." << std::endl;
+            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
+        }
+    }
+    persistor.lotus.finish_bulk_insert();
+}
+
+void Visitor::insert_properties(){
+    this->persistor.lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
+    for(const auto& poi : pois){
+        if (poi.first > nodes.size()){
+            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
+        }else{
+            for(const auto& property : poi.second.properties){
+                this->persistor.lotus.insert({std::to_string(poi.second.id),property.first, property.second});
+            }
         }
     }
     persistor.lotus.finish_bulk_insert();
@@ -327,10 +339,16 @@ void Visitor::fill_PoiTypes(){
     poi_types["hospital"] = ed::types::PoiType(3, "hôpital");
     poi_types["post_office"] = ed::types::PoiType(4, "bureau de poste");
     poi_types["bicycle_rental"] = ed::types::PoiType(5, "station vls");
+    poi_types["bicycle_parking"] = ed::types::PoiType(6, "Parking vélo");
+    poi_types["parking"] = ed::types::PoiType(7, "Parking");
 }
 
 void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
     if(tags.find("amenity") != tags.end()){
+        auto poi_it = pois.find(osmid);
+        if (poi_it != pois.end()){
+            return;
+        }
         std::string value = tags.at("amenity");
         auto it = poi_types.find(value);
         if(it != poi_types.end()){
@@ -339,6 +357,12 @@ void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
             if(tags.find("name") != tags.end()){
                 poi.name = tags.at("name");
             }
+            for(auto st : tags){
+                if((st.first != "amenity") && (st.first != "name")){
+                    poi.properties[st.first] = st.second;
+                 }
+             }
+            poi.id = pois.size();
             pois[osmid] = poi;
         }
     }
@@ -354,6 +378,7 @@ void Visitor::set_coord_admin(){
 
 int main(int argc, char** argv) {
     navitia::init_app();
+    auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
     std::string input, connection_string;
     po::options_description desc("Allowed options");
@@ -367,12 +392,12 @@ int main(int argc, char** argv) {
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
+        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE );
         return 0;
     }
 
     if(vm.count("help")) {
-        std::cout << desc <<  "\n";
+        LOG4CPLUS_INFO(logger, desc );
         return 1;
     }
 
@@ -382,32 +407,37 @@ int main(int argc, char** argv) {
     v.persistor.lotus.start_transaction();
 
     v.persistor.clean_georef();
+    v.persistor.clean_poi();
     v.fill_PoiTypes();
     v.persistor.lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri"});
     CanalTP::read_osm_pbf(input, v);
     v.set_coord_admin();
     v.persistor.lotus.finish_bulk_insert();
 
-    std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
-    std::cout<<v.poi_types.size()<<" poitype/ "<<v.pois.size()<< " poi"<<std::endl;
+    LOG4CPLUS_INFO(logger, v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways );
+    LOG4CPLUS_INFO(logger, v.poi_types.size()<<" poitype/ "<<v.pois.size()<< " poi");
     v.count_nodes_uses();
     v.insert_edges();
 
-    std::cout<<"Chargement des adresses"<<std::endl;
+    LOG4CPLUS_INFO(logger, "add House_numbers data");
     v.insert_house_numbers();
+    LOG4CPLUS_INFO(logger, "add poi_types data");
     v.insert_poitypes();
+    LOG4CPLUS_INFO(logger, "add pois data");
     v.insert_pois();
-    std::cout<<"Chargement des données administratives"<<std::endl;
+    LOG4CPLUS_INFO(logger, "add pois properties data");
+    v.insert_properties();
+    LOG4CPLUS_INFO(logger, "add admins data");
     v.insert_admin();
 
     v.build_relation();
 
-    std::cout<<"Fusion des voies"<<std::endl;
+    LOG4CPLUS_INFO(logger, "Fusion ways");
     v.persistor.build_ways();
 
     v.persistor.lotus.commit();
 
-    std::cout<<"Durée d'intégration des données OSM :"<<to_simple_string(pt::microsec_clock::local_time() - start)<<std::endl;
+    LOG4CPLUS_INFO(logger, "Integration time OSM Data :"<<to_simple_string(pt::microsec_clock::local_time() - start));
     return 0;
 }
 

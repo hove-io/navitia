@@ -27,7 +27,7 @@ def qualifier_one_direct_test():
 
     qualifier.qualifier_one(journeys, "departure")
 
-    assert(journey_direct.type == "rapid")
+    assert("non_pt" in journey_direct.type)
 
 
 # Test with 5 journeys

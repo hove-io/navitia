@@ -218,6 +218,9 @@ struct Autocomplete
                         new_result.push_back(i);
                     }
                 }
+                //The function "unique" works only if the vector new_result is sorted.
+                std::sort(new_result.begin(), new_result.end());
+
                 // std::unique retrie les donnée et fout les doublons à la fin
                 // La fonction retourne un itérateur vers le premier doublon
                 // Expérimentalement le gain est très faible

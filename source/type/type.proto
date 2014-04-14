@@ -276,6 +276,7 @@ message Poi {
     optional PoiType poi_type = 7;
     repeated AdministrativeRegion administrative_regions = 10;
     optional Address address = 11;
+    repeated Code properties = 12;
 }
 
 message Network {

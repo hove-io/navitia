@@ -18,7 +18,8 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   georef::StreetNetwork & worker,
                                   bool disruption_active,
                                   uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
-                                  uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
+                                  uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
+                                  bool show_codes = false);
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
@@ -27,7 +28,8 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
                                    bool disruption_active, int max_duration = 3600,
-                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
+                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
+                                   bool show_codes = false);
 
 
 }}

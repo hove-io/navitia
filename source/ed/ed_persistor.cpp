@@ -15,6 +15,9 @@ void EdPersistor::persist(const ed::PoiPoiType& data){
     LOG4CPLUS_INFO(logger, "Begin: add pois data");
     this->insert_pois(data);
     LOG4CPLUS_INFO(logger, "End: add pois data");
+    LOG4CPLUS_INFO(logger, "Begin: add pois data");
+    this->insert_poi_properties(data);
+    LOG4CPLUS_INFO(logger, "End: add pois data");
     LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -201,6 +204,16 @@ void EdPersistor::insert_pois(const ed::PoiPoiType& data){
     lotus.finish_bulk_insert();
 }
 
+void EdPersistor::insert_poi_properties(const ed::PoiPoiType& data){
+    this->lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
+    for(const auto& itm : data.pois){
+        for(auto property : itm.second->properties){
+            this->lotus.insert({std::to_string(itm.second->id),property.first, property.second});
+        }
+    }
+    lotus.finish_bulk_insert();
+}
+
 void EdPersistor::build_relation_way_admin(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
     for(const auto& itm : data.ways){
@@ -341,7 +354,7 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
 void EdPersistor::clean_georef(){
     PQclear(this->lotus.exec(
                 "TRUNCATE georef.node, georef.house_number, navitia.admin, "
-                "georef.way, navitia.poi_type, navitia.poi CASCADE;"));
+                "georef.way CASCADE;"));
 }
 
 void EdPersistor::clean_poi(){

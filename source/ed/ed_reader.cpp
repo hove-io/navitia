@@ -45,6 +45,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_journey_pattern_point_connections(data, work);
     this->fill_poi_types(data, work);
     this->fill_pois(data, work);
+    this->fill_poi_properties(data, work);
     this->fill_ways(data, work);
     this->fill_house_numbers(data, work);
     this->fill_vertex(data, work);
@@ -654,7 +655,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, uri, name FROM navitia.poi_type WHERE uri <> 'bicycle_rental';";
+    std::string request = "SELECT id, uri, name FROM navitia.poi_type;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::POIType* poi_type = new navitia::georef::POIType();
@@ -671,8 +672,7 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, "
             "ST_Y(poi.coord::geometry) as lat, poi.visible as visible, "
             "poi.name, poi.uri, poi.poi_type_id FROM navitia.poi poi, "
-            "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id "
-            "and poi_type.uri <> 'bicycle_rental';";
+            "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::POI* poi = new navitia::georef::POI();
@@ -684,12 +684,26 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
         poi->visible = const_it["visible"].as<bool>();
         const_it["weight"].to(poi->weight);
         navitia::georef::POIType* poi_type = this->poi_type_map[const_it["poi_type_id"].as<idx_t>()];
-        if(poi_type != NULL ){
+        if(poi_type != nullptr ){
             poi->poitype_idx = poi_type->idx;
         }
         this->poi_map[const_it["id"].as<idx_t>()] = poi;
         poi->idx = data.geo_ref->pois.size();
         data.geo_ref->pois.push_back(poi);
+    }
+}
+
+void EdReader::fill_poi_properties(navitia::type::Data&, pqxx::work& work){
+    std::string request = "select poi_id, key, value from navitia.poi_properties;";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        navitia::georef::POI* poi = this->poi_map[const_it["poi_id"].as<idx_t>()];
+        if(poi != nullptr ){
+            std::string key, value;
+            const_it["key"].to(key);
+            const_it["value"].to(value);
+            poi->properties[key] = value;
+        }
     }
 }
 
@@ -861,6 +875,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
                           "e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
     pqxx::result result = work.exec(request);
     size_t nb_edges_no_way = 0;
+    int nb_walking_edges(0), nb_biking_edges(0), nb_driving_edges(0);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
 
@@ -893,6 +908,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
 
         e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
         boost::add_edge(source, target, e, data.geo_ref->graph);
+        nb_walking_edges++;
 
         if (const_it["bike"].as<bool>()) {
             e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
@@ -900,6 +916,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
             boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
             way->edges.push_back(std::make_pair(bike_source, bike_target));
+            nb_biking_edges++;
         }
         if (const_it["car"].as<bool>()) {
             e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Car]);
@@ -907,6 +924,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
             boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
             way->edges.push_back(std::make_pair(car_source, car_target));
+            nb_driving_edges++;
         }
     }
 
@@ -914,7 +932,10 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_edges_no_way << " edges have an unkown way");
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref->graph) << " edges added");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref->graph) << " edges added ");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_walking_edges << " walking edges");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_biking_edges << " biking edges");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_driving_edges << " driving edges");
 }
 
 //get the minimum distance and the vertex to start from between 2 edges
@@ -954,7 +975,7 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
                 request += "ST_Y(poi.coord::geometry) as lat";
                 request += " FROM navitia.poi poi, navitia.poi_type poi_type";
                 request += " where poi.poi_type_id=poi_type.id";
-                request += " and poi_type.uri = 'bicycle_rental'";
+                request += " and poi_type.uri = 'poi_type:bicycle_rental'";
 
     pqxx::result result = work.exec(request);
     size_t cpt_bike_sharing(0);

@@ -168,13 +168,13 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     forbidden_uri, request.from_datetime(),
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(), *data, false, request.count(),
-                    request.start_page());
+                    request.start_page(), request.show_codes());
         case pbnavitia::NEXT_ARRIVALS:
             return timetables::next_arrivals(request.arrival_filter(),
                     forbidden_uri, request.from_datetime(),
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
-                    *data, false, request.count(), request.start_page());
+                    *data, false, request.count(), request.start_page(), request.show_codes());
         case pbnavitia::STOPS_SCHEDULES:
             return timetables::stops_schedule(request.departure_filter(),
                                               request.arrival_filter(),
@@ -183,16 +183,17 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     *data, false);
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
-                    request.has_calendar() ? boost::optional<const std::string>(request.calendar()) : boost::optional<const std::string>(),
+                    request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
+                                             boost::optional<const std::string>(),
                     forbidden_uri, request.from_datetime(),
                     request.duration(),
                     request.depth(), max_date_times, request.interface_version(),
-                    request.count(), request.start_page(), *data, false);
+                    request.count(), request.start_page(), *data, false, request.show_codes());
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
                     forbidden_uri, request.from_datetime(),
                     request.duration(), request.interface_version(), request.depth(),
-                    request.count(), request.start_page(), *data, false);
+                    request.count(), request.start_page(), *data, false, request.show_codes());
         default:
             LOG4CPLUS_WARN(logger, "Unknown timetable query");
             pbnavitia::Response response;
@@ -406,13 +407,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.max_duration(),
-                request.max_transfers());
+                request.max_transfers(), request.show_codes());
     } else {
         return navitia::routing::make_isochrone(*planner, origin, request.datetimes(0),
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.max_duration(),
-                request.max_transfers());
+                request.max_transfers(), request.show_codes());
     }
 }
 

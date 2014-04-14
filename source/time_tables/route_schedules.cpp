@@ -98,7 +98,7 @@ route_schedule(const std::string& filter,
                const std::string &str_dt,
                uint32_t duration, uint32_t interface_version,
                const uint32_t max_depth, int count, int start_page,
-               type::Data &d, bool disruption_active) {
+               type::Data &d, bool disruption_active, const bool show_codes) {
     RequestHandle handler("ROUTE_SCHEDULE", filter, forbidden_uris, str_dt, duration, d);
 
     if(handler.pb_response.has_error()) {
@@ -150,7 +150,7 @@ route_schedule(const std::string& filter,
             //version v1
             pbnavitia::RouteScheduleRow* row = table->add_rows();
             fill_pb_object(sp, d, row->mutable_stop_point(), max_depth,
-                           now, action_period);
+                           now, action_period, show_codes);
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 datetime_stop_time dt_stop_time  = matrice[i][j];
                 if(interface_version == 1) {

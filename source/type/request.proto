@@ -43,6 +43,7 @@ message NextStopTimeRequest {
     optional int32 max_date_times       = 11;
     repeated string forbidden_uri       = 12;
     optional string calendar            = 13;
+    optional bool show_codes            = 14;
 }
 
 message StreetNetworkParams{
@@ -69,6 +70,7 @@ message JourneysRequest {
     optional StreetNetworkParams streetnetwork_params   = 8;
     required bool wheelchair                            = 9;
     required bool disruption_active                     = 10;
+    optional bool show_codes                            = 11;
 }
 
 message PlacesNearbyRequest {

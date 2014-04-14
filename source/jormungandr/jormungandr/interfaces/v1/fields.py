@@ -132,6 +132,16 @@ class get_label(fields.Raw):
             if obj.name != '':
                 return obj.name
 
+class get_key_value(fields.Raw):
+
+    def output(self, key, obj):
+        res = {}
+        for code in obj.properties:
+            res[code.type] = code.value
+        return res
+
+
+
 code = {
     "type": fields.String(),
     "value": fields.String()
@@ -241,8 +251,9 @@ physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
 line["commercial_mode"] = PbField(commercial_mode)
 
 poi_type = deepcopy(generic_type)
-poi = deepcopy(generic_type)
+poi = deepcopy(generic_type_admin)
 poi["poi_type"] = PbField(poi_type)
+poi["properties"] = get_key_value()
 
 company = deepcopy(generic_type)
 company["codes"] = NonNullList(NonNullNested(code))

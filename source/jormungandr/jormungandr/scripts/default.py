@@ -8,7 +8,7 @@ from jormungandr.renderers import render_from_protobuf
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
-import logging
+from flask import current_app
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
@@ -145,6 +145,7 @@ class Script(object):
         st.from_datetime = request["from_datetime"]
         st.duration = request["duration"]
         st.depth = request["depth"]
+        st.show_codes = request["show_codes"]
         if not "nb_stoptimes" in request:
             st.nb_stoptimes = 0
         else:
@@ -226,6 +227,7 @@ class Script(object):
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
         req.journeys.disruption_active = request["disruption_active"]
+        req.journeys.show_codes = request["show_codes"]
 
         self.origin_modes = request["origin_mode"]
 
@@ -242,9 +244,11 @@ class Script(object):
         return req
 
     def check_missing_journey(self, list_journey, initial_request):
-        """ Check if some particular journeys are missing, and return:
+        """
+        Check if some particular journeys are missing, and return:
                 if it is the case a modified version of the request to be rerun
-                else None"""
+                else None
+        """
         if not "cheap_journey" in self.functional_params \
             or self.functional_params["cheap_journey"].lower() != "true":
             return (None, None)
@@ -317,14 +321,16 @@ class Script(object):
 
             if local_resp.response_type == response_pb2.ITINERARY_FOUND:
 
-                #if a specific tag was provided, we tag the journeys before the qualifier
+                # if a specific tag was provided, we tag the journeys
+                # and we don't call the qualifier, it will be done after
+                # with the journeys from the previous query
                 if tag:
                     for j in local_resp.journeys:
                         j.type = tag
-
-                #we qualify the journeys
-                request_type = "arrival" if req.journeys.clockwise else "departure"
-                qualifier_one(local_resp.journeys, request_type)
+                else:
+                    #we qualify the journeys
+                    request_type = "arrival" if req.journeys.clockwise else "departure"
+                    qualifier_one(local_resp.journeys, request_type)
 
                 if not resp:
                     resp = local_resp
@@ -332,7 +338,7 @@ class Script(object):
                     self.merge_response(resp, local_resp)
             if not resp:
                 resp = local_resp
-            logging.getLogger(__name__).debug("for mode {}|{} we have found {} journeys".format(o_mode, d_mode, len(local_resp.journeys)))
+            current_app.logger.debug("for mode {}|{} we have found {} journeys".format(o_mode, d_mode, len(local_resp.journeys)))
 
         self.__fill_uris(resp)
         return resp
@@ -348,7 +354,13 @@ class Script(object):
         if new_request:
             #we have to call kraken again with a modified version of the request
             new_resp = self.call_kraken(new_request, instance, tag)
+
             self.merge_response(resp, new_resp)
+
+            # we qualify the journeys with the previous one
+            # because we need all journeys to qualify them correctly
+            request_type = "arrival" if new_request.journeys.clockwise else "departure"
+            qualifier_one(resp.journeys, request_type)
 
         #we filter the journeys
         self.delete_journeys(resp, original_request)
@@ -370,42 +382,51 @@ class Script(object):
         if not resp.journeys or len(resp.journeys) == 0:
             return resp  # no journeys found, useless to call kraken again
 
-        while request["count"] > len(resp.journeys):
-            temp_datetime = None
-            if request['clockwise']:
-                str_dt = ""
-                last_journey = resp.journeys[-1]
-                if last_journey.HasField("departure_date_time"):
-                    l_date_time = last_journey.departure_date_time
-                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                    temp_datetime = l_date_time_f + timedelta(seconds=1)
-                else:
-                    duration = int(resp.journeys[-1].duration) + 1
-                    r_datetime = pb_req.journeys.datetimes[0]
-                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
-                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
-            else:
-                last_journey = resp.journeys[0]
-                if resp.journeys[-1].HasField("arrival_date_time"):
-                    l_date_time = last_journey.arrival_date_time
-                    l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                    temp_datetime = l_date_time_f + timedelta(seconds=-1)
-                else:
-                    duration = int(resp.journeys[-1].duration) - 1
-                    r_datetime = pb_req.journeys.datetimes[0]
-                    r_datetime_f = datetime.strptime(r_datetime, f_date_time)
-                    temp_datetime = r_datetime_f + timedelta(seconds=duration)
+        last_best = next((j for j in resp.journeys if j.type == 'rapid'), None)
+        while request["min_nb_journeys"] > len(resp.journeys):
+            if not last_best:  # if no rapid journey has been found, no need to continue
+                break
 
-            pb_req.journeys.datetimes[0] = temp_datetime.strftime(f_date_time)
-            tmp_resp = self.get_journey(pb_req, instance, request)
+            new_datetime = None
+            if request['clockwise']:
+                l_date_time = last_best.departure_date_time
+                l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                new_datetime = l_date_time_f + timedelta(minutes=1)
+            else:
+                l_date_time = last_best.arrival_date_time
+                l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                new_datetime = l_date_time_f + timedelta(minutes=-1)
+
+            # we copy the query not to have side effects
+            next_request = copy.deepcopy(pb_req)
+            next_request.journeys.datetimes[0] = new_datetime.strftime(f_date_time)
+            del next_request.journeys.datetimes[1:]
+            tmp_resp = self.get_journey(next_request, instance, request)
 
             if len(tmp_resp.journeys) == 0:
                 break  #no more journeys found, we stop
 
+            # we tag the journeys as 'next' or 'prev' journeys
+            for j in tmp_resp.journeys:
+                j.tags.append("next" if request['clockwise'] else "prev")
+
+            last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
+
             self.merge_response(resp, tmp_resp)
+
+        self.choose_best(resp)
 
         self.delete_journeys(resp, request)  # last filter
         return resp
+
+    def choose_best(self, resp):
+        """
+        the best journey, is the first rapid, ie the rapid without additional tags ('prev' or 'next')
+        """
+        for j in resp.journeys:
+            if j.type == 'rapid' and not j.tags:
+                j.type = 'best'
+                break  # we want to ensure the unicity of the best
 
     def merge_response(self, initial_response, new_response):
         #since it's not the first call to kraken, some kraken's id
@@ -455,14 +476,25 @@ class Script(object):
             tag_to_delete = ["", "possible_cheap"]
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 
+        #we want to keep only one non pt (the first one)
+        for tag in ["non_pt_bss", "non_pt_walk", "non_pt_bike"]:
+            found_direct = False
+            for idx, j in enumerate(resp.journeys):
+                if j.type != tag:
+                    continue
+                if found_direct:
+                    to_delete.append(idx)
+                else:
+                    found_direct = True
+
         # list comprehension does not work with repeated field, so we have to delete them manually
         to_delete.sort(reverse=True)
         for idx in to_delete:
             del resp.journeys[idx]
 
         #after all filters, we filter not to give too many results
-        if request["count"] and len(resp.journeys) > request["count"]:
-            del resp.journeys[request["count"]:]
+        if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
+            del resp.journeys[request["max_nb_journeys"]:]
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)

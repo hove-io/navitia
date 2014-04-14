@@ -604,3 +604,9 @@ CREATE TABLE IF NOT EXISTS navitia.od_ticket(
     ticket_id TEXT NOT NULL REFERENCES navitia.ticket
 );
 
+CREATE TABLE IF NOT EXISTS navitia.poi_properties(
+  poi_id bigint NOT NULL REFERENCES navitia.poi,
+  key text,
+  value text
+);
+
