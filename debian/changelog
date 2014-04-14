@@ -1,421 +1,427 @@
+navitia2 (0.91.2) unstable; urgency=low
+
+  * Jormungandr: rapid journeys cannot be non_pt 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 14 Apr 2014 18:04:49 +0100
+
 navitia2 (0.92.1) unstable; urgency=low
 
- * Upgrade data version
+  * Upgrade data version
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 14 Apr 2014 16:04:47 +0100
 
 navitia2 (0.92.0) unstable; urgency=low
 
- * Jormungandr: Journey's type refactoring
- * Jormungandr: add tags to journeys to better qualify them
- * All: change bss sections type (BSS_RENT and BSS_LANDING)
- * Jormungandr: fix previous departure behavior
- * Ed: fix poi type
- * Jormungandr: add min|max_nb_journeys parameter
- * Jormungandr: add show code param in varius apis
- * Kraken: natural sort on lines
+  * Jormungandr: Journey's type refactoring
+  * Jormungandr: add tags to journeys to better qualify them
+  * All: change bss sections type (BSS_RENT and BSS_LANDING)
+  * Jormungandr: fix previous departure behavior
+  * Ed: fix poi type
+  * Jormungandr: add min|max_nb_journeys parameter
+  * Jormungandr: add show code param in varius apis
+  * Kraken: natural sort on lines
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 14 Apr 2014 16:04:06 +0100
 
 navitia2 (0.91.1) unstable; urgency=low
 
- * Jormungandr: fix bugs in scripts
- * Kraken: Fix init of wordweight
+  * Jormungandr: fix bugs in scripts
+  * Kraken: Fix init of wordweight
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 07 Apr 2014 18:04:11 +0100
 
 navitia2 (0.91.0) unstable; urgency=low
 
- * Jormungandr: log improvements
- * Jormungandr: Improve exception management of calendars
- * Jormungandr: Adapt scenarios for a arrival before request
- * Jormungandr: Fix typing of sections
- * Jormungandr: New script configuration for call to planner
- * Kraken: Add crowfly projection in streetnetwork sections
- * Kraken: Add parameter depth in departure_board
- * Kraken: Fix get_walking_solutions
- * Kraken: Change raptor_init to raptor solution
- * Kraken: Add external codes
- * Kraken: Add addresses in POI and stop_point
- * Kraken: Fix retrieval of direct path
- * Ed: Compute relation between objects and admins in binarisation
- * Ed: New connector for POIs
- * Ed: Fix graph loading
- * All: Use forward declare in data
- * All: Use of share_ptr
- * All: Remove lock
- * Jormungandr: Fix next link
+  * Jormungandr: log improvements
+  * Jormungandr: Improve exception management of calendars
+  * Jormungandr: Adapt scenarios for a arrival before request
+  * Jormungandr: Fix typing of sections
+  * Jormungandr: New script configuration for call to planner
+  * Kraken: Add crowfly projection in streetnetwork sections
+  * Kraken: Add parameter depth in departure_board
+  * Kraken: Fix get_walking_solutions
+  * Kraken: Change raptor_init to raptor solution
+  * Kraken: Add external codes
+  * Kraken: Add addresses in POI and stop_point
+  * Kraken: Fix retrieval of direct path
+  * Ed: Compute relation between objects and admins in binarisation
+  * Ed: New connector for POIs
+  * Ed: Fix graph loading
+  * All: Use forward declare in data
+  * All: Use of share_ptr
+  * All: Remove lock
+  * Jormungandr: Fix next link
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 07 Apr 2014 15:04:08 +0100
 
 navitia2 (0.90.8) unstable; urgency=low
 
- * Connector_at: add number of messages and Disruptions send
+  * Connector_at: add number of messages and Disruptions send
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 26 Mar 2014 11:03:58 +0100
 
 navitia2 (0.90.7) unstable; urgency=low
 
- * Sindri: add number of messages pushed
+  * Sindri: add number of messages pushed
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 26 Mar 2014 10:03:14 +0100
 
 navitia2 (0.90.6) unstable; urgency=low
 
- * Debian: override dh_python2
+  * Debian: override dh_python2
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Mar 2014 17:03:20 +0100
 
 navitia2 (0.90.5) unstable; urgency=low
 
- * Jormungandr: add debian/navitia-jormungandr.pydist
+  * Jormungandr: add debian/navitia-jormungandr.pydist
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Mar 2014 15:03:40 +0100
 
 navitia2 (0.90.4) unstable; urgency=low
 
- * Jormungandr: python version >= 2.7
+  * Jormungandr: python version >= 2.7
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Mar 2014 11:03:09 +0100
 
 navitia2 (0.90.3) unstable; urgency=low
 
- * Jormungandr: really fix python version problem
+  * Jormungandr: really fix python version problem
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 21 Mar 2014 18:03:01 +0100
 
 navitia2 (0.90.2) unstable; urgency=low
 
- * Jormungandr: fix journey tagging
+  * Jormungandr: fix journey tagging
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 21 Mar 2014 17:03:52 +0100
 
 navitia2 (0.90.1) unstable; urgency=low
 
- * Jormungandr: fix ResourceUri
+  * Jormungandr: fix ResourceUri
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 21 Mar 2014 10:03:48 +0100
 
 navitia2 (0.90.0) unstable; urgency=low
 
- * Monitor: Fix a typo
- * Kraken: For odt vj, we want to display only the first and last stop time
- * kraken : Add main destination to stop schedules
- * Jormungandr: We can now request models by external_code and type
- * Kraken: fix connection duration for intra stop area connections
- * OSMReader: improve the osm tags handling for bike
- * Ed2Nav: fix way filtering
- * Kraken: add facilities for qgis debuging
- * Jormungandr: Fix tagging of cheap journeys
- * Kraken: Some journeys were still begginning by a transfer
- * Kraken: fix setting of sn params of destination
- * jormungandr : test of from argument
- * Merge pull request #206 from l-vincent-l/fix_visible_sa
- * Ed: set visible value only if we have the column
- * jormungandr : add comment property
- * kraken : add comment property
- * CMake: python tests outputed in differents files
- * CMake: output all test in xml for jenkins
- * Jormungandr: manage terminus on stop schedule
- * Kraken: reverse order of validity pattern on display
- * Kraken: fix calendar API
- * Kraken: Penalize objects without cities
- * Jormungandr: filter corrected in places_nearby for POI
+  * Monitor: Fix a typo
+  * Kraken: For odt vj, we want to display only the first and last stop time
+  * kraken : Add main destination to stop schedules
+  * Jormungandr: We can now request models by external_code and type
+  * Kraken: fix connection duration for intra stop area connections
+  * OSMReader: improve the osm tags handling for bike
+  * Ed2Nav: fix way filtering
+  * Kraken: add facilities for qgis debuging
+  * Jormungandr: Fix tagging of cheap journeys
+  * Kraken: Some journeys were still begginning by a transfer
+  * Kraken: fix setting of sn params of destination
+  * jormungandr : test of from argument
+  * Merge pull request #206 from l-vincent-l/fix_visible_sa
+  * Ed: set visible value only if we have the column
+  * jormungandr : add comment property
+  * kraken : add comment property
+  * CMake: python tests outputed in differents files
+  * CMake: output all test in xml for jenkins
+  * Jormungandr: manage terminus on stop schedule
+  * Kraken: reverse order of validity pattern on display
+  * Kraken: fix calendar API
+  * Kraken: Penalize objects without cities
+  * Jormungandr: filter corrected in places_nearby for POI
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 20 Mar 2014 17:03:50 +0100
 
 navitia2 (0.89.2) unstable; urgency=low
 
- * Fix jormungandr unit tests
+  * Fix jormungandr unit tests
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 12 Mar 2014 09:03:53 +0100
 
 navitia2 (0.89.1) unstable; urgency=low
 
- * Fix kraken version
+  * Fix kraken version
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 11 Mar 2014 18:03:56 +0100
 
 navitia2 (0.89.0) unstable; urgency=low
 
- * Jormungandr: add status API to v1
- * Jormungandr: fix resource uri
- * connecteur_at : filter modified.
- * kraken: add sort disruption by line and network
- * kraken: add sort line and network by weigth
- * Tyr: add navitia schema to ed tables.
- * Jormungandr: we always compare with lower case
- * kraken : return exceptions dates of associated_calendar
- * jormungandr : manage exceptions dates in stop_schedule
- * kraken : add calendar_exceptions in stop_schedule
- * kraken: add sort line and network by weigth
- * georef : Show reasons why stop points are excluded.
- * Buid fix on get_stop_times
- * Route_schedules: fix for frequency routes
- * Jormungandr: Add journey_pattern API
- * Kraken&Jormungandr: change walking default speed
- * jormungandr : status of stop_time is in response
- * Kraken: add schema navitia during query
- * Ed: Add column "sort" to tables company, network, and "website"
- * Ed: Add column "website" to the table "network"
+  * Jormungandr: add status API to v1
+  * Jormungandr: fix resource uri
+  * connecteur_at : filter modified.
+  * kraken: add sort disruption by line and network
+  * kraken: add sort line and network by weigth
+  * Tyr: add navitia schema to ed tables.
+  * Jormungandr: we always compare with lower case
+  * kraken : return exceptions dates of associated_calendar
+  * jormungandr : manage exceptions dates in stop_schedule
+  * kraken : add calendar_exceptions in stop_schedule
+  * kraken: add sort line and network by weigth
+  * georef : Show reasons why stop points are excluded.
+  * Buid fix on get_stop_times
+  * Route_schedules: fix for frequency routes
+  * Jormungandr: Add journey_pattern API
+  * Kraken&Jormungandr: change walking default speed
+  * jormungandr : status of stop_time is in response
+  * Kraken: add schema navitia during query
+  * Ed: Add column "sort" to tables company, network, and "website"
+  * Ed: Add column "website" to the table "network"
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 11 Mar 2014 17:03:49 +0100
 
 navitia2 (0.88.1) unstable; urgency=low
 
- * corrections on at loggers
+  * corrections on at loggers
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Mar 2014 16:03:08 +0100
 
 navitia2 (0.88.0) unstable; urgency=low
 
- * Stop schedule for calendars
- * Add logger for connector AT
+  * Stop schedule for calendars
+  * Add logger for connector AT
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Mar 2014 16:03:12 +0100
 
 navitia2 (0.87.2) unstable; urgency=low
 
- * Fix connector_at
+  * Fix connector_at
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Mar 2014 14:03:25 +0100
 
 navitia2 (0.87.1) unstable; urgency=low
 
- * Several fixes on connector at
- * Fix an url_for on the build of disruption link
+  * Several fixes on connector at
+  * Fix an url_for on the build of disruption link
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 06 Mar 2014 12:03:31 +0100
 
 navitia2 (0.87.0) unstable; urgency=low
 
- * ed : normalize uri edges
- * ed : save way_id in house_number
- * build: tyr doesn't depends of request, but it's at_connector
- * Jormungandr: change the maximum duration a journey to 24h
- * Tyr: add a new process launching reload_at in case of message for an instance
- * Tyr: add a command for trigger reload of realtime information by kraken
- * Tyr: move aggregatePlaceCommand in a "command" submodule
- * Ed: build admin map
- * Autocomplete : upper-case accented caracters added
- * Jormugandr: default bike speed is 15 km/h (4.1m/s)
+  * ed : normalize uri edges
+  * ed : save way_id in house_number
+  * build: tyr doesn't depends of request, but it's at_connector
+  * Jormungandr: change the maximum duration a journey to 24h
+  * Tyr: add a new process launching reload_at in case of message for an instance
+  * Tyr: add a command for trigger reload of realtime information by kraken
+  * Tyr: move aggregatePlaceCommand in a "command" submodule
+  * Ed: build admin map
+  * Autocomplete : upper-case accented caracters added
+  * Jormugandr: default bike speed is 15 km/h (4.1m/s)
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 05 Mar 2014 18:03:36 +0100
 
 navitia2 (0.86.2) unstable; urgency=low
 
- * Fix bike speed (for real !)
+  * Fix bike speed (for real !)
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 05 Mar 2014 11:03:50 +0100
 
 navitia2 (0.86.1) unstable; urgency=low
 
- * Change bike speed to 15km/h (4.1 m/s)
+  * Change bike speed to 15km/h (4.1 m/s)
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 05 Mar 2014 09:03:56 +0100
 
 navitia2 (0.86.0) unstable; urgency=low
 
- * Kraken: Avoid journey to finish by a transfer
- * Tyr: add aggregate_places command
- * Kraken: speed of a bike is now 20km/h (i.e 5.6m/s)
- * Kraken: fix journey from and to poi.
- * Jormungandr: check if both origin and destination are in the same instance
- * Jormungandr: remove prefix from poi and admin id
- * Jormungandr: add headsign field to v1 interface
+  * Kraken: Avoid journey to finish by a transfer
+  * Tyr: add aggregate_places command
+  * Kraken: speed of a bike is now 20km/h (i.e 5.6m/s)
+  * Kraken: fix journey from and to poi.
+  * Jormungandr: check if both origin and destination are in the same instance
+  * Jormungandr: remove prefix from poi and admin id
+  * Jormungandr: add headsign field to v1 interface
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 04 Mar 2014 18:03:53 +0100
 
 navitia2 (0.85.0) unstable; urgency=low
 
- * Krakeni/Ed: correction on the ways fusion. Ignore those without name
- * SQL: remove useless script
- * Jormungandr: fix previous journey
- * Calendar: add data exposition apis
+  * Krakeni/Ed: correction on the ways fusion. Ignore those without name
+  * SQL: remove useless script
+  * Jormungandr: fix previous journey
+  * Calendar: add data exposition apis
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 04 Mar 2014 11:03:58 +0100
 
 navitia2 (0.84.0) unstable; urgency=low
 
- * Add maintenance API
- * Fix tyr logging
- * Add a file to run tyr
+  * Add maintenance API
+  * Fix tyr logging
+  * Add a file to run tyr
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 03 Mar 2014 15:03:24 +0100
 
 navitia2 (0.83.12) unstable; urgency=low
 
- * Remove the grouping of edges by connected components
+  * Remove the grouping of edges by connected components
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 03 Mar 2014 15:03:58 +0100
 
 navitia2 (0.83.11) unstable; urgency=low
 
- * Fix a bug on merge of ways
+  * Fix a bug on merge of ways
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 03 Mar 2014 10:03:38 +0100
 
 navitia2 (0.83.10) unstable; urgency=low
 
- * Tyr: typo fix
- * Jormungandr: fix id of addresses
- * Ed: change insert of uri of admins, poi, poi_types
- * Ed: Faster merge of ways
+  * Tyr: typo fix
+  * Jormungandr: fix id of addresses
+  * Ed: change insert of uri of admins, poi, poi_types
+  * Ed: Faster merge of ways
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 28 Feb 2014 16:02:35 +0100
 
 navitia2 (0.83.9) unstable; urgency=low
 
- * Fix aggregate places
- * Fix journeys
+  * Fix aggregate places
+  * Fix journeys
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 27 Feb 2014 16:02:24 +0100
 
 navitia2 (0.83.8) unstable; urgency=low
 
- * Fix connector_at
+  * Fix connector_at
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 26 Feb 2014 18:02:19 +0100
 
 navitia2 (0.83.7) unstable; urgency=low
 
- * Disable id encoding
+  * Disable id encoding
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 26 Feb 2014 15:02:43 +0100
 
 navitia2 (0.83.6) unstable; urgency=low
 
- * Add python-requests dependency
+  * Add python-requests dependency
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Feb 2014 18:02:10 +0100
 
 navitia2 (0.83.5) unstable; urgency=low
 
- * fix connector_at
+  * fix connector_at
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Feb 2014 18:02:11 +0100
 
 navitia2 (0.83.4) unstable; urgency=low
 
- * fix packages in connector-at
+  * fix packages in connector-at
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 25 Feb 2014 16:55:57 +0100
 
 navitia2 (0.83.3) unstable; urgency=low
 
- * Deploy connector-at
+  * Deploy connector-at
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 24 Feb 2014 12:55:57 +0100
 
 navitia2 (0.83.2) unstable; urgency=low
 
- * fix qualifier
+  * fix qualifier
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 24 Feb 2014 18:02:57 +0100
 
 navitia2 (0.83.1) unstable; urgency=low
 
- * Fix fare tests
+  * Fix fare tests
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 24 Feb 2014 17:02:50 +0100
 
 navitia2 (0.83.0) unstable; urgency=low
 
- * Tyr: add bitly
- * Jormungandr: new API to get objects from an external_code
- * Fare: Adapt fare to bitly
- * Connector: call external_code API
- * Conector at: Get object from their external_code
- * Connector_at: add config of last-exec-time-file
- * Tyr: set the charset of url.
- * Kraken: fare bug correction
+  * Tyr: add bitly
+  * Jormungandr: new API to get objects from an external_code
+  * Fare: Adapt fare to bitly
+  * Connector: call external_code API
+  * Conector at: Get object from their external_code
+  * Connector_at: add config of last-exec-time-file
+  * Tyr: set the charset of url.
+  * Kraken: fare bug correction
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 24 Feb 2014 12:02:53 +0100
 
 navitia2 (0.82.5) unstable; urgency=low
 
- * Fix tyr
+  * Fix tyr
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 20 Feb 2014 10:02:13 +0100
 
 navitia2 (0.82.4) unstable; urgency=low
 
- * Fare hotfix
+  * Fare hotfix
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 19 Feb 2014 15:02:22 +0100
 
 navitia2 (0.82.3) unstable; urgency=low
 
- * Temporary delete configuration of auth_ttl
+  * Temporary delete configuration of auth_ttl
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 18 Feb 2014 10:02:28 +0100
 
 navitia2 (0.82.2) unstable; urgency=low
 
- * Journeys: Correct V0
+  * Journeys: Correct V0
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 17 Feb 2014 18:02:12 +0100
 
 navitia2 (0.82.1) unstable; urgency=low
 
- * Kraken : Change output dates format
+  * Kraken : Change output dates format
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 17 Feb 2014 12:02:56 +0100
 
 navitia2 (0.82.0) unstable; urgency=low
 
- * Tyr : better logging
- * Tyr: log action for one instance in separate file
- * Ed : import pois of geopal
- * Ed : Improved coordinate conversion
- * Ed : fix a bug on delete connected components
+  * Tyr : better logging
+  * Tyr: log action for one instance in separate file
+  * Ed : import pois of geopal
+  * Ed : Improved coordinate conversion
+  * Ed : fix a bug on delete connected components
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 17:02:56 +0100
 
 navitia2 (0.81.4) unstable; urgency=low
 
- * hotfix for sql functions
+  * hotfix for sql functions
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 11:02:51 +0100
 
 navitia2 (0.81.3) unstable; urgency=low
 
- * Hotfix for stop_point projection
+  * Hotfix for stop_point projection
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 14 Feb 2014 09:02:55 +0100
 
 navitia2 (0.81.1) unstable; urgency=low
 
- * Hotfix for date format in protobuff
+  * Hotfix for date format in protobuff
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 17:02:50 +0100
 
 navitia2 (0.81.0) unstable; urgency=low
 
- * Add email validation to tyr
+  * Add email validation to tyr
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 14:02:24 +0100
 
 navitia2 (0.80.5) unstable; urgency=low
 
- * Fix migration script
+  * Fix migration script
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 11:02:33 +0100
 
 navitia2 (0.80.4) unstable; urgency=low
 
- * Deploy migration sql script
+  * Deploy migration sql script
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 11:02:04 +0100
 
 navitia2 (0.80.3) unstable; urgency=low
 
- * Fix import in script/default
+  * Fix import in script/default
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 10:02:12 +0100
 
 navitia2 (0.80.2) unstable; urgency=low
 
- * Install geopal2ed
+  * Install geopal2ed
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 13 Feb 2014 09:02:29 +0100
 
