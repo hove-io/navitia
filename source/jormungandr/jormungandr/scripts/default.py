@@ -244,9 +244,11 @@ class Script(object):
         return req
 
     def check_missing_journey(self, list_journey, initial_request):
-        """ Check if some particular journeys are missing, and return:
+        """
+        Check if some particular journeys are missing, and return:
                 if it is the case a modified version of the request to be rerun
-                else None"""
+                else None
+        """
         if not "cheap_journey" in self.functional_params \
             or self.functional_params["cheap_journey"].lower() != "true":
             return (None, None)
@@ -373,7 +375,7 @@ class Script(object):
             return resp  # no journeys found, useless to call kraken again
 
         last_best = next((j for j in resp.journeys if j.type == 'rapid'), None)
-        while request["count"] > len(resp.journeys):
+        while request["min_nb_journeys"] > len(resp.journeys):
             if not last_best:  # if no rapid journey has been found, no need to continue
                 break
 
@@ -467,8 +469,8 @@ class Script(object):
             del resp.journeys[idx]
 
         #after all filters, we filter not to give too many results
-        if request["count"] and len(resp.journeys) > request["count"]:
-            del resp.journeys[request["count"]:]
+        if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
+            del resp.journeys[request["max_nb_journeys"]:]
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)

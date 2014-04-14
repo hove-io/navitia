@@ -457,6 +457,8 @@ class Journeys(ResourceUri):
         parser_get.add_argument("car_speed", type=float, default=16.8)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
+        parser_get.add_argument("min_nb_journeys", type=int)
+        parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
         parser_get.add_argument("disruption_active",
@@ -490,6 +492,11 @@ class Journeys(ResourceUri):
             args['destination_mode'] = 'bss'
         if args['origin_mode'] == 'vls':
             args['origin_mode'] = 'bss'
+
+        #count override min_nb_journey or max_nb_journey
+        if 'count' in args and args['count']:
+            args['min_nb_journeys'] = args['count']
+            args['max_nb_journeys'] = args['count']
 
         # for last and first section mode retrocompatibility
         if 'first_section_mode' in args and args['first_section_mode']:
