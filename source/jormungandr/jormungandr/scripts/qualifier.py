@@ -186,9 +186,9 @@ def qualifier_one(journeys, request_type):
         return get_arrival_datetime(journey) <= max_date_time
 
     def journey_departure_constraint(journey, max_mn_shift):
-        arrival_date_time = get_arrival_datetime(standard)
-        max_date_time = arrival_date_time + timedelta(minutes=max_mn_shift)
-        return get_arrival_datetime(journey) <= max_date_time
+        departure_date_time = get_departure_datetime(standard)
+        max_date_time = departure_date_time - timedelta(minutes=max_mn_shift)
+        return get_departure_datetime(journey) >= max_date_time
 
     def journey_goal_constraint(journey, max_mn_shift, r_type):
         if r_type == "arrival":
