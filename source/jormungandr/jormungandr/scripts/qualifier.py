@@ -41,11 +41,12 @@ def has_walk(journey):
     return has_fall_back_mode(journey, response_pb2.Walking)
 
 
-def is_full_bss(journey):
-    """For the moment the best way to identify the bss trips is to
-    check taht there is no public ptransport and a boarding section"""
-    return non_pt_journey(journey) and \
-           any(s.type == response_pb2.boarding for s in journey.sections)
+def has_bss(journey):
+    return any(s.type == response_pb2.BSS_RENT for s in journey.sections)
+
+
+def has_no_bss(journey):
+    return not has_bss(journey)
 
 
 def non_pt_journey(journey):
@@ -282,10 +283,27 @@ def qualifier_one(journeys, request_type):
             ]
         )),
         # less_fallback tends to limit the fallback for biking and bss
-        ("less_fallback_bike_bss", trip_carac([
+        ("less_fallback_bike", trip_carac([
             partial(is_not_possible_cheap),
             partial(has_no_car),
             partial(has_bike),
+            partial(has_no_bss),
+            partial(journey_length_constraint, max_evolution=.40),
+            partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
+            partial(nb_transfers_constraint, delta_transfers=1),
+        ],
+            [
+                nonTC_crit,
+                transfers_crit,
+                duration_crit,
+                best_crit,
+            ]
+        )),
+        # less_fallback tends to limit the fallback for biking and bss
+        ("less_fallback_bss", trip_carac([
+            partial(is_not_possible_cheap),
+            partial(has_no_car),
+            partial(has_bss),
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
             partial(nb_transfers_constraint, delta_transfers=1),
@@ -348,7 +366,8 @@ def qualifier_one(journeys, request_type):
         )),
         ("non_pt_bss", trip_carac([
             partial(is_not_possible_cheap),
-            partial(is_full_bss),
+            partial(non_pt_journey),
+            partial(has_bss),
         ],
             [
                 best_crit
