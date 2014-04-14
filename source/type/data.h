@@ -36,7 +36,7 @@ namespace navitia { namespace type {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 21; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
+    static const unsigned int data_version = 22; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
     unsigned int version = 0; //< Numéro de version des données chargées
     std::atomic<bool> loaded; //< Est-ce que lse données ont été chargées
 
