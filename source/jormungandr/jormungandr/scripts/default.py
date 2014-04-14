@@ -389,6 +389,7 @@ class Script(object):
                 l_date_time_f = datetime.strptime(l_date_time, f_date_time)
                 new_datetime = l_date_time_f + timedelta(minutes=-1)
 
+            # we copy the query not to have side effects
             next_request = copy.deepcopy(pb_req)
             next_request.journeys.datetimes[0] = new_datetime.strftime(f_date_time)
             del next_request.journeys.datetimes[1:]
@@ -397,12 +398,27 @@ class Script(object):
             if len(tmp_resp.journeys) == 0:
                 break  #no more journeys found, we stop
 
+            # we tag the journeys as 'next' or 'prev' journeys
+            for j in tmp_resp.journeys:
+                j.tags.append("next" if request['clockwise'] else "prev")
+
             last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
 
             self.merge_response(resp, tmp_resp)
 
+        self.choose_best(resp)
+
         self.delete_journeys(resp, request)  # last filter
         return resp
+
+    def choose_best(self, resp):
+        """
+        the best journey, is the first rapid, ie the rapid without additional tags ('prev' or 'next')
+        """
+        for j in resp.journeys:
+            if j.type == 'rapid' and not j.tags:
+                j.type = 'best'
+                break  # we want to ensure the unicity of the best
 
     def merge_response(self, initial_response, new_response):
         #since it's not the first call to kraken, some kraken's id

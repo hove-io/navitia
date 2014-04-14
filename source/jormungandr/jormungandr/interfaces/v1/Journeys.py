@@ -196,6 +196,7 @@ journey = {
     'to': PbField(place, attribute='destination'),
     'type': fields.String(),
     'fare': NonNullNested(fare),
+    'tags': fields.List(fields.String),
     "status": enum_type(attribute="message_status")
 }
 

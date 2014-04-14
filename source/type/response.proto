@@ -158,6 +158,7 @@ message Journey {
     optional Place destination = 8;
     optional string type = 9;
     optional Fare fare = 10;
+    repeated string tags = 11;
 }
 
 enum ResponseType {
