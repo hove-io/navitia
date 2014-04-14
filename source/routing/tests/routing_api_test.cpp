@@ -718,10 +718,10 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue bs");
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
 
-    //boarding
+    //getting the bss bike
     section = journey.sections(1);
     BOOST_CHECK(! section.id().empty());
-    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::boarding);
+    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::BSS_RENT);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
     pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
@@ -753,10 +753,10 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
     BOOST_CHECK_EQUAL(pathitem.duration(), 10);
 
-    //landing
+    //putting back the bss bike
     section = journey.sections(3);
     BOOST_CHECK(! section.id().empty());
-    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::landing);
+    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::BSS_PUT_BACK);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
     pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.duration(), bike_sharing_return.total_seconds());
