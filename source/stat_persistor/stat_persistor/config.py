@@ -38,8 +38,8 @@ class Config(object):
 
     def load(self, config_file):
         """
-        charge la configuration depuis le fichier de conf et la valide
-        si elle n'est pas valide une ValueError est levé
+        Initialize from a configuration file.
+        If not valid raise an error.
         """
         confspec = []
         confspec.append('[stat]')
@@ -47,7 +47,7 @@ class Config(object):
 
         confspec.append('[stat_persistor]')
         confspec.append('exchange-name = string(default="navitia")')
-        confspec.append('rt-topic = string(default="stat.sender")')
+        confspec.append('stat-topic = string(default="stat.sender")')
         confspec.append('queue-name = string(default="stat_persistor")')
         confspec.append('broker-url = string(default="amqp://guest:guest@localhost:5672//")')
         confspec.append('log-file = string(default=None)')
@@ -66,7 +66,7 @@ class Config(object):
 
         self.stat_connection_string = config['stat']['connection-string']
         self.broker_url = config['stat_persistor']['broker-url']
-        self.rt_topic = config['stat_persistor']['rt-topic']
+        self.rt_topic = config['stat_persistor']['stat-topic']
         self.queue_name = config['stat_persistor']['queue-name']
         self.exchange_name = config['stat_persistor']['exchange-name']
 

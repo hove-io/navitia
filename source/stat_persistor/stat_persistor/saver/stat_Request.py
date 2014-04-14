@@ -97,8 +97,8 @@ def build_stat_coverage_dict(coverage, request_id):
 def get_datetime_from_timestamp(date_time):
     try:
         request_date_time = from_timestamp(date_time)
-    except:
-        logging.getLogger("Unable to parse date")
+    except ValueError as e:
+        logging.getLogger("Unable to parse date: %s", str(e))
         request_date_time = 0
 
     return request_date_time.strftime('%Y%m%d %H:%M:%S')
