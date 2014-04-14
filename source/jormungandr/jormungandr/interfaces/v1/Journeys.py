@@ -414,7 +414,21 @@ class Journeys(ResourceUri):
     def __init__(self):
         ResourceUri.__init__(self)
         modes = ["walking", "car", "bike", "bss"]
-        types = ["all", "rapid"]
+        types = {
+            "all": "All types",
+            "best": "The best journey",
+            "rapid": "A good trade off between duration, changes and constraint respect",
+            'no_train': "Journey without train",
+            'comfort': "A journey with less changes and walking",
+            'car': "A journey with car to get to the public transport",
+            'less_fallback_walk': "A journey with less walking",
+            'less_fallback_bike_bss': "A journey with less biking",
+            'fastest': "A journey with minimum duration",
+            'non_pt_walk': "A journey without public transport, only walking",
+            'non_pt_bike': "A journey without public transport, only biking",
+            'non_pt_bss': "A journey without public transport, only bike sharing",
+        }
+
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
@@ -443,6 +457,8 @@ class Journeys(ResourceUri):
         parser_get.add_argument("car_speed", type=float, default=16.8)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
+        parser_get.add_argument("min_nb_journeys", type=int)
+        parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
         parser_get.add_argument("disruption_active",
@@ -476,6 +492,11 @@ class Journeys(ResourceUri):
             args['destination_mode'] = 'bss'
         if args['origin_mode'] == 'vls':
             args['origin_mode'] = 'bss'
+
+        #count override min_nb_journey or max_nb_journey
+        if 'count' in args and args['count']:
+            args['min_nb_journeys'] = args['count']
+            args['max_nb_journeys'] = args['count']
 
         # for last and first section mode retrocompatibility
         if 'first_section_mode' in args and args['first_section_mode']:
