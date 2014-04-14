@@ -8,7 +8,7 @@ from jormungandr.renderers import render_from_protobuf
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
-import logging
+from flask import current_app
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
@@ -321,14 +321,16 @@ class Script(object):
 
             if local_resp.response_type == response_pb2.ITINERARY_FOUND:
 
-                #if a specific tag was provided, we tag the journeys before the qualifier
+                # if a specific tag was provided, we tag the journeys
+                # and we don't call the qualifier, it will be done after
+                # with the journeys from the previous query
                 if tag:
                     for j in local_resp.journeys:
                         j.type = tag
-
-                #we qualify the journeys
-                request_type = "arrival" if req.journeys.clockwise else "departure"
-                qualifier_one(local_resp.journeys, request_type)
+                else:
+                    #we qualify the journeys
+                    request_type = "arrival" if req.journeys.clockwise else "departure"
+                    qualifier_one(local_resp.journeys, request_type)
 
                 if not resp:
                     resp = local_resp
@@ -336,7 +338,7 @@ class Script(object):
                     self.merge_response(resp, local_resp)
             if not resp:
                 resp = local_resp
-            logging.getLogger(__name__).debug("for mode {}|{} we have found {} journeys".format(o_mode, d_mode, len(local_resp.journeys)))
+            current_app.logger.debug("for mode {}|{} we have found {} journeys".format(o_mode, d_mode, len(local_resp.journeys)))
 
         self.__fill_uris(resp)
         return resp
@@ -352,7 +354,13 @@ class Script(object):
         if new_request:
             #we have to call kraken again with a modified version of the request
             new_resp = self.call_kraken(new_request, instance, tag)
+
             self.merge_response(resp, new_resp)
+
+            # we qualify the journeys with the previous one
+            # because we need all journeys to qualify them correctly
+            request_type = "arrival" if new_request.journeys.clockwise else "departure"
+            qualifier_one(resp.journeys, request_type)
 
         #we filter the journeys
         self.delete_journeys(resp, original_request)
