@@ -759,10 +759,10 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
         section->mutable_street_network()->set_mode(pbnavitia::Car);
         break;
     case georef::PathItem::TransportCaracteristic::BssTake:
-        section->set_type(pbnavitia::boarding);
+        section->set_type(pbnavitia::BSS_RENT);
         break;
     case georef::PathItem::TransportCaracteristic::BssPutBack:
-        section->set_type(pbnavitia::landing);
+        section->set_type(pbnavitia::BSS_PUT_BACK);
         break;
     default:
         throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
