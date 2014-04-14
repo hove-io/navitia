@@ -56,6 +56,10 @@ def non_pt_journey(journey):
     return has_pt
 
 
+def has_pt(journey):
+    return not non_pt_journey(journey)
+
+
 def min_from_criteria(journey_list, criteria):
     best = None
     for journey in journey_list:
@@ -331,6 +335,7 @@ def qualifier_one(journeys, request_type):
         ("rapid", trip_carac([
             partial(is_not_possible_cheap),
             partial(has_no_car),
+            partial(has_pt),
             partial(journey_length_constraint, max_evolution=.10),
             partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
         ],
