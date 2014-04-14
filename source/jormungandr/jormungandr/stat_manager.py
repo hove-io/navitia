@@ -2,7 +2,7 @@
 from navitiacommon import response_pb2
 from flask_restful import reqparse, abort
 import flask_restful
-from flask import current_app, request
+from flask import current_app, request, g
 from functools import wraps
 from navitiacommon import stat_pb2
 from navitiacommon import request_pb2
@@ -39,20 +39,33 @@ class StatManager(object):
         exchange = kombu.Exchange(self.exchange_name, 'topic', durable = True)
         self.producer = self.connection.Producer(exchange=exchange)
 
+    def param_exists(self, param_name, stat_request):
+        result = False
+        for param in stat_request.parameters:
+            if param.key == param_name:
+                result = True
+                break
+        return result
+
     def manage_stat(self, start_time, func_call):
         """
         Function to fill stat objects (requests, parameters, journeys et sections) sand send them to Broker
         """
         if not self.save_stat:
+            logging.getLogger(__name__).info('Registration of stat is not activated')
             return
+
         end_time = time.time()
-        response_duration = (end_time - start_time) #In seconds
         stat_request = stat_pb2.StatRequest()
-        stat_request.request_duration = int(response_duration * 1000) #In milliseconds
+        stat_request.request_duration = int((end_time - start_time) * 1000) #In milliseconds
         self.fill_request(stat_request, func_call)
         self.fill_coverages(stat_request, func_call)
         self.fill_parameters(stat_request, func_call)
-        if 'journeys' in request.endpoint:
+
+        #We do not save informations of journeys and sections for a request
+        #Isochron (parameter "&to" is absent for API Journeys )
+        if 'journeys' in request.endpoint and \
+                self.param_exists('to', stat_request):
             self.fill_journeys(stat_request, func_call)
         self.publish_request(stat_request)
 
@@ -62,8 +75,10 @@ class StatManager(object):
         """
         dt = datetime.now()
         stat_request.request_date = int(time.mktime(dt.timetuple()))
-        stat_request.user_id = -1
-        stat_request.user_name = ''
+        if g.user is not None and 'user_id' in g.user:
+            stat_request.user_id = g.user['user_id']
+        if g.user is not None and 'user_name' in g.user:
+            stat_request.user_name = g.user['user_id']
         stat_request.application_id = -1
         stat_request.application_name = ''
         stat_request.api = request.endpoint
@@ -71,14 +86,14 @@ class StatManager(object):
         stat_request.host = request.host_url
         if request.remote_addr:
             stat_request.client = request.remote_addr
+        stat_request.response_size = sys.getsizeof(func_call[0])
 
 
     def fill_parameters(self, stat_request, func_call):
         for item in request.args.iteritems():
             stat_parameter = stat_request.parameters.add()
-            if len(item) > 1:
-                stat_parameter.key = item[0]
-                stat_parameter.value = item[1]
+            stat_parameter.key = item[0]
+            stat_parameter.value = item[1]
 
 
     def fill_coverages(self, stat_request, func_call):
@@ -94,6 +109,7 @@ class StatManager(object):
         stat_journey.duration = 0
         stat_journey.nb_transfers = 0
         stat_journey.type = ''
+
 
     def fill_journey(self, stat_journey, resp_journey):
         """"
@@ -173,14 +189,9 @@ class StatManager(object):
 
         if 'from' in resp_section:
             section_from = resp_section['from']
-            if 'embedded_type' in section_from:
-                stat_section.from_embedded_type = section_from['embedded_type']
-
-            if 'id' in section_from:
-                stat_section.from_id = section_from['id']
-
-            if 'name' in section_from:
-                stat_section.from_name = section_from['name']
+            stat_section.from_embedded_type = section_from['embedded_type']
+            stat_section.from_id = section_from['id']
+            stat_section.from_name = section_from['name']
             try:
                 from_lat = section_from[stat_section.from_embedded_type]['coord']['lat']
                 stat_section.from_coord.lat = float(from_lat)
@@ -189,18 +200,13 @@ class StatManager(object):
                 stat_section.from_coord.lon = float(from_lon)
 
             except ValueError as e:
-                    logging.getLogger(__name__).warn("%s", str(e))
+                current_app.logger.warn('Unable to parse coordinates: %s', str(e))
 
         if 'to' in resp_section:
             section_to = resp_section['to']
-            if 'embedded_type' in section_to:
-                stat_section.to_embedded_type = section_to['embedded_type']
-
-            if 'id' in section_to:
-                stat_section.to_id = section_to['id']
-
-            if 'name' in section_to:
-                stat_section.to_name = section_to['name']
+            stat_section.to_embedded_type = section_to['embedded_type']
+            stat_section.to_id = section_to['id']
+            stat_section.to_name = section_to['name']
 
             try:
                 to_lat = section_to[stat_section.to_embedded_type]['coord']['lat']
@@ -210,7 +216,7 @@ class StatManager(object):
                 stat_section.to_coord.lon = float(to_lon)
 
             except ValueError as e:
-                    logging.getLogger(__name__).warn("%s", str(e))
+                current_app.logger.warn('Unable to parse coordinates: %s', str(e))
 
         #Ajouter les communes de départ et arrivé
         self.fill_admin_from_to(stat_section, resp_section)
@@ -246,15 +252,15 @@ class StatManager(object):
                         stat_section.from_admin_name = admin['name']
                         break
 
-            if 'administrative_regions' in resp_section['to'][stat_section.from_embedded_type]:
-                for admin in resp_section['to'][stat_section.from_embedded_type]['administrative_regions']:
+            if 'administrative_regions' in resp_section['to'][stat_section.to_embedded_type]:
+                for admin in resp_section['to'][stat_section.to_embedded_type]['administrative_regions']:
                     if (admin['level'] == 8):
                         stat_section.to_admin_id = admin['id']
                         stat_section.to_admin_name = admin['name']
                         break
 
         except ValueError as e:
-            logging.getLogger(__name__).warn("%s", str(e))
+            current_app.logger.warn('Unable to parse Information: %s', str(e))
 
 
     def fill_section_display_informations(self, stat_section, resp_section):
@@ -287,21 +293,3 @@ class manage_stat_caller:
             self.manager.manage_stat(start_time, func_call)
             return func_call
         return wrapper
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
