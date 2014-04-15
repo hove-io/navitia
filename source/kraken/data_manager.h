@@ -4,9 +4,9 @@
 
 template<typename Data>
 class DataManager{
+public:
     std::shared_ptr<Data> current_data;
 
-    public:
     DataManager() : current_data(std::make_shared<Data>()){}
 
     inline std::shared_ptr<Data> get_data() const{return current_data;}
