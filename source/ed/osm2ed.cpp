@@ -346,24 +346,43 @@ void Visitor::fill_PoiTypes(){
     poi_types["bicycle_rental"] = ed::types::PoiType(5, "station vls");
     poi_types["bicycle_parking"] = ed::types::PoiType(6, "Parking vélo");
     poi_types["parking"] = ed::types::PoiType(7, "Parking");
+    poi_types["par_ride"] = ed::types::PoiType(8, "Parc-relais");
+    poi_types["police"] = ed::types::PoiType(9, "Police, Gendarmerie");
+    poi_types["townhall"] = ed::types::PoiType(10, "Mairie");
+    poi_types["garden"] = ed::types::PoiType(11, "Jardin");
+    poi_types["park"] = ed::types::PoiType(12, "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale");
 }
 
 void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
+    std::string ref_tag;
     if(tags.find("amenity") != tags.end()){
+            ref_tag = "amenity";
+    }
+    if(tags.find("leisure") != tags.end()){
+            ref_tag = "leisure";
+    }
+    if(!ref_tag.empty()){
         auto poi_it = pois.find(osmid);
         if (poi_it != pois.end()){
             return;
         }
-        std::string value = tags.at("amenity");
+        std::string value = tags.at(ref_tag);
         auto it = poi_types.find(value);
         if(it != poi_types.end()){
             ed::types::Poi poi;
+            if((it->first == "parking") && (tags.find("park_ride") != tags.end())){
+                std::string park_ride = tags.at("park_ride");
+                boost::to_lower(park_ride);
+                if(park_ride == "yes"){
+                    it = poi_types.find("par_ride");
+                }
+            }
             poi.poi_type = &it->second;
             if(tags.find("name") != tags.end()){
                 poi.name = tags.at("name");
             }
             for(auto st : tags){
-                if((st.first != "amenity") && (st.first != "name")){
+                if((st.first != ref_tag) && (st.first != "name")){
                     poi.properties[st.first] = st.second;
                  }
              }
