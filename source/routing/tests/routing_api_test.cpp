@@ -126,110 +126,15 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T092000");
 }
 
-namespace ng = navitia::georef;
-struct test_speed_provider {
-    const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return test_default_speed; }
-
-    //to ease test we use easier speed
-    const navitia::flat_enum_map<nt::Mode_e, float> test_default_speed {
-                                                        {{
-                                                            1, //nt::Mode_e::Walking
-                                                            2, //nt::Mode_e::Bike
-                                                            5, //nt::Mode_e::Car
-                                                            2 //nt::Mode_e::Vls
-                                                        }}
-                                                        };
-    bt::time_duration to_duration(float dist, type::Mode_e mode) {
-        return seconds(std::round(dist / get_default_speed()[mode]));
-    }
-};
-
-struct normal_speed_provider {
-    const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return georef::default_speed; }
-    bt::time_duration to_duration(float dist, type::Mode_e mode) {
-        return milliseconds(dist / get_default_speed()[mode] * 1000);
-    }
-};
 
 template <typename speed_provider_trait>
 struct streetnetworkmode_fixture : public routing_api_data<speed_provider_trait> {
 
     pbnavitia::Response make_response() {
-        navitia::georef::StreetNetwork sn_worker(this->b.data.geo_ref);
-        nr::RAPTOR raptor(this->b.data);
+        navitia::georef::StreetNetwork sn_worker(this->b.data->geo_ref);
+        nr::RAPTOR raptor(*(this->b.data));
         return nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false);
     }
-
-    bt::time_duration to_duration(double dist, type::Mode_e mode) {
-        return speed_trait.to_duration(dist, mode);
-    }
-
-    void add_edges(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to, float dist, type::Mode_e mode) {
-        boost::add_edge(idx_from + geo_ref.offsets[mode],
-                        idx_to + geo_ref.offsets[mode],
-                        georef::Edge(edge_idx, to_duration(dist, mode)),
-                        geo_ref.graph);
-        boost::add_edge(idx_to + geo_ref.offsets[mode],
-                        idx_from + geo_ref.offsets[mode],
-                        georef::Edge(edge_idx, to_duration(dist, mode)),
-                        geo_ref.graph);
-    }
-    void add_edges(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to, const type::GeographicalCoord& a, const type::GeographicalCoord& b, type::Mode_e mode) {
-        add_edges(edge_idx, geo_ref, idx_from, idx_to, a.distance_to(b), mode);
-    }
-
-    const bt::time_duration bike_sharing_pickup = seconds(30);
-    const bt::time_duration bike_sharing_return = seconds(45);
-
-    void add_bike_sharing_edge(int edge_idx, georef::GeoRef& geo_ref, int idx_from, int idx_to) {
-        boost::add_edge(idx_from + geo_ref.offsets[type::Mode_e::Walking],
-                        idx_to + geo_ref.offsets[type::Mode_e::Bike],
-                        georef::Edge(edge_idx, bike_sharing_pickup),
-                        geo_ref.graph);
-        boost::add_edge(idx_to + geo_ref.offsets[type::Mode_e::Bike],
-                        idx_from + geo_ref.offsets[type::Mode_e::Walking],
-                        georef::Edge(edge_idx, bike_sharing_return),
-                        geo_ref.graph);
-    }
-
-    const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return speed_trait.get_default_speed(); }
-
-
-    int AA = 0;
-    int GG = 1;
-    int HH = 2;
-    int II = 3;
-    int JJ = 4;
-    int KK = 5;
-    int BB = 6;
-    int CC = 7;
-    int FF = 8;
-    int EE = 9;
-    int RR = 10;
-    int SS = 11;
-
-    type::GeographicalCoord A = {120, 80, false};
-    type::GeographicalCoord G = {100, 80, false};
-    type::GeographicalCoord H = {100, 100, false};
-    type::GeographicalCoord I = {70, 100, false};
-    type::GeographicalCoord J = {70, 120, false};
-    type::GeographicalCoord K = {10, 120, false};
-    type::GeographicalCoord B = {10, 30, false};
-    type::GeographicalCoord C = {220, 30, false};
-    type::GeographicalCoord F = {220, 50, false};
-    type::GeographicalCoord E = {120, 50, false};
-    type::GeographicalCoord R = {210, 80, false};
-    type::GeographicalCoord S = {10, 10, false};
-
-    ed::builder b = {"20120614"};
-    type::EntryPoint origin;
-    type::EntryPoint destination;
-    std::vector<std::string> datetimes = {"20120614T080000", "20120614T090000"};
-    std::vector<std::string> forbidden;
-
-    double distance_ag;
-
-    speed_provider_trait speed_trait;
 };
 
 // Walking

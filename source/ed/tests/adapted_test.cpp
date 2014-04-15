@@ -206,9 +206,9 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     messages.push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply(messages, *b.data.pt_data);
+    loader.apply(messages, b.data.pt_data);
 
-    vj = b.data.pt_data->vehicle_journeys[0];
+    vj = b.data.pt_data.vehicle_journeys[0];
 
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
 //    BOOST_CHECK_EQUAL(*vj->validity_pattern,  ValidityPattern(b.begin, "1111111"));

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/functions.h"
 #include "type/data.h"
 #include <boost/date_time/gregorian_calendar.hpp>
 #include "georef/georef.h"
@@ -56,13 +57,13 @@ struct builder{
     std::map<std::string, navitia::type::Network *> nts;
     boost::gregorian::date begin;
 
-    navitia::type::Data data;
+    std::unique_ptr<navitia::type::Data> data = std::make_unique<navitia::type::Data>();
     navitia::georef::GeoRef street_network;
 
 
     /// Il faut préciser là date de début des différents validity patterns
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
-        data.meta->production_date = {begin, begin + boost::gregorian::years(1)};
+        data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
     }
 
     /// Crée un vehicle journey
