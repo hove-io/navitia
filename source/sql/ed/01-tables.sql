@@ -127,7 +127,9 @@ CREATE TABLE IF NOT EXISTS navitia.poi (
     name TEXT NOT NULL,
     uri TEXT NOT NULL,
     visible BOOLEAN NOT NULL DEFAULT True,
-    poi_type_id BIGINT NOT NULL REFERENCES navitia.poi_type
+    poi_type_id BIGINT NOT NULL REFERENCES navitia.poi_type,
+    address_name TEXT,
+    address_number TEXT
 );
 
 
