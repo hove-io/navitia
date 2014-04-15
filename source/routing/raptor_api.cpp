@@ -75,18 +75,23 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
         // La marche à pied initiale si on avait donné une coordonnée
         if(path.items.size() > 0 && ! path.items.front().stop_points.empty()) {
-            auto temp = worker.get_path(path.items.front().stop_points.front()->idx);
-            if(temp.path_items.size() > 0) {
-                //because of projection problem, the walking path might not join exactly the routing one
-                nt::GeographicalCoord routing_first_coord = path.items.front().stop_points.front()->coord;
-                if (temp.path_items.back().coordinates.back() != routing_first_coord) {
-                    //if it's the case, we artificialy add the missing segment
-                    temp.path_items.back().coordinates.push_back(routing_first_coord);
-                }
+            const auto& departure_stop_point = path.items.front().stop_points.front();
+            //for stop areas, we don't want to display the fallback section if start
+            // from one of the stop area's stop point
+            if (! (origin.type == nt::Type_e::StopArea && origin.uri == departure_stop_point->stop_area->uri)) {
+                auto temp = worker.get_path(departure_stop_point->idx);
+                if(temp.path_items.size() > 0) {
+                    //because of projection problem, the walking path might not join exactly the routing one
+                    nt::GeographicalCoord routing_first_coord = departure_stop_point->coord;
+                    if (temp.path_items.back().coordinates.back() != routing_first_coord) {
+                        //if it's the case, we artificialy add the missing segment
+                        temp.path_items.back().coordinates.push_back(routing_first_coord);
+                    }
 
-                const auto walking_time = temp.duration;
-                departure_time = path.items.front().departure - walking_time;
-                fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure_time);
+                    const auto walking_time = temp.duration;
+                    departure_time = path.items.front().departure - walking_time;
+                    fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure_time);
+                }
             }
         }
 
@@ -177,18 +182,23 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         }
         // La marche à pied finale si on avait donné une coordonnée
         if(path.items.size() > 0 && ! path.items.back().stop_points.empty()) {
-            auto temp = worker.get_path(path.items.back().stop_points.back()->idx, true);
-            if(temp.path_items.size() > 0) {
-               //add a junction between the routing path and the walking one if needed
-                nt::GeographicalCoord routing_last_coord = path.items.back().stop_points.back()->coord;
-                if (temp.path_items.front().coordinates.front() != routing_last_coord) {
-                    temp.path_items.front().coordinates.push_front(routing_last_coord);
-                }
+            const auto& arrival_stop_point = path.items.back().stop_points.back();
+            //for stop areas, we don't want to display the fallback section if start
+            // from one of the stop area's stop point
+            if (! (origin.type == nt::Type_e::StopArea && origin.uri == arrival_stop_point->stop_area->uri)) {
+                auto temp = worker.get_path(arrival_stop_point->idx, true);
+                if(temp.path_items.size() > 0) {
+                   //add a junction between the routing path and the walking one if needed
+                    nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
+                    if (temp.path_items.front().coordinates.front() != routing_last_coord) {
+                        temp.path_items.front().coordinates.push_front(routing_last_coord);
+                    }
 
-                auto begin_section_time = arrival_time;
-                fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
-                        begin_section_time, show_codes);
-                arrival_time = arrival_time + temp.duration;
+                    auto begin_section_time = arrival_time;
+                    fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
+                            begin_section_time, show_codes);
+                    arrival_time = arrival_time + temp.duration;
+                }
             }
         }
 

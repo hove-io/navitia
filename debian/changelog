@@ -1,6 +1,12 @@
+navitia2 (0.93.3) unstable; urgency=low
+
+  * Kraken: Fix journeys beginning by a stop_area
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 15 Apr 2014 15:04:36 +0100
+
 navitia2 (0.91.2) unstable; urgency=low
 
-  * Jormungandr: rapid journeys cannot be non_pt 
+  * Jormungandr: rapid journeys cannot be non_pt
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 14 Apr 2014 18:04:49 +0100
 
