@@ -302,14 +302,17 @@ void Visitor::insert_poitypes(){
 void Visitor::insert_pois(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id"});
     for(auto poi : pois){
+        Node n;
         try{
-            Node n = nodes.at(poi.first);
-            std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->persistor.lotus.insert({std::to_string(poi.second.id),std::to_string(poi.second.weight),
-                                        point, poi.second.name, "poi:" + std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
-        }catch(...){
-            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
+            n = nodes.at(poi.first);
+        }catch(const std::out_of_range& e){
+            LOG4CPLUS_INFO(logger, "Unable to find node [" << poi.first<<"] "<<e.what());
+            continue;
         }
+        std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
+        this->persistor.lotus.insert({std::to_string(poi.second.id),std::to_string(poi.second.weight),
+                                    point, poi.second.name, "poi:" + std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
+
     }
     persistor.lotus.finish_bulk_insert();
 }
@@ -317,12 +320,14 @@ void Visitor::insert_pois(){
 void Visitor::insert_properties(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
     for(const auto& poi : pois){
-        if (poi.first > nodes.size()){
-            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
-        }else{
-            for(const auto& property : poi.second.properties){
-                this->persistor.lotus.insert({std::to_string(poi.second.id),property.first, property.second});
-            }
+        try{
+            nodes.at(poi.first);
+        }catch(const std::out_of_range& e){
+            LOG4CPLUS_INFO(logger, "Unable to find node [" << poi.first<<"] "<<e.what());
+            continue;
+        }
+        for(const auto& property : poi.second.properties){
+            this->persistor.lotus.insert({std::to_string(poi.second.id),property.first, property.second});
         }
     }
     persistor.lotus.finish_bulk_insert();
