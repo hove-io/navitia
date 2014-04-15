@@ -190,7 +190,7 @@ void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
 
 void EdPersistor::insert_pois(const ed::PoiPoiType& data){
     this->lotus.prepare_bulk_insert("navitia.poi",
-    {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible"});
+    {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible", "address_number", "address_name"});
     for(const auto& itm : data.pois) {
         std::string poi_type("NULL");
         if(itm.second->poi_type != nullptr){
@@ -199,7 +199,8 @@ void EdPersistor::insert_pois(const ed::PoiPoiType& data){
         this->lotus.insert({std::to_string(itm.second->id),
                 std::to_string(itm.second->weight),
                 this->to_geographic_point(itm.second->coord),
-                itm.second->name, "poi:" + itm.first, poi_type, std::to_string(itm.second->visible)});
+                itm.second->name, "poi:" + itm.first, poi_type, std::to_string(itm.second->visible),
+                itm.second->address_number, itm.second->address_name});
     }
     lotus.finish_bulk_insert();
 }
