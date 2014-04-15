@@ -84,6 +84,7 @@ struct Visitor{
 
     std::unordered_map<uint64_t, ed::types::Poi> pois;
     std::unordered_map<std::string, ed::types::PoiType> poi_types;
+    std::vector<std::string> properties_to_ignore;
 
     int total_ways;
     int total_house_number;
@@ -130,6 +131,7 @@ struct Visitor{
     void build_relation();
  
     void fill_PoiTypes();
+    void fill_properties_to_ignore();
     void fill_pois(const uint64_t osmid, const CanalTP::Tags & tags);
     void insert_poitypes();
     void insert_pois();
@@ -139,6 +141,7 @@ struct Visitor{
     /// 1/ être une intersaction
     /// 2/ ne pas avoir déjà été inséré
     void insert_if_needed(uint64_t ref);
+    bool is_property_to_ignore(const std::string& tag);
 };
 
 }}
