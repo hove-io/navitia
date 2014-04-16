@@ -348,7 +348,7 @@ void Visitor::fill_PoiTypes(){
     poi_types["bicycle_rental"] = ed::types::PoiType(5, "station vls");
     poi_types["bicycle_parking"] = ed::types::PoiType(6, "Parking vélo");
     poi_types["parking"] = ed::types::PoiType(7, "Parking");
-    poi_types["par_ride"] = ed::types::PoiType(8, "Parc-relais");
+    poi_types["park_ride"] = ed::types::PoiType(8, "Parc-relais");
     poi_types["police"] = ed::types::PoiType(9, "Police, Gendarmerie");
     poi_types["townhall"] = ed::types::PoiType(10, "Mairie");
     poi_types["garden"] = ed::types::PoiType(11, "Jardin");
@@ -396,7 +396,7 @@ void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
                 std::string park_ride = tags.at("park_ride");
                 boost::to_lower(park_ride);
                 if(park_ride == "yes"){
-                    it = poi_types.find("par_ride");
+                    it = poi_types.find("park_ride");
                 }
             }
             poi.poi_type = &it->second;
