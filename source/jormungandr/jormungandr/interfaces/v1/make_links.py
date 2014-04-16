@@ -210,16 +210,14 @@ class add_id_links(generate_links):
         return wrapper
 
     def get_objets(self, data, collection_name=None):
-        if isinstance(data, dict)or \
-           isinstance(data, OrderedDict):
+        if hasattr(data, 'keys'):
             if "id" in data.keys() \
                and (not "href" in data.keys()) \
                and collection_name:
                 self.data.add(collection_name)
             for key, value in data.iteritems():
-                c_name = key
-                self.get_objets(value, c_name)
-        if isinstance(data, tuple) or isinstance(data, list):
+                self.get_objets(value, key)
+        if isinstance(data, (list, tuple)):
             for item in data:
                 self.get_objets(item, collection_name)
 
