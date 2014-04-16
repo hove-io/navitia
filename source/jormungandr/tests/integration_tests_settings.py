@@ -1,7 +1,5 @@
 # encoding: utf-8
-import os
-
-
-INI_FILE = os.path.dirname(os.path.realpath(__file__)) + "/test_jormungandr.ini"
-
+krakens_dir = '/home/antoine/dev/kraken/debug/tests'
+INSTANCES_DIR = krakens_dir
+START_MONITORING_THREAD = False
 
