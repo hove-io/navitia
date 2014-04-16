@@ -10,18 +10,26 @@ import re
 some small functions to check the service responses
 """
 
-def check_and_get_as_dict(tester, url):
+
+def check_url(tester, url):
     """Test url status code to 200 and if valid format response as json"""
     #tester = app.test_client(tester)
     response = tester.get(url)
 
     assert response
     eq_(response.status_code, 200)
+    return response
+
+
+def check_and_get_as_dict(tester, url, display=False):
+    """Test url status code to 200 and if valid format response as json"""
+    response = check_url(tester, url)
 
     assert response.data
     json_response = json.loads(response.data)
 
-    logging.debug("loaded response : " + str(json_response))
+    if display:
+        logging.debug("loaded response : " + str(json_response))
 
     assert json_response
     return json_response
@@ -39,11 +47,13 @@ def get_not_null(dict, field):
 
 days_regexp = re.compile("^(0|1){366}$")
 
+
 def is_valid_days(days):
    match = days_regexp.match(days)
    if not match:
         return None
    return match
+
 
 def is_valid_datetime(str):
     """
@@ -102,6 +112,9 @@ def is_valid_bool(str):
 
 
 def get_links_dict(response):
+    """
+    get links as dict ordered by 'rel'
+    """
     raw_links = get_not_null(response, "links")
 
     #create a dict with the 'rel' field as key
@@ -110,3 +123,28 @@ def get_links_dict(response):
     return links
 
 
+def check_links(object, tester):
+    """
+    get the links as dict ordered by 'rel' and check:
+     - all links must have the attributes:
+       * 'href' --> valid url if not templated
+       * 'rel' --> not empty
+       * 'title' --> optional (? don't we have to ensure the title ?)
+       * templated --> optional but must be a boolean
+    """
+    links = get_links_dict(object)
+
+    for link_name, link in links.iteritems():
+        assert 'href' in link, "no href in link"
+
+        if 'templated' in link and not link['templated']:
+            assert is_valid_bool(link['templated'])
+            assert check_url(tester, link['href']), "href's link must be a valid url"
+
+        assert 'rel' in link
+        assert link['rel']
+
+        #assert 'title' in link
+        #assert link['title']
+
+    return links

@@ -3,6 +3,7 @@
 #include "kraken/data_manager.h"
 #include "kraken/kraken_zmq.h"
 
+#include "ed/build_helper.h"
 #include <zmq.hpp>
 #include <boost/thread.hpp>
 
@@ -11,9 +12,9 @@
  */
 struct mock_kraken {
 
-    mock_kraken(navitia::type::Data* d, const std::string& name) {
+    mock_kraken(ed::builder& d, const std::string& name) {
         DataManager<navitia::type::Data> data_manager;
-        data_manager.get_data().reset(d);
+        data_manager.current_data.reset(d.data.release());
 
         boost::thread_group threads;
         // Prepare our context and sockets

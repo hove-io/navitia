@@ -64,6 +64,7 @@ struct builder{
     /// Il faut préciser là date de début des différents validity patterns
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
         data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
+		data->loaded = true;
     }
 
     /// Crée un vehicle journey

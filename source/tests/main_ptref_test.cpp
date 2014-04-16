@@ -7,7 +7,7 @@ int main() {
 
     routing_api_data<normal_speed_provider> routing_data;
 
-    mock_kraken kraken(routing_data.b.data.release(), "main_ptref_test");
+    mock_kraken kraken(routing_data.b, "main_ptref_test");
 
 
     return 0;
