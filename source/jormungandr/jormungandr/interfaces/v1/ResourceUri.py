@@ -8,7 +8,6 @@ from flask import url_for
 from flask.ext.restful.utils import unpack
 from jormungandr.authentification import authentification_required
 import navitiacommon.type_pb2 as type_pb2
-from collections import deque
 
 
 class ResourceUri(Resource):
