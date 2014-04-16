@@ -13,7 +13,6 @@ struct mock_kraken {
 
     mock_kraken(navitia::type::Data* d, const std::string& name) {
         DataManager<navitia::type::Data> data_manager;
-//        data_manager.current_data.reset(d);
         data_manager.get_data().reset(d);
 
         boost::thread_group threads;
