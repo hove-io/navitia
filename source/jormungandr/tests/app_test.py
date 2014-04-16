@@ -1,7 +1,7 @@
 import os
 os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
     + '/integration_tests_settings.py'
-from utils import *
+from tests_mechanism import *
 from jormungandr import i_manager, app
 from nose.tools import *
 from check_utils import *
@@ -40,34 +40,6 @@ def read(request):
     return to_return
 
 
-def check_valid_calendar(cal):
-    get_not_null(cal, "id")
-    get_not_null(cal, "name")
-    pattern = get_not_null(cal, "week_pattern")
-    is_valid_bool(get_not_null(pattern, "monday"))  # check one field in pattern
-
-    validity_pattern = get_not_null(cal, "validity_pattern")
-    assert len(validity_pattern) > 0
-
-    beginning_date = get_not_null(validity_pattern, "beginning_date")
-    assert is_valid_date(beginning_date)
-
-    days = get_not_null(validity_pattern, "days")
-    assert is_valid_days(days)
-
-    exceptions = get_not_null(cal, "exceptions")
-    assert len(exceptions) > 0
-
-    active_periods = get_not_null(cal, "active_periods")
-    assert len(active_periods) > 0
-
-    beg = get_not_null(active_periods[0], "begin")
-    assert is_valid_date(beg)
-
-    end = get_not_null(active_periods[0], "end")
-    assert is_valid_date(end)
-
-    #check links
 
 """
 class TestJormun(MockInstance):
