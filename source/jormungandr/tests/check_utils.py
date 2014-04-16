@@ -1,4 +1,4 @@
-from jormungandr import app
+
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -12,7 +12,7 @@ some small functions to check the service responses
 
 def check_and_get_as_dict(tester, url):
     """Test url status code to 200 and if valid format response as json"""
-    tester = app.test_client(tester)
+    #tester = app.test_client(tester)
     response = tester.get(url)
 
     assert response

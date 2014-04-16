@@ -132,5 +132,3 @@ class TestJormun(MockInstance):
         assert calendars
         check_valid_calendar(calendars[0])
 """
-
-
