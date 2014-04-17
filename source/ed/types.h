@@ -374,7 +374,9 @@ struct Poi{
     PoiType* poi_type;
     navitia::type::GeographicalCoord coord;
     std::map<std::string, std::string> properties;
-    Poi(): id(0), name(""), weight(0), visible(true), poi_type(nullptr){}
+    std::string address_number;
+    std::string address_name;
+    Poi(): id(0), name(""), weight(0), visible(true), poi_type(nullptr), address_number(""), address_name(""){}
 
 };
 

@@ -403,11 +403,13 @@ struct POI : public nt::Nameable, nt::Header{
     std::vector<Admin*> admin_list;
     std::map<std::string, std::string> properties;
     nt::idx_t poitype_idx;
+    int address_number;
+    std::string address_name;
 
-    POI(): weight(0), poitype_idx(type::invalid_idx){}
+    POI(): weight(0), poitype_idx(type::invalid_idx), address_number(-1){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri &name & weight & coord & admin_list & properties & poitype_idx & visible;
+        ar &idx & uri &name & weight & coord & admin_list & properties & poitype_idx & visible & address_number & address_name;
     }
 
     std::vector<type::idx_t> get(type::Type_e type, const GeoRef &) const;

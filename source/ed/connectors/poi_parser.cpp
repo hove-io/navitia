@@ -51,6 +51,8 @@ void PoiParser::fill_poi(){
     int lat_c = reader.get_pos_col("poi_lat");
     int lon_c = reader.get_pos_col("poi_lon");
     int type_id_c = reader.get_pos_col("poi_type_id");
+    int address_number_c = reader.get_pos_col("poi_address_number");
+    int address_name_c = reader.get_pos_col("poi_address_name");
 
     while(!reader.eof()){
         std::vector<std::string> row = reader.next();
@@ -79,6 +81,12 @@ void PoiParser::fill_poi(){
                     }
                     poi->poi_type = poi_type->second;
                     poi->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[lon_c]), str_to_double(row[lat_c])));
+                    if (reader.is_valid(address_number_c, row)){
+                        poi->address_number = row[address_number_c];
+                    }
+                    if (reader.is_valid(address_name_c, row)){
+                        poi->address_name = row[address_name_c];
+                    }
                     this->data.pois[row[id_c]] = poi;
                 }
             }

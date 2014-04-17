@@ -671,14 +671,23 @@ void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, "
             "ST_Y(poi.coord::geometry) as lat, poi.visible as visible, "
-            "poi.name, poi.uri, poi.poi_type_id FROM navitia.poi poi, "
+            "poi.name, poi.uri, poi.poi_type_id, poi.address_number, "
+            "poi.address_name FROM navitia.poi poi, "
             "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        std::string string_number;
+        int int_number;
         navitia::georef::POI* poi = new navitia::georef::POI();
         const_it["uri"].to(poi->uri);
         const_it["name"].to(poi->name);
         const_it["id"].to(poi->id);
+        const_it["address_number"].to(string_number);
+        int_number = str_to_int(string_number);
+        if(int_number > -1){
+            poi->address_number = int_number;
+        }
+        const_it["address_name"].to(poi->address_name);
         poi->coord.set_lon(const_it["lon"].as<double>());
         poi->coord.set_lat(const_it["lat"].as<double>());
         poi->visible = const_it["visible"].as<bool>();

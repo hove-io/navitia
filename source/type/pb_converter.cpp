@@ -907,7 +907,17 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
             fill_pb_object(admin, data,  poi->add_administrative_regions(),
                            depth-1, now, action_period);
         }
-        fill_pb_object(geopoi->coord, data, poi->mutable_address(), depth - 1, now, action_period);
+        pbnavitia::Address * pb_address = poi->mutable_address();
+        if(geopoi->address_name.empty()){
+            fill_pb_object(geopoi->coord, data, pb_address, depth - 1, now, action_period);
+        }else{
+            pb_address->set_name(geopoi->address_name);
+            pb_address->set_house_number(geopoi->address_number);
+            if(geopoi->coord.is_initialized()) {
+                pb_address->mutable_coord()->set_lat(geopoi->coord.lat());
+                pb_address->mutable_coord()->set_lon(geopoi->coord.lon());
+            }
+        }
     }
     for(const auto& propertie : geopoi->properties){
         pbnavitia::Code * pb_code = poi->add_properties();
