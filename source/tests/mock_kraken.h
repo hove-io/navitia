@@ -25,10 +25,8 @@ struct mock_kraken {
         zmq::socket_t workers(context, ZMQ_DEALER);
         workers.bind("inproc://workers");
 
-        // Launch pool of worker threads
-        for (int thread_nbr = 0; thread_nbr < data_manager.get_data()->nb_threads; ++thread_nbr) {
-            threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager)));
-        }
+        // Launch only one thread for the tests
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager)));
 
         // Connect work threads to client threads via a queue
         do {

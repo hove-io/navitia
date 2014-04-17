@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include "ed/build_helper.h"
 #include "calendar/calendar_api.h"
+#include "type/pt_data.h"
 
 /*
                                             Mars 2014

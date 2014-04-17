@@ -22,39 +22,39 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     b.vj("RATP", "A", "11111111", "", true, "")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
     b.vj("RATP", "B", "11111111", "", true, "")("stop4", 8000, 8050)("stop2", 8300, 8350)("stop5", 8400, 8450);
     b.generate_dummy_basis();
-    b.data.pt_data->index();
-    b.data.build_raptor();
-    b.data.build_uri();
-    b.data.meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
 
-    RAPTOR raptor(b.data);
+    RAPTOR raptor(*b.data);
 
     //fare data initialization
     boost::gregorian::date start_date(boost::gregorian::from_undelimited_string("20110101"));
     boost::gregorian::date end_date(boost::gregorian::from_undelimited_string("20350101"));
-    b.data.fare->fare_map["price1"].add(start_date, end_date, fare::Ticket("price1", "Ticket vj 1", 100, "125"));
-    b.data.fare->fare_map["price2"].add(start_date, end_date, fare::Ticket("price2", "Ticket vj 2", 200, "175"));
+    b.data->fare->fare_map["price1"].add(start_date, end_date, fare::Ticket("price1", "Ticket vj 1", 100, "125"));
+    b.data->fare->fare_map["price2"].add(start_date, end_date, fare::Ticket("price2", "Ticket vj 2", 200, "175"));
 
     // dummy transition
     fare::Transition transitionA;
     fare::State endA;
     endA.line = "A";
     transitionA.ticket_key = "price1";
-    auto endA_v = boost::add_vertex(endA, b.data.fare->g);
-    boost::add_edge(b.data.fare->begin_v, endA_v, transitionA, b.data.fare->g);
+    auto endA_v = boost::add_vertex(endA, b.data->fare->g);
+    boost::add_edge(b.data->fare->begin_v, endA_v, transitionA, b.data->fare->g);
 
     fare::Transition transitionB;
     fare::State endB;
     endB.line = "B";
     transitionB.ticket_key = "price2";
-    auto endB_v = boost::add_vertex(endB, b.data.fare->g);
-    boost::add_edge(b.data.fare->begin_v, endB_v, transitionB, b.data.fare->g);
+    auto endB_v = boost::add_vertex(endB, b.data->fare->g);
+    boost::add_edge(b.data->fare->begin_v, endB_v, transitionB, b.data->fare->g);
 
     //call to raptor
     type::EntryPoint origin(type::Type_e::StopArea, "stop1");
     type::EntryPoint destination(type::Type_e::StopArea, "stop5");
 
-    georef::StreetNetwork sn_worker(*b.data.geo_ref);
+    georef::StreetNetwork sn_worker(*b.data->geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T080000"}, true, type::AccessibiliteParams(), {}, sn_worker, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -102,18 +102,18 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     b.vj("RATP", "A", "11111111", "", true, "")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
     b.vj("RATP", "B", "11111111", "", true, "")("stop4", 8000, 8050)("stop2", 8300, 8350)("stop5", 8400, 8450);
     b.generate_dummy_basis();
-    b.data.pt_data->index();
-    b.data.build_raptor();
-    b.data.build_uri();
-    b.data.meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
 
-    RAPTOR raptor(b.data);
+    RAPTOR raptor(*b.data);
 
     //call to raptor
     type::EntryPoint origin(type::Type_e::StopArea, "stop1");
     type::EntryPoint destination(type::Type_e::StopArea, "stop5");
 
-    georef::StreetNetwork sn_worker(*b.data.geo_ref);
+    georef::StreetNetwork sn_worker(*b.data->geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T080000"}, true, type::AccessibiliteParams(), {}, sn_worker, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);

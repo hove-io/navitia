@@ -13,7 +13,7 @@ struct data_set {
 
     data_set() : b("20140101") {
         //add calendar
-        navitia::type::Calendar* wednesday_cal {new navitia::type::Calendar(b.data->meta.production_date.begin())};
+        navitia::type::Calendar* wednesday_cal {new navitia::type::Calendar(b.data->meta->production_date.begin())};
         wednesday_cal->name = "the wednesday calendar";
         wednesday_cal->uri = "wednesday";
         wednesday_cal->active_periods.push_back(period("20140101", "20140911"));
@@ -24,9 +24,9 @@ struct data_set {
             exd.type = navitia::type::ExceptionDate::ExceptionType::sub;
             wednesday_cal->exceptions.push_back(exd);
         }
-        b.data->pt_data.calendars.push_back(wednesday_cal);
+        b.data->pt_data->calendars.push_back(wednesday_cal);
 
-        navitia::type::Calendar* monday_cal {new navitia::type::Calendar(b.data->meta.production_date.begin())};
+        navitia::type::Calendar* monday_cal {new navitia::type::Calendar(b.data->meta->production_date.begin())};
         monday_cal->name = "the monday calendar";
         monday_cal->uri = "monday";
         monday_cal->active_periods.push_back(period("20140105", "20140911"));
@@ -37,7 +37,7 @@ struct data_set {
             exd.type = navitia::type::ExceptionDate::ExceptionType::sub;
             monday_cal->exceptions.push_back(exd);
         }
-        b.data->pt_data.calendars.push_back(monday_cal);
+        b.data->pt_data->calendars.push_back(monday_cal);
 
         //add lines
         b.vj("network:R", "line:A", "", "", true, "vj1")
@@ -47,7 +47,7 @@ struct data_set {
         b.lines["line:A"]->calendar_list.push_back(monday_cal);
         b.data->build_uri();
 
-        navitia::type::VehicleJourney* vj = b.data->pt_data.vehicle_journeys_map["vj1"];
+        navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];
         vj->validity_pattern->add(boost::gregorian::from_undelimited_string("20140101"),
                                   boost::gregorian::from_undelimited_string("20140111"), monday_cal->week_pattern);
 
