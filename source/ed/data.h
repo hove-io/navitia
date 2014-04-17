@@ -40,8 +40,7 @@ public:
     std::vector<types::JourneyPatternPointConnection*> journey_pattern_point_connections;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
-    /// Liste des alias et synonymes
-    std::map<std::string, std::string> alias;
+    /// Liste des synonymes
     std::map<std::string, std::string> synonymes;
 
     //fare:
