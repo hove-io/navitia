@@ -2,6 +2,8 @@ import os
 import subprocess
 from check_utils import *
 
+os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
+    + '/integration_tests_settings.py'
 from jormungandr import app
 from jormungandr.instance_manager import InstanceManager
 
@@ -29,13 +31,13 @@ class AbstractTestFixture:
         krakens_exe = cls.data_sets
         for kraken_name in krakens_exe:
             exe = os.path.join(krakens_dir, kraken_name)
-            logging.info("spawning " + exe)
+            logging.debug("spawning " + exe)
             fdr, fdw = os.pipe()
             kraken = subprocess.Popen(exe, stderr=fdw, stdout=fdw, close_fds=True)
 
             cls.krakens_pool[kraken_name] = kraken
 
-        logging.info("{} kraken spawned".format(len(cls.krakens_pool)))
+        logging.debug("{} kraken spawned".format(len(cls.krakens_pool)))
 
         # we want to wait for all data to be loaded
         all_good = True
@@ -55,7 +57,7 @@ class AbstractTestFixture:
     @classmethod
     def kill_all_krakens(cls):
         for name, kraken_process in cls.krakens_pool.iteritems():
-            logging.info("killing " + name)
+            logging.debug("killing " + name)
             kraken_process.kill()
 
     @classmethod
@@ -65,7 +67,7 @@ class AbstractTestFixture:
         conf_template_str = conf_template.read()
         for name in cls.krakens_pool:
             f = open(os.path.join(krakens_dir, name) + '.ini', 'w')
-            logging.info("writing ini file {} for {}".format(f.name, name))
+            logging.debug("writing ini file {} for {}".format(f.name, name))
             f.write(conf_template_str.format(instance_name=name))
             f.close()
 
@@ -78,7 +80,8 @@ class AbstractTestFixture:
     @classmethod
     def setup(cls):
         cls.krakens_pool = {}
-        logging.info("let's pop the krakens")
+        logging.info("Initing the tests {}, let's pop the krakens"
+                     .format(cls.__name__))
         cls.launch_all_krakens()
         cls.create_dummy_ini()
         i_manager = InstanceManager()
@@ -86,7 +89,8 @@ class AbstractTestFixture:
 
     @classmethod
     def teardown(cls):
-        logging.info("time to hunt the krakens down")
+        logging.info("Tearing down the tests {}, time to hunt the krakens down"
+                     .format(cls.__name__))
         cls.kill_all_krakens()
 
     def __init__(self, *args, **kwargs):
@@ -99,6 +103,8 @@ class AbstractTestFixture:
         """
         Query the requested url, test url status code to 200
         and if valid format response as dict
+
+        display param dumps the json (used only for debug)
         """
         response = check_url(self.tester, url)
 
@@ -106,7 +112,7 @@ class AbstractTestFixture:
         json_response = json.loads(response.data)
 
         if display:
-            logging.debug("loaded response : " + json.dumps(json_response, indent=2))
+            logging.info("loaded response : " + json.dumps(json_response, indent=2))
 
         assert json_response
         return json_response

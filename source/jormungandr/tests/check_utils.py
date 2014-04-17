@@ -1,4 +1,3 @@
-
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -7,7 +6,7 @@ import logging
 import re
 
 """
-some small functions to check the service responses
+Some small functions to check the service responses
 """
 
 
@@ -31,14 +30,13 @@ def get_not_null(dict, field):
     assert val
     return val
 
+
 days_regexp = re.compile("^(0|1){366}$")
 
 
 def is_valid_days(days):
-   match = days_regexp.match(days)
-   if not match:
-        return None
-   return match
+    m = days_regexp.match(days)
+    return m
 
 
 def is_valid_datetime(str):

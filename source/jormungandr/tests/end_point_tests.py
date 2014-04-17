@@ -46,8 +46,11 @@ class TestEmptyEndPoint(AbstractTestFixture):
 
 @dataset(['main_routing_test', 'main_ptref_test'])
 class TestEndPoint(AbstractTestFixture):
+    """
+    Test the end point with 2 regions loaded
+    """
     def test_coverage(self):
-        json_response = self.query("/v1/coverage", True)
+        json_response = self.query("/v1/coverage")
 
         check_links(json_response, self.tester)
 

@@ -47,7 +47,7 @@ class TestCalendar(AbstractTestFixture):
         check_valid_calendar(cal)
 
     def test_calendars_lines(self):
-        json_response = self.query_region("calendars/monday/lines", display=True)
+        json_response = self.query_region("calendars/monday/lines")
 
         lines = get_not_null(json_response, "lines")
 
