@@ -299,7 +299,7 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
     LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
     LOG4CPLUS_INFO(logger, "Begin: insert synonyms");
-    this->insert_synonyms(data.synonymes);
+    this->insert_synonyms(data.synonyms);
     LOG4CPLUS_INFO(logger, "End: insert synonyms");
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
@@ -363,7 +363,7 @@ void EdPersistor::clean_poi(){
 void EdPersistor::clean_db(){
     PQclear(this->lotus.exec(
                 "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
-                "navitia.physical_mode, navitia.contributor, navitia.alias, "
+                "navitia.physical_mode, navitia.contributor, "
                 "navitia.synonym, navitia.commercial_mode, "
                 "navitia.vehicle_properties, navitia.properties, "
                 "navitia.validity_pattern, navitia.network, navitia.parameters, "

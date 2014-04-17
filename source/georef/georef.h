@@ -246,15 +246,14 @@ struct GeoRef {
 
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode;
-
-    std::map<std::string, std::string> synonymes;
+    nt::map synonyms;
     int word_weight = 5; //Pas serialisé : lu dans le fichier ini
 
     void init();
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
-                & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & synonymes & poi_proximity_list
+                & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & poi_proximity_list
                 & nb_vertex_by_mode;
     }
 
@@ -263,7 +262,7 @@ struct GeoRef {
         // On avait donc une fuite de mémoire
         graph.clear();
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
-                & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & synonymes & poi_proximity_list
+                & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & poi_proximity_list
                 & nb_vertex_by_mode;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()

@@ -92,12 +92,12 @@ struct Autocomplete
       * — on rajoute la position à la liste de chaque mot
       */
     void add_string(std::string str, T position,
-                    const std::map<std::string, std::string> & map_synonymes){
+                    const navitia::type::map& synonyms){
         word_quality wc;
         int distance = 0;
 
-        //Appeler la méthode pour traiter les alias avant de les ajouter dans le dictionaire:
-        std::vector<std::string> vec_word = tokenize(str, map_synonymes);
+        //Appeler la méthode pour traiter les synonymes avant de les ajouter dans le dictionaire:
+        std::vector<std::string> vec_word = tokenize(str, synonyms);
 
         //créer des patterns pour chaque mot et les ajouter dans temp_pattern_map:
         add_vec_pattern(vec_word, position);
@@ -266,11 +266,11 @@ struct Autocomplete
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str,
-                                          const std::map<std::string, std::string> & map_synonymes,const int wordweight,
+                                          const navitia::type::map& synonyms,const int wordweight,
                                           size_t nbmax,
                                           std::function<bool(T)> keep_element)
                                           const{
-        std::vector<std::string> vec = tokenize(str, map_synonymes);
+        std::vector<std::string> vec = tokenize(str, synonyms);
         int wordCount = 0;
         int wordLength = 0;
         fl_quality quality;
@@ -306,7 +306,7 @@ struct Autocomplete
 
     /** Recherche des patterns les plus proche : faute de frappe */
     std::vector<fl_quality> find_partial_with_pattern(const std::string &str,
-                                                      const std::map<std::string, std::string> &map_synonymes, const int word_weight,
+                                                      const navitia::type::map& synonyms, const int word_weight,
                                                       size_t nbmax,
                                                       std::function<bool(T)> keep_element)
                                                       const{
@@ -320,7 +320,7 @@ struct Autocomplete
         std::vector<fl_quality> vec_quality;
         fl_quality quality;
 
-        std::vector<std::string> vec_word = tokenize(str, map_synonymes);
+        std::vector<std::string> vec_word = tokenize(str, synonyms);
         std::vector<std::string> vec_pattern = make_vec_pattern(vec_word, 2); //2-grams
         int wordLength = words_length(vec_word);
         int pattern_count = vec_pattern.size();
@@ -446,19 +446,7 @@ struct Autocomplete
         return str;
     }
 
-    struct StrComapre {
-        bool operator()(const  std::string& str_a, const std::string& str_b) const {
-            std::vector< std::string > vect_a, vect_b;
-            split(vect_a, str_a, boost::is_any_of(" "), boost::token_compress_on );
-            split(vect_b, str_b, boost::is_any_of(" "), boost::token_compress_on );
-            if(vect_a.size() != vect_b.size())
-                return vect_a.size() >= vect_b.size();
-            return vect_a.front() >= vect_b.front();
-        }
-    };
-
-    std::vector<std::string> tokenize(const std::string & str,
-                                      const std::map<std::string, std::string> & map_synonymes) const{
+    std::vector<std::string> tokenize(const std::string & str, const navitia::type::map& synonyms) const{
         std::vector<std::string> vec;
         std::string strFind = str;
         boost::to_lower(strFind);
@@ -466,11 +454,8 @@ struct Autocomplete
 
         //traiter les caractères accentués
         strFind = strip_accents(strFind);
-        std::map<std::string, std::string, StrComapre> map;
-        for(const auto& pair : map_synonymes){
-            map[pair.first] = pair.second;
-        }
-       for(const auto& it : map){
+
+       for(const auto& it : synonyms.map){
             strFind = boost::regex_replace(strFind,boost::regex("\\<" + it.first + "\\>"), it.second);
         }
 
@@ -484,9 +469,9 @@ struct Autocomplete
     }
 
     bool is_address_type(const std::string & str,
-                          const std::map<std::string, std::string> & map_synonymes) const{
+                         const navitia::type::map& synonyms) const{
         bool result = false;
-        std::vector<std::string> vec_token = tokenize(str, map_synonymes);
+        std::vector<std::string> vec_token = tokenize(str, synonyms);
         std::vector<std::string> vecTpye = {"rue", "avenue", "place", "boulevard","chemin", "impasse"};
         auto vtok = vec_token.begin();
         while(vtok != vec_token.end() && (result == false)){

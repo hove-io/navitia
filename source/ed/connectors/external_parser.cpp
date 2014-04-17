@@ -35,11 +35,11 @@ void ExternalParser::fill_synonyms(const std::string &file, Data & data)
                 value = row[value_c];
                 boost::to_lower(key);
                 boost::to_lower(value);
-                data.synonymes[key]=value;
+                data.synonyms[key]=value;
             }
         }
     }
-    LOG4CPLUS_TRACE(logger, "On a  " + boost::lexical_cast<std::string>(data.synonymes.size())+ " synonymes");
+    LOG4CPLUS_TRACE(logger, "synonyms : " + boost::lexical_cast<std::string>(data.synonyms.size()));
 }
 
 }}

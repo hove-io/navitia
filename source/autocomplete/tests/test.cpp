@@ -16,44 +16,43 @@
 namespace pt = boost::posix_time;
 using namespace navitia::autocomplete;
 
-BOOST_AUTO_TEST_CASE(parse_find_with_alias_and_synonyms_test){
-    /// Liste des alias (Pas serialisé)
+BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     int word_weight = 5;
     int nbmax = 10;
     std::vector<std::string> admins;
     std::string admin_uri = "";
 
-    std::map<std::string, std::string> synonyms;
-    synonyms["hotel de ville"]="mairie";
-    synonyms["c c"]="centre commercial";
-    synonyms["cc"]="centre commercial";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
-    synonyms["ld"]="Lieu-Dit";
-    synonyms["de"]="";
-    synonyms["la"]="";
-    synonyms["les"]="";
-    synonyms["des"]="";
-    synonyms["d"]="";
-    synonyms["l"]="";
+    navitia::type::map synonyms;
+    synonyms.map["hotel de ville"]="mairie";
+    synonyms.map["c c"]="centre commercial";
+    synonyms.map["cc"]="centre commercial";
+    synonyms.map["c.h.u"]="hopital";
+    synonyms.map["c.h.r"]="hopital";
+    synonyms.map["ld"]="Lieu-Dit";
+    synonyms.map["de"]="";
+    synonyms.map["la"]="";
+    synonyms.map["les"]="";
+    synonyms.map["des"]="";
+    synonyms.map["d"]="";
+    synonyms.map["l"]="";
 
-    synonyms["st"]="saint";
-    synonyms["ste"]="sainte";
-    synonyms["cc"]="centre commercial";
-    synonyms["chu"]="hopital";
-    synonyms["chr"]="hopital";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
-    synonyms["all"]="allée";
-    synonyms["allee"]="allée";
-    synonyms["ave"]="avenue";
-    synonyms["av"]="avenue";
-    synonyms["bvd"]="boulevard";
-    synonyms["bld"]="boulevard";
-    synonyms["bd"]="boulevard";
-    synonyms["b"]="boulevard";
-    synonyms["r"]="rue";
-    synonyms["pl"]="place";
+    synonyms.map["st"]="saint";
+    synonyms.map["ste"]="sainte";
+    synonyms.map["cc"]="centre commercial";
+    synonyms.map["chu"]="hopital";
+    synonyms.map["chr"]="hopital";
+    synonyms.map["c.h.u"]="hopital";
+    synonyms.map["c.h.r"]="hopital";
+    synonyms.map["all"]="allée";
+    synonyms.map["allee"]="allée";
+    synonyms.map["ave"]="avenue";
+    synonyms.map["av"]="avenue";
+    synonyms.map["bvd"]="boulevard";
+    synonyms.map["bld"]="boulevard";
+    synonyms.map["bd"]="boulevard";
+    synonyms.map["b"]="boulevard";
+    synonyms.map["r"]="rue";
+    synonyms.map["pl"]="place";
 
     Autocomplete<unsigned int> ac;
     ac.add_string("hotel de ville paris", 0, synonyms);
@@ -136,26 +135,26 @@ BOOST_AUTO_TEST_CASE(regex_replace_tests){
 
 BOOST_AUTO_TEST_CASE(regex_toknize_tests){
 
-    std::map<std::string, std::string> synonyms;
-    synonyms["hotel de ville"]="mairie";
-    synonyms["c c"]="centre commercial";
-    synonyms["cc"]="centre commercial";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
-    synonyms["ld"]="Lieu-Dit";
-    synonyms["de"]="";
-    synonyms["la"]="";
-    synonyms["les"]="";
-    synonyms["des"]="";
-    synonyms["d"]="";
-    synonyms["l"]="";
-    synonyms["st"]="saint";
-    synonyms["r"]="rue";
+    navitia::type::map synonyms;
+    synonyms.map["hotel de ville"]="mairie";
+    synonyms.map["c c"]="centre commercial";
+    synonyms.map["cc"]="centre commercial";
+    synonyms.map["c.h.u"]="hopital";
+    synonyms.map["c.h.r"]="hopital";
+    synonyms.map["ld"]="Lieu-Dit";
+    synonyms.map["de"]="";
+    synonyms.map["la"]="";
+    synonyms.map["les"]="";
+    synonyms.map["des"]="";
+    synonyms.map["d"]="";
+    synonyms.map["l"]="";
+    synonyms.map["st"]="saint";
+    synonyms.map["r"]="rue";
 
     Autocomplete<unsigned int> ac;
     std::vector<std::string> vec;
 
-    //synonyme : "cc" = "centre commercial" / alias : de = ""
+    //synonyme : "cc" = "centre commercial" / synonym : de = ""
     //"cc Carré de Soie" -> "centre commercial carré de soie"
     vec = ac.tokenize("cc Carré de Soie", synonyms);
     BOOST_CHECK_EQUAL(vec[0], "centre");
@@ -164,7 +163,7 @@ BOOST_AUTO_TEST_CASE(regex_toknize_tests){
     BOOST_CHECK_EQUAL(vec[3], "soie");
 
     vec.clear();
-    //synonyme : "c c"= "centre commercial" / alias : de = ""
+    //synonyme : "c c"= "centre commercial" / synonym : de = ""
     //"c c Carré de Soie" -> "centre commercial carré de soie"
     vec = ac.tokenize("c c Carré de Soie", synonyms);
     BOOST_CHECK_EQUAL(vec[0], "centre");
@@ -175,18 +174,18 @@ BOOST_AUTO_TEST_CASE(regex_toknize_tests){
 
 BOOST_AUTO_TEST_CASE(regex_address_type_tests){
 
-    std::map<std::string, std::string> synonyms;
-    synonyms["hotel de ville"]="mairie";
-    synonyms["c c"]="centre commercial";
-    synonyms["cc"]="centre commercial";
-    synonyms["c.h.u"]="hopital";
-    synonyms["c.h.r"]="hopital";
-    synonyms["ld"]="Lieu-Dit";
-    synonyms["av"]="avenue";
-    synonyms["r"]="rue";
-    synonyms["bvd"]="boulevard";
-    synonyms["bld"]="boulevard";
-    synonyms["bd"]="boulevard";
+    navitia::type::map synonyms;
+    synonyms.map["hotel de ville"]="mairie";
+    synonyms.map["c c"]="centre commercial";
+    synonyms.map["cc"]="centre commercial";
+    synonyms.map["c.h.u"]="hopital";
+    synonyms.map["c.h.r"]="hopital";
+    synonyms.map["ld"]="Lieu-Dit";
+    synonyms.map["av"]="avenue";
+    synonyms.map["r"]="rue";
+    synonyms.map["bvd"]="boulevard";
+    synonyms.map["bld"]="boulevard";
+    synonyms.map["bd"]="boulevard";
     //AddressType = {"rue", "avenue", "place", "boulevard","chemin", "impasse"}
 
     Autocomplete<unsigned int> ac;
@@ -196,23 +195,23 @@ BOOST_AUTO_TEST_CASE(regex_address_type_tests){
 
 BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
 
-    std::map<std::string, std::string> synonyms;
-    synonyms["gare sncf"]="gare";
-    synonyms["gare snc"]="gare";
-    synonyms["gare sn"]="gare";
-    synonyms["gare s"]="gare";
-    synonyms["de"]="";
-    synonyms["la"]="";
-    synonyms["les"]="";
-    synonyms["des"]="";
-    synonyms["d"]="";
-    synonyms["l"]="";
-    synonyms["st"]="saint";
-    synonyms["av"]="avenue";
-    synonyms["r"]="rue";
-    synonyms["bvd"]="boulevard";
-    synonyms["bld"]="boulevard";
-    synonyms["bd"]="boulevard";
+    navitia::type::map synonyms;
+    synonyms.map["gare sncf"]="gare";
+    synonyms.map["gare snc"]="gare";
+    synonyms.map["gare sn"]="gare";
+    synonyms.map["gare s"]="gare";
+    synonyms.map["de"]="";
+    synonyms.map["la"]="";
+    synonyms.map["les"]="";
+    synonyms.map["des"]="";
+    synonyms.map["d"]="";
+    synonyms.map["l"]="";
+    synonyms.map["st"]="saint";
+    synonyms.map["av"]="avenue";
+    synonyms.map["r"]="rue";
+    synonyms.map["bvd"]="boulevard";
+    synonyms.map["bld"]="boulevard";
+    synonyms.map["bd"]="boulevard";
 
     Autocomplete<unsigned int> ac;
     std::vector<std::string> vec;
@@ -279,7 +278,7 @@ BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
 }
 
 BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
-    std::map<std::string, std::string> synonyms;
+    navitia::type::map synonyms;
     std::vector<std::string> vec;
     std::string admin_uri = "";
 
@@ -375,7 +374,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
 
 BOOST_AUTO_TEST_CASE(Faute_de_frappe_One){
 
-        std::map<std::string, std::string> synonyms;
+        navitia::type::map synonyms;
         int word_weight = 5;
         int nbmax = 10;
 
@@ -425,7 +424,7 @@ sort
 
 BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
 
-    std::map<std::string, std::string> synonyms;
+    navitia::type::map synonyms;
     std::vector<std::string> admins;
     std::string admin_uri = "";
     int word_weight = 5;
@@ -460,7 +459,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
 ///Test pour verifier que - entres les deux mots est ignoré.
 BOOST_AUTO_TEST_CASE(autocomplete_add_string_with_Line){
 
-    std::map<std::string, std::string> synonyms;
+    navitia::type::map synonyms;
     std::vector<std::string> admins;
     std::string admin_uri = "";
     int word_weight = 5;
@@ -482,38 +481,38 @@ BOOST_AUTO_TEST_CASE(autocomplete_add_string_with_Line){
     BOOST_REQUIRE_EQUAL(res.at(2).idx, 3);
 }
 
-BOOST_AUTO_TEST_CASE(autocomplete_alias_and_weight_test){
+BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
 
-        std::map<std::string, std::string> synonyms;
+        navitia::type::map synonyms;
         std::vector<std::string> admins;
         std::string admin_uri;
         int word_weight = 5;
         int nbmax = 10;
 
-        synonyms["de"]="";
-        synonyms["la"]="";
-        synonyms["les"]="";
-        synonyms["des"]="";
-        synonyms["d"]="";
-        synonyms["l"]="";
+        synonyms.map["de"]="";
+        synonyms.map["la"]="";
+        synonyms.map["les"]="";
+        synonyms.map["des"]="";
+        synonyms.map["d"]="";
+        synonyms.map["l"]="";
 
-        synonyms["st"]="saint";
-        synonyms["ste"]="sainte";
-        synonyms["cc"]="centre commercial";
-        synonyms["chu"]="hopital";
-        synonyms["chr"]="hopital";
-        synonyms["c.h.u"]="hopital";
-        synonyms["c.h.r"]="hopital";
-        synonyms["all"]="allée";
-        synonyms["allee"]="allée";
-        synonyms["ave"]="avenue";
-        synonyms["av"]="avenue";
-        synonyms["bvd"]="boulevard";
-        synonyms["bld"]="boulevard";
-        synonyms["bd"]="boulevard";
-        synonyms["b"]="boulevard";
-        synonyms["r"]="rue";
-        synonyms["pl"]="place";
+        synonyms.map["st"]="saint";
+        synonyms.map["ste"]="sainte";
+        synonyms.map["cc"]="centre commercial";
+        synonyms.map["chu"]="hopital";
+        synonyms.map["chr"]="hopital";
+        synonyms.map["c.h.u"]="hopital";
+        synonyms.map["c.h.r"]="hopital";
+        synonyms.map["all"]="allée";
+        synonyms.map["allee"]="allée";
+        synonyms.map["ave"]="avenue";
+        synonyms.map["av"]="avenue";
+        synonyms.map["bvd"]="boulevard";
+        synonyms.map["bld"]="boulevard";
+        synonyms.map["bd"]="boulevard";
+        synonyms.map["b"]="boulevard";
+        synonyms.map["r"]="rue";
+        synonyms.map["pl"]="place";
 
         Autocomplete<unsigned int> ac;
         ac.add_string("rue jeanne d'arc", 0, synonyms);
