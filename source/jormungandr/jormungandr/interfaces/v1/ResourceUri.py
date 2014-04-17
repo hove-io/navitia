@@ -164,7 +164,7 @@ class complete_links(object):
         result = []
         for v in data.itervalues():
             queue.append(v)
-        collect_type =
+        collect_type = collect["type"]
         while queue:
             elem = queue.pop()
             if isinstance(elem, (list, tuple)):
