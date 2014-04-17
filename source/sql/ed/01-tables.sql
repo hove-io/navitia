@@ -107,12 +107,6 @@ CREATE TABLE IF NOT EXISTS navitia.synonym (
     value TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS navitia.alias (
-    id BIGINT PRIMARY KEY,
-    key TEXT NOT NULL,
-    value TEXT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS navitia.poi_type (
     id BIGINT PRIMARY KEY,
     uri TEXT NOT NULL,

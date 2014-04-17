@@ -156,4 +156,4 @@ DO $$
     END;
 $$;
 
-
+DROP TABLE IF EXISTS navitia.alias;
