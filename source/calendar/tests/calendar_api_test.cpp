@@ -35,29 +35,29 @@ struct calendar_fixture {
 
         b.vj("network:R", "line:A", "1", "", true, "VJA")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
         b.vj("network:R", "line:B", "1", "", true, "VJB")("stop11", 11 * 3600, 11 * 3600 + 10 * 60)("stop22", 14 * 3600, 14 * 3600 + 10 * 60);
-        b.data.build_uri();
+        b.data->build_uri();
 
-        auto calA = new navitia::type::Calendar(b.data.meta->production_date.begin());
+        auto calA = new navitia::type::Calendar(b.data->meta->production_date.begin());
         calA->uri = "calA";
         calA->active_periods.push_back({date("20140301"), date("20140305")});
         calA->active_periods.push_back({date("20140310"), date("20140314")});
         calA->week_pattern = std::bitset<7>{"1111100"};
-        b.data.pt_data->calendars.push_back(calA);
+        b.data->pt_data->calendars.push_back(calA);
 
-        auto calB = new navitia::type::Calendar(b.data.meta->production_date.begin());
+        auto calB = new navitia::type::Calendar(b.data->meta->production_date.begin());
         calB->uri = "calB";
         calB->active_periods.push_back({date("20140307"), date("20140309")});
         calB->active_periods.push_back({date("20140312"), date("20140316")});
         calB->active_periods.push_back({date("20140321"), date("20140325")});
         calB->week_pattern = std::bitset<7>{"0000011"};
-        b.data.pt_data->calendars.push_back(calB);
+        b.data->pt_data->calendars.push_back(calB);
 
         //both calendars are associated to the line
         b.lines["line:A"]->calendar_list.push_back(calA);
         b.lines["line:B"]->calendar_list.push_back(calB);
 
-        b.data.build_uri();
-        b.data.pt_data->index();
+        b.data->build_uri();
+        b.data->pt_data->index();
     }
 };
 /*
@@ -66,7 +66,7 @@ struct calendar_fixture {
 */
 BOOST_FIXTURE_TEST_CASE(test_count_calendar, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "", "", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "", "", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 2);
 }
 /*
@@ -77,7 +77,7 @@ BOOST_FIXTURE_TEST_CASE(test_count_calendar, calendar_fixture) {
   */
 BOOST_FIXTURE_TEST_CASE(test_forbidden_uris, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "", "", 1, 10, 0, "", {"line:B"});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "", "", 1, 10, 0, "", {"line:B"});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 1);
     pbnavitia::Calendar pb_cal = resp.calendars(0);
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calA");
@@ -89,7 +89,7 @@ BOOST_FIXTURE_TEST_CASE(test_forbidden_uris, calendar_fixture) {
 */
 BOOST_FIXTURE_TEST_CASE(test_filter, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "", "", 1, 10, 0, "line.uri=line:A", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "", "", 1, 10, 0, "line.uri=line:A", {});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 1);
     pbnavitia::Calendar pb_cal = resp.calendars(0);
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calA");
@@ -101,7 +101,7 @@ BOOST_FIXTURE_TEST_CASE(test_filter, calendar_fixture) {
   */
 BOOST_FIXTURE_TEST_CASE(test_filter_period_no_solution, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140201", "20140210", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "20140201", "20140210", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
 /*
@@ -112,7 +112,7 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_no_solution, calendar_fixture) {
 // Response calA
 BOOST_FIXTURE_TEST_CASE(test_filter_period_1, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140302", "20140303", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "20140302", "20140303", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 1);
     pbnavitia::Calendar pb_cal = resp.calendars(0);
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calA");
@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_1, calendar_fixture) {
 // Response calB
 BOOST_FIXTURE_TEST_CASE(test_filter_period_2, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140307", "20140308", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "20140307", "20140308", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 1);
     pbnavitia::Calendar pb_cal = resp.calendars(0);
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calB");
@@ -139,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_2, calendar_fixture) {
 // Response calA et calB
 BOOST_FIXTURE_TEST_CASE(test_filter_period_3, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140312", "20140313", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "20140312", "20140313", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 2);
     pbnavitia::Calendar pb_cal = resp.calendars(0);
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calA");
@@ -156,7 +156,7 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_3, calendar_fixture) {
 // Response calB
 BOOST_FIXTURE_TEST_CASE(test_filter_period_4, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140322", "20140324", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "20140322", "20140324", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 1);
     pbnavitia::Calendar pb_cal = resp.calendars(0);
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calB");
@@ -170,7 +170,7 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_4, calendar_fixture) {
 // Response calA
 BOOST_FIXTURE_TEST_CASE(test_filter_period_5, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140301", "20140301", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "20140301", "20140301", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.calendars_size(), 1);
     pbnavitia::Calendar pb_cal = resp.calendars(0);
     BOOST_REQUIRE_EQUAL(pb_cal.uri(), "calA");
@@ -180,27 +180,27 @@ BOOST_FIXTURE_TEST_CASE(test_filter_period_5, calendar_fixture) {
 // Response Error
 BOOST_FIXTURE_TEST_CASE(test_parse_start_date, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "201403AA", "20140301", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "201403AA", "20140301", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse start_date, bad lexical cast: source type value could not be interpreted as target");
 }
 
 // Response Error
 BOOST_FIXTURE_TEST_CASE(test_parse_end_date, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "20140301", "201403AA", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "20140301", "201403AA", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse end_date, bad lexical cast: source type value could not be interpreted as target");
 }
 
 // Response Error
 BOOST_FIXTURE_TEST_CASE(test_parse_start_end_date, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "0000", "1111", 1, 10, 0, "", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "0000", "1111", 1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse start_date, Day of month value is out of range 1..31");
 }
 
 // Response Error
 BOOST_FIXTURE_TEST_CASE(test_ptref_error, calendar_fixture) {
 
-    pbnavitia::Response resp = navitia::calendar::calendars(b.data, "", "", 1, 10, 0, "line:A", {});
+    pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "", "", 1, 10, 0, "line:A", {});
     BOOST_REQUIRE_EQUAL(resp.error().message(), "Filter: unable to parse line:A");
 }

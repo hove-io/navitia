@@ -23,17 +23,17 @@ struct principal_destination_fixture {
         b.vj("network:R", "line:A", "1", "", true, "VJF")("stop1", 14 * 3600, 14 * 3600 + 10 * 60)("stop2", 22 * 3600, 22 * 3600 + 10 * 60)
                                                          ("stop3", 22 * 3600, 22 * 3600 + 10 * 60);
         b.vj("network:K", "line:B", "1", "", true, "VJJ");
-        b.data.build_uri();
-        b.data.pt_data->index();
+        b.data->build_uri();
+        b.data->pt_data->index();
     }
 };
 
 BOOST_FIXTURE_TEST_CASE(principal_destination_found, principal_destination_fixture) {
-    navitia::type::Route* route = b.data.pt_data->routes_map["line:A:0"];
-    BOOST_CHECK_EQUAL(b.data.pt_data->stop_points[route->main_destination()]->uri, "stop3");
+    navitia::type::Route* route = b.data->pt_data->routes_map["line:A:0"];
+    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[route->main_destination()]->uri, "stop3");
 }
 
 BOOST_FIXTURE_TEST_CASE(principal_destination_not_found, principal_destination_fixture) {
-    navitia::type::Route* route = b.data.pt_data->routes_map["line:B:1"];
+    navitia::type::Route* route = b.data->pt_data->routes_map["line:B:1"];
     BOOST_CHECK_EQUAL(route->main_destination(), navitia::type::invalid_idx);
 }
