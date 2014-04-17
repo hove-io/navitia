@@ -53,8 +53,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 //    this->clean_graph(data, work);
     this->fill_graph_vls(data, work);
 
-    //Charger les alias et les synonymes
-    this->fill_alias(data, work);
+    //Charger les synonymes
     this->fill_synonyms(data, work);
 
     /// les relations admin et les autres objets
@@ -1021,17 +1020,6 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
         cpt_bike_sharing++;
     }
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_bike_sharing << " bike sharing stations added");
-}
-
-void EdReader::fill_alias(navitia::type::Data& data, pqxx::work& work){
-    std::string key, value;
-    std::string request = "SELECT key, value FROM navitia.alias;";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        const_it["key"].to(key);
-        const_it["value"].to(value);
-        data.geo_ref->alias[key]=value;
-    }
 }
 
 void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){

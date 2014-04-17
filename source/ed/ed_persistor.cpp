@@ -298,9 +298,6 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert journey pattern point connections");
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
     LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
-    LOG4CPLUS_INFO(logger, "Begin: insert aliases");
-    this->insert_alias(data.alias);
-    LOG4CPLUS_INFO(logger, "End: insert aliases");
     LOG4CPLUS_INFO(logger, "Begin: insert synonyms");
     this->insert_synonyms(data.synonymes);
     LOG4CPLUS_INFO(logger, "End: insert synonyms");
@@ -939,24 +936,6 @@ void EdPersistor::insert_rel_calendar_line(const std::vector<types::Calendar*>& 
         }
     }
     this->lotus.finish_bulk_insert();
-}
-
-
-void EdPersistor::insert_alias(const std::map<std::string, std::string>& alias){
-    this->lotus.prepare_bulk_insert("navitia.alias", {"id", "key", "value"});
-    int count=1;
-    std::map <std::string, std::string> ::const_iterator it = alias.begin();
-    while(it != alias.end()){
-        std::vector<std::string> values;
-        values.push_back(std::to_string(count));
-        values.push_back(it->first);
-        values.push_back(it->second);
-        this->lotus.insert(values);
-        count++;
-        ++it;
-    }
-    this->lotus.finish_bulk_insert();
-
 }
 
 void EdPersistor::insert_synonyms(const std::map<std::string, std::string>& synonyms){

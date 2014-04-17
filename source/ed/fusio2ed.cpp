@@ -23,14 +23,13 @@ int main(int argc, char * argv[])
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
 
-    std::string input, date, connection_string, aliases_file,
+    std::string input, date, connection_string,
                 synonyms_file, fare_dir;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("aliases,a", po::value<std::string>(&aliases_file), "Fichier aliases")
         ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare")
@@ -94,10 +93,6 @@ int main(int argc, char * argv[])
     ed::connectors::ExternalParser extConnecteur;
     if(vm.count("synonyms")){
         extConnecteur.fill_synonyms(synonyms_file, data);
-    }
-
-    if(vm.count("aliases")){
-        extConnecteur.fill_aliases(aliases_file, data);
     }
 
     if(vm.count("fare")){
