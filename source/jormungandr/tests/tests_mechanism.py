@@ -92,6 +92,36 @@ class AbstractTestFixture:
     def __init__(self, *args, **kwargs):
         self.tester = app.test_client()
 
+    # ==============================
+    # helpers
+    # ==============================
+    def query(self, url, display=False):
+        """
+        Query the requested url, test url status code to 200
+        and if valid format response as dict
+        """
+        response = check_url(self.tester, url)
+
+        assert response.data
+        json_response = json.loads(response.data)
+
+        if display:
+            logging.debug("loaded response : " + json.dumps(json_response, indent=2))
+
+        assert json_response
+        return json_response
+
+    def query_region(self, url, display=False):
+        """
+            helper if the test in only one region,
+            to shorten the test url query /v1/coverage/{region}/url
+        """
+        assert len(self.krakens_pool) == 1, "the helper can only work with one region"
+
+        real_url = "/v1/coverage/{region}/{url}".format(region=self.krakens_pool.iterkeys().next(), url=url)
+
+        return self.query(real_url, display)
+
 
 def dataset(datasets):
     """

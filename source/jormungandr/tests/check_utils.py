@@ -21,20 +21,6 @@ def check_url(tester, url):
     return response
 
 
-def check_and_get_as_dict(tester, url, display=False):
-    """Test url status code to 200 and if valid format response as json"""
-    response = check_url(tester, url)
-
-    assert response.data
-    json_response = json.loads(response.data)
-
-    if display:
-        logging.debug("loaded response : " + str(json_response))
-
-    assert json_response
-    return json_response
-
-
 def get_not_null(dict, field):
     assert field in dict
 

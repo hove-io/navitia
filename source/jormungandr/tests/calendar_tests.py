@@ -31,10 +31,34 @@ def check_valid_calendar(cal):
 
     #check links
 
+
 @dataset(["main_ptref_test"])
 class TestCalendar(AbstractTestFixture):
 
-    def test_bidon(self):
-        logging.info("===========================================heho !")
-        response = check_and_get_as_dict(self.tester, "/v1/coverage/main_ptref_test")
+    def test_calendars(self):
+        json_response = self.query_region("calendars/")
+
+        calendars = get_not_null(json_response, "calendars")
+
+        #we need at least one calendar
+        assert calendars
+
+        cal = calendars[0]
+        check_valid_calendar(cal)
+
+    def test_calendars_lines(self):
+        json_response = self.query_region("calendars/monday/lines", display=True)
+
+        lines = get_not_null(json_response, "lines")
+
+        assert lines
+
+    def test_lines_calendars(self):
+        json_response = self.query_region("calendars/monday/lines/line:A/calendars")
+
+        calendars = get_not_null(json_response, "calendars")
+
+        assert calendars
+        check_valid_calendar(calendars[0])
+
 

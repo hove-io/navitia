@@ -9,7 +9,7 @@ class TestEmptyEndPoint(AbstractTestFixture):
     """
 
     def test_index(self):
-        json_response = check_and_get_as_dict(self.tester, "/")
+        json_response = self.query("/")
 
         versions = get_not_null(json_response, 'versions')
 
@@ -33,13 +33,13 @@ class TestEmptyEndPoint(AbstractTestFixture):
 
     def test_empty_coverage(self):
         #even with no loaded kraken, the response should be valid
-        json_response = check_and_get_as_dict(self.tester, "/v1/coverage")
+        json_response = self.query("/v1/coverage")
 
         assert 'regions' in json_response
         assert not json_response['regions']
 
     def test_v1(self):
-        json_response = check_and_get_as_dict(self.tester, "/v1")
+        json_response = self.query("/v1")
         # this entry point is just links
         check_links(json_response, self.tester)
 
@@ -47,7 +47,7 @@ class TestEmptyEndPoint(AbstractTestFixture):
 @dataset(['main_routing_test', 'main_ptref_test'])
 class TestEndPoint(AbstractTestFixture):
     def test_coverage(self):
-        json_response = check_and_get_as_dict(self.tester, "/v1/coverage", True)
+        json_response = self.query("/v1/coverage", True)
 
         check_links(json_response, self.tester)
 
