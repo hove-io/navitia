@@ -70,7 +70,7 @@ class add_address_poi_id(object):
             objects = f(*args, **kwargs)
 
             def add_id(objects, region, type_=None):
-                if hasattr(objects, 'items'):
+                if isinstance(objects, (list, tuple)):
                     for item in objects:
                         add_id(item, region, type_)
                 elif hasattr(objects, 'keys'):
@@ -164,21 +164,20 @@ class complete_links(object):
         result = []
         for v in data.itervalues():
             queue.append(v)
+        collect_type =
         while queue:
-            a = len(queue)
             elem = queue.pop()
-            b = len(queue)
             if isinstance(elem, (list, tuple)):
                 queue.extend(elem)
             elif hasattr(elem, 'iterkeys'):
-                if 'type' in elem and elem['type'] == collect["type"]:
-                    if collect["type"] == "notes":
-                        result.append({"id": elem['id'], "value": elem['value'], "type": collect["type"]})
-                    elif collect["type"] == "exceptions":
-                        type = "Remove"
+                if 'type' in elem and elem['type'] == collect_type:
+                    if collect_type == "notes":
+                        result.append({"id": elem['id'], "value": elem['value'], "type": collect_type})
+                    elif collect_type == "exceptions":
+                        type_= "Remove"
                         if elem['except_type'] == 0:
-                            type = "Add"
-                        result.append({"id": elem['id'], "date": elem['date'], "type" : type})
+                            type_ = "Add"
+                        result.append({"id": elem['id'], "date": elem['date'], "type" : type_})
                     for del_ in collect["del"]:
                         del elem[del_]
                 else:
