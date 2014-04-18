@@ -17,7 +17,7 @@
 
 namespace navitia { namespace autocomplete {
 
-struct Comapre {
+struct Compare {
     bool operator()(const  std::string& str_a, const std::string& str_b) const {
         if(str_a.length() == str_b.length()){
             return str_a >= str_b;
@@ -27,7 +27,7 @@ struct Comapre {
     }
 };
 
-using autocomplete_map = std::map<std::string, std::string, Comapre>;
+using autocomplete_map = std::map<std::string, std::string, Compare>;
 /** Map de type Autocomplete
   *
   * On associe une chaine de caractères, par exemple "rue jean jaures" à une valeur T (typiquement un pointeur
