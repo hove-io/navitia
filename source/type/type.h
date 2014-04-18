@@ -986,24 +986,6 @@ struct EntryPoint {
 
     EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };
-
-struct StrComapre {
-    bool operator()(const  std::string& str_a, const std::string& str_b) const {
-        if(str_a.length() == str_b.length()){
-            return str_a >= str_b;
-        }else{
-            return (str_a.length() > str_b.length());
-        }
-    }
-};
-
-struct map{
-    std::map<std::string, std::string, StrComapre> map;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & map;
-    }
-};
-
 } //namespace navitia::type
 
 //trait to access the number of elements in the Mode_e enum

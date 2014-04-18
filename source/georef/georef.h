@@ -246,7 +246,7 @@ struct GeoRef {
 
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode;
-    nt::map synonyms;
+    navitia::autocomplete::autocomplete_map synonyms;
     int word_weight = 5; //Pas serialisé : lu dans le fichier ini
 
     void init();

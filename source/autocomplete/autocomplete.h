@@ -17,7 +17,17 @@
 
 namespace navitia { namespace autocomplete {
 
+struct Comapre {
+    bool operator()(const  std::string& str_a, const std::string& str_b) const {
+        if(str_a.length() == str_b.length()){
+            return str_a >= str_b;
+        }else{
+            return (str_a.length() > str_b.length());
+        }
+    }
+};
 
+using autocomplete_map = std::map<std::string, std::string, Comapre>;
 /** Map de type Autocomplete
   *
   * On associe une chaine de caractères, par exemple "rue jean jaures" à une valeur T (typiquement un pointeur
@@ -92,7 +102,7 @@ struct Autocomplete
       * — on rajoute la position à la liste de chaque mot
       */
     void add_string(std::string str, T position,
-                    const navitia::type::map& synonyms){
+                    const autocomplete_map& synonyms){
         word_quality wc;
         int distance = 0;
 
@@ -164,8 +174,7 @@ struct Autocomplete
 
     //Méthode pour calculer le score de chaque élément par son admin.
     void compute_score(type::PT_Data &pt_data, georef::GeoRef &georef,
-                       const type::Type_e type);/* {
-    }*/
+                       const type::Type_e type);
     // Méthodes premettant de retrouver nos éléments
     /** Définit un fonctor permettant de parcourir notre structure un peu particulière */
     struct comp{
@@ -266,7 +275,8 @@ struct Autocomplete
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str,
-                                          const navitia::type::map& synonyms,const int wordweight,
+                                          const autocomplete_map& synonyms,
+                                          const int wordweight,
                                           size_t nbmax,
                                           std::function<bool(T)> keep_element)
                                           const{
@@ -306,7 +316,7 @@ struct Autocomplete
 
     /** Recherche des patterns les plus proche : faute de frappe */
     std::vector<fl_quality> find_partial_with_pattern(const std::string &str,
-                                                      const navitia::type::map& synonyms, const int word_weight,
+                                                      const autocomplete_map& synonyms, const int word_weight,
                                                       size_t nbmax,
                                                       std::function<bool(T)> keep_element)
                                                       const{
@@ -446,16 +456,15 @@ struct Autocomplete
         return str;
     }
 
-    std::vector<std::string> tokenize(const std::string & str, const navitia::type::map& synonyms) const{
+    std::vector<std::string> tokenize(std::string strFind, const autocomplete_map& synonyms) const{
         std::vector<std::string> vec;
-        std::string strFind = str;
         boost::to_lower(strFind);
         strFind = boost::regex_replace(strFind, boost::regex("( ){2,}"), " ");
 
         //traiter les caractères accentués
         strFind = strip_accents(strFind);
 
-       for(const auto& it : synonyms.map){
+       for(const auto& it : synonyms){
             strFind = boost::regex_replace(strFind,boost::regex("\\<" + it.first + "\\>"), it.second);
         }
 
@@ -469,7 +478,7 @@ struct Autocomplete
     }
 
     bool is_address_type(const std::string & str,
-                         const navitia::type::map& synonyms) const{
+                         const autocomplete_map& synonyms) const{
         bool result = false;
         std::vector<std::string> vec_token = tokenize(str, synonyms);
         std::vector<std::string> vecTpye = {"rue", "avenue", "place", "boulevard","chemin", "impasse"};
