@@ -427,6 +427,12 @@ void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
         data.pt_data->journey_pattern_points.push_back(jpp);
         this->journey_pattern_point_map[const_it["id"].as<idx_t>()] = jpp;
     }
+
+    //we need to sort all jpp by order
+    for (auto journey_pattern : data.pt_data->journey_patterns) {
+        auto comp = [](const nt::JourneyPatternPoint* jpp1, const nt::JourneyPatternPoint* jpp2){return jpp1->order < jpp2->order;};
+        std::sort(journey_pattern->journey_pattern_point_list.begin(), journey_pattern->journey_pattern_point_list.end(), comp);
+    }
 }
 
 
@@ -649,6 +655,11 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         vj->stop_time_list.push_back(stop);
         stop->vehicle_journey = vj;
         data.pt_data->stop_times.push_back(stop);
+    }
+
+    for(auto* vj: data.pt_data->vehicle_journeys) {
+        std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+                  [](const nt::StopTime* st1, const nt::StopTime* st2){return st1->journey_pattern_point->order < st2->journey_pattern_point->order;});
     }
 
 }
