@@ -65,7 +65,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
             for( navitia::georef::Admin* admin : sa->admin_list){
                 if (admin->level ==8){key +=" " + admin->name;}
             }
-            this->stop_area_autocomplete.add_string(sa->name + " " + key, sa->idx, georef.alias, georef.synonymes);
+            this->stop_area_autocomplete.add_string(sa->name + " " + key, sa->idx, georef.synonyms);
         }
     }
     this->stop_area_autocomplete.build();
@@ -79,7 +79,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
             for(navitia::georef::Admin* admin : sp->admin_list){
                 if (admin->level == 8){key += key + " " + admin->name;}
             }
-            this->stop_point_autocomplete.add_string(sp->name + " " + key, sp->idx, georef.alias, georef.synonymes);
+            this->stop_point_autocomplete.add_string(sp->name + " " + key, sp->idx, georef.synonyms);
         }
     }
     this->stop_point_autocomplete.build();
@@ -87,7 +87,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->line_autocomplete.clear();
     for(const Line* line : this->lines){
         if (!line->name.empty()){
-            this->line_autocomplete.add_string(line->name, line->idx, georef.alias, georef.synonymes);
+            this->line_autocomplete.add_string(line->name, line->idx, georef.synonyms);
         }
     }
     this->line_autocomplete.build();

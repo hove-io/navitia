@@ -92,8 +92,7 @@ private:
     void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work, const double percent_delete);
     void fill_graph_vls(navitia::type::Data& data, pqxx::work& work);
 
-    //les alias et synonymes:
-    void fill_alias(navitia::type::Data& data, pqxx::work& work);
+    //Synonyms:
     void fill_synonyms(navitia::type::Data& data, pqxx::work& work);
 
     //les tarifs:

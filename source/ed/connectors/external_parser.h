@@ -13,7 +13,6 @@ private:
 public:
     ExternalParser();
 
-    void fill_aliases(const std::string &file, Data & data);
     void fill_synonyms(const std::string &file, Data & data);
 };
 }}

@@ -986,7 +986,6 @@ struct EntryPoint {
 
     EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };
-
 } //namespace navitia::type
 
 //trait to access the number of elements in the Mode_e enum

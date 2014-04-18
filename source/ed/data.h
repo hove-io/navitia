@@ -40,9 +40,8 @@ public:
     std::vector<types::JourneyPatternPointConnection*> journey_pattern_point_connections;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
-    /// Liste des alias et synonymes
-    std::map<std::string, std::string> alias;
-    std::map<std::string, std::string> synonymes;
+    /// List of synonyms
+    std::map<std::string, std::string> synonyms;
 
     //fare:
     std::vector<std::tuple<navitia::fare::State, navitia::fare::State, navitia::fare::Transition>> transitions; // transition with state before and after
