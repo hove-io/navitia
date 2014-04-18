@@ -3,7 +3,7 @@ from converters_collection_type import collections_to_resource_type
 from converters_collection_type import resource_type_to_collection
 from make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from flask import url_for
 from flask.ext.restful.utils import unpack
 from jormungandr.authentification import authentification_required
