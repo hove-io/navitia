@@ -18,6 +18,8 @@ build_package/
 *.log
 *.orig
 source/scripts/settings_jormungandr.sh
+dev_settings.sh
+dev_settings.py
 debian/navitia-ed
 debian/navitia-jormungandr
 debian/tmp
