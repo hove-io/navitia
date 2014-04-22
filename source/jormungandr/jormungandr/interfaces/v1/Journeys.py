@@ -443,11 +443,11 @@ class Journeys(ResourceUri):
                                 dest="max_transfers")
         parser_get.add_argument("first_section_mode[]",
                                 type=option_value(modes),
-                                default=["bss"],
+                                default=["walking"],
                                 dest="origin_mode", action="append")
         parser_get.add_argument("last_section_mode[]",
                                 type=option_value(modes),
-                                default=["bss"],
+                                default=["walking"],
                                 dest="destination_mode", action="append")
         parser_get.add_argument("max_duration_to_pt", type=int, default=15*60,
                                 description="maximal duration of non public \
