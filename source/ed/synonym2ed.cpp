@@ -65,7 +65,7 @@ int main(int argc, char * argv[])
     }
 
     ed::EdPersistor p(connection_string);
-    p.persist(synonym_parser.synonym_map);
+    p.persist_synonym(synonym_parser.synonym_map);
     LOG4CPLUS_FATAL(logger, "temps :"<<to_simple_string(pt::microsec_clock::local_time() - start));
 
     return 0;

@@ -27,7 +27,7 @@ struct EdPersistor{
     void clean_poi();
     /// Synonyms
     void clean_synonym();
-    void persist(const std::map<std::string, std::string>& data);
+    void persist_synonym(const std::map<std::string, std::string>& data);
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
