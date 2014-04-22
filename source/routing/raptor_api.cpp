@@ -76,7 +76,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         // La marche à pied initiale si on avait donné une coordonnée
         if(path.items.size() > 0 && ! path.items.front().stop_points.empty()) {
             const auto& departure_stop_point = path.items.front().stop_points.front();
-            //for stop areas, we don't want to display the fallback section if start
+            // for stop areas, we don't want to display the fallback section if start
             // from one of the stop area's stop point
             if (! (origin.type == nt::Type_e::StopArea && origin.uri == departure_stop_point->stop_area->uri)) {
                 auto temp = worker.get_path(departure_stop_point->idx);
@@ -183,9 +183,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         // La marche à pied finale si on avait donné une coordonnée
         if(path.items.size() > 0 && ! path.items.back().stop_points.empty()) {
             const auto& arrival_stop_point = path.items.back().stop_points.back();
-            //for stop areas, we don't want to display the fallback section if start
+            // for stop areas, we don't want to display the fallback section if start
             // from one of the stop area's stop point
-            if (! (origin.type == nt::Type_e::StopArea && origin.uri == arrival_stop_point->stop_area->uri)) {
+            if (! (destination.type == nt::Type_e::StopArea && destination.uri == arrival_stop_point->stop_area->uri)) {
                 auto temp = worker.get_path(arrival_stop_point->idx, true);
                 if(temp.path_items.size() > 0) {
                    //add a junction between the routing path and the walking one if needed
