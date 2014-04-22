@@ -1,3 +1,9 @@
+navitia2 (0.94.0) unstable; urgency=low
+
+  * Jormungandr: change default fallback modes
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 22 Apr 2014 10:04:43 +0100
+
 navitia2 (0.93.0) unstable; urgency=low
 
   * Kraken: fix order bug
