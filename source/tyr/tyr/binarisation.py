@@ -212,6 +212,37 @@ def poi2ed(instance_config, filename, job_id):
     finally:
         lock.release()
 
+@celery.task()
+def synonym2ed(instance_config, filename, job_id):
+    """ launch synonym2ed """
+
+    job = models.Job.query.get(job_id)
+    instance = job.instance
+    lock = redis.lock('tyr.lock|' + instance.name)
+    if not lock.acquire(blocking=False):
+        synonym2ed.retry(countdown=300, max_retries=10)
+
+    logger = get_instance_logger(instance)
+    try:
+        working_directory = os.path.dirname(filename)
+
+        zip_file = zipfile.ZipFile(filename)
+        zip_file.extractall(path=working_directory)
+
+        connection_string = make_connection_string(instance_config)
+        res = launch_exec('synonym2ed',
+                ["-i", working_directory, "--connection-string", connection_string],
+                logger)
+        if res != 0:
+            #@TODO: exception
+            raise ValueError('synonym2ed failed')
+    except:
+        logger.exception('')
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+    finally:
+        lock.release()
 
 @celery.task()
 def reload_data(instance_config, job_id):

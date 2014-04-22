@@ -50,4 +50,7 @@ add_executable(poi2ed poi2ed.cpp)
 
 target_link_libraries(poi2ed transportation_data_import ed connectors types pq pqxx data utils ${BOOST_LIBS} log4cplus)
 
-INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed fare2ed geopal2ed poi2ed)
+add_executable(synonym2ed synonym2ed.cpp)
+target_link_libraries(synonym2ed transportation_data_import ed connectors types pq pqxx data utils ${BOOST_LIBS} log4cplus)
+
+INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav nav2rt fusio2ed fare2ed geopal2ed poi2ed synonym2ed)

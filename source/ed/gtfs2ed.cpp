@@ -2,8 +2,6 @@
 #include <iostream>
 
 #include "ed/connectors/gtfs_parser.h"
-#include "ed/connectors/external_parser.h"
-
 #include "utils/timer.h"
 
 #include <fstream>
@@ -22,14 +20,12 @@ int main(int argc, char * argv[])
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
 
-    std::string input, date, connection_string,
-                synonyms_file;
+    std::string input, date, connection_string;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
@@ -87,11 +83,6 @@ int main(int argc, char * argv[])
 
     data.normalize_uri();
 
-    ed::connectors::ExternalParser extConnecteur;
-    if(vm.count("synonyms")){
-        extConnecteur.fill_synonyms(synonyms_file, data);
-    }
-
     LOG4CPLUS_INFO(logger, "line: " << data.lines.size());
     LOG4CPLUS_INFO(logger, "route: " << data.routes.size());
     LOG4CPLUS_INFO(logger, "journey_pattern: " << data.journey_patterns.size());
@@ -104,7 +95,6 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
     LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
     LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());
-    LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonyms.size());
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);
