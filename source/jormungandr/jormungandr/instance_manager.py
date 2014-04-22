@@ -90,7 +90,7 @@ class InstanceManager(object):
         else:
             raise RegionNotFound(instance_name)
 
-    def thread_ping(self, timer=1):
+    def thread_ping(self, timer=10):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         while not self.thread_event.is_set():
@@ -179,7 +179,7 @@ class InstanceManager(object):
             req.requested_api = type_pb2.METADATAS
             try:
                 resp = self.instances[key_region].send_and_receive(req,
-                                                               timeout=2000)
+                                                               timeout=1000)
                 resp_dict = protobuf_to_dict(resp.metadatas)
             except DeadSocketException:
                 resp_dict = {
