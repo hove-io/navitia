@@ -10,7 +10,7 @@ from jormungandr.singleton import singleton
 from importlib import import_module
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.exceptions import ApiNotFound, RegionNotFound
+from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
 from jormungandr import app
 from jormungandr.instance import Instance
 import traceback
@@ -177,10 +177,17 @@ class InstanceManager(object):
         for key_region in regions:
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
-            resp = self.instances[key_region].send_and_receive(req,
+            try:
+                resp = self.instances[key_region].send_and_receive(req,
                                                                timeout=2000)
-            resp_dict = protobuf_to_dict(resp)
-            if 'metadatas' in resp_dict.keys():
-                resp_dict['metadatas']['region_id'] = key_region
-                response['regions'].append(resp_dict['metadatas'])
+                resp_dict = protobuf_to_dict(resp.metadatas)
+            except DeadSocketException:
+                resp_dict = {
+                    "error" : {
+                        "code": "dead_socket",
+                        "value": "The region %s is dead".format(key_region)
+                    }
+                }
+            resp_dict['region_id'] = key_region
+            response['regions'].append(resp_dict)
         return response
