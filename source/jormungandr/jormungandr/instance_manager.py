@@ -38,7 +38,6 @@ class InstanceManager(object):
         """
 
         self.instances = {}
-        self.contributors = {}
         self.context = zmq.Context()
         self.default_socket = None
 
@@ -98,9 +97,6 @@ class InstanceManager(object):
             for key, instance in self.instances.iteritems():
                 resp = instance.send_and_receive(req, timeout=1000)
                 if resp.HasField("metadatas"):
-                    metadatas = resp.metadatas
-                    for contributor in metadatas.contributors:
-                        self.contributors[str(contributor)] = key
                     try:
                         instance.geom = wkt.loads(metadatas.shape)
                     except ReadingError:
