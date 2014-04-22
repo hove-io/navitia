@@ -107,12 +107,6 @@ CREATE TABLE IF NOT EXISTS navitia.synonym (
     value TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS navitia.alias (
-    id BIGINT PRIMARY KEY,
-    key TEXT NOT NULL,
-    value TEXT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS navitia.poi_type (
     id BIGINT PRIMARY KEY,
     uri TEXT NOT NULL,
@@ -127,7 +121,9 @@ CREATE TABLE IF NOT EXISTS navitia.poi (
     name TEXT NOT NULL,
     uri TEXT NOT NULL,
     visible BOOLEAN NOT NULL DEFAULT True,
-    poi_type_id BIGINT NOT NULL REFERENCES navitia.poi_type
+    poi_type_id BIGINT NOT NULL REFERENCES navitia.poi_type,
+    address_name TEXT,
+    address_number TEXT
 );
 
 

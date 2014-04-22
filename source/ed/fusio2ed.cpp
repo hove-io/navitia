@@ -23,14 +23,13 @@ int main(int argc, char * argv[])
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
 
-    std::string input, date, connection_string, aliases_file,
+    std::string input, date, connection_string,
                 synonyms_file, fare_dir;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("aliases,a", po::value<std::string>(&aliases_file), "Fichier aliases")
         ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare")
@@ -96,10 +95,6 @@ int main(int argc, char * argv[])
         extConnecteur.fill_synonyms(synonyms_file, data);
     }
 
-    if(vm.count("aliases")){
-        extConnecteur.fill_aliases(aliases_file, data);
-    }
-
     if(vm.count("fare")){
         start = pt::microsec_clock::local_time();
         LOG4CPLUS_INFO(logger, "Alimentation de fare");
@@ -122,9 +117,8 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
     LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());
-    LOG4CPLUS_INFO(logger, "alias : " <<data.alias.size());
-    LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonymes.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());    
+    LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonyms.size());
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);

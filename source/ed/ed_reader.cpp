@@ -53,8 +53,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 //    this->clean_graph(data, work);
     this->fill_graph_vls(data, work);
 
-    //Charger les alias et les synonymes
-    this->fill_alias(data, work);
+    //Charger les synonymes
     this->fill_synonyms(data, work);
 
     /// les relations admin et les autres objets
@@ -428,6 +427,12 @@ void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
         data.pt_data->journey_pattern_points.push_back(jpp);
         this->journey_pattern_point_map[const_it["id"].as<idx_t>()] = jpp;
     }
+
+    //we need to sort all jpp by order
+    for (auto journey_pattern : data.pt_data->journey_patterns) {
+        auto comp = [](const nt::JourneyPatternPoint* jpp1, const nt::JourneyPatternPoint* jpp2){return jpp1->order < jpp2->order;};
+        std::sort(journey_pattern->journey_pattern_point_list.begin(), journey_pattern->journey_pattern_point_list.end(), comp);
+    }
 }
 
 
@@ -652,6 +657,11 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         data.pt_data->stop_times.push_back(stop);
     }
 
+    for(auto* vj: data.pt_data->vehicle_journeys) {
+        std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+                  [](const nt::StopTime* st1, const nt::StopTime* st2){return st1->journey_pattern_point->order < st2->journey_pattern_point->order;});
+    }
+
 }
 
 void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
@@ -671,14 +681,23 @@ void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, "
             "ST_Y(poi.coord::geometry) as lat, poi.visible as visible, "
-            "poi.name, poi.uri, poi.poi_type_id FROM navitia.poi poi, "
+            "poi.name, poi.uri, poi.poi_type_id, poi.address_number, "
+            "poi.address_name FROM navitia.poi poi, "
             "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        std::string string_number;
+        int int_number;
         navitia::georef::POI* poi = new navitia::georef::POI();
         const_it["uri"].to(poi->uri);
         const_it["name"].to(poi->name);
         const_it["id"].to(poi->id);
+        const_it["address_number"].to(string_number);
+        int_number = str_to_int(string_number);
+        if(int_number > -1){
+            poi->address_number = int_number;
+        }
+        const_it["address_name"].to(poi->address_name);
         poi->coord.set_lon(const_it["lon"].as<double>());
         poi->coord.set_lat(const_it["lat"].as<double>());
         poi->visible = const_it["visible"].as<bool>();
@@ -1014,17 +1033,6 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_bike_sharing << " bike sharing stations added");
 }
 
-void EdReader::fill_alias(navitia::type::Data& data, pqxx::work& work){
-    std::string key, value;
-    std::string request = "SELECT key, value FROM navitia.alias;";
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        const_it["key"].to(key);
-        const_it["value"].to(value);
-        data.geo_ref->alias[key]=value;
-    }
-}
-
 void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
     std::string key, value;
     std::string request = "SELECT key, value FROM navitia.synonym;";
@@ -1032,7 +1040,7 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         const_it["key"].to(key);
         const_it["value"].to(value);
-        data.geo_ref->synonymes[key]=value;
+        data.geo_ref->synonyms[key] = value;
     }
 }
 

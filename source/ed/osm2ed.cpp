@@ -300,16 +300,21 @@ void Visitor::insert_poitypes(){
 }
 
 void Visitor::insert_pois(){
-    this->persistor.lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id"});
+    this->persistor.lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id", "address_name", "address_number"});
     for(auto poi : pois){
+        Node n;
         try{
-            Node n = nodes.at(poi.first);
-            std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-            this->persistor.lotus.insert({std::to_string(poi.second.id),std::to_string(poi.second.weight),
-                                        point, poi.second.name, "poi:" + std::to_string(poi.first),std::to_string(poi.second.poi_type->id)});
-        }catch(...){
-            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
+            n = nodes.at(poi.first);
+        }catch(const std::out_of_range& e){
+            LOG4CPLUS_INFO(logger, "Unable to find node [" << poi.first<<"] "<<e.what());
+            continue;
         }
+        std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
+        this->persistor.lotus.insert({std::to_string(poi.second.id),std::to_string(poi.second.weight),
+                                    point, poi.second.name, "poi:" + std::to_string(poi.first),
+                                    std::to_string(poi.second.poi_type->id), poi.second.address_name,
+                                    poi.second.address_number});
+
     }
     persistor.lotus.finish_bulk_insert();
 }
@@ -317,12 +322,14 @@ void Visitor::insert_pois(){
 void Visitor::insert_properties(){
     this->persistor.lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
     for(const auto& poi : pois){
-        if (poi.first > nodes.size()){
-            LOG4CPLUS_INFO(logger, "Unable to find node " << poi.first);
-        }else{
-            for(const auto& property : poi.second.properties){
-                this->persistor.lotus.insert({std::to_string(poi.second.id),property.first, property.second});
-            }
+        try{
+            nodes.at(poi.first);
+        }catch(const std::out_of_range& e){
+            LOG4CPLUS_INFO(logger, "Unable to find node [" << poi.first<<"] "<<e.what());
+            continue;
+        }
+        for(const auto& property : poi.second.properties){
+            this->persistor.lotus.insert({std::to_string(poi.second.id),property.first, property.second});
         }
     }
     persistor.lotus.finish_bulk_insert();
@@ -341,27 +348,73 @@ void Visitor::fill_PoiTypes(){
     poi_types["bicycle_rental"] = ed::types::PoiType(5, "station vls");
     poi_types["bicycle_parking"] = ed::types::PoiType(6, "Parking vélo");
     poi_types["parking"] = ed::types::PoiType(7, "Parking");
+    poi_types["park_ride"] = ed::types::PoiType(8, "Parc-relais");
+    poi_types["police"] = ed::types::PoiType(9, "Police, Gendarmerie");
+    poi_types["townhall"] = ed::types::PoiType(10, "Mairie");
+    poi_types["garden"] = ed::types::PoiType(11, "Jardin");
+    poi_types["park"] = ed::types::PoiType(12, "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale");
+}
+
+bool Visitor::is_property_to_ignore(const std::string& tag){
+    for(const std::string& st : properties_to_ignore){
+        if(st == tag){
+            return true;
+        }
+    }
+    return false;
+}
+
+void Visitor::fill_properties_to_ignore(){
+    properties_to_ignore.push_back("name");
+    properties_to_ignore.push_back("amenity");
+    properties_to_ignore.push_back("leisure");
+    properties_to_ignore.push_back("addr:housenumber");
+    properties_to_ignore.push_back("addr:street");
+    properties_to_ignore.push_back("addr:city");
+    properties_to_ignore.push_back("addr:postcode");
+    properties_to_ignore.push_back("addr:country");
 }
 
 void Visitor::fill_pois(const uint64_t osmid, const CanalTP::Tags & tags){
+    std::string ref_tag;
     if(tags.find("amenity") != tags.end()){
+            ref_tag = "amenity";
+    }
+    if(tags.find("leisure") != tags.end()){
+            ref_tag = "leisure";
+    }
+    if(!ref_tag.empty()){
         auto poi_it = pois.find(osmid);
         if (poi_it != pois.end()){
             return;
         }
-        std::string value = tags.at("amenity");
+        std::string value = tags.at(ref_tag);
         auto it = poi_types.find(value);
         if(it != poi_types.end()){
             ed::types::Poi poi;
+            if((it->first == "parking") && (tags.find("park_ride") != tags.end())){
+                std::string park_ride = tags.at("park_ride");
+                boost::to_lower(park_ride);
+                if(park_ride == "yes"){
+                    it = poi_types.find("park_ride");
+                }
+            }
             poi.poi_type = &it->second;
             if(tags.find("name") != tags.end()){
                 poi.name = tags.at("name");
             }
             for(auto st : tags){
-                if((st.first != "amenity") && (st.first != "name")){
+                if(is_property_to_ignore(st.first)){
+                    if(st.first == "addr:housenumber"){
+                        poi.address_number = st.second;
+                    }
+                    if(st.first == "addr:street"){
+                        poi.address_name = st.second;
+                    }
+                }else{
                     poi.properties[st.first] = st.second;
-                 }
-             }
+                }
+            }
             poi.id = pois.size();
             pois[osmid] = poi;
         }
@@ -409,6 +462,7 @@ int main(int argc, char** argv) {
     v.persistor.clean_georef();
     v.persistor.clean_poi();
     v.fill_PoiTypes();
+    v.fill_properties_to_ignore();
     v.persistor.lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri"});
     CanalTP::read_osm_pbf(input, v);
     v.set_coord_admin();

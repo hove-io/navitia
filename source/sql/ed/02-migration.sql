@@ -136,3 +136,24 @@ DO $$
     END;
 $$;
 
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.poi ADD COLUMN address_name TEXT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column address_name already exists in navitia.poi.';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.poi ADD COLUMN address_number TEXT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column address_number already exists in navitia.poi.';
+        END;
+    END;
+$$;
+
+DROP TABLE IF EXISTS navitia.alias;

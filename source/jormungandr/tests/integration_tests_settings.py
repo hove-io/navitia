@@ -1,8 +1,29 @@
 # encoding: utf-8
-import os
+START_MONITORING_THREAD = False
 
-from app_saving_settings import *
 
-INI_FILE = os.path.dirname(os.path.realpath(__file__)) + "/test_jormungandr.ini"
+LOGGER = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters':{
+        'default': {
+            'format': '[%(asctime)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s',
+        },
+    },
+    'handlers': {
+        'default': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['default'],
+            'level': 'INFO',
+            'propagate': True
+        },
+    }
+}
 
 

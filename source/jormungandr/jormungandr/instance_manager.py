@@ -43,8 +43,8 @@ class InstanceManager(object):
 
         # if a .ini file is defined in the settings we take it
         # else we load all .ini file found in the INSTANCES_DIR
-        if 'INI_FILE' in app.config:
-            ini_files = [app.config['INI_FILE']]
+        if 'INI_FILES' in app.config:
+            ini_files = app.config['INI_FILES']
         else:
             ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
 

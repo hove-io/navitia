@@ -246,17 +246,14 @@ struct GeoRef {
 
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode;
-
-    /// Liste des alias
-    std::map<std::string, std::string> alias;
-    std::map<std::string, std::string> synonymes;
+    navitia::autocomplete::autocomplete_map synonyms;
     int word_weight = 5; //Pas serialisé : lu dans le fichier ini
 
     void init();
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
-                & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list
+                & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & poi_proximity_list
                 & nb_vertex_by_mode;
     }
 
@@ -265,7 +262,7 @@ struct GeoRef {
         // On avait donc une fuite de mémoire
         graph.clear();
         ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points
-                & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list
+                & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & synonyms & poi_proximity_list
                 & nb_vertex_by_mode;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -403,11 +400,13 @@ struct POI : public nt::Nameable, nt::Header{
     std::vector<Admin*> admin_list;
     std::map<std::string, std::string> properties;
     nt::idx_t poitype_idx;
+    int address_number;
+    std::string address_name;
 
-    POI(): weight(0), poitype_idx(type::invalid_idx){}
+    POI(): weight(0), poitype_idx(type::invalid_idx), address_number(-1){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri &name & weight & coord & admin_list & properties & poitype_idx & visible;
+        ar &idx & uri &name & weight & coord & admin_list & properties & poitype_idx & visible & address_number & address_name;
     }
 
     std::vector<type::idx_t> get(type::Type_e type, const GeoRef &) const;

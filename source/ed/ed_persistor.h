@@ -51,7 +51,6 @@ private:
 
     void insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections);
     void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
-    void insert_alias(const std::map<std::string, std::string>& alias);
     void insert_synonyms(const std::map<std::string, std::string>& synonyms);
 
     /// Inserer les données fiche horaire par période

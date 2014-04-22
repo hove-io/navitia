@@ -3,7 +3,7 @@ from converters_collection_type import collections_to_resource_type
 from converters_collection_type import resource_type_to_collection
 from make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from flask import url_for
 from flask.ext.restful.utils import unpack
 from jormungandr.authentification import authentification_required
@@ -70,11 +70,10 @@ class add_address_poi_id(object):
             objects = f(*args, **kwargs)
 
             def add_id(objects, region, type_=None):
-                if isinstance(objects, list) or isinstance(objects, tuple):
+                if isinstance(objects, (list, tuple)):
                     for item in objects:
                         add_id(item, region, type_)
-                elif isinstance(objects, dict) or\
-                        isinstance(objects, OrderedDict):
+                elif hasattr(objects, 'keys'):
                     for v in objects.keys():
                         add_id(objects[v], region, v)
                     if 'address' == type_:
@@ -161,28 +160,28 @@ class complete_links(object):
     def __init__(self, resource):
         self.resource = resource
     def complete(self, data, collect):
+        queue = deque()
         result = []
-        if isinstance(data, list) or isinstance(data, tuple):
-            for item in data:
-                result.extend(self.complete(item, collect))
-
-        elif isinstance(data, dict) or\
-                isinstance(data, OrderedDict):
-            if 'type' in data and data['type'] == collect["type"]:
-                if collect["type"] in {"notes"}:
-                    result.append({"id": data['id'], "value": data['value'], "type": collect["type"]})
-                if collect["type"] in {"exceptions"}:
-                    type = "Remove"
-                    if data['except_type'] == 0:
-                        type = "Add"
-                    result.append({"id": data['id'], "date": data['date'], "type" : type})
-                to_del = collect["del"]
-                for del_ in to_del:
-                    del data[del_]
-
-            else:
-                for v in data.items():
-                    result.extend(self.complete(v, collect))
+        for v in data.itervalues():
+            queue.append(v)
+        collect_type = collect["type"]
+        while queue:
+            elem = queue.pop()
+            if isinstance(elem, (list, tuple)):
+                queue.extend(elem)
+            elif hasattr(elem, 'iterkeys'):
+                if 'type' in elem and elem['type'] == collect_type:
+                    if collect_type == "notes":
+                        result.append({"id": elem['id'], "value": elem['value'], "type": collect_type})
+                    elif collect_type == "exceptions":
+                        type_= "Remove"
+                        if elem['except_type'] == 0:
+                            type_ = "Add"
+                        result.append({"id": elem['id'], "date": elem['date'], "type" : type_})
+                    for del_ in collect["del"]:
+                        del elem[del_]
+                else:
+                    queue.extend(elem.itervalues())
         return result
 
     def __call__(self, f):
