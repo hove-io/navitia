@@ -95,10 +95,14 @@ class InstanceManager(object):
         req.requested_api = type_pb2.METADATAS
         while not self.thread_event.is_set():
             for key, instance in self.instances.iteritems():
-                resp = instance.send_and_receive(req, timeout=1000)
+                try:
+                    resp = instance.send_and_receive(req, timeout=1000)
+                except DeadSocketException:
+                    instance.geom = None
+                    continue
                 if resp.HasField("metadatas"):
                     try:
-                        instance.geom = wkt.loads(metadatas.shape)
+                        instance.geom = wkt.loads(resp.metadatas.shape)
                     except ReadingError:
                         instance.geom = None
             self.thread_event.wait(timer)
