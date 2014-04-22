@@ -17,6 +17,7 @@ manager.add_command('aggregate_places', AggregatePlacesCommand())
 manager.add_command('reload_at', ReloadAtCommand())
 manager.add_command('at_reloader', AtReloader())
 manager.add_command('reload_kraken', ReloadKrakenCommand())
+manager.add_command('build_datas', BuildDatasCommand())
 
 if __name__ == '__main__':
     app.config['DEBUG'] = True
