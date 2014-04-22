@@ -1,5 +1,6 @@
 # coding=utf-8
-from shapely import geometry, geos, wkt
+from shapely import geometry, wkt
+from shapely.geos import ReadingError
 import ConfigParser
 import zmq
 from threading import Thread, Event
@@ -9,7 +10,7 @@ from jormungandr.singleton import singleton
 from importlib import import_module
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.exceptions import ApiNotFound, RegionNotFound
+from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
 from jormungandr import app
 from jormungandr.instance import Instance
 import traceback
@@ -37,7 +38,6 @@ class InstanceManager(object):
         """
 
         self.instances = {}
-        self.contributors = {}
         self.context = zmq.Context()
         self.default_socket = None
 
@@ -90,20 +90,21 @@ class InstanceManager(object):
         else:
             raise RegionNotFound(instance_name)
 
-    def thread_ping(self, timer=1):
+    def thread_ping(self, timer=10):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         while not self.thread_event.is_set():
             for key, instance in self.instances.iteritems():
                 try:
                     resp = instance.send_and_receive(req, timeout=1000)
-                    if resp.HasField("metadatas"):
-                        metadatas = resp.metadatas
-                        for contributor in metadatas.contributors:
-                            self.contributors[str(contributor)] = key
-                        instance.geom = wkt.loads(metadatas.shape)
-                except geos.ReadingError:
+                except DeadSocketException:
                     instance.geom = None
+                    continue
+                if resp.HasField("metadatas"):
+                    try:
+                        instance.geom = wkt.loads(resp.metadatas.shape)
+                    except ReadingError:
+                        instance.geom = None
             self.thread_event.wait(timer)
 
     def stop(self):
@@ -176,10 +177,18 @@ class InstanceManager(object):
         for key_region in regions:
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
-            resp = self.instances[key_region].send_and_receive(req,
-                                                               timeout=2000)
-            resp_dict = protobuf_to_dict(resp)
-            if 'metadatas' in resp_dict.keys():
-                resp_dict['metadatas']['region_id'] = key_region
-                response['regions'].append(resp_dict['metadatas'])
+            try:
+                resp = self.instances[key_region].send_and_receive(req,
+                                                               timeout=1000)
+                resp_dict = protobuf_to_dict(resp.metadatas)
+            except DeadSocketException:
+                resp_dict = {
+                    "status": "dead",
+                    "error" : {
+                        "code": "dead_socket",
+                        "value": "The region %s is dead".format(key_region)
+                    }
+                }
+            resp_dict['region_id'] = key_region
+            response['regions'].append(resp_dict)
         return response
