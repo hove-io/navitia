@@ -1,5 +1,6 @@
 # coding=utf-8
-from shapely import geometry, geos, wkt
+from shapely import geometry, wkt
+from shapely.geos import ReadingError
 import ConfigParser
 import zmq
 from threading import Thread, Event
@@ -95,15 +96,15 @@ class InstanceManager(object):
         req.requested_api = type_pb2.METADATAS
         while not self.thread_event.is_set():
             for key, instance in self.instances.iteritems():
-                try:
-                    resp = instance.send_and_receive(req, timeout=1000)
-                    if resp.HasField("metadatas"):
-                        metadatas = resp.metadatas
-                        for contributor in metadatas.contributors:
-                            self.contributors[str(contributor)] = key
+                resp = instance.send_and_receive(req, timeout=1000)
+                if resp.HasField("metadatas"):
+                    metadatas = resp.metadatas
+                    for contributor in metadatas.contributors:
+                        self.contributors[str(contributor)] = key
+                    try:
                         instance.geom = wkt.loads(metadatas.shape)
-                except geos.ReadingError:
-                    instance.geom = None
+                    except ReadingError:
+                        instance.geom = None
             self.thread_event.wait(timer)
 
     def stop(self):
