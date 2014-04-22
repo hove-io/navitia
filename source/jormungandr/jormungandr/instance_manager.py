@@ -183,6 +183,7 @@ class InstanceManager(object):
                 resp_dict = protobuf_to_dict(resp.metadatas)
             except DeadSocketException:
                 resp_dict = {
+                    "status": "dead",
                     "error" : {
                         "code": "dead_socket",
                         "value": "The region %s is dead".format(key_region)
