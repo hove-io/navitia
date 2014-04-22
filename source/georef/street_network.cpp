@@ -67,6 +67,17 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
                 item.angle = *last_angle;
             }
             last_angle = current_angle;
+
+            // FIXME: ugly temporary fix
+            // while we don't use a boost::reverse_graph, the easiest way to handle
+            // the bss rent/putback section in the arrival section is to swap them
+            // This patch is wrong since we don't handle the different duration of
+            // bss_rent and bss_put_back, but it'll do for the moment
+            if (item.transportation == PathItem::TransportCaracteristic::BssTake) {
+                item.transportation = PathItem::TransportCaracteristic::BssPutBack;
+            } else if (item.transportation == PathItem::TransportCaracteristic::BssPutBack) {
+                item.transportation = PathItem::TransportCaracteristic::BssTake;
+            }
         }
 
         if (! result.path_items.empty()) {
