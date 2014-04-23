@@ -1,3 +1,4 @@
+from collections import deque
 from nose.tools import *
 import json
 from navitiacommon import request_pb2, response_pb2
@@ -169,6 +170,102 @@ def check_links(object, tester):
 
     return links
 
+
+def walk_dict(tree, visitor):
+    """
+    depth first search on a dict.
+    call the visit(elem) method on the visitor for each node
+
+    >>> bob = {'tutu': 1,
+    ... 'tata': [1, 2],
+    ... 'toto': {'bob':12, 'bobette': 13, 'nested_bob': {'bob': 3}},
+    ... 'tete': ('tuple1', ['ltuple1', 'ltuple2']),
+    ... 'titi': [{'a':1}, {'b':1}]}
+
+    >>> def my_visitor(name, val):
+    ...     print "{}={}".format(name, val)
+
+    >>> walk_dict(bob, my_visitor)
+    titi={'b': 1}
+    b=1
+    titi={'a': 1}
+    a=1
+    tete=ltuple2
+    tete=ltuple1
+    tete=tuple1
+    tutu=1
+    toto={'bobette': 13, 'bob': 12, 'nested_bob': {'bob': 3}}
+    nested_bob={'bob': 3}
+    bob=3
+    bob=12
+    bobette=13
+    tata=2
+    tata=1
+    """
+    queue = deque()
+
+    def add_elt(name, elt, first=False):
+        if isinstance(elt, (list, tuple)):
+            for val in elt:
+                queue.append((name, val))
+        elif hasattr(elt, 'iteritems'):
+            for k, v in elt.iteritems():
+                queue.append((k, v))
+        elif first:  # for the first elt, we add it even if it is no collection
+            queue.append((name, elt))
+
+    add_elt("main", tree, first=True)
+    while queue:
+        elem = queue.pop()
+        #we don't want to visit the list, we'll visit each node separatly
+        if not isinstance(elem[1], (list, tuple)):
+            visitor(elem[0], elem[1])
+        #for list and tuple, the name is the parent's name
+        add_elt(elem[0], elem[1])
+
+
+def check_internal_links(response, tester):
+    """
+    We want to check that all 'internal' link are correctly linked to an element in the response
+
+    for that we first collect all internal link
+    then iterate on all node and remove a link if we find a node with
+     * a name equals to link.'rel'
+     * an id equals to link.'id'
+
+     At the end the internal link list must be empty
+    """
+    internal_links_id = set()
+    internal_link_types = set()  # set with the types we look for
+
+    def add_link_visitor(name, val):
+        if name == 'links':
+            if 'internal' in val and bool(val['internal']):
+                internal_links_id.add(val['id'])
+                internal_link_types.add(val['rel'])
+
+    walk_dict(response, add_link_visitor)
+
+    logging.info('links: {}'.format(len(internal_links_id)))
+
+    for l in internal_links_id:
+        logging.info('--> {}'.format(l))
+    for l in internal_link_types:
+        logging.info('type --> {}'.format(l))
+
+    def check_node(name, val):
+
+        if name in internal_link_types:
+            logging.info("found a good node {}".format(name))
+
+            if 'id' in val and val['id'] in internal_links_id:
+                #found one ref, we can remove the link
+                internal_links_id.remove(val['id'])
+
+    walk_dict(response, check_node)
+
+    assert not internal_links_id, "cannot find correct ref for internal links : {}".\
+        format([lid for lid in internal_links_id])
 
 class unique_dict(dict):
     """

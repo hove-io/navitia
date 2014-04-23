@@ -20,13 +20,15 @@ def is_valid_journey_response(response, tester):
     for f in fares:
         is_valid_ticket(f, tester)
         all_tickets[f['id']] = f
-        #TODO check internal links
+
+    check_internal_links(response, tester)
 
 
     #TODO check journey links (prev/next)
 
 
 def is_valid_journey(journey, tester):
+    #TODO!
     pass
 
 
