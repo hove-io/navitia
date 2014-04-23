@@ -6,7 +6,6 @@
 #include <random>
 #include <fstream>
 #include "utils/init.h"
-#include <valgrind/callgrind.h>
 
 using namespace navitia;
 using namespace routing;
