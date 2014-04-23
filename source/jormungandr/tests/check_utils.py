@@ -15,8 +15,9 @@ def check_url(tester, url):
     #tester = app.test_client(tester)
     response = tester.get(url)
 
-    assert response
-    eq_(response.status_code, 200)
+    assert response, "response for url {} is null".format(url)
+    eq_(response.status_code, 200, "invalid return code, response : {}"
+        .format(json.dumps(json.loads(response.data), indent=2)))
     return response
 
 
@@ -27,7 +28,7 @@ def get_not_null(dict, field):
     if type(val) == bool:
         return val  # no check for booleans
 
-    assert val
+    assert val, "value of field {} is null".format(field)
     return val
 
 

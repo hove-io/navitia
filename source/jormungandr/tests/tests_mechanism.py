@@ -128,6 +128,20 @@ class AbstractTestFixture:
 
         return self.query(real_url, display)
 
+    def query_no_assert(self, url, display=False):
+        """
+        query url without checking the status code
+        used to test invalid url
+        return tuple with response as dict and status
+        """
+        response = self.tester.get(url)
+
+        json_response = json.loads(response.data)
+        if display:
+            logging.info("loaded response : " + json.dumps(json_response, indent=2))
+
+        return json_response, response.status_code
+
 
 def dataset(datasets):
     """
