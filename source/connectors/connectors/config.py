@@ -15,6 +15,7 @@ class Config(object):
         self.exchange_name = None
         self.rt_topic = None
         self.jormungandr_url = None
+        self.jormungandr_token = None
         self.logger_file = None
         self.logger_level = None
 
@@ -49,6 +50,7 @@ class Config(object):
         confspec.append('broker-url = string()')
         confspec.append('last-exec-time-file = string(default="./last_exec_time.txt")')
         confspec.append('jormungandr-url = string()')
+        confspec.append('jormungandr-token = string(default=None)')
         confspec.append('logger-file = string(default="./connector_at.log")')
         confspec.append('logger-level = string(default="DEBUG")')
 
@@ -67,5 +69,6 @@ class Config(object):
         self.rt_topic = config['connector-at']['rt-topic']
         self.last_exec_time_file = config['connector-at']['last-exec-time-file']
         self.jormungandr_url = config['connector-at']['jormungandr-url']
+        self.jormungandr_token = config['connector-at']['jormungandr-token']
         self.logger_file = config['connector-at']['logger-file']
         self.logger_level = config['connector-at']['logger-level']

@@ -62,6 +62,7 @@ class AtRealtimeReader(object):
         except:
             raise ValueError("AT : Connecting at server failed")
         self.jormungandr_url = config.jormungandr_url
+        self.jormungandr_token = config.jormungandr_token
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
 
@@ -128,8 +129,14 @@ class AtRealtimeReader(object):
         if object_type in self._collections.keys():
             collection = self._collections[object_type]
             url = "%s/v1/%s" % (self.jormungandr_url, collection)
+            if self.jormungandr_token:
+                auth = (self.jormungandr_token, None)
+            else:
+                auth = None
             request_jormun = requests.get(url,
-                                          params={"external_code": externalcode})
+                                          params={"external_code": externalcode},
+                                          auth=auth)
+            logging.getLogger(__name__).debug("call %s" % request_jormun.url)
             if request_jormun:
                 json = request_jormun.json()
                 if collection in json and len(json[collection]) > 0:
