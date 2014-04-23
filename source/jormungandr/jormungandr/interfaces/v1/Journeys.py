@@ -423,7 +423,8 @@ class Journeys(ResourceUri):
             'comfort': "A journey with less changes and walking",
             'car': "A journey with car to get to the public transport",
             'less_fallback_walk': "A journey with less walking",
-            'less_fallback_bike_bss': "A journey with less biking",
+            'less_fallback_bike': "A journey with less biking",
+            'less_fallback_bss': "A journey with less bss",
             'fastest': "A journey with minimum duration",
             'non_pt_walk': "A journey without public transport, only walking",
             'non_pt_bike': "A journey without public transport, only biking",
@@ -510,20 +511,24 @@ class Journeys(ResourceUri):
             if uri:
                 objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
-                    args['origin'] = self.transform_id(objects[-1])
+                    args['origin'] = objects[-1]
                 else:
                     abort(503, message="Unable to compute journeys "
                                        "from this object")
         else:
             if args['origin']:
                 self.region = i_manager.key_of_id(args['origin'])
-                args['origin'] = self.transform_id(args['origin'])
             elif args['destination']:
                 self.region = i_manager.key_of_id(args['destination'])
-            if args['destination']:
-                args['destination'] = self.transform_id(args['destination'])
             # else:
             #    raise RegionNotFound("")
+
+        #we transform the origin/destination url to add information
+        if args['origin']:
+            args['origin'] = self.transform_id(args['origin'])
+        if args['destination']:
+            args['destination'] = self.transform_id(args['destination'])
+
         if not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
         api = None
