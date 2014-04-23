@@ -436,6 +436,7 @@ class Script(object):
         self.choose_best(resp)
 
         self.delete_journeys(resp, request)  # last filter
+        self.sort_journeys(resp)
         return resp
 
     def choose_best(self, resp):
@@ -514,6 +515,12 @@ class Script(object):
         #after all filters, we filter not to give too many results
         if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
             del resp.journeys[request["max_nb_journeys"]:]
+
+
+    def sort_journeys(self, resp):
+        if len(resp.journeys) > 0:
+            resp.journeys.sort(self.journey_compare)
+
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)
