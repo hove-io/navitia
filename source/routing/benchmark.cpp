@@ -111,10 +111,8 @@ int main(int argc, char** argv){
     for(auto demand : demands){
         ++show_progress;
         Timer t2;
-                    CALLGRIND_START_INSTRUMENTATION;
 
         auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target], demand.hour, demand.date, navitia::DateTimeUtils::inf,false);
-                    CALLGRIND_STOP_INSTRUMENTATION;
 
         Path path;
         if(res.size() > 0) {
