@@ -160,7 +160,7 @@ def reload_kraken(instance_id):
 
 
 @celery.task()
-def build_all_datas():
+def build_all_data():
     for instance in models.Instance.query.all():
         job = models.Job()
         job.instance = instance
