@@ -141,22 +141,22 @@ struct streetnetworkmode_fixture : public routing_api_data<speed_provider_trait>
 BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provider>) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     origin.streetnetwork_params.offset = 0;
-    origin.streetnetwork_params.max_duration = bt::seconds(200 / get_default_speed()[navitia::type::Mode_e::Walking]);
+    origin.streetnetwork_params.max_duration = bt::seconds(15*60);//bt::seconds(200 / get_default_speed()[navitia::type::Mode_e::Walking]);
     origin.streetnetwork_params.speed_factor = 1;
 
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     destination.streetnetwork_params.offset = 0;
     destination.streetnetwork_params.speed_factor = 1;
-    destination.streetnetwork_params.max_duration = bt::seconds(50 / get_default_speed()[navitia::type::Mode_e::Walking]);
+    destination.streetnetwork_params.max_duration = bt::seconds(15*60);//bt::seconds(50 / get_default_speed()[navitia::type::Mode_e::Walking]);
 
     pbnavitia::Response resp = make_response();
 
     dump_response(resp, "walking");
 
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4); //1 direct path by date and 1 path with bus by date
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct path by date and 1 path with bus
     pbnavitia::Journey journey = resp.journeys(0);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20120614T090000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20120614T090510");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20120614T080000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20120614T080510");
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
@@ -179,19 +179,17 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
 BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Bike];
-    double total_distance = S.distance_to(B) + B.distance_to(K) + K.distance_to(J) + J.distance_to(I)
-            + I.distance_to(H) + H.distance_to(G) + G.distance_to(A) + A.distance_to(R) + 1;
-    origin.streetnetwork_params.max_duration = bt::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Bike]);
+    origin.streetnetwork_params.max_duration = bt::minutes(15);
     origin.streetnetwork_params.speed_factor = 1;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Bike];
-    destination.streetnetwork_params.max_duration = bt::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Bike]);
+    destination.streetnetwork_params.max_duration = bt::minutes(15);
     destination.streetnetwork_params.speed_factor = 1;
 
     auto resp = make_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct path by date and 1 path with bus
     auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
@@ -241,7 +239,7 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     auto resp = make_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct path by date and 1 path with bus
     auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
@@ -292,7 +290,7 @@ BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture<test_speed_provider>) {
     auto resp = make_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 direct path by date only because the car is faster than the bus
     auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
@@ -324,17 +322,17 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bss;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Bss];
-    origin.streetnetwork_params.max_duration = bt::pos_infin;
+    origin.streetnetwork_params.max_duration = bt::minutes(15);
     origin.streetnetwork_params.speed_factor = 1;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bss;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Bss];
-    destination.streetnetwork_params.max_duration = bt::pos_infin;
+    destination.streetnetwork_params.max_duration = bt::minutes(15);
     destination.streetnetwork_params.speed_factor = 1;
 
     auto resp = make_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     auto journey = resp.journeys(0);
     dump_response(resp, "bss");
 
