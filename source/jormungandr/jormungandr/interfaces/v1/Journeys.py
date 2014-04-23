@@ -335,7 +335,7 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_journey['arrival_date_time'] \
                 and asap_journey['departure_date_time']:
-            second = timedelta(seconds=1)
+            second = timedelta(minutes=1)
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             s_arrival = asap_journey['arrival_date_time']
