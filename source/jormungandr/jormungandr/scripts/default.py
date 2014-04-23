@@ -367,14 +367,33 @@ class Script(object):
         return resp
 
     def journey_compare(self, j1, j2):
-        arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
-        arrival_j2_f = datetime.strptime(j2.arrival_date_time, f_date_time)
-        if arrival_j1_f > arrival_j2_f:
-            return 1
-        elif arrival_j1_f == arrival_j2_f:
-            return 0
-        else:
-            return -1
+        arrival_j1 = j1.arrival_date_time
+        arrival_j2 = j2.arrival_date_time
+        if arrival_j1 != arrival_j2:
+            return -1 if arrival_j1 < arrival_j2 else 1
+
+        duration_j1 = j1.duration
+        duration_j2 = j2.duration
+        if duration_j1 != duration_j2:
+            return duration_j1 - duration_j2
+
+        nb_transfers_j1 = j1.nb_transfers
+        nb_transfers_j2 = j2.nb_transfers
+        if nb_transfers_j1 != nb_transfers_j2:
+            return nb_transfers_j1 - nb_transfers_j2
+
+        non_pt_duration_j1 = non_pt_duration_j2 = -1
+        for journey in [j1, j2]:
+            non_pt_duration = 0
+            for section in journey.sections:
+                if section.type != response_pb2.PUBLIC_TRANSPORT:
+                    non_pt_duration = section.duration
+            if non_pt_duration_j1 == -1:
+                non_pt_duration_j1 = non_pt_duration
+            else:
+                non_pt_duration_j2 = non_pt_duration
+        return non_pt_duration_j1 - non_pt_duration_j2
+
 
     def fill_journeys(self, pb_req, request, instance):
         resp = self.get_journey(pb_req, instance, request)
