@@ -1,7 +1,7 @@
 # encoding: utf-8
-from flask_restful import reqparse, abort
+from flask_restful import reqparse
 import flask_restful
-from flask import current_app, request
+from flask import current_app, request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 from jormungandr import i_manager
@@ -47,17 +47,13 @@ def authentification_required(func):
 
 
 def get_token():
-    parser = reqparse.RequestParser()
-    parser.add_argument('Authorization', type=str, location='headers')
-    request_args = parser.parse_args()
-
-    if not request_args['Authorization']:
+    if 'Authorization' not in request.headers:
         return None
 
-    args = request_args['Authorization'].split(' ')
+    args = request.headers['Authorization'].split(' ')
     if len(args) > 1:
         try:
-            _, b64 = request_args['Authorization'].split(' ')
+            _, b64 = args
             decoded = base64.decodestring(b64)
             return decoded.split(':')[0]
         except ValueError:
@@ -69,32 +65,58 @@ def get_token():
 def authenticate(region, api, abort=False):
     if 'PUBLIC' in current_app.config \
             and current_app.config['PUBLIC']:
-        # si jormungandr est en mode public: on zap l'authentification
+        #if jormungandr is on public mode we skip the authentification process
         return True
 
+    #Hack for allow user not logged in...
     token = get_token()
-
     if not token:
         instance = Instance.get_by_name(region)
         if abort:
             if instance and instance.is_free:
                 return True
             else:
-                flask_restful.abort(401)
+                abort_request()
         else:
             return False if not instance else instance.first().is_free
 
-    user = User.get_from_token(token, datetime.datetime.now())
+    user = get_user()
     if user:
         if user.has_access(region, api):
             return True
         else:
             if abort:
-                flask_restful.abort(403)
+                abort_request()
             else:
                 return False
     else:
         if abort:
-            flask_restful.abort(401)
+           abort_request()
         else:
             return False
+
+def abort_request():
+    """
+    abort a request with the proper http status in case of authentification issues
+    """
+    if get_user():
+        flask_restful.abort(403)
+    else:
+        flask_restful.abort(401)
+
+def has_access(instance, abort=False):
+    res = instance.is_accessible_by(get_user())
+    if abort and not res:
+        abort_request()
+    else:
+        return res
+
+def get_user():
+    """
+    return the current authentificated User or None
+    """
+    if hasattr(g, 'user'):
+        return g.user
+    else:
+        g.user = User.get_from_token(get_token(), datetime.datetime.now())
+        return g.user

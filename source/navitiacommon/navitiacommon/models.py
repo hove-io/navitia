@@ -130,6 +130,35 @@ class Instance(db.Model):
             else:
                 return None
 
+    def _is_accessible_by(self, user):
+        """
+        Check if an instance is accessible by a user
+        We don't check the api used here!
+        this version don't use cache
+        """
+        if self.is_free:
+            return True
+        elif user:
+            return self.authorizations.filter_by(user=user).count() > 0
+        else:
+            return False
+
+    def is_accessible_by(self, user):
+        """
+        Check if an instance is accessible by a user
+        We don't check the api used here!
+        """
+        if user:
+            user_id = user.id
+        else:
+            user_id = None
+        key = '%s_%s' % (self.name, user_id)
+        res = get_cache().get(self.cache_prefix + '_access', key)
+        if res is None:
+            res = self._is_accessible_by(user)
+            get_cache().set(self.cache_prefix + '_access', key, res)
+        return res
+
     def __repr__(self):
         return '<Instance %r>' % self.name
 
