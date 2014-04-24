@@ -158,7 +158,8 @@ void RAPTOR::clear_and_init(Solutions departs,
     for(Solution item : departs) {
         const type::JourneyPatternPoint* journey_pattern_point = data.pt_data->journey_pattern_points[item.rpidx];
         const type::StopPoint* stop_point = journey_pattern_point->stop_point;
-        if(stop_point->accessible(required_properties)) {
+        if(stop_point->accessible(required_properties) &&
+                ((clockwise && item.arrival <= bound) || (!clockwise && item.arrival >= bound))) {
             labels[0][item.rpidx].dt = item.arrival;
             labels[0][item.rpidx].type = boarding_type::departure;
             best_labels[item.rpidx] = item.arrival;
@@ -178,11 +179,11 @@ void RAPTOR::clear_and_init(Solutions departs,
         if(sp->accessible(required_properties)) {
             for(auto journey_pattern_point : sp->journey_pattern_point_list) {
                 type::idx_t jppidx = journey_pattern_point->idx;
-                if(journey_patterns_valides.test(journey_pattern_point->journey_pattern->idx) &&
-                        ((clockwise && (bound == DateTimeUtils::inf || best_labels[jppidx] > bound)) ||
-                        ((!clockwise) && (bound == DateTimeUtils::min || best_labels[jppidx] < bound)))) {
+                if(journey_patterns_valides.test(journey_pattern_point->journey_pattern->idx)) {
                         b_dest.add_destination(jppidx, item.second, clockwise);
-                        best_labels[jppidx] = bound;
+                        best_labels[jppidx] = clockwise ?
+                                    std::min(bound, labels[0][jppidx].dt) :
+                                    std::max(bound, labels[0][jppidx].dt);
                     }
             }
         }

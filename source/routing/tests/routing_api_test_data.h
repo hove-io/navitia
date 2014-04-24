@@ -69,29 +69,27 @@ struct routing_api_data {
               |
               S
 
-                On veut aller de S vers R :
-                    *) la voie cyclable est : A->G->H->I->J->K->B
-                    *) la voie rÃ©servÃ©e Ã  la voiture est : A->E->F->C->B
-                    *) la voie MAP est : A->B
-                    *) la voie cyclable, voiture et MAP : S->B
-                    *) entre A et B que le transport en commun
-                    *) entre A et R que la marche a pied
+                We want to go from S to R:
+                    *) The bikeway is: A->G->H->I->J->K->B
+                    *) The car way is: A->E->F->C->B
+                    *) We can walk on A->B
+                    *) A->B has public transport
+                    *) S->B can be use by walk, bike or car
+                    *) A->R is a pedestrian street
 
-
-
-                    CoordonÃ©es :
-                                A(12, 8)    0
-                                G(10, 8)    1
-                                H(10, 10)   2
-                                I(7, 10)    3
-                                J(7, 12)    4
-                                K(1, 12)    5
-                                B(1, 3)     6
-                                C(15, 3)    7
-                                F(15, 5)    8
-                                E(12, 5)    9
-                                R(21, 8)    10
-                                S(1, 1)     11
+                    Coordinates:
+                                A(120, 80)    0
+                                G(100, 80)    1
+                                H(100, 100)   2
+                                I(70, 100)    3
+                                J(70, 120)    4
+                                K(10, 120)    5
+                                B(10, 30)     6
+                                C(150, 30)    7
+                                F(150, 50)    8
+                                E(120, 50)    9
+                                R(210, 80)    10
+                                S(10, 10)     11
 
 
 
@@ -276,8 +274,9 @@ struct routing_api_data {
         b.data->geo_ref->ways[5]->edges.push_back(std::make_pair(GG, GG)); //on way AG
 
         b.sa("stopA", A.lon(), A.lat());
-        b.sa("stopR", R.lon(), R.lat());
-        b.vj("A")("stopA", 8*3600 +10*60, 8*3600 + 11 * 60)("stopR", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+        b.sa("stopB", B.lon(), B.lat());
+        //we add a very fast bus (2 seconds) to be faster than walking and biking
+        b.vj("A")("stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)("stopA", 8*3600 + 1 * 60 + 2 ,8*3600 + 1*60 + 2);
         b.generate_dummy_basis();
         b.data->pt_data->index();
         b.data->build_raptor();
@@ -296,7 +295,15 @@ struct routing_api_data {
                 destination_uri = "coord:"+destination_lon+":"+destination_lat;
         navitia::type::Type_e destination_type = b.data->get_type_of_id(destination_uri);
         destination = {destination_type, destination_uri};
-        // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
+
+        //we give a rough shape (a square)
+        std::stringstream ss;
+        ss << "POLYGON((" << S.lon() - 1e-3 << " " << S.lat() - 1e-3
+                  << ", " << S.lon() - 1e-3 << " " << R.lat() + 1e-3
+                  << ", " << R.lon() + 1e-3 << " " << R.lat() + 1e-3
+                  << ", " << R.lon() + 1e-3 << " " << S.lat() - 1e-3
+                  << ", " << S.lon() - 1e-3 << " " << S.lat() - 1e-3 << "))";
+        b.data->meta->shape = ss.str();
     }
 
     bt::time_duration to_duration(double dist, navitia::type::Mode_e mode) {
@@ -364,7 +371,7 @@ struct routing_api_data {
     ed::builder b = {"20120614"};
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;
-    std::vector<std::string> datetimes = {"20120614T080000", "20120614T090000"};
+    std::vector<std::string> datetimes = {"20120614T080000"};
     std::vector<std::string> forbidden;
 
     double distance_ag;
