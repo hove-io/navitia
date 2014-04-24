@@ -583,8 +583,11 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         if(this->sort != other.sort) {
             return this->sort < other.sort;
         }
+        if(this->code != other.code) {
+            return navitia::pseudo_natural_sort()(this->code, other.code);
+        }
         if(this->name != other.name) {
-            return navitia::pseudo_natural_sort()(this->name, other.name);
+            return this->name < other.name;
         }
         return this < &other;
     }
