@@ -7,6 +7,7 @@ from flask import current_app
 import glob
 from tyr import celery
 from navitiacommon import models
+import logging
 import os
 import zipfile
 from tyr.helper import load_instance_config
@@ -129,6 +130,7 @@ def scan_instances():
             models.db.session.add(instance)
             models.db.session.commit()
 
+
 @celery.task()
 def reload_at(instance_id):
     instance = models.Instance.query.get(instance_id)
@@ -143,6 +145,32 @@ def reload_at(instance_id):
           finish_job.si(job.id)
           ).delay()
 
+
+@celery.task()
+def reload_kraken(instance_id):
+    instance = models.Instance.query.get(instance_id)
+    job = models.Job()
+    job.instance = instance
+    job.state = 'pending'
+    instance_config = load_instance_config(instance.name)
+    models.db.session.add(job)
+    models.db.session.commit()
+    chain(reload_data.si(instance_config, job.id)).delay()
+    logging.info("Task reload kraken for instance {} queued".format(instance.name))
+
+
+@celery.task()
+def build_all_data():
+    for instance in models.Instance.query.all():
+        job = models.Job()
+        job.instance = instance
+        job.state = 'pending'
+        instance_config = load_instance_config(instance.name)
+        models.db.session.add(job)
+        models.db.session.commit()
+        chain(ed2nav.si(instance_config, job.id),
+                            nav2rt.si(instance_config, job.id)).delay()
+        current_app.logger.info("Job  build data of : %s queued"%instance.name)
 
 
 @task_postrun.connect

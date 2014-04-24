@@ -218,6 +218,7 @@ def reload_data(instance_config, job_id):
     """ reload data on all kraken of this instance"""
     job = models.Job.query.get(job_id)
     instance = job.instance
+    logging.info("Unqueuing job {}, reload data of instance {}".format(job.id, instance.name))
     logger = get_instance_logger(instance)
     try:
         task = navitiacommon.task_pb2.Task()
