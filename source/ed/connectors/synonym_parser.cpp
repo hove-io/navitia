@@ -7,13 +7,13 @@
 
 namespace ed{ namespace connectors{
 
-SynonymParser::SynonymParser(const std::string & path): path(path){
+SynonymParser::SynonymParser(const std::string & filename): filename(filename){
         logger = log4cplus::Logger::getInstance("log");
 }
 
 void SynonymParser::fill_synonyms(){
     std::string key, value;
-    CsvReader reader(this->path + "/synonyms.txt", ',', true, true);
+    CsvReader reader(this->filename, ',', true, true);
     if(!reader.is_open()) {
        throw SynonymParserException("Cannot open file : " + reader.filename);
     }

@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
-        ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
+        ("input,i", po::value<std::string>(&input), "Synonyms file name")
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");

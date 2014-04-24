@@ -11,13 +11,13 @@ struct SynonymParserException: public navitia::exception{
 class SynonymParser{
 private:
     log4cplus::Logger logger;
-    std::string path;
+    std::string filename;
     void fill_synonyms();
 
 public:
     std::map<std::string, std::string> synonym_map;
 
-    SynonymParser(const std::string & path);
+    SynonymParser(const std::string& filename);
 
     void fill();
 };

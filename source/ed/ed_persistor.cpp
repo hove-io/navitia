@@ -323,6 +323,7 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
 
 void EdPersistor::persist_synonym(const std::map<std::string, std::string>& data){
     this->lotus.start_transaction();
+    this->clean_synonym();
     LOG4CPLUS_INFO(logger, "Begin: insert synonyms");
     this->insert_synonyms(data);
     LOG4CPLUS_INFO(logger, "Begin: commit");
