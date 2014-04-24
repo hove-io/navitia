@@ -1,7 +1,6 @@
 #include "config.h"
 #include <iostream>
 #include "ed/connectors/fusio_parser.h"
-#include "ed/connectors/external_parser.h"
 #include "ed/connectors/fare_parser.h"
 
 #include "utils/timer.h"
@@ -24,13 +23,12 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, date, connection_string,
-                synonyms_file, fare_dir;
+                fare_dir;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
@@ -90,11 +88,6 @@ int main(int argc, char * argv[])
 
     data.normalize_uri();
 
-    ed::connectors::ExternalParser extConnecteur;
-    if(vm.count("synonyms")){
-        extConnecteur.fill_synonyms(synonyms_file, data);
-    }
-
     if(vm.count("fare")){
         start = pt::microsec_clock::local_time();
         LOG4CPLUS_INFO(logger, "Alimentation de fare");
@@ -117,8 +110,7 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
     LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());    
-    LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonyms.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);

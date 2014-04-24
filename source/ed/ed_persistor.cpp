@@ -298,9 +298,6 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert journey pattern point connections");
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
     LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
-    LOG4CPLUS_INFO(logger, "Begin: insert synonyms");
-    this->insert_synonyms(data.synonyms);
-    LOG4CPLUS_INFO(logger, "End: insert synonyms");
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
     LOG4CPLUS_INFO(logger, "End: insert fares");
@@ -324,6 +321,15 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "End: commit");
 }
 
+void EdPersistor::persist_synonym(const std::map<std::string, std::string>& data){
+    this->lotus.start_transaction();
+    this->clean_synonym();
+    LOG4CPLUS_INFO(logger, "Begin: insert synonyms");
+    this->insert_synonyms(data);
+    LOG4CPLUS_INFO(logger, "Begin: commit");
+    this->lotus.commit();
+    LOG4CPLUS_INFO(logger, "End: commit");
+}
 
 void EdPersistor::persist_fare(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: truncate fare tables");
@@ -360,11 +366,15 @@ void EdPersistor::clean_poi(){
                 "TRUNCATE  navitia.poi_type, navitia.poi CASCADE;"));
 }
 
+void EdPersistor::clean_synonym(){
+    PQclear(this->lotus.exec("TRUNCATE navitia.synonym"));
+}
+
 void EdPersistor::clean_db(){
     PQclear(this->lotus.exec(
                 "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
                 "navitia.physical_mode, navitia.contributor, "
-                "navitia.synonym, navitia.commercial_mode, "
+                "navitia.commercial_mode, "
                 "navitia.vehicle_properties, navitia.properties, "
                 "navitia.validity_pattern, navitia.network, navitia.parameters, "
                 "navitia.connection, navitia.calendar, navitia.period, "
