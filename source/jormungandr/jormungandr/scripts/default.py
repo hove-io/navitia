@@ -367,14 +367,27 @@ class Script(object):
         return resp
 
     def journey_compare(self, j1, j2):
-        arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
-        arrival_j2_f = datetime.strptime(j2.arrival_date_time, f_date_time)
-        if arrival_j1_f > arrival_j2_f:
-            return 1
-        elif arrival_j1_f == arrival_j2_f:
-            return 0
-        else:
-            return -1
+        if j1.arrival_date_time != j2.arrival_date_time:
+            return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
+
+        if j1.duration != j2.duration:
+            return j1.duration - j2.duration
+
+        if j1.nb_transfers != j2.nb_transfers:
+            return j1.nb_transfers - j2.nb_transfers
+
+        non_pt_duration_j1 = non_pt_duration_j2 = None
+        for journey in [j1, j2]:
+            non_pt_duration = 0
+            for section in journey.sections:
+                if section.type != response_pb2.PUBLIC_TRANSPORT:
+                    non_pt_duration += section.duration
+            if not non_pt_duration_j1:
+                non_pt_duration_j1 = non_pt_duration
+            else:
+                non_pt_duration_j2 = non_pt_duration
+        return non_pt_duration_j1 - non_pt_duration_j2
+
 
     def fill_journeys(self, pb_req, request, instance):
         resp = self.get_journey(pb_req, instance, request)
@@ -417,6 +430,7 @@ class Script(object):
         self.choose_best(resp)
 
         self.delete_journeys(resp, request)  # last filter
+        self.sort_journeys(resp)
         return resp
 
     def choose_best(self, resp):
@@ -495,6 +509,12 @@ class Script(object):
         #after all filters, we filter not to give too many results
         if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
             del resp.journeys[request["max_nb_journeys"]:]
+
+
+    def sort_journeys(self, resp):
+        if len(resp.journeys) > 0:
+            resp.journeys.sort(self.journey_compare)
+
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)
