@@ -1,3 +1,9 @@
+navitia2 (0.94.1) unstable; urgency=low
+
+  * Ed: Do bulk insert on stop times every 150000 inserts
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 24 Apr 2014 14:04:36 +0100
+
 navitia2 (0.94.0) unstable; urgency=low
 
   * Jormungandr: change default fallback modes
