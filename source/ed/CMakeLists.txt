@@ -1,4 +1,3 @@
-
 SET(SOURCE_LIB
         data.cpp
         types.cpp
@@ -18,7 +17,7 @@ FIND_LIBRARY(OSMPBF osmpbf)
 
 add_executable(osm2ed osm2ed.cpp)
 target_link_libraries(osm2ed transportation_data_import ed connectors pq pqxx ${OSMPBF} pb_lib utils
-    ${BOOST_LIBS} log4cplus)
+    ${BOOST_LIBS} log4cplus z)
 
 add_subdirectory(tests)
 
