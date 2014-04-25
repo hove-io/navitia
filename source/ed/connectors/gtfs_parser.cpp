@@ -156,17 +156,17 @@ void StopsGtfsHandler::finish(Data& data) {
 
 void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
     //we have to check if there was stop area in the file
-    bool has_stop_area = (!data.stop_areas.empty());
-    if (! has_stop_area) {
+    bool has_no_stop_areas = data.stop_areas.empty();
+    if (has_no_stop_areas) {
         for (const auto sp : data.stop_points) {
             if (sp->stop_area) {
-                has_stop_area = true;
+                has_no_stop_areas = false;
                 break;
             }
         }
     }
 
-    if (! has_stop_area) {
+    if (has_no_stop_areas) {
         //we artificialy create one stop_area by stop point
         for (const auto sp : data.stop_points) {
             auto sa = new nm::StopArea;
