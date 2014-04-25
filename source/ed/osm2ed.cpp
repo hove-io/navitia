@@ -275,7 +275,7 @@ std::vector<uint64_t> Visitor::nodes_of_relation(const CanalTP::References & ref
 
 
 void Visitor::insert_admin(){
-    this->persistor.lotus.prepare_bulk_insert("navitia.admin", {"id", "name", "post_code", "insee", "level", "coord", "boundary", "uri"});
+    this->persistor.lotus.prepare_bulk_insert("georef.admin", {"id", "name", "post_code", "insee", "level", "coord", "boundary", "uri"});
     int ignored = 0;
     for(auto ar : OSMAdminRefs){
         auto admin = ar.second;
@@ -292,7 +292,7 @@ void Visitor::insert_admin(){
 }
 
 void Visitor::insert_poitypes(){
-    this->persistor.lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
+    this->persistor.lotus.prepare_bulk_insert("georef.poi_type", {"id", "uri", "name"});
     for(auto pt : poi_types){
         this->persistor.lotus.insert({std::to_string(pt.second.id), "poi_type:" + pt.first, pt.second.name});
     }
@@ -300,7 +300,7 @@ void Visitor::insert_poitypes(){
 }
 
 void Visitor::insert_pois(){
-    this->persistor.lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id", "address_name", "address_number"});
+    this->persistor.lotus.prepare_bulk_insert("georef.poi", {"id","weight","coord", "name", "uri", "poi_type_id", "address_name", "address_number"});
     for(auto poi : pois){
         Node n;
         try{
@@ -320,7 +320,7 @@ void Visitor::insert_pois(){
 }
 
 void Visitor::insert_properties(){
-    this->persistor.lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
+    this->persistor.lotus.prepare_bulk_insert("georef.poi_properties", {"poi_id","key","value"});
     for(const auto& poi : pois){
         try{
             nodes.at(poi.first);

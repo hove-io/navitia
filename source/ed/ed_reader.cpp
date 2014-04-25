@@ -78,7 +78,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, post_code, insee, level, ST_X(coord::geometry) as lon, "
         "ST_Y(coord::geometry) as lat "
-        "FROM navitia.admin";
+        "FROM georef.admin";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -665,7 +665,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, uri, name FROM navitia.poi_type;";
+    std::string request = "SELECT id, uri, name FROM georef.poi_type;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::POIType* poi_type = new navitia::georef::POIType();
@@ -682,8 +682,8 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT poi.id, poi.weight, ST_X(poi.coord::geometry) as lon, "
             "ST_Y(poi.coord::geometry) as lat, poi.visible as visible, "
             "poi.name, poi.uri, poi.poi_type_id, poi.address_number, "
-            "poi.address_name FROM navitia.poi poi, "
-            "navitia.poi_type poi_type where poi.poi_type_id=poi_type.id;";
+            "poi.address_name FROM georef.poi poi, "
+            "georef.poi_type poi_type where poi.poi_type_id=poi_type.id;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         std::string string_number;
@@ -713,7 +713,7 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_poi_properties(navitia::type::Data&, pqxx::work& work){
-    std::string request = "select poi_id, key, value from navitia.poi_properties;";
+    std::string request = "select poi_id, key, value from georef.poi_properties;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::POI* poi = this->poi_map[const_it["poi_id"].as<idx_t>()];
@@ -992,7 +992,7 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
     data.geo_ref->build_proximity_list();
     std::string request = "SELECT poi.id as id, ST_X(poi.coord::geometry) as lon,";
                 request += "ST_Y(poi.coord::geometry) as lat";
-                request += " FROM navitia.poi poi, navitia.poi_type poi_type";
+                request += " FROM georef.poi poi, georef.poi_type poi_type";
                 request += " where poi.poi_type_id=poi_type.id";
                 request += " and poi_type.uri = 'poi_type:bicycle_rental'";
 
@@ -1035,7 +1035,7 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
 
 void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
     std::string key, value;
-    std::string request = "SELECT key, value FROM navitia.synonym;";
+    std::string request = "SELECT key, value FROM georef.synonym;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         const_it["key"].to(key);
@@ -1224,7 +1224,7 @@ void EdReader::build_rel_way_admin(navitia::type::Data&, pqxx::work& work){
 }
 
 void EdReader::build_rel_admin_admin(navitia::type::Data&, pqxx::work& work){
-    std::string request = "select master_admin_id, admin_id from navitia.rel_admin_admin;";
+    std::string request = "select master_admin_id, admin_id from georef.rel_admin_admin;";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::Admin* admin_master = this->admin_map[const_it["master_admin_id"].as<idx_t>()];

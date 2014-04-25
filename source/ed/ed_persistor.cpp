@@ -82,13 +82,13 @@ void EdPersistor::build_ways(){
     /// Update ways name
     PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
     /// Update of admin cordinates  : Calcul of barycentre
-    PQclear(this->lotus.exec("SELECT navitia.update_admin_coord();", "", PGRES_TUPLES_OK));
+    PQclear(this->lotus.exec("SELECT georef.update_admin_coord();", "", PGRES_TUPLES_OK));
     /// Relation between admins
-    PQclear(this->lotus.exec("SELECT navitia.match_admin_to_admin();", "", PGRES_TUPLES_OK));
+    PQclear(this->lotus.exec("SELECT georef.match_admin_to_admin();", "", PGRES_TUPLES_OK));
 }
 
 void EdPersistor::insert_admins(const ed::Georef& data){
-    this->lotus.prepare_bulk_insert("navitia.admin",
+    this->lotus.prepare_bulk_insert("georef.admin",
             {"id", "name", "post_code", "insee", "level", "coord", "uri"});
     for(const auto& itm : data.admins){
         if(itm.second->is_used){
@@ -181,7 +181,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
 }
 
 void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
-    this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
+    this->lotus.prepare_bulk_insert("georef.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
         this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
     }
@@ -189,7 +189,7 @@ void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
 }
 
 void EdPersistor::insert_pois(const ed::PoiPoiType& data){
-    this->lotus.prepare_bulk_insert("navitia.poi",
+    this->lotus.prepare_bulk_insert("georef.poi",
     {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible", "address_number", "address_name"});
     for(const auto& itm : data.pois) {
         std::string poi_type("NULL");
@@ -206,7 +206,7 @@ void EdPersistor::insert_pois(const ed::PoiPoiType& data){
 }
 
 void EdPersistor::insert_poi_properties(const ed::PoiPoiType& data){
-    this->lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
+    this->lotus.prepare_bulk_insert("georef.poi_properties", {"poi_id","key","value"});
     for(const auto& itm : data.pois){
         for(auto property : itm.second->properties){
             this->lotus.insert({std::to_string(itm.second->id),property.first, property.second});
@@ -229,7 +229,7 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
 }
 
 void EdPersistor::update_boundary(){
-    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from navitia.admin;",
+    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from georef.admin;",
                 "", PGRES_TUPLES_OK));
 }
 
@@ -357,17 +357,17 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
 
 void EdPersistor::clean_georef(){
     PQclear(this->lotus.exec(
-                "TRUNCATE georef.node, georef.house_number, navitia.admin, "
+                "TRUNCATE georef.node, georef.house_number, georef.admin, "
                 "georef.way CASCADE;"));
 }
 
 void EdPersistor::clean_poi(){
     PQclear(this->lotus.exec(
-                "TRUNCATE  navitia.poi_type, navitia.poi CASCADE;"));
+                "TRUNCATE  georef.poi_type, georef.poi CASCADE;"));
 }
 
 void EdPersistor::clean_synonym(){
-    PQclear(this->lotus.exec("TRUNCATE navitia.synonym"));
+    PQclear(this->lotus.exec("TRUNCATE georef.synonym"));
 }
 
 void EdPersistor::clean_db(){
@@ -959,7 +959,7 @@ void EdPersistor::insert_rel_calendar_line(const std::vector<types::Calendar*>& 
 }
 
 void EdPersistor::insert_synonyms(const std::map<std::string, std::string>& synonyms){
-    this->lotus.prepare_bulk_insert("navitia.synonym", {"id", "key", "value"});
+    this->lotus.prepare_bulk_insert("georef.synonym", {"id", "key", "value"});
     int count = 1;
         std::map <std::string, std::string>::const_iterator it = synonyms.begin();
     while(it != synonyms.end()){
