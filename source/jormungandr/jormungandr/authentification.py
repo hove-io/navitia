@@ -47,28 +47,42 @@ def authentification_required(func):
 
 
 def get_token():
+    """
+    find the Token in the "Authorization" HTTP header
+    two cases are handle:
+        - the token is the only value in the header
+        - Basic Authentication is used and the token is in the username part
+          In this case the Value of the header look like this:
+          "BASIC 54651a4ae4rae"
+          The second part is the username and the password separate by a ":"
+          and encoded in base64
+    """
     if 'Authorization' not in request.headers:
         return None
 
     args = request.headers['Authorization'].split(' ')
-    if len(args) > 1:
+    if len(args) == 2:
         try:
-            _, b64 = args
+            b64 = args[1]
             decoded = base64.decodestring(b64)
             return decoded.split(':')[0]
         except ValueError:
             return None
     else:
-        return args[0]
+        return request.headers['Authorization']
 
 
 def authenticate(region, api, abort=False):
+    """
+    Check the Authorization of the current user for this region and this API.
+    If abort is True, the request is aborted with the appropriate HTTP code.
+    """
     if 'PUBLIC' in current_app.config \
             and current_app.config['PUBLIC']:
         #if jormungandr is on public mode we skip the authentification process
         return True
 
-    #Hack for allow user not logged in...
+    #Hack to allow user not logged in...
     token = get_token()
     if not token:
         instance = Instance.get_by_name(region)

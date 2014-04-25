@@ -71,7 +71,7 @@ class User(db.Model):
         return query.count() > 0
 
     def has_access(self, instance_name, api_name):
-        key = '%d_%s_%s' % (self.id, instance_name, api_name)
+        key = '{0}_{1}_{2}'.format(self.id, instance_name, api_name)
         res = get_cache().get(self.cache_prefix, key)
         if res is None:
             res = self._has_access(instance_name, api_name)
@@ -134,7 +134,7 @@ class Instance(db.Model):
         """
         Check if an instance is accessible by a user
         We don't check the api used here!
-        this version don't use cache
+        this version doesn't use cache
         """
         if self.is_free:
             return True
@@ -152,7 +152,7 @@ class Instance(db.Model):
             user_id = user.id
         else:
             user_id = None
-        key = '%s_%s' % (self.name, user_id)
+        key = '{0}_{1}'.format(self.name, user_id)
         res = get_cache().get(self.cache_prefix + '_access', key)
         if res is None:
             res = self._is_accessible_by(user)
