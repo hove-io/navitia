@@ -1,6 +1,6 @@
 import navitiacommon.response_pb2 as response_pb2
-from ..default import Script
-from..default import are_equals
+from ..default import Script, are_equals
+
 
 def empty_journeys_test():
     script = Script()
@@ -197,9 +197,9 @@ def journeys_equality_test_different_journeys():
     assert not are_equals(journey1, journey2)
 
 
-def journeys_equality_test_different_journeys2():
+def journeys_equality_test_different_nb_sections():
     """
-    test the are_equals method, applied to journeys with
+    test the are_equals method, applied to journeys with different number of sections
     """
     journey1 = create_dummy_journey()
     modified_section = journey1.sections.add()

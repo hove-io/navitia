@@ -44,6 +44,8 @@ def compare_journey_generator(journey):
     2 journeys are equals if they share for all the sections the same :
      * departure time
      * arrival time
+     * vj
+     * type
      * departure location
      * arrival location
     """
@@ -429,7 +431,7 @@ class Script(object):
         """
         call kraken to get the requested number of journeys
 
-        It more journeys are wanted, we ask for the next (or previous is not clockwise) departures
+        It more journeys are wanted, we ask for the next (or previous if not clockwise) departures
         """
         resp = self.get_journey(pb_req, instance, request)
 
