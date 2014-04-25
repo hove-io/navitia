@@ -398,8 +398,8 @@ CREATE TABLE IF NOT EXISTS georef.poi (
     coord GEOGRAPHY(POINT, 4326),
     name TEXT NOT NULL,
     uri TEXT NOT NULL,
-    poi_type_id BIGINT NOT NULL REFERENCES georef.poi_type,
     visible BOOLEAN NOT NULL DEFAULT True,
+    poi_type_id BIGINT NOT NULL REFERENCES georef.poi_type,
     address_name TEXT,
     address_number TEXT
 );
