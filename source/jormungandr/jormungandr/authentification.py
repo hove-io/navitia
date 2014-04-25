@@ -1,7 +1,7 @@
 # encoding: utf-8
-from flask_restful import reqparse, abort
+from flask_restful import reqparse
 import flask_restful
-from flask import current_app, request
+from flask import current_app, request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 from jormungandr import i_manager
@@ -47,54 +47,90 @@ def authentification_required(func):
 
 
 def get_token():
-    parser = reqparse.RequestParser()
-    parser.add_argument('Authorization', type=str, location='headers')
-    request_args = parser.parse_args()
-
-    if not request_args['Authorization']:
+    """
+    find the Token in the "Authorization" HTTP header
+    two cases are handle:
+        - the token is the only value in the header
+        - Basic Authentication is used and the token is in the username part
+          In this case the Value of the header look like this:
+          "BASIC 54651a4ae4rae"
+          The second part is the username and the password separate by a ":"
+          and encoded in base64
+    """
+    if 'Authorization' not in request.headers:
         return None
 
-    args = request_args['Authorization'].split(' ')
-    if len(args) > 1:
+    args = request.headers['Authorization'].split(' ')
+    if len(args) == 2:
         try:
-            _, b64 = request_args['Authorization'].split(' ')
+            b64 = args[1]
             decoded = base64.decodestring(b64)
             return decoded.split(':')[0]
         except ValueError:
             return None
     else:
-        return args[0]
+        return request.headers['Authorization']
 
 
 def authenticate(region, api, abort=False):
+    """
+    Check the Authorization of the current user for this region and this API.
+    If abort is True, the request is aborted with the appropriate HTTP code.
+    """
     if 'PUBLIC' in current_app.config \
             and current_app.config['PUBLIC']:
-        # si jormungandr est en mode public: on zap l'authentification
+        #if jormungandr is on public mode we skip the authentification process
         return True
 
+    #Hack to allow user not logged in...
     token = get_token()
-
     if not token:
         instance = Instance.get_by_name(region)
         if abort:
             if instance and instance.is_free:
                 return True
             else:
-                flask_restful.abort(401)
+                abort_request()
         else:
             return False if not instance else instance.first().is_free
 
-    user = User.get_from_token(token, datetime.datetime.now())
+    user = get_user()
     if user:
         if user.has_access(region, api):
             return True
         else:
             if abort:
-                flask_restful.abort(403)
+                abort_request()
             else:
                 return False
     else:
         if abort:
-            flask_restful.abort(401)
+           abort_request()
         else:
             return False
+
+def abort_request():
+    """
+    abort a request with the proper http status in case of authentification issues
+    """
+    if get_user():
+        flask_restful.abort(403)
+    else:
+        flask_restful.abort(401)
+
+def has_access(instance, abort=False):
+    res = instance.is_accessible_by(get_user())
+    if abort and not res:
+        abort_request()
+    else:
+        return res
+
+def get_user():
+    """
+    return the current authentificated User or None
+    """
+    if hasattr(g, 'user'):
+        return g.user
+    else:
+        g.user = User.get_from_token(get_token(), datetime.datetime.now())
+        return g.user

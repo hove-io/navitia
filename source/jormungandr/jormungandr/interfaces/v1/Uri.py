@@ -1,9 +1,9 @@
 # coding=utf-8
 from flask import url_for, redirect
 from flask.ext.restful import fields, marshal_with, reqparse, abort
-from jormungandr import i_manager
+from jormungandr import i_manager, authentification
 from converters_collection_type import collections_to_resource_type
-from fields import stop_point, stop_area, route, line, physical_mode,\
+from fields import stop_point, stop_area, route, line, physical_mode, \
     commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
     journey_pattern, vehicle_journey, connection, error, PbField
@@ -15,7 +15,6 @@ from errors import ManageError
 from Coord import Coord
 from navitiacommon.models import PtObject
 from flask.ext.restful.types import boolean
-
 
 class Uri(ResourceUri):
     parsers = {}
@@ -52,17 +51,15 @@ class Uri(ResourceUri):
         if region is None and lat is None and lon is None:
             if "external_code" in args and args["external_code"]:
                 type_ = collections_to_resource_type[collection]
-                try:
-                    res = PtObject.get_from_external_code(args["external_code"],
-                                                          type_)
-                except:
-                    abort(400, message="Unable to query this type of object"
-                          " with external code")
+                res = PtObject.get_from_external_code(args["external_code"],
+                                                      type_)
                 if res:
                     id = res.uri
-                    instances = res.instances
-                    if len(instances) > 0:
-                        region = res.instances[0].name
+                    for instance in res.instances:
+                        if authentification.has_access(instance, abort=False):
+                            region = instance.name
+                    if not region:
+                        authentification.abort_request()
                 else:
                     abort(404, message="Unable to find an object for the uri %s"
                           % args["external_code"])
@@ -71,9 +68,6 @@ class Uri(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         if not self.region:
             return {"error": "No region"}, 404
-
-
-
         if(collection and id):
             args["filter"] = collections_to_resource_type[collection] + ".uri="
             args["filter"] += id

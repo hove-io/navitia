@@ -71,7 +71,7 @@ class User(db.Model):
         return query.count() > 0
 
     def has_access(self, instance_name, api_name):
-        key = '%d_%s_%s' % (self.id, instance_name, api_name)
+        key = '{0}_{1}_{2}'.format(self.id, instance_name, api_name)
         res = get_cache().get(self.cache_prefix, key)
         if res is None:
             res = self._has_access(instance_name, api_name)
@@ -129,6 +129,35 @@ class Instance(db.Model):
                 return  db.session.merge(cache_res[0], load=False)
             else:
                 return None
+
+    def _is_accessible_by(self, user):
+        """
+        Check if an instance is accessible by a user
+        We don't check the api used here!
+        this version doesn't use cache
+        """
+        if self.is_free:
+            return True
+        elif user:
+            return self.authorizations.filter_by(user=user).count() > 0
+        else:
+            return False
+
+    def is_accessible_by(self, user):
+        """
+        Check if an instance is accessible by a user
+        We don't check the api used here!
+        """
+        if user:
+            user_id = user.id
+        else:
+            user_id = None
+        key = '{0}_{1}'.format(self.name, user_id)
+        res = get_cache().get(self.cache_prefix + '_access', key)
+        if res is None:
+            res = self._is_accessible_by(user)
+            get_cache().set(self.cache_prefix + '_access', key, res)
+        return res
 
     def __repr__(self):
         return '<Instance %r>' % self.name
