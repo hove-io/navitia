@@ -65,21 +65,21 @@ $BODY$ LANGUAGE plpgsql;
 DO $$
     DECLARE count_multi int;
 BEGIN
-    count_multi := coalesce((select count(*) from navitia.admin where geometrytype(boundary::geometry) = 'MULTIPOLYGON' limit 1), 0);
+    count_multi := coalesce((select count(*) from georef.admin where geometrytype(boundary::geometry) = 'MULTIPOLYGON' limit 1), 0);
     CASE WHEN count_multi = 0 
         THEN
             -- Ajout d'une colonne temporaire
-            ALTER TABLE navitia.admin ADD COLUMN boundary_tmp GEOGRAPHY(POLYGON, 4326);
+            ALTER TABLE georef.admin ADD COLUMN boundary_tmp GEOGRAPHY(POLYGON, 4326);
             -- Déplacer le contenu de la colonne boundary dans boundary_tmp
-            UPDATE navitia.admin set boundary_tmp=boundary;
+            UPDATE georef.admin set boundary_tmp=boundary;
             -- Vidage de la colonne boundary
-            UPDATE navitia.admin  SET boundary = NULL;
+            UPDATE georef.admin  SET boundary = NULL;
             -- Changement du type de boundary
-            ALTER TABLE navitia.admin ALTER COLUMN boundary TYPE GEOGRAPHY(MULTIPOLYGON, 4326);
+            ALTER TABLE georef.admin ALTER COLUMN boundary TYPE GEOGRAPHY(MULTIPOLYGON, 4326);
             -- Déplacer le contenu de la colonne boundary_tmp dans boundary
-            UPDATE navitia.admin  SET boundary = ST_Multi(st_astext(boundary_tmp));
+            UPDATE georef.admin  SET boundary = ST_Multi(st_astext(boundary_tmp));
             -- Suppression de la colonne temporaire
-            ALTER TABLE navitia.admin DROP COLUMN boundary_tmp;
+            ALTER TABLE georef.admin DROP COLUMN boundary_tmp;
     ELSE
         RAISE NOTICE 'column boundary already type MULTIPOLYGON, skipping';
     END CASE;
@@ -129,7 +129,7 @@ $$;
 DO $$
     BEGIN
         BEGIN
-            ALTER TABLE navitia.poi ADD COLUMN visible BOOLEAN NOT NULL DEFAULT True;
+            ALTER TABLE georef.poi ADD COLUMN visible BOOLEAN NOT NULL DEFAULT True;
         EXCEPTION
             WHEN duplicate_column THEN RAISE NOTICE 'column visible already exists in navitia.poi.';
         END;
@@ -139,7 +139,7 @@ $$;
 DO $$
     BEGIN
         BEGIN
-            ALTER TABLE navitia.poi ADD COLUMN address_name TEXT;
+            ALTER TABLE georef.poi ADD COLUMN address_name TEXT;
         EXCEPTION
             WHEN duplicate_column THEN RAISE NOTICE 'column address_name already exists in navitia.poi.';
         END;
@@ -149,11 +149,64 @@ $$;
 DO $$
     BEGIN
         BEGIN
-            ALTER TABLE navitia.poi ADD COLUMN address_number TEXT;
+            ALTER TABLE georef.poi ADD COLUMN address_number TEXT;
         EXCEPTION
             WHEN duplicate_column THEN RAISE NOTICE 'column address_number already exists in navitia.poi.';
         END;
     END;
 $$;
 
+DO $$
+    DECLARE count_admin int;
+BEGIN
+    count_admin := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='admin'), 0);
+    CASE WHEN count_admin > 0 
+        THEN
+			INSERT INTO georef.admin SELECT * FROM navitia.admin;
+			INSERT INTO georef.rel_admin_admin SELECT * FROM navitia.rel_admin_admin;
+    ELSE
+        RAISE NOTICE 'table admin already exists, skipping';
+    END CASE;
+END
+$$;
+
+DO $$
+    DECLARE count_poi int;
+BEGIN
+    count_poi := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='poi'), 0);
+    CASE WHEN count_poi > 0 
+        THEN
+			INSERT INTO georef.poi_type SELECT * FROM navitia.poi_type;
+			INSERT INTO georef.poi SELECT * FROM navitia.poi;
+			INSERT INTO georef.poi_properties SELECT * FROM navitia.poi_properties;
+    ELSE
+        RAISE NOTICE 'table poi already exists, skipping';
+    END CASE;
+END
+$$;
+
+DO $$
+    DECLARE count_synonym int;
+BEGIN
+    count_synonym := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='synonym'), 0);
+    CASE WHEN count_synonym > 0 
+        THEN
+			INSERT INTO georef.synonym SELECT * FROM navitia.synonym;
+    ELSE
+        RAISE NOTICE 'table synonym already exists, skipping';
+    END CASE;
+END
+$$;
+DROP TABLE IF EXISTS navitia.admin CASCADE;	
+DROP TABLE IF EXISTS navitia.rel_admin_admin CASCADE;
+DROP TABLE IF EXISTS navitia.poi CASCADE;			
+DROP TABLE IF EXISTS navitia.synonym;
+			
 DROP TABLE IF EXISTS navitia.alias;
+DROP TABLE IF EXISTS navitia.rel_stop_point_admin;
+DROP TABLE IF EXISTS navitia.rel_stop_area_admin;
+DROP TABLE IF EXISTS navitia.rel_poi_admin;
+DROP FUNCTION IF EXISTS georef.match_stop_area_to_admin();
+DROP FUNCTION IF EXISTS georef.match_stop_point_to_admin();
+DROP FUNCTION IF EXISTS georef.update_admin_coord();
+DROP FUNCTION IF EXISTS georef.match_admin_to_admin();

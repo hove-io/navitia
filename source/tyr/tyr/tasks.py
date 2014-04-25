@@ -65,7 +65,7 @@ def type_of_data(filename):
         return 'geopal'
     if filename.endswith('.poi'):
         return 'poi'
-	if "synonyms.txt" in zipf.namelist():
+	if "synonyms.txt" == filename:
 		return 'synonym'
     return None
 

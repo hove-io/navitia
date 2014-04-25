@@ -100,58 +100,6 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_properties (
     school_vehicle BOOLEAN NOT NULL
 );
 
-
-CREATE TABLE IF NOT EXISTS navitia.synonym (
-    id BIGINT PRIMARY KEY,
-    key TEXT NOT NULL,
-    value TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS navitia.poi_type (
-    id BIGINT PRIMARY KEY,
-    uri TEXT NOT NULL,
-    name TEXT NOT NULL
-);
-
-
-CREATE TABLE IF NOT EXISTS navitia.poi (
-    id BIGINT PRIMARY KEY,
-    weight INTEGER NOT NULL,
-    coord GEOGRAPHY(POINT, 4326),
-    name TEXT NOT NULL,
-    uri TEXT NOT NULL,
-    visible BOOLEAN NOT NULL DEFAULT True,
-    poi_type_id BIGINT NOT NULL REFERENCES navitia.poi_type,
-    address_name TEXT,
-    address_number TEXT
-);
-
-
-CREATE TABLE IF NOT EXISTS navitia.admin (
-    id BIGINT PRIMARY KEY,
-    name TEXT NOT NULL,
-    comment TEXT,
-    post_code TEXT,
-    insee TEXT,
-    level INTEGER NOT NULL,
-    coord GEOGRAPHY(POINT, 4326),
-    boundary GEOGRAPHY(MULTIPOLYGON, 4326),
-    uri TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS navitia.rel_poi_admin (
-    poi_id BIGINT NOT NULL REFERENCES navitia.poi,
-    admin_id BIGINT NOT NULL REFERENCES navitia.admin,
-    CONSTRAINT rel_poi_admin_pk PRIMARY KEY (poi_id, admin_id)
-);
-
-CREATE TABLE IF NOT EXISTS navitia.rel_admin_admin (
-    master_admin_id BIGINT NOT NULL REFERENCES navitia.admin,
-    admin_id BIGINT NOT NULL REFERENCES navitia.admin,
-    CONSTRAINT rel_admin_admin_pk PRIMARY KEY (master_admin_id, admin_id)
-);
-
-
 CREATE TABLE IF NOT EXISTS navitia.validity_pattern (
     id BIGINT PRIMARY KEY,
     days BIT VARYING(400) NOT NULL
@@ -312,12 +260,6 @@ CREATE TABLE IF NOT EXISTS navitia.stop_area (
     visible BOOLEAN NOT NULL DEFAULT True
 );
 
-CREATE TABLE IF NOT EXISTS navitia.rel_stop_area_admin (
-    stop_area_id BIGINT NOT NULL REFERENCES navitia.stop_area,
-    admin_id BIGINT NOT NULL REFERENCES navitia.admin,
-    CONSTRAINT rel_stop_area_admin_pk PRIMARY KEY (stop_area_id, admin_id)
-);
-
 CREATE TABLE IF NOT EXISTS navitia.stop_point (
     id BIGINT PRIMARY KEY,
     properties_id BIGINT REFERENCES navitia.properties,
@@ -331,12 +273,6 @@ CREATE TABLE IF NOT EXISTS navitia.stop_point (
 );
 
 
-
-CREATE TABLE IF NOT EXISTS navitia.rel_stop_point_admin (
-    admin_id BIGINT NOT NULL REFERENCES navitia.admin,
-    stop_point_id BIGINT NOT NULL REFERENCES navitia.stop_point,
-    CONSTRAINT rel_stop_point_admin_pk PRIMARY KEY (admin_id, stop_point_id)
-);
 
 CREATE TABLE IF NOT EXISTS navitia.connection (
     departure_stop_point_id BIGINT NOT NULL REFERENCES navitia.stop_point,
@@ -442,6 +378,55 @@ CREATE TABLE IF NOT EXISTS navitia.rel_calendar_line (
 );
 
 -- Schéma Georef
+
+CREATE TABLE IF NOT EXISTS georef.synonym (
+    id BIGINT PRIMARY KEY,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS georef.poi_type (
+    id BIGINT PRIMARY KEY,
+    uri TEXT NOT NULL,
+    name TEXT NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS georef.poi (
+    id BIGINT PRIMARY KEY,
+    weight INTEGER NOT NULL,
+    coord GEOGRAPHY(POINT, 4326),
+    name TEXT NOT NULL,
+    uri TEXT NOT NULL,
+    visible BOOLEAN NOT NULL DEFAULT True,
+    poi_type_id BIGINT NOT NULL REFERENCES georef.poi_type,
+    address_name TEXT,
+    address_number TEXT
+);
+
+CREATE TABLE IF NOT EXISTS georef.poi_properties(
+  poi_id bigint NOT NULL REFERENCES georef.poi,
+  key text,
+  value text
+);
+
+CREATE TABLE IF NOT EXISTS georef.admin (
+    id BIGINT PRIMARY KEY,
+    name TEXT NOT NULL,
+    comment TEXT,
+    post_code TEXT,
+    insee TEXT,
+    level INTEGER NOT NULL,
+    coord GEOGRAPHY(POINT, 4326),
+    boundary GEOGRAPHY(MULTIPOLYGON, 4326),
+    uri TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS georef.rel_admin_admin (
+    master_admin_id BIGINT NOT NULL REFERENCES georef.admin,
+    admin_id BIGINT NOT NULL REFERENCES georef.admin,
+    CONSTRAINT rel_admin_admin_pk PRIMARY KEY (master_admin_id, admin_id)
+);
 
 CREATE TABLE IF NOT EXISTS georef.way (
                 id BIGSERIAL PRIMARY KEY,
@@ -599,10 +584,3 @@ CREATE TABLE IF NOT EXISTS navitia.od_ticket(
     od_id BIGINT NOT NULL REFERENCES navitia.origin_destination,
     ticket_id TEXT NOT NULL REFERENCES navitia.ticket
 );
-
-CREATE TABLE IF NOT EXISTS navitia.poi_properties(
-  poi_id bigint NOT NULL REFERENCES navitia.poi,
-  key text,
-  value text
-);
-

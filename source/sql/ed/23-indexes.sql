@@ -2,21 +2,6 @@
 -- création des index qui n'existe pas
 DO $$
 BEGIN
-
-    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'poi_type_uri_idx')
-    THEN
-        CREATE UNIQUE INDEX poi_type_uri_idx ON navitia.poi_type(uri);
-    ELSE
-        RAISE NOTICE 'relation "poi_type_uri_idx" already exists, skipping';
-    END CASE;
-
-    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'poi_uri_idx')
-    THEN
-        CREATE UNIQUE INDEX poi_uri_idx ON navitia.poi(uri);
-    ELSE
-        RAISE NOTICE 'relation "poi_uri_idx" already exists, skipping';
-    END CASE;
-
     CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'commercial_mode_uri_idx')
     THEN
         CREATE UNIQUE INDEX commercial_mode_uri_idx ON navitia.commercial_mode(uri);
@@ -95,21 +80,6 @@ BEGIN
         RAISE NOTICE 'relation "journey_pattern_point_uri_idx" already exists, skipping';
     END CASE;
 
-
-    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'admin_uri_idx')
-    THEN
-        CREATE UNIQUE INDEX admin_uri_idx ON navitia.admin(uri);
-    ELSE
-        RAISE NOTICE 'relation "admin_uri_idx" already exists, skipping';
-    END CASE;
-
-    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'admin_boundary_idx')
-    THEN
-        CREATE INDEX admin_boundary_idx ON navitia.admin USING gist(boundary);
-    ELSE
-        RAISE NOTICE 'relation "admin_boundary_idx" already exists, skipping';
-    END CASE;
-
     CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'way_uri_idx')
     THEN
         CREATE UNIQUE INDEX way_uri_idx ON georef.way(uri);
@@ -174,6 +144,35 @@ BEGIN
         CREATE INDEX rel_amin_way_id ON georef.rel_way_admin(admin_id, way_id);
     ELSE
         RAISE NOTICE 'relation "rel_amin_way_id" already exists, skipping';
+    END CASE;
+
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'poi_type_uri_idx')
+    THEN
+        CREATE UNIQUE INDEX poi_type_uri_idx ON georef.poi_type(uri);
+    ELSE
+        RAISE NOTICE 'relation "poi_type_uri_idx" already exists, skipping';
+    END CASE;
+    
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'poi_uri_idx')
+    THEN
+        CREATE UNIQUE INDEX poi_uri_idx ON georef.poi(uri);
+    ELSE
+        RAISE NOTICE 'relation "poi_uri_idx" already exists, skipping';
+    END CASE;
+    
+
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'admin_uri_idx')
+    THEN
+        CREATE UNIQUE INDEX admin_uri_idx ON georef.admin(uri);
+    ELSE
+        RAISE NOTICE 'relation "admin_uri_idx" already exists, skipping';
+    END CASE;
+    
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'admin_boundary_idx')
+    THEN
+        CREATE INDEX admin_boundary_idx ON georef.admin USING gist(boundary);
+    ELSE
+        RAISE NOTICE 'relation "admin_boundary_idx" already exists, skipping';
     END CASE;
 END$$;
 
