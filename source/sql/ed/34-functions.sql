@@ -104,10 +104,9 @@ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION georef.clean_way() RETURNS VOID AS $$
 delete from georef.way
-where id in ( select w.id from georef.way w
-left outer join georef.fusion_ways fw
-on(w.id=fw.id)
-where fw.id IS NULL)
+using georef.fusion_ways
+where georef.way.id = georef.fusion_ways.id and
+georef.fusion_ways.id IS NULL
 $$
 LANGUAGE SQL;
 
