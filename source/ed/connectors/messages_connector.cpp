@@ -58,7 +58,7 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
     std::unique_ptr<pqxx::connection> conn;
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(conf.connection_string));
-        conn->prepare("messages", request)("timestamp")("INTERVAL", pqxx::prepare::treat_string);
+        conn->prepare("messages", request);
         std::string st_current_time = boost::posix_time::to_iso_string(current_time);
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des messages");
@@ -184,7 +184,7 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
     std::unique_ptr<pqxx::connection> conn;
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(conf.connection_string));
-        conn->prepare("messages", request)("timestamp")("INTERVAL", pqxx::prepare::treat_string);
+        conn->prepare("messages", request);
         std::string st_current_time = boost::posix_time::to_iso_string(current_time);
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des perturbations at");
