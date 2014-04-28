@@ -458,7 +458,7 @@ CREATE TABLE IF NOT EXISTS georef.house_number (
 );
 
 CREATE TABLE IF NOT EXISTS georef.rel_way_admin (
-                admin_id BIGINT NOT NULL REFERENCES navitia.admin,
+                admin_id BIGINT NOT NULL REFERENCES georef.admin,
                 way_id BIGINT NOT NULL REFERENCES georef.way,
                 CONSTRAINT rel_way_admin_pk PRIMARY KEY (admin_id, way_id)
 );
