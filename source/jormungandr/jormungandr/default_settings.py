@@ -59,7 +59,6 @@ LOGGER = {
 #Paramètres pour les statistiques
 SAVE_STAT = True
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-EXCHANGE_NAME='navitia'
-TOPIC_NAME='stat.sender'
+EXCHANGE_NAME='stat_persistor_exchange'
 SQLALCHEMY_DATABASE_STAT = 'postgresql://navitia:navitia@localhost/navitia'
 

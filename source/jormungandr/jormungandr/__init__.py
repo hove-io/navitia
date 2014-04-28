@@ -68,11 +68,7 @@ i_manager = InstanceManager()
 i_manager.initialisation(start_ping=app.config['START_MONITORING_THREAD'])
 
 from jormungandr.stat_manager import StatManager
-i_stat_manager = StatManager()
-i_stat_manager.init(save_stat=app.config['SAVE_STAT'],
-                    broker_url=app.config['BROKER_URL'],
-                    exchange_name=app.config['EXCHANGE_NAME'],
-                    topic_name=app.config['TOPIC_NAME'])
+stat_manager = StatManager()
 
 from jormungandr import api
 
