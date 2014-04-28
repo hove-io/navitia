@@ -303,6 +303,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
        "sp.comment as comment, sp.external_code as external_code,"
        "ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,"
        "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,"
+       "sp.platform_code as platform_code,"
        "pr.wheelchair_boarding as wheelchair_boarding,"
        "pr.sheltered as sheltered, pr.elevator as elevator,"
        "pr.escalator as escalator, pr.bike_accepted as bike_accepted,"
@@ -322,6 +323,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
         const_it["comment"].to(sp->comment);
         const_it["fare_zone"].to(sp->fare_zone);
         const_it["external_code"].to(sp->codes["external_code"]);
+        const_it["platform_code"].to(sp->platform_code);
         sp->coord.set_lon(const_it["lon"].as<double>());
         sp->coord.set_lat(const_it["lat"].as<double>());
         if (const_it["wheelchair_boarding"].as<bool>()){

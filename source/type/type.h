@@ -765,6 +765,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;
+    std::string platform_code;
 
     StopArea* stop_area;
     std::vector<navitia::georef::Admin*> admin_list;
@@ -774,7 +775,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         journey_pattern_point_list.resize(0);
-        ar & uri & name & stop_area & coord & fare_zone & idx
+        ar & uri & name & stop_area & coord & fare_zone & idx & platform_code
             & journey_pattern_point_list & admin_list & _properties & messages
             & stop_point_connection_list & comment & codes;
     }

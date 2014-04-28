@@ -112,6 +112,7 @@ void StopsGtfsHandler::init(Data& data) {
             name_c = csv.get_pos_col("stop_name"),
             desc_c = csv.get_pos_col("stop_desc"),
             wheelchair_c = csv.get_pos_col("wheelchair_boarding");
+            platform_c = csv.get_pos_col("platform_code");
     if (code_c == -1) {
         code_c = id_c;
     }
@@ -268,6 +269,8 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
                 sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
             }
         }
+        if (has_col(platform_c, row))
+            sp->platform_code = row[platform_c];
         gtfs_data.stop_map[sp->uri] = sp;
         data.stop_points.push_back(sp);
         if (has_col(parent_c, row) && row[parent_c] != "") {// we save the reference to the stop area

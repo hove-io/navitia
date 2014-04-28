@@ -125,6 +125,7 @@ message StopPoint {
     optional string comment = 11;
     repeated Code codes = 12;
 	optional Address address = 13;
+    optional string platform_code = 14;
 }
 
 message Line {
