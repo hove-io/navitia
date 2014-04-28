@@ -1,14 +1,14 @@
 import "type.proto";
-package pbnavitia.stat;
-	
+package pbnavitia;
+
 message StatParameter {
     optional string key = 1;
-    optional string value = 2;    
+    optional string value = 2;
 }
 
-message Coord{
-    optional double lat = 1;
-    optional double lon = 2;
+message StatError {
+    optional string id = 1;
+    optional string message = 2;
 }
 
 message StatCoverage{
@@ -25,13 +25,13 @@ message StatRequest {
     optional int32	request_duration = 6;
     optional string	api = 7;
     optional string   path = 8;
-    optional string	query_string = 9;
     optional string	host = 10;
     optional int32	response_size = 11;
     optional string	client = 12;
-    repeated StatCoverage coverages = 13;    
+    repeated StatCoverage coverages = 13;
     repeated StatParameter parameters = 14;
-    repeated StatJourneyResponse journeys = 15;
+    optional StatError error = 15;
+    repeated StatJourneyResponse journeys = 16;
 }
 
 message StatJourneyResponse {
@@ -53,13 +53,13 @@ message StatJourneySection {
     optional string 	from_embedded_type = 6;
     optional string 	from_id = 7;
     optional string 	from_name = 8;
-    optional Coord 	from_coord = 9;
+    optional GeographicalCoord from_coord = 9;
     optional string 	from_admin_id = 10;
     optional string 	from_admin_name = 11;
     optional string 	to_embedded_type = 12;
     optional string 	to_id = 13;
     optional string 	to_name = 14;
-    optional Coord 	to_coord = 15;
+    optional GeographicalCoord to_coord = 15;
     optional string 	to_admin_id = 16;
     optional string 	to_admin_name = 17;
     optional string 	vehicle_journey_id = 18;
