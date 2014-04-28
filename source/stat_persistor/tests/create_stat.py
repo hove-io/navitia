@@ -5,13 +5,14 @@ import datetime
 import time
 
 connection = kombu.Connection("amqp://guest:guest@localhost:5672//")
-exchange_name = "navitia"
-topic_name = "stat.sender"
-exchange_object = kombu.Exchange(exchange_name, 'topic', durable = True)
+exchange_name = "stat_navitia"
+topic_name = "stat_sender"
+#exchange_object = kombu.Exchange(exchange_name, 'topic', durable = True)
+exchange_object = kombu.Exchange(exchange_name, type="direct")
 producer = connection.Producer(exchange=exchange_object)
 
 stat_request = stat_pb2.StatRequest()
-dt = datetime.datetime.now()
+dt = datetime.datetime.utcnow()
 stat_request.request_date = int(time.mktime(dt.timetuple()))
 stat_request.user_id = 1
 stat_request.user_name = 'Toto'
@@ -78,6 +79,6 @@ stat_section.physical_mode_name = 'physical_mode_name'
 stat_section.commercial_mode_id = 'commercial_mode_id'
 stat_section.commercial_mode_name = 'commercial_mode_name'
 
-producer.publish(stat_request.SerializeToString(), routing_key= topic_name)
+producer.publish(stat_request.SerializeToString())
 
 connection.close()

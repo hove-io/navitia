@@ -14,6 +14,7 @@ def persist_stat_request(meta, conn, stat):
     request_table = meta.tables['stat.requests']
     coverage_table = meta.tables['stat.coverages']
     parameter_table = meta.tables['stat.parameters']
+    error_table = meta.tables['stat.errors']
     journey_table = meta.tables['stat.journeys']
     journey_section_table = meta.tables['stat.journey_sections']
 
@@ -33,8 +34,13 @@ def persist_stat_request(meta, conn, stat):
         conn.execute(query.values(
             build_stat_parameter_dict(param, request_id.inserted_primary_key[0])))
 
-    #Inserer les journeys dans la table stat.journeys
+    #Inserer dans la table stat.parameters
+    query = error_table.insert()
+    if stat.error.id:
+        conn.execute(query.values(
+            build_stat_error_dict(stat.error, request_id.inserted_primary_key[0])))
 
+    #Inserer les journeys dans la table stat.journeys
     for journey in stat.journeys:
         query = journey_table.insert()
         journey_id = conn.execute(
@@ -55,18 +61,12 @@ def build_stat_request_dict(stat):
     """
     return{
         'request_date': get_datetime_from_timestamp(stat.request_date),
-        'year': from_timestamp(stat.request_date).year,
-        'month': from_timestamp(stat.request_date).month,
-        'day': from_timestamp(stat.request_date).day,
-        'hour': from_timestamp(stat.request_date).hour,
-        'minute': from_timestamp(stat.request_date).minute,
         'user_id': stat.user_id,
         'user_name': stat.user_name,
         'app_id': stat.application_id,
         'app_name': stat.application_name,
         'request_duration': stat.request_duration,
         'api': stat.api,
-        'query_string': stat.query_string,
         'host': stat.host,
         'client': stat.client,
         'response_size': stat.response_size
@@ -83,6 +83,19 @@ def build_stat_parameter_dict(param, request_id):
         'param_key': param.key,
         'param_value': param.value
     }
+
+
+def build_stat_error_dict(error, request_id):
+    """
+    Construit à partir d'un object protobuf pbnavitia.stat.HitStat.error
+    Utilisé pour l'insertion dans la table stat.errors
+    """
+    return {
+        'request_id': request_id,
+        'id': error.id,
+        'message': error.message
+    }
+
 
 def build_stat_coverage_dict(coverage, request_id):
     """

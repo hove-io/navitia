@@ -31,6 +31,10 @@ class StatSaver(object):
                                      autoload=True,
                                      schema='stat')
 
+        self.error_table = Table('errors', self.meta,
+                                     autoload=True,
+                                     schema='stat')
+
         self.journey_table = Table('journeys', self.meta,
                                    autoload=True,
                                    schema='stat')

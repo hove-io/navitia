@@ -19,6 +19,7 @@ def upgrade():
     create_requests()
     create_coverages()
     create_parameters()
+    create_errors()
     create_journeys()
     create_journey_sections()
 
@@ -27,18 +28,12 @@ def create_requests():
         'requests',
         sa.Column('id', sa.Integer(), primary_key=True, nullable=False),
         sa.Column('request_date', sa.DateTime(), nullable=False),
-        sa.Column('year', sa.Integer(), nullable=False),
-        sa.Column('month', sa.Integer(), nullable=False),
-        sa.Column('day', sa.Integer(), nullable=False),
-        sa.Column('hour', sa.Integer(), nullable=False),
-        sa.Column('minute', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('user_name', sa.Text()),
         sa.Column('app_id', sa.Integer()),
         sa.Column('app_name', sa.Text()),
         sa.Column('request_duration', sa.Integer()),
         sa.Column('api', sa.Text()),
-        sa.Column('query_string', sa.Text()),
         sa.Column('host', sa.Text()),
         sa.Column('client', sa.Text()),
         sa.Column('response_size', sa.Integer()),
@@ -49,6 +44,16 @@ def create_coverages():
     op.create_table(
         'coverages',
         sa.Column('region_id', sa.Text()),
+        sa.Column('request_id', sa.BigInteger(), nullable=False),
+        sa.ForeignKeyConstraint(['request_id'], ['stat.requests.id'],),
+        schema='stat'
+    )
+
+def create_errors():
+    op.create_table(
+        'errors',
+        sa.Column('id', sa.Text()),
+        sa.Column('message', sa.Text()),
         sa.Column('request_id', sa.BigInteger(), nullable=False),
         sa.ForeignKeyConstraint(['request_id'], ['stat.requests.id'],),
         schema='stat'
@@ -122,4 +127,5 @@ def downgrade():
     op.drop_table('journeys', schema='stat')
     op.drop_table('parameters', schema='stat')
     op.drop_table('coverages', schema='stat')
+    op.drop_table('errors', schema='stat')
     op.drop_table('requests', schema='stat')

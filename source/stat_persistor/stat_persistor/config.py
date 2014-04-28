@@ -1,18 +1,16 @@
 #encoding: utf-8
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
-
+import json
 
 class Config(object):
     """
     class de configuration de stat_persistor
-
     """
     def __init__(self):
         self.broker_url = None
         self.stat_connection_string = None
         self.exchange_name = None
-        self.rt_topic =None
         self.queue_name = None
         self.log_file = None
         self.log_level = None
@@ -41,35 +39,28 @@ class Config(object):
         Initialize from a configuration file.
         If not valid raise an error.
         """
-        confspec = []
-        confspec.append('[stat]')
-        confspec.append('connection-string = string()')
+        try:
+            config_data = json.loads(open(config_file).read())
 
-        confspec.append('[stat_persistor]')
-        confspec.append('exchange-name = string(default="navitia")')
-        confspec.append('stat-topic = string(default="stat.sender")')
-        confspec.append('queue-name = string(default="stat_persistor")')
-        confspec.append('broker-url = string(default="amqp://guest:guest@localhost:5672//")')
-        confspec.append('log-file = string(default=None)')
-        confspec.append('log-level = string(default="debug")')
-        confspec.append('stat-file = string(default="/home/canaltp/NAViTiA/data/stat_persistor.log")')
+            if 'database' in config_data and \
+                'connection-string' in config_data['database']:
+                self.stat_connection_string = config_data['database']['connection-string']
 
+            if 'stat_persistor' in config_data:
+                if 'exchange-name' in config_data['stat_persistor']:
+                    self.exchange_name = config_data['stat_persistor']['exchange-name']
 
-        config = ConfigObj(config_file, configspec=confspec, stringify=True)
+                if 'queue-name' in config_data['stat_persistor']:
+                    self.queue_name = config_data['stat_persistor']['queue-name']
 
-        val = Validator()
-        res = config.validate(val, preserve_errors=True)
-        #validate retourne true, ou un dictionaire  ...
-        if type(res) is dict:
-            error = self.build_error(config, res)
-            raise ValueError("Config is not valid: " + error)
+                if 'broker-url' in config_data['stat_persistor']:
+                    self.broker_url = config_data['stat_persistor']['broker-url']
 
-        self.stat_connection_string = config['stat']['connection-string']
-        self.broker_url = config['stat_persistor']['broker-url']
-        self.rt_topic = config['stat_persistor']['stat-topic']
-        self.queue_name = config['stat_persistor']['queue-name']
-        self.exchange_name = config['stat_persistor']['exchange-name']
+                if 'log-level' in config_data['stat_persistor']:
+                    self.log_level = config_data['stat_persistor']['log-level']
 
-        self.log_level = config['stat_persistor']['log-level']
-        self.log_file = config['stat_persistor']['log-file']
-        self.stat_file = config['stat_persistor']['stat-file']
+                if 'log-file' in config_data['stat_persistor']:
+                    self.log_file = config_data['stat_persistor']['log-file']
+
+        except ValueError as e:
+            raise ValueError("Config is not valid: " + str(e))
