@@ -5,6 +5,6 @@ SET(BOOST_LIBS ${BOOST_LIB} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM
 
 add_executable(calendar_api_test calendar_api_test.cpp)
 
-target_link_libraries(calendar_api_test calendar_api types ptreferential pb_lib data fare routing ed georef autocomplete utils ${BOOST_LIBS})
+target_link_libraries(calendar_api_test calendar_api types ptreferential pb_lib data fare routing ed georef autocomplete utils ${BOOST_LIBS} pthread)
 
 ADD_TEST(calendar_api_test ${EXECUTABLE_OUTPUT_PATH}/calendar_api_test --report_level=no)
