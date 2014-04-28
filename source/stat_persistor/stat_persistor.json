@@ -1,0 +1,12 @@
+{
+
+    "database":{"connection-string":"postgresql://navitia:navitia@localhost/navitia"},
+    "stat_persistor":
+   {
+       "exchange-name":"stat_persistor_exchange",
+       "queue-name":"stat_persistor_queue",
+       "broker-url":"amqp://guest:guest@localhost:5672//",
+       "log-level":"debug",
+       "log-file":""
+   }
+}
