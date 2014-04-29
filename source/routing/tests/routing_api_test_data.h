@@ -46,15 +46,15 @@ struct test_speed_provider {
                                                             2 //nt::Mode_e::Vls
                                                         }}
                                                         };
-    bt::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
-        return bt::seconds(std::round(dist / get_default_speed()[mode]));
+    navitia::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
+        return navitia::seconds(std::round(dist / get_default_speed()[mode]));
     }
 };
 
 struct normal_speed_provider {
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return navitia::georef::default_speed; }
-    bt::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
-        return bt::milliseconds(dist / get_default_speed()[mode] * 1000);
+    navitia::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
+        return navitia::milliseconds(dist / get_default_speed()[mode] * 1000);
     }
 };
 
@@ -336,7 +336,7 @@ struct routing_api_data {
         b.data->meta->shape = ss.str();
     }
 
-    bt::time_duration to_duration(double dist, navitia::type::Mode_e mode) {
+    navitia::time_duration to_duration(double dist, navitia::type::Mode_e mode) {
         return speed_trait.to_duration(dist, mode);
     }
 
@@ -355,8 +355,8 @@ struct routing_api_data {
         add_edges(edge_idx, geo_ref, idx_from, idx_to, a.distance_to(b), mode);
     }
 
-    const bt::time_duration bike_sharing_pickup = bt::seconds(30);
-    const bt::time_duration bike_sharing_return = bt::seconds(45);
+    const navitia::time_duration bike_sharing_pickup = navitia::seconds(30);
+    const navitia::time_duration bike_sharing_return = navitia::seconds(45);
 
     void add_bike_sharing_edge(int edge_idx, navitia::georef::GeoRef& geo_ref, int idx_from, int idx_to) {
         boost::add_edge(idx_from + geo_ref.offsets[navitia::type::Mode_e::Walking],

@@ -178,7 +178,7 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
 }
 
 void RAPTOR::clear_and_init(Solutions departs,
-                  std::vector<std::pair<type::idx_t, bt::time_duration> > destinations,
+                  std::vector<std::pair<type::idx_t, navitia::time_duration> > destinations,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
 
@@ -221,8 +221,8 @@ void RAPTOR::clear_and_init(Solutions departs,
 
 
 std::vector<Path>
-RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departures_,
-                    const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
+RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
+                    const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
                     const DateTime &departure_datetime,
                     bool disruption_active, const DateTime &bound,
                     const uint32_t max_transfers,
@@ -266,7 +266,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, bt::time_duration> 
 
 
 void
-RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departures_,
+RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
           const DateTime &departure_datetime, const DateTime &bound, uint32_t max_transfers,
           const type::AccessibiliteParams & accessibilite_params,
           const std::vector<std::string> & forbidden,
@@ -493,7 +493,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
         int departure_day, DateTime borne, bool disruption_active, bool clockwise,
         const type::AccessibiliteParams & accessibilite_params,
         uint32_t max_transfers) {
-    std::vector<std::pair<type::idx_t, bt::time_duration> > departures, destinations;
+    std::vector<std::pair<type::idx_t, navitia::time_duration> > departures, destinations;
 
     for(const type::StopPoint* sp : departure->stop_point_list) {
         departures.push_back({sp->idx, {}});

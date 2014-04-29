@@ -58,8 +58,8 @@ const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     }}
                                                     };
 
-const boost::posix_time::seconds default_time_bss_pickup(120);
-const boost::posix_time::seconds default_time_bss_putback(60);
+const navitia::seconds default_time_bss_pickup(120);
+const navitia::seconds default_time_bss_putback(60);
 
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
@@ -83,12 +83,12 @@ struct Vertex {
 
 struct Edge {
     nt::idx_t way_idx = nt::invalid_idx; //< indexe vers le nom de rue
-    boost::posix_time::time_duration duration = {}; // duration of the edge
+    navitia::time_duration duration = {}; // duration of the edge
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & way_idx & duration;
     }
-    Edge(nt::idx_t wid, boost::posix_time::time_duration dur) : way_idx(wid), duration(dur) {}
+    Edge(nt::idx_t wid, navitia::time_duration dur) : way_idx(wid), duration(dur) {}
     Edge() {}
 };
 
@@ -162,7 +162,7 @@ private:
         un nom de voie et une liste de segments */
 struct PathItem {
     nt::idx_t way_idx = nt::invalid_idx; //< Way of this path item
-    boost::posix_time::time_duration duration = {}; //< Length of the journey on this item
+    navitia::time_duration duration = {}; //< Length of the journey on this item
     std::deque<nt::GeographicalCoord> coordinates;//< path item coordinates
     int angle = 0; //< Angle with the next PathItem (needed to give direction)
 
@@ -195,7 +195,7 @@ struct PathItem {
 
 /** Itinéraire complet */
 struct Path {
-    boost::posix_time::time_duration duration = {}; //< Longueur totale du parcours
+    navitia::time_duration duration = {}; //< Longueur totale du parcours
     std::deque<PathItem> path_items = {}; //< Liste des voies parcourues
 };
 

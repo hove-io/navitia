@@ -101,7 +101,7 @@ struct PathItem {
 
 /** Un itinéraire complet */
 struct Path {
-    boost::posix_time::time_duration duration;
+    navitia::time_duration duration;
     uint32_t nb_changes;
     boost::posix_time::ptime request_time;
     std::vector<PathItem> items;

@@ -822,7 +822,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
             navitia::georef::Edge e;
             float len;
             const_it["leng"].to(len);
-            e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
+            e.duration = navitia::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
             e.way_idx = const_it["way_id"].as<idx_t>();
             uint64_t source = node_map_temp[const_it["source_node_id"].as<uint64_t>()];
             uint64_t target = node_map_temp[const_it["target_node_id"].as<uint64_t>()];
@@ -952,12 +952,12 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
 
         //TODO et les pietons ??!
 
-        e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
+        e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
         boost::add_edge(source, target, e, data.geo_ref->graph);
         nb_walking_edges++;
 
         if (const_it["bike"].as<bool>()) {
-            e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
+            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
             auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
             auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
             boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
@@ -965,7 +965,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             nb_biking_edges++;
         }
         if (const_it["car"].as<bool>()) {
-            e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Car]);
+            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Car]);
             auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
             auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
             boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
@@ -1043,7 +1043,7 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
         auto min_dist = get_min_distance(data, nearest_walking_edge, nearest_biking_edge);
         navitia::georef::vertex_t walking_v = std::get<1>(min_dist);
         navitia::georef::vertex_t biking_v = std::get<2>(min_dist);
-        boost::posix_time::time_duration dur_between_edges = boost::posix_time::seconds(std::get<0>(min_dist) / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
+        navitia::time_duration dur_between_edges = navitia::seconds(std::get<0>(min_dist) / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
 
         navitia::georef::Edge edge;
         edge.way_idx = data.geo_ref->graph[nearest_walking_edge].way_idx; //arbitrarily we assume the way is the walking way

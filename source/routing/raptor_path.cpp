@@ -37,8 +37,8 @@ namespace navitia { namespace routing {
 
 
 std::vector<Path>
-makePathes(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departures,
-           const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations,
+makePathes(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures,
+           const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
            const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_,
            bool clockwise, bool disruption_active) {
     std::vector<Path> result;
@@ -237,9 +237,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise, bool 
     }
 
     if(result.items.size() > 0)
-        result.duration = result.items.back().arrival - result.items.front().departure;
+        result.duration = navitia::time_duration::from_boost_duration(result.items.back().arrival - result.items.front().departure);
     else
-        result.duration = boost::posix_time::seconds(0);
+        result.duration = navitia::seconds(0);
 
     result.nb_changes = 0;
     if(result.items.size() > 2) {

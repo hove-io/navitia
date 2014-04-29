@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 #include "georef.h"
+#include "type/time_duration.h"
 #include <boost/graph/filtered_graph.hpp>
 #include <boost/graph/two_bit_color_map.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
@@ -38,20 +39,15 @@ namespace bt = boost::posix_time;
 
 namespace navitia { namespace georef {
 
-struct SpeedDistanceCombiner : public std::binary_function<bt::time_duration, bt::time_duration, bt::time_duration> {
+struct SpeedDistanceCombiner : public std::binary_function<navitia::time_duration, navitia::time_duration, navitia::time_duration> {
     /// speed factor compared to the default speed of the transportation mode
     /// speed_factor = 2 means the speed is twice the default speed of the given transportation mode
     float speed_factor;
     SpeedDistanceCombiner(float speed_) : speed_factor(speed_) {}
-    inline bt::time_duration operator()(bt::time_duration a, bt::time_duration b) const {
+    inline navitia::time_duration operator()(navitia::time_duration a, navitia::time_duration b) const {
         if (a == bt::pos_infin || b == bt::pos_infin)
             return bt::pos_infin;
-        return a + divide_by_speed(b);
-    }
-
-    //needs to redefine the / operator since boost only define integer division
-    inline bt::time_duration divide_by_speed(bt::time_duration t) const {
-        return bt::milliseconds(t.total_milliseconds() / speed_factor);
+        return a + b / speed_factor;
     }
 };
 template <typename T>
@@ -112,7 +108,7 @@ struct PathFinder {
     float speed_factor = 0.;
 
     /// Distance array for the Dijkstra
-    std::vector<bt::time_duration> distances;
+    std::vector<navitia::time_duration> distances;
 
     /// Predecessors array for the Dijkstra
     std::vector<vertex_t> predecessors;
@@ -126,14 +122,14 @@ struct PathFinder {
     void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
     /// compute the reachable stop points within the radius
-    std::vector<std::pair<type::idx_t, bt::time_duration>> find_nearest_stop_points(bt::time_duration radius,
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(navitia::time_duration radius,
                                                                          const proximitylist::ProximityList<type::idx_t>& pl);
 
     /// Compute the path from the starting point to the the target geographical coord
     Path compute_path(const type::GeographicalCoord& target_coord);
 
     /// compute the distance from the starting point to the target stop point
-    bt::time_duration get_distance(type::idx_t target_idx);
+    navitia::time_duration get_distance(type::idx_t target_idx);
 
     /// return the path from the starting point to the target. the target has to have been previously visited.
     Path get_path(type::idx_t idx);
@@ -156,26 +152,26 @@ struct PathFinder {
                                                start, &predecessors[0], &distances[0],
                                                boost::get(&Edge::duration, geo_ref.graph), // weigth map
                                                boost::identity_property_map(),
-                                               std::less<bt::time_duration>(),
+                                               std::less<navitia::time_duration>(),
                                                SpeedDistanceCombiner(speed_factor), //we multiply the edge duration by a speed factor
-                                               bt::seconds(0),
+                                               navitia::seconds(0),
                                                visitor,
                                                color
                                                );
     }
 private:
-    Path get_path(const ProjectionData& target, std::pair<bt::time_duration, ProjectionData::Direction> nearest_edge);
+    Path get_path(const ProjectionData& target, std::pair<navitia::time_duration, ProjectionData::Direction> nearest_edge);
 
     /** compute the path to the target and update the distances/pred
      *  return a pair with the edge corresponding to the target and the distance
      */
-    std::pair<bt::time_duration, ProjectionData::Direction> update_path(const ProjectionData& target);
+    std::pair<navitia::time_duration, ProjectionData::Direction> update_path(const ProjectionData& target);
 
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
-    std::pair<bt::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target) const;
+    std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target) const;
 
     ///return the time the travel the distance at the current speed (used for projections)
-    bt::time_duration crow_fly_duration(const double val) const;
+    navitia::time_duration crow_fly_duration(const double val) const;
 
     void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection, ProjectionData::Direction d) const;
 
@@ -195,12 +191,12 @@ struct StreetNetwork {
 
     bool departure_launched() const;
     bool arrival_launched() const;
-    std::vector<std::pair<type::idx_t, bt::time_duration>> find_nearest_stop_points(
-                                                    bt::time_duration radius,
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(
+                                                    navitia::time_duration radius,
                                                     const proximitylist::ProximityList<type::idx_t>& pl,
                                                     bool use_second);
 
-    bt::time_duration get_distance(type::idx_t target_idx, bool use_second = false);
+    navitia::time_duration get_distance(type::idx_t target_idx, bool use_second = false);
 
     Path get_path(type::idx_t idx, bool use_second = false);
 
@@ -242,9 +238,9 @@ struct target_visitor : public boost::dijkstra_visitor<> {
 
 // Visiteur qui s'arrête au bout d'une certaine distance
 struct distance_visitor : public boost::dijkstra_visitor<> {
-    boost::posix_time::time_duration max_duration;
-    const std::vector<bt::time_duration>& durations;
-    distance_visitor(bt::time_duration max_dur, const std::vector<bt::time_duration> & dur) :
+    navitia::time_duration max_duration;
+    const std::vector<navitia::time_duration>& durations;
+    distance_visitor(navitia::time_duration max_dur, const std::vector<navitia::time_duration> & dur) :
         max_duration(max_dur), durations(dur){}
 
     template <typename graph_type>

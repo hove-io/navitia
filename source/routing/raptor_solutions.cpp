@@ -34,8 +34,8 @@ namespace bt = boost::posix_time;
 namespace navitia { namespace routing {
 
 Solutions
-get_solutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs,
-             const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
+get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
+             const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
              bool clockwise, const std::vector<label_vector_t> &labels,
              const type::AccessibiliteParams & accessibilite_params, const type::Data &data,
              bool disruption_active) {
@@ -56,7 +56,7 @@ get_solutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &dep
 
 
 Solutions
-get_solutions(const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const DateTime &dep, bool clockwise, const type::Data & data, bool) {
+get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs, const DateTime &dep, bool clockwise, const type::Data & data, bool) {
     Solutions result;
     for(auto dep_dist : departs) {
         for(auto journey_pattern : data.pt_data->stop_points[dep_dist.first]->journey_pattern_point_list) {
@@ -84,8 +84,8 @@ bool improves(const DateTime & best_so_far, bool clockwise, const DateTime & cur
 }
 
 Solutions
-get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs,
-               const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
+get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
+               const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
                const std::vector<label_vector_t> &labels,
                const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active){
     Solutions result;
@@ -166,7 +166,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, bt::ti
 
 
 Solutions
-get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs, const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations, Solution best,
+get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations, Solution best,
                     const std::vector<label_vector_t> &labels, const type::Data &data){
     Solutions result;
 
@@ -180,7 +180,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, b
             for(auto journey_pattern_point : data.pt_data->stop_points[spid_dist.first]->journey_pattern_point_list) {
                 type::idx_t jppidx = journey_pattern_point->idx;
                 if(labels[i][journey_pattern_point->idx].type != boarding_type::uninitialized) {
-                    bt::time_duration walking_time = getWalkingTime(i, jppidx, departs, destinations, clockwise, labels, data);
+                    navitia::time_duration walking_time = getWalkingTime(i, jppidx, departs, destinations, clockwise, labels, data);
                     if(best.walking_time <= walking_time) {
                         continue;
                     }
@@ -275,13 +275,13 @@ get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, const 
 }
 
 
-boost::posix_time::time_duration getWalkingTime(int count, type::idx_t jpp_idx, const std::vector<std::pair<type::idx_t, bt::time_duration> > &departs,
-                     const std::vector<std::pair<type::idx_t, bt::time_duration> > &destinations,
+navitia::time_duration getWalkingTime(int count, type::idx_t jpp_idx, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
+                     const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
                      bool clockwise, const std::vector<label_vector_t> &labels, const type::Data &data) {
 
     const type::JourneyPatternPoint* current_jpp = data.pt_data->journey_pattern_points[jpp_idx];
     int cnt = count;
-    bt::time_duration walking_time = {};
+    navitia::time_duration walking_time = {};
 
     //Marche à la fin
     for(auto dest_dist : destinations) {
@@ -304,7 +304,7 @@ boost::posix_time::time_duration getWalkingTime(int count, type::idx_t jpp_idx, 
                                                                                            current_jpp->stop_point->idx,
                                                                                            clockwise, *data.pt_data);
                 if(connection_idx != type::invalid_idx)
-                    walking_time += bt::seconds(data.pt_data->stop_point_connections[connection_idx]->duration);
+                    walking_time += navitia::seconds(data.pt_data->stop_point_connections[connection_idx]->duration);
             }
             current_jpp = boarding;
             boarding_type_value = labels[cnt][current_jpp->idx].type;
