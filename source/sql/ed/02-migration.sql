@@ -174,10 +174,11 @@ DO $$
     DECLARE count_poi int;
 BEGIN
     count_poi := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='poi'), 0);
-    CASE WHEN count_poi > 0 
+    CASE WHEN count_poi > 0
         THEN
 			INSERT INTO georef.poi_type SELECT * FROM navitia.poi_type;
-			INSERT INTO georef.poi SELECT * FROM navitia.poi;
+			insert into georef.poi (id,weight,coord,name,uri,visible,poi_type_id,address_name,address_number)
+			select id,weight,coord,name,uri,visible,poi_type_id,address_name,address_number from navitia.poi;
 			INSERT INTO georef.poi_properties SELECT * FROM navitia.poi_properties;
     ELSE
         RAISE NOTICE 'table poi already exists, skipping';
