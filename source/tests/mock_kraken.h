@@ -62,7 +62,7 @@ struct mock_kraken {
         // Connect work threads to client threads via a queue
         do {
             try {
-                zmq::device(ZMQ_QUEUE, clients, workers);
+                zmq::proxy(clients, workers, NULL);
             } catch(zmq::error_t){}//lors d'un SIGHUP on restore la queue
         } while(true);
     }
