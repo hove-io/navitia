@@ -37,6 +37,7 @@ www.navitia.io
 #include <iostream>
 #include "utils/init.h"
 #include "kraken_zmq.h"
+#include "utils/zmq_compat.h"
 
 
 int main(int, char** argv){
