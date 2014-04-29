@@ -35,6 +35,7 @@ www.navitia.io
 
 #include "ed/build_helper.h"
 #include <zmq.hpp>
+#include "utils/zmq_compat.h"
 #include <boost/thread.hpp>
 
 /**
