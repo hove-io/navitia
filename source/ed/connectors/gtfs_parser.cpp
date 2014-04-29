@@ -501,7 +501,8 @@ void TripsGtfsHandler::init(Data& data) {
 
     id_c = csv.get_pos_col("route_id"), service_c = csv.get_pos_col("service_id"),
             trip_c = csv.get_pos_col("trip_id"), headsign_c = csv.get_pos_col("trip_headsign"),
-            block_id_c = csv.get_pos_col("block_id"), wheelchair_c = csv.get_pos_col("wheelchair_accessible");
+            block_id_c = csv.get_pos_col("block_id"), wheelchair_c = csv.get_pos_col("wheelchair_accessible"),
+            bikes_c = csv.get_pos_col("bikes_allowed");
 }
 
 void TripsGtfsHandler::finish(Data& data) {
@@ -556,6 +557,8 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
     //                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
     if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+    if(has_col(bikes_c, row) && row[bikes_c] == "1")
+        vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
 
     auto itm = gtfs_data.physical_mode_map.find(line->commercial_mode->uri);
     if (itm != gtfs_data.physical_mode_map.end()){
