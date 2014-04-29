@@ -54,21 +54,19 @@ void dataRAPTOR::load(const type::PT_Data &data)
     footpath_temp_forward.resize(data.stop_points.size());
     footpath_temp_backward.resize(data.stop_points.size());
 
-    //Construction des connexions entre journey_patternpoints
-    //(sert pour les prolongements de service ainsi que les correpondances garanties
+    // Build of connections between journey pattern points
+    // This is use for extension of service and guaranteed connection
     for(const type::JourneyPatternPointConnection* jppc : data.journey_pattern_point_connections) {
         footpath_rp_forward.insert(std::make_pair(jppc->departure->idx, jppc));
         footpath_rp_backward.insert(std::make_pair(jppc->destination->idx, jppc));
     }
 
-    //Construction de la liste des marche à pied à partir des connexions renseignées
+    // Build of a structure to look for connections
     for(const type::StopPointConnection* connection : data.stop_point_connections) {
         footpath_temp_forward[connection->departure->idx][connection->destination->idx] = connection;
-        footpath_temp_backward[connection->departure->idx][connection->destination->idx] = connection;
+        footpath_temp_backward[connection->destination->idx][connection->departure->idx] = connection;
     }
 
-
-    //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
     footpath_index_forward.resize(data.stop_points.size());
     footpath_index_backward.resize(data.stop_points.size());
     for(const type::StopPoint* sp : data.stop_points) {

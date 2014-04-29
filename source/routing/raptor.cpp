@@ -42,8 +42,7 @@ void RAPTOR::make_queue() {
 
 template<class Visitor>
 void
-RAPTOR::journey_pattern_path_connections(const Visitor & visitor/*,
-                                         const std::bitset<7> & required_properties*/) {
+RAPTOR::journey_pattern_path_connections(const Visitor & visitor) {
     std::vector<type::idx_t> to_mark;
     for(auto jpp_departure_idx = marked_rp.find_first(); jpp_departure_idx != marked_rp.npos; jpp_departure_idx = marked_rp.find_next(jpp_departure_idx)) {
         const auto* jpp_departure = data.pt_data->journey_pattern_points[jpp_departure_idx];
@@ -130,7 +129,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 
                 for(; it != end; ++it) {
                     const type::StopPointConnection* spc = *it;
-                    const auto destination = spc->destination;
+                    const auto destination = v.clockwise() ? spc->destination : spc->departure;
                     next = v.combine(previous, spc->duration); // ludo
                     if(destination->accessible(required_properties)) {
                         for(auto destination_jpp : destination->journey_pattern_point_list) {
