@@ -13,7 +13,7 @@ This is the Navitia repository.
 
 Navitia is a service providing:
 
-#. journeys computation
+#. multi-modal journeys computation
 
 #. line schedules
 
