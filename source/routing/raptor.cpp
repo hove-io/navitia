@@ -1,3 +1,33 @@
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+  
+This file is part of Navitia,
+    the software to build cool stuff with public transport.
+ 
+Hope you'll enjoy and contribute to this project,
+    powered by Canal TP (www.canaltp.fr).
+Help us simplify mobility and open public transport:
+    a non ending quest to the responsive locomotion way of traveling!
+  
+LICENCE: This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+   
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+   
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+  
+Stay tuned using
+twitter @navitia 
+IRC #navitia on freenode
+https://groups.google.com/d/forum/navitia
+www.navitia.io
+*/
+
 #include "raptor.h"
 #include <boost/foreach.hpp>
 
@@ -12,8 +42,7 @@ void RAPTOR::make_queue() {
 
 template<class Visitor>
 void
-RAPTOR::journey_pattern_path_connections(const Visitor & visitor/*,
-                                         const std::bitset<7> & required_properties*/) {
+RAPTOR::journey_pattern_path_connections(const Visitor & visitor) {
     std::vector<type::idx_t> to_mark;
     for(auto jpp_departure_idx = marked_rp.find_first(); jpp_departure_idx != marked_rp.npos; jpp_departure_idx = marked_rp.find_next(jpp_departure_idx)) {
         const auto* jpp_departure = data.pt_data->journey_pattern_points[jpp_departure_idx];
@@ -100,7 +129,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 
                 for(; it != end; ++it) {
                     const type::StopPointConnection* spc = *it;
-                    const auto destination = spc->destination;
+                    const auto destination = v.clockwise() ? spc->destination : spc->departure;
                     next = v.combine(previous, spc->duration); // ludo
                     if(destination->accessible(required_properties)) {
                         for(auto destination_jpp : destination->journey_pattern_point_list) {
@@ -158,7 +187,8 @@ void RAPTOR::clear_and_init(Solutions departs,
     for(Solution item : departs) {
         const type::JourneyPatternPoint* journey_pattern_point = data.pt_data->journey_pattern_points[item.rpidx];
         const type::StopPoint* stop_point = journey_pattern_point->stop_point;
-        if(stop_point->accessible(required_properties)) {
+        if(stop_point->accessible(required_properties) &&
+                ((clockwise && item.arrival <= bound) || (!clockwise && item.arrival >= bound))) {
             labels[0][item.rpidx].dt = item.arrival;
             labels[0][item.rpidx].type = boarding_type::departure;
             best_labels[item.rpidx] = item.arrival;
@@ -178,11 +208,11 @@ void RAPTOR::clear_and_init(Solutions departs,
         if(sp->accessible(required_properties)) {
             for(auto journey_pattern_point : sp->journey_pattern_point_list) {
                 type::idx_t jppidx = journey_pattern_point->idx;
-                if(journey_patterns_valides.test(journey_pattern_point->journey_pattern->idx) &&
-                        ((clockwise && (bound == DateTimeUtils::inf || best_labels[jppidx] > bound)) ||
-                        ((!clockwise) && (bound == DateTimeUtils::min || best_labels[jppidx] < bound)))) {
+                if(journey_patterns_valides.test(journey_pattern_point->journey_pattern->idx)) {
                         b_dest.add_destination(jppidx, item.second, clockwise);
-                        best_labels[jppidx] = bound;
+                        best_labels[jppidx] = clockwise ?
+                                    std::min(bound, labels[0][jppidx].dt) :
+                                    std::max(bound, labels[0][jppidx].dt);
                     }
             }
         }

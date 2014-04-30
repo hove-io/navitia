@@ -14,5 +14,5 @@ ADD_BOOST_TEST(thermometer)
 
 
 add_executable(departure_boards_test departure_boards_test.cpp)
-target_link_libraries(departure_boards_test time_tables ptreferential ed data fare routing utils pb_lib georef ${BOOST_LIBS} log4cplus)
+target_link_libraries(departure_boards_test time_tables ptreferential ed data fare routing utils pb_lib georef ${BOOST_LIBS} log4cplus pthread)
 ADD_BOOST_TEST(departure_boards_test)

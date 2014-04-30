@@ -1,3 +1,33 @@
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+  
+This file is part of Navitia,
+    the software to build cool stuff with public transport.
+ 
+Hope you'll enjoy and contribute to this project,
+    powered by Canal TP (www.canaltp.fr).
+Help us simplify mobility and open public transport:
+    a non ending quest to the responsive locomotion way of traveling!
+  
+LICENCE: This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+   
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+   
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+  
+Stay tuned using
+twitter @navitia 
+IRC #navitia on freenode
+https://groups.google.com/d/forum/navitia
+www.navitia.io
+*/
+
 #include "raptor_api.h"
 #include "type/pb_converter.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
@@ -76,7 +106,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         // La marche à pied initiale si on avait donné une coordonnée
         if(path.items.size() > 0 && ! path.items.front().stop_points.empty()) {
             const auto& departure_stop_point = path.items.front().stop_points.front();
-            //for stop areas, we don't want to display the fallback section if start
+            // for stop areas, we don't want to display the fallback section if start
             // from one of the stop area's stop point
             if (! (origin.type == nt::Type_e::StopArea && origin.uri == departure_stop_point->stop_area->uri)) {
                 auto temp = worker.get_path(departure_stop_point->idx);
@@ -183,9 +213,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         // La marche à pied finale si on avait donné une coordonnée
         if(path.items.size() > 0 && ! path.items.back().stop_points.empty()) {
             const auto& arrival_stop_point = path.items.back().stop_points.back();
-            //for stop areas, we don't want to display the fallback section if start
+            // for stop areas, we don't want to display the fallback section if start
             // from one of the stop area's stop point
-            if (! (origin.type == nt::Type_e::StopArea && origin.uri == arrival_stop_point->stop_area->uri)) {
+            if (! (destination.type == nt::Type_e::StopArea && destination.uri == arrival_stop_point->stop_area->uri)) {
                 auto temp = worker.get_path(arrival_stop_point->idx, true);
                 if(temp.path_items.size() > 0) {
                    //add a junction between the routing path and the walking one if needed

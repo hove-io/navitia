@@ -12,7 +12,7 @@ ADD_BOOST_TEST(reverse_raptor_test)
 
 add_executable(routing_api_test routing_api_test.cpp)
 target_link_libraries(routing_api_test ed data types routing fare pb_lib georef
-    autocomplete utils  ${BOOST_LIBS} log4cplus)
+    autocomplete utils  ${BOOST_LIBS} log4cplus pthread)
 ADD_BOOST_TEST(routing_api_test)
 
 add_executable(best_stoptime_test best_stoptime.cpp)
@@ -22,5 +22,5 @@ ADD_BOOST_TEST(best_stoptime_test)
 
 add_executable(raptor_adapted_test raptor_adapted_test.cpp)
 target_link_libraries(raptor_adapted_test ed data types routing fare pb_lib georef
-    autocomplete utils ${BOOST_LIBS} log4cplus)
+    autocomplete utils ${BOOST_LIBS} log4cplus pthread)
 ADD_BOOST_TEST(raptor_adapted_test)

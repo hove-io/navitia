@@ -1,53 +1,15 @@
--- Pour chaque stop area trouve les zones administratives qui le contiennent
-CREATE OR REPLACE FUNCTION georef.match_stop_area_to_admin() RETURNS VOID AS $$
-INSERT INTO navitia.rel_stop_area_admin(stop_area_id, admin_id)
-SELECT sa.id, ad.id
-FROM
-	navitia.stop_area sa,
-	navitia.admin ad
-WHERE
-	st_within(sa.coord::geometry, ad.boundary::geometry)
-	AND ad.boundary && sa.coord -- On force l’utilisation des indexes spatiaux en comparant les bounding boxes
-$$
-LANGUAGE SQL;
-
--- Pour chaque stop point trouve les zones administratives qui le contiennent
-CREATE OR REPLACE FUNCTION georef.match_stop_point_to_admin() RETURNS VOID AS $$
-INSERT INTO navitia.rel_stop_point_admin(stop_point_id, admin_id)
-SELECT sp.id, ad.id
-FROM
-	navitia.stop_point sp,
-	navitia.admin ad
-WHERE
-	st_within(sp.coord::geometry, ad.boundary::geometry)
-	AND ad.boundary && sp.coord -- On force l’utilisation des indexes spatiaux en comparant les bounding boxes
-$$
-LANGUAGE SQL;
-
 -- Pour chaque rue trouve les zones administratives qui le contiennent
 CREATE OR REPLACE FUNCTION georef.match_way_to_admin() RETURNS VOID AS $$
 INSERT INTO georef.rel_way_admin(way_id, admin_id)
 SELECT DISTINCT way.id, ad.id
 FROM
 	georef.way way,
-	navitia.admin ad,
+	georef.admin ad,
     georef.edge edge
 WHERE
     edge.way_id = way.id
 	AND st_within(edge.the_geog::geometry, ad.boundary::geometry)
 	AND ad.boundary && edge.the_geog -- On force l’utilisation des indexes spatiaux en comparant les bounding boxes
-$$
-LANGUAGE SQL;
-
--- Pour chaque poi trouve les zones administratives qui le contiennent
-CREATE OR REPLACE FUNCTION georef.match_poi_to_admin() RETURNS VOID AS $$
-INSERT INTO navitia.rel_poi_admin(poi_id, admin_id)
-SELECT DISTINCT poi.id, ad.id
-FROM
-	navitia.poi poi,
-	navitia.admin ad
-WHERE st_within(poi.coord::geometry, ad.boundary::geometry)
-	AND poi.coord && ad.boundary -- On force l’utilisation des indexes spatiaux en comparant les bounding boxes
 $$
 LANGUAGE SQL;
 
@@ -58,7 +20,7 @@ insert into georef.fusion_ways(id, way_id)
 select test2.id, test1.way_id from
 (
 SELECT a.id as admin_id, w.name as way_name, w.id as way_id
-  FROM georef.way w, georef.rel_way_admin r, navitia.admin a
+  FROM georef.way w, georef.rel_way_admin r, georef.admin a
   where w.id=r.way_id
   and r.admin_id=a.id
   and a.level=8 -- On choisit que les communes
@@ -66,7 +28,7 @@ SELECT a.id as admin_id, w.name as way_name, w.id as way_id
   order by a.id, w.name, w.id) test1
   inner join (
   SELECT a.id as admin_id, w.name as way_name, min(w.id) as id
-  FROM georef.way w, georef.rel_way_admin r, navitia.admin a
+  FROM georef.way w, georef.rel_way_admin r, georef.admin a
   where w.id=r.way_id
   and r.admin_id=a.id
   and a.level=8
@@ -168,17 +130,17 @@ insert into georef.rel_way_admin select * from georef.tmp_rel_way_admin
 $$
 LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION navitia.update_admin_coord() RETURNS VOID AS $$
-UPDATE navitia.admin set coord = st_centroid(boundary::geometry)
+CREATE OR REPLACE FUNCTION georef.update_admin_coord() RETURNS VOID AS $$
+UPDATE georef.admin set coord = st_centroid(boundary::geometry)
 where st_X(coord::geometry)=0
 and st_y(coord::geometry)=0
 $$
 LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION navitia.match_admin_to_admin() RETURNS VOID AS $$
-INSERT INTO navitia.rel_admin_admin(master_admin_id, admin_id)
+CREATE OR REPLACE FUNCTION georef.match_admin_to_admin() RETURNS VOID AS $$
+INSERT INTO georef.rel_admin_admin(master_admin_id, admin_id)
 select distinct ad1.id, ad2.id
-from navitia.admin ad1, navitia.admin ad2
+from georef.admin ad1, georef.admin ad2
 WHERE st_within(ad2.coord::geometry, ad1.boundary::geometry)
 AND ad2.coord && ad1.boundary -- On force l’utilisation des indexes spatiaux en comparant les bounding boxes
 and ad1.id <> ad2.id
@@ -223,17 +185,17 @@ BEGIN
 					and e.target_node_id=n.id)aa)))) INTO ret;
 	CASE  geometrytype(ret::geometry) 
 		WHEN 'MULTIPOLYGON'  THEN
-			UPDATE navitia.admin 
+			UPDATE georef.admin 
 			set boundary = ret::geometry
-			where navitia.admin.id=adminid;
+			where georef.admin.id=adminid;
 		WHEN 'MultiLineString'  THEN
-			UPDATE navitia.admin 
+			UPDATE georef.admin 
 			set boundary = ST_Multi(ST_Polygonize(ret::geometry))
-			where navitia.admin.id=adminid;
+			where georef.admin.id=adminid;
 		ELSE 
-			UPDATE navitia.admin 
+			UPDATE georef.admin 
 			set boundary = NULL
-			where navitia.admin.id=adminid;
+			where georef.admin.id=adminid;
 	END CASE;
 END
 $$

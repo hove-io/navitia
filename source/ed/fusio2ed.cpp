@@ -1,7 +1,36 @@
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+  
+This file is part of Navitia,
+    the software to build cool stuff with public transport.
+ 
+Hope you'll enjoy and contribute to this project,
+    powered by Canal TP (www.canaltp.fr).
+Help us simplify mobility and open public transport:
+    a non ending quest to the responsive locomotion way of traveling!
+  
+LICENCE: This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+   
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+   
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+  
+Stay tuned using
+twitter @navitia 
+IRC #navitia on freenode
+https://groups.google.com/d/forum/navitia
+www.navitia.io
+*/
+
 #include "config.h"
 #include <iostream>
 #include "ed/connectors/fusio_parser.h"
-#include "ed/connectors/external_parser.h"
 #include "ed/connectors/fare_parser.h"
 
 #include "utils/timer.h"
@@ -24,13 +53,12 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, date, connection_string,
-                synonyms_file, fare_dir;
+                fare_dir;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("fare,f", po::value<std::string>(&fare_dir), "Repertoire des fichiers fare")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
@@ -90,11 +118,6 @@ int main(int argc, char * argv[])
 
     data.normalize_uri();
 
-    ed::connectors::ExternalParser extConnecteur;
-    if(vm.count("synonyms")){
-        extConnecteur.fill_synonyms(synonyms_file, data);
-    }
-
     if(vm.count("fare")){
         start = pt::microsec_clock::local_time();
         LOG4CPLUS_INFO(logger, "Alimentation de fare");
@@ -117,8 +140,7 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
     LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());    
-    LOG4CPLUS_INFO(logger, "synonyms : " <<data.synonyms.size());
+    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);

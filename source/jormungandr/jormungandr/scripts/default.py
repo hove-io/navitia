@@ -1,4 +1,34 @@
 # coding=utf-8
+
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
+
 import copy
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
@@ -20,6 +50,45 @@ pb_type = {
 }
 
 f_date_time = "%Y%m%dT%H%M%S"
+
+
+def are_equals(journey1, journey2):
+    """
+    To decide that 2 journeys are equals, we loop through all values of the
+    compare_journey_generator and stop at the first non equals value
+
+    Note: the fillvalue is the value used when a generator is consumed
+    (if the 2 generators does not return the same number of elt).
+    by setting it to object(), we ensure that it will be !=
+    from any values returned by the other generator
+    """
+    return all(a == b for a, b in itertools.izip_longest(compare_journey_generator(journey1),
+                                                         compare_journey_generator(journey2),
+                                                         fillvalue=object()))
+
+
+def compare_journey_generator(journey):
+    """
+    Generator used to compare journeys together
+
+    2 journeys are equals if they share for all the sections the same :
+     * departure time
+     * arrival time
+     * vj
+     * type
+     * departure location
+     * arrival location
+    """
+    yield journey.departure_date_time
+    yield journey.arrival_date_time
+    for s in journey.sections:
+        yield s.type
+        yield s.begin_date_time
+        yield s.end_date_time
+        yield s.vehicle_journey.uri if s.vehicle_journey else 'no_vj'
+        #NOTE: we want to ensure that we always yield the same number of elt
+        yield s.origin.uri if s.origin else 'no_origin'
+        yield s.destination.uri if s.destination else 'no_destination'
 
 
 class Script(object):
@@ -367,25 +436,44 @@ class Script(object):
         return resp
 
     def journey_compare(self, j1, j2):
-        arrival_j1_f = datetime.strptime(j1.arrival_date_time, f_date_time)
-        arrival_j2_f = datetime.strptime(j2.arrival_date_time, f_date_time)
-        if arrival_j1_f > arrival_j2_f:
-            return 1
-        elif arrival_j1_f == arrival_j2_f:
-            return 0
-        else:
-            return -1
+        if j1.arrival_date_time != j2.arrival_date_time:
+            return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
+
+        if j1.duration != j2.duration:
+            return j1.duration - j2.duration
+
+        if j1.nb_transfers != j2.nb_transfers:
+            return j1.nb_transfers - j2.nb_transfers
+
+        non_pt_duration_j1 = non_pt_duration_j2 = None
+        for journey in [j1, j2]:
+            non_pt_duration = 0
+            for section in journey.sections:
+                if section.type != response_pb2.PUBLIC_TRANSPORT:
+                    non_pt_duration += section.duration
+            if not non_pt_duration_j1:
+                non_pt_duration_j1 = non_pt_duration
+            else:
+                non_pt_duration_j2 = non_pt_duration
+        return non_pt_duration_j1 - non_pt_duration_j2
 
     def fill_journeys(self, pb_req, request, instance):
+        """
+        call kraken to get the requested number of journeys
+
+        It more journeys are wanted, we ask for the next (or previous if not clockwise) departures
+        """
         resp = self.get_journey(pb_req, instance, request)
 
         if not resp.journeys or len(resp.journeys) == 0:
             return resp  # no journeys found, useless to call kraken again
 
         last_best = next((j for j in resp.journeys if j.type == 'rapid'), None)
-        while request["min_nb_journeys"] > len(resp.journeys):
+        cpt_attempt = 1  # we limit the number of call to at most the number of wanted journeys
+        while request["min_nb_journeys"] > len(resp.journeys) and cpt_attempt <= request["min_nb_journeys"]:
             if not last_best:  # if no rapid journey has been found, no need to continue
                 break
+            cpt_attempt += 1
 
             new_datetime = None
             if request['clockwise']:
@@ -417,6 +505,7 @@ class Script(object):
         self.choose_best(resp)
 
         self.delete_journeys(resp, request)  # last filter
+        self.sort_journeys(resp)
         return resp
 
     def choose_best(self, resp):
@@ -435,10 +524,22 @@ class Script(object):
         if len(new_response.journeys) == 0:
             return
 
-        initial_response.journeys.extend(new_response.journeys)
-        #we have to add the addition fare too
-        if new_response.tickets:
-            initial_response.tickets.extend(new_response.tickets)
+        #we don't want to add a journey already there
+        tickets_to_add = set()
+        for new_j in new_response.journeys:
+
+            if any(are_equals(new_j, old_j) for old_j in initial_response.journeys):
+                current_app.logger.debug("the journey tag={}, departure={} "
+                                         "was already there, we filter it".format(new_j.type, new_j.departure_date_time))
+                continue  # already there, we don't want to add it
+
+            initial_response.journeys.extend([new_j])
+            for t in new_j.fare.ticket_id:
+                tickets_to_add.add(t)
+
+        # we have to add the additional fares too
+        # if at least one journey has the ticket we add it
+        initial_response.tickets.extend([t for t in new_response.tickets if t.id in tickets_to_add])
 
     @staticmethod
     def change_ids(new_journeys, journey_count):
@@ -495,6 +596,10 @@ class Script(object):
         #after all filters, we filter not to give too many results
         if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
             del resp.journeys[request["max_nb_journeys"]:]
+
+    def sort_journeys(self, resp):
+        if len(resp.journeys) > 0:
+            resp.journeys.sort(self.journey_compare)
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)

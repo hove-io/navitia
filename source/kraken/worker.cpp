@@ -1,3 +1,33 @@
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+  
+This file is part of Navitia,
+    the software to build cool stuff with public transport.
+ 
+Hope you'll enjoy and contribute to this project,
+    powered by Canal TP (www.canaltp.fr).
+Help us simplify mobility and open public transport:
+    a non ending quest to the responsive locomotion way of traveling!
+  
+LICENCE: This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+   
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+   
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+  
+Stay tuned using
+twitter @navitia 
+IRC #navitia on freenode
+https://groups.google.com/d/forum/navitia
+www.navitia.io
+*/
+
 #include "worker.h"
 
 #include "utils/configuration.h"
@@ -317,36 +347,23 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
     if(it_sa != data->pt_data->stop_areas_map.end()) {
         pbnavitia::Place* place = pb_response.add_places();
-        fill_pb_object(it_sa->second, *data, place->mutable_stop_area(), 1);
-        place->set_embedded_type(pbnavitia::STOP_AREA);
-        place->set_name(place->stop_area().name());
-        place->set_uri(place->stop_area().uri());
+        fill_pb_placemark(it_sa->second, *data, place, 1);
     } else {
         auto it_sp = data->pt_data->stop_points_map.find(request.uri());
         if(it_sp != data->pt_data->stop_points_map.end()) {
             pbnavitia::Place* place = pb_response.add_places();
-            fill_pb_object(it_sp->second, *data, place->mutable_stop_point(), 1);
-            place->set_embedded_type(pbnavitia::STOP_POINT);
-            place->set_name(place->stop_point().name());
-            place->set_uri(place->stop_point().uri());
+            fill_pb_placemark(it_sp->second, *data, place, 1);
         } else {
             auto it_poi = data->geo_ref->poi_map.find(request.uri());
             if(it_poi != data->geo_ref->poi_map.end()) {
                 pbnavitia::Place* place = pb_response.add_places();
-                fill_pb_object(data->geo_ref->pois[it_poi->second], *data,
-                        place->mutable_poi(), 1);
-                place->set_embedded_type(pbnavitia::POI);
-                place->set_name(place->poi().name());
-                place->set_uri(place->poi().uri());
+                fill_pb_placemark(data->geo_ref->pois[it_poi->second], *data,place, 1);
             } else {
                 auto it_admin = data->geo_ref->admin_map.find(request.uri());
                 if(it_admin != data->geo_ref->admin_map.end()) {
                     pbnavitia::Place* place = pb_response.add_places();
-                    fill_pb_object(data->geo_ref->admins[it_admin->second],
-                            *data, place->mutable_administrative_region(), 1);
-                    place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
-                    place->set_name(place->administrative_region().name());
-                    place->set_uri(place->administrative_region().uri());
+                    fill_pb_placemark(data->geo_ref->admins[it_admin->second],*data, place, 1);
+
                 }else{
                     fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse : "+request.uri(),  pb_response.mutable_error());
                 }

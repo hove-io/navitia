@@ -1,3 +1,33 @@
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+  
+This file is part of Navitia,
+    the software to build cool stuff with public transport.
+ 
+Hope you'll enjoy and contribute to this project,
+    powered by Canal TP (www.canaltp.fr).
+Help us simplify mobility and open public transport:
+    a non ending quest to the responsive locomotion way of traveling!
+  
+LICENCE: This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+   
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+   
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+  
+Stay tuned using
+twitter @navitia 
+IRC #navitia on freenode
+https://groups.google.com/d/forum/navitia
+www.navitia.io
+*/
+
 #include "gtfs_parser.h"
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -471,7 +501,8 @@ void TripsGtfsHandler::init(Data& data) {
 
     id_c = csv.get_pos_col("route_id"), service_c = csv.get_pos_col("service_id"),
             trip_c = csv.get_pos_col("trip_id"), headsign_c = csv.get_pos_col("trip_headsign"),
-            block_id_c = csv.get_pos_col("block_id"), wheelchair_c = csv.get_pos_col("wheelchair_accessible");
+            block_id_c = csv.get_pos_col("block_id"), wheelchair_c = csv.get_pos_col("wheelchair_accessible"),
+            bikes_c = csv.get_pos_col("bikes_allowed");
 }
 
 void TripsGtfsHandler::finish(Data& data) {
@@ -526,6 +557,8 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
     //                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
     if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+    if(has_col(bikes_c, row) && row[bikes_c] == "1")
+        vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
 
     auto itm = gtfs_data.physical_mode_map.find(line->commercial_mode->uri);
     if (itm != gtfs_data.physical_mode_map.end()){

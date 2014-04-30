@@ -1,9 +1,39 @@
 # coding=utf-8
+
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
+
 from flask import url_for, redirect
 from flask.ext.restful import fields, marshal_with, reqparse, abort
-from jormungandr import i_manager
+from jormungandr import i_manager, authentification
 from converters_collection_type import collections_to_resource_type
-from fields import stop_point, stop_area, route, line, physical_mode,\
+from fields import stop_point, stop_area, route, line, physical_mode, \
     commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
     journey_pattern, vehicle_journey, connection, error, PbField
@@ -15,7 +45,6 @@ from errors import ManageError
 from Coord import Coord
 from navitiacommon.models import PtObject
 from flask.ext.restful.types import boolean
-
 
 class Uri(ResourceUri):
     parsers = {}
@@ -52,17 +81,15 @@ class Uri(ResourceUri):
         if region is None and lat is None and lon is None:
             if "external_code" in args and args["external_code"]:
                 type_ = collections_to_resource_type[collection]
-                try:
-                    res = PtObject.get_from_external_code(args["external_code"],
-                                                          type_)
-                except:
-                    abort(400, message="Unable to query this type of object"
-                          " with external code")
+                res = PtObject.get_from_external_code(args["external_code"],
+                                                      type_)
                 if res:
                     id = res.uri
-                    instances = res.instances
-                    if len(instances) > 0:
-                        region = res.instances[0].name
+                    for instance in res.instances:
+                        if authentification.has_access(instance, abort=False):
+                            region = instance.name
+                    if not region:
+                        authentification.abort_request()
                 else:
                     abort(404, message="Unable to find an object for the uri %s"
                           % args["external_code"])
@@ -71,9 +98,6 @@ class Uri(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         if not self.region:
             return {"error": "No region"}, 404
-
-
-
         if(collection and id):
             args["filter"] = collections_to_resource_type[collection] + ".uri="
             args["filter"] += id

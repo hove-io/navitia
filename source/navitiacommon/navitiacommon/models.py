@@ -1,4 +1,34 @@
 # encoding: utf-8
+
+#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
+
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 from navitiacommon.cache import get_cache
@@ -48,17 +78,17 @@ class User(db.Model):
         cache_res = get_cache().get(cls.cache_prefix, token)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
-            res = cls.query.join(Key).filter(Key.token == token,
+            query = cls.query.join(Key).filter(Key.token == token,
                                               (Key.valid_until > valid_until)
                                               | (Key.valid_until == None))
-            if res:
-                get_cache().set(cls.cache_prefix, token, (res.first(),))
-                return res.first()
-            else:
-                get_cache().set(cls.cache_prefix, token, (None,))
-                return None
+            res = query.first()
+            get_cache().set(cls.cache_prefix, token, (res,))
+            return res
         else:
-            return cache_res[0]
+            if cache_res[0]:
+                return  db.session.merge(cache_res[0], load=False)
+            else:
+                return None
 
     def _has_access(self, instance_name, api_name):
         q1 = Instance.query.filter(Instance.name == instance_name,
@@ -71,7 +101,7 @@ class User(db.Model):
         return query.count() > 0
 
     def has_access(self, instance_name, api_name):
-        key = '%d_%s_%s' % (self.id, instance_name, api_name)
+        key = '{0}_{1}_{2}'.format(self.id, instance_name, api_name)
         res = get_cache().get(self.cache_prefix, key)
         if res is None:
             res = self._has_access(instance_name, api_name)
@@ -122,14 +152,42 @@ class Instance(db.Model):
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
             res = cls.query.filter_by(name=name).first()
-            if res:
-                get_cache().set(cls.cache_prefix, name, (res,))
-                return res
-            else:
-                get_cache().set(cls.cache_prefix, name, (None,))
-                return None
+            get_cache().set(cls.cache_prefix, name, (res,))
+            return res
         else:
-            return cache_res[0]
+            if cache_res[0]:
+                return  db.session.merge(cache_res[0], load=False)
+            else:
+                return None
+
+    def _is_accessible_by(self, user):
+        """
+        Check if an instance is accessible by a user
+        We don't check the api used here!
+        this version doesn't use cache
+        """
+        if self.is_free:
+            return True
+        elif user:
+            return self.authorizations.filter_by(user=user).count() > 0
+        else:
+            return False
+
+    def is_accessible_by(self, user):
+        """
+        Check if an instance is accessible by a user
+        We don't check the api used here!
+        """
+        if user:
+            user_id = user.id
+        else:
+            user_id = None
+        key = '{0}_{1}'.format(self.name, user_id)
+        res = get_cache().get(self.cache_prefix + '_access', key)
+        if res is None:
+            res = self._is_accessible_by(user)
+            get_cache().set(self.cache_prefix + '_access', key, res)
+        return res
 
     def __repr__(self):
         return '<Instance %r>' % self.name
@@ -206,15 +264,14 @@ class mixin_get_from_uri():
         cache_res = get_cache().get(prefix, uri)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
-            res = cls.query.filter(cls.uri == uri)
-            if res:
-                get_cache().set(prefix, uri, (res.first(),))
-                return res.first()
-            else:
-                get_cache().set(prefix, uri, (None,))
-                return None
+            res = cls.query.filter(cls.uri == uri).first()
+            get_cache().set(prefix, uri, (res,))
+            return res
         else:
-            return cache_res[0]
+            if cache_res[0]:
+                return  db.session.merge(cache_res[0], load=False)
+            else:
+                return None
 
 
 
@@ -226,15 +283,14 @@ class mixin_get_from_external_code():
         cache_res = get_cache().get(prefix, external_code)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
-            res = cls.query.filter(cls.external_code == external_code)
-            if res:
-                get_cache().set(prefix, external_code, (res.first(),))
-                return res.first()
-            else:
-                get_cache().set(prefix, external_code, (None,))
-                return None
+            res = cls.query.filter(cls.external_code == external_code).first()
+            get_cache().set(prefix, external_code, (res,))
+            return res
         else:
-            return cache_res[0]
+            if cache_res[0]:
+                return  db.session.merge(cache_res[0], load=False)
+            else:
+                return None
 
 
 class StopAreaInstance(db.Model):
@@ -262,7 +318,8 @@ class StopArea(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
                             secondary="rel_stop_area_instance",
                             backref="stop_area",
                             cascade="all",
-                            passive_deletes=True)
+                            passive_deletes=True,
+                            lazy='joined')
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = StopAreaInstance
@@ -307,7 +364,8 @@ class StopPoint(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
                             secondary="rel_stop_point_instance",
                             backref="stop_point",
                             cascade="all",
-                            passive_deletes=True)
+                            passive_deletes=True,
+                            lazy='joined')
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = StopPointInstance
@@ -351,7 +409,8 @@ class Poi(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
                             secondary="rel_poi_instance",
                             backref="poi",
                             cascade="all",
-                            passive_deletes=True)
+                            passive_deletes=True,
+                            lazy='joined')
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = PoiInstance
@@ -394,7 +453,8 @@ class Admin(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
                             secondary="rel_admin_instance",
                             backref="admin",
                             cascade="all",
-                            passive_deletes=True)
+                            passive_deletes=True,
+                            lazy='joined')
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = AdminInstance
@@ -435,7 +495,8 @@ class Line(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
                             secondary="rel_line_instance",
                             backref="line",
                             cascade="all",
-                            passive_deletes=True)
+                            passive_deletes=True,
+                            lazy='joined')
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = LineInstance
@@ -477,7 +538,8 @@ class Route(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
                             secondary="rel_route_instance",
                             backref="route",
                             cascade="all",
-                            passive_deletes=True)
+                            passive_deletes=True,
+                            lazy='joined')
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = RouteInstance
@@ -518,7 +580,8 @@ class Network(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
                             secondary="rel_network_instance",
                             backref="network",
                             cascade="all",
-                            passive_deletes=True)
+                            passive_deletes=True,
+                            lazy='joined')
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
     cls_rel_instance = NetworkInstance
@@ -584,12 +647,11 @@ class PtObject(db.Model, mixin_get_from_uri):
         cache_res = get_cache().get(prefix, external_code)
         if cache_res is None: # we store a tuple to be able to distinguish
         #  if we have already look for this element
-            res = cls.query.filter(cls.external_code == external_code)
-            if res:
-                get_cache().set(prefix, external_code, (res.first(),))
-                return res.first()
-            else:
-                get_cache().set(prefix, external_code, (None,))
-                return None
+            res = cls.query.filter(cls.external_code == external_code).first()
+            get_cache().set(prefix, external_code, (res,))
+            return res
         else:
-            return cache_res[0]
+            if cache_res[0]:
+                return  db.session.merge(cache_res[0], load=False)
+            else:
+                return None

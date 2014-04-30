@@ -1,3 +1,33 @@
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+  
+This file is part of Navitia,
+    the software to build cool stuff with public transport.
+ 
+Hope you'll enjoy and contribute to this project,
+    powered by Canal TP (www.canaltp.fr).
+Help us simplify mobility and open public transport:
+    a non ending quest to the responsive locomotion way of traveling!
+  
+LICENCE: This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+   
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+   
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+  
+Stay tuned using
+twitter @navitia 
+IRC #navitia on freenode
+https://groups.google.com/d/forum/navitia
+www.navitia.io
+*/
+
 #include "ed_persistor.h"
 #include "ed/connectors/fare_utils.h"
 
@@ -82,13 +112,13 @@ void EdPersistor::build_ways(){
     /// Update ways name
     PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
     /// Update of admin cordinates  : Calcul of barycentre
-    PQclear(this->lotus.exec("SELECT navitia.update_admin_coord();", "", PGRES_TUPLES_OK));
+    PQclear(this->lotus.exec("SELECT georef.update_admin_coord();", "", PGRES_TUPLES_OK));
     /// Relation between admins
-    PQclear(this->lotus.exec("SELECT navitia.match_admin_to_admin();", "", PGRES_TUPLES_OK));
+    PQclear(this->lotus.exec("SELECT georef.match_admin_to_admin();", "", PGRES_TUPLES_OK));
 }
 
 void EdPersistor::insert_admins(const ed::Georef& data){
-    this->lotus.prepare_bulk_insert("navitia.admin",
+    this->lotus.prepare_bulk_insert("georef.admin",
             {"id", "name", "post_code", "insee", "level", "coord", "uri"});
     for(const auto& itm : data.admins){
         if(itm.second->is_used){
@@ -181,7 +211,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
 }
 
 void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
-    this->lotus.prepare_bulk_insert("navitia.poi_type", {"id", "uri", "name"});
+    this->lotus.prepare_bulk_insert("georef.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
         this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
     }
@@ -189,7 +219,7 @@ void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
 }
 
 void EdPersistor::insert_pois(const ed::PoiPoiType& data){
-    this->lotus.prepare_bulk_insert("navitia.poi",
+    this->lotus.prepare_bulk_insert("georef.poi",
     {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible", "address_number", "address_name"});
     for(const auto& itm : data.pois) {
         std::string poi_type("NULL");
@@ -206,7 +236,7 @@ void EdPersistor::insert_pois(const ed::PoiPoiType& data){
 }
 
 void EdPersistor::insert_poi_properties(const ed::PoiPoiType& data){
-    this->lotus.prepare_bulk_insert("navitia.poi_properties", {"poi_id","key","value"});
+    this->lotus.prepare_bulk_insert("georef.poi_properties", {"poi_id","key","value"});
     for(const auto& itm : data.pois){
         for(auto property : itm.second->properties){
             this->lotus.insert({std::to_string(itm.second->id),property.first, property.second});
@@ -229,7 +259,7 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
 }
 
 void EdPersistor::update_boundary(){
-    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from navitia.admin;",
+    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from georef.admin;",
                 "", PGRES_TUPLES_OK));
 }
 
@@ -298,9 +328,6 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert journey pattern point connections");
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
     LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
-    LOG4CPLUS_INFO(logger, "Begin: insert synonyms");
-    this->insert_synonyms(data.synonyms);
-    LOG4CPLUS_INFO(logger, "End: insert synonyms");
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
     LOG4CPLUS_INFO(logger, "End: insert fares");
@@ -324,6 +351,15 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "End: commit");
 }
 
+void EdPersistor::persist_synonym(const std::map<std::string, std::string>& data){
+    this->lotus.start_transaction();
+    this->clean_synonym();
+    LOG4CPLUS_INFO(logger, "Begin: insert synonyms");
+    this->insert_synonyms(data);
+    LOG4CPLUS_INFO(logger, "Begin: commit");
+    this->lotus.commit();
+    LOG4CPLUS_INFO(logger, "End: commit");
+}
 
 void EdPersistor::persist_fare(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: truncate fare tables");
@@ -351,20 +387,24 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
 
 void EdPersistor::clean_georef(){
     PQclear(this->lotus.exec(
-                "TRUNCATE georef.node, georef.house_number, navitia.admin, "
+                "TRUNCATE georef.node, georef.house_number, georef.admin, "
                 "georef.way CASCADE;"));
 }
 
 void EdPersistor::clean_poi(){
     PQclear(this->lotus.exec(
-                "TRUNCATE  navitia.poi_type, navitia.poi CASCADE;"));
+                "TRUNCATE  georef.poi_type, georef.poi CASCADE;"));
+}
+
+void EdPersistor::clean_synonym(){
+    PQclear(this->lotus.exec("TRUNCATE georef.synonym"));
 }
 
 void EdPersistor::clean_db(){
     PQclear(this->lotus.exec(
                 "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
                 "navitia.physical_mode, navitia.contributor, "
-                "navitia.synonym, navitia.commercial_mode, "
+                "navitia.commercial_mode, "
                 "navitia.vehicle_properties, navitia.properties, "
                 "navitia.validity_pattern, navitia.network, navitia.parameters, "
                 "navitia.connection, navitia.calendar, navitia.period, "
@@ -949,7 +989,7 @@ void EdPersistor::insert_rel_calendar_line(const std::vector<types::Calendar*>& 
 }
 
 void EdPersistor::insert_synonyms(const std::map<std::string, std::string>& synonyms){
-    this->lotus.prepare_bulk_insert("navitia.synonym", {"id", "key", "value"});
+    this->lotus.prepare_bulk_insert("georef.synonym", {"id", "key", "value"});
     int count = 1;
         std::map <std::string, std::string>::const_iterator it = synonyms.begin();
     while(it != synonyms.end()){

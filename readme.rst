@@ -67,4 +67,8 @@ Tools
 
 Installation
 ============
-For the installation procedure, please refer to the `installation documentation <https://github.com/canaltp/kraken/blob/dev/install.rst>`_
+For the installation procedure, please refer to the `installation documentation <https://github.com/canaltp/navitia/blob/dev/install.rst>`_
+
+How to contribute
+=================
+Fork the github repo, create a new branch from dev, and submit your pull request!

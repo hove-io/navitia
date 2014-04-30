@@ -1,3 +1,32 @@
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
+
 """
 Functions to launch the binaratisations
 """
@@ -212,12 +241,39 @@ def poi2ed(instance_config, filename, job_id):
     finally:
         lock.release()
 
+@celery.task()
+def synonym2ed(instance_config, filename, job_id):
+    """ launch synonym2ed """
+
+    job = models.Job.query.get(job_id)
+    instance = job.instance
+    lock = redis.lock('tyr.lock|' + instance.name)
+    if not lock.acquire(blocking=False):
+        synonym2ed.retry(countdown=300, max_retries=10)
+
+    logger = get_instance_logger(instance)
+    try:
+        connection_string = make_connection_string(instance_config)
+        res = launch_exec('synonym2ed',
+                ["-i", filename, "--connection-string", connection_string],
+                logger)
+        if res != 0:
+            #@TODO: exception
+            raise ValueError('synonym2ed failed')
+    except:
+        logger.exception('')
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+    finally:
+        lock.release()
 
 @celery.task()
 def reload_data(instance_config, job_id):
     """ reload data on all kraken of this instance"""
     job = models.Job.query.get(job_id)
     instance = job.instance
+    logging.info("Unqueuing job {}, reload data of instance {}".format(job.id, instance.name))
     logger = get_instance_logger(instance)
     try:
         task = navitiacommon.task_pb2.Task()

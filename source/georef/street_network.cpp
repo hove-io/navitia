@@ -1,3 +1,33 @@
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+  
+This file is part of Navitia,
+    the software to build cool stuff with public transport.
+ 
+Hope you'll enjoy and contribute to this project,
+    powered by Canal TP (www.canaltp.fr).
+Help us simplify mobility and open public transport:
+    a non ending quest to the responsive locomotion way of traveling!
+  
+LICENCE: This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+   
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+   
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+  
+Stay tuned using
+twitter @navitia 
+IRC #navitia on freenode
+https://groups.google.com/d/forum/navitia
+www.navitia.io
+*/
+
 #include "street_network.h"
 #include "type/data.h"
 #include "georef.h"
@@ -53,15 +83,35 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
 
         //we have to reverse the path
         std::reverse(result.path_items.begin(), result.path_items.end());
+        boost::optional<int> last_angle = {};
         for (auto& item : result.path_items) {
             std::reverse(item.coordinates.begin(), item.coordinates.end());
+
             //we have to reverse the directions too
-            item.angle *= -1;
+            // the first direction become 0,
+            // and we 'shift' all directions to the next path_item after reverting them
+            int current_angle = -1 * item.angle;
+            if (! last_angle) {
+                item.angle = 0;
+            } else {
+                item.angle = *last_angle;
+            }
+            last_angle = current_angle;
+
+            // FIXME: ugly temporary fix
+            // while we don't use a boost::reverse_graph, the easiest way to handle
+            // the bss rent/putback section in the arrival section is to swap them
+            // This patch is wrong since we don't handle the different duration of
+            // bss_rent and bss_put_back, but it'll do for the moment
+            if (item.transportation == PathItem::TransportCaracteristic::BssTake) {
+                item.transportation = PathItem::TransportCaracteristic::BssPutBack;
+            } else if (item.transportation == PathItem::TransportCaracteristic::BssPutBack) {
+                item.transportation = PathItem::TransportCaracteristic::BssTake;
+            }
         }
 
         if (! result.path_items.empty()) {
             //no direction for the first elt
-            result.path_items.front().angle = 0;
             result.path_items.back().coordinates.push_back(arrival_path_finder.starting_edge.projected);
         }
     }
