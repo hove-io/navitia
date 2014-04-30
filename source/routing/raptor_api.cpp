@@ -36,8 +36,6 @@ www.navitia.io
 #include <chrono>
 #include "type/meta_data.h"
 #include "fare/fare.h"
-#include <valgrind/callgrind.h>
-
 
 namespace navitia { namespace routing {
 
@@ -250,7 +248,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
     }
 
-    CALLGRIND_STOP_INSTRUMENTATION;
     return pb_response;
 }
 
@@ -339,7 +336,6 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               georef::StreetNetwork & worker,
               bool disruption_active,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
-    CALLGRIND_START_INSTRUMENTATION;
     pbnavitia::Response response;
 
     std::vector<bt::ptime> datetimes;
