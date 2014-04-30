@@ -756,7 +756,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         std::vector<std::string> values;
         values.push_back(std::to_string(stop->arrival_time));
         values.push_back(std::to_string(stop->departure_time));
-        if(stop->local_traffic_zone != navitia::type::invalid_idx){
+        if(stop->local_traffic_zone != std::numeric_limits<uint16_t>::max()){
             values.push_back(std::to_string(stop->local_traffic_zone));
         }else{
             values.push_back(lotus.null_value);

@@ -235,14 +235,14 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     }
 
     if(is_valid(itl_c, row)){
-        int local_traffic_zone =  boost::lexical_cast<int>(row[itl_c]);
+        uint16_t local_traffic_zone =  boost::lexical_cast<uint16_t>(row[itl_c]);
         if (local_traffic_zone > 0)
             stop_time->local_traffic_zone = local_traffic_zone;
         else
-            stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
+            stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
     }
     else
-        stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
+        stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
     return stop_time;
 
 }

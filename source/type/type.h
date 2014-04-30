@@ -815,7 +815,7 @@ struct JourneyPatternPoint : public Header{
 
 };
 
-struct StopTime : public Nameable {
+struct StopTime {
     static const uint8_t PICK_UP = 0;
     static const uint8_t DROP_OFF = 1;
     static const uint8_t ODT = 2;
@@ -823,21 +823,22 @@ struct StopTime : public Nameable {
     static const uint8_t WHEELCHAIR_BOARDING = 4;
     static const uint8_t DATE_TIME_ESTIMATED = 5;
 
-    uint32_t arrival_time; ///< En secondes depuis minuit
-    uint32_t departure_time; ///< En secondes depuis minuit
-    uint32_t start_time; ///< Si horaire en fréquence, premiere arrivee
-    uint32_t end_time; ///< Si horaire en fréquence, dernier depart
-    uint32_t headway_secs; ///< Si horaire en fréquence
-    VehicleJourney* vehicle_journey;
-    JourneyPatternPoint* journey_pattern_point;
-    uint32_t local_traffic_zone;
     std::bitset<8> properties;
+    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
+    uint32_t arrival_time = 0; ///< En secondes depuis minuit
+    uint32_t departure_time = 0; ///< En secondes depuis minuit
+    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence, premiere arrivee
+    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence, dernier depart
+    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence
+    VehicleJourney* vehicle_journey = nullptr;
+    JourneyPatternPoint* journey_pattern_point = nullptr;
+    std::string comment;
 
-    ValidityPattern* departure_validity_pattern;
-    ValidityPattern* arrival_validity_pattern;
+    ValidityPattern* departure_validity_pattern = nullptr;
+    ValidityPattern* arrival_validity_pattern = nullptr;
 
-    ValidityPattern* departure_adapted_validity_pattern;
-    ValidityPattern* arrival_adapted_validity_pattern;
+    ValidityPattern* departure_adapted_validity_pattern = nullptr;
+    ValidityPattern* arrival_adapted_validity_pattern = nullptr;
 
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
@@ -905,12 +906,6 @@ struct StopTime : public Nameable {
         else
             return clockwise ? hour <= this->end_time : this->start_time <= hour;
     }
-
-    //@TODO construire ces putin de validy pattern!!
-    StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
-        headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey(nullptr), journey_pattern_point(nullptr),
-        local_traffic_zone(std::numeric_limits<uint32_t>::max()), departure_validity_pattern(nullptr), arrival_validity_pattern(nullptr),
-        departure_adapted_validity_pattern(nullptr), arrival_adapted_validity_pattern(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point

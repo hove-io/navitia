@@ -124,12 +124,13 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
 
 
 VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee, const std::string& depart,
-            uint32_t local_traffic_zone, bool drop_off_allowed, bool pick_up_allowed){
-    return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(), pt::duration_from_string(depart).total_seconds(), local_traffic_zone, drop_off_allowed, pick_up_allowed);
-
+            uint16_t local_traffic_zone, bool drop_off_allowed, bool pick_up_allowed){
+    return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(),
+            pt::duration_from_string(depart).total_seconds(), local_traffic_zone,
+            drop_off_allowed, pick_up_allowed);
 }
 
-VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32_t local_trafic_zone, bool drop_off_allowed, bool pick_up_allowed){
+VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone, bool drop_off_allowed, bool pick_up_allowed){
     navitia::type::StopTime* st = new navitia::type::StopTime();
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;

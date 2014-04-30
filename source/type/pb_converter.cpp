@@ -528,7 +528,7 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
         hp->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
     if(!st->comment.empty()){
-        fill_pb_object(st->comment, data,  hp->add_notes(),max_depth,now,action_period);
+        fill_pb_object(st->comment, data,  hp->add_notes(), max_depth, now, action_period);
     }
 }
 
