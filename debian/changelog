@@ -1,3 +1,33 @@
+navitia2 (0.95.0) unstable; urgency=low
+
+  * ed : move poi table in georef schema
+  * Kraken: delete of old, useless file
+  * kraken: Correction for API place with uri
+  * Kraken: use utils/zmq_compat.h for supporting zmq 3 and zmq 2
+  * Kraken: Fix reverse connections
+  * Jormungandr: chmod +x on manage.py
+  * Set GTFS bikes allowed property in VehicleJourney
+  * sql: navitia.admin has become georef.admin
+  * Fix for Ubuntu 14.04
+  * Documentation: add a 'how to contribute section'
+  * Ouistiti: add licences
+  * Move admin in georef
+  * Jormungandr: we want uniq journeys
+  * Jormungandr: check ACL on URI api
+  * Ed: line sort
+  * Add tests on journeys
+  * Kraken: remove valgrind
+  * Ed: remove hiredis dependency
+  * Jormungandr: Sort journeys
+  * Connector at auth
+  * Jormungandr: prev&next one minutes before/after
+  * Kraken: switch bss rent/putback section for arrival
+  * Add commands tyr
+  * Kraken: bug on arrival streetnetwork section
+  * Kraken: fix reverse path angles
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 30 Apr 2014 10:04:16 +0100
+
 navitia2 (0.94.1) unstable; urgency=low
 
   * Ed: Do bulk insert on stop times every 150000 inserts
