@@ -80,7 +80,7 @@ class ConnectorAT(object):
     def run(self):
         self.at_realtime_reader.execute()
         logging.getLogger('connector').info("put %i message and %i disruptions"
-                    "to following topics: %s" %\
+                    " to following topics: %s" %\
                     (len(self.at_realtime_reader.message_list),
                      len(self.at_realtime_reader.perturbation_list),
                      self.config.rt_topic))
@@ -98,3 +98,4 @@ class ConnectorAT(object):
 
             self.producer.publish(task.SerializeToString(),
                                   routing_key=self.config.rt_topic)
+        self.connection.release()
