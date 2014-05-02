@@ -327,12 +327,12 @@ struct StopTime : public Nameable {
     bool wheelchair_boarding;
     bool date_time_estimated;
 
-    uint32_t local_traffic_zone;
+    uint16_t local_traffic_zone;
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
         headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
         ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),date_time_estimated(false),
-                local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
+                local_traffic_zone(std::numeric_limits<uint16_t>::max()) {}
 
     navitia::type::StopTime* get_navitia_type() const;
 

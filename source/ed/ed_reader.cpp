@@ -701,7 +701,6 @@ void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::POIType* poi_type = new navitia::georef::POIType();
         const_it["uri"].to(poi_type->uri);
         const_it["name"].to(poi_type->name);
-        const_it["id"].to(poi_type->id);
         poi_type->idx = data.geo_ref->poitypes.size();
         data.geo_ref->poitypes.push_back(poi_type);
         this->poi_type_map[const_it["id"].as<idx_t>()] = poi_type;
@@ -721,7 +720,6 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::POI* poi = new navitia::georef::POI();
         const_it["uri"].to(poi->uri);
         const_it["name"].to(poi->name);
-        const_it["id"].to(poi->id);
         const_it["address_number"].to(string_number);
         int_number = str_to_int(string_number);
         if(int_number > -1){
@@ -768,7 +766,6 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::Way* way = new navitia::georef::Way;
         const_it["uri"].to(way->uri);
         const_it["name"].to(way->name);
-        way->id = id;
         way->idx = data.geo_ref->ways.size();
 
         const_it["type"].to(way->way_type);
@@ -1171,7 +1168,6 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta->production_date.begin());
-        const_it["id"].to(cal->id);
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
         const_it["external_code"].to(cal->codes["external_code"]);

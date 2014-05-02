@@ -237,7 +237,6 @@ void GeoRef::add_way(const Way& w){
     Way* to_add = new Way;
     to_add->name = w.name;
     to_add->idx = w.idx;
-    to_add->id = w.id;
     to_add->uri = w.uri;
     ways.push_back(to_add);
 }

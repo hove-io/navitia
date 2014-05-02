@@ -235,14 +235,14 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     }
 
     if(is_valid(itl_c, row)){
-        int local_traffic_zone =  boost::lexical_cast<int>(row[itl_c]);
+        uint16_t local_traffic_zone =  boost::lexical_cast<uint16_t>(row[itl_c]);
         if (local_traffic_zone > 0)
             stop_time->local_traffic_zone = local_traffic_zone;
         else
-            stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
+            stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
     }
     else
-        stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
+        stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
     return stop_time;
 
 }
@@ -548,7 +548,6 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         throw InvalidHeaders(csv.filename);
     }
     ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
-    mode->id = row[id_c];
     mode->name = row[name_c];
     mode->uri = row[id_c];
     data.physical_modes.push_back(mode);
@@ -567,7 +566,6 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
         throw InvalidHeaders(csv.filename);
     }
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = row[id_c];
     commercial_mode->name = row[name_c];
     commercial_mode->uri = row[id_c];
     data.commercial_modes.push_back(commercial_mode);
@@ -759,7 +757,6 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         throw InvalidHeaders(csv.filename);
     }
     ed::types::Calendar* calendar = new ed::types::Calendar();
-    calendar->id = row[id_c];
     calendar->uri = row[id_c];
     calendar->external_code = row[id_c];
     calendar->name =  row[name_c];

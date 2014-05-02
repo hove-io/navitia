@@ -384,7 +384,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
     count = 0; //< Itération de l'algo raptor (une itération par correspondance)
     const type::JourneyPatternPoint* boarding = nullptr; //< Le JPP time auquel on a embarqué
     DateTime workingDt = visitor.worst_datetime();
-    uint32_t l_zone = std::numeric_limits<uint32_t>::max();
+    uint16_t l_zone = std::numeric_limits<uint16_t>::max();
 
     //this->foot_path(visitor, accessibilite_params.properties);
     uint32_t nb_jpp_visites = 0;
@@ -423,7 +423,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                         const type::StopTime* st = *it_st;
                         const auto current_time = st->section_end_time(visitor.clockwise(), DateTimeUtils::hour(workingDt));
                         DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
-                        if((l_zone == std::numeric_limits<uint32_t>::max()
+                        if((l_zone == std::numeric_limits<uint16_t>::max()
                             || l_zone != st->local_traffic_zone)
                                 && st->valid_end(visitor.clockwise())) {
                             //On stocke le meilleur label, et on marque pour explorer par la suite

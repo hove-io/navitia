@@ -124,12 +124,13 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
 
 
 VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee, const std::string& depart,
-            uint32_t local_traffic_zone, bool drop_off_allowed, bool pick_up_allowed){
-    return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(), pt::duration_from_string(depart).total_seconds(), local_traffic_zone, drop_off_allowed, pick_up_allowed);
-
+            uint16_t local_traffic_zone, bool drop_off_allowed, bool pick_up_allowed){
+    return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(),
+            pt::duration_from_string(depart).total_seconds(), local_traffic_zone,
+            drop_off_allowed, pick_up_allowed);
 }
 
-VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32_t local_trafic_zone, bool drop_off_allowed, bool pick_up_allowed){
+VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone, bool drop_off_allowed, bool pick_up_allowed){
     navitia::type::StopTime* st = new navitia::type::StopTime();
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;
@@ -324,14 +325,12 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->id = "0";
     commercial_mode->name = "Tram";
     commercial_mode->uri = "0x0";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
 
     commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->id = "1";
     commercial_mode->name = "Metro";
     commercial_mode->uri = "0x1";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
@@ -339,7 +338,6 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
         mode->idx = mt->idx;
-        mode->id = mt->id;
         mode->name = mt->name;
         mode->uri = mt->uri;
         this->data->pt_data->physical_modes.push_back(mode);
