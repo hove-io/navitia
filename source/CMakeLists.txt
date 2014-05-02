@@ -42,7 +42,7 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}"
                      "${Boost_INCLUDE_DIRS}"
                      "${CMAKE_SOURCE_DIR}/third_party/SimpleAmqpClient/src/"
 )
-link_directories("${Boost_LIBRARY_DIRS}")
+link_directories(${Boost_LIBRARY_DIRS})
 
 MACRO(ADD_BOOST_TEST EXE_NAME)
     ADD_TEST(${EXE_NAME} "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no)
