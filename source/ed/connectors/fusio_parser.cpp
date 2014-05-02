@@ -548,7 +548,6 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         throw InvalidHeaders(csv.filename);
     }
     ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
-    mode->id = row[id_c];
     mode->name = row[name_c];
     mode->uri = row[id_c];
     data.physical_modes.push_back(mode);
@@ -567,7 +566,6 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
         throw InvalidHeaders(csv.filename);
     }
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = row[id_c];
     commercial_mode->name = row[name_c];
     commercial_mode->uri = row[id_c];
     data.commercial_modes.push_back(commercial_mode);
@@ -759,7 +757,6 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         throw InvalidHeaders(csv.filename);
     }
     ed::types::Calendar* calendar = new ed::types::Calendar();
-    calendar->id = row[id_c];
     calendar->uri = row[id_c];
     calendar->external_code = row[id_c];
     calendar->name =  row[name_c];

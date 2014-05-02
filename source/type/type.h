@@ -122,21 +122,17 @@ template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
 
 
-struct Nameable{
+struct Nameable {
     std::string name;
     std::string comment;
-    bool visible;
-    Nameable():visible(true){}
+    bool visible = true;
 };
 
 
-struct Header{
-    std::string id;
-    idx_t idx;
-    std::string uri;
-    Header() : idx(invalid_idx){}
+struct Header {
+    idx_t idx = invalid_idx; // Index of the object in the main structure
+    std::string uri; // unique indentifier of the object
     std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
-
 };
 
 struct Codes {
@@ -425,7 +421,7 @@ struct Connection: public Header, hasProperties{
         max_duration(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & departure & destination & display_duration & duration & max_duration & _properties;
+        ar & idx & uri & departure & destination & display_duration & duration & max_duration & _properties;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -479,7 +475,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     bool wheelchair_boarding;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & name & coord & stop_point_list & admin_list
+        ar & idx & uri & name & coord & stop_point_list & admin_list
         & _properties & wheelchair_boarding & messages & visible & comment & codes;
     }
 
@@ -504,7 +500,7 @@ struct Network : public Header, Nameable, HasMessages, Codes{
     std::vector<Line*> line_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & address_name & address_number & address_type_name
+        ar & idx & name & uri & address_name & address_number & address_type_name
             & mail & website & fax & sort & line_list & messages & codes;
     }
 
@@ -525,7 +521,7 @@ struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri;
+        ar & idx & name & uri;
     }
     bool operator<(const Contributor & other) const { return this < &other; }
 };
@@ -543,7 +539,7 @@ struct Company : public Header, Nameable, Codes{
     std::vector<Line*> line_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & address_name & address_number &
+        ar & idx & name & uri & address_name & address_number &
         address_type_name & phone_number & mail & website & fax & codes;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -554,7 +550,7 @@ struct CommercialMode : public Header, Nameable{
     const static Type_e type = Type_e::CommercialMode;
     std::vector<Line*> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & line_list;
+        ar & idx & name & uri & line_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const CommercialMode & other) const { return this < &other; }
@@ -566,7 +562,7 @@ struct PhysicalMode : public Header, Nameable{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & journey_pattern_list;
+        ar & idx & name & uri & journey_pattern_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -599,7 +595,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
     Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & code & forward_name & backward_name
+        ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & messages & calendar_list & codes;
@@ -632,7 +628,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     idx_t main_destination();
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & line & journey_pattern_list & messages & codes;
+        ar & idx & name & uri & line & journey_pattern_list & messages & codes;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -653,7 +649,7 @@ struct JourneyPattern : public Header, Nameable{
     JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & is_frequence & route & commercial_mode
+        ar & idx & name & uri & is_frequence & route & commercial_mode
                 & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 
@@ -798,11 +794,11 @@ struct JourneyPatternPoint : public Header{
 
     // Attention la sérialisation est répartrie dans deux methode: save et load
     template<class Archive> void save(Archive & ar, const unsigned int) const{
-        ar & id & idx & uri & order & main_stop_point & fare_section & journey_pattern
+        ar & idx & uri & order & main_stop_point & fare_section & journey_pattern
                 & stop_point & order ;
     }
     template<class Archive> void load(Archive & ar, const unsigned int) {
-        ar & id & idx & uri & order & main_stop_point & fare_section & journey_pattern
+        ar & idx & uri & order & main_stop_point & fare_section & journey_pattern
                 & stop_point & order;
         //on remplit le tableau des stoppoints, bizarrement ca segfault au chargement si on le fait à la bina...
         this->stop_point->journey_pattern_point_list.push_back(this);
@@ -944,7 +940,7 @@ struct Calendar : public Nameable, public Header, public Codes {
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern & codes;
+        ar & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern & codes;
     }
 };
 

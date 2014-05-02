@@ -325,14 +325,12 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->id = "0";
     commercial_mode->name = "Tram";
     commercial_mode->uri = "0x0";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
 
     commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->id = "1";
     commercial_mode->name = "Metro";
     commercial_mode->uri = "0x1";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
@@ -340,7 +338,6 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
         mode->idx = mt->idx;
-        mode->id = mt->id;
         mode->name = mt->name;
         mode->uri = mt->uri;
         this->data->pt_data->physical_modes.push_back(mode);

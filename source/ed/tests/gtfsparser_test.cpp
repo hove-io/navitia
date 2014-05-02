@@ -268,21 +268,19 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
 
     // Lignes
     BOOST_REQUIRE_EQUAL(data.lines.size(), 5);
-    for(auto l : data.lines)
-        std::cout << l->uri << " " << l->name << "  " << l->id << std::endl;
     BOOST_CHECK_EQUAL(data.lines[0]->uri, "AB");
     BOOST_CHECK_EQUAL(data.lines[0]->name, "Airport - Bullfrog");
     BOOST_REQUIRE(data.lines[0]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "DTA");
     BOOST_REQUIRE(data.lines[0]->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->id, "3");
+    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->uri, "3");
 
     BOOST_CHECK_EQUAL(data.lines[4]->uri, "AAMV");
     BOOST_CHECK_EQUAL(data.lines[4]->name, "Airport - Amargosa Valley");
     BOOST_REQUIRE(data.lines[4]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[4]->network->uri, "DTA");
     BOOST_REQUIRE(data.lines[4]->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->id, "3");
+    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->uri, "3");
 
     //Trips
     BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11);
