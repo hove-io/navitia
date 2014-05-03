@@ -55,7 +55,7 @@ const type::StopTime* next_valid_pick_up(type::idx_t idx, const type::idx_t end,
     for(; idx < end; ++idx) {
         const type::StopTime* st = data.dataRaptor->st_idx_forward[idx];
         if (st->valid_end(reconstructing_path) && st->valid_hour(hour, true) &&
-            ((disruption_active && st->arrival_adapted_validity_pattern->check(date)) || ((!disruption_active) && st->arrival_validity_pattern->check(date)))
+            ((disruption_active && st->departure_adapted_validity_pattern->check(date)) || ((!disruption_active) && st->departure_validity_pattern->check(date)))
             && st->vehicle_journey->accessible(required_vehicle_properties) ){
                 return st;
         }
