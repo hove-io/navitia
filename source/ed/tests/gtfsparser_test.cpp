@@ -316,3 +316,13 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
 }
+
+BOOST_AUTO_TEST_CASE(parse_gtfs_with_slashs) {
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_slashs");
+    parser.fill(data);
+
+    BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 1);
+
+    //TODO tests on the loaded stop point
+}
