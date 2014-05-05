@@ -40,6 +40,7 @@ from datetime import datetime, timedelta
 import logging
 from jormungandr import app
 from jormungandr.instance import Instance
+from jormungandr.authentification import get_user
 
 import time
 import sys
@@ -109,18 +110,17 @@ class StatManager(object):
         if not self.save_stat:
             return
 
-        #start_time = time.time();
         end_time = time.time()
         stat_request = stat_pb2.StatRequest()
         stat_request.request_duration = int((end_time - start_time) * 1000) #In milliseconds
         self.fill_request(stat_request, func_call)
         self.fill_coverages(stat_request)
         self.fill_parameters(stat_request)
-        self.fill_Result(stat_request, func_call)
+        self.fill_result(stat_request, func_call)
         self.publish_request(stat_request)
 
 
-    def fill_Result(self, stat_request, func_call):
+    def fill_result(self, stat_request, func_call):
         if 'error' in func_call[0]:
             self.fill_error(stat_request, func_call[0]['error'])
 
@@ -137,9 +137,11 @@ class StatManager(object):
         """
         dt = datetime.utcnow()
         stat_request.request_date = int(time.mktime(dt.timetuple()))
-        if hasattr(g,'user') and g.user is not None:
-            stat_request.user_id = g.user.id
-            stat_request.user_name = g.user.login
+        user = get_user()
+        if user is not None:
+            stat_request.user_id = user.id
+            stat_request.user_name = user.login
+
         stat_request.application_id = -1
         stat_request.application_name = ''
         stat_request.api = request.endpoint

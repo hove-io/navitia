@@ -38,5 +38,5 @@ class StatedResource(Resource):
         Resource.__init__(self, *args, **kwargs)
         self.method_decorators = []
 
-        if True:#stat_actived:
+        if stat_manager.save_stat:
             self.method_decorators.append(manage_stat_caller(stat_manager))

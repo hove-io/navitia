@@ -34,7 +34,7 @@ import datetime
 from sqlalchemy import Column, Table, MetaData, select, create_engine, \
     ForeignKey, bindparam, and_, or_, exc
 import sqlalchemy
-from stat_persistor.saver.stat_Request import persist_stat_request
+from stat_persistor.saver.stat_request import persist_stat_request
 from stat_persistor.saver.utils import FunctionalError, TechnicalError
 from stat_persistor.config import Config
 

@@ -106,7 +106,6 @@ def authenticate(region, api, abort=False):
     Check the Authorization of the current user for this region and this API.
     If abort is True, the request is aborted with the appropriate HTTP code.
     """
-    g.user = None
     if 'PUBLIC' in current_app.config \
             and current_app.config['PUBLIC']:
         #if jormungandr is on public mode we skip the authentification process
@@ -128,9 +127,7 @@ def authenticate(region, api, abort=False):
     user = User.get_from_token(token, datetime.datetime.now())
 
     if user:
-        #Here we keep user to be used in stat
         if user.has_access(region, api):
-            g.user = user
             return True
         else:
             if abort:
