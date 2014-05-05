@@ -596,7 +596,7 @@ void fill_pb_placemark(const type::StopArea* stop_area,
     place->set_name(stop_area->name);
     for(auto admin : place->stop_area().administrative_regions()) {
         if (admin.level() == 8){
-            place->set_name(place->name() + ", " + admin.name());
+            place->set_name(place->name() + " (" + admin.name() + ")");
         }
     }
 
@@ -691,13 +691,7 @@ void fill_pb_placemark(navitia::georef::Way* way,
     place->set_name(place->name() + str_street_name);
     for(auto admin : place->address().administrative_regions()) {
         if (admin.level() == 8){
-            if (admin.zip_code()!=""){
-                place->set_name(place->name() + ", " + admin.zip_code() + " " + admin.name());
-            }else{
-                place->set_name(place->name() + ", " + admin.name());
-            }
-
-
+            place->set_name(place->name() + ", " + admin.name());
         }
     }
 
