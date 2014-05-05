@@ -33,13 +33,17 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 
 #include "kraken/data_manager.h"
+#include <atomic>
 
 //mock of navitia::type::Data class
 class Data{
     public:
         bool load(const std::string&){return load_status;}
+        std::atomic<bool> is_connected_to_rabbitmq;
         static bool load_status;
         static bool destructor_called;
+
+        Data(){is_connected_to_rabbitmq = false;}
 
         ~Data(){Data::destructor_called = true;}
 };
