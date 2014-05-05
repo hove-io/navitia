@@ -166,8 +166,8 @@ def build_stat_section_dict(section, request_id, journey_id):
     Construit à partir d'un object protobuf pbnavitia.stat.HitStat.journey.sections
     Utilisé pour l'insertion dans la table stat.sections
     """
-    from_point = "POINT(%.20f %.20f)" %(section.from_coord.lon, section.from_coord.lat)
-    to_point = "POINT(%.20f %.20f)" %(section.to_coord.lon, section.to_coord.lat)
+    from_point = "POINT({0:.20f} {1:.20f})".format(section.from_coord.lon, section.from_coord.lat)
+    to_point = "POINT({0:.20f} {1:.20f})".format(section.to_coord.lon, section.to_coord.lat)
 
     return{
         'request_id': request_id,
