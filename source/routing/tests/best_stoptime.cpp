@@ -1153,8 +1153,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 101);
         std::tie(st1, dt1) = earliest_stop_time(jpp2, dt_test, *(b.data), false, false);
-        BOOST_CHECK_EQUAL(dt1, 0);
-        BOOST_CHECK(st1 == nullptr);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, 0));
+        BOOST_CHECK(st1 != nullptr);
     }
     {
         DateTime dt_test = DateTimeUtils::set(1, sp2_arrival);
@@ -1166,9 +1166,9 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
         BOOST_CHECK_EQUAL(st2->journey_pattern_point->stop_point->stop_area->name, spa2);
     }
     {
-        DateTime dt_test = DateTimeUtils::set(0, sp2_departure);
+        DateTime dt_test = DateTimeUtils::set(1, sp2_departure);
         std::tie(st1, dt1) = earliest_stop_time(jpp2, dt_test, *(b.data), false, false);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp2_departure));
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(2, 0));
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->arrival_time, sp2_arrival);
         BOOST_CHECK_EQUAL(st1->departure_time, sp2_departure);
