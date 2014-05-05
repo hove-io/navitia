@@ -136,7 +136,7 @@ void StopsGtfsHandler::finish(Data& data) {
         }
     }
 
-    //On va chercher l'accessibilité pour les stop points qui hérite de l'accessibilité de leur stop area
+    //We fetch the accessibility for all stop points that inherit from their stop area's accessibility
     for (auto sp : wheelchair_heritance) {
         if(sp->stop_area == nullptr)
             continue;
@@ -155,52 +155,27 @@ void StopsGtfsHandler::finish(Data& data) {
 }
 
 void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
-    //we have to check if there was stop area in the file
-    bool has_no_stop_areas = data.stop_areas.empty();
-    if (has_no_stop_areas) {
-        for (const auto sp : data.stop_points) {
-            if (sp->stop_area) {
-                has_no_stop_areas = false;
-                break;
-            }
-        }
+    int nb_added_sa(0);
+    //we artificialy create one stop_area for stop point without one
+    for (const auto sp : data.stop_points) {
+        auto sa = new nm::StopArea;
+
+        sa->coord.set_lon(sp->coord.lon());
+        sa->coord.set_lat(sp->coord.lat());
+        sa->name = sp->name;
+        sa->uri = sp->uri;
+        if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING))
+            sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+
+        gtfs_data.stop_area_map[sa->uri] = sa;
+        data.stop_areas.push_back(sa);
+        sp->stop_area = sa;
+        nb_added_sa ++;
     }
 
-    if (has_no_stop_areas) {
-        //we artificialy create one stop_area by stop point
-        for (const auto sp : data.stop_points) {
-            auto sa = new nm::StopArea;
-
-            sa->coord.set_lon(sp->coord.lon());
-            sa->coord.set_lat(sp->coord.lat());
-            sa->name = sp->name;
-            sa->uri = sp->uri;
-            if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING))
-                sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-
-            gtfs_data.stop_area_map[sa->uri] = sa;
-            data.stop_areas.push_back(sa);
-            sp->stop_area = sa;
-        }
-        return;
+    if (nb_added_sa) {
+        LOG4CPLUS_INFO(logger, nb_added_sa << " stop_points without stop_area. Creation of a stop_area for each of those stop_points");
     }
-
-    //Deletion of the stop point without stop areas
-    std::vector<size_t> erasest;
-    for (int i = data.stop_points.size()-1; i >=0;--i) {
-        if (data.stop_points[i]->stop_area == nullptr) {
-            erasest.push_back(i);
-        }
-    }
-    int num_elements = data.stop_points.size();
-    for (size_t to_erase : erasest) {
-        gtfs_data.stop_map.erase(data.stop_points[to_erase]->uri);
-        delete data.stop_points[to_erase];
-        data.stop_points[to_erase] = data.stop_points[num_elements - 1];
-        num_elements--;
-    }
-    data.stop_points.resize(num_elements);
-    LOG4CPLUS_INFO(logger, "Deletion of " << erasest.size() << " stop_point wihtout stop_area");
 }
 
 template <typename T>
