@@ -157,13 +157,13 @@ def aggregate_places(instance_config, job_id):
         class PoiEd(Base_ed):
             __table__ = Table("poi", meta_ed,
                         autoload=True, autoload_with=engine_ed,
-                        schema='navitia')
+                        schema='georef')
         handle_object_instance("poi", PoiEd)
 
         class AdminEd(Base_ed):
             __table__ = Table("admin", meta_ed,
                          autoload=True, autoload_with=engine_ed,
-                         schema='navitia')
+                         schema='georef')
         handle_object_instance("admin", AdminEd)
 
         class LineEd(Base_ed):
