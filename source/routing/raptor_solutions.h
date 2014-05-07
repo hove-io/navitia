@@ -42,7 +42,7 @@ struct Solution {
     uint32_t count;
     DateTime arrival, upper_bound;
     float ratio;
-    boost::posix_time::time_duration walking_time = {};
+    navitia::time_duration walking_time = {};
 
     Solution() : rpidx(type::invalid_idx), count(0),
                        arrival(DateTimeUtils::inf), upper_bound(DateTimeUtils::inf),
@@ -71,33 +71,33 @@ struct Solution {
 typedef std::set<Solution> Solutions;
 
 Solutions
-get_solutions(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
-             const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations, bool clockwise,
+get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
+             const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations, bool clockwise,
              const std::vector<label_vector_t> &labels, const type::AccessibiliteParams & accessibilite_params,
              const type::Data &data, bool disruption_active);
 
 //This one is hacky, it's used to retrieve the departures.
 Solutions
-get_solutions(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
+get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
              const DateTime &dep, bool clockwise, const type::Data & data, bool disruption_active);
 
 Solutions
-get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
-                    const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations, Solution best,
+get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
+                    const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations, Solution best,
                     const std::vector<label_vector_t> &labels, const type::Data &data);
 
 Solutions
-get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
-               const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations,
+get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
+               const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
                const std::vector<label_vector_t> &labels,
                const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active);
 
 std::pair<type::idx_t, DateTime>
 get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, const std::vector<label_vector_t> &labels);
 
-boost::posix_time::time_duration
-getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departs,
-               const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations,
+navitia::time_duration
+getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
+               const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
                bool clockwise, const std::vector<label_vector_t> &labels, const type::Data &data);
 
 }}

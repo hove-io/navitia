@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "datetime.h"
+#include "type/time_duration.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
 #include "utils/functions.h"
@@ -968,7 +969,7 @@ struct StreetNetworkParams{
     Mode_e mode;
     idx_t offset;
     float speed_factor;
-    boost::posix_time::time_duration max_duration;
+    navitia::time_duration max_duration;
     Type_e type_filter; // filtre sur le départ/arrivée : exemple les arrêts les plus proches à une site type
     std::string uri_filter; // l'uri de l'objet
     float radius_filter; // ce paramètre est utilisé pour le filtre
@@ -976,7 +977,7 @@ struct StreetNetworkParams{
                 mode(Mode_e::Walking),
                 offset(0),
                 speed_factor(1),
-                max_duration(boost::posix_time::seconds(1)),
+                max_duration(navitia::seconds(1)),
                 type_filter(Type_e::Unknown),
                 uri_filter(""),
                 radius_filter(150){}

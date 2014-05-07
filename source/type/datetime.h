@@ -95,10 +95,12 @@ std::string iso_hour_string(const DateTime dt, const type::Data &d);
 boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data &d);
 DateTime to_datetime(boost::posix_time::ptime ptime, const type::Data &d);
 
-inline DateTime operator-(DateTime time, boost::posix_time::time_duration dur) {
+template <typename duration>
+inline DateTime operator-(DateTime time, duration dur) {
     return time - dur.total_seconds();
 }
-inline DateTime operator+(DateTime time, boost::posix_time::time_duration dur) {
+template <typename duration>
+inline DateTime operator+(DateTime time, duration dur) {
     return time + dur.total_seconds();
 }
 

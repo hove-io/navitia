@@ -46,11 +46,11 @@ namespace bt = boost::posix_time;
 using dir = ProjectionData::Direction;
 
 struct computation_results {
-    bt::time_duration duration; //asked duration
-    std::vector<bt::time_duration> durations_matrix; //duration matrix
+    navitia::time_duration duration; //asked duration
+    std::vector<navitia::time_duration> durations_matrix; //duration matrix
     std::vector<vertex_t> predecessor;
 
-    computation_results(bt::time_duration d, const PathFinder& worker) : duration(d), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
+    computation_results(navitia::time_duration d, const PathFinder& worker) : duration(d), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
 
     bool operator ==(const computation_results& other) {
 
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
             std::string name(get_name(i, j));
 
             //we add edge to the next vertex (the value is not important)
-            b.add_edge(name, get_name(i, j + 1), bt::seconds((i + j) * j));
-            b.add_edge(name, get_name(i + 1, j), bt::seconds((i + j) * i));
+            b.add_edge(name, get_name(i, j + 1), navitia::seconds((i + j) * j));
+            b.add_edge(name, get_name(i + 1, j), navitia::seconds((i + j) * i));
         }
     }
 
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
               << " distance to target " << worker.distances[proj[dir::Target]] << std::endl;
 
     // the distance matrix also has to be updated
-    BOOST_CHECK(worker.distances[proj[dir::Source]] + bt::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == distance//we have to take into account the projection distance
-                    || worker.distances[proj[dir::Target]] + bt::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == distance);
+    BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == distance//we have to take into account the projection distance
+                    || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == distance);
 
     computation_results first_res {distance, worker};
 
@@ -153,8 +153,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         //we have to find a way to get there
         BOOST_REQUIRE_NE(other_distance, bt::pos_infin);
         // the distance matrix  also has to be updated
-        BOOST_CHECK(worker.distances[proj[dir::Source]] + bt::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
-                        || worker.distances[proj[dir::Target]] + bt::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
+        BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
+                        || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
 
         BOOST_REQUIRE(first_res == other_res);
     }
@@ -167,8 +167,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         //we have to find a way to get there
         BOOST_CHECK_NE(other_distance, bt::pos_infin);
 
-        BOOST_CHECK(worker.distances[proj[dir::Source]] + bt::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
-                        || worker.distances[proj[dir::Target]] + bt::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
+        BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
+                        || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
 
         BOOST_CHECK(first_res == other_res);
     }

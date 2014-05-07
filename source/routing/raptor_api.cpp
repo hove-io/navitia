@@ -37,7 +37,6 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "fare/fare.h"
 
-
 namespace navitia { namespace routing {
 
 void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj,
@@ -82,12 +81,12 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             if (clockwise) {
                 departure = datetime;
             } else {
-                departure = datetime - temp.duration;
+                departure = datetime - temp.duration.to_posix();
             }
             fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
 
             const auto str_departure = navitia::to_iso_string_no_fractional(departure);
-            const auto str_arrival = navitia::to_iso_string_no_fractional(departure + temp.duration);
+            const auto str_arrival = navitia::to_iso_string_no_fractional(departure + temp.duration.to_posix());
             pb_journey->set_departure_date_time(str_departure);
             pb_journey->set_arrival_date_time(str_arrival);
         }
@@ -119,7 +118,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     }
 
                     const auto walking_time = temp.duration;
-                    departure_time = path.items.front().departure - walking_time;
+                    departure_time = path.items.front().departure - walking_time.to_posix();
                     fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure_time);
                 }
             }
@@ -227,7 +226,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     auto begin_section_time = arrival_time;
                     fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
                             begin_section_time, show_codes);
-                    arrival_time = arrival_time + temp.duration;
+                    arrival_time = arrival_time + temp.duration.to_posix();
                 }
             }
         }
@@ -253,10 +252,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 }
 
 
-std::vector<std::pair<type::idx_t, bt::time_duration> >
+std::vector<std::pair<type::idx_t, navitia::time_duration> >
 get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         georef::StreetNetwork & worker, bool use_second = false){
-    std::vector<std::pair<type::idx_t, bt::time_duration> > result;
+    std::vector<std::pair<type::idx_t, navitia::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
@@ -337,7 +336,6 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               georef::StreetNetwork & worker,
               bool disruption_active,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
-
     pbnavitia::Response response;
 
     std::vector<bt::ptime> datetimes;
@@ -397,7 +395,6 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     }
     if(clockwise)
         std::reverse(result.begin(), result.end());
-
     return make_pathes(result, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
 }
 
