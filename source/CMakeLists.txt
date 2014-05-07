@@ -84,8 +84,8 @@ configure_file("${CMAKE_SOURCE_DIR}/config.h.cmake" "${CMAKE_BINARY_DIR}/config.
 
 ## TEST
 set(CONNECTOR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/connectors")
-add_test(connectors nosetests --with-xunit  --xunit-file=nosetest_jormungandr.xml --where=${CONNECTOR_PATH})
-set_tests_properties(connectors PROPERTIES ENVIRONMENT PYTHONPATH=${CONNECTOR_PATH})
+add_test(connectors nosetests --with-xunit  --xunit-file=nosetest_jormungandr.xml "--where=${CONNECTOR_PATH}")
+set_tests_properties(connectors PROPERTIES ENVIRONMENT "PYTHONPATH=${CONNECTOR_PATH}")
 
 #ADD_TEST(jormungandr_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/jormungandr/)
 #ADD_TEST(tyr_pep8 pep8 --repeat --exclude=*_pb2.py ${CMAKE_SOURCE_DIR}/tyr/tyr)
