@@ -211,7 +211,7 @@ public:
         auto dur = time_duration(d.hours(), d.minutes(), d.seconds(), d.fractional_seconds());
 
         //check for overflow
-        if (dur.total_seconds() < d.total_seconds()) {
+        if (dur.total_seconds() != d.total_seconds()) {
             throw navitia::exception("duration overflow while converting from boost::time_duration: " + boost::date_time::to_simple_string(d));
         }
         return dur;
@@ -228,7 +228,10 @@ public:
 
     //float division (rounding is done on the ticks)
     time_duration operator/(float divisor) const {
-      return time_duration(ticks_.as_number() / divisor);
+        if (divisor == 0.0) {
+            throw navitia::exception("cannot divide duration by 0");
+        }
+        return time_duration(ticks_.as_number() / divisor);
     }
 
   private:

@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(weekday_conversion) {
 }
 
 BOOST_AUTO_TEST_CASE(simple_duration_construction) {
-
+    // we can 'cast' a boost posix duration to a navitia duration with the from_boost_duration method
     boost::posix_time::time_duration boost_dur(12,24,49, 1);
 
     navitia::time_duration nav_dur(navitia::time_duration::from_boost_duration(boost_dur));
@@ -197,9 +197,9 @@ BOOST_AUTO_TEST_CASE(time_dur_no_overflow_with_infinity) {
 
     boost::posix_time::time_duration other_dur (big_dur);//no problem to copy the duration with boost
 
-    //but the max should be to high for navitia duration
     navitia::time_duration nav_dur = navitia::time_duration::from_boost_duration(big_dur);
 
+    //and no problem with navitia either, it is recognised as infinity
     BOOST_CHECK_EQUAL(nav_dur, boost::posix_time::pos_infin);
 }
 
