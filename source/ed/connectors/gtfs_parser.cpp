@@ -142,8 +142,6 @@ void StopsGtfsHandler::finish(Data& data) {
             continue;
         if (sp->stop_area->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING)) {
             sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-        } else {
-            LOG4CPLUS_WARN(logger, "Impossible to get the stop area accessibility value for the stop point " + sp->uri);
         }
     }
 
@@ -158,6 +156,9 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
     int nb_added_sa(0);
     //we artificialy create one stop_area for stop point without one
     for (const auto sp : data.stop_points) {
+        if (sp->stop_area) {
+            continue;
+        }
         auto sa = new nm::StopArea;
 
         sa->coord.set_lon(sp->coord.lon());
