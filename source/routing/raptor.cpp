@@ -255,13 +255,13 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
 
         boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, true, max_transfers);
 
-        if(b_dest.best_now_jpp_idx != type::invalid_idx) {
-            std::vector<Path> temp = makePathes(calc_dest, calc_dep, accessibilite_params, *this, !clockwise, disruption_active);
-            result.insert(result.end(), temp.begin(), temp.end());
+        if(b_dest.best_now_jpp_idx == type::invalid_idx) {
+            continue;
         }
+        std::vector<Path> temp = makePathes(calc_dest, calc_dep, accessibilite_params, *this, !clockwise, disruption_active);
+        result.insert(result.end(), temp.begin(), temp.end());
     }
     return result;
-
 }
 
 
