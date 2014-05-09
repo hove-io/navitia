@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(change){
 }
 
 
-BOOST_AUTO_TEST_CASE(passe_minuit){
+BOOST_AUTO_TEST_CASE(over_midnight){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
     b.vj("B")("stop2", 10*60)("stop3", 20*60);
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
 }
 
 
-BOOST_AUTO_TEST_CASE(passe_minuit_2){
+BOOST_AUTO_TEST_CASE(over_midnight_2){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 59*60);
     b.vj("B")("stop4", 23*3600 + 10*60)("stop2", 10*60)("stop3", 20*60);
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
 }
 
 
-BOOST_AUTO_TEST_CASE(passe_minuit_interne){
+BOOST_AUTO_TEST_CASE(over_midnight_interne){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 30*60, 24*3600 + 30*60)("stop3", 24*3600 + 40 * 60);
     b.data->pt_data->index();
