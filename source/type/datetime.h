@@ -34,7 +34,7 @@ www.navitia.io
 #include <limits>
 #include <fstream>
 #include "utils/flat_enum_map.h"
-
+#include "time_duration.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_config.hpp>
 
@@ -91,16 +91,14 @@ std::string str(const DateTime &dt);
 std::string iso_string(const DateTime dt, const type::Data &d);
 std::string iso_hour_string(const DateTime dt, const type::Data &d);
 
-
 boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data &d);
 DateTime to_datetime(boost::posix_time::ptime ptime, const type::Data &d);
 
-template <typename duration>
-inline DateTime operator-(DateTime time, duration dur) {
+inline DateTime operator-(DateTime time, time_duration dur) {
     return time - dur.total_seconds();
 }
-template <typename duration>
-inline DateTime operator+(DateTime time, duration dur) {
+
+inline DateTime operator+(DateTime time, time_duration dur) {
     return time + dur.total_seconds();
 }
 

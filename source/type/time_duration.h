@@ -30,12 +30,14 @@ www.navitia.io
 
 #pragma once
 #include <utils/exception.h>
+#include <iomanip>
 #include <boost/date_time/time_duration.hpp>
 #include <boost/date_time/time_resolution_traits.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
-
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/gregorian/parsers.hpp>
 #include <boost/serialization/split_free.hpp>
 
 // adapted from boost (I don't understand why it is not like that in boost
