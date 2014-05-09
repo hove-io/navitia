@@ -225,7 +225,9 @@ BOOST_FIXTURE_TEST_CASE(test_parse_end_date, calendar_fixture) {
 BOOST_FIXTURE_TEST_CASE(test_parse_start_end_date, calendar_fixture) {
 
     pbnavitia::Response resp = navitia::calendar::calendars(*(b.data), "0000", "1111", 1, 10, 0, "", {});
-    BOOST_REQUIRE_EQUAL(resp.error().message(), "Unable to parse start_date, Day of month value is out of range 1..31");
+    BOOST_REQUIRE(resp.error().message() == "Unable to parse start_date, Day of month value is out of range 1..31"
+                  || resp.error().message() == "Unable to parse start_date, Year is out of valid range: 1400..10000");
+    //either are valid error (it seems that the order of the parse depends on the compiler)
 }
 
 // Response Error
