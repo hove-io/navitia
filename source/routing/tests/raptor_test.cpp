@@ -172,6 +172,60 @@ BOOST_AUTO_TEST_CASE(change){
     res1 = raptor.compute(d.stop_areas[0], d.stop_areas[4], 7900, 0, DateTimeUtils::set(0, 8399), false);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
+/****
+ *              connection 5mins
+ *   line1      ----------------->  line 2
+ * A----------->B                 C----------->D
+ *              <-----------------
+ *              connection 15 mins
+ *
+ * Time tables
+ * Line 1
+ *    VJ1     VJ2            VJ3     VJ4
+ * A  07h00  07h55        B 07h10   07h20
+ * B  07h05  08h00        A 07h15   07h25
+ *
+ * Line 2
+ *    VJ5    VJ6             VJ7
+ * C 07h10  07h20         D 07h00
+ * D 07h15  07h35         C 07h05
+ *
+ */
+BOOST_AUTO_TEST_CASE(different_connection_time) {
+    ed::builder b("20120614");
+    b.vj("line1-1")("A", 7*3600)("B", 7*3600 + 5*60);
+    b.vj("line1-1")("A", 7*3600 + 55*60)("B", 8*3600);
+    b.vj("line1-2")("B", 7*3600 + 10*60)("A", 7*3600 + 15*60);
+    b.vj("line1-2")("B", 7*3600 + 20*60)("A", 7*3600 + 25*60);
+    b.vj("line2-1")("C", 7*3600 + 10*60)("D", 7*3600 + 15*60);
+    b.vj("line2-1")("C", 7*3600 + 20*60)("D", 7*3600 + 35*60);
+    b.vj("line2-2")("D", 7*3600)("C", 7*3600 + 5*60);
+    b.connection("B", "C", 300);
+    b.connection("C", "B", 900);
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["A"], d.stop_areas_map["D"], 7*3600, 0, DateTimeUtils::inf, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    auto res = res1.back();
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items.front().departure, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items.front().departure, *(b.data))), 7*3600);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items.back().arrival, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items.back().arrival, *(b.data))), 7*3600 + 15*60);
+
+    res1 = raptor.compute(d.stop_areas_map["D"], d.stop_areas_map["A"], 7*3600, 0, DateTimeUtils::inf, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items.front().departure, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items.front().departure, *(b.data))), 7*3600);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items.back().arrival, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items.back().arrival, *(b.data))), 7*3600 + 25*60);
+}
 
 
 BOOST_AUTO_TEST_CASE(over_midnight){
