@@ -37,6 +37,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "fare/fare.h"
 
+
 namespace navitia { namespace routing {
 
 void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj,
@@ -336,6 +337,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               georef::StreetNetwork & worker,
               bool disruption_active,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
+
     pbnavitia::Response response;
 
     std::vector<bt::ptime> datetimes;
@@ -395,6 +397,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     }
     if(clockwise)
         std::reverse(result.begin(), result.end());
+
     return make_pathes(result, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
 }
 
