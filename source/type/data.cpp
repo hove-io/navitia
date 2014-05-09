@@ -186,26 +186,6 @@ ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
     }
 }
 
-ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time){
-
-    if(time >= DateTimeUtils::SECONDS_PER_DAY) {
-        ValidityPattern vp(ref_validity_pattern->beginning_date,ref_validity_pattern->str());
-        //we copy the validity pattern and since we want the same validity pattern for the day after
-        //we shift the bitset
-        vp.days <<= 1;
-        ValidityPattern* vp_similar = this->get_similar_validity_pattern(&vp);
-        if (vp_similar == nullptr) {
-            ValidityPattern* tmp_vp = new ValidityPattern(vp);
-            tmp_vp->idx = this->pt_data->validity_patterns.size();
-            this->pt_data->validity_patterns.push_back(tmp_vp);
-            return tmp_vp;
-        } else {
-            return vp_similar;
-        }
-    }
-    return ref_validity_pattern;
-}
-
 using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
 
 list_cal_bitset find_matching_calendar(const Data&, const VehicleJourney* vehicle_journey, double relative_threshold) {
