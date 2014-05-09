@@ -43,8 +43,8 @@ typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
 namespace ed{ namespace connectors {
 
-int default_waiting_duration = 120;
-int default_connection_duration = 120;
+static int default_waiting_duration = 120;
+static int default_connection_duration = 120;
 
 int time_to_int(const std::string & time) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -333,15 +333,19 @@ void TransfersGtfsHandler::finish(Data& data) {
 void TransfersGtfsHandler::fill_stop_point_connection(nm::StopPointConnection* connection, const csv_row& row) const {
     if(has_col(time_c, row)) {
         try{
+            //the GTFS transfers duration already take into account a tolerance so duration and display duration are equal
             connection->display_duration = boost::lexical_cast<int>(row[time_c]);
-        } catch (...) {
+            connection->duration = connection->display_duration;
+        } catch (const boost::bad_lexical_cast&) {
+            //if no transfers time is given, we add an additional waiting time to the real duration
+            //ie you want to walk for 2 mn for your transfert, and we add 2 more minutes to add robustness to your transfers
             connection->display_duration = default_connection_duration;
+            connection->duration = connection->display_duration + default_waiting_duration;
         }
     } else {
         connection->display_duration = default_connection_duration;
+        connection->duration = connection->display_duration + default_waiting_duration;
     }
-    //in the 'real' duration we add 2mn of waiting time to add robustness
-    connection->duration = connection->display_duration + default_waiting_duration;
 }
 
 void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
@@ -359,7 +363,7 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     it = gtfs_data.stop_map.find(row[to_c]);
-    if(it == gtfs_data.stop_map.end()){
+    if(it == gtfs_data.stop_map.end()) {
         auto it_sa = gtfs_data.sa_spmap.find(row[to_c]);
         if(it_sa == gtfs_data.sa_spmap.end()) {
             LOG4CPLUS_WARN(logger, "Impossible de find the stop point (to) " + row[to_c]);

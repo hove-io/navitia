@@ -199,13 +199,11 @@ void TransfersFusioHandler::fill_stop_point_connection(ed::types::StopPointConne
     }
 
     if(is_valid(real_time_c, row)) {
-        try{
+        try {
             connection->duration = boost::lexical_cast<int>(row[real_time_c]);
-        } catch (...) {
-            connection->duration = connection->display_duration;
+        } catch (const boost::bad_lexical_cast&) {
+            LOG4CPLUS_INFO(logger, "impossible to parse real transfers time duration " << row[real_time_c]);
         }
-    } else {
-        connection->duration = connection->display_duration;
     }
 }
 
