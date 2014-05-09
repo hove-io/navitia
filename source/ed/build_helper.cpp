@@ -166,7 +166,9 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
         }
     } else {
         sp = it->second;
-        auto find_jpp = std::find_if(sp->journey_pattern_point_list.begin(), sp->journey_pattern_point_list.end(), [&](navitia::type::JourneyPatternPoint* jpp){return jpp->journey_pattern == vj->journey_pattern;});
+        auto find_jpp = std::find_if(sp->journey_pattern_point_list.begin(),
+                                     sp->journey_pattern_point_list.end(),
+                                     [&](navitia::type::JourneyPatternPoint* jpp){return jpp->journey_pattern == vj->journey_pattern;});
         if(find_jpp != sp->journey_pattern_point_list.end())
             jpp = *find_jpp;
     }
