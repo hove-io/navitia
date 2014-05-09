@@ -23,9 +23,9 @@ Navitia is a service providing:
 
 #. sexy things such as isochrones
 
-The API can be found in http://api.navitia.io/
+The API can be found at http://api.navitia.io/
 
-For more information see http://www.navitia.io/
+For more information see http://www.navitia.io/ or twitter @navitia or google groups navitia
 
 Organisation
 ============
