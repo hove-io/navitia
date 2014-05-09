@@ -188,7 +188,7 @@ ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
 
 ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time){
 
-    if(time >= 24*3600) { //Seconds in a day
+    if(time >= DateTimeUtils::SECONDS_PER_DAY) {
         ValidityPattern vp(ref_validity_pattern->beginning_date,ref_validity_pattern->str());
         //we copy the validity pattern and since we want the same validity pattern for the day after
         //we shift the bitset

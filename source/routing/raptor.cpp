@@ -246,7 +246,9 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
         return result;
     }
 
-    //Second passe : permet d’optimiser les temps de correspondance
+    // Second phase
+    // If we asked for a earliest arrival time, we now try to find the tardiest departure time
+    // and vice and versa
     departures = get_solutions(calc_dep, calc_dest, !clockwise,
                                labels,
                                accessibilite_params, data, disruption_active);

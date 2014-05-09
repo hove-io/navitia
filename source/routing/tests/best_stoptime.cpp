@@ -997,6 +997,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
         BOOST_CHECK(st2 == nullptr);
     }
     {
+        //We test if we can find the train leaving after midnight
         DateTime dt_test = DateTimeUtils::set(1, sp2_departure - 101);
         std::tie(st1, dt1) = earliest_stop_time(jpp2, dt_test, *(b.data), false, false);
         BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp2_departure));
@@ -1071,8 +1072,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
 }
 
 /**
- * Cas de passe minuit avec changement d'heure entre l'heure d'arrivée et de départ
- * et départ à minuit
+ * This one is an overmidnight, plus we leave from a stop point at exactly
+ * midnight
  *
  * ========== =============== ================ ================
  * stop point sp1             sp2              sp3
