@@ -43,6 +43,8 @@ typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
 namespace ed{ namespace connectors {
 
+int default_waiting_duration = 120;
+int default_connection_duration = 120;
 
 int time_to_int(const std::string & time) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -333,11 +335,13 @@ void TransfersGtfsHandler::fill_stop_point_connection(nm::StopPointConnection* c
         try{
             connection->display_duration = boost::lexical_cast<int>(row[time_c]);
         } catch (...) {
-            connection->display_duration = 120;
+            connection->display_duration = default_connection_duration;
         }
     } else {
-        connection->display_duration = 120;
+        connection->display_duration = default_connection_duration;
     }
+    //in the 'real' duration we add 2mn of waiting time to add robustness
+    connection->duration = connection->display_duration + default_waiting_duration;
 }
 
 void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
