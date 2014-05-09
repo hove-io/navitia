@@ -55,7 +55,7 @@ RAPTOR::journey_pattern_path_connections(const Visitor & visitor) {
             if(get_type(count, jpp_departure_idx) == boarding_type::vj && visitor.comp(dt, best_labels[jpp_idx])) {
                 labels[count][jpp_idx].dt = dt;
                 best_labels[jpp_idx] = dt;
-                labels[count][jpp_idx].boarding = jpp_departure;
+                labels[count][jpp_idx].boarding_jpp = jpp_departure->idx;
                 labels[count][jpp_idx].type = boarding_type::connection_stay_in;
                 to_mark.push_back(jpp_idx);
             }
@@ -108,7 +108,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                     type::idx_t jpp_idx = jpp->idx;
                     if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx])) {
                        current_labels[jpp_idx].dt = best_departure;
-                       current_labels[jpp_idx].boarding = data.pt_data->journey_pattern_points[best_jpp];
+                       current_labels[jpp_idx].boarding_jpp = best_jpp;
                        current_labels[jpp_idx].type = boarding_type::connection;
                        best_labels[jpp_idx] = best_departure;
 
@@ -137,7 +137,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                             if(best_jpp != destination_jpp_idx) {
                                 if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
                                     current_labels[destination_jpp_idx].dt = next;
-                                    current_labels[destination_jpp_idx].boarding = data.pt_data->journey_pattern_points[best_jpp];
+                                    current_labels[destination_jpp_idx].boarding_jpp = best_jpp;
                                     current_labels[destination_jpp_idx].type = boarding_type::connection;
                                     best_labels[destination_jpp_idx] = next;
 
@@ -434,7 +434,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
 
                             if(visitor.comp(workingDt, bound)) {
                                 working_labels[jpp_idx].dt = workingDt;
-                                working_labels[jpp_idx].boarding = boarding;
+                                working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
                                 best_labels[jpp_idx] = working_labels[jpp_idx].dt;
                                 if(!this->b_dest.add_best(visitor, jpp_idx, working_labels[jpp_idx].dt, this->count)) {
@@ -446,7 +446,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                       get_type(this->count-1, jpp_idx) == boarding_type::uninitialized &&
                                       b_dest.add_best(visitor, jpp_idx, workingDt, this->count)) {
                                 working_labels[jpp_idx].dt = workingDt;
-                                working_labels[jpp_idx].boarding = boarding;
+                                working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
                                 best_labels[jpp_idx] = workingDt;
                             }

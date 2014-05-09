@@ -38,8 +38,6 @@ void dataRAPTOR::load(const type::PT_Data &data)
 {
     Label label;
     label.dt = DateTimeUtils::inf;
-    label.boarding = nullptr;
-    label.type = boarding_type::uninitialized;
     labels_const.assign(data.journey_pattern_points.size(), label);
     label.dt = DateTimeUtils::min;
     labels_const_reverse.assign(data.journey_pattern_points.size(), label);
