@@ -24,7 +24,7 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -fno-omit-frame-pointer")
 
 #Fixture directory for unit testing
-SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
+SET(FIXTURES_DIR "${CMAKE_SOURCE_DIR}/../fixtures/")
 
 
 set(Boost_USE_MULTITHREADED ON)
@@ -36,16 +36,16 @@ FIND_PACKAGE(Boost 1.47.0 COMPONENTS unit_test_framework thread regex
 
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
-include_directories(${CMAKE_CURRENT_BINARY_DIR}
-                     ${CMAKE_SOURCE_DIR}
-                     ${CMAKE_SOURCE_DIR}/../
-                     ${Boost_INCLUDE_DIRS}
-                     ${CMAKE_SOURCE_DIR}/third_party/SimpleAmqpClient/src/
+include_directories("${CMAKE_CURRENT_BINARY_DIR}"
+                     "${CMAKE_SOURCE_DIR}"
+                     "${CMAKE_SOURCE_DIR}/../"
+                     "${Boost_INCLUDE_DIRS}"
+                     "${CMAKE_SOURCE_DIR}/third_party/SimpleAmqpClient/src/"
 )
 link_directories(${Boost_LIBRARY_DIRS})
 
 MACRO(ADD_BOOST_TEST EXE_NAME)
-    ADD_TEST(${EXE_NAME} ${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME} --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no)
+    ADD_TEST(${EXE_NAME} "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no)
 ENDMACRO(ADD_BOOST_TEST)
 
 ENABLE_TESTING()
@@ -79,13 +79,13 @@ set(CMAKE_REQUIRED_INCLUDES "/usr/include")
 CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 CHECK_INCLUDE_FILE_CXX("log4cplus/loggingmacros.h" HAVE_LOGGINGMACROS_H)
 
-configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+configure_file("${CMAKE_SOURCE_DIR}/config.h.cmake" "${CMAKE_BINARY_DIR}/config.h")
 
 
 ## TEST
-add_test(connectors nosetests --where=${CMAKE_CURRENT_SOURCE_DIR}/connectors)
-set_tests_properties(connectors PROPERTIES ENVIRONMENT
-    PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/connectors)
+set(CONNECTOR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/connectors")
+add_test(connectors nosetests --with-xunit  --xunit-file=nosetest_jormungandr.xml "--where=${CONNECTOR_PATH}")
+set_tests_properties(connectors PROPERTIES ENVIRONMENT "PYTHONPATH=${CONNECTOR_PATH}")
 
 #ADD_TEST(jormungandr_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/jormungandr/)
 #ADD_TEST(tyr_pep8 pep8 --repeat --exclude=*_pb2.py ${CMAKE_SOURCE_DIR}/tyr/tyr)
