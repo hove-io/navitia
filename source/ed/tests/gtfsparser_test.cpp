@@ -316,3 +316,21 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
 }
+
+//TODO: work on this, we should be able to parse line with \\ in char
+//BOOST_AUTO_TEST_CASE(parse_gtfs_with_slashs) {
+//    ed::Data data;
+//    ed::connectors::GtfsData gtfs_data;
+//    //we need to provide by hand some data before loading the file
+//    std::string stop_file = std::string(FIXTURES_DIR) + gtfs_path + "_slashs" + "/stops.txt";
+//    ed::connectors::FileParser<ed::connectors::StopsGtfsHandler> parser (gtfs_data, stop_file, true);
+//    parser.fill(data);
+
+//    BOOST_REQUIRE_EQUAL(data.stop_points.size(), 1);
+
+//    //TODO tests on the loaded stop point
+//    auto stop_area =  data.stop_points.front();
+//    BOOST_CHECK_EQUAL(stop_area->uri, "141581");
+//    BOOST_CHECK_EQUAL(stop_area->name, "16058601");
+//    BOOST_CHECK_EQUAL(stop_area->comment, "Siebengewald, Gochsedijk\\Centrum");
+//}
