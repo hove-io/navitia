@@ -239,7 +239,6 @@ void Data::complete(){
     pt::ptime start;
     int sort, autocomplete;
 
-    build_midnight_interchange();
     build_grid_validity_pattern();
     build_associated_calendar();
 
@@ -333,19 +332,6 @@ void Data::build_associated_calendar() {
 void Data::build_grid_validity_pattern() {
     for(Calendar* cal : this->pt_data->calendars){
         cal->build_validity_pattern(meta->production_date);
-    }
-}
-
-void Data::build_midnight_interchange() {
-    for(VehicleJourney* vj : this->pt_data->vehicle_journeys) {
-        for(StopTime* stop : vj->stop_time_list){
-            // Théorique
-            stop->departure_validity_pattern = get_or_create_validity_pattern(vj->validity_pattern, stop->departure_time);
-            stop->arrival_validity_pattern = get_or_create_validity_pattern(vj->validity_pattern, stop->arrival_time);
-            // Adapté
-            stop->departure_adapted_validity_pattern = get_or_create_validity_pattern(vj->adapted_validity_pattern, stop->departure_time);
-            stop->arrival_adapted_validity_pattern = get_or_create_validity_pattern(vj->adapted_validity_pattern, stop->arrival_time);
-        }
     }
 }
 

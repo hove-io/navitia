@@ -190,13 +190,8 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
     st->local_traffic_zone = local_trafic_zone;
     st->set_drop_off_allowed(drop_off_allowed);
     st->set_pick_up_allowed(pick_up_allowed);
- //   st.set_wheelchair_boarding(vj->wheelchair_boarding);
 
     vj->stop_time_list.push_back(st);
-    st->arrival_validity_pattern = vj->validity_pattern;
-    st->departure_validity_pattern = vj->validity_pattern;
-    st->arrival_adapted_validity_pattern = vj->validity_pattern;
-    st->departure_adapted_validity_pattern = vj->validity_pattern;
     b.data->pt_data->stop_times.push_back(st);
     return *this;
 }

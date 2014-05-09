@@ -155,8 +155,6 @@ public:
     void build_administrative_regions();
     /** Construit les données raptor */
     void build_raptor();
-    /** Construction des validity pattern des StopTimes **/
-    void build_midnight_interchange();
 
     void build_associated_calendar();
 
