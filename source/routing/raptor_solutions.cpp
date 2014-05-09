@@ -264,10 +264,10 @@ get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, const 
     while(labels[cnt][current_jpp].type != boarding_type::departure) {
         if(labels[cnt][current_jpp].type == boarding_type::vj) {
             DateTimeUtils::update(last_time, DateTimeUtils::hour(labels[cnt][current_jpp].dt), clockwise);
-            current_jpp = labels[cnt][current_jpp].boarding->idx;
+            current_jpp = labels[cnt][current_jpp].boarding_jpp;
             --cnt;
         } else {
-            current_jpp = labels[cnt][current_jpp].boarding->idx;
+            current_jpp = labels[cnt][current_jpp].boarding_jpp;
             last_time = labels[cnt][current_jpp].dt;
         }
     }
@@ -294,11 +294,13 @@ navitia::time_duration getWalkingTime(int count, type::idx_t jpp_idx, const std:
     auto boarding_type_value = labels[count][jpp_idx].type;
     while(boarding_type_value != boarding_type::departure /*&& boarding_type_value != boarding_type::uninitialized*/) {
         if(boarding_type_value == boarding_type::vj) {
-            current_jpp = labels[cnt][current_jpp->idx].boarding;
+            const type::idx_t current_jpp_idx = labels[cnt][current_jpp->idx].boarding_jpp;
+            current_jpp = data.pt_data->journey_pattern_points[current_jpp_idx];
             --cnt;
             boarding_type_value = labels[cnt][current_jpp->idx].type;
         } else {
-            const type::JourneyPatternPoint* boarding = labels[cnt][current_jpp->idx].boarding;
+            const type::idx_t boarding_jpp_idx = labels[cnt][current_jpp->idx].boarding_jpp;
+            const type::JourneyPatternPoint* boarding = data.pt_data->journey_pattern_points[boarding_jpp_idx];
             if(boarding_type_value == boarding_type::connection) {
                 type::idx_t connection_idx = data.dataRaptor->get_stop_point_connection_idx(boarding->stop_point->idx,
                                                                                            current_jpp->stop_point->idx,

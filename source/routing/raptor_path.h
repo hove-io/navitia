@@ -40,7 +40,7 @@ namespace navitia { namespace routing {
             const RAPTOR &raptor_, bool disruption_active);
 
     ///Construit un chemin
-    Path makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
+    Path makePath(type::idx_t destination_idx, size_t countb, bool clockwise,
             bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
             const RAPTOR &raptor_);
 
