@@ -29,10 +29,12 @@ www.navitia.io
 */
 
 #pragma once
-#include <utils/exception.h>
+#include <iomanip>
+#include "utils/exception.h"
 #include <boost/date_time/time_duration.hpp>
 #include <boost/date_time/time_resolution_traits.hpp>
 #include <boost/serialization/serialization.hpp>
+#include <boost/date_time/gregorian/parsers.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 
@@ -293,7 +295,7 @@ void load(Archive & ar, time_duration & td, unsigned int /*version*/) {
     if(is_special) {
         std::string s;
         ar & boost::serialization::make_nvp("sv_time_duration", s);
-        boost::posix_time::special_values sv = boost::gregorian::special_value_from_string(s);
+        auto sv = boost::gregorian::special_value_from_string(s);
         td = time_duration(sv);
     }
     else {

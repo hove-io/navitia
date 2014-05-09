@@ -30,8 +30,8 @@ www.navitia.io
 
 #pragma once
 
-#include "datetime.h"
 #include "type/time_duration.h"
+#include "datetime.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
 #include "utils/functions.h"
