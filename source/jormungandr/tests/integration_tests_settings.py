@@ -2,7 +2,7 @@
 START_MONITORING_THREAD = False
 
 
-SAVE_STAT = False
+SAVE_STAT = True
 LOGGER = {
     'version': 1,
     'disable_existing_loggers': False,
