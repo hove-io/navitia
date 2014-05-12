@@ -31,59 +31,6 @@ from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 
 
-def is_valid_journey_response(response, tester):
-    journeys = get_not_null(response, "journeys")
-
-    all_sections = unique_dict('id')
-    assert len(journeys) > 0, "we must at least have one journey"
-    for j in journeys:
-        is_valid_journey(j, tester)
-
-        for s in j['sections']:
-            all_sections[s['id']] = s
-
-    # check the fare section
-    # the fares must be structurally valid and all link to sections must be ok
-    all_tickets = unique_dict('id')
-    fares = get_not_null(response, "tickets")
-    for f in fares:
-        is_valid_ticket(f, tester)
-        all_tickets[f['id']] = f
-
-    check_internal_links(response, tester)
-
-
-    #TODO check journey links (prev/next)
-
-
-def is_valid_journey(journey, tester):
-    #TODO!
-    pass
-
-
-def is_valid_ticket(ticket, tester):
-    found = get_not_null(ticket, 'found')
-    assert is_valid_bool(found)
-
-    get_not_null(ticket, 'id')
-    get_not_null(ticket, 'name')
-    cost = get_not_null(ticket, 'cost')
-    if found:
-        #for found ticket, we must have a non empty currency
-        get_not_null(cost, 'currency')
-
-    assert is_valid_float(get_not_null(cost, 'value'))
-
-    check_links(ticket, tester)
-
-
-#default journey query used in varius test
-journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
-    .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
-            to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
-            datetime="20120614T080000")
-
-
 @dataset(["main_routing_test"])
 class TestJourneys(AbstractTestFixture):
     """
