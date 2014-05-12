@@ -31,10 +31,13 @@ import os
 import subprocess
 from check_utils import *
 
-os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
-    + '/integration_tests_settings.py'
+# set default config file if not defined in other tests
+if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
+    os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
+        + '/integration_tests_settings.py'
 from jormungandr import app
 from jormungandr.instance_manager import InstanceManager
+from jormungandr.stat_manager import StatManager
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
@@ -107,17 +110,23 @@ class AbstractTestFixture:
         ]
 
     @classmethod
-    def setup(cls):
+    def setup_class(cls):
         cls.krakens_pool = {}
         logging.info("Initing the tests {}, let's pop the krakens"
                      .format(cls.__name__))
         cls.launch_all_krakens()
         cls.create_dummy_ini()
+
         i_manager = InstanceManager()
         i_manager.initialisation(start_ping=False)
 
+        #we block the stat manager not to send anything to rabbit mq
+        def mock_publish(self, stat):
+            pass
+        StatManager.publish_request = mock_publish
+
     @classmethod
-    def teardown(cls):
+    def teardown_class(cls):
         logging.info("Tearing down the tests {}, time to hunt the krakens down"
                      .format(cls.__name__))
         cls.kill_all_krakens()
