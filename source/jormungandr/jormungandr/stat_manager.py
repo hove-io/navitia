@@ -103,35 +103,40 @@ class StatManager(object):
 
 
 
-    def manage_stat(self, start_time, func_call):
+    def manage_stat(self, start_time, call_result):
         """
         Function to fill stat objects (requests, parameters, journeys et sections) sand send them to Broker
         """
         if not self.save_stat:
             return
 
+        stat_request = self._manage_stat(start_time, call_result)
+
+
+    def _manage_stat(self, start_time, call_result):
         end_time = time.time()
         stat_request = stat_pb2.StatRequest()
         stat_request.request_duration = int((end_time - start_time) * 1000) #In milliseconds
-        self.fill_request(stat_request, func_call)
+        self.fill_request(stat_request, call_result)
         self.fill_coverages(stat_request)
         self.fill_parameters(stat_request)
-        self.fill_result(stat_request, func_call)
+        self.fill_result(stat_request, call_result)
         self.publish_request(stat_request)
+        return stat_request
 
 
-    def fill_result(self, stat_request, func_call):
-        if 'error' in func_call[0]:
-            self.fill_error(stat_request, func_call[0]['error'])
+    def fill_result(self, stat_request, call_result):
+        if 'error' in call_result[0]:
+            self.fill_error(stat_request, call_result[0]['error'])
 
         #We do not save informations of journeys and sections for a request
         #Isochron (parameter "&to" is absent for API Journeys )
         if 'journeys' in request.endpoint and \
                 'to' in request.args:
-            self.fill_journeys(stat_request, func_call)
+            self.fill_journeys(stat_request, call_result)
 
 
-    def fill_request(self, stat_request, func_call):
+    def fill_request(self, stat_request, call_result):
         """
         Remplir requests
         """
@@ -152,7 +157,7 @@ class StatManager(object):
         elif request.headers.getlist("X-Forwarded-For"):
             stat_request.client = request.headers.getlist("X-Forwarded-For")[0]
 
-        stat_request.response_size = sys.getsizeof(func_call[0])
+        stat_request.response_size = sys.getsizeof(call_result[0])
 
 
     def fill_parameters(self, stat_request):
@@ -205,12 +210,12 @@ class StatManager(object):
             stat_journey.type = resp_journey['type']
 
 
-    def fill_journeys(self, stat_request, func_call):
+    def fill_journeys(self, stat_request, call_result):
         """
         Fill journeys and sections for each journey
         """
-        if 'journeys' in func_call[0]:
-            for resp_journey in func_call[0]['journeys']:
+        if 'journeys' in call_result[0]:
+            for resp_journey in call_result[0]['journeys']:
                 stat_journey = stat_request.journeys.add()
                 self.fill_journey(stat_journey, resp_journey)
                 self.fill_sections(stat_journey, resp_journey)
@@ -372,7 +377,7 @@ class manage_stat_caller:
         @wraps(f)
         def wrapper(*args, **kwargs):
             start_time = time.time()
-            func_call = f(*args, **kwargs)
-            self.manager.manage_stat(start_time, func_call)
-            return func_call
+            call_result = f(*args, **kwargs)
+            self.manager.manage_stat(start_time, call_result)
+            return call_result
         return wrapper
