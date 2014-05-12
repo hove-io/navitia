@@ -49,7 +49,7 @@ from georef.edge ed
 where st_dwithin(
 		point_in,
 		ed.the_geog,100)
-AND st_expand(ed.the_geog::geometry, 100) && point_in::geometry
+AND st_expand(ed.the_geog::geometry, 0.0025) && point_in::geometry
 
 order by distance
 limit 1 )tmp
