@@ -70,7 +70,7 @@ def check_stat_journey_to_publish(self, stat):
     assert stat.journeys[0].requested_date_time == get_posix_date_time("20120614T080000") #1339653600
     assert stat.journeys[0].departure_date_time == get_posix_date_time("20120614T080042") #1339653642
     assert stat.journeys[0].arrival_date_time == get_posix_date_time("20120614T080222") #1339653742
-    assert stat.journeys[0].duration == 100
+    assert stat.journeys[0].duration == 99
     assert stat.journeys[0].type == "best"
     assert stat.journeys[0].nb_transfers == 0
 
@@ -137,4 +137,4 @@ class TestStats(AbstractTestFixture):
         """
         # we override the stat method with a mock method to test the coverage
         StatManager.publish_request = mock_coverage_stat
-        json_response = self.query("/v1/coverage", display=True)
+        json_response = self.query("/v1/coverage", display=False)
