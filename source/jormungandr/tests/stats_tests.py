@@ -37,6 +37,9 @@ def mock_journey_stat(self, stat):
 def mock_coverage_stat(self, stat):
     check_stat_coverage_to_publish(self, stat)
 
+def mock_places_stat(self, stat):
+    check_stat_places_to_publish(self, stat)
+
 def check_stat_coverage_to_publish(self, stat):
     #Verify request elements
     assert stat.user_id != ""
@@ -46,6 +49,8 @@ def check_stat_coverage_to_publish(self, stat):
     #Here we verify id of region in request.view_args of the request.
     assert stat.coverages[0].region_id == ""
     assert len(stat.journeys) == 0
+    #Verify elements of request.error
+    assert stat.error.id == ""
 
 
 def check_stat_journey_to_publish(self, stat):
@@ -64,6 +69,9 @@ def check_stat_journey_to_publish(self, stat):
     #Verify elements of request.coverages
     assert len(stat.coverages) == 1
     assert stat.coverages[0].region_id == "main_routing_test"
+
+    #Verify elements of request.error
+    assert stat.error.id == ""
 
     #Verify elements of request.journeys
     assert len(stat.journeys) == 2
@@ -106,8 +114,19 @@ def check_stat_journey_to_publish(self, stat):
     assert stat.journeys[1].sections[0].to_name == "rue ar"
     assert stat.journeys[1].sections[0].type == "street_network"
 
+def check_stat_places_to_publish(self, stat):
+    assert stat.user_id != ""
+    assert stat.api == "v1.place_uri"
+    assert len(stat.parameters) == 0
+    assert len(stat.coverages) == 1
+    #Here we verify id of region in request.view_args of the request.
+    assert stat.coverages[0].region_id == "main_ptref_test"
+    assert stat.error.id == ""
+
+
+
 @dataset(["main_routing_test"])
-class TestStats(AbstractTestFixture):
+class TestStatJourneys(AbstractTestFixture):
 
     def setup(self):
         """
@@ -138,3 +157,27 @@ class TestStats(AbstractTestFixture):
         # we override the stat method with a mock method to test the coverage
         StatManager.publish_request = mock_coverage_stat
         json_response = self.query("/v1/coverage", display=False)
+
+@dataset(["main_ptref_test"])
+class TestStatPlaces(AbstractTestFixture):
+
+    def setup(self):
+        """
+        We save the original publish_method to be able to put it back after the tests
+        each test will override this method with it's own mock check method
+        """
+        self.real_publish_request_method = StatManager.publish_request
+
+    def teardown(self):
+        """
+        Here we put back the original method to stat manager.
+        """
+        StatManager.publish_request = self.real_publish_request_method
+
+    def test_simple_test_places_with_stats(self):
+        """
+        here  we test stat objects for api place_uri filled by stat manager
+        """
+        # we override the stat method with a mock method to test the place_uri
+        StatManager.publish_request = check_stat_places_to_publish
+        response = self.query_region("places/stop_area:stop1", display=False)
