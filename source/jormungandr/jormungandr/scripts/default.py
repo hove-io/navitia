@@ -91,7 +91,7 @@ def compare_journey_generator(journey):
         yield s.destination.uri if s.destination else 'no_destination'
 
 def count_tagged_journeys(journeys):
-        return len([1 for journey in journeys if journey.type])
+        return sum([1 for journey in journeys if journey.type])
 
 
 class Script(object):
