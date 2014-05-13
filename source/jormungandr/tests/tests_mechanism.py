@@ -38,6 +38,7 @@ if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
 from jormungandr import app
 from jormungandr.instance_manager import InstanceManager
 from jormungandr.stat_manager import StatManager
+from navitiacommon.models import User
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
@@ -130,6 +131,15 @@ class AbstractTestFixture:
 
         StatManager.publish_request = mock_publish
         StatManager._init_rabbitmq = mock_init
+
+        #we don't want to have anything to do with the jormun database either
+        class bob:
+            @classmethod
+            def mock_get_token(cls, token, valid_until):
+                #note, since get_from_token is a class method, we need to wrap it.
+                #change that with a real mock framework
+                pass
+        User.get_from_token = bob.mock_get_token
 
 
 
