@@ -602,7 +602,7 @@ class Script(object):
         if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
             del resp.journeys[request["max_nb_journeys"]:]
 
-    def sort_journeys(self, resp, clockwise):
+    def sort_journeys(self, resp, clockwise=True):
         if len(resp.journeys) > 0:
             if clockwise:
                 resp.journeys.sort(self.journey_compare)
