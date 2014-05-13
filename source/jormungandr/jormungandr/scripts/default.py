@@ -513,6 +513,7 @@ class Script(object):
 
     def choose_best(self, resp):
         """
+        prerequisite: Journeys has to be sorted before
         the best journey, is the first rapid, ie the rapid without additional tags ('prev' or 'next')
         """
         for j in resp.journeys:
