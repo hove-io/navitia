@@ -102,6 +102,9 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
+    if(!sp->platform_code.empty()) {
+        stop_point->set_platform_code(sp->platform_code);
+    }
     if(!sp->comment.empty()) {
         stop_point->set_comment(sp->comment);
     }

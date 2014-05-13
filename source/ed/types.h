@@ -299,6 +299,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
+    std::string platform_code;
 
     StopArea* stop_area;
     Network* network;

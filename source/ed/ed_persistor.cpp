@@ -582,7 +582,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
 void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_points){
     this->lotus.prepare_bulk_insert("navitia.stop_point",
             {"id", "uri", "external_code", "name", "coord", "comment",
-            "fare_zone", "stop_area_id","properties_id"});
+            "fare_zone", "stop_area_id","properties_id","platform_code"});
 
     for(types::StopPoint* sp : stop_points){
         std::vector<std::string> values;
@@ -599,6 +599,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
             values.push_back(lotus.null_value);
         }
         values.push_back(std::to_string(sp->to_ulog()));
+        values.push_back(sp->platform_code);
         this->lotus.insert(values);
     }
 

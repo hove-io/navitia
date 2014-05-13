@@ -38,6 +38,16 @@ DO $$
     END;
 $$;
 
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.stop_point ADD COLUMN platform_code TEXT NULL DEFAULT NULL;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column platform_code already exists in navitia.stop_point.';
+        END;
+    END;
+$$;
+
 CREATE OR REPLACE FUNCTION add_external_code(tblname varchar) RETURNS VOID AS $BODY$
     BEGIN
         EXECUTE format('ALTER TABLE navitia.%I ADD COLUMN external_code TEXT;', tblname);

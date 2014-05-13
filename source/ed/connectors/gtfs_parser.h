@@ -158,7 +158,8 @@ struct StopsGtfsHandler : public GenericHandler {
     lon_c,
     type_c,
     parent_c,
-    wheelchair_c;
+    wheelchair_c,
+    platform_c;
 
     int ignored = 0;
     std::vector<types::StopPoint*> wheelchair_heritance;
