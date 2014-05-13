@@ -147,6 +147,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         On this call the first call to kraken returns a journey
         with a too long waiting duration.
         The second call to kraken must return a valid journey
+        We had a debug argument, hence 2 journeys are returned, only one is typed
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
@@ -163,7 +164,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         """
         Kraken returns two journeys, the earliest arrival one returns a too
         long waiting duration, therefore it must be deleted.
-        The second one must be return
+        The second one must be returned
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
             .format(from_sa="A", to_sa="D", datetime="20120615T080000")
@@ -190,6 +191,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         """
         Kraken always retrieves journeys with non_pt_duration > max_non_pt_duration
         No journeys should be tagged, but get_journeys should stop quickly
+        We had the debug argument, hence a non-typed journey is returned
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
             .format(from_sa="E", to_sa="H", datetime="20120615T080000")
