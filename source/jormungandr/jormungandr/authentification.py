@@ -124,8 +124,7 @@ def authenticate(region, api, abort=False):
         else:
             return False if not instance else instance.first().is_free
 
-    user = User.get_from_token(token, datetime.datetime.now())
-
+    user = get_user()
     if user:
         if user.has_access(region, api):
             return True
@@ -158,7 +157,7 @@ def has_access(instance, abort=False):
 
 def get_user():
     """
-    return the current authentificated User or None
+    return the current authenticated User or None
     """
     if hasattr(g, 'user'):
         return g.user
