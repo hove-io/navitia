@@ -90,6 +90,9 @@ def compare_journey_generator(journey):
         yield s.origin.uri if s.origin else 'no_origin'
         yield s.destination.uri if s.destination else 'no_destination'
 
+def count_typed_journeys(journeys):
+        return sum(1 for journey in journeys if journey.type)
+
 
 class Script(object):
     def __init__(self):
@@ -430,9 +433,6 @@ class Script(object):
             # because we need all journeys to qualify them correctly
             request_type = "arrival" if new_request.journeys.clockwise else "departure"
             qualifier_one(resp.journeys, request_type)
-
-        #we filter the journeys
-        self.delete_journeys(resp, original_request)
         return resp
 
     def journey_compare(self, j1, j2):
@@ -457,23 +457,30 @@ class Script(object):
                 non_pt_duration_j2 = non_pt_duration
         return non_pt_duration_j1 - non_pt_duration_j2
 
+
+
     def fill_journeys(self, pb_req, request, instance):
         """
         call kraken to get the requested number of journeys
 
         It more journeys are wanted, we ask for the next (or previous if not clockwise) departures
         """
-        resp = self.get_journey(pb_req, instance, request)
-
-        if not resp.journeys or len(resp.journeys) == 0:
-            return resp  # no journeys found, useless to call kraken again
-
-        last_best = next((j for j in resp.journeys if j.type == 'rapid'), None)
-        cpt_attempt = 1  # we limit the number of call to at most the number of wanted journeys
-        while request["min_nb_journeys"] > len(resp.journeys) and cpt_attempt <= request["min_nb_journeys"]:
-            if not last_best:  # if no rapid journey has been found, no need to continue
+        resp = response_pb2.Response()
+        next_request = copy.deepcopy(pb_req)
+        nb_typed_journeys = 0
+        cpt_attempt = 0
+        max_attempts = 2 if not request["min_nb_journeys"] else request["min_nb_journeys"]*2
+        while ((request["min_nb_journeys"] and request["min_nb_journeys"] > nb_typed_journeys) or\
+            (not request["min_nb_journeys"] and nb_typed_journeys == 0)) and cpt_attempt < max_attempts:
+            tmp_resp = self.get_journey(next_request, instance, request)
+            if len(tmp_resp.journeys) == 0:
                 break
-            cpt_attempt += 1
+            last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
+            if not last_best:
+                last_best = next((j for j in tmp_resp.journeys), None)
+                #In this case there is no journeys, so we stop
+                if not last_best:
+                    break
 
             new_datetime = None
             if request['clockwise']:
@@ -489,31 +496,28 @@ class Script(object):
             next_request = copy.deepcopy(pb_req)
             next_request.journeys.datetimes[0] = new_datetime.strftime(f_date_time)
             del next_request.journeys.datetimes[1:]
-            tmp_resp = self.get_journey(next_request, instance, request)
+            # we tag the journeys as 'next' or 'prev' journey
+            if len(resp.journeys):
+                for j in tmp_resp.journeys:
+                    j.tags.append("next" if request['clockwise'] else "prev")
 
-            if len(tmp_resp.journeys) == 0:
-                break  #no more journeys found, we stop
-
-            # we tag the journeys as 'next' or 'prev' journeys
-            for j in tmp_resp.journeys:
-                j.tags.append("next" if request['clockwise'] else "prev")
-
-            last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
-
+            self.delete_journeys(tmp_resp, request)
             self.merge_response(resp, tmp_resp)
 
-        self.choose_best(resp)
+            nb_typed_journeys = count_typed_journeys(resp.journeys)
+            cpt_attempt += 1
 
-        self.delete_journeys(resp, request)  # last filter
         self.sort_journeys(resp)
+        self.choose_best(resp)
         return resp
 
     def choose_best(self, resp):
         """
-        the best journey, is the first rapid, ie the rapid without additional tags ('prev' or 'next')
+        prerequisite: Journeys has to be sorted before
+        the best journey is the first rapid
         """
         for j in resp.journeys:
-            if j.type == 'rapid' and not j.tags:
+            if j.type == 'rapid':
                 j.type = 'best'
                 break  # we want to ensure the unicity of the best
 
@@ -573,7 +577,7 @@ class Script(object):
         if request["type"] != "" and request["type"] != "all":
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
         else:
-            #by default, we filter non tagged journeys
+            #by default, we filter non typed journeys
             tag_to_delete = ["", "possible_cheap"]
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 

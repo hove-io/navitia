@@ -122,4 +122,79 @@ class TestJourneysNoRegion(AbstractTestFixture):
         error_regexp = re.compile('^No region available for the coordinates.*')
         assert error_regexp.match(response['error']['message'])
 
+@dataset(["basic_routing_test"])
+class TestLongWaitingDurationFilter(AbstractTestFixture):
+    """
+    Test if the filter on long waiting duration is working
+    """
 
+    def test_novalidjourney_on_first_call(self):
+        """
+        On this call the first call to kraken returns a journey
+        with a too long waiting duration.
+        The second call to kraken must return a valid journey
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        assert(len(response['journeys']) == 1)
+        assert(response['journeys'][0]['arrival_date_time'] == "20120614T160000")
+        assert(response['journeys'][0]['type'] == "best")
+
+    def test_novalidjourney_on_first_call_debug(self):
+        """
+        On this call the first call to kraken returns a journey
+        with a too long waiting duration.
+        The second call to kraken must return a valid journey
+        We had a debug argument, hence 2 journeys are returned, only one is typed
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        assert(len(response['journeys']) == 2)
+        assert(response['journeys'][0]['arrival_date_time'] == "20120614T150000")
+        assert(response['journeys'][0]['type'] == "")
+        assert(response['journeys'][1]['arrival_date_time'] == "20120614T160000")
+        assert(response['journeys'][1]['type'] == "best")
+
+
+    def test_remove_one_journey_from_batch(self):
+        """
+        Kraken returns two journeys, the earliest arrival one returns a too
+        long waiting duration, therefore it must be deleted.
+        The second one must be returned
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa="A", to_sa="D", datetime="20120615T080000")
+
+        response = self.query_region(query, display=False)
+        assert(len(response['journeys']) == 1)
+        assert(response['journeys'][0]['arrival_date_time'] == u'20120615T151000')
+        assert(response['journeys'][0]['type'] == "best")
+
+
+    def test_max_attemps(self):
+        """
+        Kraken always retrieves journeys with non_pt_duration > max_non_pt_duration
+        No journeys should be typed, but get_journeys should stop quickly
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa="E", to_sa="H", datetime="20120615T080000")
+
+        response = self.query_region(query, display=False)
+        assert(not "journeys" in response or len(response['journeys']) == 0)
+
+
+    def test_max_attemps_debug(self):
+        """
+        Kraken always retrieves journeys with non_pt_duration > max_non_pt_duration
+        No journeys should be typed, but get_journeys should stop quickly
+        We had the debug argument, hence a non-typed journey is returned
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
+            .format(from_sa="E", to_sa="H", datetime="20120615T080000")
+
+        response = self.query_region(query, display=False)
+        assert(len(response['journeys']) == 1)
