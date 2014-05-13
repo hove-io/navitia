@@ -124,7 +124,6 @@ def check_stat_places_to_publish(self, stat):
     assert stat.error.id == ""
 
 
-
 @dataset(["main_routing_test"])
 class TestStatJourneys(AbstractTestFixture):
 
@@ -157,6 +156,7 @@ class TestStatJourneys(AbstractTestFixture):
         # we override the stat method with a mock method to test the coverage
         StatManager.publish_request = mock_coverage_stat
         json_response = self.query("/v1/coverage", display=False)
+
 
 @dataset(["main_ptref_test"])
 class TestStatPlaces(AbstractTestFixture):

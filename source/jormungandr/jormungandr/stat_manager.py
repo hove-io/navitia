@@ -99,7 +99,7 @@ class StatManager(object):
             self.producer = self.connection.Producer(exchange=exchange)
         except:
             self.save_stat = False
-            current_app.logger.warn('Unable to activate the producer of stat:')
+            logging.getLogger(__name__).warn('Unable to activate the producer of stat')
 
 
 

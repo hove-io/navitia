@@ -123,7 +123,15 @@ class AbstractTestFixture:
         #we block the stat manager not to send anything to rabbit mq
         def mock_publish(self, stat):
             pass
+
+        #we don't want to initialize rabbit for test.
+        def mock_init():
+            pass
+
         StatManager.publish_request = mock_publish
+        StatManager._init_rabbitmq = mock_init
+
+
 
     @classmethod
     def teardown_class(cls):
