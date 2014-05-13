@@ -291,12 +291,12 @@ void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::
         const type::Line* line = journey_pattern->route->line;
         // On gère la liste des interdits
         for(auto forbid_uri : forbidden){
-            if       ( (forbid_uri == line->uri)
-                    || (forbid_uri == journey_pattern->route->uri)
+            if       ( (line && forbid_uri == line->uri)
+                    || (journey_pattern->route && forbid_uri == journey_pattern->route->uri)
                     || (forbid_uri == journey_pattern->uri)
-                    || (forbid_uri == journey_pattern->commercial_mode->uri)
-                    || (forbid_uri == journey_pattern->physical_mode->uri)
-                    || (forbid_uri == line->network->uri) )
+                    || (journey_pattern->commercial_mode && forbid_uri == journey_pattern->commercial_mode->uri)
+                    || (journey_pattern->physical_mode && forbid_uri == journey_pattern->physical_mode->uri)
+                    || (line->network && forbid_uri == line->network->uri) )
             {
                 forbidden_journey_patterns.set(journey_pattern->idx);
                 break;
