@@ -178,7 +178,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
     def test_max_attemps(self):
         """
         Kraken always retrieves journeys with non_pt_duration > max_non_pt_duration
-        No journeys should be tagged, but get_journeys should stop quickly
+        No journeys should be typed, but get_journeys should stop quickly
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
             .format(from_sa="E", to_sa="H", datetime="20120615T080000")
@@ -190,7 +190,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
     def test_max_attemps_debug(self):
         """
         Kraken always retrieves journeys with non_pt_duration > max_non_pt_duration
-        No journeys should be tagged, but get_journeys should stop quickly
+        No journeys should be typed, but get_journeys should stop quickly
         We had the debug argument, hence a non-typed journey is returned
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\

@@ -90,7 +90,7 @@ def compare_journey_generator(journey):
         yield s.origin.uri if s.origin else 'no_origin'
         yield s.destination.uri if s.destination else 'no_destination'
 
-def count_tagged_journeys(journeys):
+def count_typed_journeys(journeys):
         return sum([1 for journey in journeys if journey.type])
 
 
@@ -467,11 +467,11 @@ class Script(object):
         """
         resp = response_pb2.Response()
         next_request = copy.deepcopy(pb_req)
-        nb_tagged_journeys = 0
+        nb_typed_journeys = 0
         cpt_attempt = 0
         max_attempts = 2 if not request["min_nb_journeys"] else request["min_nb_journeys"]*2
-        while ((request["min_nb_journeys"] and request["min_nb_journeys"] > nb_tagged_journeys) or\
-            (not request["min_nb_journeys"] and nb_tagged_journeys == 0)) and cpt_attempt < max_attempts:
+        while ((request["min_nb_journeys"] and request["min_nb_journeys"] > nb_typed_journeys) or\
+            (not request["min_nb_journeys"] and nb_typed_journeys == 0)) and cpt_attempt < max_attempts:
             tmp_resp = self.get_journey(next_request, instance, request)
             if len(tmp_resp.journeys) == 0:
                 break
@@ -504,7 +504,7 @@ class Script(object):
             self.delete_journeys(tmp_resp, request)
             self.merge_response(resp, tmp_resp)
 
-            nb_tagged_journeys = count_tagged_journeys(resp.journeys)
+            nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
         self.sort_journeys(resp)
@@ -577,7 +577,7 @@ class Script(object):
         if request["type"] != "" and request["type"] != "all":
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
         else:
-            #by default, we filter non tagged journeys
+            #by default, we filter non typed journeys
             tag_to_delete = ["", "possible_cheap"]
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 
