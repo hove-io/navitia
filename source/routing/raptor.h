@@ -159,8 +159,8 @@ struct RAPTOR
         return labels[count][jpp_idx].type;
     }
 
-    inline const type::JourneyPatternPoint* get_boarding_jpp(size_t count, type::idx_t jpp_idx) const {
-        return labels[count][jpp_idx].boarding;
+    inline type::idx_t get_boarding_jpp(size_t count, type::idx_t jpp_idx) const {
+        return labels[count][jpp_idx].boarding_jpp;
     }
 
     ~RAPTOR() {}

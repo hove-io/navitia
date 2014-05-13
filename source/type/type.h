@@ -831,12 +831,6 @@ struct StopTime {
     JourneyPatternPoint* journey_pattern_point = nullptr;
     std::string comment;
 
-    ValidityPattern* departure_validity_pattern = nullptr;
-    ValidityPattern* arrival_validity_pattern = nullptr;
-
-    ValidityPattern* departure_adapted_validity_pattern = nullptr;
-    ValidityPattern* arrival_adapted_validity_pattern = nullptr;
-
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
@@ -904,10 +898,23 @@ struct StopTime {
             return clockwise ? hour <= this->end_time : this->start_time <= hour;
     }
 
+    bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
+        if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
+                || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
+            if(day == 0)
+                return false;
+            --day;
+        }
+        if(!is_adapted) {
+            return vehicle_journey->validity_pattern->check(day);
+        } else {
+            return vehicle_journey->adapted_validity_pattern->check(day);
+        }
+    }
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point
-            & properties & local_traffic_zone & departure_validity_pattern & arrival_validity_pattern
-            & departure_adapted_validity_pattern & arrival_adapted_validity_pattern & comment;
+            & properties & local_traffic_zone & comment;
     }
 
     bool operator<(const StopTime& other) const {

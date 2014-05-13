@@ -55,7 +55,7 @@ RAPTOR::journey_pattern_path_connections(const Visitor & visitor) {
             if(get_type(count, jpp_departure_idx) == boarding_type::vj && visitor.comp(dt, best_labels[jpp_idx])) {
                 labels[count][jpp_idx].dt = dt;
                 best_labels[jpp_idx] = dt;
-                labels[count][jpp_idx].boarding = jpp_departure;
+                labels[count][jpp_idx].boarding_jpp = jpp_departure->idx;
                 labels[count][jpp_idx].type = boarding_type::connection_stay_in;
                 to_mark.push_back(jpp_idx);
             }
@@ -108,7 +108,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                     type::idx_t jpp_idx = jpp->idx;
                     if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx])) {
                        current_labels[jpp_idx].dt = best_departure;
-                       current_labels[jpp_idx].boarding = data.pt_data->journey_pattern_points[best_jpp];
+                       current_labels[jpp_idx].boarding_jpp = best_jpp;
                        current_labels[jpp_idx].type = boarding_type::connection;
                        best_labels[jpp_idx] = best_departure;
 
@@ -137,7 +137,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                             if(best_jpp != destination_jpp_idx) {
                                 if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
                                     current_labels[destination_jpp_idx].dt = next;
-                                    current_labels[destination_jpp_idx].boarding = data.pt_data->journey_pattern_points[best_jpp];
+                                    current_labels[destination_jpp_idx].boarding_jpp = best_jpp;
                                     current_labels[destination_jpp_idx].type = boarding_type::connection;
                                     best_labels[destination_jpp_idx] = next;
 
@@ -239,29 +239,31 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     clear_and_init(departures, calc_dest, bound, clockwise);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
-    //auto tmp = makePathes(calc_dest, bound, accessibilite_params, *this, clockwise, disruption_active);
-    //result.insert(result.end(), tmp.begin(), tmp.end());
+//    auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
+//    result.insert(result.end(), tmp.begin(), tmp.end());
     // Aucune solution n’a été trouvée :'(
     if(b_dest.best_now_jpp_idx == type::invalid_idx) {
         return result;
-    } else {
-
-        //Second passe : permet d’optimiser les temps de correspondance
-        departures = get_solutions(calc_dep, calc_dest, !clockwise,
-                                   labels,
-                                   accessibilite_params, data, disruption_active);
-        for(auto departure : departures) {
-            clear_and_init({departure}, calc_dep, departure_datetime, !clockwise);
-
-            boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, true, max_transfers);
-
-            if(b_dest.best_now_jpp_idx != type::invalid_idx) {
-                std::vector<Path> temp = makePathes(calc_dest, calc_dep, accessibilite_params, *this, !clockwise, disruption_active);
-                result.insert(result.end(), temp.begin(), temp.end());
-            }
-        }
-        return result;
     }
+
+    // Second phase
+    // If we asked for a earliest arrival time, we now try to find the tardiest departure time
+    // and vice and versa
+    departures = get_solutions(calc_dep, calc_dest, !clockwise,
+                               labels,
+                               accessibilite_params, data, disruption_active);
+    for(auto departure : departures) {
+        clear_and_init({departure}, calc_dep, departure_datetime, !clockwise);
+
+        boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, true, max_transfers);
+
+        if(b_dest.best_now_jpp_idx == type::invalid_idx) {
+            continue;
+        }
+        std::vector<Path> temp = makePathes(calc_dest, calc_dep, accessibilite_params, *this, !clockwise, disruption_active);
+        result.insert(result.end(), temp.begin(), temp.end());
+    }
+    return result;
 }
 
 
@@ -432,7 +434,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
 
                             if(visitor.comp(workingDt, bound)) {
                                 working_labels[jpp_idx].dt = workingDt;
-                                working_labels[jpp_idx].boarding = boarding;
+                                working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
                                 best_labels[jpp_idx] = working_labels[jpp_idx].dt;
                                 if(!this->b_dest.add_best(visitor, jpp_idx, working_labels[jpp_idx].dt, this->count)) {
@@ -444,7 +446,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                       get_type(this->count-1, jpp_idx) == boarding_type::uninitialized &&
                                       b_dest.add_best(visitor, jpp_idx, workingDt, this->count)) {
                                 working_labels[jpp_idx].dt = workingDt;
-                                working_labels[jpp_idx].boarding = boarding;
+                                working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
                                 best_labels[jpp_idx] = workingDt;
                             }

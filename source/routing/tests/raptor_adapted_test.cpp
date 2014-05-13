@@ -263,7 +263,6 @@ impact-3
 
         ed::AtAdaptedLoader adapter;
         adapter.apply(perturbations, *b.data->pt_data);
-        b.data->build_midnight_interchange();
         b.build_relations(*b.data->pt_data);
         b.generate_dummy_basis();
         b.data->pt_data->index();

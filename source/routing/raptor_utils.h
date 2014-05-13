@@ -46,10 +46,10 @@ enum class boarding_type {
     connection_guarantee
 };
 
-struct Label{
+struct Label {
     DateTime dt;
-    boarding_type type;
-    const type::JourneyPatternPoint* boarding;
+    boarding_type type = boarding_type::uninitialized;
+    navitia::type::idx_t boarding_jpp = navitia::type::invalid_idx;
 };
 
 typedef std::pair<int, int> pair_int;

@@ -166,7 +166,9 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
         }
     } else {
         sp = it->second;
-        auto find_jpp = std::find_if(sp->journey_pattern_point_list.begin(), sp->journey_pattern_point_list.end(), [&](navitia::type::JourneyPatternPoint* jpp){return jpp->journey_pattern == vj->journey_pattern;});
+        auto find_jpp = std::find_if(sp->journey_pattern_point_list.begin(),
+                                     sp->journey_pattern_point_list.end(),
+                                     [&](navitia::type::JourneyPatternPoint* jpp){return jpp->journey_pattern == vj->journey_pattern;});
         if(find_jpp != sp->journey_pattern_point_list.end())
             jpp = *find_jpp;
     }
@@ -190,13 +192,8 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
     st->local_traffic_zone = local_trafic_zone;
     st->set_drop_off_allowed(drop_off_allowed);
     st->set_pick_up_allowed(pick_up_allowed);
- //   st.set_wheelchair_boarding(vj->wheelchair_boarding);
 
     vj->stop_time_list.push_back(st);
-    st->arrival_validity_pattern = vj->validity_pattern;
-    st->departure_validity_pattern = vj->validity_pattern;
-    st->arrival_adapted_validity_pattern = vj->validity_pattern;
-    st->departure_adapted_validity_pattern = vj->validity_pattern;
     b.data->pt_data->stop_times.push_back(st);
     return *this;
 }

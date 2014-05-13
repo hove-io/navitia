@@ -186,26 +186,6 @@ ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
     }
 }
 
-ValidityPattern* Data::get_or_create_validity_pattern(ValidityPattern* ref_validity_pattern, const uint32_t time){
-
-    if(time > 24*3600) {
-        ValidityPattern vp(ref_validity_pattern->beginning_date,ref_validity_pattern->str());
-        //we copy the validity pattern and since we want the same validity pattern for the day after
-        //we shift the bitset
-        vp.days <<= 1;
-        ValidityPattern* vp_similar = this->get_similar_validity_pattern(&vp);
-        if (vp_similar == nullptr) {
-            ValidityPattern* tmp_vp = new ValidityPattern(vp);
-            tmp_vp->idx = this->pt_data->validity_patterns.size();
-            this->pt_data->validity_patterns.push_back(tmp_vp);
-            return tmp_vp;
-        } else {
-            return vp_similar;
-        }
-    }
-    return ref_validity_pattern;
-}
-
 using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
 
 list_cal_bitset find_matching_calendar(const Data&, const VehicleJourney* vehicle_journey, double relative_threshold) {
@@ -239,7 +219,6 @@ void Data::complete(){
     pt::ptime start;
     int sort, autocomplete;
 
-    build_midnight_interchange();
     build_grid_validity_pattern();
     build_associated_calendar();
 
@@ -333,19 +312,6 @@ void Data::build_associated_calendar() {
 void Data::build_grid_validity_pattern() {
     for(Calendar* cal : this->pt_data->calendars){
         cal->build_validity_pattern(meta->production_date);
-    }
-}
-
-void Data::build_midnight_interchange() {
-    for(VehicleJourney* vj : this->pt_data->vehicle_journeys) {
-        for(StopTime* stop : vj->stop_time_list){
-            // Théorique
-            stop->departure_validity_pattern = get_or_create_validity_pattern(vj->validity_pattern, stop->departure_time);
-            stop->arrival_validity_pattern = get_or_create_validity_pattern(vj->validity_pattern, stop->arrival_time);
-            // Adapté
-            stop->departure_adapted_validity_pattern = get_or_create_validity_pattern(vj->adapted_validity_pattern, stop->departure_time);
-            stop->arrival_adapted_validity_pattern = get_or_create_validity_pattern(vj->adapted_validity_pattern, stop->arrival_time);
-        }
     }
 }
 

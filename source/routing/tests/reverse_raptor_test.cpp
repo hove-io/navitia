@@ -331,6 +331,33 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(passe_minuit4){
+    ed::builder b("20120614");
+    b.vj("A", "0001000", "", true)("stop1", 23*3600+55*60, 24*3600)("stop2", 24*3600 + 15*60);
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"],
+            24*3600+15*60, 3, DateTimeUtils::min, false, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    auto res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, d.stop_areas_map["stop1"]->idx);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, d.stop_areas_map["stop2"]->idx);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items[0].departure, *(b.data))), 4);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items[0].departure, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items[0].arrival, *(b.data))), 4);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items[0].arrival, *(b.data))), 15*60);
+}
+
+
 BOOST_AUTO_TEST_CASE(validity_pattern){
     ed::builder b("20120614");
     b.vj("D", "00", "", true)("stop1", 8000)("stop2", 8200);
