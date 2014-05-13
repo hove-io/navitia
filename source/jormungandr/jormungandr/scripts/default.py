@@ -433,9 +433,6 @@ class Script(object):
             # because we need all journeys to qualify them correctly
             request_type = "arrival" if new_request.journeys.clockwise else "departure"
             qualifier_one(resp.journeys, request_type)
-
-        #we filter the journeys
-        self.delete_journeys(resp, original_request)
         return resp
 
     def journey_compare(self, j1, j2):
