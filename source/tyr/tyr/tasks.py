@@ -65,7 +65,7 @@ def type_of_data(filename):
         return 'geopal'
     if filename.endswith('.poi'):
         return 'poi'
-    if "synonyms.txt" == filename:
+    if filename.endswith("synonyms.txt"):
         return 'synonym'
     return None
 
