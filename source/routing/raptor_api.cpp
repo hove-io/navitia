@@ -128,7 +128,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         const type::VehicleJourney* vj = nullptr;
         size_t item_idx(0);
         // La partie TC et correspondances
-        for(PathItem & item : path.items) {
+        for(auto path_i = path.items.begin(); path_i < path.items.end(); ++path_i) {
+            const auto item = *path_i;
 
             pbnavitia::Section* pb_section = pb_journey->add_sections();
             pb_section->set_id(enhanced_response.register_section(pb_journey, item, item_idx++));
