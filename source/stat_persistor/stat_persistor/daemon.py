@@ -75,12 +75,16 @@ class StatPersistor(ConsumerMixin):
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=self.queues, callbacks=[self.process_task])]
 
-    def handle_statistics(self, stat_hit):
+    def handle_statistics(self, stat_hit, message):
         if stat_hit.IsInitialized():
             try:
                 self.stat_saver.persist_stat(self.config, stat_hit)
+                message.ack()
             except (FunctionalError, TechnicalError) as e:
                 logging.getLogger('stat_persistor').warn("error while saving stats: {}".format(str(e)))
+                # on error (like a database KO) we retry this task later after 10 seconds
+                message.requeue()
+                time.sleep(10)
         else:
             logging.getLogger('stat_persistor').warn("protobuff query not initialized,"
                                                      " no stat logged")
@@ -97,8 +101,7 @@ class StatPersistor(ConsumerMixin):
             message.ack()
             return
 
-        self.handle_statistics(stat_request)
-        message.ack()
+        self.handle_statistics(stat_request, message)
 
     def __del__(self):
         self.close()
