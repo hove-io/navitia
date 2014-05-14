@@ -72,9 +72,5 @@ class TestNoStats(AbstractTestFixture):
         """
         Even if the stat manager is failing we want the journey result.
         """
-        #res = self.query("v1/coverage/main_routing_test/" + journey_basic_query, display=True)
         response = self.query_region(journey_basic_query, display=False)
         is_valid_journey_response(response, self.tester)
-        #assert res[0]['status'] == 500
-        #assert res[0]['message'] == 'Internal Server Error'
-
