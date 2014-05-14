@@ -120,9 +120,11 @@ void fill_pb_placemark(navitia::georef::Way* way, const type::Data &data, pbnavi
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_placemark(const type::StopArea* stop_area, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
+void fill_pb_placemark(const type::StopArea* stop_area, const type::Data &data,
+        pbnavitia::Place* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes = false);
 
 void fill_pb_placemark(navitia::georef::Admin* admin, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,

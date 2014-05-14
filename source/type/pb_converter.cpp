@@ -590,12 +590,13 @@ void fill_pb_placemark(const type::StopPoint* stop_point,
 void fill_pb_placemark(const type::StopArea* stop_area,
                        const type::Data &data, pbnavitia::Place* place,
                        int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period){
+                       const pt::time_period& action_period,
+                       const bool show_codes) {
     if(stop_area == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
     fill_pb_object(stop_area, data, place->mutable_stop_area(), depth,
-                   now, action_period, false);
+                   now, action_period, show_codes);
     place->set_name(stop_area->name);
     for(auto admin : place->stop_area().administrative_regions()) {
         if (admin.level() == 8){
