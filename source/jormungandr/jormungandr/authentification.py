@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask_restful import reqparse
+from flask_restful import reqparse, abort
 import flask_restful
 from flask import current_app, request, g
 from functools import wraps
@@ -38,7 +38,6 @@ from jormungandr import i_manager
 import datetime
 import base64
 from navitiacommon.models import User, Instance, db
-
 
 def authentification_required(func):
     """
@@ -114,6 +113,7 @@ def authenticate(region, api, abort=False):
 
     #Hack to allow user not logged in...
     token = get_token()
+
     if not token:
         instance = Instance.get_by_name(region)
         if abort:
@@ -157,7 +157,7 @@ def has_access(instance, abort=False):
 
 def get_user():
     """
-    return the current authentificated User or None
+    return the current authenticated User or None
     """
     if hasattr(g, 'user'):
         return g.user

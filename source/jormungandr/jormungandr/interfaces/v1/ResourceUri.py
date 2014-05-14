@@ -30,6 +30,8 @@
 from flask.ext.restful import Resource
 from converters_collection_type import collections_to_resource_type
 from converters_collection_type import resource_type_to_collection
+from jormungandr.interfaces.v1.StatedResource import StatedResource
+from jormungandr.stat_manager import manage_stat_caller
 from make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
 from collections import OrderedDict, deque
@@ -39,12 +41,11 @@ from jormungandr.authentification import authentification_required
 import navitiacommon.type_pb2 as type_pb2
 
 
-class ResourceUri(Resource):
+class ResourceUri(StatedResource):
 
     def __init__(self, *args, **kwargs):
-        Resource.__init__(self, *args, **kwargs)
+        StatedResource.__init__(self, *args, **kwargs)
         self.region = None
-        self.method_decorators = []
         self.method_decorators.append(add_id_links())
         self.method_decorators.append(add_address_poi_id(self))
         self.method_decorators.append(add_computed_resources(self))

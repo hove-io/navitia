@@ -67,6 +67,9 @@ from jormungandr.instance_manager import InstanceManager
 i_manager = InstanceManager()
 i_manager.initialisation(start_ping=app.config['START_MONITORING_THREAD'])
 
+from jormungandr.stat_manager import StatManager
+stat_manager = StatManager()
+
 from jormungandr import api
 
 

@@ -1,4 +1,4 @@
-# coding=utf-8
+#encoding: utf-8
 
 #  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
@@ -29,38 +29,30 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.restful import Resource, fields, marshal_with
-from jormungandr import i_manager
-from jormungandr.interfaces.v1.StatedResource import StatedResource
-from make_links import add_coverage_link, add_coverage_link, add_collection_links, clean_links
-from converters_collection_type import collections_to_resource_type
-from collections import OrderedDict
-from fields import NonNullNested
+import datetime
 
 
-region_fields = {
-    "id": fields.String(attribute="region_id"),
-    "start_production_date": fields.String,
-    "end_production_date": fields.String,
-    "status": fields.String,
-    "shape": fields.String,
-    "error": NonNullNested({
-        "code": fields.String,
-        "value": fields.String
-    })
-}
-regions_fields = OrderedDict([
-    ("regions", fields.List(fields.Nested(region_fields)))
-])
-
-collections = collections_to_resource_type.keys()
+class FunctionalError(ValueError):
+    """
+    Exception lancé lorsque que la donnée à traiter n'est pas valide
+    """
+    pass
 
 
-class Coverage(StatedResource):
+class TechnicalError(ValueError):
+    """
+    Exception lancé lors d'un probléme technique
+    typiquement la base de données est inaccessible
+    """
+    pass
 
-    @clean_links()
-    @add_coverage_link()
-    @add_collection_links(collections)
-    @marshal_with(regions_fields)
-    def get(self, region=None, lon=None, lat=None):
-        return i_manager.regions(region, lon, lat), 200
+
+def from_timestamp(timestamp):
+    #@TODO: pour le moment on remet à l'heure local
+    #à virer le jour ou kraken géreras tout en UTC
+    return datetime.datetime.fromtimestamp(timestamp)
+
+
+def from_time(time):
+    return datetime.datetime.utcfromtimestamp(time).time()
+
