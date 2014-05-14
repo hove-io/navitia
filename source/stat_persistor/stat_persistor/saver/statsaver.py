@@ -97,7 +97,6 @@ class StatSaver(object):
 
         try:
             callback(self.meta, conn, item)
-            #callback(item, config)
             transaction.commit()
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.DataError) as e:
             logger.exception('error during transaction')
