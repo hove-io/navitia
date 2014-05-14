@@ -457,8 +457,6 @@ class Script(object):
                 non_pt_duration_j2 = non_pt_duration
         return non_pt_duration_j1 - non_pt_duration_j2
 
-
-
     def fill_journeys(self, pb_req, request, instance):
         """
         call kraken to get the requested number of journeys
@@ -577,7 +575,7 @@ class Script(object):
         if request["type"] != "" and request["type"] != "all":
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
         else:
-            #by default, we filter non typed journeys
+            #by default, we filter non tagged journeys
             tag_to_delete = ["", "possible_cheap"]
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 
@@ -601,19 +599,18 @@ class Script(object):
         if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
             del resp.journeys[request["max_nb_journeys"]:]
 
-    def sort_journeys(self, resp):
+    def sort_journeys(self, resp, clockwise=True):
         if len(resp.journeys) > 0:
-            resp.journeys.sort(self.journey_compare)
+            if clockwise:
+                resp.journeys.sort(self.journey_compare)
+            else:
+                resp.journeys.sort(lambda a, b: self.journey_compare(a, b)*-1)
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)
 
         # call to kraken
         resp = self.fill_journeys(req, request, instance)
-
-        if not request["clockwise"]:
-            resp.journeys.sort(self.journey_compare)
-
         return resp
 
     def journeys(self, request, instance):
