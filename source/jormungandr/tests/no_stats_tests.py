@@ -70,10 +70,11 @@ class TestNoStats(AbstractTestFixture):
 
     def test_simple_journey_query_stats(self):
         """
-        If the stat manager is failing and we want stats, we get an error
+        Even if the stat manager is failing we want the journey result.
         """
-        res = self.query_no_assert("v1/coverage/main_routing_test/" + journey_basic_query, display=False)
-
-        assert res[0]['status'] == 500
-        assert res[0]['message'] == 'Internal Server Error'
+        #res = self.query("v1/coverage/main_routing_test/" + journey_basic_query, display=True)
+        response = self.query_region(journey_basic_query, display=False)
+        is_valid_journey_response(response, self.tester)
+        #assert res[0]['status'] == 500
+        #assert res[0]['message'] == 'Internal Server Error'
 

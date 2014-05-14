@@ -46,8 +46,6 @@ class StatSaver(object):
     """
 
     def __init__(self, config):
-        self.file_name = config.stat_file
-
         self.__engine = create_engine(config.stat_connection_string)
         self.meta = MetaData(self.__engine)
         self.request_table = Table('requests', self.meta, autoload=True,

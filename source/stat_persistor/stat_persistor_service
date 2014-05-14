@@ -24,8 +24,7 @@ def main():
         print("Bad usage, learn how to use me with %s -h" % sys.argv[0])
         sys.exit(1)
 
-    daemon = StatPersistor()
-    daemon.init(config_file)
+    daemon = StatPersistor(config_file)
     daemon.run()
 
     sys.exit(0)

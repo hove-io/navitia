@@ -69,6 +69,7 @@ class TestJourneysNoRegion(AbstractTestFixture):
         error_regexp = re.compile('^No region available for the coordinates.*')
         assert error_regexp.match(response['error']['message'])
 
+
 @dataset(["basic_routing_test"])
 class TestLongWaitingDurationFilter(AbstractTestFixture):
     """

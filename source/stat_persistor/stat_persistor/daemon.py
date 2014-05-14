@@ -44,45 +44,19 @@ from kombu.mixins import ConsumerMixin
 class StatPersistor(ConsumerMixin):
 
     """
-    this is the service who handle the persistence of statistiques send to
+    this is the service who handle the persistence of statistiques send by
     rabbitmq
-
-    usage:
-    sindri = Sindri()
-    sindri.init(conf_filename)
-    sindri.run()
     """
 
-    def __init__(self):
+    def __init__(self, conf_file):
         self.connection = None
         self.exchange = None
-        self.stat_saver = None
         self.queues = []
         self.config = Config()
 
-    def init(self, filename):
-        """
-        init the service with the configuration file taken in parameter
-        """
-        self.config.load(filename)
-        self._init_logger(self.config.log_file, self.config.log_level)
+        self.config.load(conf_file)
         self.stat_saver = StatSaver(self.config)
         self._init_rabbitmq()
-
-
-    def _init_logger(self, filename='', level='debug'):
-        """
-        initialise loggers, by default to debug level and with output on stdout
-        """
-        level = getattr(logging, level.upper(), logging.DEBUG)
-        logging.basicConfig(filename=filename, level=level)
-
-        if level == logging.DEBUG:
-            # if we are in debug we log all sql request and results
-            logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
-            logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
-            logging.getLogger('sqlalchemy.dialects.postgresql')\
-                .setLevel(logging.INFO)
 
     def _init_rabbitmq(self):
         """
@@ -97,46 +71,34 @@ class StatPersistor(ConsumerMixin):
         queue_name = self.config.queue_name
         queue = kombu.Queue(queue_name, exchange=exchange, durable=True)
         self.queues.append(queue)
+
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=self.queues, callbacks=[self.process_task])]
 
-    def handle_statistique(self, stat_hit):
+    def handle_statistics(self, stat_hit):
         if stat_hit.IsInitialized():
             try:
                 self.stat_saver.persist_stat(self.config, stat_hit)
-            except FunctionalError as e:
-                logging.getLogger('stat_persistor').warn("%s", str(e))
-            except TechnicalError as e:
-                logging.getLogger('stat_persistor').warn("%s", str(e))
-
+            except (FunctionalError, TechnicalError) as e:
+                logging.getLogger('stat_persistor').warn("error while saving stats: {}".format(str(e)))
         else:
-            logging.getLogger('stat_persistor').warn("stat task whitout "
-                                             "payload")
+            logging.getLogger('stat_persistor').warn("protobuff query not initialized,"
+                                                     " no stat logged")
 
     def process_task(self, body, message):
         logging.getLogger('stat_persistor').debug("Message received")
         stat_request = navitiacommon.stat_pb2.StatRequest()
         try:
             stat_request.ParseFromString(body)
-            logging.getLogger('stat_persistor').debug('%s', str(stat_request))
+            logging.getLogger('stat_persistor').debug('query received: {}'.format(str(stat_request)))
         except google.protobuf.message.DecodeError as e:
             logging.getLogger('stat_persistor').warn("message is not a valid "
-                                             "protobuf task: %s", str(e))
+                                             "protobuf task: {}".format(str(e)))
             message.ack()
             return
 
-        try:
-            self.handle_statistique(stat_request)
-
-            message.ack()
-        except TechnicalError:
-            # on technical error (like a database KO) we retry this task later
-            # and we sleep 10 seconds
-            message.requeue()
-            time.sleep(10)
-        except:
-            logging.exception('fatal')
-            sys.exit(1)
+        self.handle_statistics(stat_request)
+        message.ack()
 
     def __del__(self):
         self.close()

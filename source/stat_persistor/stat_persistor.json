@@ -1,12 +1,29 @@
 {
-
-    "database":{"connection-string":"postgresql://navitia:navitia@localhost/navitia"},
-    "stat_persistor":
-   {
-       "exchange-name":"stat_persistor_exchange",
-       "queue-name":"stat_persistor_queue",
-       "broker-url":"amqp://guest:guest@localhost:5672//",
-       "log-level":"debug",
-       "log-file":""
+   "database": {"connection-string": "postgresql://navitia:navitia@localhost/navitia"},
+   "exchange-name": "stat_persistor_exchange",
+   "queue-name": "stat_persistor_queue",
+   "broker-url": "amqp://guest:guest@localhost:5672//",
+   "logger": {
+        "version": 1,
+        "disable_existing_loggers": "False",
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s"
+            }
+        },
+        "handlers": {
+            "default": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+                "formatter": "default"
+            }
+        },
+        "loggers": {
+            "": {
+                "handlers": ["default"],
+                "level": "DEBUG",
+                "propagate": "True"
+            }
+        }
    }
 }

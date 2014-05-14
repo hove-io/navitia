@@ -30,8 +30,12 @@
 # www.navitia.io
 
 from configobj import ConfigObj, flatten_errors
+import logging
+import logging.config
 from validate import Validator
 import json
+import sys
+
 
 class Config(object):
     """
@@ -43,8 +47,6 @@ class Config(object):
         self.exchange_name = None
         self.queue_name = None
         self.log_file = None
-        self.log_level = None
-        self.stat_file = None
 
     def build_error(self, config, validate_result):
         """
@@ -76,21 +78,21 @@ class Config(object):
                 'connection-string' in config_data['database']:
                 self.stat_connection_string = config_data['database']['connection-string']
 
-            if 'stat_persistor' in config_data:
-                if 'exchange-name' in config_data['stat_persistor']:
-                    self.exchange_name = config_data['stat_persistor']['exchange-name']
+                if 'exchange-name' in config_data:
+                    self.exchange_name = config_data['exchange-name']
 
-                if 'queue-name' in config_data['stat_persistor']:
-                    self.queue_name = config_data['stat_persistor']['queue-name']
+                if 'queue-name' in config_data:
+                    self.queue_name = config_data['queue-name']
 
-                if 'broker-url' in config_data['stat_persistor']:
-                    self.broker_url = config_data['stat_persistor']['broker-url']
+                if 'broker-url' in config_data:
+                    self.broker_url = config_data['broker-url']
 
-                if 'log-level' in config_data['stat_persistor']:
-                    self.log_level = config_data['stat_persistor']['log-level']
-
-                if 'log-file' in config_data['stat_persistor']:
-                    self.log_file = config_data['stat_persistor']['log-file']
+            if 'logger' in config_data:
+                logging.config.dictConfig(config_data['logger'])
+            else:  # Default is std out
+                handler = logging.StreamHandler(stream=sys.stdout)
+                logging.getLogger().addHandler(handler)
+                logging.getLogger().setLevel('INFO')
 
         except ValueError as e:
             raise ValueError("Config is not valid: " + str(e))

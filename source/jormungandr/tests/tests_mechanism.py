@@ -65,6 +65,9 @@ class AbstractTestFixture:
         for kraken_name in krakens_exe:
             exe = os.path.join(krakens_dir, kraken_name)
             logging.debug("spawning " + exe)
+
+            assert os.path.exists(exe), "cannot find the kraken {}".format(exe)
+
             fdr, fdw = os.pipe()
             kraken = subprocess.Popen(exe, stderr=fdw, stdout=fdw, close_fds=True)
 

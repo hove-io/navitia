@@ -110,7 +110,11 @@ class StatManager(object):
         if not self.save_stat:
             return
 
-        stat_request = self._manage_stat(start_time, call_result)
+        try:
+            stat_request = self._manage_stat(start_time, call_result)
+        except Exception as e:
+            #if stat are not working we don't want jormungandr to stop.
+            current_app.logger.error('Error during stat management: {}'.format(e.message))
 
 
     def _manage_stat(self, start_time, call_result):
