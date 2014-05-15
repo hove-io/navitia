@@ -76,7 +76,7 @@ struct RAPTOR
         marked_sp(data.pt_data->stop_points.size()),
         journey_patterns_valides(data.pt_data->journey_patterns.size()),
         Q(data.pt_data->journey_patterns.size()) {
-            labels.assign(20, data.dataRaptor->labels_const);
+            labels.assign(10, data.dataRaptor->labels_const);
     }
 
 

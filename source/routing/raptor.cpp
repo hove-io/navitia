@@ -160,13 +160,18 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
     if(clockwise) {
         //Q.assign(data.pt_data->journey_patterns.size(), std::numeric_limits<int>::max());
         memset32<int>(&Q[0], data.pt_data->journey_patterns.size(), std::numeric_limits<int>::max());
-        labels.resize(1);
+        labels.resize(10);
         labels[0] = data.dataRaptor->labels_const;
     } else {
         //Q.assign(data.pt_data->journey_patterns.size(), -1);
         memset32<int>(&Q[0], data.pt_data->journey_patterns.size(), -1);
-        labels.resize(1);
+        labels.resize(10);
         labels[0] = data.dataRaptor->labels_const_reverse;
+    }
+    for(auto& lbl_list : labels) {
+        for(auto& l : lbl_list) {
+            l.type = boarding_type::uninitialized;
+        }
     }
 
     b_dest.reinit(data.pt_data->journey_pattern_points.size(), borne);
