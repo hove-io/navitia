@@ -384,7 +384,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     //getting the bss bike
     section = journey.sections(1);
     BOOST_CHECK(! section.id().empty());
-    //check vls station placemark
+    //check bss station placemark, it must be a poi
     const auto& first_vls_section = section.origin(); //the last place of the walking section must be the vls station
     BOOST_CHECK_EQUAL(first_vls_section.embedded_type(), pbnavitia::POI);
     BOOST_CHECK_EQUAL(first_vls_section.name(), "first station");

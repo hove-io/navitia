@@ -750,14 +750,14 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     pb_fare->set_found(! fare.not_found);
 }
 
-const navitia::georef::POI* get_nearest_vls_station(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
+const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
     const navitia::georef::POI* vls = nullptr;
     //we loop through all poi near the coord to find a vls station within 50 meter
     for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 50)) {
         const auto poi_idx = pair.first;
         const auto poi = data.geo_ref->pois[poi_idx];
         const auto poi_type = data.geo_ref->poitypes[poi->poitype_idx];
-        if (poi_type->uri == "bicycle_rental") {
+        if (poi_type->uri == "poi_type:bicycle_rental") {
             vls = poi;
             break;
         }
@@ -791,10 +791,12 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
     if (last_item.transportation == georef::PathItem::TransportCaracteristic::BssPutBack) {
-        const auto vls_station = get_nearest_vls_station(data, last_item.coordinates.back());
+        const auto vls_station = get_nearest_bss_station(data, last_item.coordinates.front());
         if (vls_station) {
             fill_pb_placemark(vls_station, data, dest_place, depth, now, action_period);
             poi_found = true;
+        } else {
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "tiens on arrive pas a trouver une station vls a cote pour deposer son velib");
         }
     }
     if (! poi_found) {
@@ -837,10 +839,12 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
     bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
     if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
-        const auto vls_station = get_nearest_vls_station(data, first_item.coordinates.front());
+        const auto vls_station = get_nearest_bss_station(data, first_item.coordinates.front());
         if (vls_station) {
             fill_pb_placemark(vls_station, data, orig_place, depth, now, action_period);
             poi_found = true;
+        } else {
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "tiens on arrive pas a trouver une station vls a cote pour prendre son velib");
         }
     }
     if (! poi_found && first_item.way_idx != nt::invalid_idx) {
