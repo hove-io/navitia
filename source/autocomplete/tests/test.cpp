@@ -182,24 +182,24 @@ BOOST_AUTO_TEST_CASE(regex_toknize_tests){
     synonyms["r"]="rue";
 
     Autocomplete<unsigned int> ac;
-    std::vector<std::string> vec;
+    std::set<std::string> vec;
 
     //synonyme : "cc" = "centre commercial" / synonym : de = ""
     //"cc Carré de Soie" -> "centre commercial carré de soie"
     vec = ac.tokenize("cc Carré de Soie", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "carre");
-    BOOST_CHECK_EQUAL(vec[1], "centre");
-    BOOST_CHECK_EQUAL(vec[2], "commercial");
-    BOOST_CHECK_EQUAL(vec[3], "soie");
+    BOOST_CHECK(vec.find("carre") != vec.end());
+    BOOST_CHECK(vec.find("centre") != vec.end());
+    BOOST_CHECK(vec.find("commercial") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());
 
     vec.clear();
     //synonyme : "c c"= "centre commercial" / synonym : de = ""
     //"c c Carré de Soie" -> "centre commercial carré de soie"
     vec = ac.tokenize("c c Carré de Soie", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "carre");
-    BOOST_CHECK_EQUAL(vec[1], "centre");
-    BOOST_CHECK_EQUAL(vec[2], "commercial");
-    BOOST_CHECK_EQUAL(vec[3], "soie");
+    BOOST_CHECK(vec.find("carre") != vec.end());
+    BOOST_CHECK(vec.find("centre") != vec.end());
+    BOOST_CHECK(vec.find("commercial") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());
 }
 
 BOOST_AUTO_TEST_CASE(regex_address_type_tests){
@@ -244,72 +244,70 @@ BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
     synonyms["bd"]="boulevard";
 
     Autocomplete<unsigned int> ac;
-    std::vector<std::string> vec;
+    std::set<std::string> vec;
 
     //synonyme : "gare sncf" = "gare"
     //"gare sncf" -> "gare"
     vec = ac.tokenize("gare sncf", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
     BOOST_CHECK_EQUAL(vec.size(),1);
     vec.clear();
 
     //synonyme : "gare snc" = "gare"
     //"gare snc" -> "gare"
     vec = ac.tokenize("gare snc", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
     BOOST_CHECK_EQUAL(vec.size(),1);
     vec.clear();
 
     //synonyme : "gare sn" = "gare"
     //"gare sn" -> "gare"
     vec = ac.tokenize("gare sn", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK(vec.find("gare") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),1);
     vec.clear();
 
     //synonyme : "gare s" = "gare"
     //"gare s" -> "gare"
     vec = ac.tokenize("gare s", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK(vec.find("gare") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),1);
     vec.clear();
 
     //synonyme : "gare sn nantes" = "gare nantes"
     //"gare sn nantes" -> "gare nantes"
     vec = ac.tokenize("gare sn nantes", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
-    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 
     //synonyme : "gare sn nantes" = "gare nantes"
     //"gare sn  nantes" -> "gare nantes"
     vec = ac.tokenize("gare sn  nantes", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
-    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 
     //synonyme : "gare sn nantes" = "gare nantes"
     //"gare s  nantes" -> "gare nantes"
     vec = ac.tokenize("gare  s  nantes", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
-    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 
     //synonyme : "gare sn nantes" = "gare nantes"
     //"gare s    nantes" -> "gare nantes"
     vec = ac.tokenize("gare  s    nantes", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
-    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 }
 
 BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
     autocomplete_map synonyms;
-    std::vector<std::string> vec;
+    std::set<std::string> vec;
     std::string admin_uri = "";
 
     Autocomplete<unsigned int> ac;
@@ -321,55 +319,55 @@ BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
     ac.add_string("pente de Bray", 5, synonyms);
     ac.build();
 
-    vec.push_back("rue");
-    vec.push_back("jean");
-    vec.push_back("jaures");
+    vec.insert("rue");
+    vec.insert("jean");
+    vec.insert("jaures");
     auto res = ac.find(vec);
     std::vector<int> expected = {0};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("jaures");
+    vec.insert("jaures");
     res = ac.find(vec);
     expected = {0, 1, 3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("avenue");
+    vec.insert("avenue");
     res = ac.find(vec);
     expected = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("av");
+    vec.insert("av");
     res = ac.find(vec);
     expected = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("r");
-    vec.push_back("jean");
+    vec.insert("r");
+    vec.insert("jean");
     res = ac.find(vec);
     expected = {0, 2};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("jean");
-    vec.push_back("r");
+    vec.insert("jean");
+    vec.insert("r");
     res = ac.find(vec);
     expected = {0, 2};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("ponia");
+    vec.insert("ponia");
     res = ac.find(vec);
     expected = {4};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("ru");
-    vec.push_back("je");
-    vec.push_back("jau");
+    vec.insert("ru");
+    vec.insert("je");
+    vec.insert("jau");
     res = ac.find(vec);
     expected = {0};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());    
