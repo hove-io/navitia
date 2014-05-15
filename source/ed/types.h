@@ -417,7 +417,7 @@ struct Poi{
  */
 struct AdminStopArea{
     std::string admin;
-    std::vector<StopArea*> stop_area;
+    std::vector<const StopArea*> stop_area;
 };
 
 }}//end namespace ed::types

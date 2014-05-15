@@ -35,6 +35,7 @@ www.navitia.io
 
 
 namespace nt = navitia::type;
+
 namespace navitia {
 
     namespace georef {
@@ -54,7 +55,8 @@ namespace navitia {
             std::string insee;
             nt::GeographicalCoord coord;
             polygon_type boundary;
-            std::vector<Admin*> admin_list;
+            std::vector<const Admin*> admin_list;
+            std::vector<const nt::StopArea*> main_stop_areas;
 
             Admin():level(-1){}
             Admin(int lev):level(lev){}
