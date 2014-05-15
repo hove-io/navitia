@@ -29,10 +29,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from configobj import ConfigObj, flatten_errors
 import logging
 import logging.config
-from validate import Validator
 import json
 import sys
 
@@ -55,6 +53,13 @@ class Config(object):
         """
         config_data = json.loads(open(config_file).read())
 
+        if 'logger' in config_data:
+            logging.config.dictConfig(config_data['logger'])
+        else:  # Default is std out
+            handler = logging.StreamHandler(stream=sys.stdout)
+            logging.getLogger().addHandler(handler)
+            logging.getLogger().setLevel('INFO')
+
         if 'database' in config_data and \
             'connection-string' in config_data['database']:
             self.stat_connection_string = config_data['database']['connection-string']
@@ -76,10 +81,3 @@ class Config(object):
             self.broker_url = config_data['broker-url']
         else:
             raise ValueError("Config is not valid, broker-url is needed")
-
-        if 'logger' in config_data:
-            logging.config.dictConfig(config_data['logger'])
-        else:  # Default is std out
-            handler = logging.StreamHandler(stream=sys.stdout)
-            logging.getLogger().addHandler(handler)
-            logging.getLogger().setLevel('INFO')
