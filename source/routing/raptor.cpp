@@ -168,8 +168,8 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
         labels.resize(10);
         labels[0] = data.dataRaptor->labels_const_reverse;
     }
-    for(size_t i=1; i < 10; ++i) {
-        for(Label& l : labels[i]) {
+    for(auto& lbl_list : labels) {
+        for(auto& l : lbl_list) {
             l.type = boarding_type::uninitialized;
         }
     }
