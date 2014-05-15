@@ -32,7 +32,7 @@
 from stat_persistor.config import Config
 import logging
 import navitiacommon.stat_pb2
-import google
+import google.protobuf.message import DecodeError
 from stat_persistor.saver.statsaver import StatSaver
 from stat_persistor.saver.utils import TechnicalError, FunctionalError
 import sys
@@ -91,7 +91,7 @@ class StatPersistor(ConsumerMixin):
         try:
             stat_request.ParseFromString(body)
             logging.getLogger('stat_persistor').debug('query received: {}'.format(str(stat_request)))
-        except google.protobuf.message.DecodeError as e:
+        except DecodeError as e:
             logging.getLogger('stat_persistor').warn("message is not a valid "
                                              "protobuf task: {}".format(str(e)))
             message.ack()
