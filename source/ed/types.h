@@ -410,6 +410,11 @@ struct Poi{
 
 };
 
+/**
+ * A AdminStopArea is a relation between an admin code and a list of stop area.
+ *
+ * Beware that a stop_area can be shared between different AdminStopArea
+ */
 struct AdminStopArea{
     std::string admin;
     std::vector<StopArea*> stop_area;

@@ -835,12 +835,13 @@ void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_fi
 void AdminStopAreaFusioHandler::init(Data&){
     admin_c = csv.get_pos_col("admin_id");
     stop_area_c = csv.get_pos_col("station_id");
+
     for (const auto& stop_area : gtfs_data.stop_area_map){
         tmp_stop_area_map[stop_area.second->external_code] = stop_area.second;
     }
 }
 
-void AdminStopAreaFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line){
+void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(! is_first_line && ! has_col(stop_area_c, row)) {
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         "  file has no stop_area_c column");
@@ -853,11 +854,18 @@ void AdminStopAreaFusioHandler::handle_line(Data&, const csv_row& row, bool is_f
         return;
     }
 
-    ed::types::AdminStopArea* admin_stop_area = new ed::types::AdminStopArea();
-    admin_stop_area->admin = row[admin_c];
-    admin_stop_area->stop_area.push_back(sa->second);
-    gtfs_data.admin_stop_area_vector.push_back(admin_stop_area);
+    ed::types::AdminStopArea* admin_stop_area{nullptr};
+    auto admin_it = admin_stop_area_map.find(row[admin_c]);
+    if (admin_it == admin_stop_area_map.end()) {
+        admin_stop_area = new ed::types::AdminStopArea();
+        admin_stop_area->admin = row[admin_c];
+        admin_stop_area_map.insert({admin_stop_area->admin, admin_stop_area});
+        data.admin_stop_areas.push_back(admin_stop_area);
+    } else {
+        admin_stop_area = admin_it->second;
+    }
 
+    admin_stop_area->stop_area.push_back(sa->second);
 }
 
 void FusioParser::fill_default_agency(Data & data){
