@@ -48,51 +48,38 @@ class Config(object):
         self.queue_name = None
         self.log_file = None
 
-    def build_error(self, config, validate_result):
-        """
-        construit la chaine d'erreur si la config n'est pas valide
-        """
-        result = ""
-        for entry in flatten_errors(config, validate_result):
-            # each entry is a tuple
-            section_list, key, error = entry
-            if key is not None:
-                section_list.append(key)
-            else:
-                section_list.append('[missing section]')
-            section_string = ', '.join(section_list)
-            if type(error) is bool and not error:
-                error = 'Missing value or section.'
-            result += section_string + ' => ' + str(error) + "\n"
-        return result
-
     def load(self, config_file):
         """
         Initialize from a configuration file.
         If not valid raise an error.
         """
-        try:
-            config_data = json.loads(open(config_file).read())
+        config_data = json.loads(open(config_file).read())
 
-            if 'database' in config_data and \
-                'connection-string' in config_data['database']:
-                self.stat_connection_string = config_data['database']['connection-string']
+        if 'database' in config_data and \
+            'connection-string' in config_data['database']:
+            self.stat_connection_string = config_data['database']['connection-string']
+        else:
+            raise ValueError("Config is not valid, a connection-string is needed")
 
-                if 'exchange-name' in config_data:
-                    self.exchange_name = config_data['exchange-name']
+        if 'exchange-name' in config_data:
+            self.exchange_name = config_data['exchange-name']
+        else:
+            raise ValueError("Config is not valid, exchange-name is needed")
 
-                if 'queue-name' in config_data:
-                    self.queue_name = config_data['queue-name']
+        if 'queue-name' in config_data:
+            self.queue_name = config_data['queue-name']
+        else:
+            raise ValueError("Config is not valid, queue-name is needed")
 
-                if 'broker-url' in config_data:
-                    self.broker_url = config_data['broker-url']
 
-            if 'logger' in config_data:
-                logging.config.dictConfig(config_data['logger'])
-            else:  # Default is std out
-                handler = logging.StreamHandler(stream=sys.stdout)
-                logging.getLogger().addHandler(handler)
-                logging.getLogger().setLevel('INFO')
+        if 'broker-url' in config_data:
+            self.broker_url = config_data['broker-url']
+        else:
+            raise ValueError("Config is not valid, broker-url is needed")
 
-        except ValueError as e:
-            raise ValueError("Config is not valid: " + str(e))
+        if 'logger' in config_data:
+            logging.config.dictConfig(config_data['logger'])
+        else:  # Default is std out
+            handler = logging.StreamHandler(stream=sys.stdout)
+            logging.getLogger().addHandler(handler)
+            logging.getLogger().setLevel('INFO')
