@@ -16,12 +16,16 @@ import geoalchemy2 as ga
 
 
 def upgrade():
+    create_schema()
     create_requests()
     create_coverages()
     create_parameters()
     create_errors()
     create_journeys()
     create_journey_sections()
+
+def create_schema():
+    op.execute("CREATE SCHEMA stat;")
 
 def create_requests():
     op.create_table(
