@@ -210,6 +210,6 @@ BOOST_AUTO_TEST_CASE(time_dur_overflow) {
     boost::posix_time::time_duration other_dur (big_dur);//no problem to copy the duration with boost
 
     //but the max should be to high for navitia duration
-    BOOST_CHECK_THROW(navitia::time_duration nav_dur = navitia::time_duration::from_boost_duration(big_dur), navitia::exception);
+    BOOST_CHECK_THROW(navitia::time_duration::from_boost_duration(big_dur), navitia::exception);
 }
 

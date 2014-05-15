@@ -39,20 +39,10 @@ namespace navitia {
 
     namespace georef {
         typedef boost::geometry::model::polygon<navitia::type::GeographicalCoord> polygon_type;
-        struct Levels{
-            std::map<std::string, std::string> LevelList;
-            Levels(){
-//                LevelList["2"]="Pays";
-//                LevelList["4"]="Région";
-//                LevelList["6"]="Département";
-                LevelList["8"]="Commune";
-                LevelList["9"]="Arrondissement";
-                LevelList["10"]="Quartier";
-            }
-        };
 
         struct Admin : nt::Header, nt::Nameable {
             /**
+              http://wiki.openstreetmap.org/wiki/Key:admin_level#admin_level
               Level = 2  : Pays
               Level = 4  : Région
               Level = 6  : Département
@@ -69,7 +59,7 @@ namespace navitia {
             Admin():level(-1){}
             Admin(int lev):level(lev){}
             template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-                ar & idx & level & post_code & insee & name & uri & coord &admin_list;
+                ar & idx & level & post_code & insee & name & uri & coord & admin_list;
             }
         };
     }
