@@ -303,6 +303,28 @@ struct routing_api_data {
         add_bike_sharing_edge(5, *b.data->geo_ref, GG, GG);
         b.data->geo_ref->ways[5]->edges.push_back(std::make_pair(GG, GG)); //on way AG
 
+        //and we add 2 bike sharing poi, to check the placemark
+        navitia::georef::POIType* poi_type = new navitia::georef::POIType();
+        poi_type->uri = "bicycle_rental";
+        poi_type->name = "bicycle rental station";
+        poi_type->idx = 0;
+        b.data->geo_ref->poitypes.push_back(poi_type);
+
+        navitia::georef::POI* poi_1 = new navitia::georef::POI();
+        poi_1->uri = "station_1";
+        poi_1->name = "first station";
+        poi_1->coord = B;
+        poi_1->poitype_idx = 0;
+        poi_1->idx = 0;
+        navitia::georef::POI* poi_2 = new navitia::georef::POI();
+        poi_2->uri = "station_2";
+        poi_2->name = "second station";
+        poi_2->coord = G;
+        poi_2->poitype_idx = 0;
+        poi_2->idx = 1;
+        b.data->geo_ref->pois.push_back(poi_1);
+        b.data->geo_ref->pois.push_back(poi_2);
+
         b.sa("stopA", A.lon(), A.lat());
         b.sa("stopB", B.lon(), B.lat());
         //we add a very fast bus (2 seconds) to be faster than walking and biking
