@@ -504,7 +504,10 @@ struct Autocomplete
                 vec.push_back(token_it);
             }
         }
-       return vec;
+        //Sort the vector and delete duplicate elements.
+        std::sort(vec.begin(), vec.end());
+        vec.erase(std::unique(vec.begin(), vec.end()),vec.end());
+        return vec;
     }
 
     bool is_address_type(const std::string & str,
