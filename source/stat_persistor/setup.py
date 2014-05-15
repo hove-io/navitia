@@ -39,10 +39,12 @@ setup(name='stat_persistor',
         author_email='krishna.adhikari@canaltp.fr',
         url='www.navitia.io',
         packages=['stat_persistor'],
-        scripts=['stat_persistor'],
+        scripts=['stat_persistor_service'],
         data_files=[
-            ('/usr/share/stat_persitor/migrations', ['migrations/alembic.ini', 'migrations/env.py', 'migrations/script.py.mako']),
-            ('/usr/share/stat_persistor/migrations/versions', glob.glob('migrations/versions/*.py')),
-            ('/etc/init.d', ['stat_persistor'])
+            ('/usr/share/stat_persitor/migrations', ['migrations/alembic.ini',
+                                                     'migrations/alembic/env.py',
+                                                     'migrations/alembic/script.py.mako']),
+            ('/usr/share/stat_persistor/migrations/versions', glob.glob('migrations/alembic/versions/*.py')),
+            ('/etc/init.d', ['stat_persistor_service'])
         ],
 )
