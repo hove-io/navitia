@@ -31,7 +31,6 @@ www.navitia.io
 #pragma once
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <bitset>
-
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -409,6 +408,11 @@ struct Poi{
     std::string address_name;
     Poi(): id(0), name(""), weight(0), visible(true), poi_type(nullptr), address_number(""), address_name(""){}
 
+};
+
+struct AdminStopArea{
+    std::string admin;
+    std::vector<StopArea*> stop_area;
 };
 
 }}//end namespace ed::types

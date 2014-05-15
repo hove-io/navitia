@@ -832,6 +832,34 @@ void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_fi
 }
 }
 
+void AdminStopAreaFusioHandler::init(Data&){
+    admin_c = csv.get_pos_col("admin_id");
+    stop_area_c = csv.get_pos_col("station_id");
+    for (const auto& stop_area : gtfs_data.stop_area_map){
+        tmp_stop_area_map[stop_area.second->external_code] = stop_area.second;
+    }
+}
+
+void AdminStopAreaFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line){
+    if(! is_first_line && ! has_col(stop_area_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        "  file has no stop_area_c column");
+        throw InvalidHeaders(csv.filename);
+    }
+
+    auto sa = tmp_stop_area_map.find(row[stop_area_c]);
+    if (sa == tmp_stop_area_map.end()) {
+        LOG4CPLUS_ERROR(logger, "AdminStopAreaFusioHandler : Impossible to find the stop_area " << row[stop_area_c]);
+        return;
+    }
+
+    ed::types::AdminStopArea* admin_stop_area = new ed::types::AdminStopArea();
+    admin_stop_area->admin = row[admin_c];
+    admin_stop_area->stop_area.push_back(sa->second);
+    gtfs_data.admin_stop_area_vector.push_back(admin_stop_area);
+
+}
+
 void FusioParser::fill_default_agency(Data & data){
     // création d'un réseau par defaut
     ed::types::Network * network = new ed::types::Network();
@@ -885,6 +913,7 @@ void FusioParser::parse_files(Data& data) {
     parse<grid_calendar::PeriodFusioHandler>(data, "grid_periods.txt");
     parse<grid_calendar::ExceptionDatesFusioHandler>(data, "grid_exception_dates.txt");
     parse<grid_calendar::CalendarLineFusioHandler>(data, "grid_rel_calendar_line.txt");
+    parse<AdminStopAreaFusioHandler>(data, "admin_stations.txt");
 }
 }
 }

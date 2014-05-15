@@ -267,6 +267,16 @@ struct CalendarLineFusioHandler : public GenericHandler {
 };
 }
 
+struct AdminStopAreaFusioHandler : public GenericHandler {
+    AdminStopAreaFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int admin_c, stop_area_c;
+    std::unordered_map<std::string, ed::types::StopArea*> tmp_stop_area_map;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"admin_id", "station_id"}; }
+
+};
+
 /**
  * custom parser
  * simply define the list of elemental parsers to use

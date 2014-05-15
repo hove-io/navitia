@@ -585,3 +585,8 @@ CREATE TABLE IF NOT EXISTS navitia.od_ticket(
     od_id BIGINT NOT NULL REFERENCES navitia.origin_destination,
     ticket_id TEXT NOT NULL REFERENCES navitia.ticket
 );
+
+CREATE TABLE IF NOT EXISTS navitia.admin_stop_area(
+    admin_id Text NOT NULL,
+    stop_area_id BIGINT NOT NULL REFERENCES navitia.stop_area
+);
