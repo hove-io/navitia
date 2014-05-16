@@ -178,6 +178,18 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
                 foot = foot_forbiden;
             }
         }
+
+        else if(key == "public_transport"){
+            if(val == "platform"){
+                foot = foot_allowed;
+            }
+        }
+
+        else if(key == "railway"){
+            if(val == "platform"){
+                foot = foot_allowed;
+            }
+        }
     }
 
     if(car_reverse == unknown && car_direct != unknown)

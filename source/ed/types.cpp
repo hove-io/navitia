@@ -208,7 +208,6 @@ bool StopTime::operator<(const StopTime& other) const {
 
 navitia::type::StopArea* StopArea::get_navitia_type() const {
     navitia::type::StopArea* sa = new navitia::type::StopArea();
-    sa->id = this->id;
     sa->idx = this->idx;
     sa->uri = this->uri;
     sa->coord = this->coord;
@@ -221,7 +220,6 @@ navitia::type::StopArea* StopArea::get_navitia_type() const {
 
 nt::Contributor* Contributor::get_navitia_type() const {
     nt::Contributor* nt_contributor = new nt::Contributor();
-    nt_contributor->id = this->id;
     nt_contributor->idx = this->idx;
     nt_contributor->uri = this->uri;
     nt_contributor->name = this->name;
@@ -230,7 +228,6 @@ nt::Contributor* Contributor::get_navitia_type() const {
 
 nt::PhysicalMode* PhysicalMode::get_navitia_type() const {
     nt::PhysicalMode* nt_mode = new nt::PhysicalMode();
-    nt_mode->id = this->id;
     nt_mode->idx = this->idx;
     nt_mode->uri = this->uri;
     nt_mode->name = this->name;
@@ -240,7 +237,6 @@ nt::PhysicalMode* PhysicalMode::get_navitia_type() const {
 
 nt::CommercialMode* CommercialMode::get_navitia_type() const {
     nt::CommercialMode* nt_commercial_mode = new nt::CommercialMode();
-    nt_commercial_mode->id = this->id;
     nt_commercial_mode->idx = this->idx;
     nt_commercial_mode->uri = this->uri;
     nt_commercial_mode->name = this->name;
@@ -249,7 +245,6 @@ nt::CommercialMode* CommercialMode::get_navitia_type() const {
 
 nt::Company* Company::get_navitia_type() const {
     nt::Company* nt_company = new nt::Company();
-    nt_company->id = this->id;
     nt_company->idx = this->idx;
     nt_company->name = this->name;
     nt_company->uri = this->uri;
@@ -265,7 +260,6 @@ nt::Company* Company::get_navitia_type() const {
 
 nt::StopPoint* StopPoint::get_navitia_type() const {
     nt::StopPoint* nt_stop_point = new nt::StopPoint();
-    nt_stop_point->id = this->id;
     nt_stop_point->idx = this->idx;
     nt_stop_point->uri = this->uri;
     nt_stop_point->name = this->name;
@@ -284,7 +278,6 @@ nt::StopPoint* StopPoint::get_navitia_type() const {
 
 nt::Line* Line::get_navitia_type() const {
     navitia::type::Line* nt_line = new nt::Line();
-    nt_line->id = this->id;
     nt_line->idx = this->idx;
     nt_line->uri = this->uri;
     nt_line->name = this->name;
@@ -307,7 +300,6 @@ nt::Line* Line::get_navitia_type() const {
 
 nt::Route* Route::get_navitia_type() const {
     navitia::type::Route* nt_route = new nt::Route();
-    nt_route->id = this->id;
     nt_route->idx = this->idx;
     nt_route->uri = this->uri;
     nt_route->name = this->name;
@@ -319,7 +311,6 @@ nt::Route* Route::get_navitia_type() const {
 
 nt::Network* Network::get_navitia_type() const {
     nt::Network* nt_network = new nt::Network();
-    nt_network->id = this->id;
     nt_network->idx = this->idx;
     nt_network->uri = this->uri;
     nt_network->name = this->name;
@@ -336,7 +327,6 @@ nt::Network* Network::get_navitia_type() const {
 
 nt::JourneyPattern* JourneyPattern::get_navitia_type() const {
     nt::JourneyPattern* nt_journey_pattern = new nt::JourneyPattern();
-    nt_journey_pattern->id = this->id;
     nt_journey_pattern->idx = this->idx;
     nt_journey_pattern->uri = this->uri;
     nt_journey_pattern->name = this->name;
@@ -378,7 +368,6 @@ nt::StopTime* StopTime::get_navitia_type() const {
 
 nt::StopPointConnection* StopPointConnection::get_navitia_type() const {
     nt::StopPointConnection* nt_connection = new nt::StopPointConnection();
-    nt_connection->id = this->id;
     nt_connection->idx = this->idx;
     nt_connection->uri = this->uri;
     nt_connection->departure->idx = this->departure->idx;
@@ -391,7 +380,6 @@ nt::StopPointConnection* StopPointConnection::get_navitia_type() const {
 
 navitia::type::JourneyPatternPointConnection* JourneyPatternPointConnection::get_navitia_type() const {
     nt::JourneyPatternPointConnection* nt_rpc = new nt::JourneyPatternPointConnection();
-    nt_rpc->id = this->id;
     nt_rpc->idx = this->idx;
     nt_rpc->uri = this->uri;
     nt_rpc->departure->idx = this->departure->idx;
@@ -403,7 +391,6 @@ navitia::type::JourneyPatternPointConnection* JourneyPatternPointConnection::get
 
 nt::JourneyPatternPoint* JourneyPatternPoint::get_navitia_type() const {
     nt::JourneyPatternPoint* nt_journey_pattern_point = new nt::JourneyPatternPoint();
-    nt_journey_pattern_point->id = this->id;
     nt_journey_pattern_point->idx = this->idx;
     nt_journey_pattern_point->uri = this->uri;
     nt_journey_pattern_point->order = this->order;
@@ -417,7 +404,6 @@ nt::JourneyPatternPoint* JourneyPatternPoint::get_navitia_type() const {
 
 nt::VehicleJourney* VehicleJourney::get_navitia_type() const {
     nt::VehicleJourney* nt_vj = new nt::VehicleJourney();
-    nt_vj->id = this->id;
     nt_vj->idx = this->idx;
     nt_vj->name = this->name;
     nt_vj->uri = this->uri;
@@ -452,7 +438,6 @@ nt::VehicleJourney* VehicleJourney::get_navitia_type() const {
 nt::Calendar* Calendar::get_navitia_type() const{
     nt::Calendar* nt_cal = new nt::Calendar();
     nt_cal->comment = this->comment;
-    nt_cal->id = this->id;
     nt_cal->idx = this->idx;
     nt_cal->name = this->name;
 
@@ -462,7 +447,6 @@ nt::Calendar* Calendar::get_navitia_type() const{
 nt::ValidityPattern* ValidityPattern::get_navitia_type() const {
     nt::ValidityPattern* nt_vp = new nt::ValidityPattern();
 
-    nt_vp->id = this->id;
     nt_vp->idx = this->idx;
     nt_vp->uri = this->uri;
     nt_vp->beginning_date = this->beginning_date;

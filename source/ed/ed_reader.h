@@ -83,6 +83,10 @@ private:
 
     std::unordered_map<uint64_t, uint64_t> node_map;
 
+    //for admin main stop areas, we need this temporary map
+    //(we can't use an index since the link is between georef and navitia, and those modules are loaded separatly)
+    std::unordered_map<std::string, navitia::georef::Admin*> admin_by_insee_code;
+
 
     // ces deux vectors servent pour ne pas charger les graphes secondaires
     std::set<uint64_t> way_to_ignore; //TODO if bottleneck change to flat_set
@@ -110,6 +114,7 @@ private:
 
 
     void fill_admins(navitia::type::Data& data, pqxx::work& work);
+    void fill_admin_stop_areas(navitia::type::Data& data, pqxx::work& work);
     void fill_stop_point_connections(navitia::type::Data& data, pqxx::work& work);
     void fill_journey_pattern_point_connections(navitia::type::Data& data, pqxx::work& work);
     void fill_poi_types(navitia::type::Data& data, pqxx::work& work);

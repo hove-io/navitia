@@ -269,7 +269,8 @@ CREATE TABLE IF NOT EXISTS navitia.stop_point (
     fare_zone INTEGER,
     name TEXT NOT NULL,
     comment TEXT,
-    stop_area_id BIGINT NOT NULL REFERENCES navitia.stop_area
+    stop_area_id BIGINT NOT NULL REFERENCES navitia.stop_area,
+    platform_code TEXT
 );
 
 
@@ -583,4 +584,9 @@ CREATE TABLE IF NOT EXISTS navitia.od_ticket(
     id BIGINT PRIMARY KEY,
     od_id BIGINT NOT NULL REFERENCES navitia.origin_destination,
     ticket_id TEXT NOT NULL REFERENCES navitia.ticket
+);
+
+CREATE TABLE IF NOT EXISTS navitia.admin_stop_area(
+    admin_id Text NOT NULL,
+    stop_area_id BIGINT NOT NULL REFERENCES navitia.stop_area
 );

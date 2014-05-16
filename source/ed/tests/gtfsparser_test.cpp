@@ -268,21 +268,19 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
 
     // Lignes
     BOOST_REQUIRE_EQUAL(data.lines.size(), 5);
-    for(auto l : data.lines)
-        std::cout << l->uri << " " << l->name << "  " << l->id << std::endl;
     BOOST_CHECK_EQUAL(data.lines[0]->uri, "AB");
     BOOST_CHECK_EQUAL(data.lines[0]->name, "Airport - Bullfrog");
     BOOST_REQUIRE(data.lines[0]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "DTA");
     BOOST_REQUIRE(data.lines[0]->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->id, "3");
+    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->uri, "3");
 
     BOOST_CHECK_EQUAL(data.lines[4]->uri, "AAMV");
     BOOST_CHECK_EQUAL(data.lines[4]->name, "Airport - Amargosa Valley");
     BOOST_REQUIRE(data.lines[4]->network != nullptr);
     BOOST_CHECK_EQUAL(data.lines[4]->network->uri, "DTA");
     BOOST_REQUIRE(data.lines[4]->commercial_mode != nullptr);
-    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->id, "3");
+    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->uri, "3");
 
     //Trips
     BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11);
@@ -318,3 +316,21 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
 }
+
+//TODO: work on this, we should be able to parse line with \\ in char
+//BOOST_AUTO_TEST_CASE(parse_gtfs_with_slashs) {
+//    ed::Data data;
+//    ed::connectors::GtfsData gtfs_data;
+//    //we need to provide by hand some data before loading the file
+//    std::string stop_file = std::string(FIXTURES_DIR) + gtfs_path + "_slashs" + "/stops.txt";
+//    ed::connectors::FileParser<ed::connectors::StopsGtfsHandler> parser (gtfs_data, stop_file, true);
+//    parser.fill(data);
+
+//    BOOST_REQUIRE_EQUAL(data.stop_points.size(), 1);
+
+//    //TODO tests on the loaded stop point
+//    auto stop_area =  data.stop_points.front();
+//    BOOST_CHECK_EQUAL(stop_area->uri, "141581");
+//    BOOST_CHECK_EQUAL(stop_area->name, "16058601");
+//    BOOST_CHECK_EQUAL(stop_area->comment, "Siebengewald, Gochsedijk\\Centrum");
+//}

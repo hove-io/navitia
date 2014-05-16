@@ -39,8 +39,8 @@ namespace navitia { namespace georef {
 const auto source_e = ProjectionData::Direction::Source;
 const auto target_e = ProjectionData::Direction::Target;
 
-bt::time_duration PathFinder::crow_fly_duration(const double distance) const {
-    return bt::seconds(distance / (default_speed[mode] * speed_factor));
+navitia::time_duration PathFinder::crow_fly_duration(const double distance) const {
+    return navitia::seconds(distance / (default_speed[mode] * speed_factor));
 }
 
 StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
@@ -60,14 +60,14 @@ void StreetNetwork::init(const type::EntryPoint& start, boost::optional<const ty
 bool StreetNetwork::departure_launched() const {return departure_path_finder.computation_launch;}
 bool StreetNetwork::arrival_launched() const {return arrival_path_finder.computation_launch;}
 
-std::vector<std::pair<type::idx_t, bt::time_duration>>
-StreetNetwork::find_nearest_stop_points(bt::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl, bool use_second) {
+std::vector<std::pair<type::idx_t, navitia::time_duration>>
+StreetNetwork::find_nearest_stop_points(navitia::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl, bool use_second) {
     // delegate to the arrival or departure pathfinder
     // results are store to build the routing path after the transportation routing computation
     return (use_second ? arrival_path_finder : departure_path_finder).find_nearest_stop_points(radius, pl);
 }
 
-bt::time_duration StreetNetwork::get_distance(type::idx_t target_idx, bool use_second) {
+navitia::time_duration StreetNetwork::get_distance(type::idx_t target_idx, bool use_second) {
     return (use_second ? arrival_path_finder : departure_path_finder).get_distance(target_idx);
 }
 
@@ -125,7 +125,7 @@ Path StreetNetwork::get_direct_path() {
     //Cherche s'il y a des nœuds en commun, et retient le chemin le plus court
     size_t num_vertices = boost::num_vertices(geo_ref.graph);
 
-    bt::time_duration min_dist = bt::pos_infin;
+    navitia::time_duration min_dist = bt::pos_infin;
     vertex_t target = std::numeric_limits<size_t>::max();
     for(vertex_t u = 0; u != num_vertices; ++u) {
         if((departure_path_finder.distances[u] != bt::pos_infin)
@@ -186,8 +186,8 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
     }
 }
 
-std::vector<std::pair<type::idx_t, bt::time_duration>>
-PathFinder::find_nearest_stop_points(bt::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl) {
+std::vector<std::pair<type::idx_t, navitia::time_duration>>
+PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl) {
     if (! starting_edge.found)
         return {};
 
@@ -198,7 +198,7 @@ PathFinder::find_nearest_stop_points(bt::time_duration radius, const proximityli
         return {};
 
     computation_launch = true;
-    std::vector<std::pair<type::idx_t, bt::time_duration>> result;
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> result;
 
     // On lance un dijkstra depuis les deux nœuds de départ
     try {
@@ -215,7 +215,7 @@ PathFinder::find_nearest_stop_points(bt::time_duration radius, const proximityli
         ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
         // Est-ce que le stop point a pu être raccroché au street network
         if(projection.found){
-            bt::time_duration best_dist = max;
+            navitia::time_duration best_dist = max;
             if (distances[projection[source_e]] < max) {
                 best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]); }
             if (distances[projection[target_e]] < max) {
@@ -229,7 +229,7 @@ PathFinder::find_nearest_stop_points(bt::time_duration radius, const proximityli
     return result;
 }
 
-bt::time_duration PathFinder::get_distance(type::idx_t target_idx) {
+navitia::time_duration PathFinder::get_distance(type::idx_t target_idx) {
     constexpr auto max = bt::pos_infin;
 
     if (! starting_edge.found)
@@ -243,7 +243,7 @@ bt::time_duration PathFinder::get_distance(type::idx_t target_idx) {
     return nearest_edge.first;
 }
 
-std::pair<bt::time_duration, ProjectionData::Direction> PathFinder::find_nearest_vertex(const ProjectionData& target) const {
+std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::find_nearest_vertex(const ProjectionData& target) const {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
         return {max, source_e};
@@ -332,7 +332,7 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
     }
 }
 
-Path PathFinder::get_path(const ProjectionData& target, std::pair<bt::time_duration, ProjectionData::Direction> nearest_edge) {
+Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_duration, ProjectionData::Direction> nearest_edge) {
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
         return {};
 
@@ -386,7 +386,7 @@ void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
     add_custom_projections_to_path(p, append_to_begin, starting_edge, direction);
 }
 
-std::pair<bt::time_duration, ProjectionData::Direction> PathFinder::update_path(const ProjectionData& target) {
+std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_path(const ProjectionData& target) {
     constexpr auto max = bt::pos_infin;
     if (! target.found)
         return {max, source_e};

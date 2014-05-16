@@ -46,10 +46,10 @@ enum class boarding_type {
     connection_guarantee
 };
 
-struct Label{
+struct Label {
     DateTime dt;
-    boarding_type type;
-    const type::JourneyPatternPoint* boarding;
+    boarding_type type = boarding_type::uninitialized;
+    navitia::type::idx_t boarding_jpp = navitia::type::invalid_idx;
 };
 
 typedef std::pair<int, int> pair_int;
@@ -72,12 +72,12 @@ inline void memset32(T*buf, uint n, T c)
 
 
 struct best_dest {
-    std::vector<boost::posix_time::time_duration> jpp_idx_duration;
+    std::vector<navitia::time_duration> jpp_idx_duration;
     DateTime best_now;
     type::idx_t best_now_jpp_idx;
     size_t count;
 
-    void add_destination(type::idx_t jpp_idx, const boost::posix_time::time_duration duration_to_dest, bool /*clockwise*/) {
+    void add_destination(type::idx_t jpp_idx, const navitia::time_duration duration_to_dest, bool /*clockwise*/) {
         jpp_idx_duration[jpp_idx] = duration_to_dest; //AD, check if there are some rounding problems
     }
 
@@ -130,7 +130,7 @@ struct best_dest {
 
     void reinit(const size_t nb_jpp_idx) {
         jpp_idx_duration.resize(nb_jpp_idx);
-        memset32<boost::posix_time::time_duration>(&jpp_idx_duration[0], nb_jpp_idx, boost::posix_time::pos_infin);
+        memset32<navitia::time_duration>(&jpp_idx_duration[0], nb_jpp_idx, boost::posix_time::pos_infin);
         best_now = DateTimeUtils::inf;
         best_now_jpp_idx = type::invalid_idx;
         count = std::numeric_limits<size_t>::max();

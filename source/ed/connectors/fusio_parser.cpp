@@ -199,13 +199,11 @@ void TransfersFusioHandler::fill_stop_point_connection(ed::types::StopPointConne
     }
 
     if(is_valid(real_time_c, row)) {
-        try{
+        try {
             connection->duration = boost::lexical_cast<int>(row[real_time_c]);
-        } catch (...) {
-            connection->duration = connection->display_duration;
+        } catch (const boost::bad_lexical_cast&) {
+            LOG4CPLUS_INFO(logger, "impossible to parse real transfers time duration " << row[real_time_c]);
         }
-    } else {
-        connection->duration = connection->display_duration;
     }
 }
 
@@ -235,14 +233,14 @@ ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row
     }
 
     if(is_valid(itl_c, row)){
-        int local_traffic_zone =  boost::lexical_cast<int>(row[itl_c]);
+        uint16_t local_traffic_zone =  boost::lexical_cast<uint16_t>(row[itl_c]);
         if (local_traffic_zone > 0)
             stop_time->local_traffic_zone = local_traffic_zone;
         else
-            stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
+            stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
     }
     else
-        stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
+        stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
     return stop_time;
 
 }
@@ -548,7 +546,6 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         throw InvalidHeaders(csv.filename);
     }
     ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
-    mode->id = row[id_c];
     mode->name = row[name_c];
     mode->uri = row[id_c];
     data.physical_modes.push_back(mode);
@@ -567,7 +564,6 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
         throw InvalidHeaders(csv.filename);
     }
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = row[id_c];
     commercial_mode->name = row[name_c];
     commercial_mode->uri = row[id_c];
     data.commercial_modes.push_back(commercial_mode);
@@ -759,7 +755,6 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         throw InvalidHeaders(csv.filename);
     }
     ed::types::Calendar* calendar = new ed::types::Calendar();
-    calendar->id = row[id_c];
     calendar->uri = row[id_c];
     calendar->external_code = row[id_c];
     calendar->name =  row[name_c];
@@ -837,6 +832,42 @@ void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_fi
 }
 }
 
+void AdminStopAreaFusioHandler::init(Data&){
+    admin_c = csv.get_pos_col("admin_id");
+    stop_area_c = csv.get_pos_col("station_id");
+
+    for (const auto& stop_area : gtfs_data.stop_area_map){
+        tmp_stop_area_map[stop_area.second->external_code] = stop_area.second;
+    }
+}
+
+void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
+    if(! is_first_line && ! has_col(stop_area_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+                        "  file has no stop_area_c column");
+        throw InvalidHeaders(csv.filename);
+    }
+
+    auto sa = tmp_stop_area_map.find(row[stop_area_c]);
+    if (sa == tmp_stop_area_map.end()) {
+        LOG4CPLUS_ERROR(logger, "AdminStopAreaFusioHandler : Impossible to find the stop_area " << row[stop_area_c]);
+        return;
+    }
+
+    ed::types::AdminStopArea* admin_stop_area{nullptr};
+    auto admin_it = admin_stop_area_map.find(row[admin_c]);
+    if (admin_it == admin_stop_area_map.end()) {
+        admin_stop_area = new ed::types::AdminStopArea();
+        admin_stop_area->admin = row[admin_c];
+        admin_stop_area_map.insert({admin_stop_area->admin, admin_stop_area});
+        data.admin_stop_areas.push_back(admin_stop_area);
+    } else {
+        admin_stop_area = admin_it->second;
+    }
+
+    admin_stop_area->stop_area.push_back(sa->second);
+}
+
 void FusioParser::fill_default_agency(Data & data){
     // création d'un réseau par defaut
     ed::types::Network * network = new ed::types::Network();
@@ -890,6 +921,7 @@ void FusioParser::parse_files(Data& data) {
     parse<grid_calendar::PeriodFusioHandler>(data, "grid_periods.txt");
     parse<grid_calendar::ExceptionDatesFusioHandler>(data, "grid_exception_dates.txt");
     parse<grid_calendar::CalendarLineFusioHandler>(data, "grid_rel_calendar_line.txt");
+    parse<AdminStopAreaFusioHandler>(data, "admin_stations.txt");
 }
 }
 }

@@ -31,10 +31,14 @@ import os
 import subprocess
 from check_utils import *
 
-os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
-    + '/integration_tests_settings.py'
+# set default config file if not defined in other tests
+if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
+    os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
+        + '/integration_tests_settings.py'
 from jormungandr import app
 from jormungandr.instance_manager import InstanceManager
+from jormungandr.stat_manager import StatManager
+from navitiacommon.models import User
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
@@ -61,6 +65,9 @@ class AbstractTestFixture:
         for kraken_name in krakens_exe:
             exe = os.path.join(krakens_dir, kraken_name)
             logging.debug("spawning " + exe)
+
+            assert os.path.exists(exe), "cannot find the kraken {}".format(exe)
+
             fdr, fdw = os.pipe()
             kraken = subprocess.Popen(exe, stderr=fdw, stdout=fdw, close_fds=True)
 
@@ -107,17 +114,40 @@ class AbstractTestFixture:
         ]
 
     @classmethod
-    def setup(cls):
+    def setup_class(cls):
         cls.krakens_pool = {}
         logging.info("Initing the tests {}, let's pop the krakens"
                      .format(cls.__name__))
         cls.launch_all_krakens()
         cls.create_dummy_ini()
+
         i_manager = InstanceManager()
         i_manager.initialisation(start_ping=False)
 
+        #we block the stat manager not to send anything to rabbit mq
+        def mock_publish(self, stat):
+            pass
+
+        #we don't want to initialize rabbit for test.
+        def mock_init():
+            pass
+
+        StatManager.publish_request = mock_publish
+        StatManager._init_rabbitmq = mock_init
+
+        #we don't want to have anything to do with the jormun database either
+        class bob:
+            @classmethod
+            def mock_get_token(cls, token, valid_until):
+                #note, since get_from_token is a class method, we need to wrap it.
+                #change that with a real mock framework
+                pass
+        User.get_from_token = bob.mock_get_token
+
+
+
     @classmethod
-    def teardown(cls):
+    def teardown_class(cls):
         logging.info("Tearing down the tests {}, time to hunt the krakens down"
                      .format(cls.__name__))
         cls.kill_all_krakens()

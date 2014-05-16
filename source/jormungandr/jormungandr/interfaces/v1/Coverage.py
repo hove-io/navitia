@@ -31,6 +31,7 @@
 
 from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager
+from jormungandr.interfaces.v1.StatedResource import StatedResource
 from make_links import add_coverage_link, add_coverage_link, add_collection_links, clean_links
 from converters_collection_type import collections_to_resource_type
 from collections import OrderedDict
@@ -55,7 +56,7 @@ regions_fields = OrderedDict([
 collections = collections_to_resource_type.keys()
 
 
-class Coverage(Resource):
+class Coverage(StatedResource):
 
     @clean_links()
     @add_coverage_link()

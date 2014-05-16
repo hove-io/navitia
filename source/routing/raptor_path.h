@@ -40,15 +40,15 @@ namespace navitia { namespace routing {
             const RAPTOR &raptor_, bool disruption_active);
 
     ///Construit un chemin
-    Path makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
+    Path makePath(type::idx_t destination_idx, size_t countb, bool clockwise,
             bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
             const RAPTOR &raptor_);
 
 
     ///Construit tous chemins trouvés
     std::vector<Path> 
-    makePathes(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &departures,
-            const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > &destinations,
+    makePathes(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures,
+            const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
             const type::AccessibiliteParams & accessibilite_params,
             const RAPTOR &raptor_, bool clockwise, bool disruption_active);
 

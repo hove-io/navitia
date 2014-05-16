@@ -172,9 +172,63 @@ BOOST_AUTO_TEST_CASE(change){
     res1 = raptor.compute(d.stop_areas[0], d.stop_areas[4], 7900, 0, DateTimeUtils::set(0, 8399), false);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
+/****
+ *              connection 5mins
+ *   line1      ----------------->  line 2
+ * A----------->B                 C----------->D
+ *              <-----------------
+ *              connection 15 mins
+ *
+ * Time tables
+ * Line 1
+ *    VJ1     VJ2            VJ3     VJ4
+ * A  07h00  07h55        B 07h10   07h20
+ * B  07h05  08h00        A 07h15   07h25
+ *
+ * Line 2
+ *    VJ5    VJ6             VJ7
+ * C 07h10  07h20         D 07h00
+ * D 07h15  07h35         C 07h05
+ *
+ */
+BOOST_AUTO_TEST_CASE(different_connection_time) {
+    ed::builder b("20120614");
+    b.vj("line1-1")("A", 7*3600)("B", 7*3600 + 5*60);
+    b.vj("line1-1")("A", 7*3600 + 55*60)("B", 8*3600);
+    b.vj("line1-2")("B", 7*3600 + 10*60)("A", 7*3600 + 15*60);
+    b.vj("line1-2")("B", 7*3600 + 20*60)("A", 7*3600 + 25*60);
+    b.vj("line2-1")("C", 7*3600 + 10*60)("D", 7*3600 + 15*60);
+    b.vj("line2-1")("C", 7*3600 + 20*60)("D", 7*3600 + 35*60);
+    b.vj("line2-2")("D", 7*3600)("C", 7*3600 + 5*60);
+    b.connection("B", "C", 300);
+    b.connection("C", "B", 900);
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["A"], d.stop_areas_map["D"], 7*3600, 0, DateTimeUtils::inf, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    auto res = res1.back();
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items.front().departure, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items.front().departure, *(b.data))), 7*3600);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items.back().arrival, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items.back().arrival, *(b.data))), 7*3600 + 15*60);
+
+    res1 = raptor.compute(d.stop_areas_map["D"], d.stop_areas_map["A"], 7*3600, 0, DateTimeUtils::inf, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items.front().departure, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items.front().departure, *(b.data))), 7*3600);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items.back().arrival, *(b.data))), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(to_datetime(res.items.back().arrival, *(b.data))), 7*3600 + 25*60);
+}
 
 
-BOOST_AUTO_TEST_CASE(passe_minuit){
+BOOST_AUTO_TEST_CASE(over_midnight){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
     b.vj("B")("stop2", 10*60)("stop3", 20*60);
@@ -228,7 +282,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
 }
 
 
-BOOST_AUTO_TEST_CASE(passe_minuit_2){
+BOOST_AUTO_TEST_CASE(over_midnight_2){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 59*60);
     b.vj("B")("stop4", 23*3600 + 10*60)("stop2", 10*60)("stop3", 20*60);
@@ -286,7 +340,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
 }
 
 
-BOOST_AUTO_TEST_CASE(passe_minuit_interne){
+BOOST_AUTO_TEST_CASE(over_midnight_interne){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 30*60, 24*3600 + 30*60)("stop3", 24*3600 + 40 * 60);
     b.data->pt_data->index();
@@ -606,9 +660,9 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     b.vj("A","11111111", "", true)("stop1", 8*3600)("stop2", 8*3600 + 20*60);
     b.vj("B","11111111", "", true)("stop1", 9*3600)("stop2", 9*3600 + 20*60);
 
-    std::vector<std::pair<navitia::type::idx_t, bt::time_duration>> departs, destinations;
-    departs.push_back(std::make_pair(0, bt::seconds(10 * 60)));
-    destinations.push_back(std::make_pair(1,bt::seconds(0)));
+    std::vector<std::pair<navitia::type::idx_t, navitia::time_duration>> departs, destinations;
+    departs.push_back(std::make_pair(0, navitia::seconds(10 * 60)));
+    destinations.push_back(std::make_pair(1,navitia::seconds(0)));
 
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -663,8 +717,8 @@ BOOST_AUTO_TEST_CASE(itl) {
 BOOST_AUTO_TEST_CASE(mdi) {
     ed::builder b("20120614");
 
-    b.vj("B")("stop1",17*3600, 17*3600,std::numeric_limits<uint32_t>::max(), true, false)("stop2", 17*3600+15*60)("stop3",17*3600+30*60, 17*3600+30*60,std::numeric_limits<uint32_t>::max(), true, false);
-    b.vj("C")("stop4",16*3600, 16*3600,std::numeric_limits<uint32_t>::max(), true, true)("stop5", 16*3600+15*60)("stop6",16*3600+30*60, 16*3600+30*60,std::numeric_limits<uint32_t>::max(), false, true);
+    b.vj("B")("stop1",17*3600, 17*3600,std::numeric_limits<uint16_t>::max(), true, false)("stop2", 17*3600+15*60)("stop3",17*3600+30*60, 17*3600+30*60,std::numeric_limits<uint16_t>::max(), true, false);
+    b.vj("C")("stop4",16*3600, 16*3600,std::numeric_limits<uint16_t>::max(), true, true)("stop5", 16*3600+15*60)("stop6",16*3600+30*60, 16*3600+30*60,std::numeric_limits<uint16_t>::max(), false, true);
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();

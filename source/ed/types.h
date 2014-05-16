@@ -31,7 +31,6 @@ www.navitia.io
 #pragma once
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <bitset>
-
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -299,6 +298,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
+    std::string platform_code;
 
     StopArea* stop_area;
     Network* network;
@@ -327,12 +327,12 @@ struct StopTime : public Nameable {
     bool wheelchair_boarding;
     bool date_time_estimated;
 
-    uint32_t local_traffic_zone;
+    uint16_t local_traffic_zone;
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
         headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
         ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),date_time_estimated(false),
-                local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
+                local_traffic_zone(std::numeric_limits<uint16_t>::max()) {}
 
     navitia::type::StopTime* get_navitia_type() const;
 
@@ -408,6 +408,16 @@ struct Poi{
     std::string address_name;
     Poi(): id(0), name(""), weight(0), visible(true), poi_type(nullptr), address_number(""), address_name(""){}
 
+};
+
+/**
+ * A AdminStopArea is a relation between an admin code and a list of stop area.
+ *
+ * Beware that a stop_area can be shared between different AdminStopArea
+ */
+struct AdminStopArea{
+    std::string admin;
+    std::vector<const StopArea*> stop_area;
 };
 
 }}//end namespace ed::types

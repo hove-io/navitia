@@ -171,13 +171,13 @@ struct streetnetworkmode_fixture : public routing_api_data<speed_provider_trait>
 BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provider>) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     origin.streetnetwork_params.offset = 0;
-    origin.streetnetwork_params.max_duration = bt::seconds(15*60);//bt::seconds(200 / get_default_speed()[navitia::type::Mode_e::Walking]);
+    origin.streetnetwork_params.max_duration = navitia::seconds(15*60);//navitia::seconds(200 / get_default_speed()[navitia::type::Mode_e::Walking]);
     origin.streetnetwork_params.speed_factor = 1;
 
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     destination.streetnetwork_params.offset = 0;
     destination.streetnetwork_params.speed_factor = 1;
-    destination.streetnetwork_params.max_duration = bt::seconds(15*60);//bt::seconds(50 / get_default_speed()[navitia::type::Mode_e::Walking]);
+    destination.streetnetwork_params.max_duration = navitia::seconds(15*60);//navitia::seconds(50 / get_default_speed()[navitia::type::Mode_e::Walking]);
 
     pbnavitia::Response resp = make_response();
 
@@ -209,11 +209,11 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
 BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) {
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Bike];
-    origin.streetnetwork_params.max_duration = bt::minutes(15);
+    origin.streetnetwork_params.max_duration = navitia::minutes(15);
     origin.streetnetwork_params.speed_factor = 1;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Bike];
-    destination.streetnetwork_params.max_duration = bt::minutes(15);
+    destination.streetnetwork_params.max_duration = navitia::minutes(15);
     destination.streetnetwork_params.speed_factor = 1;
 
     auto resp = make_response();
@@ -309,12 +309,12 @@ BOOST_FIXTURE_TEST_CASE(car, streetnetworkmode_fixture<test_speed_provider>) {
 
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Car];
-    origin.streetnetwork_params.max_duration = bt::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Car]);
+    origin.streetnetwork_params.max_duration = navitia::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Car]);
     origin.streetnetwork_params.speed_factor = 1;
 
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Car];
-    destination.streetnetwork_params.max_duration = bt::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Car]);
+    destination.streetnetwork_params.max_duration = navitia::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Car]);
     destination.streetnetwork_params.speed_factor = 1;
 
     auto resp = make_response();
@@ -352,11 +352,11 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bss;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Bss];
-    origin.streetnetwork_params.max_duration = bt::minutes(15);
+    origin.streetnetwork_params.max_duration = navitia::minutes(15);
     origin.streetnetwork_params.speed_factor = 1;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bss;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Bss];
-    destination.streetnetwork_params.max_duration = bt::minutes(15);
+    destination.streetnetwork_params.max_duration = navitia::minutes(15);
     destination.streetnetwork_params.speed_factor = 1;
 
     auto resp = make_response();

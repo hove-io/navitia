@@ -69,6 +69,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_stop_times(data, work);
 
     this->fill_admins(data, work);
+    this->fill_admin_stop_areas(data, work);
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->fill_stop_point_connections(data, work);
@@ -104,7 +105,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 }
 
 
-
 void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, post_code, insee, level, ST_X(coord::geometry) as lon, "
         "ST_Y(coord::geometry) as lat "
@@ -126,6 +126,49 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
 
         nav_data.geo_ref->admins.push_back(admin);
         this->admin_map[const_it["id"].as<idx_t>()] = admin;
+
+        admin_by_insee_code[admin->insee] = admin;
+    }
+
+}
+
+
+void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
+    std::string request = "SELECT admin_id, stop_area_id from navitia.admin_stop_area";
+
+    size_t nb_unknown_admin(0), nb_unknown_stop(0), nb_valid_admin(0);
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        auto it_admin = admin_by_insee_code.find(const_it["admin_id"].as<std::string>());
+        if (it_admin == admin_by_insee_code.end()) {
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "impossible to find admin " << const_it["admin_id"]
+                    << ", we cannot associate stop_area " << const_it["stop_area_id"] << " to it");
+            nb_unknown_admin++;
+            continue;
+        }
+        navitia::georef::Admin* admin = it_admin->second;
+
+        auto it_sa = stop_area_map.find(const_it["stop_area_id"].as<idx_t>());
+        if (it_sa == stop_area_map.end()) {
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "impossible to find stop_area " << const_it["stop_area_id"]
+                    << ", we cannot associate it to admin " << const_it["admin_id"]);
+            nb_unknown_stop++;
+            continue;
+        }
+
+        navitia::type::StopArea* sa = it_sa->second;
+
+        admin->main_stop_areas.push_back(sa);
+        nb_valid_admin++;
+    }
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_valid_admin << " admin with at least one main stop");
+
+    if (nb_unknown_admin) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_unknown_admin << " admin not found for admin main stops");
+    }
+    if (nb_unknown_stop) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_unknown_stop << " stops not found for admin main stops");
     }
 
 }
@@ -303,6 +346,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
        "sp.comment as comment, sp.external_code as external_code,"
        "ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,"
        "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,"
+       "sp.platform_code as platform_code,"
        "pr.wheelchair_boarding as wheelchair_boarding,"
        "pr.sheltered as sheltered, pr.elevator as elevator,"
        "pr.escalator as escalator, pr.bike_accepted as bike_accepted,"
@@ -322,6 +366,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
         const_it["comment"].to(sp->comment);
         const_it["fare_zone"].to(sp->fare_zone);
         const_it["external_code"].to(sp->codes["external_code"]);
+        const_it["platform_code"].to(sp->platform_code);
         sp->coord.set_lon(const_it["lon"].as<double>());
         sp->coord.set_lat(const_it["lat"].as<double>());
         if (const_it["wheelchair_boarding"].as<bool>()){
@@ -701,7 +746,6 @@ void EdReader::fill_poi_types(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::POIType* poi_type = new navitia::georef::POIType();
         const_it["uri"].to(poi_type->uri);
         const_it["name"].to(poi_type->name);
-        const_it["id"].to(poi_type->id);
         poi_type->idx = data.geo_ref->poitypes.size();
         data.geo_ref->poitypes.push_back(poi_type);
         this->poi_type_map[const_it["id"].as<idx_t>()] = poi_type;
@@ -721,7 +765,6 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::POI* poi = new navitia::georef::POI();
         const_it["uri"].to(poi->uri);
         const_it["name"].to(poi->name);
-        const_it["id"].to(poi->id);
         const_it["address_number"].to(string_number);
         int_number = str_to_int(string_number);
         if(int_number > -1){
@@ -768,7 +811,6 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::Way* way = new navitia::georef::Way;
         const_it["uri"].to(way->uri);
         const_it["name"].to(way->name);
-        way->id = id;
         way->idx = data.geo_ref->ways.size();
 
         const_it["type"].to(way->way_type);
@@ -825,7 +867,7 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
             navitia::georef::Edge e;
             float len;
             const_it["leng"].to(len);
-            e.duration = boost::posix_time::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
+            e.duration = navitia::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
             e.way_idx = const_it["way_id"].as<idx_t>();
             uint64_t source = node_map_temp[const_it["source_node_id"].as<uint64_t>()];
             uint64_t target = node_map_temp[const_it["target_node_id"].as<uint64_t>()];
@@ -955,12 +997,12 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
 
         //TODO et les pietons ??!
 
-        e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
+        e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
         boost::add_edge(source, target, e, data.geo_ref->graph);
         nb_walking_edges++;
 
         if (const_it["bike"].as<bool>()) {
-            e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
+            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
             auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
             auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
             boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
@@ -968,7 +1010,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             nb_biking_edges++;
         }
         if (const_it["car"].as<bool>()) {
-            e.duration = boost::posix_time::seconds(len / ng::default_speed[nt::Mode_e::Car]);
+            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Car]);
             auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
             auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
             boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
@@ -1046,7 +1088,7 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
         auto min_dist = get_min_distance(data, nearest_walking_edge, nearest_biking_edge);
         navitia::georef::vertex_t walking_v = std::get<1>(min_dist);
         navitia::georef::vertex_t biking_v = std::get<2>(min_dist);
-        boost::posix_time::time_duration dur_between_edges = boost::posix_time::seconds(std::get<0>(min_dist) / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
+        navitia::time_duration dur_between_edges = navitia::seconds(std::get<0>(min_dist) / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
 
         navitia::georef::Edge edge;
         edge.way_idx = data.geo_ref->graph[nearest_walking_edge].way_idx; //arbitrarily we assume the way is the walking way
@@ -1171,7 +1213,6 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work){
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta->production_date.begin());
-        const_it["id"].to(cal->id);
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
         const_it["external_code"].to(cal->codes["external_code"]);
@@ -1273,7 +1314,7 @@ void EdReader::check_coherence(navitia::type::Data& data) const {
     size_t non_associated_lines(0);
     for (navitia::type::Line* line: data.pt_data->lines) {
         if (line->calendar_list.empty()) {
-            LOG4CPLUS_DEBUG(log, "the line " << line->uri << " is not associated with any calendar");
+            LOG4CPLUS_TRACE(log, "the line " << line->uri << " is not associated with any calendar");
             non_associated_lines++;
         }
     }

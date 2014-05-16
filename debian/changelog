@@ -1,3 +1,27 @@
+navitia2 (0.96.0) unstable; urgency=low
+
+  * Kraken: Fix rabbitmq bug after a reload of data
+  * Jormungandr: Better handling of rabbitmq connection
+  * Cmake improvements
+  * Fix Clang compilation
+  * Kraken: work on memory consumption
+  * OSM2Ed: SQL optimizations
+  * Kraken: fix bugs on validity pattern
+  * Kraken: fix format of name
+  * GTFS2ed: Fix behaviour when a stoppoint doesn't have a stop area
+  * OSM2ed: Parse platform ways
+  * GTFS2ed: Parse platform codes
+  * Tyr: Fix schema name of admin and poi
+  * Jormungandr: max waiting duration
+  * Tyr: Fix synonyms integration
+  * Jormungandr: fix journey sorting
+  * Kraken: Improvement on build path
+  * Jormungandr: Introduction of statistics
+  * Kraken: Improvements on autocomplete
+  * Kraken: Start from main stop area when a admin is asked
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 16 May 2014 11:05:47 +0100
+
 navitia2 (0.95.0) unstable; urgency=low
 
   * ed : move poi table in georef schema

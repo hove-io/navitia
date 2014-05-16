@@ -56,7 +56,7 @@ struct custom_seconds
     constexpr custom_seconds(int s) : dur(s) {}
     custom_seconds(const custom_seconds&) = default;
     custom_seconds& operator=(const custom_seconds&) = default;
-    operator bt::time_duration() const { return bt::seconds(dur); }
+    operator navitia::time_duration() const { return navitia::seconds(dur); }
 };
 std::ostream & operator<<(std::ostream& os, custom_seconds s) {
     os << s.dur << " seconds";
@@ -144,10 +144,10 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
     BOOST_CHECK_EQUAL(g[b].coord, expected);
 
     edge_t e = edge(a, b, g).first;
-    BOOST_CHECK_EQUAL(g[e].duration, bt::seconds(10));
+    BOOST_CHECK_EQUAL(g[e].duration, navitia::seconds(10));
 
     // Construction implicite de nœuds
-    builder("c", "d", bt::seconds(42));
+    builder("c", "d", navitia::seconds(42));
     BOOST_CHECK_EQUAL(num_vertices(g), 4);
     BOOST_CHECK_EQUAL(num_edges(g), 2);
 
@@ -409,17 +409,17 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     res = w.find_nearest_stop_points(100_s, pl, false);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / (default_speed[Mode_e::Walking] * 2))); //the projection is done with the same mean of transport, at the same speed
+    BOOST_CHECK_EQUAL(res[0].second, navitia::seconds(50 / (default_speed[Mode_e::Walking] * 2))); //the projection is done with the same mean of transport, at the same speed
 
     w.init(starting_point);
     res = w.find_nearest_stop_points(1000_s, pl, false);
     std::sort(res.begin(), res.end());
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res[0].first , 0);
-    BOOST_CHECK_EQUAL(res[0].second, bt::seconds(50 / (default_speed[Mode_e::Walking] * 2)));
+    BOOST_CHECK_EQUAL(res[0].second, navitia::seconds(50 / (default_speed[Mode_e::Walking] * 2)));
     BOOST_CHECK_EQUAL(res[1].first , 1);
     //1 projections at the arrival, and 3 edges (100s each but at twice the speed)
-    BOOST_CHECK_EQUAL(res[1].second, bt::seconds(50 / (default_speed[Mode_e::Walking] * 2)) + 150_s);
+    BOOST_CHECK_EQUAL(res[1].second, navitia::seconds(50 / (default_speed[Mode_e::Walking] * 2)) + 150_s);
 }
 
 // Récupérer les cordonnées d'un numéro impair :
@@ -782,7 +782,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
      */
 
     b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
-    b("a","b",bt::seconds(100))("b","a",bt::seconds(100))("c","d",bt::seconds(100))("d","c",bt::seconds(100))("d","e",bt::seconds(100))("e","d",bt::seconds(100));
+    b("a","b",navitia::seconds(100))("b","a",navitia::seconds(100))("c","d",navitia::seconds(100))("d","c",navitia::seconds(100))("d","e",navitia::seconds(100))("e","d",navitia::seconds(100));
 
     GeographicalCoord c1(50,10, false);
     GeographicalCoord c2(350,20, false);
@@ -873,24 +873,24 @@ BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
 
 //small test to make sure the time manipulation works in the SpeedDistanceCombiner
 BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
-    bt::time_duration dur = 10_s;
+    navitia::time_duration dur = 10_s;
 
     SpeedDistanceCombiner comb(2);
 
-    BOOST_CHECK_EQUAL(comb.divide_by_speed(dur), 5_s);
+    BOOST_CHECK_EQUAL(dur / 2, 5_s);
 
-    bt::time_duration dur2 = 60_s;
-    BOOST_CHECK_EQUAL(comb(dur, dur2), bt::seconds(10+60/2));
+    navitia::time_duration dur2 = 60_s;
+    BOOST_CHECK_EQUAL(comb(dur, dur2), navitia::seconds(10+60/2));
 }
 
 BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
-    bt::time_duration dur = 10_s;
+    navitia::time_duration dur = 10_s;
 
     SpeedDistanceCombiner comb(0.5);
 
-    BOOST_CHECK_EQUAL(comb.divide_by_speed(dur), 20_s);
+    BOOST_CHECK_EQUAL(dur / 0.5, 20_s);
 
-    bt::time_duration dur2 = 60_s;
+    navitia::time_duration dur2 = 60_s;
     BOOST_CHECK_EQUAL(comb(dur, dur2), 130_s);
 }
 
@@ -913,6 +913,3 @@ BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Car], false);
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bike], false);
 }
-
-
-

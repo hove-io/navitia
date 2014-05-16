@@ -324,7 +324,7 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             break;
     }
     int max_non_pt = request.max_duration_to_pt();
-    result.max_duration = boost::posix_time::seconds(max_non_pt);
+    result.max_duration = navitia::seconds(max_non_pt);
     return result;
 }
 

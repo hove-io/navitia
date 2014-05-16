@@ -31,59 +31,6 @@ from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 
 
-def is_valid_journey_response(response, tester):
-    journeys = get_not_null(response, "journeys")
-
-    all_sections = unique_dict('id')
-    assert len(journeys) > 0, "we must at least have one journey"
-    for j in journeys:
-        is_valid_journey(j, tester)
-
-        for s in j['sections']:
-            all_sections[s['id']] = s
-
-    # check the fare section
-    # the fares must be structurally valid and all link to sections must be ok
-    all_tickets = unique_dict('id')
-    fares = get_not_null(response, "tickets")
-    for f in fares:
-        is_valid_ticket(f, tester)
-        all_tickets[f['id']] = f
-
-    check_internal_links(response, tester)
-
-
-    #TODO check journey links (prev/next)
-
-
-def is_valid_journey(journey, tester):
-    #TODO!
-    pass
-
-
-def is_valid_ticket(ticket, tester):
-    found = get_not_null(ticket, 'found')
-    assert is_valid_bool(found)
-
-    get_not_null(ticket, 'id')
-    get_not_null(ticket, 'name')
-    cost = get_not_null(ticket, 'cost')
-    if found:
-        #for found ticket, we must have a non empty currency
-        get_not_null(cost, 'currency')
-
-    assert is_valid_float(get_not_null(cost, 'value'))
-
-    check_links(ticket, tester)
-
-
-#default journey query used in varius test
-journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
-    .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
-            to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
-            datetime="20120614T080000")
-
-
 @dataset(["main_routing_test"])
 class TestJourneys(AbstractTestFixture):
     """
@@ -123,3 +70,79 @@ class TestJourneysNoRegion(AbstractTestFixture):
         assert error_regexp.match(response['error']['message'])
 
 
+@dataset(["basic_routing_test"])
+class TestLongWaitingDurationFilter(AbstractTestFixture):
+    """
+    Test if the filter on long waiting duration is working
+    """
+
+    def test_novalidjourney_on_first_call(self):
+        """
+        On this call the first call to kraken returns a journey
+        with a too long waiting duration.
+        The second call to kraken must return a valid journey
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        assert(len(response['journeys']) == 1)
+        assert(response['journeys'][0]['arrival_date_time'] == "20120614T160000")
+        assert(response['journeys'][0]['type'] == "best")
+
+    def test_novalidjourney_on_first_call_debug(self):
+        """
+        On this call the first call to kraken returns a journey
+        with a too long waiting duration.
+        The second call to kraken must return a valid journey
+        We had a debug argument, hence 2 journeys are returned, only one is typed
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        assert(len(response['journeys']) == 2)
+        assert(response['journeys'][0]['arrival_date_time'] == "20120614T150000")
+        assert(response['journeys'][0]['type'] == "")
+        assert(response['journeys'][1]['arrival_date_time'] == "20120614T160000")
+        assert(response['journeys'][1]['type'] == "best")
+
+
+    def test_remove_one_journey_from_batch(self):
+        """
+        Kraken returns two journeys, the earliest arrival one returns a too
+        long waiting duration, therefore it must be deleted.
+        The second one must be returned
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa="A", to_sa="D", datetime="20120615T080000")
+
+        response = self.query_region(query, display=False)
+        assert(len(response['journeys']) == 1)
+        assert(response['journeys'][0]['arrival_date_time'] == u'20120615T151000')
+        assert(response['journeys'][0]['type'] == "best")
+
+
+    def test_max_attemps(self):
+        """
+        Kraken always retrieves journeys with non_pt_duration > max_non_pt_duration
+        No journeys should be typed, but get_journeys should stop quickly
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa="E", to_sa="H", datetime="20120615T080000")
+
+        response = self.query_region(query, display=False)
+        assert(not "journeys" in response or len(response['journeys']) == 0)
+
+
+    def test_max_attemps_debug(self):
+        """
+        Kraken always retrieves journeys with non_pt_duration > max_non_pt_duration
+        No journeys should be typed, but get_journeys should stop quickly
+        We had the debug argument, hence a non-typed journey is returned
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
+            .format(from_sa="E", to_sa="H", datetime="20120615T080000")
+
+        response = self.query_region(query, display=False)
+        assert(len(response['journeys']) == 1)

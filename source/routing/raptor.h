@@ -42,6 +42,7 @@ www.navitia.io
 #include "raptor_path.h"
 #include "raptor_solutions.h"
 #include "raptor_utils.h"
+#include "type/time_duration.h"
 
 namespace navitia { namespace routing {
 
@@ -75,7 +76,7 @@ struct RAPTOR
         marked_sp(data.pt_data->stop_points.size()),
         journey_patterns_valides(data.pt_data->journey_patterns.size()),
         Q(data.pt_data->journey_patterns.size()) {
-            labels.assign(20, data.dataRaptor->labels_const);
+            labels.assign(10, data.dataRaptor->labels_const);
     }
 
 
@@ -84,7 +85,7 @@ struct RAPTOR
 
     ///Initialise les structure retour et b_dest
     void clear_and_init(Solutions departures,
-              std::vector<std::pair<type::idx_t, boost::posix_time::time_duration> > destinations,
+              std::vector<std::pair<type::idx_t, navitia::time_duration> > destinations,
               navitia::DateTime bound, const bool clockwise,
               const type::Properties &properties = 0);
 
@@ -104,8 +105,8 @@ struct RAPTOR
      *  à une heure donnée.
      */
     std::vector<Path> 
-    compute_all(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration>> &departs,
-                const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration>> &destinations,
+    compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration>> &departs,
+                const std::vector<std::pair<type::idx_t, navitia::time_duration>> &destinations,
                 const DateTime &departure_datetime, bool disruption_active, const DateTime &bound=DateTimeUtils::inf,
                 const uint32_t max_transfers=std::numeric_limits<int>::max(),
                 const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
@@ -118,7 +119,7 @@ struct RAPTOR
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
     void
-    isochrone(const std::vector<std::pair<type::idx_t, boost::posix_time::time_duration>> &departures_,
+    isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duration>> &departures_,
               const DateTime &departure_datetime, const DateTime &bound = DateTimeUtils::min,
               uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
@@ -158,8 +159,8 @@ struct RAPTOR
         return labels[count][jpp_idx].type;
     }
 
-    inline const type::JourneyPatternPoint* get_boarding_jpp(size_t count, type::idx_t jpp_idx) const {
-        return labels[count][jpp_idx].boarding;
+    inline type::idx_t get_boarding_jpp(size_t count, type::idx_t jpp_idx) const {
+        return labels[count][jpp_idx].boarding_jpp;
     }
 
     ~RAPTOR() {}

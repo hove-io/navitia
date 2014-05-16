@@ -46,9 +46,11 @@ www.navitia.io
   */
 namespace ed { namespace connectors {
 
+/**
+ * Temporary structure used in the GTFS parser, mainly to keep a relation between ids and the pointers
+ */
 struct GtfsData {
     GtfsData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
-    // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
@@ -71,7 +73,7 @@ struct GtfsData {
     std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
     std::unordered_map<std::string, ed::types::Calendar*> calendars_map;
 
-    boost::gregorian::date_period production_date;///<Période de validité des données
+    boost::gregorian::date_period production_date;// Data validity period
 };
 
 inline bool has_col(int col_idx, const std::vector<std::string>& row) {
@@ -158,7 +160,8 @@ struct StopsGtfsHandler : public GenericHandler {
     lon_c,
     type_c,
     parent_c,
-    wheelchair_c;
+    wheelchair_c,
+    platform_c;
 
     int ignored = 0;
     std::vector<types::StopPoint*> wheelchair_heritance;

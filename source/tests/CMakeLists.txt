@@ -8,5 +8,8 @@ add_executable(main_routing_test main_routing_test.cpp)
 
 add_executable(main_ptref_test main_ptref_test.cpp)
 
+add_executable(basic_routing_test basic_routing_test.cpp)
+
 target_link_libraries(main_routing_test ${ALL_LIBS})
 target_link_libraries(main_ptref_test ${ALL_LIBS})
+target_link_libraries(basic_routing_test ${ALL_LIBS})

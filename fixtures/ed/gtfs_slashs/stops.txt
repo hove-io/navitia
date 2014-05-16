@@ -1,0 +1,2 @@
+stop_id,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url
+141581,16058601,"Siebengewald, Gochsedijk\Centrum",51.648438,6.108465,0,stoparea:42204,,,,

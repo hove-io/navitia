@@ -41,7 +41,12 @@ std::string VehicleJourney::get_direction() const {
     if ((this->journey_pattern != nullptr) && (!this->journey_pattern->journey_pattern_point_list.empty())){
         const auto jpp = this->journey_pattern->journey_pattern_point_list.back();
         if(jpp->stop_point != nullptr){
-            return jpp->stop_point->name;
+            for (auto admin: jpp->stop_point->admin_list){
+                if (admin->level == 8){
+                    return jpp->stop_point->name + " (" + admin->name + ")";
+                }
+            }
+        return jpp->stop_point->name;
         }
     }
     return "";

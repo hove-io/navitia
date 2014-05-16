@@ -102,6 +102,9 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
+    if(!sp->platform_code.empty()) {
+        stop_point->set_platform_code(sp->platform_code);
+    }
     if(!sp->comment.empty()) {
         stop_point->set_comment(sp->comment);
     }
@@ -528,7 +531,7 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
         hp->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
     if(!st->comment.empty()){
-        fill_pb_object(st->comment, data,  hp->add_notes(),max_depth,now,action_period);
+        fill_pb_object(st->comment, data,  hp->add_notes(), max_depth, now, action_period);
     }
 }
 
@@ -587,16 +590,17 @@ void fill_pb_placemark(const type::StopPoint* stop_point,
 void fill_pb_placemark(const type::StopArea* stop_area,
                        const type::Data &data, pbnavitia::Place* place,
                        int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period){
+                       const pt::time_period& action_period,
+                       const bool show_codes) {
     if(stop_area == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
     fill_pb_object(stop_area, data, place->mutable_stop_area(), depth,
-                   now, action_period, false);
+                   now, action_period, show_codes);
     place->set_name(stop_area->name);
     for(auto admin : place->stop_area().administrative_regions()) {
         if (admin.level() == 8){
-            place->set_name(place->name() + ", " + admin.name());
+            place->set_name(place->name() + " (" + admin.name() + ")");
         }
     }
 
@@ -691,13 +695,7 @@ void fill_pb_placemark(navitia::georef::Way* way,
     place->set_name(place->name() + str_street_name);
     for(auto admin : place->address().administrative_regions()) {
         if (admin.level() == 8){
-            if (admin.zip_code()!=""){
-                place->set_name(place->name() + ", " + admin.zip_code() + " " + admin.name());
-            }else{
-                place->set_name(place->name() + ", " + admin.name());
-            }
-
-
+            place->set_name(place->name() + ", " + admin.name());
         }
     }
 

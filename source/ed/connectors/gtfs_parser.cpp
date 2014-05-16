@@ -43,6 +43,8 @@ typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
 namespace ed{ namespace connectors {
 
+static int default_waiting_duration = 120;
+static int default_connection_duration = 120;
 
 int time_to_int(const std::string & time) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -112,6 +114,7 @@ void StopsGtfsHandler::init(Data& data) {
             name_c = csv.get_pos_col("stop_name"),
             desc_c = csv.get_pos_col("stop_desc"),
             wheelchair_c = csv.get_pos_col("wheelchair_boarding");
+            platform_c = csv.get_pos_col("platform_code");
     if (code_c == -1) {
         code_c = id_c;
     }
@@ -136,14 +139,12 @@ void StopsGtfsHandler::finish(Data& data) {
         }
     }
 
-    //On va chercher l'accessibilité pour les stop points qui hérite de l'accessibilité de leur stop area
+    //We fetch the accessibility for all stop points that inherit from their stop area's accessibility
     for (auto sp : wheelchair_heritance) {
         if(sp->stop_area == nullptr)
             continue;
         if (sp->stop_area->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING)) {
             sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-        } else {
-            LOG4CPLUS_WARN(logger, "Impossible to get the stop area accessibility value for the stop point " + sp->uri);
         }
     }
 
@@ -155,52 +156,30 @@ void StopsGtfsHandler::finish(Data& data) {
 }
 
 void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
-    //we have to check if there was stop area in the file
-    bool has_stop_area = (!data.stop_areas.empty());
-    if (! has_stop_area) {
-        for (const auto sp : data.stop_points) {
-            if (sp->stop_area) {
-                has_stop_area = true;
-                break;
-            }
+    int nb_added_sa(0);
+    //we artificialy create one stop_area for stop point without one
+    for (const auto sp : data.stop_points) {
+        if (sp->stop_area) {
+            continue;
         }
+        auto sa = new nm::StopArea;
+
+        sa->coord.set_lon(sp->coord.lon());
+        sa->coord.set_lat(sp->coord.lat());
+        sa->name = sp->name;
+        sa->uri = sp->uri;
+        if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING))
+            sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+
+        gtfs_data.stop_area_map[sa->uri] = sa;
+        data.stop_areas.push_back(sa);
+        sp->stop_area = sa;
+        nb_added_sa ++;
     }
 
-    if (! has_stop_area) {
-        //we artificialy create one stop_area by stop point
-        for (const auto sp : data.stop_points) {
-            auto sa = new nm::StopArea;
-
-            sa->coord.set_lon(sp->coord.lon());
-            sa->coord.set_lat(sp->coord.lat());
-            sa->name = sp->name;
-            sa->uri = sp->uri;
-            if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING))
-                sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-
-            gtfs_data.stop_area_map[sa->uri] = sa;
-            data.stop_areas.push_back(sa);
-            sp->stop_area = sa;
-        }
-        return;
+    if (nb_added_sa) {
+        LOG4CPLUS_INFO(logger, nb_added_sa << " stop_points without stop_area. Creation of a stop_area for each of those stop_points");
     }
-
-    //Deletion of the stop point without stop areas
-    std::vector<size_t> erasest;
-    for (int i = data.stop_points.size()-1; i >=0;--i) {
-        if (data.stop_points[i]->stop_area == nullptr) {
-            erasest.push_back(i);
-        }
-    }
-    int num_elements = data.stop_points.size();
-    for (size_t to_erase : erasest) {
-        gtfs_data.stop_map.erase(data.stop_points[to_erase]->uri);
-        delete data.stop_points[to_erase];
-        data.stop_points[to_erase] = data.stop_points[num_elements - 1];
-        num_elements--;
-    }
-    data.stop_points.resize(num_elements);
-    LOG4CPLUS_INFO(logger, "Deletion of " << erasest.size() << " stop_point wihtout stop_area");
 }
 
 template <typename T>
@@ -268,6 +247,8 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
                 sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
             }
         }
+        if (has_col(platform_c, row))
+            sp->platform_code = row[platform_c];
         gtfs_data.stop_map[sp->uri] = sp;
         data.stop_points.push_back(sp);
         if (has_col(parent_c, row) && row[parent_c] != "") {// we save the reference to the stop area
@@ -355,12 +336,18 @@ void TransfersGtfsHandler::finish(Data& data) {
 void TransfersGtfsHandler::fill_stop_point_connection(nm::StopPointConnection* connection, const csv_row& row) const {
     if(has_col(time_c, row)) {
         try{
+            //the GTFS transfers duration already take into account a tolerance so duration and display duration are equal
             connection->display_duration = boost::lexical_cast<int>(row[time_c]);
-        } catch (...) {
-            connection->display_duration = 120;
+            connection->duration = connection->display_duration;
+        } catch (const boost::bad_lexical_cast&) {
+            //if no transfers time is given, we add an additional waiting time to the real duration
+            //ie you want to walk for 2 mn for your transfert, and we add 2 more minutes to add robustness to your transfers
+            connection->display_duration = default_connection_duration;
+            connection->duration = connection->display_duration + default_waiting_duration;
         }
     } else {
-        connection->display_duration = 120;
+        connection->display_duration = default_connection_duration;
+        connection->duration = connection->display_duration + default_waiting_duration;
     }
 }
 
@@ -379,7 +366,7 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     it = gtfs_data.stop_map.find(row[to_c]);
-    if(it == gtfs_data.stop_map.end()){
+    if(it == gtfs_data.stop_map.end()) {
         auto it_sa = gtfs_data.sa_spmap.find(row[to_c]);
         if(it_sa == gtfs_data.sa_spmap.end()) {
             LOG4CPLUS_WARN(logger, "Impossible de find the stop point (to) " + row[to_c]);
@@ -686,56 +673,48 @@ void GenericGtfsParser::fill_default_modes(Data& data){
 
     // commercial_mode et physical_mode : par défaut
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = "0";
     commercial_mode->name = "Tram";
     commercial_mode->uri = "0";
     data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
+    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = "1";
     commercial_mode->name = "Metro";
     commercial_mode->uri = "1";
     data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
+    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = "2";
     commercial_mode->name = "Rail";
     commercial_mode->uri = "2";
     data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
+    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = "3";
     commercial_mode->name = "Bus";
     commercial_mode->uri = "3";
     data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
+    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = "4";
     commercial_mode->name = "Ferry";
     commercial_mode->uri = "4";
     data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
+    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = "5";
     commercial_mode->name = "Cable car";
     commercial_mode->uri = "5";
     data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map[commercial_mode->id] = commercial_mode;
+    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = "6";
     commercial_mode->name = "Gondola";
     commercial_mode->uri = "6";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->id = "7";
     commercial_mode->name = "Funicular";
     commercial_mode->uri = "7";
     data.commercial_modes.push_back(commercial_mode);
@@ -743,7 +722,6 @@ void GenericGtfsParser::fill_default_modes(Data& data){
 
     for(ed::types::CommercialMode *mt : data.commercial_modes) {
         ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
-        mode->id = mt->id;
         mode->name = mt->name;
         mode->uri = mt->uri;
         data.physical_modes.push_back(mode);

@@ -1,0 +1,3 @@
+usr/lib/python*/dist-packages/stat_persistor
+/usr/share/stat_persistor/*
+/etc/init.d/stat_persistor_service

@@ -328,6 +328,10 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert journey pattern point connections");
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
     LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
+    LOG4CPLUS_INFO(logger, "Begin: insert admin stop area");
+    this->insert_admin_stop_areas(data.admin_stop_areas);
+    LOG4CPLUS_INFO(logger, "End: insert admin stop area");
+
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
     LOG4CPLUS_INFO(logger, "End: insert fares");
@@ -582,7 +586,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
 void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_points){
     this->lotus.prepare_bulk_insert("navitia.stop_point",
             {"id", "uri", "external_code", "name", "coord", "comment",
-            "fare_zone", "stop_area_id","properties_id"});
+            "fare_zone", "stop_area_id","properties_id","platform_code"});
 
     for(types::StopPoint* sp : stop_points){
         std::vector<std::string> values;
@@ -599,6 +603,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
             values.push_back(lotus.null_value);
         }
         values.push_back(std::to_string(sp->to_ulog()));
+        values.push_back(sp->platform_code);
         this->lotus.insert(values);
     }
 
@@ -756,7 +761,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         std::vector<std::string> values;
         values.push_back(std::to_string(stop->arrival_time));
         values.push_back(std::to_string(stop->departure_time));
-        if(stop->local_traffic_zone != navitia::type::invalid_idx){
+        if(stop->local_traffic_zone != std::numeric_limits<uint16_t>::max()){
             values.push_back(std::to_string(stop->local_traffic_zone));
         }else{
             values.push_back(lotus.null_value);
@@ -901,6 +906,23 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         this->lotus.insert(values);
     }
 
+    this->lotus.finish_bulk_insert();
+}
+
+
+void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas) {
+    this->lotus.prepare_bulk_insert("navitia.admin_stop_area", {"admin_id", "stop_area_id"});
+
+    for(const types::AdminStopArea* asa : admin_stop_areas) {
+        for(const types::StopArea* sa: asa->stop_area) {
+            std::vector<std::string> values {
+                asa->admin,
+                std::to_string(sa->idx)
+            };
+
+            this->lotus.insert(values);
+        }
+    }
     this->lotus.finish_bulk_insert();
 }
 

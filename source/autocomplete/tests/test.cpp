@@ -182,24 +182,24 @@ BOOST_AUTO_TEST_CASE(regex_toknize_tests){
     synonyms["r"]="rue";
 
     Autocomplete<unsigned int> ac;
-    std::vector<std::string> vec;
+    std::set<std::string> vec;
 
     //synonyme : "cc" = "centre commercial" / synonym : de = ""
     //"cc Carré de Soie" -> "centre commercial carré de soie"
     vec = ac.tokenize("cc Carré de Soie", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "centre");
-    BOOST_CHECK_EQUAL(vec[1], "commercial");
-    BOOST_CHECK_EQUAL(vec[2], "carre");
-    BOOST_CHECK_EQUAL(vec[3], "soie");
+    BOOST_CHECK(vec.find("carre") != vec.end());
+    BOOST_CHECK(vec.find("centre") != vec.end());
+    BOOST_CHECK(vec.find("commercial") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());
 
     vec.clear();
     //synonyme : "c c"= "centre commercial" / synonym : de = ""
     //"c c Carré de Soie" -> "centre commercial carré de soie"
     vec = ac.tokenize("c c Carré de Soie", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "centre");
-    BOOST_CHECK_EQUAL(vec[1], "commercial");
-    BOOST_CHECK_EQUAL(vec[2], "carre");
-    BOOST_CHECK_EQUAL(vec[3], "soie");
+    BOOST_CHECK(vec.find("carre") != vec.end());
+    BOOST_CHECK(vec.find("centre") != vec.end());
+    BOOST_CHECK(vec.find("commercial") != vec.end());
+    BOOST_CHECK(vec.find("soie") != vec.end());
 }
 
 BOOST_AUTO_TEST_CASE(regex_address_type_tests){
@@ -244,72 +244,70 @@ BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
     synonyms["bd"]="boulevard";
 
     Autocomplete<unsigned int> ac;
-    std::vector<std::string> vec;
+    std::set<std::string> vec;
 
     //synonyme : "gare sncf" = "gare"
     //"gare sncf" -> "gare"
     vec = ac.tokenize("gare sncf", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
     BOOST_CHECK_EQUAL(vec.size(),1);
     vec.clear();
 
     //synonyme : "gare snc" = "gare"
     //"gare snc" -> "gare"
     vec = ac.tokenize("gare snc", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
     BOOST_CHECK_EQUAL(vec.size(),1);
     vec.clear();
 
     //synonyme : "gare sn" = "gare"
     //"gare sn" -> "gare"
     vec = ac.tokenize("gare sn", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK(vec.find("gare") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),1);
     vec.clear();
 
     //synonyme : "gare s" = "gare"
     //"gare s" -> "gare"
     vec = ac.tokenize("gare s", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK(vec.find("gare") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),1);
     vec.clear();
 
     //synonyme : "gare sn nantes" = "gare nantes"
     //"gare sn nantes" -> "gare nantes"
     vec = ac.tokenize("gare sn nantes", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
-    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 
     //synonyme : "gare sn nantes" = "gare nantes"
     //"gare sn  nantes" -> "gare nantes"
     vec = ac.tokenize("gare sn  nantes", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
-    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 
     //synonyme : "gare sn nantes" = "gare nantes"
     //"gare s  nantes" -> "gare nantes"
     vec = ac.tokenize("gare  s  nantes", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
-    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 
     //synonyme : "gare sn nantes" = "gare nantes"
     //"gare s    nantes" -> "gare nantes"
     vec = ac.tokenize("gare  s    nantes", synonyms);
-    BOOST_CHECK_EQUAL(vec[0], "gare");
-    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK(vec.find("gare") != vec.end());
+    BOOST_CHECK(vec.find("nantes") != vec.end());
     BOOST_CHECK_EQUAL(vec.size(),2);
     vec.clear();
 }
 
 BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
     autocomplete_map synonyms;
-    std::vector<std::string> vec;
+    std::set<std::string> vec;
     std::string admin_uri = "";
 
     Autocomplete<unsigned int> ac;
@@ -321,55 +319,55 @@ BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
     ac.add_string("pente de Bray", 5, synonyms);
     ac.build();
 
-    vec.push_back("rue");
-    vec.push_back("jean");
-    vec.push_back("jaures");
+    vec.insert("rue");
+    vec.insert("jean");
+    vec.insert("jaures");
     auto res = ac.find(vec);
     std::vector<int> expected = {0};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("jaures");
+    vec.insert("jaures");
     res = ac.find(vec);
     expected = {0, 1, 3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("avenue");
+    vec.insert("avenue");
     res = ac.find(vec);
     expected = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("av");
+    vec.insert("av");
     res = ac.find(vec);
     expected = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("r");
-    vec.push_back("jean");
+    vec.insert("r");
+    vec.insert("jean");
     res = ac.find(vec);
     expected = {0, 2};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("jean");
-    vec.push_back("r");
+    vec.insert("jean");
+    vec.insert("r");
     res = ac.find(vec);
     expected = {0, 2};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("ponia");
+    vec.insert("ponia");
     res = ac.find(vec);
     expected = {4};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
     vec.clear();
-    vec.push_back("ru");
-    vec.push_back("je");
-    vec.push_back("jau");
+    vec.insert("ru");
+    vec.insert("je");
+    vec.insert("jau");
     res = ac.find(vec);
     expected = {0};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());    
@@ -590,3 +588,106 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         // Qualité = 100 - (9 + 10) = 81
         BOOST_REQUIRE_EQUAL(res4.at(0).quality, 81);
     }
+
+BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
+
+    autocomplete_map synonyms;
+    std::vector<std::string> admins;
+    std::string admin_uri;
+    int word_weight = 5;
+    int nbmax = 10;
+
+    synonyms["de"]="";
+    synonyms["la"]="";
+    synonyms["le"]="";
+    synonyms["les"]="";
+    synonyms["des"]="";
+    synonyms["d"]="";
+    synonyms["l"]="";
+
+    synonyms["st"]="saint";
+    synonyms["ste"]="sainte";
+    synonyms["cc"]="centre commercial";
+    synonyms["chu"]="hopital";
+    synonyms["chr"]="hopital";
+    synonyms["c.h.u"]="hopital";
+    synonyms["c.h.r"]="hopital";
+    synonyms["all"]="allée";
+    synonyms["allee"]="allée";
+    synonyms["ave"]="avenue";
+    synonyms["av"]="avenue";
+    synonyms["bvd"]="boulevard";
+    synonyms["bld"]="boulevard";
+    synonyms["bd"]="boulevard";
+    synonyms["b"]="boulevard";
+    synonyms["r"]="rue";
+    synonyms["pl"]="place";
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("gare de Tours Tours", 0, synonyms);
+    ac.add_string("Garennes-sur-Eure", 1, synonyms);
+    ac.add_string("gare d'Orléans Orléans", 2, synonyms);
+    ac.add_string("gare de Bourges Bourges", 3, synonyms);
+    ac.add_string("Gare SNCF Blois", 4, synonyms);
+    ac.add_string("gare de Dreux Dreux", 5, synonyms);
+    ac.add_string("gare de Lucé Lucé", 6, synonyms);
+    ac.add_string("gare de Vierzon Vierzon", 7, synonyms);
+    ac.add_string("Les Sorinières, Les Sorinières", 8, synonyms);
+    ac.add_string("Les Sorinières 44840", 9, synonyms);
+    ac.add_string("Rouet, Les Sorinières", 10, synonyms);
+    ac.add_string("Ecoles, Les Sorinières", 11, synonyms);
+    ac.add_string("Prières, Les Sorinières", 12, synonyms);
+    ac.add_string("Calvaire, Les Sorinières", 13, synonyms);
+    ac.add_string("Corberie, Les Sorinières", 14, synonyms);
+    ac.add_string("Le Pérou, Les Sorinières", 15, synonyms);
+    ac.add_string("Les Sorinières, Villebernier", 16, synonyms);
+    ac.add_string("Les Faulx, Les Sorinières", 17, synonyms);
+    ac.add_string("cimetière, Les Sorinières", 18, synonyms);
+
+    ac.build();
+
+    auto res = ac.find_complete("gare", synonyms, word_weight, nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res.size(), 8);
+    BOOST_REQUIRE_EQUAL(res.at(0).quality, 91);
+    BOOST_REQUIRE_EQUAL(res.at(0).idx, 6);//gare de Lucé Lucé
+    BOOST_REQUIRE_EQUAL(res.at(1).idx, 5);//gare de Dreux Dreux
+    BOOST_REQUIRE_EQUAL(res.at(2).idx, 0);//gare de Tours Tours
+    BOOST_REQUIRE_EQUAL(res.at(3).idx, 2);//gare d'Orléans Orléans
+    BOOST_REQUIRE_EQUAL(res.at(4).idx, 3);//gare de Bourges Bourges
+    BOOST_REQUIRE_EQUAL(res.at(5).idx, 7);//gare de Vierzon Vierzon
+    BOOST_REQUIRE_EQUAL(res.at(6).idx, 4);//Gare SNCF Blois
+    BOOST_REQUIRE_EQUAL(res.at(7).idx, 1);//Garennes-sur-Eure
+    BOOST_REQUIRE_EQUAL(res.at(7).quality, 79);
+
+
+    auto res1 = ac.find_complete("gare tours", synonyms, word_weight, nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
+
+    auto res2 = ac.find_complete("gare tours tours", synonyms, word_weight, nbmax, [](int){return true;});
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
+
+    auto res3 = ac.find_complete("les Sorinières", synonyms, word_weight, nbmax,[](int){return true;});
+    BOOST_REQUIRE_EQUAL(res3.size(), 10);
+    BOOST_REQUIRE_EQUAL(res3.at(0).quality, 100);
+    BOOST_REQUIRE_EQUAL(res3.at(0).idx, 8); //Les Sorinières, Les Sorinières
+    BOOST_REQUIRE_EQUAL(res3.at(1).quality, 90);
+    BOOST_REQUIRE_EQUAL(res3.at(1).idx, 9); //Les Sorinières 44840
+    BOOST_REQUIRE_EQUAL(res3.at(2).quality, 90);
+    BOOST_REQUIRE_EQUAL(res3.at(2).idx, 15); //Le Pérou, Les Sorinières
+    BOOST_REQUIRE_EQUAL(res3.at(3).quality, 90);
+    BOOST_REQUIRE_EQUAL(res3.at(3).idx, 17); //Les Faulx, Les Sorinières
+    BOOST_REQUIRE_EQUAL(res3.at(4).quality, 90);
+    BOOST_REQUIRE_EQUAL(res3.at(4).idx, 10); //Rouet, Les Sorinières
+    BOOST_REQUIRE_EQUAL(res3.at(5).quality, 89);
+    BOOST_REQUIRE_EQUAL(res3.at(5).idx, 11); //Ecoles, Les Sorinières
+    BOOST_REQUIRE_EQUAL(res3.at(6).quality, 88);
+    BOOST_REQUIRE_EQUAL(res3.at(6).idx, 12); //Prières, Les Sorinières
+    BOOST_REQUIRE_EQUAL(res3.at(7).quality, 87);
+    BOOST_REQUIRE_EQUAL(res3.at(7).idx, 13); //Calvaire, Les Sorinières
+    BOOST_REQUIRE_EQUAL(res3.at(8).quality, 87);
+    BOOST_REQUIRE_EQUAL(res3.at(8).idx, 14);//Corberie, Les Sorinières
+    BOOST_REQUIRE_EQUAL(res3.at(9).quality, 86);
+    BOOST_REQUIRE_EQUAL(res3.at(9).idx, 18);//cimetière, Les Sorinières
+}

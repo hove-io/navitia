@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 
+#include "type/time_duration.h"
 #include "datetime.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
@@ -122,21 +123,17 @@ template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
 
 
-struct Nameable{
+struct Nameable {
     std::string name;
     std::string comment;
-    bool visible;
-    Nameable():visible(true){}
+    bool visible = true;
 };
 
 
-struct Header{
-    std::string id;
-    idx_t idx;
-    std::string uri;
-    Header() : idx(invalid_idx){}
+struct Header {
+    idx_t idx = invalid_idx; // Index of the object in the main structure
+    std::string uri; // unique indentifier of the object
     std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
-
 };
 
 struct Codes {
@@ -425,7 +422,7 @@ struct Connection: public Header, hasProperties{
         max_duration(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & departure & destination & display_duration & duration & max_duration & _properties;
+        ar & idx & uri & departure & destination & display_duration & duration & max_duration & _properties;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -479,7 +476,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     bool wheelchair_boarding;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & name & coord & stop_point_list & admin_list
+        ar & idx & uri & name & coord & stop_point_list & admin_list
         & _properties & wheelchair_boarding & messages & visible & comment & codes;
     }
 
@@ -504,7 +501,7 @@ struct Network : public Header, Nameable, HasMessages, Codes{
     std::vector<Line*> line_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & address_name & address_number & address_type_name
+        ar & idx & name & uri & address_name & address_number & address_type_name
             & mail & website & fax & sort & line_list & messages & codes;
     }
 
@@ -525,7 +522,7 @@ struct Contributor : public Header, Nameable{
     const static Type_e type = Type_e::Contributor;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri;
+        ar & idx & name & uri;
     }
     bool operator<(const Contributor & other) const { return this < &other; }
 };
@@ -543,7 +540,7 @@ struct Company : public Header, Nameable, Codes{
     std::vector<Line*> line_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & address_name & address_number &
+        ar & idx & name & uri & address_name & address_number &
         address_type_name & phone_number & mail & website & fax & codes;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -554,7 +551,7 @@ struct CommercialMode : public Header, Nameable{
     const static Type_e type = Type_e::CommercialMode;
     std::vector<Line*> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & line_list;
+        ar & idx & name & uri & line_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const CommercialMode & other) const { return this < &other; }
@@ -566,7 +563,7 @@ struct PhysicalMode : public Header, Nameable{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & journey_pattern_list;
+        ar & idx & name & uri & journey_pattern_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -599,7 +596,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
     Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & code & forward_name & backward_name
+        ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
                 & messages & calendar_list & codes;
@@ -632,7 +629,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     idx_t main_destination();
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & line & journey_pattern_list & messages & codes;
+        ar & idx & name & uri & line & journey_pattern_list & messages & codes;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -653,7 +650,7 @@ struct JourneyPattern : public Header, Nameable{
     JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & is_frequence & route & commercial_mode
+        ar & idx & name & uri & is_frequence & route & commercial_mode
                 & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 
@@ -765,6 +762,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;
+    std::string platform_code;
 
     StopArea* stop_area;
     std::vector<navitia::georef::Admin*> admin_list;
@@ -774,7 +772,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         journey_pattern_point_list.resize(0);
-        ar & uri & name & stop_area & coord & fare_zone & idx
+        ar & uri & name & stop_area & coord & fare_zone & idx & platform_code
             & journey_pattern_point_list & admin_list & _properties & messages
             & stop_point_connection_list & comment & codes;
     }
@@ -798,11 +796,11 @@ struct JourneyPatternPoint : public Header{
 
     // Attention la sérialisation est répartrie dans deux methode: save et load
     template<class Archive> void save(Archive & ar, const unsigned int) const{
-        ar & id & idx & uri & order & main_stop_point & fare_section & journey_pattern
+        ar & idx & uri & order & main_stop_point & fare_section & journey_pattern
                 & stop_point & order ;
     }
     template<class Archive> void load(Archive & ar, const unsigned int) {
-        ar & id & idx & uri & order & main_stop_point & fare_section & journey_pattern
+        ar & idx & uri & order & main_stop_point & fare_section & journey_pattern
                 & stop_point & order;
         //on remplit le tableau des stoppoints, bizarrement ca segfault au chargement si on le fait à la bina...
         this->stop_point->journey_pattern_point_list.push_back(this);
@@ -815,7 +813,7 @@ struct JourneyPatternPoint : public Header{
 
 };
 
-struct StopTime : public Nameable {
+struct StopTime {
     static const uint8_t PICK_UP = 0;
     static const uint8_t DROP_OFF = 1;
     static const uint8_t ODT = 2;
@@ -823,21 +821,16 @@ struct StopTime : public Nameable {
     static const uint8_t WHEELCHAIR_BOARDING = 4;
     static const uint8_t DATE_TIME_ESTIMATED = 5;
 
-    uint32_t arrival_time; ///< En secondes depuis minuit
-    uint32_t departure_time; ///< En secondes depuis minuit
-    uint32_t start_time; ///< Si horaire en fréquence, premiere arrivee
-    uint32_t end_time; ///< Si horaire en fréquence, dernier depart
-    uint32_t headway_secs; ///< Si horaire en fréquence
-    VehicleJourney* vehicle_journey;
-    JourneyPatternPoint* journey_pattern_point;
-    uint32_t local_traffic_zone;
     std::bitset<8> properties;
-
-    ValidityPattern* departure_validity_pattern;
-    ValidityPattern* arrival_validity_pattern;
-
-    ValidityPattern* departure_adapted_validity_pattern;
-    ValidityPattern* arrival_adapted_validity_pattern;
+    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
+    uint32_t arrival_time = 0; ///< En secondes depuis minuit
+    uint32_t departure_time = 0; ///< En secondes depuis minuit
+    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence, premiere arrivee
+    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence, dernier depart
+    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence
+    VehicleJourney* vehicle_journey = nullptr;
+    JourneyPatternPoint* journey_pattern_point = nullptr;
+    std::string comment;
 
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
@@ -906,16 +899,23 @@ struct StopTime : public Nameable {
             return clockwise ? hour <= this->end_time : this->start_time <= hour;
     }
 
-    //@TODO construire ces putin de validy pattern!!
-    StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
-        headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey(nullptr), journey_pattern_point(nullptr),
-        local_traffic_zone(std::numeric_limits<uint32_t>::max()), departure_validity_pattern(nullptr), arrival_validity_pattern(nullptr),
-        departure_adapted_validity_pattern(nullptr), arrival_adapted_validity_pattern(nullptr){}
+    bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
+        if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
+                || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
+            if(day == 0)
+                return false;
+            --day;
+        }
+        if(!is_adapted) {
+            return vehicle_journey->validity_pattern->check(day);
+        } else {
+            return vehicle_journey->adapted_validity_pattern->check(day);
+        }
+    }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point
-            & properties & local_traffic_zone & departure_validity_pattern & arrival_validity_pattern
-            & departure_adapted_validity_pattern & arrival_adapted_validity_pattern & comment;
+            & properties & local_traffic_zone & comment;
     }
 
     bool operator<(const StopTime& other) const {
@@ -949,7 +949,7 @@ struct Calendar : public Nameable, public Header, public Codes {
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern & codes;
+        ar & name & idx & uri & week_pattern & active_periods & exceptions & validity_pattern & codes;
     }
 };
 
@@ -977,7 +977,7 @@ struct StreetNetworkParams{
     Mode_e mode;
     idx_t offset;
     float speed_factor;
-    boost::posix_time::time_duration max_duration;
+    navitia::time_duration max_duration;
     Type_e type_filter; // filtre sur le départ/arrivée : exemple les arrêts les plus proches à une site type
     std::string uri_filter; // l'uri de l'objet
     float radius_filter; // ce paramètre est utilisé pour le filtre
@@ -985,7 +985,7 @@ struct StreetNetworkParams{
                 mode(Mode_e::Walking),
                 offset(0),
                 speed_factor(1),
-                max_duration(boost::posix_time::seconds(1)),
+                max_duration(navitia::seconds(1)),
                 type_filter(Type_e::Unknown),
                 uri_filter(""),
                 radius_filter(150){}
