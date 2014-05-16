@@ -137,7 +137,7 @@ struct Autocomplete
         int distance = 0;
 
         //Appeler la méthode pour traiter les synonymes avant de les ajouter dans le dictionaire:
-        std::vector<std::string> vec_word = tokenize(str, synonyms);
+        auto vec_word = tokenize(str, synonyms);
 
         //créer des patterns pour chaque mot et les ajouter dans temp_pattern_map:
         add_vec_pattern(vec_word, position);
@@ -155,7 +155,7 @@ struct Autocomplete
         word_quality_list[position] = wc;
     }
 
-    void add_vec_pattern(const std::vector<std::string> &vec_words, T position){
+    void add_vec_pattern(const std::set<std::string> &vec_words, T position){
         //Créer les patterns:
         std::vector<std::string> vec_patt = make_vec_pattern(vec_words, 2);
         auto v_patt = vec_patt.begin();
@@ -165,7 +165,7 @@ struct Autocomplete
         }
     }
 
-    std::vector<std::string> make_vec_pattern(const std::vector<std::string> &vec_words, size_t n_gram) const{
+    std::vector<std::string> make_vec_pattern(const std::set<std::string> &vec_words, size_t n_gram) const{
         std::vector<std::string> pattern;
         auto vec = vec_words.begin();
         while(vec != vec_words.end()){
@@ -240,7 +240,7 @@ struct Autocomplete
     }
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant tous ces mots*/
-    std::vector<T> find(std::vector<std::string> vecStr) const {
+    std::vector<T> find(std::set<std::string> vecStr) const {
         std::vector<T> result;
         auto vec = vecStr.begin();
         if(vec != vecStr.end()){
@@ -310,7 +310,7 @@ struct Autocomplete
                                           size_t nbmax,
                                           std::function<bool(T)> keep_element)
                                           const{
-        std::vector<std::string> vec = tokenize(str, synonyms);
+        auto vec = tokenize(str, synonyms);
         int wordCount = 0;
         int wordLength = 0;
         fl_quality quality;
@@ -360,7 +360,7 @@ struct Autocomplete
         std::vector<fl_quality> vec_quality;
         fl_quality quality;
 
-        std::vector<std::string> vec_word = tokenize(str, synonyms);
+        auto vec_word = tokenize(str, synonyms);
         std::vector<std::string> vec_pattern = make_vec_pattern(vec_word, 2); //2-grams
         int wordLength = words_length(vec_word);
         int pattern_count = vec_pattern.size();
@@ -443,7 +443,7 @@ struct Autocomplete
         return result;
     }
 
-    int words_length(std::vector<std::string> & words) const{
+    int words_length(std::set<std::string> & words) const{
         int distance = 0;
         auto vec = words.begin();
         while(vec != words.end()){
@@ -486,8 +486,8 @@ struct Autocomplete
         return str;
     }
 
-    std::vector<std::string> tokenize(std::string strFind, const autocomplete_map& synonyms) const{
-        std::vector<std::string> vec;
+    std::set<std::string> tokenize(std::string strFind, const autocomplete_map& synonyms) const{
+        std::set<std::string> vec;
         boost::to_lower(strFind);
         strFind = boost::regex_replace(strFind, boost::regex("( ){2,}"), " ");
 
@@ -501,16 +501,16 @@ struct Autocomplete
         boost::tokenizer <> tokens(strFind);
         for (auto token_it: tokens){
             if (!token_it.empty()){
-                vec.push_back(token_it);
+                vec.insert(token_it);
             }
         }
-       return vec;
+        return vec;
     }
 
     bool is_address_type(const std::string & str,
                          const autocomplete_map& synonyms) const{
         bool result = false;
-        std::vector<std::string> vec_token = tokenize(str, synonyms);
+        auto vec_token = tokenize(str, synonyms);
         std::vector<std::string> vecTpye = {"rue", "avenue", "place", "boulevard","chemin", "impasse"};
         auto vtok = vec_token.begin();
         while(vtok != vec_token.end() && (result == false)){
