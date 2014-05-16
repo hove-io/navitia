@@ -192,18 +192,18 @@ list_cal_bitset find_matching_calendar(const Data&, const VehicleJourney* vehicl
     list_cal_bitset res;
     //for the moment we keep lot's of trace, but they will be removed after a while
     auto log = log4cplus::Logger::getInstance("kraken::type::Data::Calendar");
-    LOG4CPLUS_DEBUG(log, "vj " << vehicle_journey->uri << " :" << vehicle_journey->validity_pattern->days.to_string());
+    LOG4CPLUS_TRACE(log, "vj " << vehicle_journey->uri << " :" << vehicle_journey->validity_pattern->days.to_string());
 
     for (const auto calendar : vehicle_journey->journey_pattern->route->line->calendar_list) {
         auto diff = get_difference(calendar->validity_pattern.days, vehicle_journey->validity_pattern->days);
         size_t nb_diff = diff.count();
 
-        LOG4CPLUS_DEBUG(log, "cal " << calendar->uri << " :" <<calendar->validity_pattern.days.to_string());
+        LOG4CPLUS_TRACE(log, "cal " << calendar->uri << " :" <<calendar->validity_pattern.days.to_string());
 
         //we associate the calendar to the vj if the diff are below a relative threshold
         //compared to the number of active days in the calendar
         size_t threshold = std::round(relative_threshold * calendar->validity_pattern.days.count());
-        LOG4CPLUS_DEBUG(log, "**** diff: " << nb_diff << " and threshold: " << threshold << (nb_diff <= threshold ? ", we keep it!!":""));
+        LOG4CPLUS_TRACE(log, "**** diff: " << nb_diff << " and threshold: " << threshold << (nb_diff <= threshold ? ", we keep it!!":""));
 
         if (nb_diff > threshold) {
             continue;
@@ -271,7 +271,7 @@ void Data::build_associated_calendar() {
         auto close_cal = find_matching_calendar(*this, vehicle_journey);
 
         if (close_cal.empty()) {
-            LOG4CPLUS_DEBUG(log, "the vj " << vehicle_journey->uri << " has been attached to no calendar");
+            LOG4CPLUS_TRACE(log, "the vj " << vehicle_journey->uri << " has been attached to no calendar");
             nb_not_matched_vj++;
             continue;
         }

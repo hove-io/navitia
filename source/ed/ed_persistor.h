@@ -86,6 +86,8 @@ private:
     void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
     void insert_synonyms(const std::map<std::string, std::string>& synonyms);
 
+    void insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas);
+
     /// Inserer les données fiche horaire par période
     void insert_week_patterns(const std::vector<types::Calendar*>& calendars);
     void insert_calendars(const std::vector<types::Calendar*>& calendars);

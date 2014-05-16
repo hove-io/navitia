@@ -328,6 +328,10 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert journey pattern point connections");
     this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
     LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
+    LOG4CPLUS_INFO(logger, "Begin: insert admin stop area");
+    this->insert_admin_stop_areas(data.admin_stop_areas);
+    LOG4CPLUS_INFO(logger, "End: insert admin stop area");
+
     LOG4CPLUS_INFO(logger, "Begin: insert fares");
     persist_fare(data);
     LOG4CPLUS_INFO(logger, "End: insert fares");
@@ -902,6 +906,23 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         this->lotus.insert(values);
     }
 
+    this->lotus.finish_bulk_insert();
+}
+
+
+void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas) {
+    this->lotus.prepare_bulk_insert("navitia.admin_stop_area", {"admin_id", "stop_area_id"});
+
+    for(const types::AdminStopArea* asa : admin_stop_areas) {
+        for(const types::StopArea* sa: asa->stop_area) {
+            std::vector<std::string> values {
+                asa->admin,
+                std::to_string(sa->idx)
+            };
+
+            this->lotus.insert(values);
+        }
+    }
     this->lotus.finish_bulk_insert();
 }
 

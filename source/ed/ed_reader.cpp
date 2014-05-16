@@ -69,6 +69,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_stop_times(data, work);
 
     this->fill_admins(data, work);
+    this->fill_admin_stop_areas(data, work);
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->fill_stop_point_connections(data, work);
@@ -104,7 +105,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 }
 
 
-
 void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, post_code, insee, level, ST_X(coord::geometry) as lon, "
         "ST_Y(coord::geometry) as lat "
@@ -126,6 +126,49 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
 
         nav_data.geo_ref->admins.push_back(admin);
         this->admin_map[const_it["id"].as<idx_t>()] = admin;
+
+        admin_by_insee_code[admin->insee] = admin;
+    }
+
+}
+
+
+void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
+    std::string request = "SELECT admin_id, stop_area_id from navitia.admin_stop_area";
+
+    size_t nb_unknown_admin(0), nb_unknown_stop(0), nb_valid_admin(0);
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        auto it_admin = admin_by_insee_code.find(const_it["admin_id"].as<std::string>());
+        if (it_admin == admin_by_insee_code.end()) {
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "impossible to find admin " << const_it["admin_id"]
+                    << ", we cannot associate stop_area " << const_it["stop_area_id"] << " to it");
+            nb_unknown_admin++;
+            continue;
+        }
+        navitia::georef::Admin* admin = it_admin->second;
+
+        auto it_sa = stop_area_map.find(const_it["stop_area_id"].as<idx_t>());
+        if (it_sa == stop_area_map.end()) {
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "impossible to find stop_area " << const_it["stop_area_id"]
+                    << ", we cannot associate it to admin " << const_it["admin_id"]);
+            nb_unknown_stop++;
+            continue;
+        }
+
+        navitia::type::StopArea* sa = it_sa->second;
+
+        admin->main_stop_areas.push_back(sa);
+        nb_valid_admin++;
+    }
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_valid_admin << " admin with at least one main stop");
+
+    if (nb_unknown_admin) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_unknown_admin << " admin not found for admin main stops");
+    }
+    if (nb_unknown_stop) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_unknown_stop << " stops not found for admin main stops");
     }
 
 }
@@ -1271,7 +1314,7 @@ void EdReader::check_coherence(navitia::type::Data& data) const {
     size_t non_associated_lines(0);
     for (navitia::type::Line* line: data.pt_data->lines) {
         if (line->calendar_list.empty()) {
-            LOG4CPLUS_DEBUG(log, "the line " << line->uri << " is not associated with any calendar");
+            LOG4CPLUS_TRACE(log, "the line " << line->uri << " is not associated with any calendar");
             non_associated_lines++;
         }
     }

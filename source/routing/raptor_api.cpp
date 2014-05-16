@@ -272,21 +272,21 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
     return pb_response;
 }
 
-
 std::vector<std::pair<type::idx_t, navitia::time_duration> >
-get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
+get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         georef::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, navitia::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
     if(ep.type == type::Type_e::Address
-                || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin
-                || ep.type == type::Type_e::StopArea || ep.type == type::Type_e::POI){
+                || ep.type == type::Type_e::Coord
+                || ep.type == type::Type_e::StopArea
+                || ep.type == type::Type_e::POI){
         std::set<type::idx_t> stop_points;
         if(ep.type == type::Type_e::StopArea){
-            auto it = pt_data.stop_areas_map.find(ep.uri);
-            if(it!= pt_data.stop_areas_map.end()) {
+            auto it = data.pt_data->stop_areas_map.find(ep.uri);
+            if(it!= data.pt_data->stop_areas_map.end()) {
                 for(auto stop_point : it->second->stop_point_list) {
                     if(stop_points.find(stop_point->idx) == stop_points.end()) {
                         result.push_back({stop_point->idx, {}});
@@ -297,7 +297,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         }
         auto tmp_sn = worker.find_nearest_stop_points(
                     ep.streetnetwork_params.max_duration,
-                    pt_data.stop_point_proximity_list,
+                    data.pt_data->stop_point_proximity_list,
                     use_second);
         for(auto idx_duration : tmp_sn) {
             auto sp_idx = idx_duration.first;
@@ -306,11 +306,34 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
                 result.push_back(idx_duration);
             }
         }
-    }else if(ep.type == type::Type_e::StopPoint){
-        auto it = pt_data.stop_points_map.find(ep.uri);
-        if(it != pt_data.stop_points_map.end()){
+    } else if(ep.type == type::Type_e::StopPoint) {
+        auto it = data.pt_data->stop_points_map.find(ep.uri);
+        if(it != data.pt_data->stop_points_map.end()){
             result.push_back({it->second->idx, {}});
         }
+    } else if(ep.type == type::Type_e::Admin) {
+        //for an admin, we want to leave from it's main stop areas if we have some, else we'll leave from the center of the admin
+        auto it_admin = data.geo_ref->admin_map.find(ep.uri);
+        if (it_admin == data.geo_ref->admin_map.end()) {
+            LOG4CPLUS_ERROR(logger, "impossible to find admin " << ep.uri);
+            return result;
+        }
+        const auto admin = data.geo_ref->admins[it_admin->second];
+
+        if (! admin->main_stop_areas.empty()) {
+            for (auto stop_area: admin->main_stop_areas) {
+                for(auto stop_point : stop_area->stop_point_list) {
+                    result.push_back({stop_point->idx, {}});
+                }
+            }
+        } else {
+            //we only add the center of the admin, and look for the stop points around
+            result = worker.find_nearest_stop_points(
+                        ep.streetnetwork_params.max_duration,
+                        data.pt_data->stop_point_proximity_list,
+                        use_second);
+        }
+        LOG4CPLUS_ERROR(logger, result.size() << " sp found for admin");
     }
 
     return result;
@@ -366,8 +389,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         return response;
     }
     worker.init(origin, {destination});
-    auto departures = get_stop_points(origin, *raptor.data.pt_data, worker);
-    auto destinations = get_stop_points(destination, *raptor.data.pt_data, worker, true);
+    auto departures = get_stop_points(origin, raptor.data, worker);
+    auto destinations = get_stop_points(destination, raptor.data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
         fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point nor destination point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
@@ -440,7 +463,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     }
     datetime = tmp_datetime.front();
     worker.init(origin);
-    auto departures = get_stop_points(origin, *raptor.data.pt_data, worker);
+    auto departures = get_stop_points(origin, raptor.data, worker);
 
     if(departures.size() == 0){
         response.set_response_type(pbnavitia::NO_ORIGIN_POINT);

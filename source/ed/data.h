@@ -75,6 +75,9 @@ public:
     std::map<std::string, navitia::fare::DateTicket> fare_map;
     std::map<navitia::fare::OD_key, std::map<navitia::fare::OD_key, std::vector<std::string>>> od_tickets;
 
+
+    std::vector<ed::types::AdminStopArea*>  admin_stop_areas;
+
     /**
          * trie les différentes donnée et affecte l'idx
          *
