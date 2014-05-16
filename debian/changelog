@@ -1,3 +1,9 @@
+navitia2 (0.96.1) unstable; urgency=low
+
+  * Stat_persistor: fix package
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 16 May 2014 14:05:54 +0100
+
 navitia2 (0.96.0) unstable; urgency=low
 
   * Kraken: Fix rabbitmq bug after a reload of data
