@@ -1,3 +1,38 @@
+navitia2 (0.95.0) unstable; urgency=low
+
+  * Adminstation  <https://github.com/CanalTP/navitia/pull/345>
+  * Stat: create stat schema  <https://github.com/CanalTP/navitia/pull/344>
+  * Navitiaii 844  <https://github.com/CanalTP/navitia/pull/343>
+  * Install stat persistor  <https://github.com/CanalTP/navitia/pull/342>
+  * Stat_persistor: better handling of errors in config  <https://github.com/CanalTP/navitia/pull/341>
+  * Kraken: Labels now have a size of 10  <https://github.com/CanalTP/navitia/pull/340>
+  * type: Cityname added in the stop_point name.  <https://github.com/CanalTP/navitia/pull/339>
+  * Kraken: Fill stop_area instead of stop_point  <https://github.com/CanalTP/navitia/pull/338>
+  * Jormungandr: Sort in reverse order in datetime represents arrival  <https://github.com/CanalTP/navitia/pull/337>
+  * Tyr: fix synonyms integration  <https://github.com/CanalTP/navitia/pull/336>
+  * Max waiting duration  <https://github.com/CanalTP/navitia/pull/335>
+  * Don't expand house numbers to 1/2 the world  <https://github.com/CanalTP/navitia/pull/333>
+  * Raptor: Use index for boarding in Label  <https://github.com/CanalTP/navitia/pull/332>
+  * Remove a validity pattern from stop time  <https://github.com/CanalTP/navitia/pull/331>
+  * Fix clang  <https://github.com/CanalTP/navitia/pull/330>
+  * Parse OSM platform ways  <https://github.com/CanalTP/navitia/pull/329>
+  * Fix #327  <https://github.com/CanalTP/navitia/pull/328>
+  * Add platformcodes  <https://github.com/CanalTP/navitia/pull/324>
+  * Parse OSM platform ways  <https://github.com/CanalTP/navitia/pull/323>
+  * Fix gtfs  <https://github.com/CanalTP/navitia/pull/322>
+  * Fix one cause for segfault for trains w/ midnight departure  <https://github.com/CanalTP/navitia/pull/321>
+  * type: Object formats for API places modified.  <https://github.com/CanalTP/navitia/pull/320>
+  * Tyr: Fix schemaname of admin and poi in aggregate_places  <https://github.com/CanalTP/navitia/pull/319>
+  * Use the departure validity pattern for pickup  <https://github.com/CanalTP/navitia/pull/318>
+  * SQL optimizations  <https://github.com/CanalTP/navitia/pull/317>
+  * Work on memory consumption  <https://github.com/CanalTP/navitia/pull/316>
+  * Cmake improvement  <https://github.com/CanalTP/navitia/pull/315>
+  * Closing amqp connection  <https://github.com/CanalTP/navitia/pull/314>
+  * Kraken: after loading the flag is_connected_to_rabbitmq was alway false  <https://github.com/CanalTP/navitia/pull/312>
+  * ed : move poi table in georef schema  <https://github.com/CanalTP/navitia/pull/311>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 16 May 2014 16:05:53 +0100
+
 navitia2 (0.94.1) unstable; urgency=low
 
   * Ed: Do bulk insert on stop times every 150000 inserts
