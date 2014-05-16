@@ -1,3 +1,9 @@
+navitia2 (0.96.3) unstable; urgency=low
+
+  * 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 16 May 2014 17:05:39 +0100
+
 navitia2 (0.96.2) unstable; urgency=low
 
   * Stat_persistor: Fix typo
