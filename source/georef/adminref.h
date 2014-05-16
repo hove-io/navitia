@@ -61,7 +61,7 @@ namespace navitia {
             Admin():level(-1){}
             Admin(int lev):level(lev){}
             template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-                ar & idx & level & post_code & insee & name & uri & coord & admin_list;
+                ar & idx & level & post_code & insee & name & uri & coord & admin_list & main_stop_areas;
             }
         };
     }

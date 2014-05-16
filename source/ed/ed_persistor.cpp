@@ -917,7 +917,7 @@ void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea
         for(const types::StopArea* sa: asa->stop_area) {
             std::vector<std::string> values {
                 asa->admin,
-                sa->uri
+                std::to_string(sa->idx)
             };
 
             this->lotus.insert(values);
