@@ -32,7 +32,7 @@
 from stat_persistor.config import Config
 import logging
 import navitiacommon.stat_pb2
-import google.protobuf.message import DecodeError
+from google.protobuf.message import DecodeError
 from stat_persistor.saver.statsaver import StatSaver
 from stat_persistor.saver.utils import TechnicalError, FunctionalError
 import sys
