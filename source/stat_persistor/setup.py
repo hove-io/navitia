@@ -30,6 +30,7 @@
 # www.navitia.io
 
 from distutils.core import setup
+from setuptools import find_packages
 import glob
 
 setup(name='stat_persistor',
@@ -38,7 +39,7 @@ setup(name='stat_persistor',
         author='CanalTP',
         author_email='krishna.adhikari@canaltp.fr',
         url='www.navitia.io',
-        packages=['stat_persistor'],
+        packages=find_packages(),
         scripts=['stat_persistor_service'],
         data_files=[
             ('/usr/share/stat_persistor/migrations', ['migrations/alembic.ini',
