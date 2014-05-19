@@ -1,6 +1,12 @@
+navitia2 (0.96.4) unstable; urgency=low
+
+  * Stat_peristor: add all packages
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 19 May 2014 14:05:08 +0100
+
 navitia2 (0.96.3) unstable; urgency=low
 
-  * Scripts: Moved init_db from ed to navitiacommon 
+  * Scripts: Moved init_db from ed to navitiacommon
 
  -- antoine-de <antoine.desbordes@gmail.com>  Fri, 16 May 2014 17:05:39 +0100
 
