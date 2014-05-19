@@ -504,6 +504,7 @@ class Script(object):
             nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
+        self.delete_journeys(resp, request)  # filter one last time to remove similar journeys
         self.sort_journeys(resp)
         self.choose_best(resp)
         return resp
