@@ -1,3 +1,9 @@
+navitia2 (0.96.7) unstable; urgency=low
+
+  * Stat_peristor: change stat_peristor.py in stat_persit.py
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 19 May 2014 17:05:18 +0100
+
 navitia2 (0.96.6) unstable; urgency=low
 
   * Stat_persitor: fix typo in install
