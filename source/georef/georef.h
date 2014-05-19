@@ -417,8 +417,6 @@ struct POIType : public nt::Nameable, nt::Header{
     }
 
     std::vector<type::idx_t> get(type::Type_e type, const GeoRef & data) const;
-
-    private:
 };
 
 
