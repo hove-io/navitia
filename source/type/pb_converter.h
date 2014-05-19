@@ -87,7 +87,7 @@ struct EnhancedResponse {
     ITERATE_NAVITIA_PT_TYPES(FILL_PB_CONSTRUCTOR)
 #undef FILL_PB_CONSTRUCTOR
 
-void fill_pb_object(navitia::georef::Way* way, const type::Data &data, pbnavitia::Address* address, int house_number,
+void fill_pb_object(const navitia::georef::Way* way, const type::Data &data, pbnavitia::Address* address, int house_number,
         const type::GeographicalCoord& coord, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
@@ -96,7 +96,7 @@ void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::D
         int max_depth = 0, const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(navitia::georef::Admin* adm, const type::Data &data, pbnavitia::StopDateTime *stop_time, int max_depth = 0,
+void fill_pb_object(const navitia::georef::Admin* adm, const type::Data &data, pbnavitia::StopDateTime *stop_time, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
@@ -116,7 +116,7 @@ void fill_pb_placemark(const type::StopPoint* stop_point, const type::Data &data
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes = false);
 
-void fill_pb_placemark(navitia::georef::Way* way, const type::Data &data, pbnavitia::Place* place, int house_number, type::GeographicalCoord& coord, int max_depth = 0,
+void fill_pb_placemark(const navitia::georef::Way* way, const type::Data &data, pbnavitia::Place* place, int house_number, type::GeographicalCoord& coord, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
@@ -126,11 +126,11 @@ void fill_pb_placemark(const type::StopArea* stop_area, const type::Data &data,
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes = false);
 
-void fill_pb_placemark(navitia::georef::Admin* admin, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
+void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_placemark(navitia::georef::POI* poi, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
+void fill_pb_placemark(const navitia::georef::POI* poi, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
@@ -156,7 +156,7 @@ void fill_pb_object(const georef::POIType*, const type::Data &data, pbnavitia::P
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(navitia::georef::Admin* adm, const type::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
+void fill_pb_object(const navitia::georef::Admin* adm, const type::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period );
 

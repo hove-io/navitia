@@ -43,7 +43,7 @@ namespace pt = boost::posix_time;
 
 namespace navitia{
 
-void fill_pb_object(navitia::georef::Admin* adm, const nt::Data&,
+void fill_pb_object(const navitia::georef::Admin* adm, const nt::Data&,
                     pbnavitia::AdministrativeRegion* admin, int,
                     const pt::ptime&, const pt::time_period& ){
     if(adm == nullptr)
@@ -168,7 +168,7 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
 }
 
 
-void fill_pb_object(navitia::georef::Way* way, const nt::Data& data,
+void fill_pb_object(const navitia::georef::Way* way, const nt::Data& data,
                     pbnavitia::Address * address, int house_number,
                     const type::GeographicalCoord& coord, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
@@ -608,7 +608,7 @@ void fill_pb_placemark(const type::StopArea* stop_area,
     place->set_embedded_type(pbnavitia::STOP_AREA);
 }
 
-void fill_pb_placemark(navitia::georef::Admin* admin,
+void fill_pb_placemark(const navitia::georef::Admin* admin,
                        const type::Data &data, pbnavitia::Place* place,
                        int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period){
@@ -654,7 +654,7 @@ void fill_pb_placemark(navitia::georef::Admin* admin,
     place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
 }
 
-void fill_pb_placemark(navitia::georef::POI* poi,
+void fill_pb_placemark(const navitia::georef::POI* poi,
                        const type::Data &data, pbnavitia::Place* place,
                        int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period){
@@ -674,7 +674,7 @@ void fill_pb_placemark(navitia::georef::POI* poi,
     place->set_embedded_type(pbnavitia::POI);
 }
 
-void fill_pb_placemark(navitia::georef::Way* way,
+void fill_pb_placemark(const navitia::georef::Way* way,
                        const type::Data &data, pbnavitia::Place* place,
                        int house_number,
                        type::GeographicalCoord& coord,
@@ -750,6 +750,22 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     pb_fare->set_found(! fare.not_found);
 }
 
+const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
+    const navitia::georef::POI* vls = nullptr;
+    //we loop through all poi near the coord to find a vls station within 50 meter
+    for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 50)) {
+        const auto poi_idx = pair.first;
+        const auto poi = data.geo_ref->pois[poi_idx];
+        const auto poi_type = data.geo_ref->poitypes[poi->poitype_idx];
+        if (poi_type->uri == "poi_type:bicycle_rental") {
+            vls = poi;
+            break;
+        }
+    }
+
+    return vls;
+}
+
 void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,
                       const navitia::type::Data& data, const boost::posix_time::ptime departure,
                       int depth, const pt::ptime& now, const pt::time_period& action_period) {
@@ -771,10 +787,24 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
 
     //add the destination as a placemark
     pbnavitia::Place* dest_place = section->mutable_destination();
-    auto way = data.geo_ref->ways[last_item.way_idx];
-    type::GeographicalCoord coord = last_item.coordinates.back();
-    fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
-                            depth, now, action_period);
+
+    bool poi_found = false;
+    // we want to have a specific place mark for vls or for the departure if we started from a poi
+    if (last_item.transportation == georef::PathItem::TransportCaracteristic::BssPutBack) {
+        const auto vls_station = get_nearest_bss_station(data, last_item.coordinates.front());
+        if (vls_station) {
+            fill_pb_placemark(vls_station, data, dest_place, depth, now, action_period);
+            poi_found = true;
+        } else {
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS putback station poi for coord " << last_item.coordinates.front());
+        }
+    }
+    if (! poi_found) {
+        auto way = data.geo_ref->ways[last_item.way_idx];
+        type::GeographicalCoord coord = last_item.coordinates.back();
+        fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
+                                depth, now, action_period);
+    }
 
     switch (last_item.transportation) {
     case georef::PathItem::TransportCaracteristic::Walk:
@@ -806,13 +836,24 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
     section->set_type(pbnavitia::STREET_NETWORK);
 
     pbnavitia::Place* orig_place = section->mutable_origin();
-    if (first_item.way_idx != nt::invalid_idx) {
+    bool poi_found = false;
+    // we want to have a specific place mark for vls or for the departure if we started from a poi
+    if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
+        const auto vls_station = get_nearest_bss_station(data, first_item.coordinates.front());
+        if (vls_station) {
+            fill_pb_placemark(vls_station, data, orig_place, depth, now, action_period);
+            poi_found = true;
+        } else {
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS rent station poi for coord " << first_item.coordinates.front());
+        }
+    }
+    if (! poi_found && first_item.way_idx != nt::invalid_idx) {
         auto way = data.geo_ref->ways[first_item.way_idx];
         type::GeographicalCoord departure_coord = first_item.coordinates.front();
         fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
                           depth, now, action_period);
     }
-    //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way)
+    //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
 
     return section;
 }
