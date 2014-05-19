@@ -796,7 +796,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
             fill_pb_placemark(vls_station, data, dest_place, depth, now, action_period);
             poi_found = true;
         } else {
-            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "tiens on arrive pas a trouver une station vls a cote pour deposer son velib");
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS putback station poi for coord " << last_item.coordinates.front());
         }
     }
     if (! poi_found) {
@@ -844,7 +844,7 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
             fill_pb_placemark(vls_station, data, orig_place, depth, now, action_period);
             poi_found = true;
         } else {
-            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "tiens on arrive pas a trouver une station vls a cote pour prendre son velib");
+            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS rent station poi for coord " << first_item.coordinates.front());
         }
     }
     if (! poi_found && first_item.way_idx != nt::invalid_idx) {
