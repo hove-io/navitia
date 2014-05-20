@@ -73,7 +73,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->fill_stop_point_connections(data, work);
-    this->fill_journey_pattern_point_connections(data, work);
     this->fill_poi_types(data, work);
     this->fill_pois(data, work);
     this->fill_poi_properties(data, work);
@@ -594,29 +593,6 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
             //add the connection in the stop points
             stop_point_connection->departure->stop_point_connection_list.push_back(stop_point_connection);
             stop_point_connection->destination->stop_point_connection_list.push_back(stop_point_connection);
-        }
-    }
-}
-
-void EdReader::fill_journey_pattern_point_connections(nt::Data& data, pqxx::work& work){
-    std::string request = "select departure_journey_pattern_point_id,"
-        "destination_journey_pattern_point_id, connection_kind_id, length "
-        "from navitia.journey_pattern_point_connection";
-
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        auto id_departure = const_it["departure_journey_pattern_point_id"];
-        auto id_destination = const_it["destination_journey_pattern_point_id"];
-        auto it_departure = journey_pattern_point_map.find(id_departure.as<idx_t>());
-        auto it_destination = journey_pattern_point_map.find(id_destination.as<idx_t>());
-        if(it_departure!=journey_pattern_point_map.end() &&
-                it_destination!=journey_pattern_point_map.end()) {
-            auto* jppc= new nt::JourneyPatternPointConnection();
-            jppc->departure = it_departure->second;
-            jppc->destination = it_destination->second;
-            jppc->connection_type = static_cast<nt::ConnectionType>(const_it["connection_kind_id"].as<int>());
-            jppc->duration = const_it["length"].as<int>();
-            data.pt_data->journey_pattern_point_connections.push_back(jppc);
         }
     }
 }

@@ -52,10 +52,6 @@ void normalize_uri(std::vector<T*>& vec){
 
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2);
 
-/// Ajoute une connection entre deux journey_pattern_point
-void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, types::JourneyPatternPoint *rp2, int length,
-                           std::multimap<std::string, types::JourneyPatternPointConnection> &journey_pattern_point_connections);
-
 /** Structure de donnée temporaire destinée à être remplie par un connecteur
       *
       * Les vecteurs contiennent des pointeurs vers un objet TC.
@@ -67,7 +63,6 @@ public:
 #define ED_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
     ITERATE_NAVITIA_PT_TYPES(ED_COLLECTIONS)
     std::vector<types::StopTime*> stops;
-    std::vector<types::JourneyPatternPointConnection*> journey_pattern_point_connections;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
     //fare:
@@ -108,9 +103,6 @@ public:
 
     /// Construit les journey_patternpoint
     void build_journey_pattern_points();
-
-    /// Construit les connections pour les correspondances garanties
-    void build_journey_pattern_point_connections();
 
     void normalize_uri();
 

@@ -49,7 +49,6 @@ struct PT_Data : boost::noncopyable{
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
 
     std::vector<StopTime*> stop_times;
-    std::vector<JourneyPatternPointConnection*> journey_pattern_point_connections;
     std::vector<StopPointConnection*> stop_point_connections;
 
     //associated cal for vj
@@ -81,7 +80,7 @@ struct PT_Data : boost::noncopyable{
                 // Les proximity list
                 & stop_area_proximity_list & stop_point_proximity_list & line_autocomplete
                 // Les types un peu spéciaux
-                & stop_point_connections & journey_pattern_point_connections
+                & stop_point_connections
                 //les messages
                 & message_holder;
     }

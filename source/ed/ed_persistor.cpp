@@ -325,9 +325,6 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert stop point connections");
     this->insert_stop_point_connections(data.stop_point_connections);
     LOG4CPLUS_INFO(logger, "End: insert stop point connections");
-    LOG4CPLUS_INFO(logger, "Begin: insert journey pattern point connections");
-    this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
-    LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
     LOG4CPLUS_INFO(logger, "Begin: insert admin stop area");
     this->insert_admin_stop_areas(data.admin_stop_areas);
     LOG4CPLUS_INFO(logger, "End: insert admin stop area");
@@ -666,24 +663,6 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections){
-    this->lotus.prepare_bulk_insert("navitia.journey_pattern_point_connection",
-            {"departure_journey_pattern_point_id",
-            "destination_journey_pattern_point_id", "connection_kind_id",
-            "length"});
-
-    //@TODO properties!!
-    for(types::JourneyPatternPointConnection* co : connections){
-        std::vector<std::string> values;
-        values.push_back(std::to_string(co->departure->idx));
-        values.push_back(std::to_string(co->destination->idx));
-        values.push_back(std::to_string(static_cast<int>(co->connection_kind)));
-        values.push_back(std::to_string(co->length));
-        this->lotus.insert(values);
-    }
-
-    this->lotus.finish_bulk_insert();
-}
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",

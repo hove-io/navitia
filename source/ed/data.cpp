@@ -47,9 +47,6 @@ void Data::sort(){
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
 
     std::sort(stops.begin(), stops.end(), Less());
-
-    std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Less());
-    std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer<nt::idx_t>());
 }
 
 void Data::normalize_uri(){
@@ -68,7 +65,6 @@ void Data::normalize_uri(){
 void Data::complete(){
     build_journey_patterns();
     build_journey_pattern_points();
-    build_journey_pattern_point_connections();
     finalize_frequency();
     //on construit les codes externe des journey pattern
     ::ed::normalize_uri(journey_patterns);
@@ -270,9 +266,6 @@ void Data::transform(navitia::type::PT_Data& data){
     data.stop_point_connections.resize(this->stop_point_connections.size());
     std::transform(this->stop_point_connections.begin(), this->stop_point_connections.end(), data.stop_point_connections.begin(), Transformer());
 
-    data.journey_pattern_point_connections.resize(this->journey_pattern_point_connections.size());
-    std::transform(this->journey_pattern_point_connections.begin(), this->journey_pattern_point_connections.end(), data.journey_pattern_point_connections.begin(), Transformer());
-
     data.stop_times.resize(this->stops.size());
     std::transform(this->stops.begin(), this->stops.end(), data.stop_times.begin(), Transformer());
 
@@ -452,58 +445,6 @@ void Data::build_journey_pattern_points(){
     LOG4CPLUS_TRACE(logger, "Nombre de journey_pattern points : "+ boost::lexical_cast<std::string>(this->journey_pattern_points.size()));
 }
 
-void Data::build_journey_pattern_point_connections(){
-    std::multimap<std::string, types::VehicleJourney*> block_vj;
-    std::multimap<std::string, types::JourneyPatternPointConnection> journey_pattern_point_connections;
-    for(types::VehicleJourney *vj: this->vehicle_journeys) {
-        if(vj->block_id != "")
-            block_vj.insert(std::make_pair(vj->block_id, vj));
-    }
-    // Gestion des admins
-
-    std::string prec_block = "";
-    for(auto it = block_vj.begin(); it!=block_vj.end(); ++it) {
-        std::string block_id = it->first;
-        if(block_id != "" && prec_block != block_id) {
-            auto pp = block_vj.equal_range(block_id);
-            //On trie les vj appartenant au meme bloc par leur premier stop time
-            std::vector<types::VehicleJourney*> vjs;
-            for(auto it_sub = pp.first; it_sub != pp.second; ++it_sub) {
-                vjs.push_back(it_sub->second);
-            }
-            std::sort(vjs.begin(), vjs.end(), [](types::VehicleJourney *  vj1, types::VehicleJourney*vj2)->bool{
-                if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
-                    return (vj1->stop_time_list.front()->arrival_time < vj2->stop_time_list.front()->arrival_time);
-                } else {
-                    return !vj1->stop_time_list.empty();
-                }
-            });
-            //On crée les connexions entre le dernier journey_pattern point et le premier journey_pattern point
-            auto prec_vj = vjs.begin();
-            auto it_vj =vjs.begin() + 1;
-
-            for(; it_vj!=vjs.end(); ++it_vj) {
-                if(!((*prec_vj)->stop_time_list.empty()) && (!(*it_vj)->stop_time_list.empty())) {
-                    auto &st1 = (*prec_vj)->stop_time_list.back(),
-                         &st2 = (*it_vj)->stop_time_list.front();
-                    if((st2->departure_time - st1->arrival_time) >= 0) {
-                        add_journey_pattern_point_connection(st1->journey_pattern_point, st2->journey_pattern_point,
-                                (st2->departure_time - st1->arrival_time),
-                                journey_pattern_point_connections);
-                    }
-                }
-                prec_vj = it_vj;
-            }
-            prec_block = block_id;
-        }
-    }
-
-    //On ajoute les journey_pattern points dans data
-    for(auto rpc : journey_pattern_point_connections) {
-        this->journey_pattern_point_connections.push_back(new types::JourneyPatternPointConnection(rpc.second));
-    }
-}
-
 // Compare si deux vehicle journey appartiennent à la même journey_pattern
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2){
 
@@ -518,30 +459,6 @@ bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * v
             return false;
         }
     return true;
-}
-
-void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, types::JourneyPatternPoint *rp2, int length,
-                           std::multimap<std::string, types::JourneyPatternPointConnection> &journey_pattern_point_connections) {
-    //Si la connexion n'existe pas encore alors on va la créer, sinon on regarde sa durée, si elle est inférieure, on la modifie
-    auto pp = journey_pattern_point_connections.equal_range(rp1->uri);
-    bool find = false;
-    for(auto it_pp = pp.first; it_pp != pp.second; ++it_pp) {
-        if(it_pp->second.destination->uri == rp2->uri) {
-            find = true;
-            if(it_pp->second.length > length)
-                it_pp->second.length = length;
-            break;
-        }
-    }
-    if(!find) {
-        types::JourneyPatternPointConnection jppc;
-        jppc.departure = rp1;
-        jppc.destination = rp2;
-        jppc.connection_kind = nt::ConnectionType::stay_in;
-        jppc.length = length;
-        journey_pattern_point_connections.insert(std::make_pair(rp1->uri, jppc));
-
-    }
 }
 
 

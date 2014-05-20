@@ -298,15 +298,6 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern_point (
 );
 
 
-CREATE TABLE IF NOT EXISTS navitia.journey_pattern_point_connection (
-    departure_journey_pattern_point_id BIGINT NOT NULL REFERENCES navitia.journey_pattern_point,
-    destination_journey_pattern_point_id BIGINT NOT NULL REFERENCES navitia.journey_pattern_point,
-    connection_kind_id BIGINT NOT NULL REFERENCES navitia.connection_kind,
-    length INTEGER NOT NULL,
-    CONSTRAINT journey_pattern_point_connection_pk PRIMARY KEY (departure_journey_pattern_point_id, destination_journey_pattern_point_id)
-);
-
-
 CREATE TABLE IF NOT EXISTS navitia.stop_time (
     id BIGSERIAL PRIMARY KEY,
     vehicle_journey_id BIGINT NOT NULL REFERENCES navitia.vehicle_journey,

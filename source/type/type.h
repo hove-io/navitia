@@ -63,7 +63,6 @@ const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 struct Message;
 
-// Types qui sont exclus : JourneyPatternPointConnection
 #define ITERATE_NAVITIA_PT_TYPES(FUN)\
     FUN(ValidityPattern, validity_patterns)\
     FUN(Line, lines)\
@@ -95,7 +94,6 @@ enum class Type_e {
     Company                         = 11,
     Route                           = 12,
     POI                             = 13,
-    JourneyPatternPointConnection   = 14,
     StopPointConnection             = 15,
     Contributor                     = 16,
 
@@ -408,31 +406,28 @@ struct JourneyPatternPoint;
 struct VehicleJourney;
 struct StopTime;
 
-template<typename T>
-struct Connection: public Header, hasProperties{
+struct StopPointConnection: public Header, hasProperties{
     const static Type_e type = Type_e::Connection;
-    T* departure;
-    T* destination;
+    StopPoint* departure;
+    StopPoint* destination;
     int display_duration;
     int duration;
     int max_duration;
     ConnectionType connection_type;
 
-    Connection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
+    StopPointConnection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
         max_duration(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & departure & destination & display_duration & duration & max_duration & _properties;
+        ar & idx & uri & departure & destination & display_duration & duration &
+            max_duration & connection_type & _properties;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-    bool operator<(const Connection<T> &other) const;
+    bool operator<(const StopPointConnection &other) const;
 
 };
-
-typedef Connection<JourneyPatternPoint>  JourneyPatternPointConnection;
-typedef Connection<StopPoint>  StopPointConnection;
 
 struct ExceptionDate {
     enum class ExceptionType {
@@ -682,6 +677,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
+    VehicleJourney* block_after = nullptr;
+    VehicleJourney* block_before = nullptr;
     ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
@@ -702,7 +699,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & messages & associated_calendars
-            & codes;
+            & codes & block_after & block_before;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;

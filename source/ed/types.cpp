@@ -186,17 +186,6 @@ bool StopPointConnection::operator<(const StopPointConnection& other) const{
     }
 }
 
-bool JourneyPatternPointConnection::operator<(const JourneyPatternPointConnection& other) const {
-    if (this->departure == other.departure) {
-        if(this->destination == other.destination) {
-            return this < &other;
-        } else {
-            return *(this->destination) < *(other.destination);
-        }
-    } else {
-        return *(this->departure) < *(other.departure);
-    }
-}
 bool StopTime::operator<(const StopTime& other) const {
     if(this->vehicle_journey == other.vehicle_journey){
         BOOST_ASSERT(this->journey_pattern_point->order != other.journey_pattern_point->order);
@@ -376,17 +365,6 @@ nt::StopPointConnection* StopPointConnection::get_navitia_type() const {
     nt_connection->max_duration = this->max_duration;
     nt_connection->set_properties(this->properties());
     return nt_connection;
-}
-
-navitia::type::JourneyPatternPointConnection* JourneyPatternPointConnection::get_navitia_type() const {
-    nt::JourneyPatternPointConnection* nt_rpc = new nt::JourneyPatternPointConnection();
-    nt_rpc->idx = this->idx;
-    nt_rpc->uri = this->uri;
-    nt_rpc->departure->idx = this->departure->idx;
-    nt_rpc->destination->idx = this->destination->idx;
-    nt_rpc->duration = this->length;
-    nt_rpc->connection_type = this->connection_kind;
-    return nt_rpc;
 }
 
 nt::JourneyPatternPoint* JourneyPatternPoint::get_navitia_type() const {

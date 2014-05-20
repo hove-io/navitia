@@ -76,7 +76,7 @@ DO $$
     DECLARE count_multi int;
 BEGIN
     count_multi := coalesce((select count(*) from georef.admin where geometrytype(boundary::geometry) = 'MULTIPOLYGON' limit 1), 0);
-    CASE WHEN count_multi = 0 
+    CASE WHEN count_multi = 0
         THEN
             -- Ajout d'une colonne temporaire
             ALTER TABLE georef.admin ADD COLUMN boundary_tmp GEOGRAPHY(POLYGON, 4326);
@@ -170,7 +170,7 @@ DO $$
     DECLARE count_admin int;
 BEGIN
     count_admin := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='admin'), 0);
-    CASE WHEN count_admin > 0 
+    CASE WHEN count_admin > 0
         THEN
 			INSERT INTO georef.admin SELECT * FROM navitia.admin;
 			INSERT INTO georef.rel_admin_admin SELECT * FROM navitia.rel_admin_admin;
@@ -200,7 +200,7 @@ DO $$
     DECLARE count_synonym int;
 BEGIN
     count_synonym := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='synonym'), 0);
-    CASE WHEN count_synonym > 0 
+    CASE WHEN count_synonym > 0
         THEN
 			INSERT INTO georef.synonym SELECT * FROM navitia.synonym;
     ELSE
@@ -208,11 +208,11 @@ BEGIN
     END CASE;
 END
 $$;
-DROP TABLE IF EXISTS navitia.admin CASCADE;	
+DROP TABLE IF EXISTS navitia.admin CASCADE;
 DROP TABLE IF EXISTS navitia.rel_admin_admin CASCADE;
-DROP TABLE IF EXISTS navitia.poi CASCADE;			
+DROP TABLE IF EXISTS navitia.poi CASCADE;
 DROP TABLE IF EXISTS navitia.synonym;
-			
+
 DROP TABLE IF EXISTS navitia.alias;
 DROP TABLE IF EXISTS navitia.rel_stop_point_admin;
 DROP TABLE IF EXISTS navitia.rel_stop_area_admin;
@@ -221,3 +221,4 @@ DROP FUNCTION IF EXISTS georef.match_stop_area_to_admin();
 DROP FUNCTION IF EXISTS georef.match_stop_point_to_admin();
 DROP FUNCTION IF EXISTS georef.update_admin_coord();
 DROP FUNCTION IF EXISTS georef.match_admin_to_admin();
+DROP TABLE IF EXISTS navitia.journey_pattern_point_connection CASCADE;

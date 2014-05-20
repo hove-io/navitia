@@ -269,28 +269,6 @@ SA builder::sa(const std::string &name, double x, double y, const bool wheelchai
 }
 
 
-void builder::journey_pattern_point_connection(const std::string & name1, const std::string & name2, float length) {
-    navitia::type::Line *line1 = (*(lines.find(name1))).second;
-    navitia::type::Line *line2 = (*(lines.find(name2))).second;
-
-    if(line1 != nullptr && line2 != nullptr) {
-        for(navitia::type::Route * route1 : line1->route_list) {
-            for(navitia::type::JourneyPattern* jp1 : route1->journey_pattern_list) {
-                for(navitia::type::Route * route2 : line2->route_list) {
-                    for(navitia::type::JourneyPattern* jp2 : route2->journey_pattern_list) {
-                        navitia::type::JourneyPatternPointConnection* connection = new navitia::type::JourneyPatternPointConnection();
-                        connection->departure = jp1->journey_pattern_point_list.back();
-                        connection->destination = jp2->journey_pattern_point_list.front();
-                        connection->duration = length;
-                        this->data->pt_data->journey_pattern_point_connections.push_back(connection);
-                    }
-                }
-            }
-
-        }
-    }
-}
-
 void builder::connection(const std::string & name1, const std::string & name2, float length) {
     navitia::type::StopPointConnection* connexion = new navitia::type::StopPointConnection();
     connexion->idx = data->pt_data->stop_point_connections.size();

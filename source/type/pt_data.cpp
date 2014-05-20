@@ -38,7 +38,6 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     ITERATE_NAVITIA_PT_TYPES(COPY_FROM_OTHER)
 
     stop_point_connections = other.stop_point_connections;
-    journey_pattern_point_connections = other.journey_pattern_point_connections;
     stop_times = other.stop_times;
 
     // First letter
@@ -61,13 +60,6 @@ void PT_Data::sort(){
     std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());\
     BOOST_ASSERT(collection_name.size() == collection_name##_size);
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
-
-    size_t journey_pattern_point_connections_size = journey_pattern_point_connections.size();
-    std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end());
-    BOOST_ASSERT(journey_pattern_point_connections.size() == journey_pattern_point_connections_size);
-    std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer<idx_t>());
-    std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end());
-    BOOST_ASSERT(journey_pattern_point_connections.size() == journey_pattern_point_connections_size);
 
     size_t stop_point_connections_size = stop_point_connections.size();
     std::sort(stop_point_connections.begin(), stop_point_connections.end());

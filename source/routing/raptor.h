@@ -144,8 +144,6 @@ struct RAPTOR
     /// Il faut spécifier le visiteur selon le sens souhaité
     template<typename Visitor> void foot_path(const Visitor & v, const type::Properties &required_properties);
 
-    ///Correspondances garanties et prolongements de service
-    template<typename Visitor> void journey_pattern_path_connections(const Visitor &visitor/*, const type::Properties &required_properties*/);
 
     ///Trouve pour chaque journey_pattern, le premier journey_pattern point auquel on peut embarquer, se sert de marked_rp
     void make_queue();

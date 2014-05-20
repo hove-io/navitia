@@ -40,37 +40,6 @@ void RAPTOR::make_queue() {
     marked_sp.reset();
 }
 
-template<class Visitor>
-void
-RAPTOR::journey_pattern_path_connections(const Visitor & visitor) {
-    std::vector<type::idx_t> to_mark;
-    for(auto jpp_departure_idx = marked_rp.find_first(); jpp_departure_idx != marked_rp.npos; jpp_departure_idx = marked_rp.find_next(jpp_departure_idx)) {
-        const auto* jpp_departure = data.pt_data->journey_pattern_points[jpp_departure_idx];
-        BOOST_FOREACH(auto &idx_rpc, data.dataRaptor->footpath_rp(visitor.clockwise()).equal_range(jpp_departure_idx)) {
-            const auto & rpc = idx_rpc.second;
-            const type::JourneyPatternPoint* jpp = rpc->*visitor.journey_pattern_point();
-
-            type::idx_t jpp_idx = jpp->idx;
-            DateTime dt = visitor.combine(labels[count][jpp_departure_idx].dt, rpc->duration);
-            if(get_type(count, jpp_departure_idx) == boarding_type::vj && visitor.comp(dt, best_labels[jpp_idx])) {
-                labels[count][jpp_idx].dt = dt;
-                best_labels[jpp_idx] = dt;
-                labels[count][jpp_idx].boarding_jpp = jpp_departure->idx;
-                labels[count][jpp_idx].type = boarding_type::connection_stay_in;
-                to_mark.push_back(jpp_idx);
-            }
-        }
-    }
-
-    for(auto rp : to_mark) {
-        marked_rp.set(rp);
-        const auto* journey_pattern_point = data.pt_data->journey_pattern_points[rp];
-        if(visitor.comp(journey_pattern_point->order, Q[journey_pattern_point->journey_pattern->idx]) ) {
-            Q[journey_pattern_point->journey_pattern->idx] = journey_pattern_point->order;
-        }
-    }
-}
-
 
 template<typename Visitor>
 void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_properties) {
@@ -351,7 +320,6 @@ struct raptor_visitor {
     constexpr bool clockwise() const{return true;}
     constexpr int init_queue_item() const{return std::numeric_limits<int>::max();}
     constexpr DateTime worst_datetime() const{return DateTimeUtils::inf;}
-    constexpr type::JourneyPatternPoint* type::JourneyPatternPointConnection::* journey_pattern_point() const{return &type::JourneyPatternPointConnection::destination;}
 };
 
 
@@ -387,7 +355,6 @@ struct raptor_reverse_visitor {
     constexpr bool clockwise() const{return false;}
     constexpr int init_queue_item() const{return -1;}
     constexpr DateTime worst_datetime() const{return DateTimeUtils::min;}
-    constexpr type::JourneyPatternPoint* type::JourneyPatternPointConnection::* journey_pattern_point() const{return &type::JourneyPatternPointConnection::departure;}
 };
 
 
@@ -485,8 +452,6 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
         }
-        // Prolongements de service
-        this->journey_pattern_path_connections(visitor);
         // Correspondances
         this->foot_path(visitor, accessibilite_params.properties);
     }

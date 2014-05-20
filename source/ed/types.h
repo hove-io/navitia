@@ -73,20 +73,6 @@ struct StopPointConnection: public Header, hasProperties {
 
 };
 
-struct JourneyPatternPointConnection: public Header {
-    JourneyPatternPoint *departure;
-    JourneyPatternPoint *destination;
-    ConnectionType connection_kind;
-    int length;
-
-    navitia::type::JourneyPatternPointConnection* get_navitia_type() const;
-
-    JourneyPatternPointConnection() : departure(NULL), destination(NULL),
-                            connection_kind(ConnectionType::undefined), length(0) {}
-
-    bool operator<(const JourneyPatternPointConnection &other) const;
-};
-
 struct Calendar : public Nameable, public Header {
     const static nt::Type_e type = nt::Type_e::Calendar;
     typedef std::bitset<7> Week;

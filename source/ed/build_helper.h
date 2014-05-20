@@ -107,7 +107,6 @@ struct builder{
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);
-    void journey_pattern_point_connection(const std::string & name1, const std::string & name2, float length=120);
     void build(navitia::type::PT_Data & pt_data);
     void build_relations(navitia::type::PT_Data & data);
     void finish();
