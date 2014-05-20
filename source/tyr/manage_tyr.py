@@ -35,7 +35,7 @@ import sys
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from tyr.command import AggregatePlacesCommand, ReloadAtCommand, AtReloader,\
-    ReloadKrakenCommand, BuildDataCommand
+    ReloadKrakenCommand, BuildDataCommand, LoadDataCommand
 
 manager = Manager(app)
 
@@ -48,6 +48,7 @@ manager.add_command('reload_at', ReloadAtCommand())
 manager.add_command('at_reloader', AtReloader())
 manager.add_command('reload_kraken', ReloadKrakenCommand())
 manager.add_command('build_data', BuildDataCommand())
+manager.add_command('load_data', LoadDataCommand())
 
 if __name__ == '__main__':
     app.config['DEBUG'] = True
