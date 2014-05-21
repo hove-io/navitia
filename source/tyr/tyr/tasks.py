@@ -212,7 +212,7 @@ def load_data(instance_id, data_path):
     models.db.session.commit()
     files = glob.glob(data_path + "/*")
 
-    import_data(files, instance, backup_file=True)
+    import_data(files, instance, backup_file=False)
 
 
 @task_postrun.connect
