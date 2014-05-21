@@ -229,7 +229,8 @@ makePath(type::idx_t destination_idx, size_t countb, bool clockwise, bool disrup
 
                 // If we boarded via a connection, this label isn't set, while it's set with a stay_in
                 // If we boarded via a connection we want to decrease the count
-                if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::uninitialized) {
+                // In some cases we can access here via a connection
+                if(raptor_.get_type(countb, current_jpp_idx) != boarding_type::connection_stay_in) {
                     --countb;
                 }
                 boarding_jpp = navitia::type::invalid_idx ;

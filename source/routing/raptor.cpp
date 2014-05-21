@@ -481,6 +481,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                 const auto & jpp_to_explore = visitor.journey_pattern_points(
                                                 this->data.pt_data->journey_pattern_points,
                                                 journey_pattern,Q[journey_pattern->idx]);
+
                 BOOST_FOREACH(const type::JourneyPatternPoint* jpp, jpp_to_explore) {
                     if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                         continue;
@@ -545,9 +546,9 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
         }
-        this->apply_vj_extension(visitor, global_pruning);
         // Correspondances
         this->foot_path(visitor, accessibilite_params.properties);
+        this->apply_vj_extension(visitor, global_pruning);
     }
 }
 

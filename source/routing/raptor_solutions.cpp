@@ -266,7 +266,7 @@ get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, const 
         if(b_type == boarding_type::vj) {
             DateTimeUtils::update(last_time, DateTimeUtils::hour(labels[cnt][current_jpp].dt), clockwise);
             current_jpp = labels[cnt][current_jpp].boarding_jpp;
-            if(labels[cnt][current_jpp].type == boarding_type::uninitialized) {
+            if(labels[cnt][current_jpp].type != boarding_type::connection_stay_in) {
                 --cnt;
             }
         } else {
@@ -295,12 +295,12 @@ navitia::time_duration getWalkingTime(int count, type::idx_t jpp_idx, const std:
     }
     //Marche pendant les correspondances
     auto boarding_type_value = labels[count][jpp_idx].type;
-    while(boarding_type_value != boarding_type::departure /*&& boarding_type_value != boarding_type::uninitialized*/) {
+    while(boarding_type_value != boarding_type::departure) {
         if(boarding_type_value == boarding_type::vj) {
             const type::idx_t current_jpp_idx = labels[cnt][current_jpp->idx].boarding_jpp;
             current_jpp = data.pt_data->journey_pattern_points[current_jpp_idx];
             boarding_type_value = labels[cnt][current_jpp->idx].type;
-            if(boarding_type_value == boarding_type::uninitialized) {
+            if(boarding_type_value != boarding_type::connection_stay_in) {
                 --cnt;
             }
             boarding_type_value = labels[cnt][current_jpp->idx].type;
