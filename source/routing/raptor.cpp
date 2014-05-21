@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -36,8 +36,69 @@ namespace bt = boost::posix_time;
 namespace navitia { namespace routing {
 
 void RAPTOR::make_queue() {
-    marked_rp.reset();
     marked_sp.reset();
+}
+
+template<typename Visitor>
+void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning) {
+    auto& working_labels = labels[count];
+    while(!vj_queue.empty()) {
+        const type::VehicleJourney* vj = vj_queue.front();
+        const navitia::type::JourneyPatternPoint* boarding_jpp = v.get_boarding_jpp(vj);
+        auto boarding_jpp_idx = boarding_jpp->idx;
+        auto workingDt = working_labels[boarding_jpp_idx].dt;
+        //The local_zone is the last one of the VJ
+        //@TODO: There might be a bug if there are several connected vj
+        uint16_t l_zone =  std::numeric_limits<uint16_t>::max();
+        for(type::StopTime* st: vj->stop_time_list) {
+            if(st->local_traffic_zone != std::numeric_limits<uint16_t>::max()) {
+                l_zone = st->local_traffic_zone;
+            }
+        }
+        //The first stoptime has to marked has a connection_stay_in
+        bool first_stop_time = true;
+        bool add_vj = false;
+        BOOST_FOREACH(type::StopTime* st, v.stop_time_list(vj)) {
+            auto jpp = st->journey_pattern_point;
+            if(l_zone == std::numeric_limits<uint16_t>::max()
+                || l_zone != st->local_traffic_zone) {
+                const auto current_time = st->section_end_time(v.clockwise(),
+                                    DateTimeUtils::hour(workingDt));
+                DateTimeUtils::update(workingDt, current_time, v.clockwise());
+                const DateTime bound = (v.comp(best_labels[jpp->idx], b_dest.best_now) || !global_pruning) ?
+                                        best_labels[jpp->idx] : b_dest.best_now;
+                if(v.comp(workingDt, bound)) {
+                    working_labels[jpp->idx].dt = workingDt;
+                    working_labels[jpp->idx].boarding_jpp = boarding_jpp_idx;
+                    working_labels[jpp->idx].type = first_stop_time ? boarding_type::connection_stay_in : boarding_type::vj;
+                    best_labels[jpp->idx] = working_labels[jpp->idx].dt;
+                    if(!this->b_dest.add_best(v, jpp->idx, working_labels[jpp->idx].dt, this->count)) {
+                        this->marked_sp.set(jpp->stop_point->idx);
+                    }
+                    add_vj = true;
+                } else if(workingDt == bound &&
+                          get_type(this->count-1, jpp->idx) == boarding_type::uninitialized &&
+                          b_dest.add_best(v, jpp->idx, workingDt, this->count)) {
+                    working_labels[jpp->idx].dt = workingDt;
+                    working_labels[jpp->idx].boarding_jpp = boarding_jpp_idx;
+                    working_labels[jpp->idx].type = first_stop_time ? boarding_type::connection_stay_in : boarding_type::vj;
+                    best_labels[jpp->idx] = workingDt;
+                    add_vj = true;
+                }
+            }
+            if(first_stop_time) {
+                boarding_jpp_idx = jpp->idx;
+            }
+            first_stop_time = false;
+        }
+        if(add_vj) {
+            auto vj_ext = v.get_extension_vj(vj);
+            if(vj_ext) {
+                vj_queue.push(vj_ext);
+            }
+        }
+        vj_queue.pop();
+    }
 }
 
 
@@ -317,6 +378,19 @@ struct raptor_visitor {
         return a + b;
     }
 
+    const type::VehicleJourney* get_extension_vj(const type::VehicleJourney* vj) const {
+       return vj->next_vj;
+    }
+
+    const type::JourneyPatternPoint* get_boarding_jpp(const type::VehicleJourney* vj) const {
+       return vj->prev_vj->journey_pattern->journey_pattern_point_list.back();
+    }
+
+    std::pair<std::vector<type::StopTime*>::const_iterator, std::vector<type::StopTime*>::const_iterator>
+    stop_time_list(const type::VehicleJourney* vj) const {
+        return std::make_pair(vj->stop_time_list.begin(), vj->stop_time_list.end());
+    }
+
     constexpr bool clockwise() const{return true;}
     constexpr int init_queue_item() const{return std::numeric_limits<int>::max();}
     constexpr DateTime worst_datetime() const{return DateTimeUtils::inf;}
@@ -350,6 +424,19 @@ struct raptor_reverse_visitor {
 
     template<typename T1, typename T2> inline auto combine(const T1& a, const T2& b) const -> decltype(a-b) {
         return a - b;
+    }
+
+    const type::VehicleJourney* get_extension_vj(const type::VehicleJourney* vj) const {
+       return vj->prev_vj;
+    }
+
+    const type::JourneyPatternPoint* get_boarding_jpp(const type::VehicleJourney* vj) const {
+       return vj->next_vj->journey_pattern->journey_pattern_point_list.front();
+    }
+
+    std::pair<std::vector<type::StopTime*>::const_reverse_iterator, std::vector<type::StopTime*>::const_reverse_iterator>
+    stop_time_list(const type::VehicleJourney* vj) const {
+        return std::make_pair(vj->stop_time_list.rbegin(), vj->stop_time_list.rend());
     }
 
     constexpr bool clockwise() const{return false;}
@@ -402,7 +489,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     if(boarding != nullptr) {
                         ++it_st;
                         const type::StopTime* st = *it_st;
-                        const auto current_time = st->section_end_time(visitor.clockwise(), DateTimeUtils::hour(workingDt));
+                        const auto current_time = st->section_end_time(visitor.clockwise(),
+                                DateTimeUtils::hour(workingDt));
                         DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
                         if((l_zone == std::numeric_limits<uint16_t>::max()
                             || l_zone != st->local_traffic_zone)
@@ -417,7 +505,6 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                 working_labels[jpp_idx].type = boarding_type::vj;
                                 best_labels[jpp_idx] = working_labels[jpp_idx].dt;
                                 if(!this->b_dest.add_best(visitor, jpp_idx, working_labels[jpp_idx].dt, this->count)) {
-                                    this->marked_rp.set(jpp_idx);
                                     this->marked_sp.set(jpp->stop_point->idx);
                                     end = false;
                                 }
@@ -449,9 +536,16 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                         }
                     }
                 }
+                if(boarding) {
+                    const type::VehicleJourney* vj = visitor.get_extension_vj((*it_st)->vehicle_journey);
+                    if(vj) {
+                        vj_queue.push(vj);
+                    }
+                }
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
         }
+        this->apply_vj_extension(visitor, global_pruning);
         // Correspondances
         this->foot_path(visitor, accessibilite_params.properties);
     }
