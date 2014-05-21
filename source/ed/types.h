@@ -227,9 +227,15 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     ValidityPattern* adapted_validity_pattern;
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey;
+    VehicleJourney* prev_vj;
+    VehicleJourney* next_vj;
 
-    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL), tmp_route(NULL), wheelchair_boarding(false),
-     vehicle_journey_type(navitia::type::VehicleJourneyType::regular), validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL),
+    tmp_line(NULL), tmp_route(NULL), wheelchair_boarding(false),
+    vehicle_journey_type(navitia::type::VehicleJourneyType::regular),
+    validity_pattern(NULL), first_stop_time(NULL), is_adapted(false),
+    adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL),
+    prev_vj(nullptr), next_vj(nullptr){}
 
     navitia::type::VehicleJourney* get_navitia_type() const;
 

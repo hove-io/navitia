@@ -677,8 +677,12 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
-    VehicleJourney* block_after = nullptr;
-    VehicleJourney* block_before = nullptr;
+
+    // These variables are used in the case of an extension of service
+    // They indicate what's the vj you can take directly after or before this one
+    // They have the same block id
+    VehicleJourney* next_vj = nullptr;
+    VehicleJourney* prev_vj = nullptr;
     ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
@@ -699,7 +703,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & messages & associated_calendars
-            & codes & block_after & block_before;
+            & codes & next_vj & prev_vj;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;

@@ -167,6 +167,28 @@ DO $$
 $$;
 
 DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.vehicle_journey ADD
+                COLUMN previous_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column previous_vehicle_journey already exists in navitia.vehicle_journey';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.vehicle_journey ADD
+                COLUMN next_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column next_vehicle_journey already exists in navitia.vehicle_journey';
+        END;
+    END;
+$$;
+
+DO $$
     DECLARE count_admin int;
 BEGIN
     count_admin := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='admin'), 0);

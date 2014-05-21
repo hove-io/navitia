@@ -244,7 +244,9 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     name TEXT NOT NULL,
     odt_type_id BIGINT NULL,
     vehicle_properties_id BIGINT NULL REFERENCES navitia.vehicle_properties,
-    theoric_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey
+    theoric_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey,
+    previous_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey,
+    next_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey
 );
 
 ALTER TABLE navitia.vehicle_journey DROP COLUMN IF EXISTS physical_mode_id;

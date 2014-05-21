@@ -607,6 +607,8 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
         "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
         "vj.external_code as external_code,"
+        "vj.next_vehicle_journey_id as prev_vj_id,"
+        "vj.previous_vehicle_journey_id as next_vj_id,"
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -619,6 +621,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "where vj.vehicle_properties_id = vp.id ";
 
     pqxx::result result = work.exec(request);
+    std::multimap<idx_t, nt::VehicleJourney*> prev_vjs, next_vjs;
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::VehicleJourney* vj = new nt::VehicleJourney();
 
@@ -668,8 +671,20 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         if (const_it["school_vehicle"].as<bool>()){
             vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
         }
+        if (!const_it["prev_vj_id"].is_null()) {
+            prev_vjs.insert(std::make_pair(const_it["prev_vj_id"].as<idx_t>(), vj));
+        }
+        if (!const_it["next_vj_id"].is_null()) {
+            next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj));
+        }
         data.pt_data->vehicle_journeys.push_back(vj);
         this->vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
+    }
+    for(auto vjid_vj: prev_vjs) {
+       vjid_vj.second->prev_vj = vehicle_journey_map[vjid_vj.first];
+    }
+    for(auto vjid_vj: next_vjs) {
+       vjid_vj.second->next_vj = vehicle_journey_map[vjid_vj.first];
     }
 }
 
