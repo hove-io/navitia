@@ -79,4 +79,4 @@ Navitia is written in python/c++, here are some alternatives:
 
 * `OpenTripPlanner <https://github.com/opentripplanner/OpenTripPlanner/>`_ : the best known, written in java
 * `rrrr <https://github.com/bliksemlabs/rrrr>`_ : the lightest one, written in python/c
-* `Synthese <https://github.com/Open-Transport/synthese>`_ : written all in c++
+* `Synthese <https://github.com/Open-Transport/synthese>`_ : a full stack, with CMS, written all in c++
