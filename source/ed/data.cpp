@@ -62,9 +62,36 @@ void Data::normalize_uri(){
     ::ed::normalize_uri(calendars);
 }
 
+void Data::build_block_id() {
+    /// We want to group vehicle journeys by their block_id
+    /// Two vehicle_journeys vj1 are consecutive if
+    /// the last arrival_time of vj1 <= to the departure_time of vj2
+    std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
+            [](const types::VehicleJourney* vj1, const types::VehicleJourney* vj2) {
+            if(vj1->block_id != vj2->block_id) {
+                return vj1->block_id < vj2->block_id;
+            } else {
+                return vj1->stop_time_list.back()->arrival_time <=
+                        vj2->stop_time_list.front()->departure_time;
+            }
+        }
+        );
+
+    types::VehicleJourney* prev_vj = nullptr;
+    for(auto it=vehicle_journeys.begin(); it!=vehicle_journeys.end(); ++it) {
+        auto vj = *it;
+        if(prev_vj && prev_vj->block_id != "" && prev_vj->block_id == vj->block_id) {
+            prev_vj->next_vj = vj;
+            vj->prev_vj = prev_vj;
+        }
+        prev_vj = vj;
+    }
+}
+
 void Data::complete(){
     build_journey_patterns();
     build_journey_pattern_points();
+    build_block_id();
     finalize_frequency();
     //on construit les codes externe des journey pattern
     ::ed::normalize_uri(journey_patterns);
@@ -373,10 +400,9 @@ void Data::build_journey_patterns(){
         ed::types::Route* route = vj1->tmp_route;
         // Si le vj n'appartient encore à aucune journey_pattern
         if(vj1->journey_pattern == 0) {
-            std::string journey_pattern_uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(this->journey_patterns.size());
-            if(!vj1->block_id.empty()){
-                journey_pattern_uri += "-" + vj1->block_id;
-            }
+            std::string journey_pattern_uri = vj1->tmp_line->uri;
+            journey_pattern_uri += "-";
+            journey_pattern_uri += boost::lexical_cast<std::string>(this->journey_patterns.size());
 
             types::JourneyPattern * journey_pattern = new types::JourneyPattern();
             journey_pattern->uri = journey_pattern_uri;
@@ -449,9 +475,6 @@ void Data::build_journey_pattern_points(){
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2){
 
     if(vj1->stop_time_list.size() != vj2->stop_time_list.size())
-        return false;
-
-    if (vj1->block_id != vj2->block_id)
         return false;
 
     for(size_t i = 0; i < vj1->stop_time_list.size(); ++i)

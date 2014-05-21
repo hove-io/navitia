@@ -104,6 +104,8 @@ public:
     /// Construit les journey_patternpoint
     void build_journey_pattern_points();
 
+    void build_block_id();
+
     void normalize_uri();
 
     /**
