@@ -674,12 +674,12 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     BOOST_CHECK_EQUAL(res1.back().items[0].arrival.time_of_day().total_seconds(), 9*3600 + 20 * 60);
 }
 
-/*
-BOOST_AUTO_TEST_CASE(prolongement_service) {
+
+BOOST_AUTO_TEST_CASE(stay_in_basic) {
     ed::builder b("20120614");
-    b.vj("A", "1111111", "", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
-    b.vj("B", "1111111", "", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
-    b.journey_pattern_point_connection("A", "B");
+    b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "1111111", "block1", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -690,7 +690,83 @@ BOOST_AUTO_TEST_CASE(prolongement_service) {
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
-*/
+
+
+BOOST_AUTO_TEST_CASE(stay_in_and_one_earlier_with_connection) {
+    ed::builder b("20120614");
+    b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "1111111", "block1", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
+    b.vj("C", "1111111", "", true)("stop1", 8*3600)("stop2", 8*3600+5*60);
+    b.vj("D", "1111111", "", true)("stop2", 8*3600+10*60)("stop3", 8*3600+15*60);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 2);
+    BOOST_CHECK(std::any_of(res1.begin(), res1.end(), [](Path path){
+                          return path.items[2].arrival.time_of_day().total_seconds() == 8*3600 + 15*60;}));
+    BOOST_CHECK(std::any_of(res1.begin(), res1.end(), [](Path path){
+                          return path.items[2].arrival.time_of_day().total_seconds() == 8*3600 + 20*60;}));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(stay_in_3_vj) {
+    ed::builder b("20120614");
+    b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "1111111", "block1", true)("stop4", 8*3600+15*60)("stop5", 8*3600 + 20*60);
+    b.vj("C", "1111111", "block1", true)("stop6", 8*3600+25*60)("stop3", 8*3600 + 30*60);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1.back().items[4].arrival.time_of_day().total_seconds(), 8*3600 + 30*60);
+}
+
+
+BOOST_AUTO_TEST_CASE(stay_in_loop) {
+    ed::builder b("20120614");
+    b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "1111111", "block1", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
+    b.vj("C", "1111111", "block1", true)("stop5", 8*3600+25*60)("stop1", 8*3600 + 30*60);
+    b.vj("D", "1111111", "block1", true)("stop4", 8*3600+35*60)("stop3", 8*3600 + 40*60);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(stay_in_invalid_vp) {
+    ed::builder b("20120614");
+    b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "0000", "block1", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
+}
 
 BOOST_AUTO_TEST_CASE(itl) {
     ed::builder b("20120614");
