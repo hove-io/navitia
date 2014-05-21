@@ -81,6 +81,20 @@ def finish_job(job_id):
 
 
 def import_data(files, instance, backup_file):
+    """
+    import the data contains in the list of 'files' in the 'instance'
+
+    :param files: files to import
+    :param instance: instance to receive the data
+    :param backup_file: If True the files are moved to a backup directory, else they are not moved
+
+    run the whole data import process:
+
+    - data import in bdd (fusio2ed, gtfs2ed, poi2ed, ...)
+    - export bdd to nav file
+    - update the jormungandr db with the new data for the instance
+    - reload the krakens
+    """
     actions = []
     job = models.Job()
     instance_config = load_instance_config(instance.name)
