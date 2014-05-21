@@ -32,6 +32,11 @@ www.navitia.io
 #include <memory>
 #include <iostream>
 
+#ifndef NO_FORCE_MEMORY_RELEASE
+//by default we force the release of the memory after the reload of the data
+#include "google/malloc_extension.h"
+#endif
+
 template<typename Data>
 class DataManager{
 public:
@@ -42,12 +47,21 @@ public:
     inline std::shared_ptr<Data> get_data() const{return current_data;}
 
     bool load(const std::string& database){
-        auto data = std::make_shared<Data>();
-        bool success = data->load(database);
-        if(success){
-            data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
-            std::swap(current_data, data);
+        bool success;
+        {
+            auto data = std::make_shared<Data>();
+            success = data->load(database);
+            if(success){
+                data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
+                std::swap(current_data, data);
+            }
         }
+
+#ifndef NO_FORCE_MEMORY_RELEASE
+        //we might want to force the system to release the memory after the swap
+        //to reduce the memory foot print
+        MallocExtension::instance()->ReleaseFreeMemory();
+#endif
         return success;
     }
 };
