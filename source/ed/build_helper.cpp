@@ -261,6 +261,9 @@ VJ builder::vj(const std::string &network_name, const std::string &line_name, co
     } else {
         vj->journey_pattern->route->line->network = it->second;
     }
+    if(block_id != "") {
+        block_vjs.insert(std::make_pair(block_id, vj));
+    }
     return res;
 }
 
@@ -337,10 +340,47 @@ void builder::connection(const std::string & name1, const std::string & name2, f
      }
  }
 
+
+ void build_blocks(std::vector<navitia::type::VehicleJourney*>& vehicle_journeys) {
+     std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
+             [](const navitia::type::VehicleJourney* vj1, const navitia::type::VehicleJourney* vj2) {
+             return vj1->stop_time_list.back()->arrival_time <=
+                         vj2->stop_time_list.front()->departure_time;
+
+             }
+      );
+
+     navitia::type::VehicleJourney* prev_vj = nullptr;
+     for(auto it=vehicle_journeys.begin(); it!=vehicle_journeys.end(); ++it) {
+         auto vj = *it;
+         if(prev_vj) {
+             prev_vj->next_vj = vj;
+             vj->prev_vj = prev_vj;
+         }
+         prev_vj = vj;
+     }
+ }
+
  void builder::finish() {
      for(auto vj : this->data->pt_data->vehicle_journeys) {
          vj->stop_time_list.front()->set_drop_off_allowed(false);
          vj->stop_time_list.back()->set_pick_up_allowed(false);
      }
+
+     std::string prev_block = "";
+     std::vector<navitia::type::VehicleJourney*> vehicle_journeys;
+
+     for(auto block_vj : block_vjs) {
+         if(prev_block != "" && prev_block != block_vj.first) {
+             build_blocks(vehicle_journeys);
+             vehicle_journeys.resize(0);
+         } else {
+             vehicle_journeys.push_back(block_vj.second);
+         }
+         prev_block = block_vj.first;
+     }
+     build_blocks(vehicle_journeys);
+
+
  }
 }
