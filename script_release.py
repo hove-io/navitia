@@ -11,7 +11,7 @@ import requests
 
 
 def get_tag_name(version):
-        return "__v{maj}.{min}.{hf}".format(maj=version[0], min=version[1], hf=version[2])
+        return "v{maj}.{min}.{hf}".format(maj=version[0], min=version[1], hf=version[2])
 
 
 class ReleaseManager:
