@@ -581,6 +581,11 @@ void CommentFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_l
                         "  file has more than one comment and no comment_id column");
         throw InvalidHeaders(csv.filename);
     }
+    if(! has_col(comment_c, row)) {
+        LOG4CPLUS_INFO(logger, "Error while reading " + csv.filename +
+                        "  row has column comment for the id : " + row[id_c]);
+        return;
+    }
     gtfs_data.comment_map[row[id_c]] = row[comment_c];
 }
 
