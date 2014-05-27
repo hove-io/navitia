@@ -17,7 +17,7 @@ def get_tag_name(version):
 class ReleaseManager:
 
     def __init__(self, release_type, remote_name="canalTP"):
-        self.directory = "~/bak/kraken"
+        self.directory = "."
         self.release_type = release_type
         self.repo = Repo(self.directory)
         self.git = self.repo.git
