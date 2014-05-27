@@ -112,62 +112,69 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
     auto end_pagination = (start_page+1) * count;
     for(nt::Type_e type : types){
         if(type == nt::Type_e::Address) {
+            //for addresses we use the street network
            try {
                georef::edge_t e = data.geo_ref->nearest_edge(coord, data.geo_ref->pl);
                ++total_result;
                georef::Way *way = data.geo_ref->ways[data.geo_ref->graph[e].way_idx];
                result.push_back(t_result(way->idx, coord, type));
            } catch(proximitylist::NotFound) {}
-        } else{
-            vector_idx_coord list;
-            std::vector<type::idx_t> indexes;
-            if(filter != "") {
-                try {
-                    indexes = ptref::make_query(type, filter, data);
-                } catch(const ptref::parsing_error &parse_error) {
-                    fill_pb_error(pbnavitia::Error::unable_to_parse,
-                                  "Unable to parse :" + parse_error.more, response.mutable_error());
-                    return response;
-                } catch(const ptref::ptref_error &pt_error) {
-                    fill_pb_error(pbnavitia::Error::bad_filter,
-                                  "ptref : " + pt_error.more, response.mutable_error());
-                    return response;
-                }
+            continue;
+        }
+
+        vector_idx_coord list;
+        std::vector<type::idx_t> indexes;
+        if(! filter.empty()) {
+            try {
+                indexes = ptref::make_query(type, filter, data);
+            } catch(const ptref::parsing_error &parse_error) {
+                fill_pb_error(pbnavitia::Error::unable_to_parse,
+                              "Problem while parsing the query:" + parse_error.more, response.mutable_error());
+                return response;
+            } catch(const ptref::ptref_error &pt_error) {
+                fill_pb_error(pbnavitia::Error::bad_filter,
+                              "ptref : " + pt_error.more, response.mutable_error());
+                return response;
             }
-            switch(type){
-            case nt::Type_e::StopArea:
-                list = data.pt_data->stop_area_proximity_list.find_within(coord, distance);
-                break;
-            case nt::Type_e::StopPoint:
-                list = data.pt_data->stop_point_proximity_list.find_within(coord, distance);
-                break;
-            case nt::Type_e::POI:
-                list = data.geo_ref->poi_proximity_list.find_within(coord, distance);
-                break;
-            default: break;
-            }
+        }
+        switch(type){
+        case nt::Type_e::StopArea:
+            list = data.pt_data->stop_area_proximity_list.find_within(coord, distance);
+            break;
+        case nt::Type_e::StopPoint:
+            list = data.pt_data->stop_point_proximity_list.find_within(coord, distance);
+            break;
+        case nt::Type_e::POI:
+            list = data.geo_ref->poi_proximity_list.find_within(coord, distance);
+            break;
+        default: break;
+        }
+
+        vector_idx_coord final_list;
+        if(filter.empty()) {
+            final_list = list;
+        } else {
             //We find the intersection between indexes and list
-            auto it_indexes = indexes.begin();
-            auto it_list = list.begin();
-            vector_idx_coord final_list;
-            if(filter=="") {
-                final_list = list;
-            } else {
-                while(it_indexes != indexes.end() && it_list != list.end()) {
-                    if(*it_indexes < it_list->first) ++it_indexes;
-                    else if(it_list->first < *it_indexes) ++ it_list;
-                    else {
-                        final_list.push_back(*it_list);
-                        ++it_list;
-                        ++it_indexes;
+            //we sort the proximity list on the indexes
+            auto comp = [](idx_coord a, idx_coord b) { return a.first < b.first; };
+            std::sort(list.begin(), list.end(), comp);
+
+            for (auto idx : indexes) {
+                auto it = std::lower_bound(list.begin(), list.end(), std::make_pair(idx, nt::GeographicalCoord()), comp); //we create a mock pair and only compare the first elt
+                if (it != list.end() && (*it).first == idx) {
+                    final_list.push_back(*it);
+                    if (final_list.size() == list.size()) {
+                        //small speedup, if all geographical elt have been added we can stop
+                        //(since the indexes list might be way bigger than the proximity list)
+                        break;
                     }
                 }
             }
-            total_result += final_list.size();
-            sort_cut<idx_coord>(final_list, end_pagination, coord);
-            for(auto idx_coord : final_list) {
-                result.push_back(t_result(idx_coord.first, idx_coord.second, type));
-            }
+        }
+        total_result += final_list.size();
+        sort_cut<idx_coord>(final_list, end_pagination, coord);
+        for(auto idx_coord : final_list) {
+            result.push_back(t_result(idx_coord.first, idx_coord.second, type));
         }
     }
     auto nb_sort = (result.size() < end_pagination) ? result.size():end_pagination;
