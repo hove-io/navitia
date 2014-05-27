@@ -84,8 +84,8 @@ def different_duration_test():
     script.sort_journeys(response)
     assert response.journeys[0].arrival_date_time == "20140422T0800"
     assert response.journeys[1].arrival_date_time == "20140422T0800"
-    assert response.journeys[0].duration == 3*60
-    assert response.journeys[1].duration == 5*60
+    assert response.journeys[0].duration == 5*60
+    assert response.journeys[1].duration == 3*60
 
 
 def different_nb_transfers_test():

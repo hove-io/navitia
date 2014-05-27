@@ -435,11 +435,17 @@ class Script(object):
         return resp
 
     def journey_compare(self, j1, j2):
+        if j1.type == "rapid" and len(j1.tags) == 0:
+            return -2
+
+        if j2.type == "rapid" and len(j2.tags) == 0:
+            return 2
+
         if j1.arrival_date_time != j2.arrival_date_time:
             return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
 
         if j1.duration != j2.duration:
-            return j1.duration - j2.duration
+            return j2.duration - j1.duration
 
         if j1.nb_transfers != j2.nb_transfers:
             return j1.nb_transfers - j2.nb_transfers
@@ -505,7 +511,7 @@ class Script(object):
             cpt_attempt += 1
 
         self.delete_journeys(resp, request)  # filter one last time to remove similar journeys
-        self.sort_journeys(resp)
+        self.sort_journeys(resp,request['clockwise'])
         self.choose_best(resp)
         return resp
 
@@ -604,7 +610,14 @@ class Script(object):
             if clockwise:
                 resp.journeys.sort(self.journey_compare)
             else:
-                resp.journeys.sort(lambda a, b: self.journey_compare(a, b)*-1)
+                def reverse_compare(a, b):
+                    # We reverse journeys that are not best journeys
+                    result = self.journey_compare(a, b)
+                    if result == 2 or result == -2:
+                        return result
+                    else:
+                        return result * -1
+                resp.journeys.sort(reverse_compare)
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)

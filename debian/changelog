@@ -1,3 +1,15 @@
+navitia2 (0.96.10) unstable; urgency=low
+
+  * Jormungandr: Fix sort of journeys
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 27 May 2014 09:05:34 +0100
+
+navitia2 (0.96.9) unstable; urgency=low
+
+  * Fusio2ed: Check existence of comment column
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 26 May 2014 18:05:17 +0100
+
 navitia2 (0.96.8) unstable; urgency=low
 
   * Kraken: Improve BSS handling
