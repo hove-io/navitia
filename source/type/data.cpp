@@ -290,8 +290,8 @@ void Data::build_associated_calendar() {
                 }
                 ExceptionDate ex;
                 ex.date = vehicle_journey->validity_pattern->beginning_date + boost::gregorian::days(i);
-                //if the vj was active this day it's a removal, else an addition
-                ex.type = (vehicle_journey->validity_pattern->days[i] ? ExceptionDate::ExceptionType::sub : ExceptionDate::ExceptionType::add);
+                //if the vj is active this day it's an addition, else a removal
+                ex.type = (vehicle_journey->validity_pattern->days[i] ? ExceptionDate::ExceptionType::add : ExceptionDate::ExceptionType::sub);
                 associated_calendar->exceptions.push_back(ex);
             }
 

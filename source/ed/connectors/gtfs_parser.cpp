@@ -872,10 +872,12 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     boost::gregorian::date b_date(boost::gregorian::min_date_time);
     if(beginning_date != "")
         b_date = boost::gregorian::from_undelimited_string(beginning_date);
-    LOG4CPLUS_TRACE(logger, "date de production: " +
+    LOG4CPLUS_INFO(logger, "date de production: " +
                     boost::gregorian::to_simple_string((start_date>b_date ? start_date : b_date))
                     + " - " + boost::gregorian::to_simple_string(end_date));
-    return boost::gregorian::date_period((start_date>b_date ? start_date : b_date), end_date);
+    //the end of a boost::gregorian::date_period is not in the period
+    //since end_date is the last day is the data, we want the end to be the next day
+    return boost::gregorian::date_period((start_date>b_date ? start_date : b_date), end_date + boost::gregorian::days(1));
 }
 
 void GtfsParser::parse_files(Data& data) {
