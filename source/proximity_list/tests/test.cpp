@@ -41,6 +41,11 @@ www.navitia.io
 using namespace navitia::type;
 using namespace navitia::proximitylist;
 
+struct logger_initialized {
+    logger_initialized()   { init_logger(); }
+};
+BOOST_GLOBAL_FIXTURE( logger_initialized )
+
 BOOST_AUTO_TEST_CASE(distances_grand_cercle)
 {
     GeographicalCoord a(0,0);
@@ -257,4 +262,83 @@ BOOST_AUTO_TEST_CASE(test_filter) {
                     {navitia::type::Type_e::StopArea},
                     "stop_area.name=paspouet bachibouzouk", 1, 10, 0, data);
     BOOST_CHECK_EQUAL(result.error().id(), pbnavitia::Error::unable_to_parse);
+}
+
+BOOST_AUTO_TEST_CASE(test_poi_filter) {
+    navitia::type::Data data;
+    //One object not in asked type and everything in the range
+    auto poitype_1 = new navitia::georef::POIType();
+    poitype_1->uri = "poi_type0";
+    poitype_1->idx = 0;
+    data.geo_ref->poitypes.push_back(poitype_1);
+    auto poitype_2 = new navitia::georef::POIType();
+    poitype_2->uri = "poi_type1";
+    poitype_2->idx = 1;
+    data.geo_ref->poitypes.push_back(poitype_2);
+
+    {
+        auto sa = new navitia::type::StopArea();
+        sa->coord.set_lon(-1.554514);
+        sa->coord.set_lat(47.218515);
+        sa->idx = 0;
+        data.pt_data->stop_areas.push_back(sa);
+    }
+    size_t poi_idx(0);
+    {//a first poi with type 1
+        auto poi  = new navitia::georef::POI();
+        poi->poitype_idx = 0;
+        poi->idx = poi_idx++;
+        poi->coord.set_lon(-1.554514);
+        poi->coord.set_lat(47.218515);
+        data.geo_ref->pois.push_back(poi);
+    }
+    {//a second poi not far with the second poi type
+        auto poi  = new navitia::georef::POI();
+        poi->uri = "bob";
+        poi->poitype_idx = 1;
+        poi->idx = poi_idx++;
+        poi->coord.set_lon(-1.554513);
+        poi->coord.set_lat(47.218516);
+        data.geo_ref->pois.push_back(poi);
+    }
+    {//a third one far far away
+        auto poi  = new navitia::georef::POI();
+        poi->coord.set_lon(-1.554514);
+        poi->idx = poi_idx++;
+        poi->coord.set_lat(50.218515);
+        data.geo_ref->pois.push_back(poi);
+    }
+    {//a fourth one near and with again the second poi type
+        auto poi  = new navitia::georef::POI();
+        poi->uri = "bobette";
+        poi->poitype_idx = 1;
+        poi->coord.set_lon(-1.554514);
+        poi->idx = poi_idx++;
+        poi->coord.set_lat(47.218513);
+        data.geo_ref->pois.push_back(poi);
+    }
+    {//a stop area in the same position as the second poi to be sure that it is not taken
+        auto sa = new navitia::type::StopArea();
+        sa->coord.set_lon(-1.554513);
+        sa->coord.set_lat(47.218516);
+        sa->idx = 0;
+        data.pt_data->stop_areas.push_back(sa);
+    }
+    data.geo_ref->init();
+    data.build_proximity_list();
+    navitia::type::GeographicalCoord c;
+    c.set_lon(-1.554514);
+    c.set_lat(47.218515);
+    auto result = find(c, 200,
+                    {navitia::type::Type_e::POI},
+                    "poi_type.uri=poi_type1", 1, 10, 0, data);
+
+    //we want the bob and bobette pois
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
+    std::set<std::string> poi_names;
+    for (int i = 0; i < result.places_nearby().size(); ++i) {
+        poi_names.insert(result.places_nearby(i).uri());
+    }
+    BOOST_CHECK(poi_names.find("bob") != poi_names.end());
+    BOOST_CHECK(poi_names.find("bobette") != poi_names.end());
 }

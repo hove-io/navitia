@@ -98,6 +98,8 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
             wh = wh && WHERE(ptr_uri<T>(), filter.op, filter.value);
         } else if(filter.attribute == "name") {
             wh = wh && WHERE(ptr_name<T>(), filter.op, filter.value);
+        } else {
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unhandled filter type: " << filter.attribute << " the filter is ignored");
         }
     }
     return wh;
@@ -212,10 +214,9 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         }
     }
     std::vector<idx_t> final_indexes = data.get_all_index(requested_type);
-    // Cas où on a aucun objet demandé dans la base (au pif, des companies…)
+    // When we have no objets asked(like for example companies)
     if(final_indexes.empty()){
         throw ptref_error("Filters: No requested object in the database");
-        return final_indexes;
     }
 
     std::vector<idx_t> indexes;
@@ -231,7 +232,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
                     "Filter: Unable to find the requested type. Not parsed: >>"
                     + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
         }
-        // Attention ! les structures doivent être triées !
+        // Warning the structures must be sorted!
         std::sort(indexes.begin(), indexes.end());
         std::unique(indexes.begin(), indexes.end());
         std::vector<idx_t> tmp_indexes;
@@ -268,7 +269,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         default:
             throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter_forbidden.navitia_type) + "<<");
         }
-        // Attention ! les structures doivent être triées !
+        // Warning the structures must be sorted!
         std::sort(forbidden_idx.begin(), forbidden_idx.end());
         std::unique(forbidden_idx.begin(), forbidden_idx.end());
         std::vector<idx_t> tmp_indexes;
@@ -278,9 +279,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         final_indexes = tmp_indexes;
     }
 
-    // Cas où c’est les filtres qui font qu’on ne trouve rien
+    // When the filters have emptied the results
     if(final_indexes.empty()){
-        //throw ptref_error("404");
         throw ptref_error("Filters: Unable to find object");
     }
     auto sort_networks = [&](type::idx_t n1_, type::idx_t n2_) {

@@ -30,22 +30,26 @@ www.navitia.io
 
 #pragma once
 #include <string>
-#include <boost/variant.hpp>
 #include <boost/utility/enable_if.hpp>
 
 namespace navitia{ namespace ptref {
-typedef boost::variant<std::string, int>  col_t;
 
-/// Exception levée lorsqu'on demande un membre qu'on ne connait pas
+/// Exception thrown when an unknown memner is asked for
 struct unknown_member{};
 
-/*Macro qui permet de savoir si une classe implémente un membre :
-On l'utilise de la manière suivante :
-DECL_HAS_MEMBER(id)
-Reflect_id<JourneyPattern>::value vaut true si le membre existe
-Cela génère ensuite une fonction permettant d'avoir le membre d'un objet :
-get_id(journey_pattern)
-la fonction lève une exception lorsque l'objet n'a pas de membre*/
+/*
+ * Macro used to know if a class has a member.
+ *
+ * Used as:
+ * DECL_HAS_MEMBER(id)
+ *
+ * Reflect_id<JourneyPattern>::value is true is this member exists.
+ *
+ * It will thus generate a function to fetch the given member:
+ * get_id(journey_pattern)
+ *
+ * This function will throw a unknown_member exception is the member does not exists
+ */
 #define DECL_HAS_MEMBER(MEM_NAME) \
 template <typename T> \
 struct Reflect_##MEM_NAME { \
@@ -66,16 +70,5 @@ DECL_HAS_MEMBER(id)
 DECL_HAS_MEMBER(idx)
 DECL_HAS_MEMBER(name)
 DECL_HAS_MEMBER(validity_pattern)
-
-/// Wrapper pour éviter de devoir définir explicitement le type
-template<class T>
-col_t get_value(T& object, const std::string & name){
-    if(name == "id") return get_id(object);
-    else if(name == "idx") return get_idx(object);
-    else if(name == "uri") return get_uri(object);
-    else if(name == "name") return get_name(object);
-    else
-        throw unknown_member();
-}
 
 }}
