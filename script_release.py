@@ -121,7 +121,7 @@ class ReleaseManager:
             pullrequests = self.get_merged_pullrequest()
             write_lines.extend(pullrequests)
         else:
-            write_lines.append(u' * \n')
+            write_lines.append(u'  * \n')
 
         author_name = self.git.config('user.name')
         author_mail = self.git.config('user.email')
@@ -209,7 +209,7 @@ class ReleaseManager:
             lines.append(line + u'\n')
 
         f_changelog.close()
-        return line
+        return lines
 
     def publish_release(self, temp_branch):
         #merge with the release branch
@@ -255,7 +255,7 @@ class ReleaseManager:
 
         if self.release_type == "hotfix":
             print "now time to do your actual hotfix!"
-            print "Note: you'll have to merge/taf/push manually after your fix:"
+            print "Note: you'll have to merge/tag/push manually after your fix:"
             print "git checkout release"
             print "git merge --no-ff {tmp_branch}".format(tmp_branch=tmp_name)
             print "git tag -a{}".format(get_tag_name(self.version))
@@ -273,7 +273,8 @@ class ReleaseManager:
 if __name__ == '__main__':
 
     if len(argv) < 2:
-        print "mandatory argument: {major|minor|hotfix} remote"
+        print "mandatory argument: {major|minor|hotfix}"
+        print "possible additional argument: remote (default is canalTP)"
         exit(5)
 
     r_type = argv[1]
