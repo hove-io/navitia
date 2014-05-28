@@ -273,13 +273,13 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     auto properties = stop_date_time.properties();
     BOOST_REQUIRE_EQUAL(properties.exceptions_size(), 2);
     auto exception = properties.exceptions(0);
-    BOOST_REQUIRE_EQUAL(exception.uri(), "exception:020120618");
+    BOOST_REQUIRE_EQUAL(exception.uri(), "exception:120120618");
     BOOST_REQUIRE_EQUAL(exception.date(), "20120618");
-    BOOST_REQUIRE_EQUAL(exception.type(), pbnavitia::ExceptionType::Add);
+    BOOST_REQUIRE_EQUAL(exception.type(), pbnavitia::ExceptionType::Remove);
 
     exception = properties.exceptions(1);
-    BOOST_REQUIRE_EQUAL(exception.uri(), "exception:020120619");
+    BOOST_REQUIRE_EQUAL(exception.uri(), "exception:120120619");
     BOOST_REQUIRE_EQUAL(exception.date(), "20120619");
-    BOOST_REQUIRE_EQUAL(exception.type(), pbnavitia::ExceptionType::Add);
+    BOOST_REQUIRE_EQUAL(exception.type(), pbnavitia::ExceptionType::Remove);
 
 }
