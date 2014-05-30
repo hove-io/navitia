@@ -24,3 +24,8 @@ add_executable(raptor_adapted_test raptor_adapted_test.cpp)
 target_link_libraries(raptor_adapted_test ed data types routing fare pb_lib georef
     autocomplete utils ${BOOST_LIBS} log4cplus pthread)
 ADD_BOOST_TEST(raptor_adapted_test)
+
+add_executable(raptor_odt_test raptor_odt_test.cpp)
+target_link_libraries(raptor_odt_test ed data types routing fare pb_lib georef
+    autocomplete utils ${BOOST_LIBS} log4cplus pthread)
+ADD_BOOST_TEST(raptor_odt_test)
