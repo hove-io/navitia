@@ -94,6 +94,7 @@ struct RAPTOR
     std::vector<Path>
     compute(const type::StopArea* departure, const type::StopArea* destination,
             int departure_hour, int departure_day, DateTime bound, bool disruption_active,
+            bool odt_active,
             bool clockwise = true,
             /*const type::Properties &required_properties = 0*/
             const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
@@ -107,7 +108,8 @@ struct RAPTOR
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration>> &departs,
                 const std::vector<std::pair<type::idx_t, navitia::time_duration>> &destinations,
-                const DateTime &departure_datetime, bool disruption_active, const DateTime &bound=DateTimeUtils::inf,
+                const DateTime &departure_datetime, bool disruption_active, bool odt_active,
+                const DateTime &bound=DateTimeUtils::inf,
                 const uint32_t max_transfers=std::numeric_limits<int>::max(),
                 const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
                 const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
@@ -124,12 +126,14 @@ struct RAPTOR
               uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
-              bool clockwise = true, bool disruption_active = false);
+              bool clockwise = true, bool disruption_active = false, bool odt_active = true);
 
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
-    void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden, bool disruption_active);
+    void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden,
+                                      bool disruption_active,
+                                      bool odt_active);
 
     ///Boucle principale, parcourt les journey_patterns,
     void boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params, bool clockwise, bool disruption_active,

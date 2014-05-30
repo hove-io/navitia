@@ -142,7 +142,7 @@ int main(int argc, char** argv){
         ++show_progress;
         Timer t2;
 
-        auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target], demand.hour, demand.date, navitia::DateTimeUtils::inf,false);
+        auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target], demand.hour, demand.date, navitia::DateTimeUtils::inf,false, true);
 
         Path path;
         if(res.size() > 0) {

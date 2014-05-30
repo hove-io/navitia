@@ -379,6 +379,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               std::vector<std::string> forbidden,
               georef::StreetNetwork & worker,
               bool disruption_active,
+              bool odt_active,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
 
     pbnavitia::Response response;
@@ -422,7 +423,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, disruption_active, odt_active, bound, max_transfers, accessibilite_params, forbidden, clockwise);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1) {
@@ -452,6 +453,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
                                    bool disruption_active,
+                                   bool odt_active,
                                    int max_duration, uint32_t max_transfers, bool show_codes) {
     pbnavitia::Response response;
 
@@ -476,7 +478,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                           accessibilite_params, forbidden, clockwise, disruption_active);
+                           accessibilite_params, forbidden, clockwise, disruption_active, odt_active);
 
 
     bt::ptime now = bt::second_clock::local_time();
