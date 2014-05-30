@@ -722,6 +722,10 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool is_odt()  const{
         return vehicle_journey_type != VehicleJourneyType::regular;
     }
+
+    bool is_odt_with_zone() const{
+        return vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time;
+    }
 };
 
 struct ValidityPattern : public Header {

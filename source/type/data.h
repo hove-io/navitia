@@ -158,6 +158,8 @@ public:
 
     void build_associated_calendar();
 
+    void build_odt();
+
     void build_grid_validity_pattern();
     void complete();
 
