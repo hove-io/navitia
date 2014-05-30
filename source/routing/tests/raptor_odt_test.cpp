@@ -48,6 +48,12 @@ public:
     navitia::type::EntryPoint destination;
     std::unique_ptr<navitia::routing::RAPTOR> raptor;
     std::unique_ptr<navitia::georef::StreetNetwork> street_network;
+    pbnavitia::Response resp;
+    pbnavitia::Journey journey;
+    pbnavitia::Section section;
+    pbnavitia::PtDisplayInfo displ;
+    navitia::type::VehicleJourney* vj1;
+    navitia::type::VehicleJourney* vj2;
 
     Params():b("20140113") {
 
@@ -67,6 +73,8 @@ public:
         raptor = std::make_unique<navitia::routing::RAPTOR>(*b.data);
 
         b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2014,01,13), boost::gregorian::date(2014,01,25));
+        vj1 = b.data->pt_data->vehicle_journeys_map["vj1"];
+        vj2 = b.data->pt_data->vehicle_journeys_map["vj2"];
     }
     pbnavitia::Response make_response(bool active_odt) {
         return navitia::routing::make_response(*raptor, origin, destination,
@@ -75,250 +83,451 @@ public:
                                forbidden,
                                *street_network, false, active_odt);
     }
+    void unset_odt_jp(){
+        for(navitia::type::JourneyPattern* jp : b.data->pt_data->journey_patterns){
+            jp->is_odt = false;
+        }
+    }
 };
 
 BOOST_FIXTURE_TEST_SUITE(odt_active, Params)
 
-BOOST_AUTO_TEST_CASE(test_odt_active) {
-    pbnavitia::Response resp;
-    pbnavitia::Journey journey;
-    pbnavitia::Section section;
-    pbnavitia::PtDisplayInfo displ;
-    navitia::type::VehicleJourney* vj1 = b.data->pt_data->vehicle_journeys_map["vj1"];
-    navitia::type::VehicleJourney* vj2 = b.data->pt_data->vehicle_journeys_map["vj2"];
-    /*
-       Testing the behavior if :
-       VJ1 : regular
-       VJ2 : regular
-    */
-    {
-        resp = make_response(true);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
 
-        resp = make_response(false);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-    }
+/*
+   Testing the behavior if :
+    Not ODT
+*/
+BOOST_AUTO_TEST_CASE(test1){
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
 
-    /*
-       Testing the behavior if :
-       VJ1 : virtual with stop_time
-       VJ2 : regular
-    */
-    {
-        vj1->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_with_stop_time;
-        b.data->build_odt();
-        resp = make_response(true);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-
-        resp = make_response(false);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-    }
-
-    /*
-       Testing the behavior if :
-       VJ1 : virtual without stop_time
-       VJ2 : regular
-    */
-    {
-        vj1->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_without_stop_time;
-        b.data->build_odt();
-        resp = make_response(true);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-
-        resp = make_response(false);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
-        BOOST_CHECK_EQUAL(journey.duration(), 2400);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T103000");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-    }
-
-    /*
-       Testing the behavior if :
-       VJ1 : stop_point to stop_point
-       VJ2 : regular
-    */
-    {
-        vj1->vehicle_journey_type = navitia::type::VehicleJourneyType::stop_point_to_stop_point;
-        b.data->build_odt();
-        resp = make_response(true);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-
-        resp = make_response(false);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
-        BOOST_CHECK_EQUAL(journey.duration(), 2400);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T103000");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-    }
-
-    /*
-       Testing the behavior if :
-       VJ1 : address to stop_point
-       VJ2 : regular
-    */
-    {
-        vj1->vehicle_journey_type = navitia::type::VehicleJourneyType::adress_to_stop_point;
-        b.data->build_odt();
-        resp = make_response(true);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-
-        resp = make_response(false);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
-        BOOST_CHECK_EQUAL(journey.duration(), 2400);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T103000");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-    }
-
-    /*
-       Testing the behavior if :
-       VJ1 : point to point
-       VJ2 : regular
-    */
-    {
-        vj1->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
-        b.data->build_odt();
-        resp = make_response(true);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-
-        resp = make_response(false);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
-        BOOST_CHECK_EQUAL(journey.duration(), 2400);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T103000");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-    }
-
-    /*
-       Testing the behavior if :
-       VJ1 : virtual with stop_time
-       VJ2 : virtual with stop_time
-    */
-    {
-        vj1->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_with_stop_time;
-        vj2->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_with_stop_time;
-
-        b.data->build_odt();
-        resp = make_response(true);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-
-        resp = make_response(false);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
-        BOOST_CHECK_EQUAL(journey.duration(), 2400);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T103000");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-    }
-
-    /*
-       Testing the behavior if :
-       VJ1 : stop_point to stop_point
-       VJ2 : stop_point to stop_point
-    */
-    {
-        vj1->vehicle_journey_type = navitia::type::VehicleJourneyType::stop_point_to_stop_point;
-        vj2->vehicle_journey_type = navitia::type::VehicleJourneyType::stop_point_to_stop_point;
-
-        b.data->build_odt();
-        resp = make_response(true);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-        BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
-        journey = resp.journeys(0);
-        section = journey.sections(0);
-        displ = section.pt_display_informations();
-        BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
-        BOOST_CHECK_EQUAL(journey.duration(), 3300);
-        BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-        BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
-
-        resp = make_response(false);
-        BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);
-    }
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
 }
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && not estimated_date_time
+   VJ2 : Not ODT, Not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test2){
+    vj1->stop_time_list.front()->set_odt(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time
+   VJ2 : Not ODT, Not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test3){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time, last stoptime is odt && not estimated_date_time
+   VJ2 : Not ODT, Not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test4){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.back()->set_odt(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time, last stoptime is odt && estimated_date_time
+   VJ2 : Not ODT, Not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test5){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
+    BOOST_CHECK_EQUAL(journey.duration(), 2400);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T103000");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    vj1->stop_time_list.front()->set_odt(false);
+    vj1->stop_time_list.front()->set_date_time_estimated(false);
+    vj1->stop_time_list.back()->set_odt(false);
+    vj1->stop_time_list.back()->set_date_time_estimated(false);
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : Not ODT, Not estimated_date_time
+   VJ2 : first stoptime is odt && not estimated_date_time, last stoptime is not odt && not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test6){
+    vj2->stop_time_list.front()->set_odt(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : Not ODT, Not estimated_date_time
+   VJ2 : first stoptime is odt && estimated_date_time, last stoptime is not odt && not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test7){
+    vj2->stop_time_list.front()->set_odt(true);
+    vj2->stop_time_list.front()->set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : Not ODT, Not estimated_date_time
+   VJ2 : first stoptime is odt && estimated_date_time, last stoptime is odt && not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test8){
+    vj2->stop_time_list.front()->set_odt(true);
+    vj2->stop_time_list.front()->set_date_time_estimated(true);
+    vj2->stop_time_list.back()->set_odt(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : Not ODT, Not estimated_date_time
+   VJ2 : first stoptime is odt && estimated_date_time, last stoptime is odt && estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test9){
+    vj2->stop_time_list.front()->set_odt(true);
+    vj2->stop_time_list.front()->set_date_time_estimated(true);
+    vj2->stop_time_list.back()->set_odt(true);
+    vj2->stop_time_list.back()->set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && not estimated_date_time, last stoptime is not odt && not estimated_date_time
+   VJ2 : first stoptime is odt && not estimated_date_time, last stoptime is not odt && not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test10){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj2->stop_time_list.front()->set_odt(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time, last stoptime is not odt && not estimated_date_time
+   VJ2 : first stoptime is odt && estimated_date_time, last stoptime is not odt && not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test11){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj2->stop_time_list.front()->set_odt(true);
+    vj2->stop_time_list.front()->set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time, last stoptime is odt && not estimated_date_time
+   VJ2 : first stoptime is odt && estimated_date_time, last stoptime is odt && not estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test12){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.back()->set_odt(true);
+    vj2->stop_time_list.front()->set_odt(true);
+    vj2->stop_time_list.front()->set_date_time_estimated(true);
+    vj2->stop_time_list.back()->set_odt(true);
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time, last stoptime is odt && estimated_date_time
+   VJ2 : first stoptime is odt && estimated_date_time, last stoptime is odt && estimated_date_time
+*/
+BOOST_AUTO_TEST_CASE(test13){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.back()->set_date_time_estimated(true);
+
+    vj2->stop_time_list.front()->set_odt(true);
+    vj2->stop_time_list.front()->set_date_time_estimated(true);
+    vj2->stop_time_list.back()->set_odt(true);
+    vj2->stop_time_list.back()->set_date_time_estimated(true);
+
+    b.data->build_odt();
+    resp = make_response(true);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
+    BOOST_CHECK_EQUAL(journey.duration(), 3300);
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+
+    resp = make_response(false);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);
+    unset_odt_jp();
+}
+
 BOOST_AUTO_TEST_SUITE_END()

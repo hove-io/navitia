@@ -309,25 +309,19 @@ BOOST_AUTO_TEST_CASE(vj_is_odt) {
     vj_regular.vehicle_journey_type = VehicleJourneyType::regular;
     vj_regular.has_landing();
     BOOST_CHECK_NOT(vj_regular.is_odt());
-    BOOST_CHECK_NOT(vj_regular.is_odt_with_zone());
 
     vj_odt.vehicle_journey_type = VehicleJourneyType::virtual_with_stop_time;
     BOOST_CHECK(vj_odt.is_odt());
-    BOOST_CHECK_NOT(vj_odt.is_odt_with_zone());
 
     vj_odt.vehicle_journey_type = VehicleJourneyType::virtual_without_stop_time;
     BOOST_CHECK(vj_odt.is_odt());
-    BOOST_CHECK(vj_odt.is_odt_with_zone());
 
     vj_odt.vehicle_journey_type = VehicleJourneyType::stop_point_to_stop_point;
     BOOST_CHECK(vj_odt.is_odt());
-    BOOST_CHECK(vj_odt.is_odt_with_zone());
 
     vj_odt.vehicle_journey_type = VehicleJourneyType::adress_to_stop_point;
     BOOST_CHECK(vj_odt.is_odt());
-    BOOST_CHECK(vj_odt.is_odt_with_zone());
 
     vj_odt.vehicle_journey_type = VehicleJourneyType::odt_point_to_point;
     BOOST_CHECK(vj_odt.is_odt());
-    BOOST_CHECK(vj_odt.is_odt_with_zone());
 }

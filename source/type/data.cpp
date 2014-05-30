@@ -315,7 +315,7 @@ void Data::build_odt(){
     for(JourneyPattern* jp : this->pt_data->journey_patterns){
         result = true;
         for(const VehicleJourney* vj : jp->vehicle_journey_list){
-            if (!vj->is_odt_with_zone()){
+            if(!vj->is_odt_and_has_date_time_estimated()){
                 result = false;
             }
         }
