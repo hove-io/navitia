@@ -200,4 +200,8 @@ void fill_pb_object(const navitia::type::ExceptionDate& exception_date, const ty
 void fill_pb_object(const std::string comment, const type::Data& data,
                     pbnavitia::Note* note, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
+
+void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data,
+                    pbnavitia::Properties* properties, int max_depth,
+                    const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 }//namespace navitia

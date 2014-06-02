@@ -43,6 +43,27 @@ namespace pt = boost::posix_time;
 
 namespace navitia{
 
+void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
+                    pbnavitia::Properties* properties, int,
+                    const boost::posix_time::ptime&, const boost::posix_time::time_period&){
+    if (((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed())
+        // No display pick up only information if first stoptime in vehiclejourney
+        && ((stop_time->vehicle_journey != nullptr) && (stop_time->vehicle_journey->stop_time_list.front() != stop_time))){
+        properties->add_additional_informations(pbnavitia::Properties::pick_up_only);
+    }
+    if((stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed()))
+        // No display drop off only information if last stoptime in vehiclejourney
+        && ((stop_time->vehicle_journey != nullptr) && (stop_time->vehicle_journey->stop_time_list.back() != stop_time))){
+        properties->add_additional_informations(pbnavitia::Properties::drop_off_only);
+    }
+    if (stop_time->odt()){
+        properties->add_additional_informations(pbnavitia::Properties::on_demand_transport);
+    }
+    if (stop_time->date_time_estimated()){
+        properties->add_additional_informations(pbnavitia::Properties::date_time_estimated);
+    }
+}
+
 void fill_pb_object(const navitia::georef::Admin* adm, const nt::Data&,
                     pbnavitia::AdministrativeRegion* admin, int,
                     const pt::ptime&, const pt::time_period& ){
@@ -516,22 +537,11 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
                     const pt::ptime& now, const pt::time_period& action_period) {
     if(st == nullptr)
         return ;
+    pbnavitia::Properties* properties = stop_date_time->mutable_properties();
+    fill_pb_object(st, data, properties, max_depth, now, action_period);
 
-    pbnavitia::Properties * hp = stop_date_time->mutable_properties();
-    if ((!st->drop_off_allowed()) && st->pick_up_allowed()){
-        hp->add_additional_informations(pbnavitia::Properties::pick_up_only);
-    }
-    if(st->drop_off_allowed() && (!st->pick_up_allowed())){
-        hp->add_additional_informations(pbnavitia::Properties::drop_off_only);
-    }
-    if (st->odt()){
-        hp->add_additional_informations(pbnavitia::Properties::on_demand_transport);
-    }
-    if (st->date_time_estimated()){
-        hp->add_additional_informations(pbnavitia::Properties::date_time_estimated);
-    }
     if(!st->comment.empty()){
-        fill_pb_object(st->comment, data,  hp->add_notes(), max_depth, now, action_period);
+        fill_pb_object(st->comment, data,  properties->add_notes(), max_depth, now, action_period);
     }
 }
 
@@ -1025,19 +1035,9 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         str_datetime = iso_hour_string(date_time, data);
     }
     rs_date_time->set_date_time(str_datetime);
-    pbnavitia::Properties * hn = rs_date_time->mutable_properties();
-    if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
-        hn->add_additional_informations(pbnavitia::Properties::pick_up_only);
-    }
-    if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
-        hn->add_additional_informations(pbnavitia::Properties::drop_off_only);
-    }
-    if (stop_time->odt()){
-        hn->add_additional_informations(pbnavitia::Properties::on_demand_transport);
-    }
-    if (stop_time->date_time_estimated()){
-        hn->add_additional_informations(pbnavitia::Properties::date_time_estimated);
-    }
+    pbnavitia::Properties* hn = rs_date_time->mutable_properties();
+    fill_pb_object(stop_time, data, hn, max_depth, now, action_period);
+
     navitia::type::StopPoint* spt = nullptr;
     if ((stop_time->vehicle_journey != nullptr)
         && (!stop_time->vehicle_journey->stop_time_list.empty())
