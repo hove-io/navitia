@@ -216,6 +216,7 @@ class ReleaseManager:
         return lines
 
     def publish_release(self, temp_branch):
+        self.git.checkout("release")
         #merge with the release branch
         self.git.merge(temp_branch, "release", '--no-ff')
 
