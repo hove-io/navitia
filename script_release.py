@@ -278,7 +278,7 @@ if __name__ == '__main__':
         exit(5)
 
     r_type = argv[1]
-    remote = argv[2] if len(argv) >= 2 else "canalTP"
+    remote = argv[2] if len(argv) >= 3 else "CanalTP"
 
     manager = ReleaseManager(release_type=r_type, remote_name=remote)
     manager.release_the_kraken()
