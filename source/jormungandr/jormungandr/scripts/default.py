@@ -477,6 +477,9 @@ class Script(object):
             (not request["min_nb_journeys"] and nb_typed_journeys == 0)) and cpt_attempt < max_attempts:
             tmp_resp = self.get_journey(next_request, instance, request)
             if len(tmp_resp.journeys) == 0:
+                # if we do not yet have journeys, we get the tmp_resp to have the error if there are some
+                if len(resp.journeys) == 0:
+                    resp = tmp_resp
                 break
             last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
             if not last_best:

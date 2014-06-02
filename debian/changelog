@@ -1,3 +1,20 @@
+navitia2 (0.97.0) unstable; urgency=low
+
+  * Kraken: fix poi_type on places_nearby API
+  * kraken : not display "pick_up only" if first stoptime
+  * Jormungandr: Correct error handling
+  * Fix Gtfs csvreader
+  * TimeTable: change exceptions
+  * documentation: Add other journey planners
+  * Tyr: Add load_data command
+  * Kraken: force malloc release
+  * Jormungandr: remove useless variable
+  * Jormungandr: filter similar journeys
+  * Kraken: Change protobuff placemark from address to POI for BSS stations.
+  * Release script improvement
+
+ -- Vincent Lara <lara.vincent@gmail.com>  Mon, 02 Jun 2014 12:06:37 +0100
+
 navitia2 (0.96.10) unstable; urgency=low
 
   * Jormungandr: Fix sort of journeys

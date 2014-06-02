@@ -27,9 +27,22 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.aggregate_places import AggregatePlacesCommand
-from tyr.command.reload_at import ReloadAtCommand
-from tyr.command.at_reloader import AtReloader
-from tyr.command.reload_kraken import ReloadKrakenCommand
-from tyr.command.build_data import BuildDataCommand
-from tyr.command.load_data import LoadDataCommand
+from flask.ext.script import Command, Option
+from navitiacommon import models
+from tyr.tasks import load_data
+import logging
+
+
+class LoadDataCommand(Command):
+    """A command used for run trigger a reload of data from a directory"""
+
+    def get_options(self):
+        return [
+            Option(dest='instance_name', help="name of the instance"),
+            Option(dest='data_dir', help="path of the data to load")
+        ]
+
+    def run(self, instance_name, data_dir):
+        logging.info("Run command load data")
+        instance = models.Instance.query.filter_by(name=instance_name).first()
+        load_data.delay(instance.id, data_dir)

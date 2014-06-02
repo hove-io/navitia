@@ -736,8 +736,9 @@ void PeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_li
         LOG4CPLUS_ERROR(logger, "period invalid, not added for calendar " << row[calendar_c]);
         return;
     }
-
-    boost::gregorian::date_period period(begin_date, end_date);
+    //the end of a gregorian period not in the period (it's the day after)
+    //since we want the end to be in the period, we add one day to it
+    boost::gregorian::date_period period(begin_date, end_date + boost::gregorian::days(1));
     cal->second->period_list.push_back(period);
 }
 

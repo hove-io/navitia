@@ -1,4 +1,4 @@
-"stop_id","stop_name","stop_desc","stop_lat","stop_lon","zone_id","stop_url","location_type","parent_station","wheelchair_boarding
+"stop_id","stop_name","stop_desc","stop_lat","stop_lon","zone_id","stop_url","location_type","parent_station","wheelchair_boarding"
 "doublon_sa", "Doublon",,"1","0",,,1,,
 "doublon_sa", "Doublon",,"1","0",,,1,,
 "doublon_sp", "Doublon",,"1","0",,,0,,

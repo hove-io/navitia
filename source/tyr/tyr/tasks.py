@@ -80,76 +80,84 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
+def import_data(files, instance, backup_file):
+    """
+    import the data contains in the list of 'files' in the 'instance'
+
+    :param files: files to import
+    :param instance: instance to receive the data
+    :param backup_file: If True the files are moved to a backup directory, else they are not moved
+
+    run the whole data import process:
+
+    - data import in bdd (fusio2ed, gtfs2ed, poi2ed, ...)
+    - export bdd to nav file
+    - update the jormungandr db with the new data for the instance
+    - reload the krakens
+    """
+    actions = []
+    job = models.Job()
+    instance_config = load_instance_config(instance.name)
+    job.instance = instance
+    job.state = 'pending'
+    task = {
+        'gtfs': gtfs2ed,
+        'fusio': fusio2ed,
+        'osm': osm2ed,
+        'geopal': geopal2ed,
+        'fare': fare2ed,
+        'poi': poi2ed,
+        'synonym': synonym2ed,
+    }
+
+    for _file in files:
+        filename = None
+
+        dataset = models.DataSet()
+        dataset.type = type_of_data(_file)
+        if dataset.type in task:
+            if backup_file:
+                filename = move_to_backupdirectory(_file,
+                                                   instance_config.backup_directory)
+            else:
+                filename = _file
+            actions.append(task[dataset.type].si(instance_config, filename))
+        else:
+            #unknown type, we skip it
+            current_app.logger.debug("unknwn file type: {} for file {}"
+                                     .format(dataset.type, _file))
+            continue
+
+        #currently the name of a dataset is the path to it
+        dataset.name = filename
+        models.db.session.add(dataset)
+        job.data_sets.append(dataset)
+
+    if actions:
+        models.db.session.add(job)
+        models.db.session.commit()
+        for action in actions:
+            action.kwargs['job_id'] = job.id
+        #We pass the job id to each tasks, but job need to be commited for
+        #having an id
+        binarisation = [ed2nav.si(instance_config, job.id),
+                        nav2rt.si(instance_config, job.id)]
+        aggregate = aggregate_places.si(instance_config, job.id)
+        #We pass the job id to each tasks, but job need to be commited for
+        #having an id
+        actions.append(group(chain(*binarisation), aggregate))
+        actions.append(reload_data.si(instance_config, job.id))
+        actions.append(finish_job.si(job.id))
+        chain(*actions).delay()
+
+
 @celery.task()
 def update_data():
     for instance in models.Instance.query.all():
-        current_app.logger.debug("Update data of : %s"%instance.name)
+        current_app.logger.debug("Update data of : {}".format(instance.name))
         instance_config = load_instance_config(instance.name)
         files = glob.glob(instance_config.source_directory + "/*")
-        actions = []
-        job = models.Job()
-        job.instance = instance
-        job.state = 'pending'
-        for _file in files:
-            dataset = models.DataSet()
-            filename = None
-
-            dataset.type = type_of_data(_file)
-            if dataset.type == 'gtfs':
-                filename = move_to_backupdirectory(_file,
-                        instance_config.backup_directory)
-                actions.append(gtfs2ed.si(instance_config, filename))
-            elif dataset.type == 'fusio':
-                filename = move_to_backupdirectory(_file,
-                        instance_config.backup_directory)
-                actions.append(fusio2ed.si(instance_config,
-                                           filename))
-            elif dataset.type == 'osm':
-                filename = move_to_backupdirectory(_file,
-                        instance_config.backup_directory)
-                actions.append(osm2ed.si(instance_config, filename))
-            elif dataset.type == 'geopal':
-                filename = move_to_backupdirectory(_file,
-                        instance_config.backup_directory)
-                actions.append(geopal2ed.si(instance_config, filename))
-            elif dataset.type == 'fare':
-                filename = move_to_backupdirectory(_file,
-                        instance_config.backup_directory)
-                actions.append(fare2ed.si(instance_config, filename))
-            elif dataset.type == 'poi':
-                filename = move_to_backupdirectory(_file,
-                        instance_config.backup_directory)
-                actions.append(poi2ed.si(instance_config, filename))
-            elif dataset.type == 'synonym':
-                filename = move_to_backupdirectory(_file,
-                        instance_config.backup_directory)
-                actions.append(synonym2ed.si(instance_config, filename))
-            else:
-                #unknown type, we skip it
-                continue
-
-            #currently the name of a dataset is the path to it
-            dataset.name = filename
-            models.db.session.add(dataset)
-            job.data_sets.append(dataset)
-
-        if actions:
-            models.db.session.add(job)
-            models.db.session.commit()
-            for action in actions:
-                action.kwargs['job_id'] = job.id
-            #We pass the job id to each tasks, but job need to be commited for
-            #having an id
-            binarisation = [ed2nav.si(instance_config, job.id),
-                            nav2rt.si(instance_config, job.id)]
-            aggregate = aggregate_places.si(instance_config, job.id)
-            #We pass the job id to each tasks, but job need to be commited for
-            #having an id
-            actions.append(group(chain(*binarisation), aggregate))
-            actions.append(reload_data.si(instance_config, job.id))
-            actions.append(finish_job.si(job.id))
-            chain(*actions).delay()
-
+        import_data(files, instance, backup_file=True)
 
 
 @celery.task()
@@ -206,6 +214,19 @@ def build_all_data():
         chain(ed2nav.si(instance_config, job.id),
                             nav2rt.si(instance_config, job.id)).delay()
         current_app.logger.info("Job  build data of : %s queued"%instance.name)
+
+
+@celery.task()
+def load_data(instance_id, data_path):
+    instance = models.Instance.query.get(instance_id)
+    job = models.Job()
+    job.instance = instance
+    job.state = 'pending'
+    models.db.session.add(job)
+    models.db.session.commit()
+    files = glob.glob(data_path + "/*")
+
+    import_data(files, instance, backup_file=False)
 
 
 @task_postrun.connect

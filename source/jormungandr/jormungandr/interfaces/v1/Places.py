@@ -33,7 +33,7 @@ from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
 from jormungandr import i_manager
 from make_links import add_id_links
-from fields import place, NonNullList, NonNullNested, PbField, pagination
+from fields import place, NonNullList, NonNullNested, PbField, pagination, error
 from ResourceUri import ResourceUri
 from make_links import add_id_links
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -41,7 +41,10 @@ from jormungandr.interfaces.parsers import depth_argument
 from copy import deepcopy
 
 
-places = {"places": NonNullList(NonNullNested(place))}
+places = {
+    "places": NonNullList(NonNullNested(place)),
+    "error": PbField(error, attribute='error'),
+}
 
 
 class Places(ResourceUri):
@@ -110,8 +113,10 @@ class PlaceUri(ResourceUri):
 
 place_nearby = deepcopy(place)
 place_nearby["distance"] = fields.Float()
-places_nearby = {"places_nearby": NonNullList(NonNullNested(place_nearby)),
-                 "pagination": PbField(pagination)}
+places_nearby = {
+    "places_nearby": NonNullList(NonNullNested(place_nearby)),
+    "error": PbField(error, attribute='error'),
+    "pagination": PbField(pagination)}
 
 
 class PlacesNearby(ResourceUri):
