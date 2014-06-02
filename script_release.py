@@ -101,6 +101,10 @@ class ReleaseManager:
 
         github_response = requests.get(query)
 
+        if github_response.status_code != 200:
+            message = github_response.json()['message']
+            return u'  * Impossible de récupérer les PR\n  * '+ message
+
         closed_pr = github_response.json()
 
         lines = []
