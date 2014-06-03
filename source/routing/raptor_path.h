@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 #include "type/type.h"
 #include "routing/routing.h"
+#include "routing/raptor_utils.h"
 #include <vector>
 namespace navitia { namespace routing {
     class RAPTOR;
@@ -54,4 +55,45 @@ namespace navitia { namespace routing {
 
     /// Ajuste les temps d’attente
     void patch_datetimes(Path &path);
+
+    std::pair<boost::posix_time::ptime, boost::posix_time::ptime>
+    handle_st(const type::StopTime* st, DateTime& workingDate, bool clockwise, const type::Data &data);
+
+    std::pair<const type::StopTime*, uint32_t>
+    get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels,
+                          const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data, bool disruption_active);
+
+    template<typename Visitor>
+    void read_path(Visitor& v, type::idx_t destination_idx, size_t countb, bool clockwise, bool disruption_active,
+              const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_);
+
+    struct BasePathVisitor {
+        void connection(type::StopPoint* /*departure*/, type::StopPoint* /*destination*/,
+                    boost::posix_time::ptime /*dep_time*/, boost::posix_time::ptime /*arr_time*/,
+                    type::StopPointConnection* /*stop_point_connection*/) {
+            return ;
+        }
+
+        void init_vj() {
+            return ;
+        }
+
+        void loop_vj(const type::StopTime* /*st*/, boost::posix_time::ptime /*departure*/, boost::posix_time::ptime /*arrival*/) {
+            return ;
+        }
+
+        void change_vj(const type::StopTime* /*prev_st*/, const type::StopTime* /*current_st*/,
+                       boost::posix_time::ptime /*prev_dt*/, boost::posix_time::ptime /*current_dt*/,
+                       bool /*clockwise*/) {
+            return ;
+        }
+
+        void finish_vj(bool /*clockwise*/) {
+            return ;
+        }
+
+        void final_step(type::idx_t /*current_jpp*/, size_t /*count*/, const std::vector<std::vector<Label>> &/*labels*/) {
+            return ;
+        }
+    };
 }}
