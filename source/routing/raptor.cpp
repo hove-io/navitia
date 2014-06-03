@@ -40,64 +40,48 @@ void RAPTOR::make_queue() {
 }
 
 template<typename Visitor>
-void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning) {
+void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
+                                const type::VehicleJourney* prev_vj, type::idx_t boarding_jpp_idx,
+                                DateTime workingDt, const uint16_t l_zone,
+                                const bool disruption_active) {
     auto& working_labels = labels[count];
-    while(!vj_queue.empty()) {
-        const type::VehicleJourney* vj = vj_queue.front();
-        const navitia::type::JourneyPatternPoint* boarding_jpp = v.get_boarding_jpp(vj);
-        auto boarding_jpp_idx = boarding_jpp->idx;
-        auto workingDt = working_labels[boarding_jpp_idx].dt;
-        //The local_zone is the last one of the VJ
-        //@TODO: There might be a bug if there are several connected vj
-        uint16_t l_zone =  std::numeric_limits<uint16_t>::max();
-        for(type::StopTime* st: vj->stop_time_list) {
-            if(st->local_traffic_zone != std::numeric_limits<uint16_t>::max()) {
-                l_zone = st->local_traffic_zone;
-            }
-        }
-        //The first stoptime has to marked has a connection_stay_in
-        bool first_stop_time = true;
-        bool add_vj = false;
+    const type::VehicleJourney* vj = v.get_extension_vj(prev_vj);
+    bool add_vj = false;
+    while(vj) {
         BOOST_FOREACH(type::StopTime* st, v.stop_time_list(vj)) {
+            if(!st->valid_end(v.clockwise()) ||
+                    !st->is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
+                continue;
+            }
+            if(l_zone != std::numeric_limits<uint16_t>::max() &&
+               l_zone == st->local_traffic_zone) {
+                continue;
+            }
             auto jpp = st->journey_pattern_point;
-            if(l_zone == std::numeric_limits<uint16_t>::max()
-                || l_zone != st->local_traffic_zone) {
-                const auto current_time = st->section_end_time(v.clockwise(),
+            const auto current_time = st->section_end_time(v.clockwise(),
                                     DateTimeUtils::hour(workingDt));
-                DateTimeUtils::update(workingDt, current_time, v.clockwise());
-                const DateTime bound = (v.comp(best_labels[jpp->idx], b_dest.best_now) || !global_pruning) ?
+            DateTimeUtils::update(workingDt, current_time, v.clockwise());
+            const DateTime bound = (v.comp(best_labels[jpp->idx], b_dest.best_now) || !global_pruning) ?
                                         best_labels[jpp->idx] : b_dest.best_now;
-                if(v.comp(workingDt, bound)) {
-                    working_labels[jpp->idx].dt = workingDt;
-                    working_labels[jpp->idx].boarding_jpp = boarding_jpp_idx;
-                    working_labels[jpp->idx].type = first_stop_time ? boarding_type::connection_stay_in : boarding_type::vj;
-                    best_labels[jpp->idx] = working_labels[jpp->idx].dt;
-                    if(!this->b_dest.add_best(v, jpp->idx, working_labels[jpp->idx].dt, this->count)) {
-                        this->marked_sp.set(jpp->stop_point->idx);
-                    }
-                    add_vj = true;
-                } else if(workingDt == bound &&
-                          get_type(this->count-1, jpp->idx) == boarding_type::uninitialized &&
-                          b_dest.add_best(v, jpp->idx, workingDt, this->count)) {
-                    working_labels[jpp->idx].dt = workingDt;
-                    working_labels[jpp->idx].boarding_jpp = boarding_jpp_idx;
-                    working_labels[jpp->idx].type = first_stop_time ? boarding_type::connection_stay_in : boarding_type::vj;
-                    best_labels[jpp->idx] = workingDt;
-                    add_vj = true;
-                }
+            if(!v.comp(workingDt, bound)) {
+                continue;
             }
-            if(first_stop_time) {
-                boarding_jpp_idx = jpp->idx;
+            working_labels[jpp->idx].dt = workingDt;
+            working_labels[jpp->idx].boarding_jpp = boarding_jpp_idx;
+            working_labels[jpp->idx].type = boarding_type::connection_stay_in;
+            best_labels[jpp->idx] = working_labels[jpp->idx].dt;
+            add_vj = true;
+            if(!this->b_dest.add_best(v, jpp->idx, working_labels[jpp->idx].dt, this->count)) {
+                this->marked_sp.set(jpp->stop_point->idx);
             }
-            first_stop_time = false;
         }
+        //If we never marked a vj, we don't want to continue
+        //This is usefull when there is a loop
         if(add_vj) {
-            auto vj_ext = v.get_extension_vj(vj);
-            if(vj_ext) {
-                vj_queue.push(vj_ext);
-            }
+            vj = v.get_extension_vj(vj);
+        } else {
+            vj = nullptr;
         }
-        vj_queue.pop();
     }
 }
 
@@ -123,7 +107,8 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                 boarding_type b_type = get_type(count, jppidx);
                 //On regarde si on est arrivé avec un vj ou un departure,
                 //Puis on compare avec la meilleure arrivée trouvée pour ce stoppoint
-                if((b_type == boarding_type::vj || b_type == boarding_type::departure) &&
+                if((b_type == boarding_type::vj || b_type == boarding_type::departure ||
+                    b_type == boarding_type::connection_stay_in) &&
                     v.comp(current_labels[jppidx].dt, best_arrival)) {
                     best_arrival = current_labels[jppidx].dt;
                     best_jpp = jppidx;
@@ -275,8 +260,8 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     clear_and_init(departures, calc_dest, bound, clockwise);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
-//    auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
-//    result.insert(result.end(), tmp.begin(), tmp.end());
+    //auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
+    //result.insert(result.end(), tmp.begin(), tmp.end());
     // Aucune solution n’a été trouvée :'(
     if(b_dest.best_now_jpp_idx == type::invalid_idx) {
         return result;
@@ -286,8 +271,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     // If we asked for a earliest arrival time, we now try to find the tardiest departure time
     // and vice and versa
     departures = get_solutions(calc_dep, calc_dest, !clockwise,
-                               labels,
-                               accessibilite_params, data, disruption_active);
+                               accessibilite_params, disruption_active, *this);
     for(auto departure : departures) {
         clear_and_init({departure}, calc_dep, departure_datetime, !clockwise);
 
@@ -382,7 +366,7 @@ struct raptor_visitor {
        return vj->next_vj;
     }
 
-    const type::JourneyPatternPoint* get_boarding_jpp(const type::VehicleJourney* vj) const {
+    const type::JourneyPatternPoint* get_last_jpp(const type::VehicleJourney* vj) const {
        return vj->prev_vj->journey_pattern->journey_pattern_point_list.back();
     }
 
@@ -430,7 +414,7 @@ struct raptor_reverse_visitor {
        return vj->prev_vj;
     }
 
-    const type::JourneyPatternPoint* get_boarding_jpp(const type::VehicleJourney* vj) const {
+    const type::JourneyPatternPoint* get_last_jpp(const type::VehicleJourney* vj) const {
        return vj->next_vj->journey_pattern->journey_pattern_point_list.front();
     }
 
@@ -490,65 +474,54 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     if(boarding != nullptr) {
                         ++it_st;
                         const type::StopTime* st = *it_st;
-                        const auto current_time = st->section_end_time(visitor.clockwise(),
-                                DateTimeUtils::hour(workingDt));
-                        DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
-                        if((l_zone == std::numeric_limits<uint16_t>::max()
-                            || l_zone != st->local_traffic_zone)
-                                && st->valid_end(visitor.clockwise())) {
-                            //On stocke le meilleur label, et on marque pour explorer par la suite
+                        if(st->valid_end(visitor.clockwise())&&
+                                (l_zone == std::numeric_limits<uint16_t>::max() ||
+                                 l_zone != st->local_traffic_zone)) {
+                            const auto current_time = st->section_end_time(visitor.clockwise(),
+                                                    DateTimeUtils::hour(workingDt));
+                            DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
                             const DateTime bound = (visitor.comp(best_labels[jpp_idx], b_dest.best_now) || !global_pruning) ?
-                                                    best_labels[jpp_idx] : b_dest.best_now;
-
-                            if(visitor.comp(workingDt, bound)) {
+                                                        best_labels[jpp_idx] : b_dest.best_now;
+                            if(visitor.comp(workingDt, bound) || bound == workingDt) {
                                 working_labels[jpp_idx].dt = workingDt;
                                 working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
                                 best_labels[jpp_idx] = working_labels[jpp_idx].dt;
-                                if(!this->b_dest.add_best(visitor, jpp_idx, working_labels[jpp_idx].dt, this->count)) {
+                                if(!this->b_dest.add_best(visitor, jpp->idx, working_labels[jpp_idx].dt, this->count)) {
                                     this->marked_sp.set(jpp->stop_point->idx);
                                     end = false;
                                 }
-                            } else if(workingDt == bound &&
-                                      get_type(this->count-1, jpp_idx) == boarding_type::uninitialized &&
-                                      b_dest.add_best(visitor, jpp_idx, workingDt, this->count)) {
-                                working_labels[jpp_idx].dt = workingDt;
-                                working_labels[jpp_idx].boarding_jpp = boarding->idx;
-                                working_labels[jpp_idx].type = boarding_type::vj;
-                                best_labels[jpp_idx] = workingDt;
                             }
                         }
                     }
-
                     //Si on peut arriver plus tôt à l'arrêt en passant par une autre journey_pattern
-                    const DateTime labels_temp = prec_labels[jpp_idx].dt;
+                    const DateTime previous_dt = prec_labels[jpp_idx].dt;
                     const boarding_type b_type = get_type(this->count-1, jpp_idx);
                     if(b_type != boarding_type::uninitialized && b_type != boarding_type::vj &&
-                       (boarding == nullptr || visitor.better_or_equal(labels_temp, workingDt, *it_st))) {
-                        const auto tmp_st_dt = best_stop_time(jpp, labels_temp,
-                                                                accessibilite_params.vehicle_properties,
-                                                                visitor.clockwise(), disruption_active, data);
+                       (boarding == nullptr || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
+
+                        const auto tmp_st_dt = best_stop_time(jpp, previous_dt,
+                                               accessibilite_params.vehicle_properties,
+                                               visitor.clockwise(), disruption_active, data);
+
                         if(tmp_st_dt.first != nullptr) {
                             boarding = jpp;
                             it_st = visitor.first_stoptime(tmp_st_dt.first);
                             workingDt = tmp_st_dt.second;
-                            BOOST_ASSERT(visitor.comp(labels_temp, workingDt) || labels_temp == workingDt);
+                            BOOST_ASSERT(visitor.comp(previous_dt, workingDt) || previous_dt == workingDt);
                             l_zone = (*it_st)->local_traffic_zone;
                         }
                     }
                 }
                 if(boarding) {
-                    const type::VehicleJourney* vj = visitor.get_extension_vj((*it_st)->vehicle_journey);
-                    if(vj) {
-                        vj_queue.push(vj);
-                    }
+                    this->apply_vj_extension(visitor, global_pruning, (*it_st)->vehicle_journey, boarding->idx,
+                                             workingDt, l_zone, disruption_active);
                 }
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
         }
         // Correspondances
         this->foot_path(visitor, accessibilite_params.properties);
-        this->apply_vj_extension(visitor, global_pruning);
     }
 }
 
