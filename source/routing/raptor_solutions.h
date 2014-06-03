@@ -37,6 +37,10 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+//Forward declare
+
+struct RAPTOR;
+
 struct Solution {
     type::idx_t rpidx;
     uint32_t count;
@@ -72,9 +76,9 @@ typedef std::set<Solution> Solutions;
 
 Solutions
 get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
-             const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations, bool clockwise,
-             const std::vector<label_vector_t> &labels, const type::AccessibiliteParams & accessibilite_params,
-             const type::Data &data, bool disruption_active);
+              const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations, bool clockwise,
+              const type::AccessibiliteParams & accessibilite_params,
+              bool disruption_active, const RAPTOR& raptor);
 
 //This one is hacky, it's used to retrieve the departures.
 Solutions
@@ -83,21 +87,22 @@ get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> >
 
 Solutions
 get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
-                    const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations, Solution best,
-                    const std::vector<label_vector_t> &labels, const type::Data &data);
+                      const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations, const Solution &best,
+                      const bool disruption_active, const type::AccessibiliteParams &accessibilite_params,
+                      const navitia::routing::RAPTOR &raptor);
 
 Solutions
 get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
                const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
-               const std::vector<label_vector_t> &labels,
-               const type::AccessibiliteParams & accessibilite_params, const type::Data &data, bool disruption_active);
+               const type::AccessibiliteParams & accessibilite_params, bool disruption_active, const RAPTOR& raptor);
 
 std::pair<type::idx_t, DateTime>
-get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, const std::vector<label_vector_t> &labels);
+get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, bool disruption_active, const type::AccessibiliteParams &accessibilite_params, const navitia::routing::RAPTOR &raptor);
 
 navitia::time_duration
 getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
                const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
-               bool clockwise, const std::vector<label_vector_t> &labels, const type::Data &data);
+               bool clockwise, bool disruption_active, const type::AccessibiliteParams &accessibilite_params,
+               const navitia::routing::RAPTOR &raptor);
 
 }}
