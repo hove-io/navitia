@@ -39,6 +39,13 @@ void RAPTOR::make_queue() {
     marked_sp.reset();
 }
 
+/*
+ * Check if the given vj is valid for the given datetime,
+ * If it is for every stoptime of the vj,
+ * If the journey_pattern_point associated to it is improved by this stop time
+ * we mark it.
+ * If the given vj also has an extension we apply it.
+ */
 template<typename Visitor>
 void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
                                 const type::VehicleJourney* prev_vj, type::idx_t boarding_jpp_idx,
@@ -367,7 +374,7 @@ struct raptor_visitor {
     }
 
     const type::JourneyPatternPoint* get_last_jpp(const type::VehicleJourney* vj) const {
-       return vj->prev_vj->journey_pattern->journey_pattern_point_list.back();
+       return vj->prev_vj && vj->prev_vj->journey_pattern->journey_pattern_point_list.back();
     }
 
     std::pair<std::vector<type::StopTime*>::const_iterator, std::vector<type::StopTime*>::const_iterator>
@@ -415,7 +422,7 @@ struct raptor_reverse_visitor {
     }
 
     const type::JourneyPatternPoint* get_last_jpp(const type::VehicleJourney* vj) const {
-       return vj->next_vj->journey_pattern->journey_pattern_point_list.front();
+       return vj->next_vj && vj->next_vj->journey_pattern->journey_pattern_point_list.front();
     }
 
     std::pair<std::vector<type::StopTime*>::const_reverse_iterator, std::vector<type::StopTime*>::const_reverse_iterator>
