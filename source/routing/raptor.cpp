@@ -374,7 +374,7 @@ struct raptor_visitor {
     }
 
     const type::JourneyPatternPoint* get_last_jpp(const type::VehicleJourney* vj) const {
-       return vj->prev_vj && vj->prev_vj->journey_pattern->journey_pattern_point_list.back();
+       return vj->prev_vj->journey_pattern->journey_pattern_point_list.back();
     }
 
     std::pair<std::vector<type::StopTime*>::const_iterator, std::vector<type::StopTime*>::const_iterator>
@@ -422,7 +422,7 @@ struct raptor_reverse_visitor {
     }
 
     const type::JourneyPatternPoint* get_last_jpp(const type::VehicleJourney* vj) const {
-       return vj->next_vj && vj->next_vj->journey_pattern->journey_pattern_point_list.front();
+       return vj->next_vj->journey_pattern->journey_pattern_point_list.front();
     }
 
     std::pair<std::vector<type::StopTime*>::const_reverse_iterator, std::vector<type::StopTime*>::const_reverse_iterator>
