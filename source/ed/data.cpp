@@ -249,6 +249,12 @@ void Data::clean(){
     //Meme chose mais avec les vj
     num_elements = vehicle_journeys.size();
     for(size_t to_erase : erasest) {
+        if(vehicle_journeys[to_erase]->next_vj) {
+            vehicle_journeys[to_erase]->next_vj->prev_vj = nullptr;
+        }
+        if(vehicle_journeys[to_erase]->prev_vj) {
+            vehicle_journeys[to_erase]->prev_vj->next_vj = nullptr;
+        }
         delete vehicle_journeys[to_erase];
         vehicle_journeys[to_erase] = vehicle_journeys[num_elements - 1];
         num_elements--;
