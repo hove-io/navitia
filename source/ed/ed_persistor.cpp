@@ -897,16 +897,12 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             values += "next_vehicle_journey_id = "+boost::lexical_cast<std::string>(vj->next_vj->idx);
         }
         if(!values.empty()) {
-            if(vj->prev_vj && vj->prev_vj->idx > vehicle_journeys.size()) {
-                std::cout << "pou" << std::endl;
-            }
             std::string query = "UPDATE navitia.vehicle_journey SET ";
             query += values;
             query += " WHERE id = ";
             query += boost::lexical_cast<std::string>(vj->idx);
             query += ";";
-            LOG4CPLUS_INFO(logger, "query : " << query);
-
+            LOG4CPLUS_TRACE(logger, "query : " << query);
             PQclear(this->lotus.exec(query, "", PGRES_COMMAND_OK));
         }
     }
