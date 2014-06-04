@@ -464,13 +464,30 @@ class Script(object):
                 non_pt_duration_j2 = non_pt_duration
         return non_pt_duration_j1 - non_pt_duration_j2
 
+    def is_odt_with_zone(self, sections_public_transport):
+        if len(sections_public_transport) == 0:
+            return False
+        else:
+            result = True
+            for section in sections_public_transport:
+                result = result and section["odt_with_zone"]
+        return result
+
     def change_request(self, pb_req, resp):
         result = copy.deepcopy(pb_req)
         for journey in resp.journeys:
+            sections_public_transport = []
             for section in journey.sections:
-                if section.pt_display_informations.vehicle_journey_type > type_pb2.virtual_with_stop_time:
-                    result.journeys.allow_odt = False
-                    return result
+                if section.type == response_pb2.PUBLIC_TRANSPORT:
+                    if section.pt_display_informations.vehicle_journey_type > type_pb2.virtual_with_stop_time:
+                        sections_public_transport.append({"line_uri": section.uris.line, "odt_with_zone" : True})
+                    else:
+                        sections_public_transport.append({"line_uri": section.uris.line, "odt_with_zone" : False})
+
+            if self.is_odt_with_zone(sections_public_transport):
+                for uri in sections_public_transport:
+                    if uri["line_uri"] not in result.journeys.forbidden_uris:
+                        result.journeys.forbidden_uris.append(uri["line_uri"])
         return result
 
     def fill_journeys(self, pb_req, request, instance):
