@@ -64,7 +64,7 @@ void Data::normalize_uri(){
 
 void Data::build_block_id() {
     /// We want to group vehicle journeys by their block_id
-    /// Two vehicle_journeys vj1 are consecutive if
+    /// Two vehicle_journeys with the same block_id vj1 are consecutive if
     /// the last arrival_time of vj1 <= to the departure_time of vj2
     std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
             [](const types::VehicleJourney* vj1, const types::VehicleJourney* vj2) {
@@ -75,7 +75,7 @@ void Data::build_block_id() {
                         vj2->stop_time_list.front()->departure_time;
             }
         }
-        );
+    );
 
     types::VehicleJourney* prev_vj = nullptr;
     for(auto it=vehicle_journeys.begin(); it!=vehicle_journeys.end(); ++it) {
