@@ -78,11 +78,22 @@ void Data::build_block_id() {
     );
 
     types::VehicleJourney* prev_vj = nullptr;
-    for(auto it=vehicle_journeys.begin(); it!=vehicle_journeys.end(); ++it) {
-        auto vj = *it;
-        if(prev_vj && prev_vj->block_id != "" && prev_vj->block_id == vj->block_id) {
-            prev_vj->next_vj = vj;
-            vj->prev_vj = prev_vj;
+    for(auto* vj : vehicle_journeys) {
+        if(prev_vj && prev_vj->block_id != "" &&
+           prev_vj->block_id == vj->block_id &&
+           ){
+            // Sanity check
+            // If the departure time of the 1st stoptime of vj is greater
+            // then the arrivaltime of the last stop time of prev_vj
+            // there is a time travel, and we don't like it!
+            // This is not supposed to happen
+            // @TODO: Add a parameter to avoid too long connection
+            // they can be for instance due to bad data
+            if(vj->stop_time_list.front()->departure_time >=
+                    prev_vj->stop_time_list.back()->arrival_time) {
+                prev_vj->next_vj = vj;
+                vj->prev_vj = prev_vj;
+            }
         }
         prev_vj = vj;
     }
