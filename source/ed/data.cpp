@@ -80,8 +80,7 @@ void Data::build_block_id() {
     types::VehicleJourney* prev_vj = nullptr;
     for(auto* vj : vehicle_journeys) {
         if(prev_vj && prev_vj->block_id != "" &&
-           prev_vj->block_id == vj->block_id &&
-           ){
+           prev_vj->block_id == vj->block_id){
             // Sanity check
             // If the departure time of the 1st stoptime of vj is greater
             // then the arrivaltime of the last stop time of prev_vj
