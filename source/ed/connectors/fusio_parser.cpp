@@ -728,10 +728,13 @@ void PeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_li
         LOG4CPLUS_ERROR(logger, "GridCalPeriodFusioHandler : Impossible to find the calendar " << row[calendar_c]);
         return;
     }
-
-    boost::gregorian::date begin_date(parse_date(row[begin_c]));
-    boost::gregorian::date end_date(parse_date(row[end_c]));
-
+    boost::gregorian::date begin_date, end_date;
+    if(has_col(begin_c, row)) {
+        begin_date = parse_date(row[begin_c]);
+    }
+    if(has_col(end_c, row)){
+        end_date = parse_date(row[end_c]);
+    }
     if (begin_date.is_not_a_date() || end_date.is_not_a_date()) {
         LOG4CPLUS_ERROR(logger, "period invalid, not added for calendar " << row[calendar_c]);
         return;
@@ -793,11 +796,18 @@ void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
         LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler : Impossible to find the calendar " << row[calendar_c]);
         return;
     }
+    if(!has_col(type_c, row)) {
+        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler: No column type for calendar " << row[calendar_c]);
+        return;
+    }
     if (row[type_c] != "0" && row[type_c] != "1") {
         LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler : unknown type " << row[type_c]);
         return;
     }
-
+    if(!has_col(datetime_c, row)) {
+        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler: No column datetime for calendar " << row[calendar_c]);
+        return;
+    }
     boost::gregorian::date date(parse_date(row[datetime_c]));
     if(date.is_not_a_date()) {
         LOG4CPLUS_ERROR(logger, "date format not valid, we do not add the exception " <<
@@ -817,21 +827,24 @@ void CalendarLineFusioHandler::init(Data&){
 
 void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line){
     if(! is_first_line && ! has_col(calendar_c, row)) {
-        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
+        LOG4CPLUS_FATAL(logger, "CalendarLineFusioHandler: Error while reading " + csv.filename +
                         "  file has more than one calendar_id and no id column");
         throw InvalidHeaders(csv.filename);
     }
 
     auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler: Impossible to find the calendar " << row[calendar_c]);
         return;
     }
-
+    if(!has_col(line_c, row)) {
+        LOG4CPLUS_WARN(logger, "CalendarLineFusioHandler: No line column for calendar : " << row[calendar_c]);
+        return;
+    }
     auto it = gtfs_data.line_map_by_external_code.find(row[line_c]);
 
     if (it == gtfs_data.line_map_by_external_code.end()) {
-        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler : Impossible to find the line " << row[line_c]);
+        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler: Impossible to find the line " << row[line_c]);
         return;
     }
     cal->second->line_list.push_back(it->second);
