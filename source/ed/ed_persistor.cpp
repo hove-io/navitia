@@ -844,8 +844,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             {"id", "uri", "external_code", "name", "comment", "validity_pattern_id",
              "adapted_validity_pattern_id", "company_id", "journey_pattern_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
-             "odt_type_id", "odt_message", "previous_vehicle_journey_id",
-             "next_vehicle_journey_id"});
+             "odt_type_id", "odt_message"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -883,20 +882,34 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(vj->to_ulog()));
         values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));
         values.push_back(vj->odt_message);
-        if(vj->prev_vj) {
-            values.push_back(std::to_string(vj->prev_vj->idx));
-        } else {
-            values.push_back(lotus.null_value);
-        }
-        if(vj->next_vj) {
-            values.push_back(std::to_string(vj->next_vj->idx));
-        } else {
-            values.push_back(lotus.null_value);
-        }
         this->lotus.insert(values);
     }
-
     this->lotus.finish_bulk_insert();
+    for(types::VehicleJourney* vj : vehicle_journeys) {
+        std::string values = "";
+        if(vj->prev_vj) {
+            values = "previous_vehicle_journey_id = " + boost::lexical_cast<std::string>(vj->prev_vj->idx);
+        }
+        if(vj->next_vj) {
+            if(!values.empty()) {
+                values += ", ";
+            }
+            values += "next_vehicle_journey_id = "+boost::lexical_cast<std::string>(vj->next_vj->idx);
+        }
+        if(!values.empty()) {
+            if(vj->prev_vj && vj->prev_vj->idx > vehicle_journeys.size()) {
+                std::cout << "pou" << std::endl;
+            }
+            std::string query = "UPDATE navitia.vehicle_journey SET ";
+            query += values;
+            query += " WHERE id = ";
+            query += boost::lexical_cast<std::string>(vj->idx);
+            query += ";";
+            LOG4CPLUS_INFO(logger, "query : " << query);
+
+            PQclear(this->lotus.exec(query, "", PGRES_COMMAND_OK));
+        }
+    }
 }
 
 
