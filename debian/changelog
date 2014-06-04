@@ -1,3 +1,10 @@
+navitia2 (0.97.1) unstable; urgency=low
+
+  * Fix bugs parse file bug in fusio2ed
+  * Add is_free configuration to tyr
+
+ -- Vincent Lara <lara.vincent@gmail.com>  Wed, 04 Jun 2014 15:06:16 +0100
+
 navitia2 (0.97.0) unstable; urgency=low
 
   * Kraken: fix poi_type on places_nearby API
