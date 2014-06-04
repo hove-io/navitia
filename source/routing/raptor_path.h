@@ -56,6 +56,7 @@ namespace navitia { namespace routing {
     /// Ajuste les temps d’attente
     void patch_datetimes(Path &path);
 
+    /// /!\ This function has a side effect, it modifies workingDate
     std::pair<boost::posix_time::ptime, boost::posix_time::ptime>
     handle_st(const type::StopTime* st, DateTime& workingDate, bool clockwise, const type::Data &data);
 
