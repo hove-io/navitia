@@ -464,30 +464,26 @@ class Script(object):
                 non_pt_duration_j2 = non_pt_duration
         return non_pt_duration_j1 - non_pt_duration_j2
 
-    def is_odt_with_zone(self, sections_public_transport):
-        if len(sections_public_transport) == 0:
-            return False
-        else:
-            result = True
-            for section in sections_public_transport:
-                result = result and section["odt_with_zone"]
-        return result
-
     def change_request(self, pb_req, resp):
         result = copy.deepcopy(pb_req)
-        for journey in resp.journeys:
-            sections_public_transport = []
+        def get_uri_odt_with_zones(journey):
+            result = []
             for section in journey.sections:
                 if section.type == response_pb2.PUBLIC_TRANSPORT:
-                    if section.pt_display_informations.vehicle_journey_type > type_pb2.virtual_with_stop_time:
-                        sections_public_transport.append({"line_uri": section.uris.line, "odt_with_zone" : True})
+                    if section.pt_display_informations.vehicle_journey_type in [type_pb2.virtual_without_stop_time,
+                                                                                type_pb2.stop_point_to_stop_point,
+                                                                                type_pb2.address_to_stop_point,
+                                                                                type_pb2.odt_point_to_point]:
+                        result.append(section.uris.line)
                     else:
-                        sections_public_transport.append({"line_uri": section.uris.line, "odt_with_zone" : False})
+                        return []
+            return result
 
-            if self.is_odt_with_zone(sections_public_transport):
-                for uri in sections_public_transport:
-                    if uri["line_uri"] not in result.journeys.forbidden_uris:
-                        result.journeys.forbidden_uris.append(uri["line_uri"])
+        map_forbidden_uris = map(get_uri_odt_with_zones, resp.journeys)
+        for forbidden_uris in map_forbidden_uris:
+            for line_uri in forbidden_uris:
+                if line_uri not in result.journeys.forbidden_uris:
+                    result.journeys.forbidden_uris.append(line_uri)
         return result
 
     def fill_journeys(self, pb_req, request, instance):
