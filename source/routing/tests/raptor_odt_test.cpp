@@ -90,7 +90,7 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(odt_active, Params)
+BOOST_FIXTURE_TEST_SUITE(allow_odt, Params)
 
 
 /*

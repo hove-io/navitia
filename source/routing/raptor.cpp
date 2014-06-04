@@ -229,14 +229,14 @@ std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
                     const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
                     const DateTime &departure_datetime,
-                    bool disruption_active, bool odt_active,
+                    bool disruption_active, bool allow_odt,
                     const DateTime &bound,
                     const uint32_t max_transfers,
                     const type::AccessibiliteParams & accessibilite_params,
                     const std::vector<std::string> & forbidden,
                     bool clockwise) {
     std::vector<Path> result;
-    set_journey_patterns_valides(DateTimeUtils::date(departure_datetime), forbidden, disruption_active, odt_active);
+    set_journey_patterns_valides(DateTimeUtils::date(departure_datetime), forbidden, disruption_active, allow_odt);
 
     auto calc_dep = clockwise ? departures_ : destinations;
     auto calc_dest = clockwise ? destinations : departures_;
@@ -278,8 +278,8 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duratio
           const DateTime &departure_datetime, const DateTime &bound, uint32_t max_transfers,
           const type::AccessibiliteParams & accessibilite_params,
           const std::vector<std::string> & forbidden,
-          bool clockwise, bool disruption_active, bool odt_active) {
-    set_journey_patterns_valides(DateTimeUtils::date(departure_datetime), forbidden, disruption_active, odt_active);
+          bool clockwise, bool disruption_active, bool allow_odt) {
+    set_journey_patterns_valides(DateTimeUtils::date(departure_datetime), forbidden, disruption_active, allow_odt);
     auto departures = get_solutions(departures_, departure_datetime, true, data, disruption_active);
     clear_and_init(departures, {}, bound, true);
 
@@ -289,7 +289,7 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duratio
 
 void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden,
                                           bool disruption_active,
-                                          bool odt_active) {
+                                          bool allow_odt) {
 
     if(disruption_active){
         journey_patterns_valides = data.dataRaptor->jp_adapted_validity_pattern[date];
@@ -298,11 +298,11 @@ void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::
     }
     boost::dynamic_bitset<> forbidden_journey_patterns(data.pt_data->journey_patterns.size());
     for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
-        const type::Line* line = journey_pattern->route->line;
-        if ((!odt_active) && (journey_pattern->is_odt)){
+        if ((!allow_odt) && (journey_pattern->is_odt)){
             forbidden_journey_patterns.set(journey_pattern->idx);
             continue;
         }
+        const type::Line* line = journey_pattern->route->line;
         // On gère la liste des interdits
         for(auto forbid_uri : forbidden){
             if       ( (line && forbid_uri == line->uri)
@@ -504,7 +504,7 @@ void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params
 
 std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
         const type::StopArea* destination, int departure_hour,
-        int departure_day, DateTime borne, bool disruption_active, bool odt_active, bool clockwise,
+        int departure_day, DateTime borne, bool disruption_active, bool allow_odt, bool clockwise,
         const type::AccessibiliteParams & accessibilite_params,
         uint32_t max_transfers) {
     std::vector<std::pair<type::idx_t, navitia::time_duration> > departures, destinations;
@@ -517,7 +517,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
         destinations.push_back({sp->idx, {}});
     }
 
-    return compute_all(departures, destinations, DateTimeUtils::set(departure_day, departure_hour), disruption_active, odt_active, borne, max_transfers, accessibilite_params, {}, clockwise);
+    return compute_all(departures, destinations, DateTimeUtils::set(departure_day, departure_hour), disruption_active, allow_odt, borne, max_transfers, accessibilite_params, {}, clockwise);
 }
 
 
