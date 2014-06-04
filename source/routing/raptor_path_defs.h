@@ -15,6 +15,7 @@ void handle_connection(const size_t countb, const navitia::type::idx_t current_j
     auto destination = destination_jpp->stop_point;
     auto connections = departure->stop_point_connection_list;
     auto l = raptor_.labels[countb][current_jpp_idx].dt;
+    // We try to find the connection that was taken by the algorithm
     auto find_predicate = [&](type::StopPointConnection* connection)->bool {
         return departure == connection->departure && destination == connection->destination;
     };
@@ -22,6 +23,7 @@ void handle_connection(const size_t countb, const navitia::type::idx_t current_j
     auto it = std::find_if(connections.begin(), connections.end(), find_predicate);
     type::StopPointConnection* stop_point_connection = nullptr;
     boost::posix_time::ptime dep_ptime, arr_ptime;
+    // It might not be find, for instance if we stayed on the same stop point
     if(it == connections.end()) {
         auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)];
         if(clockwise) {
@@ -48,8 +50,8 @@ void handle_connection(const size_t countb, const navitia::type::idx_t current_j
 
 
 template<typename Visitor>
-void handle_vj(const size_t countb, const navitia::type::idx_t current_jpp_idx, Visitor& v,
-               bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
+void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visitor& v,
+               bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
                const RAPTOR &raptor_) {
     v.init_vj();
     auto boarding_jpp = raptor_.get_boarding_jpp(countb, current_jpp_idx);
@@ -59,11 +61,13 @@ void handle_vj(const size_t countb, const navitia::type::idx_t current_jpp_idx, 
                                                               accessibilite_params, clockwise,
                                                               raptor_.data, disruption_active);
     while(boarding_jpp != current_jpp_idx) {
+        // There is a side effect on workingDate caused by workingDate
         auto departure_arrival = handle_st(current_st, workingDate, clockwise, raptor_.data);
         v.loop_vj(current_st, departure_arrival.first, departure_arrival.second);
         size_t order = current_st->journey_pattern_point->order;
+        //If are still on the same vj
         if((clockwise && order > 0) || (!clockwise && order < (current_st->vehicle_journey->stop_time_list.size()-1))) {
-            // On parcourt les données dans le sens contraire du calcul
+            // We read labels with the reverse order than the one we used during computation
             if(clockwise){
                 order--;
             }
@@ -73,6 +77,7 @@ void handle_vj(const size_t countb, const navitia::type::idx_t current_jpp_idx, 
             current_st = current_st->vehicle_journey->stop_time_list[order];
         }
         else {
+            // Here we have to change of vehicle journey, this happen with connection_stay_in
             auto prev_st = current_st;
             // If it was a connection_stay_in we want to take the the previous vj
             if(clockwise) {
@@ -87,15 +92,19 @@ void handle_vj(const size_t countb, const navitia::type::idx_t current_jpp_idx, 
         }
         current_jpp_idx = current_st->journey_pattern_point->idx;
     }
+    // There is a side effect on workingDate caused by workingDate
     auto departure_arrival = handle_st(current_st, workingDate, clockwise, raptor_.data);
     v.loop_vj(current_st, departure_arrival.first, departure_arrival.second);
-    --countb;
     boarding_jpp = navitia::type::invalid_idx ;
     v.finish_vj(clockwise);
 }
-}
 
-
+/*
+ * Start from a destination point until it reaches a departure label
+ *
+ * Call functions of the visitor along the way.
+ *
+ * */
 template<typename Visitor>
 void read_path(Visitor& v, type::idx_t destination_idx, size_t countb, bool clockwise, bool disruption_active,
           const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_) {
@@ -107,12 +116,14 @@ void read_path(Visitor& v, type::idx_t destination_idx, size_t countb, bool cloc
             current_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx);
         } else if(label_type == boarding_type::vj ||
                   label_type == boarding_type::connection_stay_in) {
-
+            handle_vj(countb, current_jpp_idx, v, clockwise, disruption_active, accessibilite_params, raptor_);
+            current_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx);
+            --countb;
+        }
         label_type = raptor_.get_type(countb, current_jpp_idx);
+        v.final_step(current_jpp_idx, countb, raptor_.labels);
     }
-    v.final_step(current_jpp_idx, countb, raptor_.labels);
 }
-
 
 
 } }
