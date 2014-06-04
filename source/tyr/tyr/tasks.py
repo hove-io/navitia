@@ -170,6 +170,9 @@ def scan_instances():
             current_app.logger.info('new instances detected: %s',
                     instance_name)
             instance = models.Instance(name=instance_name)
+            instance_config = load_instance_config(instance.name)
+            instance.is_free = instance_config.is_free
+
             models.db.session.add(instance)
             models.db.session.commit()
 
