@@ -101,6 +101,10 @@ class ReleaseManager:
 
         github_response = requests.get(query)
 
+        if github_response.status_code != 200:
+            message = github_response.json()['message']
+            return u'  * Impossible de récupérer les PR\n  * '+ message
+
         closed_pr = github_response.json()
 
         lines = []
@@ -212,6 +216,7 @@ class ReleaseManager:
         return lines
 
     def publish_release(self, temp_branch):
+        self.git.checkout("release")
         #merge with the release branch
         self.git.merge(temp_branch, "release", '--no-ff')
 
