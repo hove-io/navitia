@@ -71,7 +71,7 @@ message JourneysRequest {
     required bool wheelchair                            = 9;
     required bool disruption_active                     = 10;
     optional bool show_codes                            = 11;
-    optional bool odt_active                            = 12;
+    optional bool allow_odt                             = 12;
 }
 
 message PlacesNearbyRequest {

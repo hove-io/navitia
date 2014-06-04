@@ -494,7 +494,7 @@ class Journeys(ResourceUri):
                                 default="all")
         parser_get.add_argument("disruption_active",
                                 type=boolean, default=False)
-        parser_get.add_argument("odt_active",
+        parser_get.add_argument("allow_odt",
                                 type=boolean, default=True)
 # a supprimer
         parser_get.add_argument("max_duration", type=int, default=3600*24)

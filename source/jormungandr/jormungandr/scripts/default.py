@@ -299,7 +299,7 @@ class Script(object):
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
         req.journeys.disruption_active = request["disruption_active"]
-        req.journeys.odt_active = request["odt_active"]
+        req.journeys.allow_odt = request["allow_odt"]
         req.journeys.show_codes = request["show_codes"]
 
         self.origin_modes = request["origin_mode"]
@@ -469,7 +469,7 @@ class Script(object):
         for journey in resp.journeys:
             for section in journey.sections:
                 if section.pt_display_informations.vehicle_journey_type > type_pb2.virtual_with_stop_time:
-                    result.journeys.odt_active = False
+                    result.journeys.allow_odt = False
                     return result
         return result
 
