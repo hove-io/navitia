@@ -67,8 +67,6 @@ struct RAPTOR
     boost::dynamic_bitset<> journey_patterns_valides;
     ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
     queue_t Q;
-    /// Queue of vehicle journeys used for extension of services
-    std::queue<const type::VehicleJourney*> vj_queue;
 
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :
