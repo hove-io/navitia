@@ -98,6 +98,7 @@ def load_instance_config(instance_name):
     confspec.append('synonyms_file = string(default="")')
     confspec.append('aliases_file = string(default="")')
     confspec.append('name = string()')
+    confspec.append('is-free = boolean(default=False)')
 
     confspec.append('[database]')
     confspec.append('host = string()')
@@ -128,6 +129,7 @@ def load_instance_config(instance_name):
     instance.synonyms_file = config['instance']['synonyms_file']
     instance.aliases_file = config['instance']['aliases_file']
     instance.name = config['instance']['name']
+    instance.is_free = config['instance']['is-free']
 
     instance.pg_host = config['database']['host']
     instance.pg_dbname = config['database']['dbname']
