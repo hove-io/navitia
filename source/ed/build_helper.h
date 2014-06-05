@@ -85,6 +85,7 @@ struct builder{
     std::map<std::string, navitia::type::StopArea *> sas;
     std::map<std::string, navitia::type::StopPoint *> sps;
     std::map<std::string, navitia::type::Network *> nts;
+    std::multimap<std::string, navitia::type::VehicleJourney*> block_vjs;
     boost::gregorian::date begin;
 
     std::unique_ptr<navitia::type::Data> data = std::make_unique<navitia::type::Data>();
@@ -107,9 +108,9 @@ struct builder{
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);
-    void journey_pattern_point_connection(const std::string & name1, const std::string & name2, float length=120);
     void build(navitia::type::PT_Data & pt_data);
     void build_relations(navitia::type::PT_Data & data);
+    void build_blocks();
     void finish();
     void generate_dummy_basis();
 };

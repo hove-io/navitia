@@ -502,8 +502,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-template<>
-std::vector<idx_t> Connection<StopPoint>::get(Type_e type, const PT_Data & ) const {
+std::vector<idx_t> StopPointConnection::get(Type_e type, const PT_Data & ) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopPoint:
@@ -514,10 +513,7 @@ std::vector<idx_t> Connection<StopPoint>::get(Type_e type, const PT_Data & ) con
     }
     return result;
 }
-template<>
-bool Connection<JourneyPatternPoint>::operator<(const Connection<JourneyPatternPoint> & other) const { return this < &other; }
-template<>
-bool Connection<StopPoint>::operator<(const Connection<StopPoint> & other) const { return this < &other; }
+bool StopPointConnection::operator<(const StopPointConnection& other) const { return this < &other; }
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri) : type(type), uri(uri) {
    // Gestion des adresses

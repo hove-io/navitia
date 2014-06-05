@@ -130,7 +130,8 @@ VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee, cons
             drop_off_allowed, pick_up_allowed);
 }
 
-VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone, bool drop_off_allowed, bool pick_up_allowed){
+VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone,
+                    bool drop_off_allowed, bool pick_up_allowed){
     navitia::type::StopTime* st = new navitia::type::StopTime();
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;
@@ -246,7 +247,9 @@ VJ builder::vj(const std::string &line_name, const std::string &validity_pattern
     return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri);
 }
 
-VJ builder::vj(const std::string &network_name, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
+VJ builder::vj(const std::string &network_name, const std::string &line_name,
+               const std::string &validity_pattern, const std::string & block_id,
+               const bool wheelchair_boarding, const std::string& uri){
     auto res = VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
     auto vj = this->data->pt_data->vehicle_journeys.back();
     auto it = this->nts.find(network_name);
@@ -261,6 +264,9 @@ VJ builder::vj(const std::string &network_name, const std::string &line_name, co
     } else {
         vj->journey_pattern->route->line->network = it->second;
     }
+    if(block_id != "") {
+        block_vjs.insert(std::make_pair(block_id, vj));
+    }
     return res;
 }
 
@@ -268,28 +274,6 @@ SA builder::sa(const std::string &name, double x, double y, const bool wheelchai
     return SA(*this, name, x, y, wheelchair_boarding);
 }
 
-
-void builder::journey_pattern_point_connection(const std::string & name1, const std::string & name2, float length) {
-    navitia::type::Line *line1 = (*(lines.find(name1))).second;
-    navitia::type::Line *line2 = (*(lines.find(name2))).second;
-
-    if(line1 != nullptr && line2 != nullptr) {
-        for(navitia::type::Route * route1 : line1->route_list) {
-            for(navitia::type::JourneyPattern* jp1 : route1->journey_pattern_list) {
-                for(navitia::type::Route * route2 : line2->route_list) {
-                    for(navitia::type::JourneyPattern* jp2 : route2->journey_pattern_list) {
-                        navitia::type::JourneyPatternPointConnection* connection = new navitia::type::JourneyPatternPointConnection();
-                        connection->departure = jp1->journey_pattern_point_list.back();
-                        connection->destination = jp2->journey_pattern_point_list.front();
-                        connection->duration = length;
-                        this->data->pt_data->journey_pattern_point_connections.push_back(connection);
-                    }
-                }
-            }
-
-        }
-    }
-}
 
 void builder::connection(const std::string & name1, const std::string & name2, float length) {
     navitia::type::StopPointConnection* connexion = new navitia::type::StopPointConnection();
@@ -359,10 +343,48 @@ void builder::connection(const std::string & name1, const std::string & name2, f
      }
  }
 
+
+ void builder::build_blocks() {
+     std::string prev_block = "";
+
+     std::vector<navitia::type::VehicleJourney*> vehicle_journeys;
+     for(auto block_vj : block_vjs) {
+         if(prev_block != "" && prev_block != block_vj.first) {
+             vehicle_journeys.resize(0);
+         } else {
+             vehicle_journeys.push_back(block_vj.second);
+         }
+         prev_block = block_vj.first;
+     }
+
+     std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
+             [](const navitia::type::VehicleJourney* vj1, const navitia::type::VehicleJourney* vj2) {
+             return vj1->stop_time_list.back()->arrival_time <=
+                         vj2->stop_time_list.front()->departure_time;
+
+             }
+      );
+
+     navitia::type::VehicleJourney* prev_vj = nullptr;
+     for(auto it=vehicle_journeys.begin(); it!=vehicle_journeys.end(); ++it) {
+         auto vj = *it;
+         if(prev_vj) {
+             prev_vj->next_vj = vj;
+             vj->prev_vj = prev_vj;
+         }
+         prev_vj = vj;
+     }
+ }
+
  void builder::finish() {
-     for(auto vj : this->data->pt_data->vehicle_journeys) {
-         vj->stop_time_list.front()->set_drop_off_allowed(false);
-         vj->stop_time_list.back()->set_pick_up_allowed(false);
+     build_blocks();
+     for(navitia::type::VehicleJourney* vj : this->data->pt_data->vehicle_journeys) {
+         if(!vj->prev_vj) {
+             vj->stop_time_list.front()->set_drop_off_allowed(false);
+         }
+         if(!vj->next_vj) {
+            vj->stop_time_list.back()->set_pick_up_allowed(false);
+         }
      }
  }
 }

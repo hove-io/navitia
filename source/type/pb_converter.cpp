@@ -393,11 +393,6 @@ void fill_pb_object(const nt::StopPointConnection* c, const nt::Data& data,
 }
 
 
-void fill_pb_object(const nt::JourneyPatternPointConnection*, const nt::Data&,
-                    pbnavitia::Connection* , int,
-                    const pt::ptime&, const pt::time_period&){
-}
-
 
 void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
                     pbnavitia::ValidityPattern* validity_pattern, int,

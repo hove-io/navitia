@@ -73,20 +73,6 @@ struct StopPointConnection: public Header, hasProperties {
 
 };
 
-struct JourneyPatternPointConnection: public Header {
-    JourneyPatternPoint *departure;
-    JourneyPatternPoint *destination;
-    ConnectionType connection_kind;
-    int length;
-
-    navitia::type::JourneyPatternPointConnection* get_navitia_type() const;
-
-    JourneyPatternPointConnection() : departure(NULL), destination(NULL),
-                            connection_kind(ConnectionType::undefined), length(0) {}
-
-    bool operator<(const JourneyPatternPointConnection &other) const;
-};
-
 struct Calendar : public Nameable, public Header {
     const static nt::Type_e type = nt::Type_e::Calendar;
     typedef std::bitset<7> Week;
@@ -223,27 +209,26 @@ struct JourneyPattern : public Header, Nameable{
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     const static nt::Type_e type = nt::Type_e::VehicleJourney;
     std::string external_code;
-    JourneyPattern* journey_pattern;
-    Company* company;
-    PhysicalMode* physical_mode; // Normalement on va lire cette info dans JourneyPattern
-    Line * tmp_line; // N'est pas à remplir obligatoirement
-    Route* tmp_route;
+    JourneyPattern* journey_pattern = nullptr;
+    Company* company = nullptr;
+    PhysicalMode* physical_mode = nullptr; // Read in journey_pattern
+    Line * tmp_line = nullptr; // May be empty
+    Route* tmp_route = nullptr;
     //Vehicle* vehicle;
-    bool wheelchair_boarding;
-    navitia::type::VehicleJourneyType vehicle_journey_type;
-    ValidityPattern* validity_pattern;
-    std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
-    StopTime * first_stop_time;
+    bool wheelchair_boarding = false;
+    navitia::type::VehicleJourneyType vehicle_journey_type = navitia::type::VehicleJourneyType::regular;
+    ValidityPattern* validity_pattern = nullptr;
+    std::vector<StopTime*> stop_time_list; // May be empty
+    StopTime * first_stop_time = nullptr;
     std::string block_id;
     std::string odt_message;
 
     bool is_adapted;
-    ValidityPattern* adapted_validity_pattern;
+    ValidityPattern* adapted_validity_pattern = nullptr;
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
-    VehicleJourney* theoric_vehicle_journey;
-
-    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL), tmp_route(NULL), wheelchair_boarding(false),
-     vehicle_journey_type(navitia::type::VehicleJourneyType::regular), validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
+    VehicleJourney* theoric_vehicle_journey = nullptr;
+    VehicleJourney* prev_vj = nullptr;
+    VehicleJourney* next_vj = nullptr;
 
     navitia::type::VehicleJourney* get_navitia_type() const;
 

@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 #include <unordered_map>
+#include <queue>
 #include <limits>
 #include "type/type.h"
 #include "type/data.h"
@@ -60,8 +61,6 @@ struct RAPTOR
     best_dest b_dest;
     ///Nombre de correspondances effectuées jusqu'à présent
     unsigned int count;
-    ///Est-ce que le journey_pattern point est marqué ou non ?
-    boost::dynamic_bitset<> marked_rp;
     ///Est-ce que le stop point est arrivé ou non ?
     boost::dynamic_bitset<> marked_sp;
     ///La journey_pattern est elle valide ?
@@ -72,7 +71,6 @@ struct RAPTOR
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :
         data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
-        marked_rp(data.pt_data->journey_pattern_points.size()),
         marked_sp(data.pt_data->stop_points.size()),
         journey_patterns_valides(data.pt_data->journey_patterns.size()),
         Q(data.pt_data->journey_patterns.size()) {
@@ -144,8 +142,11 @@ struct RAPTOR
     /// Il faut spécifier le visiteur selon le sens souhaité
     template<typename Visitor> void foot_path(const Visitor & v, const type::Properties &required_properties);
 
-    ///Correspondances garanties et prolongements de service
-    template<typename Visitor> void journey_pattern_path_connections(const Visitor &visitor/*, const type::Properties &required_properties*/);
+    template<typename Visitor>
+    void apply_vj_extension(const Visitor& v, const bool global_pruning,
+                            const type::VehicleJourney* prev_vj, type::idx_t boarding_jpp_idx,
+                            DateTime workingDt, const uint16_t l_zone,
+                            const bool disruption_active);
 
     ///Trouve pour chaque journey_pattern, le premier journey_pattern point auquel on peut embarquer, se sert de marked_rp
     void make_queue();
