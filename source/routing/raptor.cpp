@@ -126,20 +126,8 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
             // NB : l'inverse arrive lorsqu'on a déjà marqué le stop point avec une autre correspondance
             if(best_jpp != type::invalid_idx) {
                 const DateTime best_departure = v.combine(best_arrival, 120);
-                //On marque tous les journey_pattern points du stop point
-                for(auto jpp : stop_point->journey_pattern_point_list) {
-                    type::idx_t jpp_idx = jpp->idx;
-                    if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx])) {
-                       current_labels[jpp_idx].dt = best_departure;
-                       current_labels[jpp_idx].boarding_jpp = best_jpp;
-                       current_labels[jpp_idx].type = boarding_type::connection;
-                       best_labels[jpp_idx] = best_departure;
+                mark_all_jpp_of_sp(stop_point, best_departure, best_jpp, current_labels, v);
 
-                       if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
-                           Q[jpp->journey_pattern->idx] = jpp->order;
-                       }
-                    }
-                }
                 //On va maintenant chercher toutes les connexions et on marque tous les journey_pattern_points concernés
                 //On récupère l'index dans les footpath
                 const pair_int & index = (v.clockwise()) ? data.dataRaptor->footpath_index_forward[stop_point_idx] :
@@ -155,21 +143,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                     const auto destination = v.clockwise() ? spc->destination : spc->departure;
                     next = v.combine(previous, spc->duration); // ludo
                     if(destination->accessible(required_properties)) {
-                        for(auto destination_jpp : destination->journey_pattern_point_list) {
-                            type::idx_t destination_jpp_idx = destination_jpp->idx;
-                            if(best_jpp != destination_jpp_idx) {
-                                if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
-                                    current_labels[destination_jpp_idx].dt = next;
-                                    current_labels[destination_jpp_idx].boarding_jpp = best_jpp;
-                                    current_labels[destination_jpp_idx].type = boarding_type::connection;
-                                    best_labels[destination_jpp_idx] = next;
-
-                                    if(v.comp(destination_jpp->order, Q[destination_jpp->journey_pattern->idx])) {
-                                        Q[destination_jpp->journey_pattern->idx] = destination_jpp->order;
-                                   }
-                                }
-                            }
-                        }
+                        mark_all_jpp_of_sp(destination, next, best_jpp, current_labels, v);
                     }
                 }
                 last = index.first + index.second;

@@ -168,6 +168,24 @@ struct RAPTOR
         return labels[count][jpp_idx].boarding_jpp;
     }
 
+    template<typename Visitor>
+    inline
+    void mark_all_jpp_of_sp(const type::StopPoint* stop_point, const DateTime dt, const type::idx_t boarding_jpp,
+                            label_vector_t& working_labels, Visitor visitor) {
+        for(auto jpp : stop_point->journey_pattern_point_list) {
+            type::idx_t jpp_idx = jpp->idx;
+            if(jpp_idx != boarding_jpp && visitor.comp(dt, best_labels[jpp_idx])) {
+               working_labels[jpp_idx].dt = dt;
+               working_labels[jpp_idx].boarding_jpp = boarding_jpp;
+               working_labels[jpp_idx].type = boarding_type::connection;
+               best_labels[jpp_idx] = dt;
+               if(visitor.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
+                   Q[jpp->journey_pattern->idx] = jpp->order;
+               }
+            }
+        }
+    }
+
     ~RAPTOR() {}
 };
 
