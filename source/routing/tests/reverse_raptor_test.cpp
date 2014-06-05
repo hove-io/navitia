@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(stay_in_basic) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 8*3600 + 25*60, 0, DateTimeUtils::min, false, true, false);
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 8*3600 + 25*60, 0, DateTimeUtils::min, true, false, false);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(stay_in_and_one_earlier_with_connection) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 8*3600 + 25*60, 0, DateTimeUtils::min, false, false);
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 8*3600 + 25*60, 0, DateTimeUtils::min, true, false, false);
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
     BOOST_CHECK(std::any_of(res1.begin(), res1.end(), [](Path path){
                           return path.items[2].arrival.time_of_day().total_seconds() == 8*3600 + 25*60;}));
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(stay_in_3_vj) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 8*3600 + 35*60, 0, DateTimeUtils::min, false, false);
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 8*3600 + 35*60, 0, DateTimeUtils::min, true, false, false);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items[4].arrival.time_of_day().total_seconds(), 8*3600 + 30*60);
 }
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(stay_in_loop) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 8*3600 + 25*60, 0, DateTimeUtils::min, false, false);
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 8*3600 + 25*60, 0, DateTimeUtils::min, true, false, false);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(stay_in_invalid_vp) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false);
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, true, false, false);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
