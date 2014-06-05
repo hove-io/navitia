@@ -397,9 +397,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             const DateTime bound = (visitor.comp(best_labels[jpp_idx], b_dest.best_now) || !global_pruning) ?
                                                         best_labels[jpp_idx] : b_dest.best_now;
                             // We want to update the labels, if it's better than the one computed before
-                            // Or if it's an destination point if it's equal
+                            // Or if it's an destination point if it's equal and not unitialized before
                             const bool best_add_result = this->b_dest.add_best(visitor, jpp->idx, workingDt, this->count);
-                            if(visitor.comp(workingDt, bound) || best_add_result) {
+                            if(visitor.comp(workingDt, bound) ||
+                                    (best_add_result && get_type(this->count-1, jpp_idx) == boarding_type::uninitialized)) {
                                 working_labels[jpp_idx].dt = workingDt;
                                 working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
