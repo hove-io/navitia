@@ -489,20 +489,21 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     if(boarding != nullptr) {
                         ++it_st;
                         const type::StopTime* st = *it_st;
+                        const auto current_time = st->section_end_time(visitor.clockwise(),
+                                                DateTimeUtils::hour(workingDt));
+                        DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
                         if(st->valid_end(visitor.clockwise())&&
                                 (l_zone == std::numeric_limits<uint16_t>::max() ||
                                  l_zone != st->local_traffic_zone)) {
-                            const auto current_time = st->section_end_time(visitor.clockwise(),
-                                                    DateTimeUtils::hour(workingDt));
-                            DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
                             const DateTime bound = (visitor.comp(best_labels[jpp_idx], b_dest.best_now) || !global_pruning) ?
                                                         best_labels[jpp_idx] : b_dest.best_now;
-                            if(visitor.comp(workingDt, bound) || bound == workingDt) {
+                            const bool best_add_result = this->b_dest.add_best(visitor, jpp->idx, workingDt, this->count);
+                            if(visitor.comp(workingDt, bound) || best_add_result) {
                                 working_labels[jpp_idx].dt = workingDt;
                                 working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
                                 best_labels[jpp_idx] = working_labels[jpp_idx].dt;
-                                if(!this->b_dest.add_best(visitor, jpp->idx, working_labels[jpp_idx].dt, this->count)) {
+                                if(!best_add_result) {
                                     this->marked_sp.set(jpp->stop_point->idx);
                                     end = false;
                                 }
