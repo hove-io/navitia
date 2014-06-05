@@ -425,7 +425,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                                accessibilite_params.vehicle_properties,
                                                visitor.clockwise(), disruption_active, data);
 
-                        if(tmp_st_dt.first != nullptr) {
+                        if(tmp_st_dt.first != nullptr && (boarding == nullptr || tmp_st_dt.first != *it_st)) {
                             boarding = jpp;
                             it_st = visitor.first_stoptime(tmp_st_dt.first);
                             workingDt = tmp_st_dt.second;
