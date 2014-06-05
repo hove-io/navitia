@@ -418,9 +418,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     // journey pattern point before
                     const DateTime previous_dt = prec_labels[jpp_idx].dt;
                     const boarding_type b_type = get_type(this->count-1, jpp_idx);
-                    if(b_type != boarding_type::uninitialized && b_type != boarding_type::vj &&
+                    if((b_type == boarding_type::connection || b_type == boarding_type::departure) &&
                        (boarding == nullptr || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
-
                         const auto tmp_st_dt = best_stop_time(jpp, previous_dt,
                                                accessibilite_params.vehicle_properties,
                                                visitor.clockwise(), disruption_active, data);
