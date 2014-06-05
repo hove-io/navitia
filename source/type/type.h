@@ -640,6 +640,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 struct JourneyPattern : public Header, Nameable{
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence;
+    bool is_odt; // Calculated at serialization
     Route* route;
     CommercialMode* commercial_mode;
     PhysicalMode* physical_mode;
@@ -647,10 +648,10 @@ struct JourneyPattern : public Header, Nameable{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
 
-    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
+    JourneyPattern(): is_frequence(false), is_odt(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & is_frequence & route & commercial_mode
+        ar & idx & name & uri & is_frequence & is_odt&  route & commercial_mode
                 & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 
@@ -721,6 +722,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool is_odt()  const{
         return vehicle_journey_type != VehicleJourneyType::regular;
     }
+
+    bool is_odt_and_has_date_time_estimated() const;
 };
 
 struct ValidityPattern : public Header {

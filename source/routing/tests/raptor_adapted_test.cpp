@@ -282,7 +282,7 @@ impact-3
                                datetimes_str, true,
                                type::AccessibiliteParams(),
                                forbidden,
-                               *street_network, disruption_active);
+                               *street_network, disruption_active, true);
     }
 };
 

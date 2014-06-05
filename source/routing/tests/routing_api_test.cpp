@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
 
     // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
     std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
-    pbnavitia::Response resp = nr::make_response(raptor, origin, destination, datetimes, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false);
+    pbnavitia::Response resp = nr::make_response(raptor, origin, destination, datetimes, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
@@ -163,7 +163,7 @@ struct streetnetworkmode_fixture : public routing_api_data<speed_provider_trait>
     pbnavitia::Response make_response() {
         navitia::georef::StreetNetwork sn_worker(*(this->b.data->geo_ref));
         nr::RAPTOR raptor(*(this->b.data));
-        return nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false);
+        return nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false, true);
     }
 };
 

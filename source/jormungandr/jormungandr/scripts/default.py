@@ -39,6 +39,7 @@ from datetime import datetime, timedelta
 import itertools
 from flask import current_app
 
+
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
     'stop_point': type_pb2.STOP_POINT,
@@ -298,6 +299,7 @@ class Script(object):
         req.journeys.max_transfers = request["max_transfers"]
         req.journeys.wheelchair = request["wheelchair"]
         req.journeys.disruption_active = request["disruption_active"]
+        req.journeys.allow_odt = request["allow_odt"]
         req.journeys.show_codes = request["show_codes"]
 
         self.origin_modes = request["origin_mode"]
@@ -462,6 +464,28 @@ class Script(object):
                 non_pt_duration_j2 = non_pt_duration
         return non_pt_duration_j1 - non_pt_duration_j2
 
+    def change_request(self, pb_req, resp):
+        result = copy.deepcopy(pb_req)
+        def get_uri_odt_with_zones(journey):
+            result = []
+            for section in journey.sections:
+                if section.type == response_pb2.PUBLIC_TRANSPORT:
+                    if section.pt_display_informations.vehicle_journey_type in [type_pb2.virtual_without_stop_time,
+                                                                                type_pb2.stop_point_to_stop_point,
+                                                                                type_pb2.address_to_stop_point,
+                                                                                type_pb2.odt_point_to_point]:
+                        result.append(section.uris.line)
+                    else:
+                        return []
+            return result
+
+        map_forbidden_uris = map(get_uri_odt_with_zones, resp.journeys)
+        for forbidden_uris in map_forbidden_uris:
+            for line_uri in forbidden_uris:
+                if line_uri not in result.journeys.forbidden_uris:
+                    result.journeys.forbidden_uris.append(line_uri)
+        return result
+
     def fill_journeys(self, pb_req, request, instance):
         """
         call kraken to get the requested number of journeys
@@ -498,8 +522,7 @@ class Script(object):
                 l_date_time_f = datetime.strptime(l_date_time, f_date_time)
                 new_datetime = l_date_time_f + timedelta(minutes=-1)
 
-            # we copy the query not to have side effects
-            next_request = copy.deepcopy(pb_req)
+            next_request = self.change_request(pb_req, tmp_resp)
             next_request.journeys.datetimes[0] = new_datetime.strftime(f_date_time)
             del next_request.journeys.datetimes[1:]
             # we tag the journeys as 'next' or 'prev' journey

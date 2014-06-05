@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     type::EntryPoint destination(type::Type_e::StopArea, "stop5");
 
     georef::StreetNetwork sn_worker(*b.data->geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T080000"}, true, type::AccessibiliteParams(), {}, sn_worker, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T080000"}, true, type::AccessibiliteParams(), {}, sn_worker, true, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     type::EntryPoint destination(type::Type_e::StopArea, "stop5");
 
     georef::StreetNetwork sn_worker(*b.data->geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T080000"}, true, type::AccessibiliteParams(), {}, sn_worker, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T080000"}, true, type::AccessibiliteParams(), {}, sn_worker, true, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);

@@ -113,6 +113,15 @@ bool VehicleJourney::has_landing() const{
 
 }
 
+bool VehicleJourney::is_odt_and_has_date_time_estimated() const{
+    for(const StopTime* st : this->stop_time_list){
+        if((!st->odt()) || (!st->date_time_estimated())){
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ValidityPattern::is_valid(int day) const {
     if(day < 0) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
