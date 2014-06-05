@@ -388,21 +388,28 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     type::idx_t jpp_idx = jpp->idx;
                     if(boarding != nullptr) {
                         ++it_st;
+                        // We update workingDt with the new arrival time
+                        // We need at each journey pattern point when we have a st
+                        // If we don't it might cause problem with overmidnight vj
                         const type::StopTime* st = *it_st;
                         const auto current_time = st->section_end_time(visitor.clockwise(),
                                                 DateTimeUtils::hour(workingDt));
                         DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
+                        // We check if there are no drop_off_only and if the local_zone is okay
                         if(st->valid_end(visitor.clockwise())&&
                                 (l_zone == std::numeric_limits<uint16_t>::max() ||
                                  l_zone != st->local_traffic_zone)) {
                             const DateTime bound = (visitor.comp(best_labels[jpp_idx], b_dest.best_now) || !global_pruning) ?
                                                         best_labels[jpp_idx] : b_dest.best_now;
+                            // We want to update the labels, if it's better than the one computed before
+                            // Or if it's an destination point if it's equal
                             const bool best_add_result = this->b_dest.add_best(visitor, jpp->idx, workingDt, this->count);
                             if(visitor.comp(workingDt, bound) || best_add_result) {
                                 working_labels[jpp_idx].dt = workingDt;
                                 working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
                                 best_labels[jpp_idx] = working_labels[jpp_idx].dt;
+                                // We want to apply connection only if it's not a destination point
                                 if(!best_add_result) {
                                     this->marked_sp.set(jpp->stop_point->idx);
                                     end = false;
@@ -410,7 +417,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             }
                         }
                     }
-                    //Si on peut arriver plus tôt à l'arrêt en passant par une autre journey_pattern
+
+                    // We try to get on a vehicle, if we were already on a vehicle, but we arrived
+                    // before on the previous via a connection, we try to catch a vehicle leaving this
+                    // journey pattern point before
                     const DateTime previous_dt = prec_labels[jpp_idx].dt;
                     const boarding_type b_type = get_type(this->count-1, jpp_idx);
                     if(b_type != boarding_type::uninitialized && b_type != boarding_type::vj &&
