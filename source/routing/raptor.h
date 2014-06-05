@@ -61,7 +61,7 @@ struct RAPTOR
     ///Nombre de correspondances effectuées jusqu'à présent
     unsigned int count;
     ///Est-ce que le stop point est arrivé ou non ?
-    boost::dynamic_bitset<> marked_sp;
+    std::vector<type::idx_t> best_jpp_by_sp;
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> journey_patterns_valides;
     ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
@@ -70,7 +70,7 @@ struct RAPTOR
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :
         data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
-        marked_sp(data.pt_data->stop_points.size()),
+        best_jpp_by_sp(data.pt_data->stop_points.size()),
         journey_patterns_valides(data.pt_data->journey_patterns.size()),
         Q(data.pt_data->journey_patterns.size()) {
             labels.assign(10, data.dataRaptor->labels_const);
