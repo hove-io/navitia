@@ -54,7 +54,6 @@ struct RAPTOR
 
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
     std::vector<label_vector_t> labels;
-
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
     std::vector<DateTime> best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
@@ -140,7 +139,7 @@ struct RAPTOR
 
     /// Fonction générique pour la marche à pied
     /// Il faut spécifier le visiteur selon le sens souhaité
-    template<typename Visitor> void foot_path(const Visitor & v, const type::Properties &required_properties);
+    template<typename Visitor> void foot_path(const Visitor & v);
 
     template<typename Visitor>
     void apply_vj_extension(const Visitor& v, const bool global_pruning,
