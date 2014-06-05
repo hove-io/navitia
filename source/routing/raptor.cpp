@@ -348,13 +348,8 @@ template<typename Visitor>
 void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active,
         bool global_pruning, uint32_t max_transfers) {
     bool end = false;
-    count = 0; //< Itération de l'algo raptor (une itération par correspondance)
-    const type::JourneyPatternPoint* boarding = nullptr; //< Le JPP time auquel on a embarqué
-    DateTime workingDt = visitor.worst_datetime();
-    uint16_t l_zone = std::numeric_limits<uint16_t>::max();
+    count = 0; //< Count iteration of raptor algorithm
 
-    //this->foot_path(visitor, accessibilite_params.properties);
-    uint32_t nb_jpp_visites = 0;
     while(!end && count <= max_transfers) {
         ++count;
         end = true;
@@ -373,10 +368,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
             if(Q[journey_pattern->idx] != std::numeric_limits<int>::max()
                     && Q[journey_pattern->idx] != -1
                     && journey_patterns_valides.test(journey_pattern->idx)) {
-                nb_jpp_visites ++;
-                boarding = nullptr;
-                workingDt = visitor.worst_datetime();
+                const type::JourneyPatternPoint* boarding = nullptr; //< The boarding journey pattern point
+                DateTime workingDt = visitor.worst_datetime();
                 typename Visitor::stop_time_iterator it_st;
+                uint16_t l_zone = std::numeric_limits<uint16_t>::max();
                 const auto & jpp_to_explore = visitor.journey_pattern_points(
                                                 this->data.pt_data->journey_pattern_points,
                                                 journey_pattern,Q[journey_pattern->idx]);
