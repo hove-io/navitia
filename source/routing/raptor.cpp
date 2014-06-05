@@ -441,7 +441,6 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
         }
-        // Correspondances
         this->foot_path(visitor, accessibilite_params.properties);
     }
 }
