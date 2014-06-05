@@ -191,8 +191,10 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
         labels[0] = data.dataRaptor->labels_const_reverse;
     }
     for(auto& lbl_list : labels) {
-        for(auto& l : lbl_list) {
+        for(Label& l : lbl_list) {
             l.type = boarding_type::uninitialized;
+            l.dt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+            l.boarding_jpp = type::invalid_idx;
         }
     }
 
