@@ -49,6 +49,44 @@ void handle_connection(const size_t countb, const navitia::type::idx_t current_j
 }
 
 
+/*
+ * /!\ This function has a side effect on variable workingDate /!\
+ * If clockwise, since we read the path on the reverse way we computed it,
+ * we first want to update workingDate with departure_time, then with arrival_time.
+ * And vice and versa with !clockwise
+ * */
+inline
+std::pair<boost::posix_time::ptime, boost::posix_time::ptime>
+handle_st(const type::StopTime* st, DateTime& workingDate, bool clockwise, const type::Data &data){
+    boost::posix_time::ptime departure, arrival;
+    if(clockwise) {
+        if(st->is_frequency())
+            DateTimeUtils::update(workingDate, st->f_departure_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
+        else
+            DateTimeUtils::update(workingDate, st->departure_time, !clockwise);
+        departure = navitia::to_posix_time(workingDate, data);
+        if(st->is_frequency())
+            DateTimeUtils::update(workingDate, st->f_arrival_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
+        else
+            DateTimeUtils::update(workingDate, st->arrival_time, !clockwise);
+        arrival = navitia::to_posix_time(workingDate, data);
+    } else {
+        if(st->is_frequency())
+            DateTimeUtils::update(workingDate, st->f_arrival_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
+        else
+            DateTimeUtils::update(workingDate, st->arrival_time, !clockwise);
+        arrival = navitia::to_posix_time(workingDate, data);
+        if(st->is_frequency())
+            DateTimeUtils::update(workingDate, st->f_departure_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
+        else
+            DateTimeUtils::update(workingDate, st->departure_time, !clockwise);
+        departure = navitia::to_posix_time(workingDate, data);
+    }
+    return std::make_pair(departure, arrival);
+}
+
+
+
 template<typename Visitor>
 void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visitor& v,
                bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,

@@ -62,38 +62,6 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
     return std::make_pair(nullptr, std::numeric_limits<uint32_t>::max());
 }
 
-
-std::pair<boost::posix_time::ptime, boost::posix_time::ptime>
-handle_st(const type::StopTime* st, DateTime& workingDate, bool clockwise, const type::Data &data){
-    boost::posix_time::ptime departure, arrival;
-    if(clockwise) {
-        if(st->is_frequency())
-            DateTimeUtils::update(workingDate, st->f_departure_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
-        else
-            DateTimeUtils::update(workingDate, st->departure_time, !clockwise);
-        departure = navitia::to_posix_time(workingDate, data);
-        if(st->is_frequency())
-            DateTimeUtils::update(workingDate, st->f_arrival_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
-        else
-            DateTimeUtils::update(workingDate, st->arrival_time, !clockwise);
-        arrival = navitia::to_posix_time(workingDate, data);
-    } else {
-        if(st->is_frequency())
-            DateTimeUtils::update(workingDate, st->f_arrival_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
-        else
-            DateTimeUtils::update(workingDate, st->arrival_time, !clockwise);
-        arrival = navitia::to_posix_time(workingDate, data);
-        if(st->is_frequency())
-            DateTimeUtils::update(workingDate, st->f_departure_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
-        else
-            DateTimeUtils::update(workingDate, st->departure_time, !clockwise);
-        departure = navitia::to_posix_time(workingDate, data);
-    }
-    return std::make_pair(departure, arrival);
-}
-
-
-
 Path
 makePath(type::idx_t destination_idx, size_t countb, bool clockwise, bool disruption_active,
          const type::AccessibiliteParams & accessibilite_params,
