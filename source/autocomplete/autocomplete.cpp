@@ -68,15 +68,15 @@ void compute_score_stop_point(type::PT_Data &pt_data, georef::GeoRef &georef) {
 
 void compute_score_stop_area(type::PT_Data & pt_data){
     //Calculate de maximum stop-point count;
-    unsigned int max_score = 0;
+    size_t max_score = 0;
     for (navitia::type::StopArea* sa : pt_data.stop_areas){
         max_score = std::max(max_score, sa->stop_point_list.size());
     }
 
     //Ajust the score of each stop_area from 0 to 100 using maximum score (max_score)
     if (max_score > 0){
-        for (auto it = pt_data.stop_area_autocomplete.word_quality_list.begin(); it != pt_data.stop_area_autocomplete.word_quality_list.end(); ++it){
-            it->second.score = (pt_data.stop_areas[it->first]->stop_point_list.size() * 100)/max_score;
+        for (auto & it : pt_data.stop_area_autocomplete.word_quality_list){
+            it.second.score = (pt_data.stop_areas[it.first]->stop_point_list.size() * 100)/max_score;
         }
     }
 }
