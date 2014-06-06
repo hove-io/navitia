@@ -191,6 +191,7 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
         labels.resize(10);
         labels[0] = data.dataRaptor->labels_const_reverse;
     }
+void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime bound) {
     for(auto& lbl_list : labels) {
         for(Label& l : lbl_list) {
             l.type = boarding_type::uninitialized;
