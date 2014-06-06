@@ -91,7 +91,6 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
         }
     }
     this->stop_area_autocomplete.build();
-    //this->stop_area_autocomplete.compute_score((*this), georef, type::Type_e::StopArea);
 
     this->stop_point_autocomplete.clear();
     for(const StopPoint* sp : this->stop_points){
@@ -122,8 +121,8 @@ void PT_Data::compute_score_autocomplete(navitia::georef::GeoRef& georef){
     //Affecter le score de chaque admin à ses ObjectTC
     georef.fl_way.compute_score((*this), georef, type::Type_e::Way);
     georef.fl_poi.compute_score((*this), georef, type::Type_e::POI);
-    this->stop_area_autocomplete.compute_score((*this), georef, type::Type_e::StopArea);
     this->stop_point_autocomplete.compute_score((*this), georef, type::Type_e::StopPoint);
+    this->stop_area_autocomplete.compute_score((*this), georef, type::Type_e::StopArea);
 }
 
 
