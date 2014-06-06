@@ -585,7 +585,7 @@ void fill_pb_placemark(const type::StopPoint* stop_point,
 
     for(auto admin : place->stop_point().administrative_regions()) {
         if (admin.level() == 8){
-            place->set_name(place->name() + ", " + admin.name());
+            place->set_name(place->name() + " (" + admin.name() + ")");
         }
     }
     place->set_uri(stop_point->uri);
