@@ -365,6 +365,8 @@ There are two ways to access this api.
 The first one, is : http://api.navitia.io/v1/{a_path_to_resource}/journeys it will retrieve all the journeys from the resource.
 The other one is the most used http//api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}.
 
+TODO: pitch on coverage pour les journeys
+
 Parameters
 ##########
 
@@ -457,11 +459,13 @@ Parameters
 Objects
 #######
 
+TODO: reponse journeys ? avec explication des links/message d'erreur ?
+
 * Journey object
 
-=================== ================== ======================================================================
+=================== ================== ===========================================================================
 Field               Type               Description
-=================== ================== ======================================================================
+=================== ================== ===========================================================================
 duration            int                Duration of the journey
 nb_transfers        int                Number of transfers in the journey
 departure_date_time datetime_          Departure date and time of the journey
@@ -473,7 +477,10 @@ to                  place_             The place from where the journey starts
 links               link_              Links related to this journey
 type                *enum* string      Used to qualified a journey. See the :ref:`journey_qualif` section
                                        for more information
-=================== ================== ======================================================================
+fare                fare_              Fare of the journey (tickets and price)
+tags                array of string    List of tags on the journey
+                                       The tags add additional information on the journey beside the journey type
+=================== ================== ===========================================================================
 
 .. note::
     When used with just a "from" or a "to" parameter, it will not contain any sections
@@ -488,6 +495,8 @@ type                *enum* string      Used to qualified a journey. See the :ref
 +==========================+======================================+========================================================+
 | type                     | *enum* string                        | Type of the section, it can be : ``PUBLIC_TRANSPORT``, |
 |                          |                                      | ``STREET_NETWORK``, ``WAITING``, ``TRANSFER``          |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| id                       | TODO                                 |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | mode                     | *enum* string                        | Mode of the street network : ``Walking``, ``Bike``,    |
 |                          |                                      | ``Car``                                                |
@@ -506,7 +515,7 @@ type                *enum* string      Used to qualified a journey. See the :ref
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | geojson                  | `GeoJson <http://www.geojson.org>`   |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| path                     | Array of path                        | The path of this section                               |
+| path                     | Array of path_                       | The path of this section                               |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | transfer_type            | *enum* string                        | The type of this transfer it can be : ``WALKING``,     |
 |                          |                                      | ``GUARANTEED``, ``EXTENSION``                          |
@@ -518,6 +527,18 @@ type                *enum* string      Used to qualified a journey. See the :ref
 | arrival_date_time        | :ref:`date_time <date_time_object>`  | Date and time of arrival                               |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 
+
+.. _path:
+
+* Path object
+
+  TODO
+
+.. _fare:
+
+* Fare object
+
+  TODO
 
 Route Schedules
 ***************
@@ -1010,4 +1031,4 @@ fastest               A journey with minimum duration
 non_pt_walk           A journey without public transport, only walking
 non_pt_bike           A journey without public transport, only biking
 non_pt_bss            A journey without public transport, only bike sharing
-
+===================== ========================================================== 
