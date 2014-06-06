@@ -79,7 +79,7 @@ struct RAPTOR
 
 
 
-    void clear(const type::Data & data, bool clockwise, DateTime borne);
+    void clear(bool clockwise, DateTime bound);
 
     ///Initialise les structure retour et b_dest
     void clear_and_init(Solutions departures,

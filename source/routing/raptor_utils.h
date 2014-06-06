@@ -50,6 +50,12 @@ struct Label {
     DateTime dt;
     boarding_type type = boarding_type::uninitialized;
     navitia::type::idx_t boarding_jpp = navitia::type::invalid_idx;
+
+    void init(bool clockwise) {
+        type = boarding_type::uninitialized;
+        boarding_jpp = type::invalid_idx;
+        dt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+    }
 };
 
 typedef std::pair<int, int> pair_int;
