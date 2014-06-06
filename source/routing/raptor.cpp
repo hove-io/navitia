@@ -162,13 +162,13 @@ void RAPTOR::init(Solutions departs,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
     for(Solution item : departs) {
-        const type::JourneyPatternPoint* journey_pattern_point = data.pt_data->journey_pattern_points[item.rpidx];
+        const type::JourneyPatternPoint* journey_pattern_point = data.pt_data->journey_pattern_points[item.jpp_idx];
         const type::StopPoint* stop_point = journey_pattern_point->stop_point;
         if(stop_point->accessible(required_properties) &&
                 ((clockwise && item.arrival <= bound) || (!clockwise && item.arrival >= bound))) {
-            labels[0][item.rpidx].dt = item.arrival;
-            labels[0][item.rpidx].type = boarding_type::departure;
-            best_labels[item.rpidx] = item.arrival;
+            labels[0][item.jpp_idx].dt = item.arrival;
+            labels[0][item.jpp_idx].type = boarding_type::departure;
+            best_labels[item.jpp_idx] = item.arrival;
 
             if(clockwise && Q[journey_pattern_point->journey_pattern->idx] > journey_pattern_point->order)
                 Q[journey_pattern_point->journey_pattern->idx] = journey_pattern_point->order;

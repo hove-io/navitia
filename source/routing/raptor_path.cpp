@@ -45,7 +45,7 @@ makePathes(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &d
     std::vector<Path> result;
     auto solutions = get_solutions(departures, destinations, !clockwise, accessibilite_params, disruption_active, raptor_);
     for(Solution solution : solutions) {
-        result.push_back(makePath(solution.rpidx, solution.count, clockwise, disruption_active, accessibilite_params, raptor_));
+        result.push_back(makePath(solution.jpp_idx, solution.count, clockwise, disruption_active, accessibilite_params, raptor_));
     }
 
     return result;

@@ -148,7 +148,6 @@ struct RAPTOR
                             DateTime workingDt, const uint16_t l_zone,
                             const bool disruption_active);
 
-    ///Trouve pour chaque journey_pattern, le premier journey_pattern point auquel on peut embarquer, se sert de marked_rp
     void make_queue();
 
     ///Boucle principale

@@ -42,13 +42,13 @@ namespace navitia { namespace routing {
 struct RAPTOR;
 
 struct Solution {
-    type::idx_t rpidx;
+    type::idx_t jpp_idx;
     uint32_t count;
     DateTime arrival, upper_bound;
     float ratio;
     navitia::time_duration walking_time = {};
 
-    Solution() : rpidx(type::invalid_idx), count(0),
+    Solution() : jpp_idx(type::invalid_idx), count(0),
                        arrival(DateTimeUtils::inf), upper_bound(DateTimeUtils::inf),
                        ratio(std::numeric_limits<float>::min()) {}
 
@@ -59,8 +59,8 @@ struct Solution {
         if(this->count != s.count) {
             return this->count < s.count;
         }
-        if (this->rpidx != s.rpidx) {
-            return this->rpidx < s.rpidx;
+        if (this->jpp_idx != s.jpp_idx) {
+            return this->jpp_idx < s.jpp_idx;
         }
         if(this->upper_bound != s.upper_bound) {
             return this->upper_bound < s.upper_bound;
@@ -100,7 +100,7 @@ std::pair<type::idx_t, DateTime>
 get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, bool disruption_active, const type::AccessibiliteParams &accessibilite_params, const navitia::routing::RAPTOR &raptor);
 
 navitia::time_duration
-getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
+getWalkingTime(int count, type::idx_t jpp_idx, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
                const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
                bool clockwise, bool disruption_active, const type::AccessibiliteParams &accessibilite_params,
                const navitia::routing::RAPTOR &raptor);
