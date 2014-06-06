@@ -374,32 +374,71 @@ Parameters
 | yep      | from                | id        | The id of the departure of your journey   |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | to                  | id        | The id of the arrival of your journey     |                 |
+|          |                     |           | If none are provided an isochrone is      |                 |
+|          |                     |           | computed                                  |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | yep      | datetime            | datetime  | A datetime                                |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | datetime_represents | String    | Can be *departure* or *arrival*.          | departure       |
 |          |                     |           | If it's departure, the request will       |                 |
-|          |                     |           | retrieve the journeys after datetime.     |                 |
+|          |                     |           | retrieve the journeys starting after      |                 |
+|          |                     |           | datetime.                                 |                 |
 |          |                     |           | If it's arrival it will retrieve journeys |                 |
 |          |                     |           | arriving before datetime.                 |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | forbidden_uris[]    | id        | If you want to avoid lines, modes ...     |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | count               | int       | Number of journeys                        |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | type                | String    | Allows you to filter the journeys.        | all             |
-|          |                     |           | Can be rapid, all ...                     |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | first_section_mode  | String    | Force the first section mode if the first |                 |
-|          |                     |           | section is not a public transport one.    |                 |
+| nop      | first_section_mode[]| Array of  | Force the first section mode if the first | walking         |
+|          |                     | string    | section is not a public transport one.    |                 |
 |          |                     |           | It takes one the following values :       |                 |
 |          |                     |           | `walking`, `car`, `bike`, `bss`           |                 |
 |          |                     |           | bss stands for bike sharing system        |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | last_section_mode   | String    | Same as first_section_mode but for the    |                 |
-|          |                     |           | last section.                             |                 |
+| nop      | last_section_mode[] | Array of  | Same as first_section_mode but for the    | walking         |
+|          |                     | string    | last section                              |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | walking_speed       | float     | Walking speed for the fallback sections   | 1.12 m/s        |
+|          |                     |           | Speed unit must be in meter/seconds       | (4 km/h)        |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | bike_speed          | float     | Biking speed for the fallback sections    | 4.1 m/s         |
+|          |                     |           | Speed unit must be in meter/seconds       | (14.7 km/h)     |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | bss_speed           | float     | Speed while using a bike from a bike      | 4.1 m/s         |
+|          |                     |           | sharing system for the fallback sections  | (14.7 km/h)     |
+|          |                     |           | Speed unit must be in meter/seconds       |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | car_speed           | float     | Driving speed for the fallback sections   | 16.8 m/s        |
+|          |                     |           | Speed unit must be in meter/seconds       | (60 km/h)       |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | count               | int       | Number of wanted journeys                 |                 |
+|          |                     |           | See the related section (TODO link!)      |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | min_nb_journeys     | int       | Minimum number of wanted journeys         |                 |
+|          |                     |           | See the related section (TODO link!)      |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_nb_journeys     | int       | Maximum number of wanted journeys         |                 |
+|          |                     |           | See the related section (TODO link!)      |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | type                | String    | Allows you to filter the type of journeys | all             |
+|          |                     |           | See the related journey type section TODO |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | disruption_active   | boolean   | If true the algorithm take the disruptions| False           |
+|          |                     |           | into account, and thus avoid disrupted    |                 |
+|          |                     |           | public transport                          |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_duration        | int       | Maximum duration of the journey           | 3600*24s (24h)  |
+|          |                     |           | Like all duration, the unit is seconds    |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | wheelchair          | boolean   | If true the traveller is considered to    | False           |
+|          |                     |           | be using a wheelchair, thus only          |                 |
+|          |                     |           | accessible public transport are used      |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | show_code           | boolean   | If true add internal id in the response   | False           |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | debug               | boolean   | Debug mode                                | False           |
+|          |                     |           | No journeys are filtered in this mode     |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 
 Objects
