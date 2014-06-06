@@ -174,9 +174,22 @@ class InstanceManager(object):
         Retourne None si on a rien trouvé
         """
         p = geometry.Point(lon, lat)
+        valid_instances = []
         for key, instance in self.instances.iteritems():
             if instance.geom and instance.geom.contains(p):
-                return key
+                valid_instances.append(key)
+        #HOTFIX
+        #If we have only one instance we return it
+        if len(valid_instances) == 1:
+            return valid_instances[0]
+        elif len(valid_instances) > 1:
+            # We return the first free instance, if there is none we return
+            # the first one
+            for name in valid_instances:
+                instance = models.Instance.get_by_name(name)
+                if instance.is_free:
+                    return name
+            return valid_instances[0]
 
         raise RegionNotFound(lon=lon, lat=lat)
 
