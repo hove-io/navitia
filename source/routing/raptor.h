@@ -54,15 +54,15 @@ struct RAPTOR
 
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
     std::vector<label_vector_t> labels;
-
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
     std::vector<DateTime> best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
     best_dest b_dest;
     ///Nombre de correspondances effectuées jusqu'à présent
     unsigned int count;
-    ///Est-ce que le stop point est arrivé ou non ?
-    boost::dynamic_bitset<> marked_sp;
+    /// The best jpp reached for every stop point during a round of raptor algorithm
+    /// Used by footpath()
+    std::vector<type::idx_t> best_jpp_by_sp;
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> journey_patterns_valides;
     ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
@@ -71,7 +71,7 @@ struct RAPTOR
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :
         data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
-        marked_sp(data.pt_data->stop_points.size()),
+        best_jpp_by_sp(data.pt_data->stop_points.size()),
         journey_patterns_valides(data.pt_data->journey_patterns.size()),
         Q(data.pt_data->journey_patterns.size()) {
             labels.assign(10, data.dataRaptor->labels_const);
@@ -140,7 +140,7 @@ struct RAPTOR
 
     /// Fonction générique pour la marche à pied
     /// Il faut spécifier le visiteur selon le sens souhaité
-    template<typename Visitor> void foot_path(const Visitor & v, const type::Properties &required_properties);
+    template<typename Visitor> void foot_path(const Visitor & v);
 
     template<typename Visitor>
     void apply_vj_extension(const Visitor& v, const bool global_pruning,
@@ -166,6 +166,24 @@ struct RAPTOR
 
     inline type::idx_t get_boarding_jpp(size_t count, type::idx_t jpp_idx) const {
         return labels[count][jpp_idx].boarding_jpp;
+    }
+
+    template<typename Visitor>
+    inline
+    void mark_all_jpp_of_sp(const type::StopPoint* stop_point, const DateTime dt, const type::idx_t boarding_jpp,
+                            label_vector_t& working_labels, Visitor visitor) {
+        for(auto jpp : stop_point->journey_pattern_point_list) {
+            type::idx_t jpp_idx = jpp->idx;
+            if(jpp_idx != boarding_jpp && visitor.comp(dt, best_labels[jpp_idx])) {
+               working_labels[jpp_idx].dt = dt;
+               working_labels[jpp_idx].boarding_jpp = boarding_jpp;
+               working_labels[jpp_idx].type = boarding_type::connection;
+               best_labels[jpp_idx] = dt;
+               if(visitor.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
+                   Q[jpp->journey_pattern->idx] = jpp->order;
+               }
+            }
+        }
     }
 
     ~RAPTOR() {}

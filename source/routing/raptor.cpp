@@ -37,7 +37,9 @@ namespace bt = boost::posix_time;
 namespace navitia { namespace routing {
 
 void RAPTOR::make_queue() {
-    marked_sp.reset();
+    for(auto& jpp : best_jpp_by_sp) {
+        jpp = type::invalid_idx;
+    }
 }
 
 /*
@@ -80,7 +82,10 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             best_labels[jpp->idx] = working_labels[jpp->idx].dt;
             add_vj = true;
             if(!this->b_dest.add_best(v, jpp->idx, working_labels[jpp->idx].dt, this->count)) {
-                this->marked_sp.set(jpp->stop_point->idx);
+                auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
+                if(best_jpp == type::invalid_idx || v.comp(workingDt, working_labels[best_jpp].dt)) {
+                    best_jpp = jpp->idx;
+                }
             }
         }
         //If we never marked a vj, we don't want to continue
@@ -95,86 +100,39 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
 
 
 template<typename Visitor>
-void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_properties) {
+void RAPTOR::foot_path(const Visitor & v) {
 
     int last = 0;
     const auto foot_path_list = v.clockwise() ? data.dataRaptor->foot_path_forward :
                                                 data.dataRaptor->foot_path_backward;
     auto it = foot_path_list.begin();
-    auto &current_labels = labels[count];
-    for(auto stop_point_idx = marked_sp.find_first(); stop_point_idx != marked_sp.npos;
-        stop_point_idx = marked_sp.find_next(stop_point_idx)) {
-        //On cherche le meilleur jpp du stop point
-        const type::StopPoint* stop_point = data.pt_data->stop_points[stop_point_idx];
-        if(stop_point->accessible(required_properties)) {
-            DateTime best_arrival = v.worst_datetime();
-            type::idx_t best_jpp = type::invalid_idx;
-
-            for(auto journey_pattern_point : stop_point->journey_pattern_point_list) {
-                type::idx_t jppidx = journey_pattern_point->idx;
-                boarding_type b_type = get_type(count, jppidx);
-                //On regarde si on est arrivé avec un vj ou un departure,
-                //Puis on compare avec la meilleure arrivée trouvée pour ce stoppoint
-                if((b_type == boarding_type::vj || b_type == boarding_type::departure ||
-                    b_type == boarding_type::connection_stay_in) &&
-                    v.comp(current_labels[jppidx].dt, best_arrival)) {
-                    best_arrival = current_labels[jppidx].dt;
-                    best_jpp = jppidx;
-                }
-            }
-            // Si on a trouvé un journey pattern pour ce stop point
-            // NB : l'inverse arrive lorsqu'on a déjà marqué le stop point avec une autre correspondance
-            if(best_jpp != type::invalid_idx) {
-                const DateTime best_departure = v.combine(best_arrival, 120);
-                //On marque tous les journey_pattern points du stop point
-                for(auto jpp : stop_point->journey_pattern_point_list) {
-                    type::idx_t jpp_idx = jpp->idx;
-                    if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx])) {
-                       current_labels[jpp_idx].dt = best_departure;
-                       current_labels[jpp_idx].boarding_jpp = best_jpp;
-                       current_labels[jpp_idx].type = boarding_type::connection;
-                       best_labels[jpp_idx] = best_departure;
-
-                       if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
-                           Q[jpp->journey_pattern->idx] = jpp->order;
-                       }
-                    }
-                }
-                //On va maintenant chercher toutes les connexions et on marque tous les journey_pattern_points concernés
-                //On récupère l'index dans les footpath
-                const pair_int & index = (v.clockwise()) ? data.dataRaptor->footpath_index_forward[stop_point_idx] :
-                                                         data.dataRaptor->footpath_index_backward[stop_point_idx];
-                //int prec_duration = -1;
-                DateTime next = v.worst_datetime(),
-                         previous = current_labels[best_jpp].dt;
-                it += index.first - last;
-                const auto end = it + index.second;
-
-                for(; it != end; ++it) {
-                    const type::StopPointConnection* spc = *it;
-                    const auto destination = v.clockwise() ? spc->destination : spc->departure;
-                    next = v.combine(previous, spc->duration); // ludo
-                    if(destination->accessible(required_properties)) {
-                        for(auto destination_jpp : destination->journey_pattern_point_list) {
-                            type::idx_t destination_jpp_idx = destination_jpp->idx;
-                            if(best_jpp != destination_jpp_idx) {
-                                if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
-                                    current_labels[destination_jpp_idx].dt = next;
-                                    current_labels[destination_jpp_idx].boarding_jpp = best_jpp;
-                                    current_labels[destination_jpp_idx].type = boarding_type::connection;
-                                    best_labels[destination_jpp_idx] = next;
-
-                                    if(v.comp(destination_jpp->order, Q[destination_jpp->journey_pattern->idx])) {
-                                        Q[destination_jpp->journey_pattern->idx] = destination_jpp->order;
-                                   }
-                                }
-                            }
-                        }
-                    }
-                }
-                last = index.first + index.second;
-            }
+    auto &working_labels = labels[count];
+    // Since we don't stop on a journey_pattern_point we don't really care about
+    // accessibility here, it'll be check in the public transport part
+    for(const auto best_jpp : best_jpp_by_sp) {
+        if(best_jpp == type::invalid_idx) {
+            continue;
         }
+        const type::StopPoint* stop_point = data.pt_data->journey_pattern_points[best_jpp]->stop_point;
+        DateTime best_arrival = working_labels[best_jpp].dt;
+        // We mark all the journey pattern point of this stop point with its datetime + 2 minutes
+        const DateTime best_departure = v.combine(best_arrival, 120);
+        mark_all_jpp_of_sp(stop_point, best_departure, best_jpp, working_labels, v);
+
+        // Now we apply all the connections
+        const pair_int & index = (v.clockwise()) ? data.dataRaptor->footpath_index_forward[stop_point->idx] :
+                                                 data.dataRaptor->footpath_index_backward[stop_point->idx];
+        DateTime next = v.worst_datetime(),
+                 previous = working_labels[best_jpp].dt;
+        it += index.first - last;
+        const auto end = it + index.second;
+        for(; it != end; ++it) {
+            const type::StopPointConnection* spc = *it;
+            const auto destination = v.clockwise() ? spc->destination : spc->departure;
+            next = v.combine(previous, spc->duration); // ludo
+            mark_all_jpp_of_sp(destination, next, best_jpp, working_labels, v);
+        }
+        last = index.first + index.second;
     }
 }
 
@@ -218,9 +176,6 @@ void RAPTOR::clear_and_init(Solutions departs,
                 Q[journey_pattern_point->journey_pattern->idx] = journey_pattern_point->order;
             else if(!clockwise &&  Q[journey_pattern_point->journey_pattern->idx] < journey_pattern_point->order)
                 Q[journey_pattern_point->journey_pattern->idx] = journey_pattern_point->order;
-            if(item.arrival != DateTimeUtils::min && item.arrival != DateTimeUtils::inf) {
-                marked_sp.set(stop_point->idx);
-            }
         }
     }
 
@@ -352,7 +307,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
             }
         }
         const auto & prec_labels=labels[count -1];
-        auto & working_labels = labels[this->count];
+        auto& working_labels = labels[this->count];
         this->make_queue();
 
         for(const auto & journey_pattern : data.pt_data->journey_patterns) {
@@ -398,8 +353,11 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                 best_labels[jpp_idx] = working_labels[jpp_idx].dt;
                                 // We want to apply connection only if it's not a destination point
                                 if(!best_add_result) {
-                                    this->marked_sp.set(jpp->stop_point->idx);
-                                    end = false;
+                                    auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
+                                    if(best_jpp == type::invalid_idx || visitor.comp(workingDt, working_labels[best_jpp].dt)) {
+                                        best_jpp = jpp->idx;
+                                        end = false;
+                                    }
                                 }
                             }
                         }
@@ -432,7 +390,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
         }
-        this->foot_path(visitor, accessibilite_params.properties);
+        this->foot_path(visitor);
     }
 }
 
