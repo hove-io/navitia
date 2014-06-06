@@ -181,8 +181,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 
 void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     const int queue_value = clockwise ?  std::numeric_limits<int>::max() : -1;
-    const size_t journey_patterns_points_size = data.pt_data->journey_pattern_points.size();
-    memset32<int>(&Q[0], journey_patterns_points_size, queue_value);
+    memset32<int>(&Q[0],  data.pt_data->journey_patterns.size(), queue_value);
     labels.resize(10);
     for(auto& lbl_list : labels) {
         for(Label& l : lbl_list) {
@@ -190,12 +189,13 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
         }
     }
 
-    b_dest.reinit(journey_patterns_points_size, bound);
+    const size_t journey_pattern_points_size = data.pt_data->journey_pattern_points.size();
+    b_dest.reinit(journey_pattern_points_size, bound);
     this->make_queue();
     if(clockwise)
-        best_labels.assign(journey_patterns_points_size, DateTimeUtils::inf);
+        best_labels.assign(journey_pattern_points_size, DateTimeUtils::inf);
     else
-        best_labels.assign(journey_patterns_points_size, DateTimeUtils::min);
+        best_labels.assign(journey_pattern_points_size, DateTimeUtils::min);
 }
 
 void RAPTOR::clear_and_init(Solutions departs,
