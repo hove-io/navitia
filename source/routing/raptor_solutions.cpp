@@ -265,8 +265,8 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
 }
 
 struct VisitorFinalJppAndDate : public BasePathVisitor {
-    type::idx_t current_jpp;
-    DateTime last_time;
+    type::idx_t current_jpp = type::invalid_idx;
+    DateTime last_time = DateTimeUtils::inf;
     void final_step(const type::idx_t current_jpp, size_t count, const std::vector<label_vector_t> &labels) {
         this->current_jpp = current_jpp;
         last_time = labels[count][current_jpp].dt;
