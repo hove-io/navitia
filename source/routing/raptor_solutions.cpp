@@ -179,15 +179,17 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
     Solutions result;
 
     std::/*unordered_*/map<type::idx_t, Solution> tmp;
-
-    for(uint32_t i=0; i<raptor.labels.size(); ++i) {
+    // We start at 1 because we don't want results of the first round
+    for(uint32_t i=1; i<raptor.labels.size(); ++i) {
         for(auto spid_dist : destinations) {
             Solution best_departure;
             best_departure.ratio = 2;
             best_departure.rpidx = type::invalid_idx;
             for(auto journey_pattern_point : raptor.data.pt_data->stop_points[spid_dist.first]->journey_pattern_point_list) {
                 type::idx_t jppidx = journey_pattern_point->idx;
-                if(raptor.labels[i][journey_pattern_point->idx].type != boarding_type::uninitialized) {
+                // We only want solution ending by a vehicle journey or a stay_in
+                if(raptor.labels[i][journey_pattern_point->idx].type == boarding_type::vj &&
+                   raptor.labels[i][journey_pattern_point->idx].type == boarding_type::connection_stay_in) {
                     navitia::time_duration walking_time = getWalkingTime(i, jppidx, departs, destinations, clockwise,
                                                                          disruption_active, accessibilite_params, raptor);
                     if(best.walking_time <= walking_time) {
@@ -204,36 +206,37 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                     int walking_time_diff_in_s = (best.walking_time - walking_time).total_seconds();
                     if (walking_time_diff_in_s > 0) {
                         float ratio = lost_time / walking_time_diff_in_s;
-                        if( ratio < best_departure.ratio) {
-                            Solution s;
-                            s.rpidx = jppidx;
-                            s.count = i;
-                            s.ratio = ratio;
-                            s.walking_time = walking_time;
-                            s.arrival = raptor.labels[i][jppidx].dt;
-                            type::idx_t final_rpidx;
-                            DateTime last_time;
-                            std::tie(final_rpidx, last_time) = get_final_jppidx_and_date(i, jppidx, clockwise,
-                                                                                         disruption_active, accessibilite_params, raptor);
+                        if( ratio >= best_departure.ratio) {
+                            continue;
+                        }
+                        Solution s;
+                        s.rpidx = jppidx;
+                        s.count = i;
+                        s.ratio = ratio;
+                        s.walking_time = walking_time;
+                        s.arrival = raptor.labels[i][jppidx].dt;
+                        type::idx_t final_rpidx;
+                        DateTime last_time;
+                        std::tie(final_rpidx, last_time) = get_final_jppidx_and_date(i, jppidx, clockwise,
+                                            disruption_active, accessibilite_params, raptor);
 
-                            if(clockwise) {
-                                s.upper_bound = last_time;
-                                for(auto spid_dep : departs) {
-                                    if(raptor.data.pt_data->journey_pattern_points[final_rpidx]->stop_point->idx == spid_dep.first) {
-                                        s.upper_bound = s.upper_bound + (spid_dep.second.total_seconds());
-                                    }
-                                }
-                            } else {
-                                s.upper_bound = last_time;
-                                for(auto spid_dep : departs) {
-                                    if(raptor.data.pt_data->journey_pattern_points[final_rpidx]->stop_point->idx == spid_dep.first) {
-                                        s.upper_bound = s.upper_bound - (spid_dep.second.total_seconds());
-                                    }
+                        if(clockwise) {
+                            s.upper_bound = last_time;
+                            for(auto spid_dep : departs) {
+                                if(raptor.data.pt_data->journey_pattern_points[final_rpidx]->stop_point->idx == spid_dep.first) {
+                                    s.upper_bound = s.upper_bound + (spid_dep.second.total_seconds());
                                 }
                             }
-
-                            best_departure = s;
+                        } else {
+                            s.upper_bound = last_time;
+                            for(auto spid_dep : departs) {
+                                if(raptor.data.pt_data->journey_pattern_points[final_rpidx]->stop_point->idx == spid_dep.first) {
+                                    s.upper_bound = s.upper_bound - (spid_dep.second.total_seconds());
+                                }
+                            }
                         }
+
+                        best_departure = s;
                     }
                 }
             }
