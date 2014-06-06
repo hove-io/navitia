@@ -156,13 +156,11 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
         best_labels.assign(journey_pattern_points_size, DateTimeUtils::min);
 }
 
-void RAPTOR::clear_and_init(Solutions departs,
+
+void RAPTOR::init(Solutions departs,
                   std::vector<std::pair<type::idx_t, navitia::time_duration> > destinations,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
-
-    this->clear(clockwise, bound);
-
     for(Solution item : departs) {
         const type::JourneyPatternPoint* journey_pattern_point = data.pt_data->journey_pattern_points[item.rpidx];
         const type::StopPoint* stop_point = journey_pattern_point->stop_point;
@@ -213,7 +211,8 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     auto calc_dest = clockwise ? destinations : departures_;
 
     auto departures = get_solutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
-    clear_and_init(departures, calc_dest, bound, clockwise);
+    clear(clockwise, bound);
+    init(departures, calc_dest, bound, clockwise);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
     //auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
@@ -229,7 +228,8 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     departures = get_solutions(calc_dep, calc_dest, !clockwise,
                                accessibilite_params, disruption_active, *this);
     for(auto departure : departures) {
-        clear_and_init({departure}, calc_dep, departure_datetime, !clockwise);
+        clear(!clockwise, departure_datetime);
+        init({departure}, calc_dep, departure_datetime, !clockwise);
 
         boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, true, max_transfers);
 
@@ -251,7 +251,8 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duratio
           bool clockwise, bool disruption_active, bool allow_odt) {
     set_journey_patterns_valides(DateTimeUtils::date(departure_datetime), forbidden, disruption_active, allow_odt);
     auto departures = get_solutions(departures_, departure_datetime, true, data, disruption_active);
-    clear_and_init(departures, {}, bound, true);
+    clear(clockwise, bound);
+    init(departures, {}, bound, true);
 
     boucleRAPTOR(accessibilite_params, clockwise, true, max_transfers);
 }
