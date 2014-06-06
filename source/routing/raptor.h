@@ -60,7 +60,8 @@ struct RAPTOR
     best_dest b_dest;
     ///Nombre de correspondances effectuées jusqu'à présent
     unsigned int count;
-    ///Est-ce que le stop point est arrivé ou non ?
+    /// The best jpp reached for every stop point during a round of raptor algorithm
+    /// Used by footpath()
     std::vector<type::idx_t> best_jpp_by_sp;
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> journey_patterns_valides;
