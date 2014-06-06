@@ -371,7 +371,7 @@ Parameters
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | Required | Name                | Type        Description                               | Default value   |
 +==========+=====================+===========+===========================================+=================+
-| yep      | from                | id        | The id of the departure of your journey   |                 |
+| nop      | from                | id        | The id of the departure of your journey   |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | to                  | id        | The id of the arrival of your journey     |                 |
 |          |                     |           | If none are provided an isochrone is      |                 |
@@ -379,48 +379,59 @@ Parameters
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | yep      | datetime            | datetime  | A datetime                                |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | datetime_represents | String    | Can be *departure* or *arrival*.          | departure       |
+| nop      | datetime_represents | string    | Can be *departure* or *arrival*.          | departure       |
+|          |                     |           |                                           |                 |
 |          |                     |           | If it's departure, the request will       |                 |
 |          |                     |           | retrieve the journeys starting after      |                 |
 |          |                     |           | datetime.                                 |                 |
+|          |                     |           |                                           |                 |
 |          |                     |           | If it's arrival it will retrieve journeys |                 |
 |          |                     |           | arriving before datetime.                 |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | forbidden_uris[]    | id        | If you want to avoid lines, modes ...     |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | first_section_mode[]| Array of  | Force the first section mode if the first | walking         |
+| nop      | first_section_mode[]| array of  | Force the first section mode if the first | walking         |
 |          |                     | string    | section is not a public transport one.    |                 |
 |          |                     |           | It takes one the following values :       |                 |
 |          |                     |           | `walking`, `car`, `bike`, `bss`           |                 |
+|          |                     |           |                                           |                 |
 |          |                     |           | bss stands for bike sharing system        |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | last_section_mode[] | Array of  | Same as first_section_mode but for the    | walking         |
+| nop      | last_section_mode[] | array of  | Same as first_section_mode but for the    | walking         |
 |          |                     | string    | last section                              |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | walking_speed       | float     | Walking speed for the fallback sections   | 1.12 m/s        |
+|          |                     |           |                                           |                 |
 |          |                     |           | Speed unit must be in meter/seconds       | (4 km/h)        |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | bike_speed          | float     | Biking speed for the fallback sections    | 4.1 m/s         |
+|          |                     |           |                                           |                 |
 |          |                     |           | Speed unit must be in meter/seconds       | (14.7 km/h)     |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | bss_speed           | float     | Speed while using a bike from a bike      | 4.1 m/s         |
 |          |                     |           | sharing system for the fallback sections  | (14.7 km/h)     |
+|          |                     |           |                                           |                 |
 |          |                     |           | Speed unit must be in meter/seconds       |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | car_speed           | float     | Driving speed for the fallback sections   | 16.8 m/s        |
+|          |                     |           |                                           |                 |
 |          |                     |           | Speed unit must be in meter/seconds       | (60 km/h)       |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | count               | int       | Number of wanted journeys                 |                 |
-|          |                     |           | See the related section (TODO link!)      |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | More in :ref:`multiple_journeys`          |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | min_nb_journeys     | int       | Minimum number of wanted journeys         |                 |
-|          |                     |           | See the related section (TODO link!)      |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | More in :ref:`multiple_journeys`          |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_journeys     | int       | Maximum number of wanted journeys         |                 |
-|          |                     |           | See the related section (TODO link!)      |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | More in :ref:`multiple_journeys`          |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | type                | String    | Allows you to filter the type of journeys | all             |
-|          |                     |           | See the related journey type section TODO |                 |
+| nop      | type                | string    | Allows you to filter the type of journeys |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | More in :ref:`journey_qualif`             |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
@@ -428,16 +439,18 @@ Parameters
 |          |                     |           | into account, and thus avoid disrupted    |                 |
 |          |                     |           | public transport                          |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_duration        | int       | Maximum duration of the journey           | 3600*24s (24h)  |
+| nop      | max_duration        | int       | Maximum duration of the journey           | 3600*24 s (24h) |
+|          |                     |           |                                           |                 |
 |          |                     |           | Like all duration, the unit is seconds    |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | wheelchair          | boolean   | If true the traveller is considered to    | False           |
 |          |                     |           | be using a wheelchair, thus only          |                 |
 |          |                     |           | accessible public transport are used      |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | show_code           | boolean   | If true add internal id in the response   | False           |
+| nop      | show_codes          | boolean   | If true add internal id in the response   | False           |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | debug               | boolean   | Debug mode                                | False           |
+|          |                     |           |                                           |                 |
 |          |                     |           | No journeys are filtered in this mode     |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 
@@ -458,11 +471,12 @@ sections            array of section_  All the sections of the journey
 from                place_             The place from where the journey starts
 to                  place_             The place from where the journey starts
 links               link_              Links related to this journey
-type                *enum* string      Use to qualified a journey can be ``comfort``, ``rapid``, ``healthy``
+type                *enum* string      Used to qualified a journey. See the :ref:`journey_qualif` section
+                                       for more information
 =================== ================== ======================================================================
 
 .. note::
-    When used with just a "from" or a "to" parameter, it will not contain the sections parameter nor the from (if the from parametre was given).
+    When used with just a "from" or a "to" parameter, it will not contain any sections
 
 .. _section:
 
@@ -961,3 +975,39 @@ datetime
 ########
 
 A date time with the format YYYYMMDDTHHMMSS
+
+Misc mechanisms
+***************
+
+.. _multiple_journeys: 
+
+Multiple journeys
+#################
+
+TODO
+
+.. _journey_qualif:
+
+Journey qualification process
+#############################
+
+Navitia can compute several journeys at the same time. After having computed them we tag them to help the user choose the best one for his needs.
+
+The different journey types are:
+
+===================== ========================================================== 
+Type                  Description
+===================== ========================================================== 
+best                  The best journey
+rapid                 A good trade off between duration, changes and constraint respect
+no_train              Journey without train
+comfort               A journey with less changes and walking
+car                   A journey with car to get to the public transport
+less_fallback_walk    A journey with less walking
+less_fallback_bike    A journey with less biking
+less_fallback_bss     A journey with less bss
+fastest               A journey with minimum duration
+non_pt_walk           A journey without public transport, only walking
+non_pt_bike           A journey without public transport, only biking
+non_pt_bss            A journey without public transport, only bike sharing
+
