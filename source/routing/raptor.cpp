@@ -179,9 +179,10 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 }
 
 
-void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime bound) {
-    int queue_value = clockwise ?  std::numeric_limits<int>::max() : -1;
-    memset32<int>(&Q[0], data.pt_data->journey_patterns.size(), queue_value);
+void RAPTOR::clear(const bool clockwise, const DateTime bound) {
+    const int queue_value = clockwise ?  std::numeric_limits<int>::max() : -1;
+    const size_t journey_patterns_points_size = data.pt_data->journey_pattern_points.size();
+    memset32<int>(&Q[0], journey_patterns_points_size, queue_value);
     labels.resize(10);
     for(auto& lbl_list : labels) {
         for(Label& l : lbl_list) {
@@ -189,12 +190,12 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime bound) {
         }
     }
 
-    b_dest.reinit(data.pt_data->journey_pattern_points.size(), bound);
+    b_dest.reinit(journey_patterns_points_size, bound);
     this->make_queue();
     if(clockwise)
-        best_labels.assign(data.pt_data->journey_pattern_points.size(), DateTimeUtils::inf);
+        best_labels.assign(journey_patterns_points_size, DateTimeUtils::inf);
     else
-        best_labels.assign(data.pt_data->journey_pattern_points.size(), DateTimeUtils::min);
+        best_labels.assign(journey_patterns_points_size, DateTimeUtils::min);
 }
 
 void RAPTOR::clear_and_init(Solutions departs,
@@ -202,7 +203,7 @@ void RAPTOR::clear_and_init(Solutions departs,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
 
-    this->clear(data, clockwise, bound);
+    this->clear(clockwise, bound);
 
     for(Solution item : departs) {
         const type::JourneyPatternPoint* journey_pattern_point = data.pt_data->journey_pattern_points[item.rpidx];
