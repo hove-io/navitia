@@ -179,8 +179,8 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
     Solutions result;
 
     std::/*unordered_*/map<type::idx_t, Solution> tmp;
-
-    for(uint32_t i=0; i<raptor.labels.size(); ++i) {
+    // We start at 1 because we don't want results of the first round
+    for(uint32_t i=1; i<raptor.labels.size(); ++i) {
         for(auto spid_dist : destinations) {
             Solution best_departure;
             best_departure.ratio = 2;
