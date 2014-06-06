@@ -55,9 +55,9 @@ struct PT_Data : boost::noncopyable{
     std::vector<AssociatedCalendar*> associated_calendars;
 
     // First letter
-    autocomplete::Autocomplete<idx_t> stop_area_autocomplete;
-    autocomplete::Autocomplete<idx_t> stop_point_autocomplete;
-    autocomplete::Autocomplete<idx_t> line_autocomplete;
+    autocomplete::Autocomplete<idx_t> stop_area_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopArea);
+    autocomplete::Autocomplete<idx_t> stop_point_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopPoint);
+    autocomplete::Autocomplete<idx_t> line_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::Line);
 
     // Proximity list
     proximitylist::ProximityList<idx_t> stop_area_proximity_list;

@@ -55,17 +55,6 @@ void compute_score_way(type::PT_Data&, georef::GeoRef &georef) {
 }
 
 
-void compute_score_stop_area(type::PT_Data &pt_data, georef::GeoRef &georef) {
-    for(auto it = pt_data.stop_area_autocomplete.word_quality_list.begin(); it != pt_data.stop_area_autocomplete.word_quality_list.end(); ++it){
-        for (navitia::georef::Admin* admin : pt_data.stop_areas[it->first]->admin_list){
-            if (admin->level == 8){
-                (it->second).score = georef.fl_admin.word_quality_list.at(admin->idx).score;
-            }
-        }
-    }
-}
-
-
 void compute_score_stop_point(type::PT_Data &pt_data, georef::GeoRef &georef) {
     //Récupérer le score de son admin du niveau 8 dans le autocomplete: georef.fl_admin
     for (auto it = pt_data.stop_point_autocomplete.word_quality_list.begin(); it != pt_data.stop_point_autocomplete.word_quality_list.end(); ++it){
@@ -77,6 +66,20 @@ void compute_score_stop_point(type::PT_Data &pt_data, georef::GeoRef &georef) {
     }
 }
 
+void compute_score_stop_area(type::PT_Data & pt_data){
+    //Calculate de maximum stop-point count;
+    size_t max_score = 0;
+    for (navitia::type::StopArea* sa : pt_data.stop_areas){
+        max_score = std::max(max_score, sa->stop_point_list.size());
+    }
+
+    //Ajust the score of each stop_area from 0 to 100 using maximum score (max_score)
+    if (max_score > 0){
+        for (auto & it : pt_data.stop_area_autocomplete.word_quality_list){
+            it.second.score = (pt_data.stop_areas[it.first]->stop_point_list.size() * 100)/max_score;
+        }
+    }
+}
 
 void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
     int max_score = 0;
@@ -108,7 +111,7 @@ void Autocomplete<type::idx_t>::compute_score(type::PT_Data &pt_data, georef::Ge
                    const type::Type_e type) {
     switch(type){
         case type::Type_e::StopArea:
-            compute_score_stop_area(pt_data, georef);
+            compute_score_stop_area(pt_data);
             break;
         case type::Type_e::StopPoint:
             compute_score_stop_point(pt_data, georef);
@@ -129,6 +132,5 @@ void Autocomplete<type::idx_t>::compute_score(type::PT_Data &pt_data, georef::Ge
             break;
     }
 }
-
 
 }}
