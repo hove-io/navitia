@@ -179,28 +179,17 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 }
 
 
-void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne) {
-    if(clockwise) {
-        //Q.assign(data.pt_data->journey_patterns.size(), std::numeric_limits<int>::max());
-        memset32<int>(&Q[0], data.pt_data->journey_patterns.size(), std::numeric_limits<int>::max());
-        labels.resize(10);
-        labels[0] = data.dataRaptor->labels_const;
-    } else {
-        //Q.assign(data.pt_data->journey_patterns.size(), -1);
-        memset32<int>(&Q[0], data.pt_data->journey_patterns.size(), -1);
-        labels.resize(10);
-        labels[0] = data.dataRaptor->labels_const_reverse;
-    }
 void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime bound) {
+    int queue_value = clockwise ?  std::numeric_limits<int>::max() : -1;
+    memset32<int>(&Q[0], data.pt_data->journey_patterns.size(), queue_value);
+    labels.resize(10);
     for(auto& lbl_list : labels) {
         for(Label& l : lbl_list) {
-            l.type = boarding_type::uninitialized;
-            l.dt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
-            l.boarding_jpp = type::invalid_idx;
+            l.init(clockwise);
         }
     }
 
-    b_dest.reinit(data.pt_data->journey_pattern_points.size(), borne);
+    b_dest.reinit(data.pt_data->journey_pattern_points.size(), bound);
     this->make_queue();
     if(clockwise)
         best_labels.assign(data.pt_data->journey_pattern_points.size(), DateTimeUtils::inf);
