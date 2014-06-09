@@ -70,6 +70,10 @@ i_manager.initialisation(start_ping=app.config['START_MONITORING_THREAD'])
 from jormungandr.stat_manager import StatManager
 stat_manager = StatManager()
 
+from jormungandr.helpers import UrlHandler
+url_handler = UrlHandler(app.config.get('FORCE_HTTPS', False))
+
+
 from jormungandr import api
 
 

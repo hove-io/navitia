@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import url_for, redirect
+from flask import redirect
 from flask.ext.restful import fields, marshal_with, reqparse, abort
 from jormungandr import i_manager, authentification
 from converters_collection_type import collections_to_resource_type
@@ -45,6 +45,7 @@ from errors import ManageError
 from Coord import Coord
 from navitiacommon.models import PtObject
 from flask.ext.restful.types import boolean
+from jormungandr import url_handler
 
 class Uri(ResourceUri):
     parsers = {}
@@ -435,5 +436,5 @@ def Redirect(*args, **kwargs):
     region = i_manager.key_of_id(id)
     if not region:
         region = "{region.id}"
-    url = url_for("v1.uri", region=region, collection=collection, id=id)
+    url = url_handler.url_for("v1.uri", region=region, collection=collection, id=id)
     return redirect(url, 303)

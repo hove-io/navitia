@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import Flask, request, url_for
+from flask import Flask, request
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
@@ -41,6 +41,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
     generic_message
 
 from jormungandr.interfaces.parsers import option_value
+from jormungandr import url_handler
 #from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
 import datetime
@@ -280,7 +281,7 @@ class add_journey_href(object):
                     journey['links'] = [
                         {
                             "type": "journeys",
-                            "href": url_for("v1.journeys", **kwargs),
+                            "href": url_handler.url_for("v1.journeys", **kwargs),
                             "templated": False
                         }
                     ]
@@ -308,14 +309,14 @@ class add_journey_pagination(object):
                 if "region" in kwargs:
                     args["region"] = kwargs["region"]
                 objects[0]["links"].append({
-                    "href": url_for("v1.journeys", _external=True, **args),
+                    "href": url_handler.url_for("v1.journeys", **args),
                     "templated": False,
                     "type": "prev"
                 })
                 args["datetime"] = datetime_after.strftime(f_datetime)
                 args["datetime_represents"] = "departure"
                 objects[0]["links"].append({
-                    "href": url_for("v1.journeys", _external=True, **args),
+                    "href": url_handler.url_for("v1.journeys", **args),
                     "templated": False,
                     "type": "next"
                 })
@@ -333,14 +334,14 @@ class add_journey_pagination(object):
                 if "region" in kwargs:
                     args["region"] = kwargs["region"]
                 objects[0]["links"].append({
-                    "href": url_for("v1.journeys", _external=True, **args),
+                    "href": url_handler.url_for("v1.journeys", **args),
                     "templated": False,
                     "type": "first"
                 })
                 args["datetime"] = datetime_last.strftime(f_datetime)
                 args["datetime_represents"] = "arrival"
                 objects[0]["links"].append({
-                    "href": url_for("v1.journeys", _external=True, **args),
+                    "href": url_handler.url_for("v1.journeys", **args),
                     "templated": False,
                     "type": "last"
                 })

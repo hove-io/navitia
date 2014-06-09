@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from flask.ext.restful import Resource
-from flask import current_app, request, abort, url_for
+from flask import current_app, request, abort
 import inspect
 import re
 
