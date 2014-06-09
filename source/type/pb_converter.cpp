@@ -671,7 +671,7 @@ void fill_pb_placemark(const navitia::georef::POI* poi,
     place->set_name(poi->name);
     for(auto admin : place->poi().administrative_regions()) {
         if (admin.level() == 8){
-            place->set_name(place->name() + ", " + admin.name());
+            place->set_name(place->name() + " (" + admin.name() + ")");
         }
     }
 
@@ -692,15 +692,16 @@ void fill_pb_placemark(const navitia::georef::Way* way,
                    house_number, coord , depth,
                    now, action_period);
     if(place->address().has_house_number()) {
-        int house_number = place->address().house_number();
-        auto str_house_number = std::to_string(house_number) + " ";
-        place->set_name(str_house_number);
+        if (house_number > 0){
+            auto str_house_number = std::to_string(house_number) + " ";
+            place->set_name(str_house_number);
+        }
     }
     auto str_street_name = place->address().name();
     place->set_name(place->name() + str_street_name);
     for(auto admin : place->address().administrative_regions()) {
         if (admin.level() == 8){
-            place->set_name(place->name() + ", " + admin.name());
+            place->set_name(place->name() + " (" + admin.name() + ")");
         }
     }
 
@@ -1086,9 +1087,23 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
     }
     if(destination != nullptr){
+        //Here we format display_informations.direction for stop_schedules.
         pt_display_info->set_direction(destination->name);
+        for(auto admin : destination->admin_list) {
+            if (admin->level == 8){
+                pt_display_info->set_direction(destination->name + " (" + admin->name + ")");
+            }
+        }
+
     }else{
+        //Here we format display_informations.direction for route_schedules.
         pt_display_info->set_direction(r->name);
+        navitia::type::StopPoint* spt = data.pt_data->stop_points[r->main_destination()];
+        for(auto admin : spt->admin_list) {
+            if (admin->level == 8){
+                pt_display_info->set_direction(r->name + " (" + admin->name + ")");
+            }
+        }
     }
     if (r->line != nullptr){
         pt_display_info->set_color(r->line->color);
