@@ -116,4 +116,12 @@ std::vector<type::idx_t> get(Type_e source, Type_e destination, type::idx_t sour
 
 
 std::vector<Filter> parse(std::string request);
+
+void sort_and_unique(std::vector<type::idx_t>& list_idx);
+
+std::vector<type::idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
+                                        std::vector<type::idx_t>& list_idx2);
+
+std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
+                                        std::vector<type::idx_t>& list_idx2);
 }} //navitia::ptref

@@ -195,6 +195,34 @@ std::vector<Filter> parse(std::string request){
     return filters;
 }
 
+void sort_and_unique(std::vector<type::idx_t>& list_idx){
+  std::sort(list_idx.begin(), list_idx.end());
+  std::unique(list_idx.begin(), list_idx.end());
+}
+
+std::vector<idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
+                                 std::vector<type::idx_t>& list_idx2){
+   sort_and_unique(list_idx1);
+   sort_and_unique(list_idx2);
+
+   std::vector<idx_t> tmp_indexes;
+   std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
+   std::set_difference(list_idx1.begin(), list_idx1.end(),
+           list_idx2.begin(), list_idx2.end(), it);
+   return tmp_indexes;
+}
+
+std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
+                                      std::vector<type::idx_t>& list_idx2){
+   sort_and_unique(list_idx1);
+   sort_and_unique(list_idx2);
+
+   std::vector<idx_t> tmp_indexes;
+   std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
+   std::set_intersection(list_idx1.begin(), list_idx1.end(), list_idx2.begin(), list_idx2.end(), it);
+   return tmp_indexes;
+}
+
 std::vector<idx_t> make_query(Type_e requested_type, std::string request,
                               const std::vector<std::string>& forbidden_uris,
                               const Data & data) {
@@ -232,13 +260,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
                     "Filter: Unable to find the requested type. Not parsed: >>"
                     + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
         }
-        // Warning the structures must be sorted!
-        std::sort(indexes.begin(), indexes.end());
-        std::unique(indexes.begin(), indexes.end());
-        std::vector<idx_t> tmp_indexes;
-        std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
-        std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
-        final_indexes = tmp_indexes;
+        final_indexes = get_intersection(final_indexes, indexes);
     }
     //We now filter with forbidden uris
     for(const auto forbidden_uri : forbidden_uris) {
@@ -269,14 +291,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         default:
             throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter_forbidden.navitia_type) + "<<");
         }
-        // Warning the structures must be sorted!
-        std::sort(forbidden_idx.begin(), forbidden_idx.end());
-        std::unique(forbidden_idx.begin(), forbidden_idx.end());
-        std::vector<idx_t> tmp_indexes;
-        std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
-        std::set_difference(final_indexes.begin(), final_indexes.end(),
-                forbidden_idx.begin(), forbidden_idx.end(), it);
-        final_indexes = tmp_indexes;
+        final_indexes = get_difference(final_indexes, forbidden_idx);
     }
 
     // When the filters have emptied the results
