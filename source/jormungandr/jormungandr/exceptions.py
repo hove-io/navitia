@@ -45,8 +45,10 @@ def format_error(code, message):
 
 class RegionNotFound(Exception):
 
-    def __init__(self, region=None, lon=None, lat=None, object_id=None):
-        if region == lon == lat is None == object_id:
+    def __init__(self, region=None, lon=None, lat=None, object_id=None, custom_msg=None):
+        if custom_msg:
+            self.data = custom_msg
+        elif region == lon == lat is None == object_id:
             self.data = format_error("unknown_object", "No region nor "
                                      "coordinates given")
         elif region and lon == lat == object_id is None:

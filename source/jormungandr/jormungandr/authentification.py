@@ -34,10 +34,10 @@ import flask_restful
 from flask import current_app, request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
-from jormungandr import i_manager
 import datetime
 import base64
 from navitiacommon.models import User, Instance, db
+
 
 def authentification_required(func):
     """
@@ -50,24 +50,15 @@ def authentification_required(func):
         region = None
         if 'region' in kwargs:
             region = kwargs['region']
+            #TODO revoir comment on gere le lon/lat
         elif 'lon' in kwargs and 'lat' in kwargs:
             try:
+                from jormungandr import i_manager  # quick fix to avoid circular dependencies
                 region = i_manager.key_of_coord(lon=kwargs['lon'],
                                                 lat=kwargs['lat'])
             except RegionNotFound:
                 pass
-        elif 'from' in request.args:
-            #used for journeys api
-            try:
-                region = i_manager.key_of_id(request.args['from'])
-                if 'to' in request.args:
-                    region_to = i_manager.key_of_id(request.args['to'])
-                    if region != region_to:
-                        abort(503, message="Unable to compute journeys "
-                              "between to different instances (%s, %s) " %
-                              (region, region_to))
-            except RegionNotFound:
-                pass
+        #else TODO demander a alex pourquoi on doit dire oui sans region et si ca ne peut pas poser des failles
 
         if not region or authenticate(region, 'ALL', abort=True):
             return func(*args, **kwargs)
@@ -149,6 +140,10 @@ def abort_request():
         flask_restful.abort(401)
 
 def has_access(instance, abort=False):
+    if 'PUBLIC' in current_app.config \
+            and current_app.config['PUBLIC']:
+        #if jormungandr is on public mode we skip the authentification process
+        return True
     res = instance.is_accessible_by(get_user())
     if abort and not res:
         abort_request()
