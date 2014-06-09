@@ -116,6 +116,13 @@ enum class Mode_e{
     //Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
 };
 
+enum class OdtLevel_e{
+    none = 0,
+    mixt = 1,
+    zonal = 2,
+    all = 3
+};
+
 struct PT_Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
@@ -613,6 +620,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         }
         return this < &other;
     }
+    type::OdtLevel_e get_odt_level() const;
 };
 
 struct Route : public Header, Nameable, HasMessages, Codes{
@@ -621,7 +629,8 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     Route() : line(nullptr) {}
-    idx_t main_destination() const;
+    idx_t main_destination();
+    type::OdtLevel_e get_odt_level() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & journey_pattern_list & messages & codes;
@@ -635,7 +644,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 struct JourneyPattern : public Header, Nameable{
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence;
-    bool is_odt; // Calculated at serialization
+    OdtLevel_e odt_level; // Calculated at serialization
     Route* route;
     CommercialMode* commercial_mode;
     PhysicalMode* physical_mode;
@@ -643,10 +652,10 @@ struct JourneyPattern : public Header, Nameable{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
 
-    JourneyPattern(): is_frequence(false), is_odt(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
+    JourneyPattern(): is_frequence(false), odt_level(OdtLevel_e::none), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & is_frequence & is_odt&  route & commercial_mode
+        ar & idx & name & uri & is_frequence & odt_level &  route & commercial_mode
                 & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 
@@ -724,7 +733,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
         return vehicle_journey_type != VehicleJourneyType::regular;
     }
 
-    bool is_odt_and_has_date_time_estimated() const;
+    type::OdtLevel_e get_odt_level() const;
 };
 
 struct ValidityPattern : public Header {
@@ -853,6 +862,7 @@ struct StopTime {
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
+    bool is_odt_and_date_time_estimated() const{ return (this->odt() && this->date_time_estimated());}
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
     uint32_t section_end_time(bool clockwise, const u_int32_t hour = 0) const {
         if(this->is_frequency())

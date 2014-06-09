@@ -269,7 +269,7 @@ void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::
     }
     boost::dynamic_bitset<> forbidden_journey_patterns(data.pt_data->journey_patterns.size());
     for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
-        if ((!allow_odt) && (journey_pattern->is_odt)){
+        if ((!allow_odt) && (journey_pattern->odt_level == type::OdtLevel_e::zonal)){
             forbidden_journey_patterns.set(journey_pattern->idx);
             continue;
         }
