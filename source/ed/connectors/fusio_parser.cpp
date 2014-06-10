@@ -769,7 +769,7 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
     }
     if (has_col(id_c, row) && row[id_c].empty()) {
         //we don't want empty named calendar as they often are empty lines in reality
-        LOG4CPLUS_ERROR(logger, "calendar name is empty, we skip it");
+        LOG4CPLUS_INFO(logger, "calendar name is empty, we skip it");
         return;
     }
     ed::types::Calendar* calendar = new ed::types::Calendar();
