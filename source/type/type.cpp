@@ -431,7 +431,7 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-idx_t Route::main_destination(){
+idx_t Route::main_destination() const {
    // StopPoint_idx, count
     std::map<idx_t, size_t> stop_point_map;
     std::pair<idx_t, size_t> best{invalid_idx, 0};

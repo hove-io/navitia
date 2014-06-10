@@ -246,7 +246,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
                     auto begin_section_time = arrival_time;
                     fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
-                            begin_section_time, show_codes);
+                            begin_section_time);
                     arrival_time = arrival_time + temp.duration.to_posix();
                 }
             }
