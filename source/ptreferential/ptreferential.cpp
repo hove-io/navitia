@@ -223,8 +223,42 @@ std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
    return tmp_indexes;
 }
 
+void manage_odt_level(std::vector<type::idx_t>& final_indexes,
+                                          const navitia::type::Type_e requested_type,
+                                          const navitia::type::OdtLevel_e odt_level,
+                                          const type::Data & data){
+    if((!final_indexes.empty()) && (requested_type == navitia::type::Type_e::Line)
+            && (odt_level != navitia::type::OdtLevel_e::all)){
+        std::vector<idx_t> forbidden_idx;
+        for(const idx_t idx : final_indexes){
+            const navitia::type::Line* line = data.pt_data->lines[idx];
+            switch(odt_level){
+                case navitia::type::OdtLevel_e::none:
+                    if (line->get_odt_level() == OdtLevel_e::none){
+                        forbidden_idx.push_back(idx);
+                    };
+                    break;
+                case navitia::type::OdtLevel_e::mixt:
+                    if (line->get_odt_level() == navitia::type::OdtLevel_e::mixt){
+                        forbidden_idx.push_back(idx);
+                    };
+                    break;
+                case navitia::type::OdtLevel_e::zonal:
+                    if (line->get_odt_level() == navitia::type::OdtLevel_e::zonal){
+                        forbidden_idx.push_back(idx);
+                    };
+                    break;
+                case navitia::type::OdtLevel_e::all:
+                    break;
+            }
+        }
+        final_indexes = get_intersection(final_indexes, forbidden_idx);
+    }
+}
+
 std::vector<idx_t> make_query(Type_e requested_type, std::string request,
                               const std::vector<std::string>& forbidden_uris,
+                              const type::OdtLevel_e odt_level,
                               const Data & data) {
     std::vector<Filter> filters;
 
@@ -293,7 +327,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         }
         final_indexes = get_difference(final_indexes, forbidden_idx);
     }
-
+       // Manage OdtLevel
+    manage_odt_level(final_indexes, requested_type, odt_level, data);
     // When the filters have emptied the results
     if(final_indexes.empty()){
         throw ptref_error("Filters: Unable to find object");
@@ -323,6 +358,14 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
 
     return final_indexes;
 }
+
+std::vector<type::idx_t> make_query(type::Type_e requested_type,
+                                    std::string request,
+                                    const std::vector<std::string>& forbidden_uris,
+                                    const type::Data &data) {
+    return make_query(requested_type, request, forbidden_uris, navitia::type::OdtLevel_e::all, data);
+}
+
 std::vector<type::idx_t> make_query(type::Type_e requested_type,
                                     std::string request,
                                     const type::Data &data) {
