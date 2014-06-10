@@ -45,11 +45,13 @@ from errors import ManageError
 from Coord import Coord
 from navitiacommon.models import PtObject
 from flask.ext.restful.types import boolean
+from jormungandr.interfaces.parsers import option_value
 
 class Uri(ResourceUri):
     parsers = {}
 
     def __init__(self, is_collection, collection, *args, **kwargs):
+        odt_levels = {"none","mixt", "zonal", "all"}
         ResourceUri.__init__(self, *args, **kwargs)
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
@@ -69,6 +71,9 @@ class Uri(ResourceUri):
                             description="An external code to query")
         parser.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
+        self.parsers["get"].add_argument("odt_level", type=option_value(odt_levels),
+                                         default="all",
+                                         description="odt level")
         if is_collection:
             parser.add_argument("filter", type=str, default="",
                                 description="The filter parameter")

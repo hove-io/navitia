@@ -49,6 +49,13 @@ pb_type = {
     'line': type_pb2.LINE
 }
 
+pb_odt_level = {
+    'none': type_pb2.odt_none,
+    'mixt': type_pb2.mixt,
+    'zonal': type_pb2.zonal,
+    'all': type_pb2.all
+}
+
 f_date_time = "%Y%m%dT%H%M%S"
 
 
@@ -667,6 +674,8 @@ class Script(object):
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
         req.ptref.show_codes = request["show_codes"]
+        if request["odt_level"]:
+            req.ptref.odt_level = pb_odt_level[request["odt_level"]]
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
