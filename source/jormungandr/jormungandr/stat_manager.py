@@ -339,15 +339,13 @@ class StatManager(object):
     def publish_request(self, stat_request):
         try:
             self.producer.publish(stat_request.SerializeToString())
-        except Exception as e:
+        except self.connection.connection_errors + self.connection.channel_errors:
             logging.getLogger(__name__).info('Server went away, will be reconnected..')
-
-            #Release the existing connection and re-initialize rabbitMQ
-            if self.connection.connect():
-                self.connection.release()
             #Initialize a new connection to RabbitMQ
             self._init_rabbitmq()
-            self.producer.publish(stat_request.SerializeToString())
+            #If connection is established publish the stat message.
+            if self.save_stat:
+                self.producer.publish(stat_request.SerializeToString())
 
     def fill_admin_from(self,stat_section, admins):
         for admin in admins:
