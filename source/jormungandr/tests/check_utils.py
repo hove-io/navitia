@@ -40,7 +40,7 @@ Some small functions to check the service responses
 """
 
 
-def check_url(tester, url, might_have_additional_args=False):
+def check_url(tester, url, might_have_additional_args=False, **kwargs):
     """
     Test url status code to 200 and if valid format response as json
     if might_have_additional_args is set to True,
@@ -49,7 +49,7 @@ def check_url(tester, url, might_have_additional_args=False):
         we don't want an error on the url
     """
     #tester = app.test_client(tester)
-    response = tester.get(url)
+    response = tester.get(url, **kwargs)
 
     assert response, "response for url {} is null".format(url)
     if might_have_additional_args:

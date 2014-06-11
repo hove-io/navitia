@@ -158,14 +158,14 @@ class AbstractTestFixture:
     # ==============================
     # helpers
     # ==============================
-    def query(self, url, display=False):
+    def query(self, url, display=False, **kwargs):
         """
         Query the requested url, test url status code to 200
         and if valid format response as dict
 
         display param dumps the json (used only for debug)
         """
-        response = check_url(self.tester, url)
+        response = check_url(self.tester, url, **kwargs)
 
         assert response.data
         json_response = json.loads(response.data)
