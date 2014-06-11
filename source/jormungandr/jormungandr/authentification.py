@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import logging
 
 from flask_restful import reqparse, abort
 import flask_restful
@@ -154,8 +155,11 @@ def get_user():
     """
     return the current authenticated User or None
     """
+    logging.warn("get user:")
     if hasattr(g, 'user'):
         return g.user
     else:
         g.user = User.get_from_token(get_token(), datetime.datetime.now())
+        logging.warn("user = {}".format(g.user))
+
         return g.user

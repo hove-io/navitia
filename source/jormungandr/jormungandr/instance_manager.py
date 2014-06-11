@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from flask import g
 from shapely import geometry, wkt
 from shapely.geos import ReadingError
 import ConfigParser
@@ -182,9 +183,26 @@ class InstanceManager(object):
         if ptobject:
             instances = ptobject.instances()
             if len(instances) > 0:
+                available_instances = []  #tmp debug, replace with list generator
+                for r in instances:
+                    if authentification.has_access(r, abort=False):
+                        logging.warn("instance {i} available for user".format(i=r))
+                        available_instances.append(r.name)
+                    else:
+                        logging.warn("instance {i} not available for user".format(i=r))
+
+                if not available_instances:
+                    #if no user, we ask the user to authenticate
+                    if not g.user:
+                        authentification.abort_request()
+                    raise RegionNotFound(custom_msg="id {i} exists but not in regions available for user"
+                                         .format(i=object_id))
+
                 if only_one:
-                    return sort_instances(instances)[0].name
-                return [i.name for i in instances]
+                    return sort_instances(available_instances)[0].name
+                return available_instances
+                #return [i.name for i in instances if authentification.has_access(i, abort=False)]
+
         raise RegionNotFound(object_id=object_id)
 
     def key_of_coord(self, lon, lat, only_one=True):
@@ -197,10 +215,12 @@ class InstanceManager(object):
         p = geometry.Point(lon, lat)
         valid_instances = []
         # a valid instance is an instance containing the coord and accessible by the user
+        found_one = False
         for key, instance in self.instances.iteritems():
-            if instance.geom and instance.geom.contains(p) \
-                    and authentification.has_access(instance, abort=False):  #TODO, pb how to check the api ?
-                valid_instances.append(key)
+            if instance.geom and instance.geom.contains(p):
+                found_one = True
+                if authentification.has_access(instance, abort=False):  #TODO, pb how to check the api ?
+                    valid_instances.append(key)
 
         if valid_instances:
             if only_one:
@@ -208,6 +228,12 @@ class InstanceManager(object):
                 return sort_instances(valid_instances)[0]
             else:
                 return valid_instances
+        elif found_one:
+            #if no user, we ask the user to authenticate
+            if not g.user:
+                authentification.abort_request()
+            raise RegionNotFound(custom_msg="coord {lon};{lat} are covered, but not in regions available for user"
+                                         .format(lon=lon, lat=lat))
 
         raise RegionNotFound(lon=lon, lat=lat)
 

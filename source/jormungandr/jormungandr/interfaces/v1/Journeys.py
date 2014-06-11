@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import logging
 
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with, abort
@@ -472,6 +473,9 @@ def compute_regions(args):
     else:
         #we need the intersection set
         possible_regions = from_regions.intersection(to_regions)
+
+    logging.warn("orig region = {o}, dest region = {d} => set = {p}".
+                 format(o=from_regions, d=to_regions, p=possible_regions))
 
     if not possible_regions:
         raise RegionNotFound(custom_msg="cannot find a region with {o} and {d} in the same time"
