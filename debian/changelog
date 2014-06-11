@@ -1,6 +1,8 @@
 navitia2 (0.97.2) unstable; urgency=low
 
   * Jormungandr: multi coverage handling 
+  * Stats: add recovery for rabbitmq
+  * Jormungandr: better reverse proxy handling (http/https in link)
 
  -- antoine-de <antoine.desbordes@gmail.com>  Wed, 11 Jun 2014 11:06:12 +0100
 
