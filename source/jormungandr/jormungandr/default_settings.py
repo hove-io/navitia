@@ -56,8 +56,7 @@ LOGGER = {
     }
 }
 
-#Paramètres pour les statistiques
+#Parameters for statistics
 SAVE_STAT = False
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-EXCHANGE_NAME='stat_persistor_exchange'
-
+EXCHANGE_NAME = 'stat_persistor_exchange'
