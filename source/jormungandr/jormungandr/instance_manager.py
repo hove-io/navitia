@@ -41,9 +41,28 @@ from importlib import import_module
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
-from jormungandr import app
+from jormungandr import app, authentification
 from jormungandr.instance import Instance
 import traceback
+
+
+def choose_best_instance(instances):
+    """
+    chose the best instance
+    we want first the non free instances then the free ones
+    """
+    best = None
+    for i in instances:
+        jormun_bdd_instance = models.Instance.get_by_name(i)
+        #TODO the is_free should be in the instances, no need to fetch the bdd for this
+        if not jormun_bdd_instance:
+            raise RegionNotFound(custom_msg="technical problem, impossible "
+                                            "to find region {i} in jormungandr database".format(i=i))
+        if not best or not jormun_bdd_instance.is_free:
+            #TODO what to do if we have 2 free instances or 2 private instances ?
+            best = jormun_bdd_instance
+
+    return best.name
 
 
 @singleton
@@ -142,12 +161,12 @@ class InstanceManager(object):
         if not self.thread_event.is_set():
             self.thread_event.set()
 
-    def key_of_id(self, object_id):
+    def key_of_id(self, object_id, only_one=True):
         """ Retrieves the key of the region of a given id
             if it's a coord calls key_of_coord
-            Return the region key, or None if it doesn't exists
+            Return one region key if only_one param is true, or None if it doesn't exists
+            and the list of possible regions if only_one is set to False
         """
-# Il s'agit d'une coordonnée
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:
                 lon, lat = object_id.split(";")
@@ -158,36 +177,74 @@ class InstanceManager(object):
                 flat = float(lat)
             except:
                 raise RegionNotFound(object_id=object_id)
-            return self.key_of_coord(flon, flat)
-        else:
-            ptobject = models.PtObject.get_from_uri(object_id)
-            if ptobject:
-                instances = ptobject.instances()
-                if len(instances) > 0:
-                    return instances[0].name
+            return self.key_of_coord(flon, flat, only_one)
+
+        ptobject = models.PtObject.get_from_uri(object_id)
+        if ptobject:
+            instances = ptobject.instances()
+            if len(instances) > 0:
+                available_instances = []  #tmp debug, replace with list generator
+                for r in instances:
+                    if authentification.has_access(r, abort=False):
+                        logging.warn("instance {i} available for user".format(i=r))
+                        available_instances.append(r.name)
+                    else:
+                        logging.warn("instance {i} not available for user".format(i=r))
+
+                if not available_instances:
+                    raise RegionNotFound(custom_msg="id {i} exists but not in regions available for user"
+                                         .format(i=object_id))
+
+                if only_one:
+                    return choose_best_instance(available_instances)
+                return available_instances
+                #return [i.name for i in instances if authentification.has_access(i, abort=False)]
+
         raise RegionNotFound(object_id=object_id)
 
-    def key_of_coord(self, lon, lat):
-        """ Étant donné une coordonnée, retourne à quelle clef NAViTiA cela
-        correspond
+    def key_of_coord(self, lon, lat, only_one=True):
+        """ For a given coordinate, return the corresponding Navitia key
 
-        Retourne None si on a rien trouvé
+        Raise RegionNotFound if nothing found
+
+        if only_one param is true return only one key, else return the list of possible keys
         """
         p = geometry.Point(lon, lat)
+        valid_instances = []
+        # a valid instance is an instance containing the coord and accessible by the user
+        found_one = False
         for key, instance in self.instances.iteritems():
             if instance.geom and instance.geom.contains(p):
-                return key
+                found_one = True
+                jormun_instance = models.Instance.get_by_name(key)
+                if not jormun_instance:
+                    raise RegionNotFound(custom_msg="technical problem, impossible "
+                                                    "to find region {r} in jormungandr database"
+                                         .format(r=key))
+                if authentification.has_access(jormun_instance, abort=False):  #TODO, pb how to check the api ?
+                    valid_instances.append(key)
+
+        if valid_instances:
+            if only_one:
+                #If we have only one instance we return the 'best one'
+                return choose_best_instance(valid_instances)
+            else:
+                return valid_instances
+        elif found_one:
+            raise RegionNotFound(custom_msg="coord {lon};{lat} are covered, "
+                                            "but not in regions available for user"
+                                 .format(lon=lon, lat=lat))
 
         raise RegionNotFound(lon=lon, lat=lat)
 
-    def is_region_exists(self, region_str):
-        if (region_str in self.instances.keys()):
+    def region_exists(self, region_str):
+        if region_str in self.instances.keys():
             return True
         else:
             raise RegionNotFound(region=region_str)
 
     def get_region(self, region_str=None, lon=None, lat=None, object_id=None):
-        if region_str and self.is_region_exists(region_str):
+        if region_str and self.region_exists(region_str):
             return region_str
         elif lon and lat:
             return self.key_of_coord(lon, lat)

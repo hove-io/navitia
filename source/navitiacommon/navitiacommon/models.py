@@ -617,7 +617,7 @@ def get_class_type(typename):
     elif typename == 'network':
         return Network
     else:
-        raise ValueError("Unable to find type : %s" % self.type)
+        raise ValueError("Unable to find type : %s" % typename)
 
 class PtObject(db.Model, mixin_get_from_uri):
     id = db.Column(db.Integer, primary_key=True)
@@ -638,6 +638,7 @@ class PtObject(db.Model, mixin_get_from_uri):
             return query_instance.all()
         else:
             return None
+
     @classmethod
     def get_from_external_code(cls, external_code, typename=None):
         if typename:

@@ -97,6 +97,7 @@ class StatManager(object):
             self.connection = kombu.Connection(self.broker_url)
             exchange = kombu.Exchange(self.exchange_name, type="direct")
             self.producer = self.connection.Producer(exchange=exchange)
+            self.save_stat = True
         except:
             self.save_stat = False
             logging.getLogger(__name__).warn('Unable to activate the producer of stat')
@@ -336,8 +337,18 @@ class StatManager(object):
 
 
     def publish_request(self, stat_request):
-        self.producer.publish(stat_request.SerializeToString())
-
+        try:
+            self.producer.publish(stat_request.SerializeToString())
+        except self.connection.connection_errors + self.connection.channel_errors:
+            logging.getLogger(__name__).exception('Server went away, will be reconnected..')
+            #Relese and close the previous connection
+            if self.connection and self.connection.connected:
+                self.connection.release()
+            #Initialize a new connection to RabbitMQ
+            self._init_rabbitmq()
+            #If connection is established publish the stat message.
+            if self.save_stat:
+                self.producer.publish(stat_request.SerializeToString())
 
     def fill_admin_from(self,stat_section, admins):
         for admin in admins:
