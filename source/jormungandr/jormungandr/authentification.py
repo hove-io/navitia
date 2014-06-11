@@ -103,18 +103,12 @@ def authenticate(region, api, abort=False):
         #if jormungandr is on public mode we skip the authentification process
         return True
 
-    #Hack to allow user not logged in...
     token = get_token()
-
     if not token:
-        instance = Instance.get_by_name(region)
         if abort:
-            if instance and instance.is_free:
-                return True
-            else:
-                abort_request()
+            abort_request()
         else:
-            return False if not instance else instance.first().is_free
+            return False
 
     user = get_user()
     if user:

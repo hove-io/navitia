@@ -192,9 +192,6 @@ class InstanceManager(object):
                         logging.warn("instance {i} not available for user".format(i=r))
 
                 if not available_instances:
-                    #if no user, we ask the user to authenticate
-                    if not g.user:
-                        authentification.abort_request()
                     raise RegionNotFound(custom_msg="id {i} exists but not in regions available for user"
                                          .format(i=object_id))
 
@@ -229,11 +226,9 @@ class InstanceManager(object):
             else:
                 return valid_instances
         elif found_one:
-            #if no user, we ask the user to authenticate
-            if not g.user:
-                authentification.abort_request()
-            raise RegionNotFound(custom_msg="coord {lon};{lat} are covered, but not in regions available for user"
-                                         .format(lon=lon, lat=lat))
+            raise RegionNotFound(custom_msg="coord {lon};{lat} are covered, "
+                                            "but not in regions available for user"
+                                 .format(lon=lon, lat=lat))
 
         raise RegionNotFound(lon=lon, lat=lat)
 
