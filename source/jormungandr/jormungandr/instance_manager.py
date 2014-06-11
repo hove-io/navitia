@@ -216,7 +216,12 @@ class InstanceManager(object):
         for key, instance in self.instances.iteritems():
             if instance.geom and instance.geom.contains(p):
                 found_one = True
-                if authentification.has_access(instance, abort=False):  #TODO, pb how to check the api ?
+                jormun_instance = models.Instance.get_by_name(key)
+                if not jormun_instance:
+                    raise RegionNotFound(custom_msg="technical problem, impossible "
+                                                    "to find region {r} in jormungandr database"
+                                         .format(r=key))
+                if authentification.has_access(jormun_instance, abort=False):  #TODO, pb how to check the api ?
                     valid_instances.append(key)
 
         if valid_instances:
@@ -233,7 +238,7 @@ class InstanceManager(object):
         raise RegionNotFound(lon=lon, lat=lat)
 
     def region_exists(self, region_str):
-        if (region_str in self.instances.keys()):
+        if region_str in self.instances.keys():
             return True
         else:
             raise RegionNotFound(region=region_str)

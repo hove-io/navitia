@@ -114,6 +114,12 @@ class Journeys(Resource):
 
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
+
+        #default value for compatibility with v1
+        args["min_nb_journeys"] = None
+        args["max_nb_journeys"] = None
+        args["show_codes"] = False
+        
         if region is None:
             region = i_manager.key_of_id(args["origin"])
         response = i_manager.dispatch(args, "journeys", instance_name=region)
@@ -122,6 +128,7 @@ class Journeys(Resource):
             if before and after:
                 response.prev = before
                 response.next = after
+
         return protobuf_to_dict(response, use_enum_labels=True), 200
 
 
