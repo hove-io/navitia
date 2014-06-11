@@ -30,11 +30,13 @@ from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from nose.tools import *
 from jormungandr.interfaces.v1.Journeys import compute_regions
+from navitiacommon import models
 
 
 class MockInstance:
-    def __init__(self, is_free):
+    def __init__(self, is_free, name):
         self.is_free = is_free
+        self.name = name
 
 
 class TestMultiCoverage:
@@ -49,10 +51,10 @@ class TestMultiCoverage:
 
         #and we will use a list of instances
         self.regions = {
-            'equador': MockInstance(True),
-            'france': MockInstance(False),
-            'peru': MockInstance(False),
-            'bolivia': MockInstance(True)
+            'equador': MockInstance(True, 'equador'),
+            'france': MockInstance(False, 'france'),
+            'peru': MockInstance(False, 'peru'),
+            'bolivia': MockInstance(True, 'bolivia')
         }
 
     def _mock_function(self, paris_region, lima_region):
@@ -71,13 +73,20 @@ class TestMultiCoverage:
 
         i_manager.key_of_id = mock_key_by_id
 
+        #we also need to mock the ptmodel cache
+        class weNeedMock:
+            @classmethod
+            def get_by_name(cls, i):
+                return i
+        models.Instance.get_by_name = weNeedMock.get_by_name
+
     def test_multi_coverage_simple(self):
         """Simple test, paris and lima are in the same region, should be easy"""
         self._mock_function(['france'], ['france'])
 
         region = compute_regions(self.args)
 
-        assert region == self.regions['france']
+        assert region == self.regions['france'].name
 
     @raises(RegionNotFound)
     def test_multi_coverage_diff_region(self):
@@ -113,7 +122,7 @@ class TestMultiCoverage:
 
         region = compute_regions(self.args)
 
-        assert region == self.regions['peru']
+        assert region == self.regions['peru'].name
 
     def test_multi_coverage_overlap_chose_non_free(self):
         """orig as 2 possible region and destination 3, we want to chose the france because equador is free"""
@@ -121,7 +130,7 @@ class TestMultiCoverage:
 
         region = compute_regions(self.args)
 
-        assert region == self.regions['france']
+        assert region == self.regions['france'].name
 
     def test_multi_coverage_overlap_chose_non_free2(self):
         """all regions and overlaping, we have to return one of the non free region (we don't know which one)"""
@@ -129,4 +138,4 @@ class TestMultiCoverage:
 
         region = compute_regions(self.args)
 
-        assert region in [self.regions['france'], self.regions['peru']]
+        assert region in [self.regions['france'].name, self.regions['peru'].name]

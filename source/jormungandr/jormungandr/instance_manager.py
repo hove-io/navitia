@@ -29,7 +29,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import g
 from shapely import geometry, wkt
 from shapely.geos import ReadingError
 import ConfigParser
@@ -47,22 +46,23 @@ from jormungandr.instance import Instance
 import traceback
 
 
-def sort_instances(instances):
+def choose_best_instance(instances):
     """
-    sort a list of possible instances
-
+    chose the best instance
     we want first the non free instances then the free ones
     """
-    def instance_compare(a, b):
-        if a.is_free != b.is_free:
-            # if the boolean is different, we want 1 if a is free, else -1
-            return a.is_free - b.is_free
-        #TODO what to do if we have 2 free instances or 2 private instances ?
-        #TODO it would be better to just return the best one because it is always the wanted behavior
-        return 1  # for the moment we keep the same order
+    best = None
+    for i in instances:
+        jormun_bdd_instance = models.Instance.get_by_name(i)
+        #TODO the is_free should be in the instances, no need to fetch the bdd for this
+        if not jormun_bdd_instance:
+            raise RegionNotFound(custom_msg="technical problem, impossible "
+                                            "to find region {i} in jormungandr database".format(i=i))
+        if not best or not jormun_bdd_instance.is_free:
+            #TODO what to do if we have 2 free instances or 2 private instances ?
+            best = jormun_bdd_instance
 
-    instances.sort(instance_compare)
-    return instances
+    return best.name
 
 
 @singleton
@@ -196,7 +196,7 @@ class InstanceManager(object):
                                          .format(i=object_id))
 
                 if only_one:
-                    return sort_instances(available_instances)[0].name
+                    return choose_best_instance(available_instances)
                 return available_instances
                 #return [i.name for i in instances if authentification.has_access(i, abort=False)]
 
@@ -227,7 +227,7 @@ class InstanceManager(object):
         if valid_instances:
             if only_one:
                 #If we have only one instance we return the 'best one'
-                return sort_instances(valid_instances)[0]
+                return choose_best_instance(valid_instances)
             else:
                 return valid_instances
         elif found_one:

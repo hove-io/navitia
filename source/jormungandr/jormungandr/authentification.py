@@ -59,7 +59,10 @@ def authentification_required(func):
                                                 lat=kwargs['lat'])
             except RegionNotFound:
                 pass
-        #else TODO demander a alex pourquoi on doit dire oui sans region et si ca ne peut pas poser des failles
+
+        if not region:
+            #we could not find any regions, we abort
+            abort_request()
 
         if not region or authenticate(region, 'ALL', abort=True):
             return func(*args, **kwargs)
@@ -150,7 +153,6 @@ def get_user():
     """
     return the current authenticated User or None
     """
-    logging.warn("get user:")
     if hasattr(g, 'user'):
         return g.user
     else:
@@ -158,6 +160,6 @@ def get_user():
         if not token:
             flask_restful.abort(401)
         g.user = User.get_from_token(token, datetime.datetime.now())
-        logging.warn("user = {}".format(g.user))
+        logging.info('user %s', g.user)
 
         return g.user

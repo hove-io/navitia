@@ -35,7 +35,7 @@ from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
-from jormungandr.instance_manager import sort_instances
+from jormungandr.instance_manager import choose_best_instance
 from jormungandr import authentification
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode, \
@@ -460,6 +460,7 @@ def compute_regions(args):
     to_regions = set()
     if args['origin']:
         from_regions = set(i_manager.key_of_id(args['origin'], only_one=False))
+        #Note: if the key_of_id does not find any region, it raises a RegionNotFoundException
 
     if args['destination']:
         to_regions = set(i_manager.key_of_id(args['destination'], only_one=False))
@@ -474,17 +475,16 @@ def compute_regions(args):
         #we need the intersection set
         possible_regions = from_regions.intersection(to_regions)
 
-    logging.warn("orig region = {o}, dest region = {d} => set = {p}".
+    logging.debug("orig region = {o}, dest region = {d} => set = {p}".
                  format(o=from_regions, d=to_regions, p=possible_regions))
 
     if not possible_regions:
         raise RegionNotFound(custom_msg="cannot find a region with {o} and {d} in the same time"
                              .format(o=args['origin'], d=args['destination']))
 
-    sorted_regions = [r for r in possible_regions]
-    sort_instances(sorted_regions)
+    sorted_regions = list(possible_regions)
 
-    _region = sorted_regions[0]
+    _region = choose_best_instance(sorted_regions)
 
     return _region
 
