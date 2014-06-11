@@ -598,7 +598,12 @@ class Journeys(ResourceUri):
                 else:
                     abort(503, message="Unable to compute journeys "
                                        "from this object")
-        else:
+
+        if not args["origin"]:  #@vlara really ? I though we could do reverse isochrone ?
+            #shoudl be in my opinion if not args["origin"] and not args["destination"]:
+            abort(400, message="from argument is required")
+
+        if not region:
             #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
             self.region = compute_regions(args)
 
@@ -617,8 +622,6 @@ class Journeys(ResourceUri):
         else:
             api = 'isochrone'
 
-        if not args["origin"]:  #@vlara really ? I though we could do reverse isochrone ?
-            abort(400, message="from argument is required")
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
         return response
