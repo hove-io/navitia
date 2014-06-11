@@ -60,18 +60,30 @@ class TestEmptyEndPoint(AbstractTestFixture):
 
         assert current_found, "we must have one current version of the api"
 
-    def test_empty_coverage(self):
-        #even with no loaded kraken, the response should be valid
-        json_response = self.query("/v1/coverage")
+@dataset([])
+class TestHttps(AbstractTestFixture):
+    """
+    Test if https link are returned for forced hosts
+    Do not need running kraken
+    """
 
-        assert 'regions' in json_response
-        assert not json_response['regions']
+    def test_index(self):
+        json_response = self.query("/")
 
-    def test_v1(self):
-        json_response = self.query("/v1")
-        # this entry point is just links
-        check_links(json_response, self.tester)
+        versions = get_not_null(json_response, 'versions')
+        assert versions[0]['links'][0]['href'].startswith('http://')
 
+    def test_index_with_scheme_https(self):
+        json_response = self.query("/", headers={'X-Scheme': 'https'})
+
+        versions = get_not_null(json_response, 'versions')
+        assert versions[0]['links'][0]['href'].startswith('https://')
+
+    def test_index_with_scheme_http(self):
+        json_response = self.query("/", headers={'X-Scheme': 'http'})
+
+        versions = get_not_null(json_response, 'versions')
+        assert versions[0]['links'][0]['href'].startswith('http://')
 
 @dataset(['main_routing_test', 'main_ptref_test'])
 class TestEndPoint(AbstractTestFixture):
