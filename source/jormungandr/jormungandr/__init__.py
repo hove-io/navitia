@@ -36,6 +36,7 @@ from flask import Flask, got_request_exception
 from flask.ext.restful import Api
 import sys
 from jormungandr.exceptions import log_exception
+from jormungandr.helper import ReverseProxied
 
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')
@@ -49,6 +50,7 @@ else:  # Default is std out
     app.logger.addHandler(handler)
     app.logger.setLevel('INFO')
 
+app.wsgi_app = ReverseProxied(app.wsgi_app)
 got_request_exception.connect(log_exception, app)
 
 rest_api = Api(app, catch_all_404s=True)
