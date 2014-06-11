@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+import re
+
 class ReverseProxied(object):
     '''Wrap the application in this middleware and configure the
     front-end server to add these headers, to let you quietly bind
@@ -35,15 +37,16 @@ class ReverseProxied(object):
     In nginx:
     location /myprefix {
         proxy_set_header X-Scheme $scheme;
-        }
+    }
 
     :param app: the WSGI application
     '''
     def __init__(self, app):
         self.app = app
+        self.re = re.compile('^https?$')
 
     def __call__(self, environ, start_response):
         scheme = environ.get('HTTP_X_SCHEME', '')
-        if scheme:
+        if scheme and self.re.match(scheme):
             environ['wsgi.url_scheme'] = scheme
         return self.app(environ, start_response)
