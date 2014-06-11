@@ -340,7 +340,10 @@ class StatManager(object):
         try:
             self.producer.publish(stat_request.SerializeToString())
         except self.connection.connection_errors + self.connection.channel_errors:
-            logging.getLogger(__name__).info('Server went away, will be reconnected..')
+            logging.getLogger(__name__).exception('Server went away, will be reconnected..')
+            #Relese and close the previous connection
+            if self.connection and self.connection.connected:
+                self.connection.release()
             #Initialize a new connection to RabbitMQ
             self._init_rabbitmq()
             #If connection is established publish the stat message.
