@@ -104,6 +104,7 @@ def authenticate(region, api, abort=False):
         return True
 
     token = get_token()
+
     if not token:
         if abort:
             abort_request()
@@ -153,7 +154,10 @@ def get_user():
     if hasattr(g, 'user'):
         return g.user
     else:
-        g.user = User.get_from_token(get_token(), datetime.datetime.now())
+        token = get_token()
+        if not token:
+            flask_restful.abort(401)
+        g.user = User.get_from_token(token, datetime.datetime.now())
         logging.warn("user = {}".format(g.user))
 
         return g.user

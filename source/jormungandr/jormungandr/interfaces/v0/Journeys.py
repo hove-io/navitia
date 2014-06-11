@@ -119,7 +119,7 @@ class Journeys(Resource):
         args["min_nb_journeys"] = None
         args["max_nb_journeys"] = None
         args["show_codes"] = False
-        
+
         if region is None:
             region = i_manager.key_of_id(args["origin"])
         response = i_manager.dispatch(args, "journeys", instance_name=region)
