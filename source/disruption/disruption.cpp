@@ -108,7 +108,6 @@ void Disruption::add_networks(const std::vector<type::idx_t>& network_idx,
 
 void Disruption::add_lines(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
-                      const type::OdtLevel_e odt_level,
                       const type::Data &d,
                       const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now){
@@ -116,7 +115,7 @@ void Disruption::add_lines(const std::string& filter,
     std::vector<type::idx_t> line_list;
     try{
         line_list  = ptref::make_query(type::Type_e::Line, filter,
-                forbidden_uris, odt_level, d);
+                forbidden_uris, d);
     } catch(const ptref::parsing_error &parse_error) {
         LOG4CPLUS_WARN(logger, "Disruption::add_lines : Unable to parse filter " + parse_error.more);
     } catch(const ptref::ptref_error &ptref_error){
@@ -162,7 +161,6 @@ void Disruption::sort_disruptions(const type::Data &d){
 
 void Disruption::disruptions_list(const std::string& filter,
                         const std::vector<std::string>& forbidden_uris,
-                        const type::OdtLevel_e odt_level,
                         const type::Data &d,
                         const boost::posix_time::time_period action_period,
                         const boost::posix_time::ptime now){
@@ -170,7 +168,7 @@ void Disruption::disruptions_list(const std::string& filter,
     std::vector<type::idx_t> network_idx = ptref::make_query(type::Type_e::Network, filter,
                                                                                       forbidden_uris, d);
     add_networks(network_idx, d, action_period, now);
-    add_lines(filter, forbidden_uris, odt_level, d, action_period, now);
+    add_lines(filter, forbidden_uris, d, action_period, now);
     add_stop_areas(network_idx, filter, forbidden_uris, d, action_period, now);
     sort_disruptions(d);
 }

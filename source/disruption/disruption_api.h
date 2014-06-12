@@ -41,7 +41,6 @@ pbnavitia::Response disruptions(const navitia::type::Data &d,
                                 const size_t depth,
                                 size_t count,
                                 size_t start_page, const std::string &filter,
-                                const std::vector<std::string>& forbidden_uris,
-                                const type::OdtLevel_e odt_level);
+                                const std::vector<std::string>& forbidden_uris);
 }}
 

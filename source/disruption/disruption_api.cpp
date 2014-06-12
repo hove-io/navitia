@@ -40,8 +40,7 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
                                 const size_t depth,
                                 size_t count,
                                 size_t start_page, const std::string &filter,
-                                const std::vector<std::string>& forbidden_uris,
-                                const type::OdtLevel_e odt_level){
+                                const std::vector<std::string>& forbidden_uris){
     pbnavitia::Response pb_response;
     boost::posix_time::ptime now;
     try{
@@ -57,7 +56,7 @@ pbnavitia::Response disruptions(const navitia::type::Data &d, const std::string 
     auto action_period = boost::posix_time::time_period(now, period_end);
     Disruption result;
     try {
-        result.disruptions_list(filter, forbidden_uris, odt_level, d, action_period, now);
+        result.disruptions_list(filter, forbidden_uris, d, action_period, now);
     } catch(const ptref::parsing_error &parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse,
                 "Unable to parse filter" + parse_error.more, pb_response.mutable_error());

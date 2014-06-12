@@ -174,8 +174,7 @@ pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &req
                                                 request.count(),
                                                 request.start_page(),
                                                 request.filter(),
-                                                forbidden_uris,
-                                                get_odt_level(request.odt_level()));
+                                                forbidden_uris);
 }
 
 pbnavitia::Response Worker::calendars(const pbnavitia::CalendarsRequest &request){
