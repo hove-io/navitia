@@ -629,7 +629,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     Route() : line(nullptr) {}
-    idx_t main_destination();
+    idx_t main_destination() const;
     type::OdtLevel_e get_odt_level() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
