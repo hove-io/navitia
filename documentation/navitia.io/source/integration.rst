@@ -14,7 +14,7 @@ This document describes how to call the interface v1, and the returned resources
 Endpoint
 ********
 
-The only endpoint of this version of the api is : http://api.navitia.io/v1/
+The only endpoint of this version of the api is : https://api.navitia.io/v1/
 
 
 Resources
@@ -102,8 +102,8 @@ The other method is to pass directly the key in the `HTTP Authorization header`_
 
     Authorization: mysecretkey
 
-.. _Basic HTTP authentification: http://tools.ietf.org/html/rfc2617#section-2
-.. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
+.. _Basic HTTP authentification: https://tools.ietf.org/html/rfc2617#section-2
+.. _HTTP Authorization header: https://tools.ietf.org/html/rfc2616#section-14.8
 
 .. _paging:
 
@@ -227,7 +227,7 @@ Collections
 Example
 #######
 
-Response example for this request ``http://api.navitia.io/v1/coverage/paris/physical_modes``
+Response example for this request ``https://api.navitia.io/v1/coverage/paris/physical_modes``
 
 .. code-block:: json
 
@@ -278,7 +278,7 @@ Parameters
 Example
 #######
 
-Response example for : ``http://api.navitia.io/v1/coverage/paris/places?q=rue``
+Response example for : ``https://api.navitia.io/v1/coverage/paris/places?q=rue``
 
 .. code-block:: json
 
@@ -331,7 +331,7 @@ Parameters
 Example
 ########
 
-Response example for : ``http://api.navitia.io/v1/coverage/paris/places_nearby?uri=stop_area:TAN:SA:RUET``
+Response example for : ``https://api.navitia.io/v1/coverage/paris/places_nearby?uri=stop_area:TAN:SA:RUET``
 
 .. code-block:: json
 
@@ -359,13 +359,30 @@ Journeys
 ********
 
 This api compute journeys.
+
 If used within the coverage api, it will retrieve the next journeys from the selected public transport object or coordinates.
 
 There are two ways to access this api.
-The first one, is : http://api.navitia.io/v1/{a_path_to_resource}/journeys it will retrieve all the journeys from the resource.
-The other one is the most used http//api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}.
 
-TODO: pitch on coverage pour les journeys
+The first one is: `<https://api.navitia.io/v1/{a_path_to_resource}/journeys>`_ it will retrieve all the journeys from the resource.
+
+The other one, the most used, is to access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}>`_ .
+
+.. note::
+    Navitia.io handle lot's of different data sets (regions). Some of them can overlap, with for example opendata data sets and private data sets.
+    
+    When using the 'journey' endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.
+    
+    For the moment it is not yet possible to compute inter data sets journeys, but it will one day be possible (with a meta system).
+    
+    If you want to use a specific data set, use the journey api within the data set: `<https://api.navitia.io/v1/coverage/{your_dataset}/journeys>`_
+
+
+.. note::
+    Neither the 'from' nor the 'to' parameter of the journey are required, but obviously one of them has to be provided.
+
+    If only one is defined an isochrone is computed with every possible journeys from or to the point.
+
 
 Parameters
 ##########
@@ -459,7 +476,15 @@ Parameters
 Objects
 #######
 
-TODO: reponse journeys ? avec explication des links/message d'erreur ?
+* main response
+
+=================== ================== ===========================================================================
+Field               Type               Description
+=================== ================== ===========================================================================
+journeys            array of journeys_ List of computed journeys
+links               link_              Links related to the journeys
+=================== ================== ===========================================================================
+
 
 * Journey object
 
@@ -475,12 +500,11 @@ sections            array of section_  All the sections of the journey
 from                place_             The place from where the journey starts
 to                  place_             The place from where the journey starts
 links               link_              Links related to this journey
-type                *enum* string      Used to qualified a journey. See the :ref:`journey_qualif` section
-                                       for more information
+type                *enum* string      Used to qualified a journey. See the :ref:`journey_qualif` section for more information
 fare                fare_              Fare of the journey (tickets and price)
-tags                array of string    List of tags on the journey
-                                       The tags add additional information on the journey beside the journey type
+tags                array of string    List of tags on the journey. The tags add additional information on the journey beside the journey type
 =================== ================== ===========================================================================
+
 
 .. note::
     When used with just a "from" or a "to" parameter, it will not contain any sections
@@ -494,26 +518,38 @@ tags                array of string    List of tags on the journey
 | Field                    | Type                                 | Description                                            |
 +==========================+======================================+========================================================+
 | type                     | *enum* string                        | Type of the section, it can be : ``PUBLIC_TRANSPORT``, |
-|                          |                                      | ``STREET_NETWORK``, ``WAITING``, ``TRANSFER``          |
+|                          |                                      | ``STREET_NETWORK``, ``WAITING``, ``TRANSFER``,         |
+|                          |                                      | ``ON_DEMAND_TRANSPORT``                                |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| id                       | TODO                                 |                                                        |
+| id                       | string                               | Id of the section                                      |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | mode                     | *enum* string                        | Mode of the street network : ``Walking``, ``Bike``,    |
 |                          |                                      | ``Car``                                                |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| duration                 | int                                  |  Duration of this section                              |
+| duration                 | int                                  | Duration of this section                               |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| from                     | place_                               |  Origin place of this section                          |
+| from                     | place_                               | Origin place of this section                           |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| to                       | place_                               |  Destination place of this section                     |
+| to                       | place_                               | Destination place of this section                      |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| links                    | Array of link_                       |  Links related to this section                         |
+| links                    | Array of link_                       | Links related to this section                          |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| display_informations     | display_informations_                |  Usefull information to display                        |
+| display_informations     | display_informations_                | Usefull information to display                         |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| additionnal_informations | *enum* string                        |  Other informations : TODO                             |
+| additionnal_informations | *enum* string                        | Other informations. It can be:                         |
+|                          |                                      |                                                        |
+|                          |                                      | ``regular``: no on demand transport (odt)              |
+|                          |                                      |                                                        |
+|                          |                                      | ``has_date_time_estimated``: odt with at least one     |
+|                          |                                      | estimated date time                                    |
+|                          |                                      |                                                        |
+|                          |                                      | ``odt_with_stop_time``: odt with                       |
+|                          |                                      | fix schedule                                           |
+|                          |                                      |                                                        |
+|                          |                                      | ``odt_with_zone``: odt with zone                       |
+|                          |                                      |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| geojson                  | `GeoJson <http://www.geojson.org>`   |                                                        |
+| geojson                  | `GeoJson <http://www.geojson.org>`_  |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | path                     | Array of path_                       | The path of this section                               |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
@@ -532,20 +568,76 @@ tags                array of string    List of tags on the journey
 
 * Path object
 
-  TODO
+  A path object in composed of an array of segment.
+
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| Field                    | Type                                 | Description                                            |
++==========================+======================================+========================================================+
+| length                   | int                                  | Length (in meter) of the segment                       |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| name                     | string                               | name of the way corresponding to the segment           |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| duration                 | int                                  | duration (in seconds) of the segment                   |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| direction                | int                                  | Angle (in degree) between the previous segment and     |
+|                          |                                      | this segment.                                          |
+|                          |                                      |                                                        |
+|                          |                                      | * 0 means going straight                               |
+|                          |                                      |                                                        |
+|                          |                                      | * > 0 means turning right                              |
+|                          |                                      |                                                        |
+|                          |                                      | * < 0 means turning left                               |
+|                          |                                      |                                                        |
+|                          |                                      | Hope it's easier to understand with a picture:         |
+|                          |                                      |                                                        |
+|                          |                                      | .. image:: direction.png                               |
+|                          |                                      |                                                        |
++--------------------------+--------------------------------------+--------------------------------------------------------+
 
 .. _fare:
 
 * Fare object
 
-  TODO
+===================== =========================== ===================================================================
+Field                 Type                        Description
+===================== =========================== ===================================================================
+total                 cost_                       total cost of the journey
+found                 boolean                     False if no fare has been found for the journey, True otherwise
+links                 link_                       Links related to this object. Link with related ticket_
+===================== =========================== ===================================================================
+
+.. _cost:
+
+* Cost object
+
+===================== =========================== =============
+Field                 Type                        Description
+===================== =========================== =============
+value                 float                       cost
+currency              string                      currency
+===================== =========================== =============
+
+.. _ticket:
+
+* Ticket object 
+
+===================== =========================== ========================================
+Field                 Type                        Description
+===================== =========================== ========================================
+id                    string                      Id of the ticket    
+name                  string                      Name of the ticket
+found                 boolean                     False if unknown ticket, True otherwise
+cost                  cost_                       Cost of the ticket
+links                 array of link_              Link to the section_ using this ticket
+===================== =========================== ========================================
+
 
 Route Schedules
 ***************
 
 This api give you access to schedules of routes.
 The response is made of an array of route_schedule, and another one of :ref:`note`.
-You can access it via that kind of url : http://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules
+You can access it via that kind of url : `<https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>`_
 
 Parameters
 ##########
@@ -624,7 +716,7 @@ Stop Schedules
 
 This api give you access to schedules of stops.
 The response is made of an array of stop_schedule, and another one of :ref:`note`.
-You can access it via that kind of url : http://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules
+You can access it via that kind of url : `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
 
 Parameters
 ##########
