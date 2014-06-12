@@ -563,7 +563,7 @@ tags                array of string    List of tags on the journey. The tags add
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | display_informations     | display_informations_                | Useful information to display                          |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| additionnal_informations | *enum* string                        | Other informations. It can be:                         |
+| additionnal_informations | *enum* string                        | Other information. It can be:                          |
 |                          |                                      |                                                        |
 |                          |                                      | * ``regular``: no on demand transport (odt)            |
 |                          |                                      |                                                        |
@@ -634,7 +634,7 @@ Field                 Type                        Description
 ===================== =========================== ===================================================================
 total                 cost_                       total cost of the journey
 found                 boolean                     False if no fare has been found for the journey, True otherwise
-links                 link_                       Links related to this object. Link with related ticket_
+links                 link_                       Links related to this object. Link with related :ref:`tickets <ticket>`
 ===================== =========================== ===================================================================
 
 .. _cost:
@@ -718,9 +718,9 @@ Rows    Array of row_     A row of the schedule
 +--------------------------+-----------------------------+-----------------------------------+
 | Field                    | Type                        | Description                       |
 +==========================+=============================+===================================+
-| additionnal_informations | Array of String             | Other informations: TODO enum     |
+| additionnal_informations | Array of String             | Other information: TODO enum      |
 +--------------------------+-----------------------------+-----------------------------------+
-| display_informations     | :ref:`display_informations` | Usefull informations about the    |
+| display_informations     | :ref:`display_informations` | Usefull information about the     |
 |                          |                             | the vehicle journey to display    |
 +--------------------------+-----------------------------+-----------------------------------+
 | links                    | Array of link_              | Links to line_, vehicle_journey,  |
@@ -1053,7 +1053,7 @@ date_time
 +--------------------------+----------------------+--------------------------------+
 | Field                    | Type                 | Description                    |
 +==========================+======================+================================+
-| additionnal_informations | Array of String      | Other informations: TODO enum  |
+| additionnal_informations | Array of String      | Other information: TODO enum   |
 +--------------------------+----------------------+--------------------------------+
 | date_times               | Array of String      | Date time                      |
 +--------------------------+----------------------+--------------------------------+
@@ -1130,7 +1130,7 @@ Multiple journeys
 
 Navitia can compute several journeys with one query. 
 
-The RAPTOR algorithm used in Navitia is a multi objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
+The RAPTOR algorithm used in Navitia is a multi-objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
 For example it cannot decide that a one hour trip with no connection is better than a 45 minutes trip with one connection (it is called the `pareto front <http://en.wikipedia.org/wiki/Pareto_efficiency>`_).
 
 If the user ask for more journeys than the number of journeys given by RAPTOR (with the parameter ``min_nb_journeys`` or ``count``), Navitia will ask RAPTOR again, 
@@ -1144,7 +1144,7 @@ Those journeys have the ``next`` (or ``previous``) value in their tags.
 Journey qualification process
 #############################
 
-Since Navitia can return several journeys, it tag them to help the user choose the best one for his needs.
+Since Navitia can return several journeys, it tags them to help the user choose the best one for his needs.
 
 The different journey types are:
 
