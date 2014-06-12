@@ -94,7 +94,7 @@ Authentication
 
 You must authenticate to use **navitia.io**. When you register we give you a authentication key to the API.
 
-There is two ways for authentification, you can use a `Basic HTTP authentification`_, where the username is the key, and without password.
+There is two ways for authentication, you can use a `Basic HTTP authentication`_, where the username is the key, and without password.
 
 The other method is to pass directly the key in the `HTTP Authorization header`_ like that:
 
@@ -102,7 +102,7 @@ The other method is to pass directly the key in the `HTTP Authorization header`_
 
     Authorization: mysecretkey
 
-.. _Basic HTTP authentification: https://tools.ietf.org/html/rfc2617#section-2
+.. _Basic HTTP authentication: https://tools.ietf.org/html/rfc2617#section-2
 .. _HTTP Authorization header: https://tools.ietf.org/html/rfc2616#section-14.8
 
 .. _paging:
@@ -227,7 +227,7 @@ Collections
 Example
 #######
 
-Response example for this request ``https://api.navitia.io/v1/coverage/paris/physical_modes``
+Response example for this request https://api.navitia.io/v1/coverage/iledefrance/physical_modes
 
 .. code-block:: json
 
@@ -278,7 +278,7 @@ Parameters
 Example
 #######
 
-Response example for : ``https://api.navitia.io/v1/coverage/paris/places?q=rue``
+Response example for : https://api.navitia.io/v1/coverage/iledefrance/places?q=rue
 
 .. code-block:: json
 
@@ -325,33 +325,35 @@ Parameters
 |         |               |                 | within the given admin uris              |                                     |
 +---------+---------------+-----------------+------------------------------------------+-------------------------------------+
 | nop     | filter        | string          | Use to restrain returned objects.        |                                     |
-|         |               |                 | for example : places_type.id=theater     |                                     |
+|         |               |                 | for example: places_type.id=theater      |                                     |
 +---------+---------------+-----------------+------------------------------------------+-------------------------------------+
 
 Example
 ########
 
-Response example for : ``https://api.navitia.io/v1/coverage/paris/places_nearby?uri=stop_area:TAN:SA:RUET``
+Response example for: https://api.navitia.io/v1/coverage/iledefrance/stop_areas/stop_area:TRN:SA:DUA8754575/places_nearby
 
 .. code-block:: json
 
     {
     "places_nearby": [
         {
-            {
-
-                "embedded_type": "stop_area",
-                "stop_area": {
-                    ...
+            "embedded_type": "stop_area",
+            "stop_area": {
+                "comment": "",
+                "name": "CHATEAUDUN",
+                "coord": {
+                    "lat": "48.073402",
+                    "lon": "1.338426"
                 },
-                "id": "stop_area:TAN:SA:RUET",
-                "name": "Ruette"
-
+                "id": "stop_area:TRN:SA:DUA8754575"
             },
-                    },
-    "links" : [
-        ...
-     ],
+            "distance": "0.0",
+            "quality": 0,
+            "id": "stop_area:TRN:SA:DUA8754575",
+            "name": "CHATEAUDUN"
+        },
+        ....
     }
 
 
@@ -411,10 +413,15 @@ Parameters
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | first_section_mode[]| array of  | Force the first section mode if the first | walking         |
 |          |                     | string    | section is not a public transport one.    |                 |
-|          |                     |           | It takes one the following values :       |                 |
-|          |                     |           | `walking`, `car`, `bike`, `bss`           |                 |
+|          |                     |           | It takes one the following values:        |                 |
+|          |                     |           | ``walking``, ``car``, ``bike``, ``bss``   |                 |
 |          |                     |           |                                           |                 |
 |          |                     |           | bss stands for bike sharing system        |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | Note: choosing ``bss`` implicitly allows  |                 |
+|          |                     |           | the ``walking`` mode since you might have |                 |
+|          |                     |           | to walk to the bss station                |                 |
+|          |                     |           |                                           |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | last_section_mode[] | array of  | Same as first_section_mode but for the    | walking         |
 |          |                     | string    | last section                              |                 |
@@ -462,7 +469,7 @@ Parameters
 |          |                     |           |                                           |                 |
 |          |                     |           | Like all duration, the unit is seconds    |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | wheelchair          | boolean   | If true the traveller is considered to    | False           |
+| nop      | wheelchair          | boolean   | If true the traveler is considered to     | False           |
 |          |                     |           | be using a wheelchair, thus only          |                 |
 |          |                     |           | accessible public transport are used      |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
@@ -502,7 +509,7 @@ to                  place_             The place from where the journey starts
 links               link_              Links related to this journey
 type                *enum* string      Used to qualified a journey. See the :ref:`journey_qualif` section for more information
 fare                fare_              Fare of the journey (tickets and price)
-tags                array of string    List of tags on the journey. The tags add additional information on the journey beside the journey type
+tags                array of string    List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example `multiple_journeys`_.
 =================== ================== ===========================================================================
 
 
@@ -517,13 +524,33 @@ tags                array of string    List of tags on the journey. The tags add
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | Field                    | Type                                 | Description                                            |
 +==========================+======================================+========================================================+
-| type                     | *enum* string                        | Type of the section, it can be : ``PUBLIC_TRANSPORT``, |
-|                          |                                      | ``STREET_NETWORK``, ``WAITING``, ``TRANSFER``,         |
-|                          |                                      | ``ON_DEMAND_TRANSPORT``                                |
+| type                     | *enum* string                        | Type of the section, it can be:                        |
+|                          |                                      |                                                        |
+|                          |                                      | * ``PUBLIC_TRANSPORT``: public transport section       |
+|                          |                                      |                                                        |
+|                          |                                      | * ``STREET_NETWORK``: street section                   |
+|                          |                                      |                                                        |
+|                          |                                      | * ``WAITING``: waiting section between transport       |
+|                          |                                      |                                                        |
+|                          |                                      | * ``TRANSFER``: transfert section                      |
+|                          |                                      |                                                        |
+|                          |                                      | * ``ON_DEMAND_TRANSPORT``: on demand transport section |
+|                          |                                      |   (odt)                                                |
+|                          |                                      |                                                        |
+|                          |                                      | * ``boarding``: taking public transport                |
+|                          |                                      |                                                        |
+|                          |                                      | * ``landing``: leaving public transport                |
+|                          |                                      |                                                        |
+|                          |                                      | * ``BSS_RENT``: taking a bike from a bike sharing      |
+|                          |                                      |   system (bss)                                         |
+|                          |                                      |                                                        |
+|                          |                                      | * ``BSS_PUT_BACK``: putting back a bike from a bike    |
+|                          |                                      |   sharing system (bss)                                 |
+|                          |                                      |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | id                       | string                               | Id of the section                                      |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| mode                     | *enum* string                        | Mode of the street network : ``Walking``, ``Bike``,    |
+| mode                     | *enum* string                        | Mode of the street network: ``Walking``, ``Bike``,     |
 |                          |                                      | ``Car``                                                |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | duration                 | int                                  | Duration of this section                               |
@@ -534,26 +561,26 @@ tags                array of string    List of tags on the journey. The tags add
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | links                    | Array of link_                       | Links related to this section                          |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| display_informations     | display_informations_                | Usefull information to display                         |
+| display_informations     | display_informations_                | Useful information to display                          |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | additionnal_informations | *enum* string                        | Other informations. It can be:                         |
 |                          |                                      |                                                        |
-|                          |                                      | ``regular``: no on demand transport (odt)              |
+|                          |                                      | * ``regular``: no on demand transport (odt)            |
 |                          |                                      |                                                        |
-|                          |                                      | ``has_date_time_estimated``: odt with at least one     |
-|                          |                                      | estimated date time                                    |
+|                          |                                      | * ``has_date_time_estimated``: odt with at least one   |
+|                          |                                      |   estimated date time                                  |
 |                          |                                      |                                                        |
-|                          |                                      | ``odt_with_stop_time``: odt with                       |
-|                          |                                      | fix schedule                                           |
+|                          |                                      | * ``odt_with_stop_time``: odt with                     |
+|                          |                                      |   fix schedule                                         |
 |                          |                                      |                                                        |
-|                          |                                      | ``odt_with_zone``: odt with zone                       |
+|                          |                                      | * ``odt_with_zone``: odt with zone                     |
 |                          |                                      |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | geojson                  | `GeoJson <http://www.geojson.org>`_  |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | path                     | Array of path_                       | The path of this section                               |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| transfer_type            | *enum* string                        | The type of this transfer it can be : ``WALKING``,     |
+| transfer_type            | *enum* string                        | The type of this transfer it can be: ``WALKING``,      |
 |                          |                                      | ``GUARANTEED``, ``EXTENSION``                          |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | stop_date_times          | Array of stop_date_time_             | List of the stop times of this section                 |
@@ -568,7 +595,11 @@ tags                array of string    List of tags on the journey. The tags add
 
 * Path object
 
-  A path object in composed of an array of segment.
+  A path object in composed of an array of path_item_ (segment).
+
+.. _path_item:
+
+* Path item object
 
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | Field                    | Type                                 | Description                                            |
@@ -591,7 +622,7 @@ tags                array of string    List of tags on the journey. The tags add
 |                          |                                      | Hope it's easier to understand with a picture:         |
 |                          |                                      |                                                        |
 |                          |                                      | .. image:: direction.png                               |
-|                          |                                      |                                                        |
+|                          |                                      |    :scale: 50 %                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 
 .. _fare:
@@ -637,7 +668,7 @@ Route Schedules
 
 This api give you access to schedules of routes.
 The response is made of an array of route_schedule, and another one of :ref:`note`.
-You can access it via that kind of url : `<https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>`_
+You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>`_
 
 Parameters
 ##########
@@ -687,7 +718,7 @@ Rows    Array of row_     A row of the schedule
 +--------------------------+-----------------------------+-----------------------------------+
 | Field                    | Type                        | Description                       |
 +==========================+=============================+===================================+
-| additionnal_informations | Array of String             | Other informations : TODO enum    |
+| additionnal_informations | Array of String             | Other informations: TODO enum     |
 +--------------------------+-----------------------------+-----------------------------------+
 | display_informations     | :ref:`display_informations` | Usefull informations about the    |
 |                          |                             | the vehicle journey to display    |
@@ -716,7 +747,7 @@ Stop Schedules
 
 This api give you access to schedules of stops.
 The response is made of an array of stop_schedule, and another one of :ref:`note`.
-You can access it via that kind of url : `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
+You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
 
 Parameters
 ##########
@@ -750,7 +781,7 @@ Departures
 **********
 
 This api retrieves a list of departures from a datetime of a selected object.
-Departures are ordered chronigically in growing order.
+Departures are ordered chronologically in growing order.
 
 Parameters
 ##########
@@ -842,7 +873,7 @@ Field        Type                  Description
 ============ ===================== ==================================
 id           string                Identifier of the route
 name         string                Name of the route
-is_frequence bool                  Is the route has frequence or not
+is_frequence bool                  Is the route has frequency or not
 line         :ref:`line`           The line of this route
 ============ ===================== ==================================
 
@@ -852,7 +883,7 @@ Stop Point
 ##########
 
 ===================== ===================== =====================================================================
-Field                 Type                        Description
+Field                 Type                  Description
 ===================== ===================== =====================================================================
 id                    string                Identifier of the line
 name                  string                Name of the line
@@ -933,7 +964,7 @@ stop_point           *optional* :ref:`stop_point`  Embedded Stop point
 stop_area            *optional* :ref:`stop_area`   Embedded Stop area
 address              *optional* :ref:`address`     Embedded address
 poi                  *optional* :ref:`poi`         Embedded poi
-adminstrative_region *optional* :ref:`admin`       Embedded adminstrative region
+adminstrative_region *optional* :ref:`admin`       Embedded administrative region
 ==================== ============================= =================================
 
 .. _embedded_type_place:
@@ -989,7 +1020,7 @@ Field                 Type                        Description
 ===================== =========================== ==================================================================
 id                    string                      Identifier of the address
 name                  string                      Name of the address
-coord                 :ref:`coord`                Coordinates of the adress
+coord                 :ref:`coord`                Coordinates of the address
 house_number          int                         House number of the address
 adminstrative_regions array of :ref:`admin`       Administrative regions of the address in which is the stop area
 ===================== =========================== ==================================================================
@@ -1005,7 +1036,7 @@ Field                 Type                        Description
 ===================== =========================== ==================================================================
 id                    string                      Identifier of the address
 name                  string                      Name of the address
-coord                 :ref:`coord`                Coordinates of the adress
+coord                 :ref:`coord`                Coordinates of the address
 level                 int                         Level of the admin
 zip_code              string                      Zip code of the admin
 ===================== =========================== ==================================================================
@@ -1022,7 +1053,7 @@ date_time
 +--------------------------+----------------------+--------------------------------+
 | Field                    | Type                 | Description                    |
 +==========================+======================+================================+
-| additionnal_informations | Array of String      | Other informations : TODO enum |
+| additionnal_informations | Array of String      | Other informations: TODO enum  |
 +--------------------------+----------------------+--------------------------------+
 | date_times               | Array of String      | Date time                      |
 +--------------------------+----------------------+--------------------------------+
@@ -1097,14 +1128,23 @@ Misc mechanisms
 Multiple journeys
 #################
 
-TODO
+Navitia can compute several journeys with one query. 
+
+The RAPTOR algorithm used in Navitia is a multi objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
+For example it cannot decide that a one hour trip with no connection is better than a 45 minutes trip with one connection (it is called the `pareto front <http://en.wikipedia.org/wiki/Pareto_efficiency>`_).
+
+If the user ask for more journeys than the number of journeys given by RAPTOR (with the parameter ``min_nb_journeys`` or ``count``), Navitia will ask RAPTOR again, 
+but for the next journeys (or the previous ones if the user asked with ``datetime_represents=arrival``). 
+
+Those journeys have the ``next`` (or ``previous``) value in their tags.
+
 
 .. _journey_qualif:
 
 Journey qualification process
 #############################
 
-Navitia can compute several journeys at the same time. After having computed them we tag them to help the user choose the best one for his needs.
+Since Navitia can return several journeys, it tag them to help the user choose the best one for his needs.
 
 The different journey types are:
 
@@ -1124,3 +1164,5 @@ non_pt_walk           A journey without public transport, only walking
 non_pt_bike           A journey without public transport, only biking
 non_pt_bss            A journey without public transport, only bike sharing
 ===================== ========================================================== 
+
+
