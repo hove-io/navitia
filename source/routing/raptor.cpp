@@ -425,7 +425,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
 
 
 int RAPTOR::best_round(type::idx_t journey_pattern_point_idx){
-    for(size_t i = 0; i < labels.size(); ++i){
+    for(size_t i = 0; i <= this->count; ++i){
         if(labels[i][journey_pattern_point_idx].dt == best_labels[journey_pattern_point_idx]){
             return i;
         }
