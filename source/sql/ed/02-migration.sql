@@ -244,3 +244,4 @@ DROP FUNCTION IF EXISTS georef.match_stop_point_to_admin();
 DROP FUNCTION IF EXISTS georef.update_admin_coord();
 DROP FUNCTION IF EXISTS georef.match_admin_to_admin();
 DROP TABLE IF EXISTS navitia.journey_pattern_point_connection CASCADE;
+DROP FUNCTION IF EXISTS georef.update_boundary(bigint);
