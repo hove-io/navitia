@@ -255,11 +255,6 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::update_boundary(){
-    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from georef.admin;",
-                "", PGRES_TUPLES_OK));
-}
-
 void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
 
     this->lotus.start_transaction();
