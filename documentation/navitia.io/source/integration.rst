@@ -102,8 +102,8 @@ The other method is to pass directly the key in the `HTTP Authorization header`_
 
     Authorization: mysecretkey
 
-.. _Basic HTTP authentication: https://tools.ietf.org/html/rfc2617#section-2
-.. _HTTP Authorization header: https://tools.ietf.org/html/rfc2616#section-14.8
+.. _Basic HTTP authentication: http://tools.ietf.org/html/rfc2617#section-2
+.. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
 
 .. _paging:
 
@@ -372,11 +372,11 @@ The other one, the most used, is to access the 'journey' api endpoint: `<https:/
 
 .. note::
     Navitia.io handle lot's of different data sets (regions). Some of them can overlap, with for example opendata data sets and private data sets.
-    
-    When using the 'journey' endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.
-    
-    For the moment it is not yet possible to compute inter data sets journeys, but it will one day be possible (with a meta system).
-    
+
+    When using the journeys endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.
+
+    For the moment it is not yet possible to compute journeys on different data sets, but it will one day be possible (with a meta system).
+
     If you want to use a specific data set, use the journey api within the data set: `<https://api.navitia.io/v1/coverage/{your_dataset}/journeys>`_
 
 
@@ -403,7 +403,7 @@ Parameters
 | nop      | datetime_represents | string    | Can be *departure* or *arrival*.          | departure       |
 |          |                     |           |                                           |                 |
 |          |                     |           | If it's departure, the request will       |                 |
-|          |                     |           | retrieve the journeys starting after      |                 |
+|          |                     |           | retrieve journeys starting after          |                 |
 |          |                     |           | datetime.                                 |                 |
 |          |                     |           |                                           |                 |
 |          |                     |           | If it's arrival it will retrieve journeys |                 |
@@ -537,9 +537,9 @@ tags                array of string    List of tags on the journey. The tags add
 |                          |                                      | * ``ON_DEMAND_TRANSPORT``: on demand transport section |
 |                          |                                      |   (odt)                                                |
 |                          |                                      |                                                        |
-|                          |                                      | * ``boarding``: taking public transport                |
+|                          |                                      | * ``boarding``: boarding on plane                      |
 |                          |                                      |                                                        |
-|                          |                                      | * ``landing``: leaving public transport                |
+|                          |                                      | * ``landing``: landing off the plane                   |
 |                          |                                      |                                                        |
 |                          |                                      | * ``BSS_RENT``: taking a bike from a bike sharing      |
 |                          |                                      |   system (bss)                                         |
@@ -567,8 +567,8 @@ tags                array of string    List of tags on the journey. The tags add
 |                          |                                      |                                                        |
 |                          |                                      | * ``regular``: no on demand transport (odt)            |
 |                          |                                      |                                                        |
-|                          |                                      | * ``has_date_time_estimated``: odt with at least one   |
-|                          |                                      |   estimated date time                                  |
+|                          |                                      | * ``has_date_time_estimated``: section with at least   |
+|                          |                                      |   one estimated date time                              |
 |                          |                                      |                                                        |
 |                          |                                      | * ``odt_with_stop_time``: odt with                     |
 |                          |                                      |   fix schedule                                         |
