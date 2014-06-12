@@ -109,7 +109,6 @@ private:
     void insert_house_numbers(const ed::Georef& data);
     void insert_edges(const ed::Georef& data);
     void build_relation_way_admin(const ed::Georef& data);
-    void update_boundary();
 
     /// Données POI
     void insert_poi_types(const ed::PoiPoiType& data);

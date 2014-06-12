@@ -76,9 +76,6 @@ void EdPersistor::persist(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, "Begin: relation admin way");
     this->build_relation_way_admin(data);
     LOG4CPLUS_INFO(logger, "End: relation admin way");
-    LOG4CPLUS_INFO(logger, "Begin: update boundary admins");
-    this->update_boundary();
-    LOG4CPLUS_INFO(logger, "End: update boundary admins");
     LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -256,11 +253,6 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
         }
      }
     this->lotus.finish_bulk_insert();
-}
-
-void EdPersistor::update_boundary(){
-    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from georef.admin;",
-                "", PGRES_TUPLES_OK));
 }
 
 void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
