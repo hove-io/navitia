@@ -19,6 +19,7 @@ message DisruptionsRequest {
     optional int32 count            = 5;
     optional string filter          = 6;
     repeated string forbidden_uris  = 7;
+    optional OdtLevel odt_level     = 8;
 }
 
 message PlacesRequest {

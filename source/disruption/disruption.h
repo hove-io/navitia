@@ -64,6 +64,7 @@ private:
                       const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
     void add_lines(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
+                      const type::OdtLevel_e odt_level,
                       const type::Data &d,
                       const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
@@ -73,6 +74,7 @@ public:
 
     void disruptions_list(const std::string& filter,
                     const std::vector<std::string>& forbidden_uris,
+                    const type::OdtLevel_e odt_level,
                     const type::Data &d,
                     const boost::posix_time::time_period action_period,
                     const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
