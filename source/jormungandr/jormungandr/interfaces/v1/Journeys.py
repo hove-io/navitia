@@ -28,11 +28,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import logging
 
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
+from jormungandr.exceptions import RegionNotFound
+from jormungandr.instance_manager import choose_best_instance
+from jormungandr import authentification
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
@@ -439,10 +443,57 @@ class add_fare_links(object):
         return wrapper
 
 
+def compute_regions(args):
+    """
+    method computing the region the journey has to be computed on
+    The complexity comes from the fact that the regions in jormungandr can overlap.
+
+    return the kraken instance key
+
+    rules are easy:
+    we fetch the different regions the user can use for 'origin' and 'destination'
+    we do the intersection and sort the list
+    """
+    _region = None
+    possible_regions = set()
+    from_regions = set()
+    to_regions = set()
+    if args['origin']:
+        from_regions = set(i_manager.key_of_id(args['origin'], only_one=False))
+        #Note: if the key_of_id does not find any region, it raises a RegionNotFoundException
+
+    if args['destination']:
+        to_regions = set(i_manager.key_of_id(args['destination'], only_one=False))
+
+    if not from_regions:
+        #we didn't get any origin, the region is in the destination's list
+        possible_regions = to_regions
+    elif not to_regions:
+        #we didn't get any origin, the region is in the destination's list
+        possible_regions = from_regions
+    else:
+        #we need the intersection set
+        possible_regions = from_regions.intersection(to_regions)
+
+    logging.debug("orig region = {o}, dest region = {d} => set = {p}".
+                 format(o=from_regions, d=to_regions, p=possible_regions))
+
+    if not possible_regions:
+        raise RegionNotFound(custom_msg="cannot find a region with {o} and {d} in the same time"
+                             .format(o=args['origin'], d=args['destination']))
+
+    sorted_regions = list(possible_regions)
+
+    _region = choose_best_instance(sorted_regions)
+
+    return _region
+
+
 class Journeys(ResourceUri):
 
     def __init__(self):
-        ResourceUri.__init__(self)
+        # journeys must have a custom authentication process
+        ResourceUri.__init__(self, authentication=False)
         modes = ["walking", "car", "bike", "bss"]
         types = {
             "all": "All types",
@@ -506,6 +557,7 @@ class Journeys(ResourceUri):
                                 type=option_value(modes), action="append")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
+
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
 
@@ -535,8 +587,10 @@ class Journeys(ResourceUri):
         if 'last_section_mode' in args and args['last_section_mode']:
             args['destination_mode'] = args['last_section_mode']
 
-        if region or (lon and lat):
-            self.region = i_manager.get_region(region, lon, lat)
+        if region:
+            self.region = i_manager.get_region(region)
+            #we check that the user can use this api
+            authentification.authenticate(region, 'ALL', abort=True)
             if uri:
                 objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
@@ -544,13 +598,14 @@ class Journeys(ResourceUri):
                 else:
                     abort(503, message="Unable to compute journeys "
                                        "from this object")
-        else:
-            if args['origin']:
-                self.region = i_manager.key_of_id(args['origin'])
-            elif args['destination']:
-                self.region = i_manager.key_of_id(args['destination'])
-            # else:
-            #    raise RegionNotFound("")
+
+        if not args["origin"]:  #@vlara really ? I though we could do reverse isochrone ?
+            #shoudl be in my opinion if not args["origin"] and not args["destination"]:
+            abort(400, message="from argument is required")
+
+        if not region:
+            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
+            self.region = compute_regions(args)
 
         #we transform the origin/destination url to add information
         if args['origin']:
@@ -560,14 +615,13 @@ class Journeys(ResourceUri):
 
         if not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
+
         api = None
         if args['destination']:
             api = 'journeys'
         else:
             api = 'isochrone'
 
-        if not args["origin"]:
-            abort(400, message="from argument is required")
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
         return response

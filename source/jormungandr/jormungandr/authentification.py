@@ -28,16 +28,17 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import logging
 
 from flask_restful import reqparse, abort
 import flask_restful
 from flask import current_app, request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
-from jormungandr import i_manager
 import datetime
 import base64
 from navitiacommon.models import User, Instance, db
+
 
 def authentification_required(func):
     """
@@ -50,24 +51,18 @@ def authentification_required(func):
         region = None
         if 'region' in kwargs:
             region = kwargs['region']
+            #TODO revoir comment on gere le lon/lat
         elif 'lon' in kwargs and 'lat' in kwargs:
             try:
+                from jormungandr import i_manager  # quick fix to avoid circular dependencies
                 region = i_manager.key_of_coord(lon=kwargs['lon'],
                                                 lat=kwargs['lat'])
             except RegionNotFound:
                 pass
-        elif 'from' in request.args:
-            #used for journeys api
-            try:
-                region = i_manager.key_of_id(request.args['from'])
-                if 'to' in request.args:
-                    region_to = i_manager.key_of_id(request.args['to'])
-                    if region != region_to:
-                        abort(503, message="Unable to compute journeys "
-                              "between to different instances (%s, %s) " %
-                              (region, region_to))
-            except RegionNotFound:
-                pass
+
+        if not region:
+            #we could not find any regions, we abort
+            abort_request()
 
         if not region or authenticate(region, 'ALL', abort=True):
             return func(*args, **kwargs)
@@ -111,18 +106,13 @@ def authenticate(region, api, abort=False):
         #if jormungandr is on public mode we skip the authentification process
         return True
 
-    #Hack to allow user not logged in...
     token = get_token()
 
     if not token:
-        instance = Instance.get_by_name(region)
         if abort:
-            if instance and instance.is_free:
-                return True
-            else:
-                abort_request()
+            abort_request()
         else:
-            return False if not instance else instance.first().is_free
+            return False
 
     user = get_user()
     if user:
@@ -149,6 +139,10 @@ def abort_request():
         flask_restful.abort(401)
 
 def has_access(instance, abort=False):
+    if 'PUBLIC' in current_app.config \
+            and current_app.config['PUBLIC']:
+        #if jormungandr is on public mode we skip the authentification process
+        return True
     res = instance.is_accessible_by(get_user())
     if abort and not res:
         abort_request()
@@ -162,5 +156,10 @@ def get_user():
     if hasattr(g, 'user'):
         return g.user
     else:
-        g.user = User.get_from_token(get_token(), datetime.datetime.now())
+        token = get_token()
+        if not token:
+            flask_restful.abort(401)
+        g.user = User.get_from_token(token, datetime.datetime.now())
+        logging.info('user %s', g.user)
+
         return g.user
