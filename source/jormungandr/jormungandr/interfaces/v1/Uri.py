@@ -47,6 +47,7 @@ from navitiacommon.models import PtObject
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
+import navitiacommon.type_pb2 as type_pb2
 
 class Uri(ResourceUri):
     parsers = {}
@@ -82,7 +83,12 @@ class Uri(ResourceUri):
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
+
         args = self.parsers["get"].parse_args()
+
+        if "odt_level" in args and args["odt_level"] != "all" and "lines" not in collection:
+            abort(404, message="bad request")
+
         if region is None and lat is None and lon is None:
             if "external_code" in args and args["external_code"]:
                 type_ = collections_to_resource_type[collection]
