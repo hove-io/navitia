@@ -75,10 +75,6 @@ class Disruptions(ResourceUri):
                                 dest="forbidden_uris[]",
                                 action="append")
 
-        parser_get.add_argument("odt_level", type=option_value(odt_levels),
-                                         default="all",
-                                         description="odt level")
-
     @marshal_with(disruptions)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):

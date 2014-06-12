@@ -166,8 +166,7 @@ class Script(object):
         req.disruptions.start_page = request['start_page']
         req.disruptions.datetime = request['datetime']
         req.disruptions.period = request['period']
-        if request["odt_level"]:
-            req.ptref.odt_level = pb_odt_level[request["odt_level"]]
+
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
