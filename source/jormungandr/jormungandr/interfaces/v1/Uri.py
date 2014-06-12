@@ -46,12 +46,12 @@ from Coord import Coord
 from navitiacommon.models import PtObject
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
+from jormungandr.interfaces.common import odt_levels
 
 class Uri(ResourceUri):
     parsers = {}
 
     def __init__(self, is_collection, collection, *args, **kwargs):
-        odt_levels = {"none","mixt", "zonal", "all"}
         ResourceUri.__init__(self, *args, **kwargs)
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
