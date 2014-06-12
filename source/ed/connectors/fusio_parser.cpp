@@ -693,18 +693,22 @@ void TripPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
 
 boost::gregorian::date parse_date(const std::string& str) {
     auto logger = log4cplus::Logger::getInstance("log");
+    if (str.empty()) {
+        LOG4CPLUS_ERROR(logger, "impossible to parse date, date is empty");
+        return boost::gregorian::date(boost::gregorian::not_a_date_time);
+    }
     try {
         return boost::gregorian::from_undelimited_string(str);
     } catch(const boost::bad_lexical_cast& ) {
-        LOG4CPLUS_ERROR(logger, "Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "Impossible to parse the date for " << str);
     } catch(const boost::gregorian::bad_day_of_month&) {
-        LOG4CPLUS_ERROR(logger, "bad_day_of_month : Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "bad_day_of_month : Impossible to parse the date for " << str);
     } catch(const boost::gregorian::bad_day_of_year&) {
-        LOG4CPLUS_ERROR(logger, "bad_day_of_year : Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "bad_day_of_year : Impossible to parse the date for " << str);
     } catch(const boost::gregorian::bad_month&) {
-        LOG4CPLUS_ERROR(logger, "bad_month : Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "bad_month : Impossible to parse the date for " << str);
     } catch(const boost::gregorian::bad_year&) {
-        LOG4CPLUS_ERROR(logger, "bad_year : Impossible to parse the begin date for " << str);
+        LOG4CPLUS_ERROR(logger, "bad_year : Impossible to parse the date for " << str);
     }
     return boost::gregorian::date(boost::gregorian::not_a_date_time);
 }
@@ -762,6 +766,11 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
                         "  file has more than one calendar and no id column");
         throw InvalidHeaders(csv.filename);
+    }
+    if (has_col(id_c, row) && row[id_c].empty()) {
+        //we don't want empty named calendar as they often are empty lines in reality
+        LOG4CPLUS_INFO(logger, "calendar name is empty, we skip it");
+        return;
     }
     ed::types::Calendar* calendar = new ed::types::Calendar();
     calendar->uri = row[id_c];
