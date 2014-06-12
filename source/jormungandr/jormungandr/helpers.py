@@ -27,40 +27,21 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.restful import Resource
-from jormungandr import url_handler
+import flask
 
 
-def index(api):
-    api.add_resource(Index, '/')
+class UrlHandler:
 
+    def __init__(self, force_https=False):
+        self.force_https = force_https
 
-class Index(Resource):
+    def url_for(self, endpoint, _external=True, **values):
+        """
+        overload flask's url_for to have default values and to be able to force https
 
-    def get(self):
-        return {
-            "versions": [
-                {
-                    "value": "v0",
-                    "description": "Alpha version of the api",
-                    "status": "deprecated",
-                    "links": [
-                        {
-                            "href": url_handler.url_for("v0"),
-                            "templated": False
-                        }
-                    ]
-                },
-                {
-                    "value": "v1",
-                    "description": "Current version of the api",
-                    "status": "current",
-                    "links": [
-                        {
-                            "href": url_handler.url_for("v1.index"),
-                            "templated": False
-                        }
-                    ]
-                }
-            ]
-        }
+        We want to force the https instead of the rather smart flask scheme detection
+        because of reverse proxy configuration
+        """
+        if self.force_https:
+            return flask.url_for(endpoint, _scheme='https', _external=_external, **values)
+        return flask.url_for(endpoint, _external=_external, **values)

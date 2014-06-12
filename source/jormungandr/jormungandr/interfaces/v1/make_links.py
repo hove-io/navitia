@@ -27,9 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import url_for
 from collections import OrderedDict
 from functools import wraps
+from jormungandr import url_handler
 from converters_collection_type import resource_type_to_collection,\
     collections_to_resource_type
 from flask.ext.restful.utils import unpack
@@ -100,7 +100,7 @@ class add_pagination_links(object):
                     if start_page > 0:
                         kwargs["start_page"] = start_page - 1
                         data["links"].append({
-                            "href": url_for(endpoint, **kwargs),
+                            "href": url_handler.url_for(endpoint, **kwargs),
                             "type": "previous",
                             "templated": False
                         })
@@ -109,7 +109,7 @@ class add_pagination_links(object):
                     if total_result > nb_next_page:
                         kwargs["start_page"] = start_page + 1
                         data["links"].append({
-                            "href": url_for(endpoint, **kwargs),
+                            "href": url_handler.url_for(endpoint, **kwargs),
                             "type": "next",
                             "templated": False
                         })
@@ -120,14 +120,14 @@ class add_pagination_links(object):
                             nb_last_page = nb_last_page / items_per_page
                             kwargs["start_page"] = nb_last_page
                             data["links"].append({
-                                "href": url_for(endpoint, **kwargs),
+                                "href": url_handler.url_for(endpoint, **kwargs),
                                 "type": "last",
                                 "templated": False
                             })
 
                         del kwargs["start_page"]
                     data["links"].append({
-                        "href": url_for(endpoint, **kwargs),
+                        "href": url_handler.url_for(endpoint, **kwargs),
                         "type": "first",
                         "templated": False
                     })
@@ -153,7 +153,7 @@ class add_coverage_link(generate_links):
             if isinstance(data, OrderedDict):
                 data = self.prepare_objetcs(data)
                 kwargs = self.prepare_kwargs(kwargs, data)
-                url = url_for("v1.coverage", _external=True, **kwargs)
+                url = url_handler.url_for("v1.coverage", **kwargs)
                 data["links"].append({"href": url, "rel": "related",
                                       "templated": True})
             if isinstance(objects, tuple):
@@ -182,8 +182,8 @@ class add_collection_links(generate_links):
                 data = self.prepare_objetcs(objects, True)
                 kwargs = self.prepare_kwargs(kwargs, data)
                 for collection in self.collections:
-                    url = url_for("v1." + collection + ".collection",
-                                  _external=True, **kwargs)
+                    url = url_handler.url_for("v1." + collection + ".collection",
+                                  **kwargs)
                     data["links"].append({"href": url, "rel": collection,
                                           "templated": True})
             if isinstance(objects, tuple):
@@ -229,7 +229,7 @@ class add_id_links(generate_links):
                         "lon" in kwargs.keys()\
                                         else "redirect"
                     del kwargs["collection"]
-                    url = url_for(endpoint, _external=True, **kwargs)
+                    url = url_handler.url_for(endpoint, **kwargs)
                     data["links"].append({"href": url, "rel": obj,
                                           "templated": True})
             if isinstance(objects, tuple):

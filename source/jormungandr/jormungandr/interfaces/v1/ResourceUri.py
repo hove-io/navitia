@@ -35,7 +35,7 @@ from jormungandr.stat_manager import manage_stat_caller
 from make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
 from collections import OrderedDict, deque
-from flask import url_for
+from jormungandr import url_handler
 from flask.ext.restful.utils import unpack
 from jormungandr.authentification import authentification_required
 import navitiacommon.type_pb2 as type_pb2
@@ -156,13 +156,13 @@ class add_computed_resources(object):
                 for api in ['route_schedules', 'stop_schedules',
                             'arrivals', 'departures', "places_nearby"]:
                     data['links'].append({
-                        "href": url_for("v1." + api, **kwargs),
+                        "href": url_handler.url_for("v1." + api, **kwargs),
                         "rel": api,
                         "templated": templated
                     })
             if collection in ['stop_areas', 'stop_points', 'addresses']:
                 data['links'].append({
-                    "href": url_for("v1.journeys", **kwargs),
+                    "href": url_handler.url_for("v1.journeys", **kwargs),
                     "rel": "journeys",
                     "templated": templated
                 })
@@ -170,13 +170,13 @@ class add_computed_resources(object):
             if 'region' in kwargs:
                 if collection == 'lines':
                     data['links'].append({
-                        "href": url_for("v1.calendars", **kwargs),
+                        "href": url_handler.url_for("v1.calendars", **kwargs),
                         "rel": "calendars",
                         "templated": templated
                     })
                 if collection in ['stop_areas', 'lines', 'networks']:
                     data['links'].append({
-                        "href": url_for("v1.disruptions", **kwargs),
+                        "href": url_handler.url_for("v1.disruptions", **kwargs),
                         "rel": "disruptions",
                         "templated": templated
                     })
