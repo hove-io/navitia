@@ -43,9 +43,9 @@ struct Thermometer {
     std::vector<uint32_t> match_journey_pattern(const vector_idx &journey_pattern) const;
 
     struct cant_match {
-        type::idx_t rp_idx;
-        cant_match() : rp_idx(type::invalid_idx) {}
-        cant_match(type::idx_t rp_idx) : rp_idx(rp_idx) {}
+        type::idx_t jpp_idx;
+        cant_match() : jpp_idx(type::invalid_idx) {}
+        cant_match(type::idx_t rp_idx) : jpp_idx(rp_idx) {}
     };
 
     struct upper {};

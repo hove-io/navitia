@@ -110,7 +110,6 @@ struct best_dest {
             const auto tmp_dt = t + jpp_idx_duration[jpp_idx];
             if((tmp_dt < best_now) || ((tmp_dt == best_now) && (count > cnt))) {
                 best_now = tmp_dt;
-                //best_now.departure = best_now.departure + jpp_idx_distance[rpid];
                 best_now_jpp_idx = jpp_idx;
                 count = cnt;
                 return true;
@@ -125,7 +124,6 @@ struct best_dest {
             const auto tmp_dt = t - jpp_idx_duration[jpp_idx];
             if((tmp_dt > best_now) || ((tmp_dt == best_now) && (count > cnt))) {
                 best_now = tmp_dt;
-                //best_now.departure = t.departure - jpp_idx_distance[rpid];
                 best_now_jpp_idx = jpp_idx;
                 count = cnt;
                 return true;

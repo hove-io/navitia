@@ -484,25 +484,25 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     bt::ptime now = bt::second_clock::local_time();
     for(const type::StopPoint* sp : raptor.data.pt_data->stop_points) {
         DateTime best = bound;
-        type::idx_t best_rp = type::invalid_idx;
+        type::idx_t best_jpp = type::invalid_idx;
         int best_round = -1;
         for(auto jpp : sp->journey_pattern_point_list) {
             if(raptor.best_labels[jpp->idx] < best) {
                 int round = raptor.best_round(jpp->idx);
                 if(round != -1 && raptor.labels[round][jpp->idx].type == boarding_type::vj) {
                     best = raptor.best_labels[jpp->idx];
-                    best_rp = jpp->idx;
+                    best_jpp = jpp->idx;
                     best_round = round;
                 }
             }
         }
 
-        if(best_rp != type::invalid_idx) {
-            auto label = raptor.best_labels[best_rp];
-            type::idx_t initial_rp;
+        if(best_jpp != type::invalid_idx) {
+            auto label = raptor.best_labels[best_jpp];
+            type::idx_t initial_jpp;
             DateTime initial_dt;
-            boost::tie(initial_rp, initial_dt) = get_final_jppidx_and_date(best_round,
-                    best_rp, clockwise, disruption_active, accessibilite_params, raptor);
+            boost::tie(initial_jpp, initial_dt) = get_final_jppidx_and_date(best_round,
+                    best_jpp, clockwise, disruption_active, accessibilite_params, raptor);
 
             int duration = ::abs(label - init_dt);
 
@@ -518,7 +518,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 pb_journey->set_nb_transfers(best_round);
                 bt::time_period action_period(navitia::to_posix_time(label-duration, raptor.data),
                         navitia::to_posix_time(label, raptor.data));
-                fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_rp]->stop_point,
+                fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point,
                         raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
             }
         }
