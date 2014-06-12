@@ -217,7 +217,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                         s.arrival = raptor.labels[i][jppidx].dt;
                         type::idx_t final_jpp_idx;
                         DateTime last_time;
-                        std::tie(final_jppidx, last_time) = get_final_jppidx_and_date(i, jppidx, clockwise,
+                        std::tie(final_jpp_idx, last_time) = get_final_jppidx_and_date(i, jppidx, clockwise,
                                             disruption_active, accessibilite_params, raptor);
 
                         if(clockwise) {
@@ -234,7 +234,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                                     s.upper_bound = s.upper_bound - (spid_dep.second.total_seconds());
                                 }
                             }
-
+                        }
                         best_departure = s;
                     }
                 }
@@ -247,7 +247,6 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                     tmp[journey_pattern] = best_departure;
                 }
             }
-
         }
     }
 
