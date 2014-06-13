@@ -84,7 +84,7 @@ The arguments are the following:
 * ``to=-122.402770;37.794682``
 * ``datetime=20140118T0800``
 
-Hence, the complete URL: http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140118T0800.
+Hence, the complete URL: http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140618T0800.
 
 
 A ``journeys`` request might return multiple journeys. Those journeys are said to be *equivalent*. For instance
@@ -93,8 +93,24 @@ a journey can be faster than an other but requires more changes or more walking.
 This API has more options explained in the reference as:
 
 * Forbid certain lines, routes or modes
+  For example you can forbid the line 1030 and the cable car mode with the url:
+  http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140618T0800&forbidden_uris[]=line:OSF:1030&forbidden_uris[]=commercial_mode:cablecar
+
 * Latest departure
+  To get the latest departure, you can query for some journeys arriving before the end of the service
+  http://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20140613T0300&datetime_represents=arrival
+
+* You can also limit the maximum duration to reach the public transport system (to limit the walking/biking/driving parts):
+  https://api.navitia.io/v1/coverage/iledefrance/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&datetime=201406121000&max_duration_to_pt=1800
+
 * Enable biking, driving or use of bike sharing system
+  For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure:
+  https://api.navitia.io/v1/coverage/iledefrance/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&datetime=201406121000&max_duration_to_pt=1800&first_section_mode[]=bss
+  
+  you can also allow walking and bike with:
+  https://api.navitia.io/v1/coverage/iledefrance/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&datetime=201406121000&max_duration_to_pt=1800&first_section_mode[]=bike&first_section_mode[]=walking
+
+  to allow a different fallback mode at the arrival mode, use ``last_section_mode[]``
 
 
 A quick journey in the API

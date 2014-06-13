@@ -14,7 +14,7 @@ This document describes how to call the interface v1, and the returned resources
 Endpoint
 ********
 
-The only endpoint of this version of the api is : http://api.navitia.io/v1/
+The only endpoint of this version of the api is : https://api.navitia.io/v1/
 
 
 Resources
@@ -94,7 +94,7 @@ Authentication
 
 You must authenticate to use **navitia.io**. When you register we give you a authentication key to the API.
 
-There is two ways for authentification, you can use a `Basic HTTP authentification`_, where the username is the key, and without password.
+There is two ways for authentication, you can use a `Basic HTTP authentication`_, where the username is the key, and without password.
 
 The other method is to pass directly the key in the `HTTP Authorization header`_ like that:
 
@@ -102,7 +102,7 @@ The other method is to pass directly the key in the `HTTP Authorization header`_
 
     Authorization: mysecretkey
 
-.. _Basic HTTP authentification: http://tools.ietf.org/html/rfc2617#section-2
+.. _Basic HTTP authentication: http://tools.ietf.org/html/rfc2617#section-2
 .. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
 
 .. _paging:
@@ -227,7 +227,7 @@ Collections
 Example
 #######
 
-Response example for this request ``http://api.navitia.io/v1/coverage/paris/physical_modes``
+Response example for this request https://api.navitia.io/v1/coverage/iledefrance/physical_modes
 
 .. code-block:: json
 
@@ -278,7 +278,7 @@ Parameters
 Example
 #######
 
-Response example for : ``http://api.navitia.io/v1/coverage/paris/places?q=rue``
+Response example for : https://api.navitia.io/v1/coverage/iledefrance/places?q=rue
 
 .. code-block:: json
 
@@ -325,33 +325,35 @@ Parameters
 |         |               |                 | within the given admin uris              |                                     |
 +---------+---------------+-----------------+------------------------------------------+-------------------------------------+
 | nop     | filter        | string          | Use to restrain returned objects.        |                                     |
-|         |               |                 | for example : places_type.id=theater     |                                     |
+|         |               |                 | for example: places_type.id=theater      |                                     |
 +---------+---------------+-----------------+------------------------------------------+-------------------------------------+
 
 Example
 ########
 
-Response example for : ``http://api.navitia.io/v1/coverage/paris/places_nearby?uri=stop_area:TAN:SA:RUET``
+Response example for: https://api.navitia.io/v1/coverage/iledefrance/stop_areas/stop_area:TRN:SA:DUA8754575/places_nearby
 
 .. code-block:: json
 
     {
     "places_nearby": [
         {
-            {
-
-                "embedded_type": "stop_area",
-                "stop_area": {
-                    ...
+            "embedded_type": "stop_area",
+            "stop_area": {
+                "comment": "",
+                "name": "CHATEAUDUN",
+                "coord": {
+                    "lat": "48.073402",
+                    "lon": "1.338426"
                 },
-                "id": "stop_area:TAN:SA:RUET",
-                "name": "Ruette"
-
+                "id": "stop_area:TRN:SA:DUA8754575"
             },
-                    },
-    "links" : [
-        ...
-     ],
+            "distance": "0.0",
+            "quality": 0,
+            "id": "stop_area:TRN:SA:DUA8754575",
+            "name": "CHATEAUDUN"
+        },
+        ....
     }
 
 
@@ -359,11 +361,30 @@ Journeys
 ********
 
 This api compute journeys.
+
 If used within the coverage api, it will retrieve the next journeys from the selected public transport object or coordinates.
 
 There are two ways to access this api.
-The first one, is : http://api.navitia.io/v1/{a_path_to_resource}/journeys it will retrieve all the journeys from the resource.
-The other one is the most used http//api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}.
+
+The first one is: `<https://api.navitia.io/v1/{a_path_to_resource}/journeys>`_ it will retrieve all the journeys from the resource.
+
+The other one, the most used, is to access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}>`_ .
+
+.. note::
+    Navitia.io handle lot's of different data sets (regions). Some of them can overlap. For example opendata data sets can overlap with private data sets.
+
+    When using the journeys endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.
+
+    For the moment it is not yet possible to compute journeys on different data sets, but it will one day be possible (with a cross-data-set system).
+
+    If you want to use a specific data set, use the journey api within the data set: `<https://api.navitia.io/v1/coverage/{your_dataset}/journeys>`_
+
+
+.. note::
+    Neither the 'from' nor the 'to' parameter of the journey are required, but obviously one of them has to be provided.
+
+    If only one is defined an isochrone is computed with every possible journeys from or to the point.
+
 
 Parameters
 ##########
@@ -371,45 +392,130 @@ Parameters
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | Required | Name                | Type        Description                               | Default value   |
 +==========+=====================+===========+===========================================+=================+
-| yep      | from                | id        | The id of the departure of your journey   |                 |
+| nop      | from                | id        | The id of the departure of your journey   |                 |
+|          |                     |           | If none are provided an isochrone is      |                 |
+|          |                     |           | computed                                  |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | to                  | id        | The id of the arrival of your journey     |                 |
+|          |                     |           | If none are provided an isochrone is      |                 |
+|          |                     |           | computed                                  |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | yep      | datetime            | datetime  | A datetime                                |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | datetime_represents | String    | Can be *departure* or *arrival*.          | departure       |
-|          |                     |           | If it's departure, the request will       |                 |
-|          |                     |           | retrieve the journeys after datetime.     |                 |
-|          |                     |           | If it's arrival it will retrieve journeys |                 |
+| nop      | datetime_represents | string    | Can be ``departure`` or ``arrival``.      | departure       |
+|          |                     |           |                                           |                 |
+|          |                     |           | If ``departure``, the request will        |                 |
+|          |                     |           | retrieve journeys starting after          |                 |
+|          |                     |           | datetime.                                 |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | If ``arrival`` it will retrieve journeys  |                 |
 |          |                     |           | arriving before datetime.                 |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | forbidden_uris[]    | id        | If you want to avoid lines, modes ...     |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | count               | int       | Number of journeys                        |                 |
+| nop      | first_section_mode[]| array of  | Force the first section mode if the first | walking         |
+|          |                     | string    | section is not a public transport one.    |                 |
+|          |                     |           | It takes one the following values:        |                 |
+|          |                     |           | ``walking``, ``car``, ``bike``, ``bss``   |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | bss stands for bike sharing system        |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | It's an array, you can give multiple      |                 |
+|          |                     |           | modes                                     |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | Note: choosing ``bss`` implicitly allows  |                 |
+|          |                     |           | the ``walking`` mode since you might have |                 |
+|          |                     |           | to walk to the bss station                |                 |
+|          |                     |           |                                           |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | type                | String    | Allows you to filter the journeys.        | all             |
-|          |                     |           | Can be rapid, all ...                     |                 |
+| nop      | last_section_mode[] | array of  | Same as first_section_mode but for the    | walking         |
+|          |                     | string    | last section                              |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_duration_to_pt  | int       | Maximum allowed duration to reach the     | 15*60 s         |
+|          |                     |           | public transport                          |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | Use this to limit the walking/biking part |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | Unit is seconds                           |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | walking_speed       | float     | Walking speed for the fallback sections   | 1.12 m/s        |
+|          |                     |           |                                           |                 |
+|          |                     |           | Speed unit must be in meter/seconds       | (4 km/h)        |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | bike_speed          | float     | Biking speed for the fallback sections    | 4.1 m/s         |
+|          |                     |           |                                           |                 |
+|          |                     |           | Speed unit must be in meter/seconds       | (14.7 km/h)     |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | bss_speed           | float     | Speed while using a bike from a bike      | 4.1 m/s         |
+|          |                     |           | sharing system for the fallback sections  | (14.7 km/h)     |
+|          |                     |           |                                           |                 |
+|          |                     |           | Speed unit must be in meter/seconds       |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | car_speed           | float     | Driving speed for the fallback sections   | 16.8 m/s        |
+|          |                     |           |                                           |                 |
+|          |                     |           | Speed unit must be in meter/seconds       | (60 km/h)       |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | min_nb_journeys     | int       | Minimum number of different suggested     |                 |
+|          |                     |           | trips                                     |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | More in :ref:`multiple_journeys`          |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_nb_journeys     | int       | Maximum number of different suggested     |                 |
+|          |                     |           | trips                                     |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | More in :ref:`multiple_journeys`          |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | count               | int       | Fixed number of different journeys        |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | More in :ref:`multiple_journeys`          |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | type                | string    | Allows you to filter the type of journeys |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | More in :ref:`journey_qualif`             |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | first_section_mode  | String    | Force the first section mode if the first |                 |
-|          |                     |           | section is not a public transport one.    |                 |
-|          |                     |           | It takes one the following values :       |                 |
-|          |                     |           | `walking`, `car`, `bike`, `bss`           |                 |
-|          |                     |           | bss stands for bike sharing system        |                 |
+| nop      | disruption_active   | boolean   | If true the algorithm take the disruptions| False           |
+|          |                     |           | into account, and thus avoid disrupted    |                 |
+|          |                     |           | public transport                          |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | last_section_mode   | String    | Same as first_section_mode but for the    |                 |
-|          |                     |           | last section.                             |                 |
+| nop      | max_duration        | int       | Maximum duration of the journey           | 3600*24 s (24h) |
+|          |                     |           |                                           |                 |
+|          |                     |           | Like all duration, the unit is seconds    |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | wheelchair          | boolean   | If true the traveler is considered to     | False           |
+|          |                     |           | be using a wheelchair, thus only          |                 |
+|          |                     |           | accessible public transport are used      |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | be warned: many data are currently too    |                 |
+|          |                     |           | faint to provide acceptable answers       |                 |
+|          |                     |           | with this parameter on                    |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | show_codes          | boolean   | If true add internal id in the response   | False           |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | debug               | boolean   | Debug mode                                | False           |
+|          |                     |           |                                           |                 |
+|          |                     |           | No journeys are filtered in this mode     |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 
 Objects
 #######
 
+* main response
+
+=================== ================== ===========================================================================
+Field               Type               Description
+=================== ================== ===========================================================================
+journeys            array of journeys_ List of computed journeys
+links               link_              Links related to the journeys
+=================== ================== ===========================================================================
+
+
 * Journey object
 
-=================== ================== ======================================================================
+=================== ================== ===========================================================================
 Field               Type               Description
-=================== ================== ======================================================================
+=================== ================== ===========================================================================
 duration            int                Duration of the journey
 nb_transfers        int                Number of transfers in the journey
 departure_date_time datetime_          Departure date and time of the journey
@@ -417,13 +523,16 @@ requested_date_time datetime_          Requested date and time of the journey
 arrival_date_time   datetime_          Arrival date and time of the journey
 sections            array of section_  All the sections of the journey
 from                place_             The place from where the journey starts
-to                  place_             The place from where the journey starts
+to                  place_             The place from where the journey ends
 links               link_              Links related to this journey
-type                *enum* string      Use to qualified a journey can be ``comfort``, ``rapid``, ``healthy``
-=================== ================== ======================================================================
+type                *enum* string      Used to qualified a journey. See the :ref:`journey_qualif` section for more information
+fare                fare_              Fare of the journey (tickets and price)
+tags                array of string    List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example `multiple_journeys`_.
+=================== ================== ===========================================================================
+
 
 .. note::
-    When used with just a "from" or a "to" parameter, it will not contain the sections parameter nor the from (if the from parametre was given).
+    When used with just a "from" or a "to" parameter, it will not contain any sections
 
 .. _section:
 
@@ -433,29 +542,63 @@ type                *enum* string      Use to qualified a journey can be ``comfo
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | Field                    | Type                                 | Description                                            |
 +==========================+======================================+========================================================+
-| type                     | *enum* string                        | Type of the section, it can be : ``PUBLIC_TRANSPORT``, |
-|                          |                                      | ``STREET_NETWORK``, ``WAITING``, ``TRANSFER``          |
+| type                     | *enum* string                        | Type of the section, it can be:                        |
+|                          |                                      |                                                        |
+|                          |                                      | * ``PUBLIC_TRANSPORT``: public transport section       |
+|                          |                                      |                                                        |
+|                          |                                      | * ``STREET_NETWORK``: street section                   |
+|                          |                                      |                                                        |
+|                          |                                      | * ``WAITING``: waiting section between transport       |
+|                          |                                      |                                                        |
+|                          |                                      | * ``TRANSFER``: transfert section                      |
+|                          |                                      |                                                        |
+|                          |                                      | * ``ON_DEMAND_TRANSPORT``: on demand transport section |
+|                          |                                      |   (odt)                                                |
+|                          |                                      |                                                        |
+|                          |                                      | * ``boarding``: boarding on plane                      |
+|                          |                                      |                                                        |
+|                          |                                      | * ``landing``: landing off the plane                   |
+|                          |                                      |                                                        |
+|                          |                                      | * ``BSS_RENT``: taking a bike from a bike sharing      |
+|                          |                                      |   system (bss)                                         |
+|                          |                                      |                                                        |
+|                          |                                      | * ``BSS_PUT_BACK``: putting back a bike from a bike    |
+|                          |                                      |   sharing system (bss)                                 |
+|                          |                                      |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| mode                     | *enum* string                        | Mode of the street network : ``Walking``, ``Bike``,    |
+| id                       | string                               | Id of the section                                      |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| mode                     | *enum* string                        | Mode of the street network: ``Walking``, ``Bike``,     |
 |                          |                                      | ``Car``                                                |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| duration                 | int                                  |  Duration of this section                              |
+| duration                 | int                                  | Duration of this section                               |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| from                     | place_                               |  Origin place of this section                          |
+| from                     | place_                               | Origin place of this section                           |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| to                       | place_                               |  Destination place of this section                     |
+| to                       | place_                               | Destination place of this section                      |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| links                    | Array of link_                       |  Links related to this section                         |
+| links                    | Array of link_                       | Links related to this section                          |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| display_informations     | display_informations_                |  Usefull information to display                        |
+| display_informations     | display_informations_                | Useful information to display                          |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| additionnal_informations | *enum* string                        |  Other informations : TODO                             |
+| additionnal_informations | *enum* string                        | Other information. It can be:                          |
+|                          |                                      |                                                        |
+|                          |                                      | * ``regular``: no on demand transport (odt)            |
+|                          |                                      |                                                        |
+|                          |                                      | * ``has_date_time_estimated``: section with at least   |
+|                          |                                      |   one estimated date time                              |
+|                          |                                      |                                                        |
+|                          |                                      | * ``odt_with_stop_time``: odt with                     |
+|                          |                                      |   fix schedule                                         |
+|                          |                                      |                                                        |
+|                          |                                      | * ``odt_with_zone``: odt with zone                     |
+|                          |                                      |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| geojson                  | `GeoJson <http://www.geojson.org>`   |                                                        |
+| geojson                  | `GeoJson <http://www.geojson.org>`_  |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| path                     | Array of path                        | The path of this section                               |
+| path                     | Array of path_                       | The path of this section                               |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| transfer_type            | *enum* string                        | The type of this transfer it can be : ``WALKING``,     |
+| transfer_type            | *enum* string                        | The type of this transfer it can be: ``WALKING``,      |
 |                          |                                      | ``GUARANTEED``, ``EXTENSION``                          |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | stop_date_times          | Array of stop_date_time_             | List of the stop times of this section                 |
@@ -466,12 +609,84 @@ type                *enum* string      Use to qualified a journey can be ``comfo
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 
 
+.. _path:
+
+* Path object
+
+  A path object in composed of an array of path_item_ (segment).
+
+.. _path_item:
+
+* Path item object
+
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| Field                    | Type                                 | Description                                            |
++==========================+======================================+========================================================+
+| length                   | int                                  | Length (in meter) of the segment                       |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| name                     | string                               | name of the way corresponding to the segment           |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| duration                 | int                                  | duration (in seconds) of the segment                   |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+| direction                | int                                  | Angle (in degree) between the previous segment and     |
+|                          |                                      | this segment.                                          |
+|                          |                                      |                                                        |
+|                          |                                      | * 0 means going straight                               |
+|                          |                                      |                                                        |
+|                          |                                      | * > 0 means turning right                              |
+|                          |                                      |                                                        |
+|                          |                                      | * < 0 means turning left                               |
+|                          |                                      |                                                        |
+|                          |                                      | Hope it's easier to understand with a picture:         |
+|                          |                                      |                                                        |
+|                          |                                      | .. image:: direction.png                               |
+|                          |                                      |    :scale: 50 %                                        |
++--------------------------+--------------------------------------+--------------------------------------------------------+
+
+.. _fare:
+
+* Fare object
+
+===================== =========================== ===================================================================
+Field                 Type                        Description
+===================== =========================== ===================================================================
+total                 cost_                       total cost of the journey
+found                 boolean                     False if no fare has been found for the journey, True otherwise
+links                 link_                       Links related to this object. Link with related :ref:`tickets <ticket>`
+===================== =========================== ===================================================================
+
+.. _cost:
+
+* Cost object
+
+===================== =========================== =============
+Field                 Type                        Description
+===================== =========================== =============
+value                 float                       cost
+currency              string                      currency
+===================== =========================== =============
+
+.. _ticket:
+
+* Ticket object 
+
+===================== =========================== ========================================
+Field                 Type                        Description
+===================== =========================== ========================================
+id                    string                      Id of the ticket    
+name                  string                      Name of the ticket
+found                 boolean                     False if unknown ticket, True otherwise
+cost                  cost_                       Cost of the ticket
+links                 array of link_              Link to the section_ using this ticket
+===================== =========================== ========================================
+
+
 Route Schedules
 ***************
 
 This api give you access to schedules of routes.
 The response is made of an array of route_schedule, and another one of :ref:`note`.
-You can access it via that kind of url : http://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules
+You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>`_
 
 Parameters
 ##########
@@ -521,9 +736,9 @@ Rows    Array of row_     A row of the schedule
 +--------------------------+-----------------------------+-----------------------------------+
 | Field                    | Type                        | Description                       |
 +==========================+=============================+===================================+
-| additionnal_informations | Array of String             | Other informations : TODO enum    |
+| additionnal_informations | Array of String             | Other information: TODO enum      |
 +--------------------------+-----------------------------+-----------------------------------+
-| display_informations     | :ref:`display_informations` | Usefull informations about the    |
+| display_informations     | :ref:`display_informations` | Usefull information about the     |
 |                          |                             | the vehicle journey to display    |
 +--------------------------+-----------------------------+-----------------------------------+
 | links                    | Array of link_              | Links to line_, vehicle_journey,  |
@@ -550,7 +765,7 @@ Stop Schedules
 
 This api give you access to schedules of stops.
 The response is made of an array of stop_schedule, and another one of :ref:`note`.
-You can access it via that kind of url : http://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules
+You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
 
 Parameters
 ##########
@@ -584,7 +799,7 @@ Departures
 **********
 
 This api retrieves a list of departures from a datetime of a selected object.
-Departures are ordered chronigically in growing order.
+Departures are ordered chronologically in growing order.
 
 Parameters
 ##########
@@ -676,7 +891,7 @@ Field        Type                  Description
 ============ ===================== ==================================
 id           string                Identifier of the route
 name         string                Name of the route
-is_frequence bool                  Is the route has frequence or not
+is_frequence bool                  Is the route has frequency or not
 line         :ref:`line`           The line of this route
 ============ ===================== ==================================
 
@@ -686,7 +901,7 @@ Stop Point
 ##########
 
 ===================== ===================== =====================================================================
-Field                 Type                        Description
+Field                 Type                  Description
 ===================== ===================== =====================================================================
 id                    string                Identifier of the line
 name                  string                Name of the line
@@ -767,7 +982,7 @@ stop_point           *optional* :ref:`stop_point`  Embedded Stop point
 stop_area            *optional* :ref:`stop_area`   Embedded Stop area
 address              *optional* :ref:`address`     Embedded address
 poi                  *optional* :ref:`poi`         Embedded poi
-adminstrative_region *optional* :ref:`admin`       Embedded adminstrative region
+adminstrative_region *optional* :ref:`admin`       Embedded administrative region
 ==================== ============================= =================================
 
 .. _embedded_type_place:
@@ -823,7 +1038,7 @@ Field                 Type                        Description
 ===================== =========================== ==================================================================
 id                    string                      Identifier of the address
 name                  string                      Name of the address
-coord                 :ref:`coord`                Coordinates of the adress
+coord                 :ref:`coord`                Coordinates of the address
 house_number          int                         House number of the address
 adminstrative_regions array of :ref:`admin`       Administrative regions of the address in which is the stop area
 ===================== =========================== ==================================================================
@@ -839,7 +1054,7 @@ Field                 Type                        Description
 ===================== =========================== ==================================================================
 id                    string                      Identifier of the address
 name                  string                      Name of the address
-coord                 :ref:`coord`                Coordinates of the adress
+coord                 :ref:`coord`                Coordinates of the address
 level                 int                         Level of the admin
 zip_code              string                      Zip code of the admin
 ===================== =========================== ==================================================================
@@ -856,7 +1071,7 @@ date_time
 +--------------------------+----------------------+--------------------------------+
 | Field                    | Type                 | Description                    |
 +==========================+======================+================================+
-| additionnal_informations | Array of String      | Other informations : TODO enum |
+| additionnal_informations | Array of String      | Other information: TODO enum   |
 +--------------------------+----------------------+--------------------------------+
 | date_times               | Array of String      | Date time                      |
 +--------------------------+----------------------+--------------------------------+
@@ -922,3 +1137,50 @@ datetime
 ########
 
 A date time with the format YYYYMMDDTHHMMSS
+
+Misc mechanisms
+***************
+
+.. _multiple_journeys: 
+
+Multiple journeys
+#################
+
+Navitia can compute several kind of trips within a journey query.
+
+The 'RAPTOR <http://research.microsoft.com/apps/pubs/default.aspx?id=156567>'_ algorithm used in Navitia is a multi-objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
+For example it cannot decide that a one hour trip with no connection is better than a 45 minutes trip with one connection (it is called the `pareto front <http://en.wikipedia.org/wiki/Pareto_efficiency>`_).
+
+If the user ask for more journeys than the number of journeys given by RAPTOR (with the parameter ``min_nb_journeys`` or ``count``), Navitia will ask RAPTOR again, 
+but for the following journeys (or the previous ones if the user asked with ``datetime_represents=arrival``). 
+
+Those journeys have the ``next`` (or ``previous``) value in their tags.
+
+
+.. _journey_qualif:
+
+Journey qualification process
+#############################
+
+Since Navitia can return several journeys, it tags them to help the user choose the best one for his needs.
+
+The different journey types are:
+
+===================== ========================================================== 
+Type                  Description
+===================== ========================================================== 
+best                  The best trip
+rapid                 A good trade off between duration, changes and constraint respect
+no_train              Alternative trip without train
+comfort               A trip with less changes and walking
+car                   A trip with car to get to the public transport
+less_fallback_walk    A trip with less walking
+less_fallback_bike    A trip with less biking
+less_fallback_bss     A trip with less bss
+fastest               A trip with minimum duration
+non_pt_walk           A trip without public transport, only walking
+non_pt_bike           A trip without public transport, only biking
+non_pt_bss            A trip without public transport, only bike sharing
+===================== ========================================================== 
+
+

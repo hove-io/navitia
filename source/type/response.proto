@@ -59,7 +59,6 @@ enum SectionType {
     STREET_NETWORK = 2;
     WAITING = 3;
     TRANSFER = 4;
-    BIRD_FLY = 5;
     boarding = 6;
     landing = 7;
     BSS_RENT = 8;
