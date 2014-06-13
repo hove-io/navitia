@@ -101,7 +101,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
         best_dt = DateTimeUtils::inf;
         best_dt_jpp = DateTimeUtils::inf;
     }
-    for(unsigned int round=1; round < raptor.labels.size(); ++round) {
+    for(unsigned int round=1; round <= raptor.count; ++round) {
         // For every round with look for the best journey pattern point that belongs to one of the destination stop points
         // We must not forget to walking duration
         type::idx_t best_jpp = type::invalid_idx;
@@ -180,7 +180,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
 
     std::/*unordered_*/map<type::idx_t, Solution> tmp;
     // We start at 1 because we don't want results of the first round
-    for(uint32_t i=1; i<raptor.labels.size(); ++i) {
+    for(uint32_t i=1; i <= raptor.count; ++i) {
         for(auto spid_dist : destinations) {
             Solution best_departure;
             best_departure.ratio = 2;
