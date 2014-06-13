@@ -431,7 +431,7 @@ Parameters
 | nop      | last_section_mode[] | array of  | Same as first_section_mode but for the    | walking         |
 |          |                     | string    | last section                              |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_duration_to_pt  | int       | Maximum allowed duration to reach the     |                 |
+| nop      | max_duration_to_pt  | int       | Maximum allowed duration to reach the     | 15*60 s         |
 |          |                     |           | public transport                          |                 |
 |          |                     |           |                                           |                 |
 |          |                     |           | Use this to limit the walking/biking part |                 |
