@@ -371,11 +371,11 @@ The first one is: `<https://api.navitia.io/v1/{a_path_to_resource}/journeys>`_ i
 The other one, the most used, is to access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}>`_ .
 
 .. note::
-    Navitia.io handle lot's of different data sets (regions). Some of them can overlap, with for example opendata data sets and private data sets.
+    Navitia.io handle lot's of different data sets (regions). Some of them can overlap. For example opendata data sets can overlap with private data sets.
 
     When using the journeys endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.
 
-    For the moment it is not yet possible to compute journeys on different data sets, but it will one day be possible (with a meta system).
+    For the moment it is not yet possible to compute journeys on different data sets, but it will one day be possible (with a cross-data-set system).
 
     If you want to use a specific data set, use the journey api within the data set: `<https://api.navitia.io/v1/coverage/{your_dataset}/journeys>`_
 
@@ -393,6 +393,8 @@ Parameters
 | Required | Name                | Type        Description                               | Default value   |
 +==========+=====================+===========+===========================================+=================+
 | nop      | from                | id        | The id of the departure of your journey   |                 |
+|          |                     |           | If none are provided an isochrone is      |                 |
+|          |                     |           | computed                                  |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | to                  | id        | The id of the arrival of your journey     |                 |
 |          |                     |           | If none are provided an isochrone is      |                 |
@@ -400,13 +402,13 @@ Parameters
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | yep      | datetime            | datetime  | A datetime                                |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | datetime_represents | string    | Can be *departure* or *arrival*.          | departure       |
+| nop      | datetime_represents | string    | Can be ``departure`` or ``arrival``.      | departure       |
 |          |                     |           |                                           |                 |
-|          |                     |           | If it's departure, the request will       |                 |
+|          |                     |           | If ``departure``, the request will        |                 |
 |          |                     |           | retrieve journeys starting after          |                 |
 |          |                     |           | datetime.                                 |                 |
 |          |                     |           |                                           |                 |
-|          |                     |           | If it's arrival it will retrieve journeys |                 |
+|          |                     |           | If ``arrival`` it will retrieve journeys  |                 |
 |          |                     |           | arriving before datetime.                 |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | forbidden_uris[]    | id        | If you want to avoid lines, modes ...     |                 |
@@ -417,6 +419,9 @@ Parameters
 |          |                     |           | ``walking``, ``car``, ``bike``, ``bss``   |                 |
 |          |                     |           |                                           |                 |
 |          |                     |           | bss stands for bike sharing system        |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | It's an array, you can give multiple      |                 |
+|          |                     |           | modes                                     |                 |
 |          |                     |           |                                           |                 |
 |          |                     |           | Note: choosing ``bss`` implicitly allows  |                 |
 |          |                     |           | the ``walking`` mode since you might have |                 |
@@ -443,15 +448,17 @@ Parameters
 |          |                     |           |                                           |                 |
 |          |                     |           | Speed unit must be in meter/seconds       | (60 km/h)       |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | count               | int       | Number of wanted journeys                 |                 |
+| nop      | min_nb_journeys     | int       | Minimum number of different suggested     |                 |
+|          |                     |           | trips                                     |                 |
 |          |                     |           |                                           |                 |
 |          |                     |           | More in :ref:`multiple_journeys`          |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | min_nb_journeys     | int       | Minimum number of wanted journeys         |                 |
+| nop      | max_nb_journeys     | int       | Maximum number of different suggested     |                 |
+|          |                     |           | trips                                     |                 |
 |          |                     |           |                                           |                 |
 |          |                     |           | More in :ref:`multiple_journeys`          |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_nb_journeys     | int       | Maximum number of wanted journeys         |                 |
+| nop      | count               | int       | Fixed number of different journeys        |                 |
 |          |                     |           |                                           |                 |
 |          |                     |           | More in :ref:`multiple_journeys`          |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
@@ -472,6 +479,10 @@ Parameters
 | nop      | wheelchair          | boolean   | If true the traveler is considered to     | False           |
 |          |                     |           | be using a wheelchair, thus only          |                 |
 |          |                     |           | accessible public transport are used      |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | be warned: many data are currently too    |                 |
+|          |                     |           | faint to provide acceptable answers       |                 |
+|          |                     |           | with this parameter on                    |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | show_codes          | boolean   | If true add internal id in the response   | False           |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
@@ -505,7 +516,7 @@ requested_date_time datetime_          Requested date and time of the journey
 arrival_date_time   datetime_          Arrival date and time of the journey
 sections            array of section_  All the sections of the journey
 from                place_             The place from where the journey starts
-to                  place_             The place from where the journey starts
+to                  place_             The place from where the journey ends
 links               link_              Links related to this journey
 type                *enum* string      Used to qualified a journey. See the :ref:`journey_qualif` section for more information
 fare                fare_              Fare of the journey (tickets and price)
@@ -1128,13 +1139,13 @@ Misc mechanisms
 Multiple journeys
 #################
 
-Navitia can compute several journeys with one query. 
+Navitia can compute several kind of trips within a journey query.
 
-The RAPTOR algorithm used in Navitia is a multi-objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
+The 'RAPTOR <http://research.microsoft.com/apps/pubs/default.aspx?id=156567>'_ algorithm used in Navitia is a multi-objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
 For example it cannot decide that a one hour trip with no connection is better than a 45 minutes trip with one connection (it is called the `pareto front <http://en.wikipedia.org/wiki/Pareto_efficiency>`_).
 
 If the user ask for more journeys than the number of journeys given by RAPTOR (with the parameter ``min_nb_journeys`` or ``count``), Navitia will ask RAPTOR again, 
-but for the next journeys (or the previous ones if the user asked with ``datetime_represents=arrival``). 
+but for the following journeys (or the previous ones if the user asked with ``datetime_represents=arrival``). 
 
 Those journeys have the ``next`` (or ``previous``) value in their tags.
 
@@ -1151,18 +1162,18 @@ The different journey types are:
 ===================== ========================================================== 
 Type                  Description
 ===================== ========================================================== 
-best                  The best journey
+best                  The best trip
 rapid                 A good trade off between duration, changes and constraint respect
-no_train              Journey without train
-comfort               A journey with less changes and walking
-car                   A journey with car to get to the public transport
-less_fallback_walk    A journey with less walking
-less_fallback_bike    A journey with less biking
-less_fallback_bss     A journey with less bss
-fastest               A journey with minimum duration
-non_pt_walk           A journey without public transport, only walking
-non_pt_bike           A journey without public transport, only biking
-non_pt_bss            A journey without public transport, only bike sharing
+no_train              Alternative trip without train
+comfort               A trip with less changes and walking
+car                   A trip with car to get to the public transport
+less_fallback_walk    A trip with less walking
+less_fallback_bike    A trip with less biking
+less_fallback_bss     A trip with less bss
+fastest               A trip with minimum duration
+non_pt_walk           A trip without public transport, only walking
+non_pt_bike           A trip without public transport, only biking
+non_pt_bss            A trip without public transport, only bike sharing
 ===================== ========================================================== 
 
 
