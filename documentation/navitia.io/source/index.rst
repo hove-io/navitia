@@ -84,7 +84,7 @@ The arguments are the following:
 * ``to=-122.402770;37.794682``
 * ``datetime=20140118T0800``
 
-Hence, the complete URL: http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140118T0800.
+Hence, the complete URL: http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140618T0800.
 
 
 A ``journeys`` request might return multiple journeys. Those journeys are said to be *equivalent*. For instance
@@ -93,8 +93,18 @@ a journey can be faster than an other but requires more changes or more walking.
 This API has more options explained in the reference as:
 
 * Forbid certain lines, routes or modes
+  For example you can forbid the line 1030 and the cablecar mode with the url:
+  http://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&datetime=20140618T0800&forbidden_uris[]=line:OSF:1030&forbidden_uris[]=commercial_mode:cablecar
+
 * Latest departure
+  TODO
+
 * Enable biking, driving or use of bike sharing system
+  For example you can allow bss and car with:
+  TODO
+
+* You can also limit the maximum duration to reach the public transport system (to limit the walking/biking/driving parts):
+  https://api.navitia.io/v1/coverage/iledefrance/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&datetime=201406121000&max_duration_to_pt=1800
 
 
 A quick journey in the API

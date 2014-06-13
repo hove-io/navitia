@@ -431,6 +431,13 @@ Parameters
 | nop      | last_section_mode[] | array of  | Same as first_section_mode but for the    | walking         |
 |          |                     | string    | last section                              |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_duration_to_pt  | int       | Maximum allowed duration to reach the     |                 |
+|          |                     |           | public transport                          |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | Use this to limit the walking/biking part |                 |
+|          |                     |           |                                           |                 |
+|          |                     |           | Unit is seconds                           |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | walking_speed       | float     | Walking speed for the fallback sections   | 1.12 m/s        |
 |          |                     |           |                                           |                 |
 |          |                     |           | Speed unit must be in meter/seconds       | (4 km/h)        |
