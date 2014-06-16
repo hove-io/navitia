@@ -130,7 +130,7 @@ std::vector<type::idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
 
 std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
                                         std::vector<type::idx_t>& list_idx2);
-void manage_odt_level(std::vector<type::idx_t>& final_indexes,
+std::vector<type::idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexes,
                                           const navitia::type::Type_e requested_type,
                                           const navitia::type::OdtLevel_e,
                                           const type::Data & data);
