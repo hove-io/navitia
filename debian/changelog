@@ -1,3 +1,9 @@
+navitia2 (0.97.3) unstable; urgency=low
+
+  * Jormungandr: V0 hotfix for demo.navitia.io 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 16 Jun 2014 16:06:42 +0100
+
 navitia2 (0.97.2) unstable; urgency=low
 
   * Jormungandr: multi coverage handling 
