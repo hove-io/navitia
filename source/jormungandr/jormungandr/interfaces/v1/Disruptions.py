@@ -35,6 +35,8 @@ from fields import PbField, error, network, line,\
     NonNullList, NonNullNested, pagination, stop_area
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
+from jormungandr.interfaces.common import odt_levels
+from jormungandr.interfaces.parsers import option_value
 from errors import ManageError
 from datetime import datetime
 

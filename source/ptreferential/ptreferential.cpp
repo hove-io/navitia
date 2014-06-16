@@ -195,8 +195,71 @@ std::vector<Filter> parse(std::string request){
     return filters;
 }
 
+std::vector<type::idx_t>::iterator sort_and_ge_new_end(std::vector<type::idx_t>& list_idx){
+  std::sort(list_idx.begin(), list_idx.end());
+  return std::unique(list_idx.begin(), list_idx.end());
+}
+
+std::vector<idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
+                                 std::vector<type::idx_t>& list_idx2){
+   std::vector<type::idx_t>::iterator new_end_1 = sort_and_ge_new_end(list_idx1);
+   std::vector<type::idx_t>::iterator new_end_2 = sort_and_ge_new_end(list_idx2);
+
+   std::vector<idx_t> tmp_indexes;
+   std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
+   std::set_difference(list_idx1.begin(), new_end_1,
+           list_idx2.begin(), new_end_2, it);
+   return tmp_indexes;
+}
+
+std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
+                                      std::vector<type::idx_t>& list_idx2){
+   std::vector<type::idx_t>::iterator new_end_1 = sort_and_ge_new_end(list_idx1);
+   std::vector<type::idx_t>::iterator new_end_2 = sort_and_ge_new_end(list_idx2);
+
+   std::vector<idx_t> tmp_indexes;
+   std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
+   std::set_intersection(list_idx1.begin(), new_end_1, list_idx2.begin(), new_end_2, it);
+   return tmp_indexes;
+}
+
+std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexes,
+                                          const navitia::type::Type_e requested_type,
+                                          const navitia::type::OdtLevel_e odt_level,
+                                          const type::Data & data){
+    if((!final_indexes.empty()) && (requested_type == navitia::type::Type_e::Line)
+            && (odt_level != navitia::type::OdtLevel_e::all)){
+        std::vector<idx_t> odt_level_idx;
+        for(const idx_t idx : final_indexes){
+            const navitia::type::Line* line = data.pt_data->lines[idx];
+            switch(odt_level){
+                case navitia::type::OdtLevel_e::none:
+                    if (line->get_odt_level() == OdtLevel_e::none){
+                        odt_level_idx.push_back(idx);
+                    };
+                    break;
+                case navitia::type::OdtLevel_e::mixt:
+                    if (line->get_odt_level() == navitia::type::OdtLevel_e::mixt){
+                        odt_level_idx.push_back(idx);
+                    };
+                    break;
+                case navitia::type::OdtLevel_e::zonal:
+                    if (line->get_odt_level() == navitia::type::OdtLevel_e::zonal){
+                        odt_level_idx.push_back(idx);
+                    };
+                    break;
+                case navitia::type::OdtLevel_e::all:
+                    break;
+            }
+        }
+        return odt_level_idx;
+    }
+    return final_indexes;
+}
+
 std::vector<idx_t> make_query(Type_e requested_type, std::string request,
                               const std::vector<std::string>& forbidden_uris,
+                              const type::OdtLevel_e odt_level,
                               const Data & data) {
     std::vector<Filter> filters;
 
@@ -232,13 +295,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
                     "Filter: Unable to find the requested type. Not parsed: >>"
                     + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
         }
-        // Warning the structures must be sorted!
-        std::sort(indexes.begin(), indexes.end());
-        std::unique(indexes.begin(), indexes.end());
-        std::vector<idx_t> tmp_indexes;
-        std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
-        std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
-        final_indexes = tmp_indexes;
+        final_indexes = get_intersection(final_indexes, indexes);
     }
     //We now filter with forbidden uris
     for(const auto forbidden_uri : forbidden_uris) {
@@ -269,16 +326,10 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
         default:
             throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter_forbidden.navitia_type) + "<<");
         }
-        // Warning the structures must be sorted!
-        std::sort(forbidden_idx.begin(), forbidden_idx.end());
-        std::unique(forbidden_idx.begin(), forbidden_idx.end());
-        std::vector<idx_t> tmp_indexes;
-        std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
-        std::set_difference(final_indexes.begin(), final_indexes.end(),
-                forbidden_idx.begin(), forbidden_idx.end(), it);
-        final_indexes = tmp_indexes;
+        final_indexes = get_difference(final_indexes, forbidden_idx);
     }
-
+       // Manage OdtLevel
+    final_indexes = manage_odt_level(final_indexes, requested_type, odt_level, data);
     // When the filters have emptied the results
     if(final_indexes.empty()){
         throw ptref_error("Filters: Unable to find object");
@@ -308,6 +359,14 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
 
     return final_indexes;
 }
+
+std::vector<type::idx_t> make_query(type::Type_e requested_type,
+                                    std::string request,
+                                    const std::vector<std::string>& forbidden_uris,
+                                    const type::Data &data) {
+    return make_query(requested_type, request, forbidden_uris, navitia::type::OdtLevel_e::all, data);
+}
+
 std::vector<type::idx_t> make_query(type::Type_e requested_type,
                                     std::string request,
                                     const type::Data &data) {

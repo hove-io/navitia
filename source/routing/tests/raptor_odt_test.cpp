@@ -75,17 +75,18 @@ public:
         b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2014,01,13), boost::gregorian::date(2014,01,25));
         vj1 = b.data->pt_data->vehicle_journeys_map["vj1"];
         vj2 = b.data->pt_data->vehicle_journeys_map["vj2"];
+
     }
-    pbnavitia::Response make_response(bool active_odt) {
+    pbnavitia::Response make_response(bool allow_odt) {
         return navitia::routing::make_response(*raptor, origin, destination,
                                {"20140114T101000"}, true,
                                navitia::type::AccessibiliteParams(),
                                forbidden,
-                               *street_network, false, active_odt);
+                               *street_network, false, allow_odt);
     }
     void unset_odt_jp(){
         for(navitia::type::JourneyPattern* jp : b.data->pt_data->journey_patterns){
-            jp->is_odt = false;
+            jp->odt_level = navitia::type::OdtLevel_e::none;
         }
     }
 };
@@ -528,6 +529,123 @@ BOOST_AUTO_TEST_CASE(test13){
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);
     unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && not estimated_date_time, last stoptime is not odt && not estimated_date_time
+   VJ2 : not odt
+*/
+
+BOOST_AUTO_TEST_CASE(test14){
+    vj1->stop_time_list.front()->set_odt(true);
+    b.data->build_odt();
+    BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::none), true);
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time, last stoptime is not odt && not estimated_date_time
+   VJ2 : not odt
+*/
+
+BOOST_AUTO_TEST_CASE(test15){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    b.data->build_odt();
+    BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time, last stoptime is odt && not estimated_date_time
+   VJ2 : not odt
+*/
+
+BOOST_AUTO_TEST_CASE(test16){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.back()->set_odt(true);
+    b.data->build_odt();
+    BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && estimated_date_time, last stoptime is odt && estimated_date_time
+   VJ2 : not odt
+*/
+
+BOOST_AUTO_TEST_CASE(test17){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    b.data->build_odt();
+    BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::zonal), true);
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is not odt && not estimated_date_time, last stoptime is odt && not estimated_date_time
+   VJ2 : not odt
+*/
+
+BOOST_AUTO_TEST_CASE(test18){
+    vj1->stop_time_list.back()->set_odt(true);
+    b.data->build_odt();
+    BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::none), true);
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is not odt && not estimated_date_time, last stoptime is odt && estimated_date_time
+   VJ2 : not odt
+*/
+
+BOOST_AUTO_TEST_CASE(test19){
+    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    b.data->build_odt();
+    BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is odt && not estimated_date_time, last stoptime is odt && estimated_date_time
+   VJ2 : not odt
+*/
+
+BOOST_AUTO_TEST_CASE(test20){
+    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    b.data->build_odt();
+    BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
+    unset_odt_jp();
+}
+
+/*
+   Testing the behavior if :
+   VJ1 : first stoptime is not odt && estimated_date_time, last stoptime is odt && estimated_date_time
+   VJ2 : not odt
+*/
+
+BOOST_AUTO_TEST_CASE(test21){
+    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    b.data->build_odt();
+    BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
+    unset_odt_jp();
+    std::cout<<std::endl<<b.data->pt_data->routes.front()->uri<<std::endl;
+    std::cout<<std::endl<<b.data->pt_data->routes.back()->uri<<std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -34,6 +34,7 @@ import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.renderers import render_from_protobuf
+from jormungandr.interfaces.common import pb_odt_level
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
@@ -48,6 +49,7 @@ pb_type = {
     'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
     'line': type_pb2.LINE
 }
+
 
 f_date_time = "%Y%m%dT%H%M%S"
 
@@ -164,6 +166,7 @@ class Script(object):
         req.disruptions.start_page = request['start_page']
         req.disruptions.datetime = request['datetime']
         req.disruptions.period = request['period']
+
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
@@ -667,6 +670,8 @@ class Script(object):
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
         req.ptref.show_codes = request["show_codes"]
+        if request["odt_level"]:
+            req.ptref.odt_level = pb_odt_level[request["odt_level"]]
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)

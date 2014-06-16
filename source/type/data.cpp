@@ -311,16 +311,20 @@ void Data::build_associated_calendar() {
 }
 
 void Data::build_odt(){
-    bool result;
     for(JourneyPattern* jp : this->pt_data->journey_patterns){
-        result = true;
-        for(const VehicleJourney* vj : jp->vehicle_journey_list){
-            if(!vj->is_odt_and_has_date_time_estimated()){
-                result = false;
-            }
+        jp->odt_level = type::OdtLevel_e::none;
+        VehicleJourney* vj;
+        if(jp->vehicle_journey_list.empty()){
+            continue;
         }
-        if((jp->vehicle_journey_list.size() > 0) && (result)){
-            jp->is_odt = true;
+        vj = jp->vehicle_journey_list.front();
+        jp->odt_level = vj->get_odt_level();
+        for(idx_t idx = 1; idx < jp->vehicle_journey_list.size(); idx++){
+            vj = jp->vehicle_journey_list[idx];
+            if (vj->get_odt_level() != jp->odt_level){
+                jp->odt_level = type::OdtLevel_e::mixt;
+                break;
+            }
         }
     }
 }

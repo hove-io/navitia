@@ -113,13 +113,31 @@ bool VehicleJourney::has_landing() const{
 
 }
 
-bool VehicleJourney::is_odt_and_has_date_time_estimated() const{
-    for(const StopTime* st : this->stop_time_list){
-        if((!st->odt()) || (!st->date_time_estimated())){
-            return false;
+type::OdtLevel_e VehicleJourney::get_odt_level() const{
+    type::OdtLevel_e result = type::OdtLevel_e::none;
+    if (this->stop_time_list.empty()){
+        return result;
+    }
+
+    const StopTime* st = this->stop_time_list.front();
+    if (st->is_odt_and_date_time_estimated()){
+        result = type::OdtLevel_e::zonal;
+    }
+    for(idx_t idx = 1; idx < this->stop_time_list.size(); idx++){
+        st = this->stop_time_list[idx];
+        if (st->is_odt_and_date_time_estimated()){
+            if (result != type::OdtLevel_e::zonal){
+                result = type::OdtLevel_e::mixt;
+                break;
+            }
+        }else{
+            if(result == type::OdtLevel_e::zonal){
+                result = type::OdtLevel_e::mixt;
+                break;
+            }
         }
     }
-    return true;
+    return result;
 }
 
 bool ValidityPattern::is_valid(int day) const {
@@ -421,6 +439,26 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     return result;
 }
 
+type::OdtLevel_e Line::get_odt_level() const{
+    type::OdtLevel_e result = type::OdtLevel_e::none;
+    if (this->route_list.empty()){
+        return result;
+    }
+
+    const Route* route = this->route_list.front();
+    result = route->get_odt_level();
+
+    for(idx_t idx = 1; idx < this->route_list.size(); idx++){
+        route = this->route_list[idx];
+        type::OdtLevel_e tmp = route->get_odt_level();
+        if (tmp != result){
+            result = type::OdtLevel_e::mixt;
+            break;
+        }
+    }
+    return result;
+}
+
 std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
@@ -450,6 +488,25 @@ idx_t Route::main_destination() const {
         }
     }
     return best.first;
+}
+
+type::OdtLevel_e Route::get_odt_level() const{
+    type::OdtLevel_e result = type::OdtLevel_e::none;
+    if (this->journey_pattern_list.empty()){
+        return result;
+    }
+
+    const JourneyPattern* jp = this->journey_pattern_list.front();
+    result = jp->odt_level;
+
+    for(idx_t idx = 1; idx < this->journey_pattern_list.size(); idx++){
+        jp = this->journey_pattern_list[idx];
+        if (jp->odt_level != result){
+            result = type::OdtLevel_e::mixt;
+            break;
+        }
+    }
+    return result;
 }
 
 std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
