@@ -74,15 +74,14 @@ class Journeys(Resource):
         parser_get.add_argument("origin_mode",
                                 type=option_value(["walking", "car", "bike",
                                                    "bss"]),
-                                action="append", default=['walking', 'bike',
-                                                          'car'],
+                                action="append", default=['walking'],
                                 description=
                                 "The list of modes you want at the "\
                                 "beggining of your journey")
         parser_get.add_argument("destination_mode",
                                 type=option_value(["walking", "car", "bike",
                                                    "bss"]),
-                                default=['walking', 'bike', 'car'],
+                                default=['walking'],
                                 action="append",
                                 description=
                                 "The list of modes you want at the"\
