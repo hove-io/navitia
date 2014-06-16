@@ -87,7 +87,7 @@ class Uri(ResourceUri):
         args = self.parsers["get"].parse_args()
 
         if "odt_level" in args and args["odt_level"] != "all" and "lines" not in collection:
-            abort(404, message="bad request")
+            abort(404, message="bad request: odt_level is not valid argument")
 
         if region is None and lat is None and lon is None:
             if "external_code" in args and args["external_code"]:
