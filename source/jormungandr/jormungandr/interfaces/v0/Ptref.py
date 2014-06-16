@@ -31,6 +31,7 @@
 
 from flask import Flask
 from flask.ext.restful import Resource, fields
+from flask.ext.restful.types import boolean
 from jormungandr import i_manager
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
@@ -64,6 +65,8 @@ class Ptref(Resource):
         self.parsers["get"].add_argument("forbidden_uris[]", type=unicode,
                                          action="append",
                                          description="Uri to forbid")
+        self.parsers["get"].add_argument("show_codes", type=boolean, default=False,
+                                         description="Either to show or not codes")
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
