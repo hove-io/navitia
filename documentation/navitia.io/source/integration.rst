@@ -167,24 +167,24 @@ The are two possible http codes :
 
 * Code 404:
 
-    ========================== ==========================================================================
-    Error id                   Description
-    ========================== ==========================================================================
-    date_out_of_bounds         When the given date is out of bounds of the production dates of the region
-    no_origin                  Couldn't find an origin for the journeys
-    no_destination             Couldn't find an destination for the journeys
-    no_origin_nor_destination  Couldn't find an origin nor a destination for the journeys
-    unknown_object             As it's said
-    ========================== ==========================================================================
+========================== ==========================================================================
+Error id                   Description
+========================== ==========================================================================
+date_out_of_bounds         When the given date is out of bounds of the production dates of the region
+no_origin                  Couldn't find an origin for the journeys
+no_destination             Couldn't find an destination for the journeys
+no_origin_nor_destination  Couldn't find an origin nor a destination for the journeys
+unknown_object             As it's said
+========================== ==========================================================================
 
 * Code 400:
 
-    =============== ========================================
-    Error id        Description
-    =============== ========================================
-    bad_filter      When you use a custom filter
-    unable_to_parse When you use a mal-formed custom filter
-    =============== ========================================
+=============== ========================================
+Error id        Description
+=============== ========================================
+bad_filter      When you use a custom filter
+unable_to_parse When you use a mal-formed custom filter
+=============== ========================================
 
 Code 50x
 ********
@@ -192,7 +192,7 @@ Code 50x
 Code 204
 ********
 
-    When your request is good but we are not able to find a journey
+When your request is good but we are not able to find a journey
 
 Redirections
 ============
@@ -203,14 +203,14 @@ Apis
 Coverage
 ********
 You can easily navigate through regions covered by navitia.io, with the coverage api.
-The only arguments are the ones of :ref:`paging`.
+The only arguments are the ones of `paging`_.
 
 Public transportation objects
 ******************************
 
 Once you have selected a region, you can explore the public transportation objects easily with these apis. You just need to add at the end of your url a collection name to see all the objects of a particular collection.
 To see an object add the id of this object at the end of the collection's url.
-The only arguments are the ones of :ref:`paging`.
+The only arguments are the ones of `paging`_.
 
 Collections
 ###########
@@ -255,7 +255,7 @@ Places
 ******
 
 This api search in public transport objects via their names.
-It returns, in addition of classic objects, a collection of :ref:`place`.
+It returns, in addition of classic objects, a collection of `place`_.
 
 .. warning::
     There is no pagination for this api
@@ -305,7 +305,7 @@ Places Nearby
 *************
 
 This api search for public transport object near another object, or near coordinates.
-It returns, in addition of classic objects, a collection of :ref:`place`.
+It returns, in addition of classic objects, a collection of `place`_.
 
 .. warning::
     There is no pagination for this api
@@ -458,20 +458,20 @@ Parameters
 | nop      | min_nb_journeys     | int       | Minimum number of different suggested     |                 |
 |          |                     |           | trips                                     |                 |
 |          |                     |           |                                           |                 |
-|          |                     |           | More in :ref:`multiple_journeys`          |                 |
+|          |                     |           | More in `multiple_journeys`_              |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_journeys     | int       | Maximum number of different suggested     |                 |
 |          |                     |           | trips                                     |                 |
 |          |                     |           |                                           |                 |
-|          |                     |           | More in :ref:`multiple_journeys`          |                 |
+|          |                     |           | More in `multiple_journeys`_              |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | count               | int       | Fixed number of different journeys        |                 |
 |          |                     |           |                                           |                 |
-|          |                     |           | More in :ref:`multiple_journeys`          |                 |
+|          |                     |           | More in `multiple_journeys`_              |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | type                | string    | Allows you to filter the type of journeys |                 |
 |          |                     |           |                                           |                 |
-|          |                     |           | More in :ref:`journey_qualif`             |                 |
+|          |                     |           | More in `journey_qualif`_                 |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
@@ -525,7 +525,7 @@ sections            array of section_  All the sections of the journey
 from                place_             The place from where the journey starts
 to                  place_             The place from where the journey ends
 links               link_              Links related to this journey
-type                *enum* string      Used to qualified a journey. See the :ref:`journey_qualif` section for more information
+type                *enum* string      Used to qualified a journey. See the `journey_qualif`_ section for more information
 fare                fare_              Fare of the journey (tickets and price)
 tags                array of string    List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example `multiple_journeys`_.
 =================== ================== ===========================================================================
@@ -603,9 +603,9 @@ tags                array of string    List of tags on the journey. The tags add
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | stop_date_times          | Array of stop_date_time_             | List of the stop times of this section                 |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| departure_date_time      | :ref:`date_time <date_time_object>`  | Date and time of departure                             |
+| departure_date_time      | `date_time <date_time_object>`_      | Date and time of departure                             |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
-| arrival_date_time        | :ref:`date_time <date_time_object>`  | Date and time of arrival                               |
+| arrival_date_time        | `date_time <date_time_object>`_      | Date and time of arrival                               |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 
 
@@ -652,7 +652,7 @@ Field                 Type                        Description
 ===================== =========================== ===================================================================
 total                 cost_                       total cost of the journey
 found                 boolean                     False if no fare has been found for the journey, True otherwise
-links                 link_                       Links related to this object. Link with related :ref:`tickets <ticket>`
+links                 link_                       Links related to this object. Link with related `tickets <ticket>`_
 ===================== =========================== ===================================================================
 
 .. _cost:
@@ -685,7 +685,7 @@ Route Schedules
 ***************
 
 This api give you access to schedules of routes.
-The response is made of an array of route_schedule, and another one of :ref:`note`.
+The response is made of an array of route_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>`_
 
 Parameters
@@ -714,7 +714,7 @@ Objects
 ===================== =========================== ==============================================
 Field                 Type                        Description
 ===================== =========================== ==============================================
-display_informations  :ref:`display_informations` Usefull information about the route to display
+display_informations  `display_informations`_     Usefull information about the route to display
 Table                 table_                      The schedule table
 ===================== =========================== ==============================================
 
@@ -738,7 +738,7 @@ Rows    Array of row_     A row of the schedule
 +==========================+=============================+===================================+
 | additionnal_informations | Array of String             | Other information: TODO enum      |
 +--------------------------+-----------------------------+-----------------------------------+
-| display_informations     | :ref:`display_informations` | Usefull information about the     |
+| display_informations     | `display_informations`_     | Usefull information about the     |
 |                          |                             | the vehicle journey to display    |
 +--------------------------+-----------------------------+-----------------------------------+
 | links                    | Array of link_              | Links to line_, vehicle_journey,  |
@@ -753,9 +753,9 @@ Rows    Array of row_     A row of the schedule
 +------------+----------------------------------------------+---------------------------+
 | Field      | Type                                         | Description               |
 +============+==============================================+===========================+
-| date_times | Array of :ref:`date_time <date_time_object>` | Array of date_time        |
+| date_times | Array of `date_time <date_time_object>`_     | Array of date_time        |
 +------------+----------------------------------------------+---------------------------+
-| stop_point | :ref:`stop_point`                            | The stop point of the row |
+| stop_point | `stop_point`_                                | The stop point of the row |
 +------------+----------------------------------------------+---------------------------+
 
 
@@ -764,7 +764,7 @@ Stop Schedules
 **************
 
 This api give you access to schedules of stops.
-The response is made of an array of stop_schedule, and another one of :ref:`note`.
+The response is made of an array of stop_schedule, and another one of `note`_.
 You can access it via that kind of url: `<https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>`_
 
 Parameters
@@ -791,7 +791,7 @@ Field                 Type                                            Descriptio
 ===================== =============================================== ==============================================
 display_informations  display_informations_                           Usefull information about the route to display
 route                 route_                                          The route of the schedule
-date_times            Array of :ref:`date_time <date_time_object>`    When does a bus stops at the stop point
+date_times            Array of `date_time <date_time_object>`_        When does a bus stops at the stop point
 stop_point            stop_point_                                     The stop point of the schedule
 ===================== =============================================== ==============================================
 
@@ -862,7 +862,7 @@ Field  Type          Description
 ====== ============= ==========================
 id     string        Identifier of the network
 name   string        Name of the network
-coord  :ref:`coord`  Center of the network
+coord  `coord`_      Center of the network
 ====== ============= ==========================
 
 .. _line:
@@ -877,8 +877,8 @@ id              string                 Identifier of the line
 name            string                 Name of the line
 code            string                 Code name of the line
 color           string                 Color of the line
-routes          array of :ref:`route`  Routes of the line
-commercial_mode :ref:`commercial_mode` Commercial mode of the line
+routes          array of `route`_      Routes of the line
+commercial_mode `commercial_mode`_     Commercial mode of the line
 =============== ====================== ============================
 
 .. _route:
@@ -892,7 +892,7 @@ Field        Type                  Description
 id           string                Identifier of the route
 name         string                Name of the route
 is_frequence bool                  Is the route has frequency or not
-line         :ref:`line`           The line of this route
+line         `line`_               The line of this route
 ============ ===================== ==================================
 
 .. _stop_point:
@@ -905,10 +905,10 @@ Field                 Type                  Description
 ===================== ===================== =====================================================================
 id                    string                Identifier of the line
 name                  string                Name of the line
-coord                 :ref:`coord`          Coordinates of the stop point
-adminstrative_regions array of :ref:`admin` Administrative regions of the stop point in which is the stop point
+coord                 `coord`_              Coordinates of the stop point
+adminstrative_regions array of `admin`_     Administrative regions of the stop point in which is the stop point
 equipments            array of string       Equipments of the stop point
-stop_area             :ref:`stop_area`      Stop Area containing this stop point
+stop_area             `stop_area`_          Stop Area containing this stop point
 ===================== ===================== =====================================================================
 
 .. _stop_area:
@@ -921,10 +921,10 @@ Field                 Type                        Description
 ===================== =========================== ==================================================================
 id                    string                      Identifier of the line
 name                  string                      Name of the line
-coord                 :ref:`coord`                Coordinates of the stop area
-adminstrative_regions array of :ref:`admin`       Administrative regions of the stop area in which is the stop area
+coord                 `coord`_                    Coordinates of the stop area
+adminstrative_regions array of `admin`_           Administrative regions of the stop area in which is the stop area
 equipments            array of string             Equipments of the stop area
-stop_points           array of :ref:`stop_point`  Stop points contained in this stop area
+stop_points           array of `stop_point`_      Stop points contained in this stop area
 ===================== =========================== ==================================================================
 
 
@@ -938,7 +938,7 @@ Field            Type                            Description
 ================ =============================== =======================================
 id               string                          Identifier of the commercial mode
 name             string                          Name of the commercial mode
-physical_modes   array of :ref:`physical_mode`   Physical modes of this commercial mode
+physical_modes   array of `physical_mode`_       Physical modes of this commercial mode
 ================ =============================== =======================================
 
 .. _physical_mode:
@@ -951,7 +951,7 @@ Field                Type                             Description
 ==================== ================================ ========================================
 id                   string                           Identifier of the physical mode
 name                 string                           Name of the physical mode
-commercial_modes     array of :ref:`commercial_mode`  Commercial modes of this physical mode
+commercial_modes     array of `commercial_mode`_      Commercial modes of this physical mode
 ==================== ================================ ========================================
 
 .. _company:
@@ -970,19 +970,19 @@ name                 string                             Name of the company
 
 Place
 #####
-A container containing either a :ref:`stop_point`, :ref:`stop_area`, :ref:`address`, , :ref:`poi`, :ref:`admin`
+A container containing either a `stop_point`_, :ref:`stop_area`, :ref:`address`, , :ref:`poi`, :ref:`admin`
 
 ==================== ============================= =================================
 Field                Type                          Description
 ==================== ============================= =================================
 name                 string                        The id of the embedded object
 id                   string                        The name of the embedded object
-embedded_type        :ref:`embedded_type_place`    The type of the embedded object
-stop_point           *optional* :ref:`stop_point`  Embedded Stop point
-stop_area            *optional* :ref:`stop_area`   Embedded Stop area
-address              *optional* :ref:`address`     Embedded address
-poi                  *optional* :ref:`poi`         Embedded poi
-adminstrative_region *optional* :ref:`admin`       Embedded administrative region
+embedded_type        `embedded_type_place`_        The type of the embedded object
+stop_point           *optional* `stop_point`_      Embedded Stop point
+stop_area            *optional* `stop_area`_       Embedded Stop area
+address              *optional* `address`_         Embedded address
+poi                  *optional* `poi`_             Embedded poi
+adminstrative_region *optional* `admin`_           Embedded administrative region
 ==================== ============================= =================================
 
 .. _embedded_type_place:
@@ -1013,7 +1013,7 @@ Field            Type                               Description
 ================ ================================== =======================================
 id               string                             Identifier of the poi type
 name             string                             Name of the poi type
-poi_type         :ref:`poi_type`                    Type of the poi
+poi_type         `poi_type`_                        Type of the poi
 ================ ================================== =======================================
 
 .. _poi_type:
@@ -1038,9 +1038,9 @@ Field                 Type                        Description
 ===================== =========================== ==================================================================
 id                    string                      Identifier of the address
 name                  string                      Name of the address
-coord                 :ref:`coord`                Coordinates of the address
+coord                 `coord`_                    Coordinates of the address
 house_number          int                         House number of the address
-adminstrative_regions array of :ref:`admin`       Administrative regions of the address in which is the stop area
+adminstrative_regions array of `admin`_           Administrative regions of the address in which is the stop area
 ===================== =========================== ==================================================================
 
 .. _admin:
@@ -1054,7 +1054,7 @@ Field                 Type                        Description
 ===================== =========================== ==================================================================
 id                    string                      Identifier of the address
 name                  string                      Name of the address
-coord                 :ref:`coord`                Coordinates of the address
+coord                 `coord`_                    Coordinates of the address
 level                 int                         Level of the admin
 zip_code              string                      Zip code of the admin
 ===================== =========================== ==================================================================
@@ -1098,7 +1098,7 @@ stop_date_time
 ========== ===================================== ============
 Field      Type                                  Description
 ========== ===================================== ============
-date_time  :ref:`date_time <date_time_object>`   A date time
+date_time  `date_time <date_time_object>`_       A date time
 stop_point stop_point_                           A stop point
 ========== ===================================== ============
 
@@ -1148,7 +1148,7 @@ Multiple journeys
 
 Navitia can compute several kind of trips within a journey query.
 
-The 'RAPTOR <http://research.microsoft.com/apps/pubs/default.aspx?id=156567>'_ algorithm used in Navitia is a multi-objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
+The `RAPTOR <http://research.microsoft.com/apps/pubs/default.aspx?id=156567>`_ algorithm used in Navitia is a multi-objective algorithm. Thus it might return multiple journeys if it cannot know that one is better than the other. 
 For example it cannot decide that a one hour trip with no connection is better than a 45 minutes trip with one connection (it is called the `pareto front <http://en.wikipedia.org/wiki/Pareto_efficiency>`_).
 
 If the user ask for more journeys than the number of journeys given by RAPTOR (with the parameter ``min_nb_journeys`` or ``count``), Navitia will ask RAPTOR again, 
