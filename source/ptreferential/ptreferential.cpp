@@ -300,6 +300,9 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
     //We now filter with forbidden uris
     for(const auto forbidden_uri : forbidden_uris) {
         const auto type_ = data.get_type_of_id(forbidden_uri);
+        //We don't use unknown forbidden type object as a filter.
+        if (type_==navitia::type::Type_e::Unknown)
+            continue;
         std::string caption_type;
         try {
             caption_type = static_data->captionByType(type_);
