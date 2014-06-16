@@ -195,31 +195,31 @@ std::vector<Filter> parse(std::string request){
     return filters;
 }
 
-void sort_and_unique(std::vector<type::idx_t>& list_idx){
+std::vector<type::idx_t>::iterator sort_and_ge_new_end(std::vector<type::idx_t>& list_idx){
   std::sort(list_idx.begin(), list_idx.end());
-  std::unique(list_idx.begin(), list_idx.end());
+  return std::unique(list_idx.begin(), list_idx.end());
 }
 
 std::vector<idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
                                  std::vector<type::idx_t>& list_idx2){
-   sort_and_unique(list_idx1);
-   sort_and_unique(list_idx2);
+   std::vector<type::idx_t>::iterator new_end_1 = sort_and_ge_new_end(list_idx1);
+   std::vector<type::idx_t>::iterator new_end_2 = sort_and_ge_new_end(list_idx2);
 
    std::vector<idx_t> tmp_indexes;
    std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
-   std::set_difference(list_idx1.begin(), list_idx1.end(),
-           list_idx2.begin(), list_idx2.end(), it);
+   std::set_difference(list_idx1.begin(), new_end_1,
+           list_idx2.begin(), new_end_2, it);
    return tmp_indexes;
 }
 
 std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
                                       std::vector<type::idx_t>& list_idx2){
-   sort_and_unique(list_idx1);
-   sort_and_unique(list_idx2);
+   std::vector<type::idx_t>::iterator new_end_1 = sort_and_ge_new_end(list_idx1);
+   std::vector<type::idx_t>::iterator new_end_2 = sort_and_ge_new_end(list_idx2);
 
    std::vector<idx_t> tmp_indexes;
    std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
-   std::set_intersection(list_idx1.begin(), list_idx1.end(), list_idx2.begin(), list_idx2.end(), it);
+   std::set_intersection(list_idx1.begin(), new_end_1, list_idx2.begin(), new_end_2, it);
    return tmp_indexes;
 }
 
