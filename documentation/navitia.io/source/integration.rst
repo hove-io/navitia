@@ -257,9 +257,12 @@ Places
 This api search in public transport objects via their names.
 It returns, in addition of classic objects, a collection of `place`_.
 
-.. warning::
 
-    There is no pagination for this api
++------------------------------------------+
+| *Warning*                                |
+|                                          |
+|    There is no pagination for this api   |
++------------------------------------------+
 
 Parameters
 ##########
@@ -371,20 +374,26 @@ The first one is: `<https://api.navitia.io/v1/{a_path_to_resource}/journeys>`_ i
 
 The other one, the most used, is to access the 'journey' api endpoint: `<https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}>`_ .
 
-.. note::
-    Navitia.io handle lot's of different data sets (regions). Some of them can overlap. For example opendata data sets can overlap with private data sets.
++-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| *Note*                                                                                                                                                      |
+|                                                                                                                                                             |
+|    Navitia.io handle lot's of different data sets (regions). Some of them can overlap. For example opendata data sets can overlap with private data sets.   |
+|                                                                                                                                                             |
+|    When using the journeys endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.       |
+|                                                                                                                                                             |
+|    For the moment it is not yet possible to compute journeys on different data sets, but it will one day be possible (with a cross-data-set system).        |
+|                                                                                                                                                             |
+|    If you want to use a specific data set, use the journey api within the data set: `<https://api.navitia.io/v1/coverage/{your_dataset}/journeys>`_         |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-    When using the journeys endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.
 
-    For the moment it is not yet possible to compute journeys on different data sets, but it will one day be possible (with a cross-data-set system).
-
-    If you want to use a specific data set, use the journey api within the data set: `<https://api.navitia.io/v1/coverage/{your_dataset}/journeys>`_
-
-
-.. note::
-    Neither the 'from' nor the 'to' parameter of the journey are required, but obviously one of them has to be provided.
-
-    If only one is defined an isochrone is computed with every possible journeys from or to the point.
++-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| *Note*                                                                                                                                                      |
+|                                                                                                                                                             |
+|    Neither the 'from' nor the 'to' parameter of the journey are required, but obviously one of them has to be provided.                                     |
+|                                                                                                                                                             |
+|    If only one is defined an isochrone is computed with every possible journeys from or to the point.                                                       |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
 Parameters
@@ -533,7 +542,8 @@ tags                array of string    List of tags on the journey. The tags add
 
 
 +-----------------------------------------------------------------------------------------------------------+
-| Note                                                                                                      |
+| *Note*                                                                                                    |
+|                                                                                                           |
 | When used with just a "from" or a "to" parameter, it will not contain any sections                        |
 +-----------------------------------------------------------------------------------------------------------+
 
