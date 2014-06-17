@@ -72,7 +72,7 @@ class Uri(ResourceUri):
                             description="An external code to query")
         parser.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        self.parsers["get"].add_argument("odt_level", type=option_value(odt_levels),
+        parser.add_argument("odt_level", type=option_value(odt_levels),
                                          default="all",
                                          description="odt level")
         if is_collection:
