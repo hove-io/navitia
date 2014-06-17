@@ -39,6 +39,8 @@ from jormungandr.interfaces.parsers import depth_argument
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from jormungandr.authentification import authentification_required
+from jormungandr.interfaces.parsers import option_value
+from jormungandr.interfaces.common import odt_levels
 
 
 class Ptref(Resource):
@@ -67,6 +69,9 @@ class Ptref(Resource):
                                          description="Uri to forbid")
         self.parsers["get"].add_argument("show_codes", type=boolean, default=False,
                                          description="Either to show or not codes")
+        self.parsers["get"].add_argument("odt_level", type=option_value(odt_levels),
+                                         default="all",
+                                         description="odt level")
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
