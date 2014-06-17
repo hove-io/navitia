@@ -532,8 +532,10 @@ tags                array of string    List of tags on the journey. The tags add
 =================== ================== ===========================================================================
 
 
-.. note::
-    When used with just a "from" or a "to" parameter, it will not contain any sections
++-----------------------------------------------------------------------------------------------------------+
+| Note                                                                                                      |
+| When used with just a "from" or a "to" parameter, it will not contain any sections                        |
++-----------------------------------------------------------------------------------------------------------+
 
 .. _section:
 
