@@ -1,10 +1,5 @@
 Interface V1's documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
 
 Overview
 ========
@@ -34,11 +29,11 @@ All the resources return a response containing a links object, a paging object, 
 * **Public transportation objects** : List of the public transport objects of a region
 
 +---------------------------------------------------------------+-------------------------------------+
-| ``get`` /coverage/*region_id*/*collection_name*               |  Collection of objects of a region  |
+| ``get`` /coverage/*region_id*/*collection_name*               | Collection of objects of a region   |
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/*region_id*/*collection_name*/*object_id*   | Information about a specific region |
 +---------------------------------------------------------------+-------------------------------------+
-| ``get`` /coverage/*lon;lat*/*collection_name*                 |  Collection of objects of a region  |
+| ``get`` /coverage/*lon;lat*/*collection_name*                 | Collection of objects of a region   |
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/*lon;lat*/*collection_name*/*object_id*     | Information about a specific region |
 +---------------------------------------------------------------+-------------------------------------+
@@ -46,9 +41,9 @@ All the resources return a response containing a links object, a paging object, 
 * **Journeys** : Compute journeys
 
 +---------------------------------------------------------------+-------------------------------------+
-| ``get`` /coverage/*resource_path*/journeys                    |  List of journeys                   |
+| ``get`` /coverage/*resource_path*/journeys                    | List of journeys                    |
 +---------------------------------------------------------------+-------------------------------------+
-| ``get`` /journeys                                             |  List of journeys                   |
+| ``get`` /journeys                                             | List of journeys                    |
 +---------------------------------------------------------------+-------------------------------------+
 
 * **Route Schedules** : Compute route schedules for a given resource
@@ -78,7 +73,7 @@ All the resources return a response containing a links object, a paging object, 
 * **Places** : Search in the datas
 
 +---------------------------------------------------------------+-------------------------------------+
-| ``get`` /coverage/places                                      |  List of objects                    |
+| ``get`` /coverage/places                                      | List of objects                     |
 +---------------------------------------------------------------+-------------------------------------+
 
 * **Places nearby** : List of objects near an object or a coord
@@ -377,22 +372,22 @@ The other one, the most used, is to access the 'journey' api endpoint: `<https:/
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | *Note*                                                                                                                                                      |
 |                                                                                                                                                             |
-|    Navitia.io handle lot's of different data sets (regions). Some of them can overlap. For example opendata data sets can overlap with private data sets.   |
+| Navitia.io handle lot's of different data sets (regions). Some of them can overlap. For example opendata data sets can overlap with private data sets.      |
 |                                                                                                                                                             |
-|    When using the journeys endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.       |
+| When using the journeys endpoint the data set used to compute the journey is chosen using the possible datasets of the origin and the destination.          |
 |                                                                                                                                                             |
-|    For the moment it is not yet possible to compute journeys on different data sets, but it will one day be possible (with a cross-data-set system).        |
+| For the moment it is not yet possible to compute journeys on different data sets, but it will one day be possible (with a cross-data-set system).           |
 |                                                                                                                                                             |
-|    If you want to use a specific data set, use the journey api within the data set: `<https://api.navitia.io/v1/coverage/{your_dataset}/journeys>`_         |
+| If you want to use a specific data set, use the journey api within the data set: `<https://api.navitia.io/v1/coverage/{your_dataset}/journeys>`_            |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | *Note*                                                                                                                                                      |
 |                                                                                                                                                             |
-|    Neither the 'from' nor the 'to' parameter of the journey are required, but obviously one of them has to be provided.                                     |
+| Neither the 'from' nor the 'to' parameter of the journey are required, but obviously one of them has to be provided.                                        |
 |                                                                                                                                                             |
-|    If only one is defined an isochrone is computed with every possible journeys from or to the point.                                                       |
+| If only one is defined an isochrone is computed with every possible journeys from or to the point.                                                          |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -526,15 +521,15 @@ links               link_              Links related to the journeys
 =================== ================== ===========================================================================
 Field               Type               Description
 =================== ================== ===========================================================================
-duration            int                Duration of the journey
+_duration            int                Duration of the journey
 nb_transfers        int                Number of transfers in the journey
-departure_date_time datetime_          Departure date and time of the journey
-requested_date_time datetime_          Requested date and time of the journey
-arrival_date_time   datetime_          Arrival date and time of the journey
-sections            array of section_  All the sections of the journey
-from                place_             The place from where the journey starts
-to                  place_             The place from where the journey ends
-links               link_              Links related to this journey
+departure_date_time `<datetime>`_      Departure date and time of the journey
+requested_date_time `datetime`_         Requested date and time of the journey
+arrival_date_time   `datetime`_         Arrival date and time of the journey
+sections            array `section`_  All the sections of the journey
+from                `place <place>`_             The place from where the journey starts
+to                  `<place>`_             The place from where the journey ends
+links               `link`_              Links related to this journey
 type                *enum* string      Used to qualified a journey. See the `journey_qualif`_ section for more information
 fare                fare_              Fare of the journey (tickets and price)
 tags                array of string    List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example `multiple_journeys`_.
@@ -983,7 +978,7 @@ name                 string                             Name of the company
 
 Place
 #####
-A container containing either a `stop_point`_, :ref:`stop_area`, :ref:`address`, , :ref:`poi`, :ref:`admin`
+A container containing either a `stop_point`_, `stop_area`_, `address`_, , `poi`_, `admin`_
 
 ==================== ============================= =================================
 Field                Type                          Description
