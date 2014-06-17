@@ -481,7 +481,9 @@ void Data::build_journey_pattern_points(){
                 journey_pattern->name = last->stop_point->stop_area->name;
             else
                 journey_pattern->name = last->stop_point->name;
-            journey_pattern->route->name = journey_pattern->name;
+            if(journey_pattern->route->name.empty()){
+                journey_pattern->route->name = journey_pattern->name;
+            }
         }
     }
     LOG4CPLUS_TRACE(logger, "Nombre de journey_pattern points : "+ boost::lexical_cast<std::string>(this->journey_pattern_points.size()));
