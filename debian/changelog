@@ -1,3 +1,9 @@
+navitia2 (0.97.5) unstable; urgency=low
+
+  * Jormungandr: hotfix for show codes and V0 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 17 Jun 2014 10:06:06 +0100
+
 navitia2 (0.97.4) unstable; urgency=low
 
   * Jormungandr: second hotfix for demo.navitia.io 
