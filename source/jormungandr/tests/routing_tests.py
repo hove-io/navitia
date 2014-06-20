@@ -40,7 +40,7 @@ class TestJourneys(AbstractTestFixture):
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
-        response = self.query_region(journey_basic_query, display=True)
+        response = self.query_region(journey_basic_query, display=False)
 
         is_valid_journey_response(response, self.tester)
 
@@ -65,13 +65,38 @@ class TestJourneys(AbstractTestFixture):
     def test_best_filtering(self):
         """Filter to get the best journey, we should have only one journey, the best one"""
 
-        response = self.query_region("{query}&type=best".format(query=journey_basic_query), display=True)
+        response = self.query_region("{query}&type=best".format(query=journey_basic_query), display=False)
 
         is_valid_journey_response(response, self.tester)
         assert len(response['journeys']) == 1
 
         assert response['journeys'][0]["type"] == "best"
 
+    def test_other_filtering(self):
+        """the basic query return a non pt walk journey and a best journey. we test the filtering of the non pt"""
+
+        response = self.query_region("{query}&type=non_pt_walk".
+                                     format(query=journey_basic_query), display=False)
+
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]["type"] == "non_pt_walk"
+
+    def test_not_existent_filtering(self):
+        """if we filter with a real type but not present, we don't get any journey"""
+
+        response = self.query_region("{query}&type=car".
+                                     format(query=journey_basic_query), display=False)
+
+        assert not 'journeys' in response or len(response['journeys']) == 0
+
+    def test_dumb_filtering(self):
+        """if we filter with non existent type, we get an error"""
+
+        response, status = self.query_region("{query}&type=sponge_bob".format(query=journey_basic_query), check=False, display=True)
+
+        assert status == 400, "the response should not be valid"
+
+        assert response['message'].startswith("The type argument must be in list")
 
 
 @dataset([])
