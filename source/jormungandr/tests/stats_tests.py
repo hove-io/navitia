@@ -143,12 +143,15 @@ class TestStatJourneys(AbstractTestFixture):
         each test will override this method with it's own mock check method
         """
         self.real_publish_request_method = StatManager.publish_request
+        self.old_save_val = stat_manager.save_stat
+        stat_manager.save_stat = True
 
     def teardown(self):
         """
         Here we put back the original method to stat manager.
         """
         StatManager.publish_request = self.real_publish_request_method
+        stat_manager.save_stat = self.old_save_val
 
     def test_simple_journey_query_with_stats(self):
         """
@@ -183,12 +186,15 @@ class TestStatPlaces(AbstractTestFixture):
         each test will override this method with it's own mock check method
         """
         self.real_publish_request_method = StatManager.publish_request
+        self.old_save_val = stat_manager.save_stat
+        stat_manager.save_stat = True
 
     def teardown(self):
         """
         Here we put back the original method to stat manager.
         """
         StatManager.publish_request = self.real_publish_request_method
+        stat_manager.save_stat = self.old_save_val
 
     def test_simple_test_places_with_stats(self):
         """
