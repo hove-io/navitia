@@ -40,7 +40,7 @@ class TestJourneys(AbstractTestFixture):
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
-        response = self.query_region(journey_basic_query, display=False)
+        response = self.query_region(journey_basic_query, display=True)
 
         is_valid_journey_response(response, self.tester)
 
@@ -61,6 +61,17 @@ class TestJourneys(AbstractTestFixture):
 
         #and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
+
+    def test_best_filtering(self):
+        """Filter to get the best journey, we should have only one journey, the best one"""
+
+        response = self.query_region("{query}&type=best".format(query=journey_basic_query), display=True)
+
+        is_valid_journey_response(response, self.tester)
+        assert len(response['journeys']) == 1
+
+        assert response['journeys'][0]["type"] == "best"
+
 
 
 @dataset([])

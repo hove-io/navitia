@@ -532,15 +532,15 @@ class Script(object):
                 for j in tmp_resp.journeys:
                     j.tags.append("next" if request['clockwise'] else "prev")
 
-            self.delete_journeys(tmp_resp, request)
+            self.delete_journeys(tmp_resp, request, filter_best=False)
             self.merge_response(resp, tmp_resp)
 
             nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
-        self.delete_journeys(resp, request)  # filter one last time to remove similar journeys
-        self.sort_journeys(resp,request['clockwise'])
+        self.sort_journeys(resp, request['clockwise'])
         self.choose_best(resp)
+        self.delete_journeys(resp, request, filter_best=True)  # filter one last time to remove similar journeys
         return resp
 
     def choose_best(self, resp):
@@ -594,7 +594,7 @@ class Script(object):
             for section in new_journey.sections:
                 section.id = section.id + '_' + str(journey_count)
 
-    def delete_journeys(self, resp, request):
+    def delete_journeys(self, resp, request, filter_best):
         if request["debug"] or not resp:
             return #in debug we want to keep all journeys
 
@@ -607,7 +607,9 @@ class Script(object):
         #filter on journey type (the qualifier)
         to_delete = []
         if request["type"] != "" and request["type"] != "all":
-            to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
+            #the best journey can only be filtered at the end. so we might want to filter anything but this journey
+            if request["type"] != "best" or filter_best:
+                to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
         else:
             #by default, we filter non tagged journeys
             tag_to_delete = ["", "possible_cheap"]
