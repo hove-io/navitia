@@ -222,7 +222,7 @@ Collections
 Example
 #######
 
-Response example for this request https://api.navitia.io/v1/coverage/iledefrance/physical_modes
+Response example for this request https://api.navitia.io/v1/coverage/fr-idf/physical_modes
 
 .. code-block:: json
 
@@ -277,7 +277,7 @@ Parameters
 Example
 #######
 
-Response example for : https://api.navitia.io/v1/coverage/iledefrance/places?q=rue
+Response example for : https://api.navitia.io/v1/coverage/fr-idf/places?q=rue
 
 .. code-block:: json
 
@@ -330,7 +330,7 @@ Parameters
 Example
 ########
 
-Response example for: https://api.navitia.io/v1/coverage/iledefrance/stop_areas/stop_area:TRN:SA:DUA8754575/places_nearby
+Response example for: https://api.navitia.io/v1/coverage/fr-idf/stop_areas/stop_area:TRN:SA:DUA8754575/places_nearby
 
 .. code-block:: json
 
