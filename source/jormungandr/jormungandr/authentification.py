@@ -158,8 +158,15 @@ def get_user():
     else:
         token = get_token()
         if not token:
-            flask_restful.abort(401)
-        g.user = User.get_from_token(token, datetime.datetime.now())
+            #a token is mandatory for non public jormungandr
+            if not current_app.config.get('PUBLIC', False):
+                flask_restful.abort(401)
+            else:  # for public one we allow unknown user
+                g.user = User(login="unknown_user")
+                g.user.id = 0
+        else:
+            g.user = User.get_from_token(token, datetime.datetime.now())
+
         logging.info('user %s', g.user)
 
         return g.user
