@@ -57,7 +57,7 @@ class ResourceUri(StatedResource):
             self.method_decorators.append(authentification_required)
 
     def get_filter(self, items):
-        filters = []
+        filter_list = []
         if len(items) % 2 != 0:
             items = items[:-1]
         type_ = None
@@ -81,15 +81,15 @@ class ResourceUri(StatedResource):
                             object_type = "poi"
                         filter_ = object_type + ".coord DWITHIN(" + lon + ","
                         filter_ += lat + ",200)"
-                        filters.append(filter)
+                        filter_list.append(filter_)
                     else:
-                        filters.append(type_ + ".uri=" + item)
+                        filter_list.append(type_ + ".uri=" + item)
                 elif type_ == 'poi':
-                    filters.append(type_ + '.uri=' + item.split(":")[-1])
+                    filter_list.append(type_ + '.uri=' + item.split(":")[-1])
                 else:
-                    filters.append(type_ + ".uri=" + item)
+                    filter_list.append(type_ + ".uri=" + item)
                 type_ = None
-        return " and ".join(filters)
+        return " and ".join(filter_list)
 
 
 class add_address_poi_id(object):
