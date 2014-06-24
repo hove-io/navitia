@@ -170,6 +170,6 @@ def get_user(abort_if_no_token=True):
         else:
             g.user = User.get_from_token(token, datetime.datetime.now())
 
-        logging.info('user %s', g.user)
+        logging.debug('user %s', g.user)
 
         return g.user
