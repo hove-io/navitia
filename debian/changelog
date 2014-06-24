@@ -1,3 +1,9 @@
+navitia2 (0.98.1) unstable; urgency=low
+
+  * Ed: change data version 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 24 Jun 2014 18:06:06 +0100
+
 navitia2 (0.98.0) unstable; urgency=low
 
   * Attempt to remove libgeos warning  <https://github.com/CanalTP/navitia/pull/410>
