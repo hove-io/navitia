@@ -38,6 +38,7 @@ typedef std::vector<uint16_t> vector_size;
 
 struct Thermometer {
     void generate_thermometer(const std::vector<vector_idx> &journey_patterns);
+    void generate_thermometer(const type::Route* route);
     vector_idx get_thermometer() const;
     std::vector<uint32_t> match_journey_pattern(const type::JourneyPattern & journey_pattern) const;
     std::vector<uint32_t> match_journey_pattern(const vector_idx &journey_pattern) const;
