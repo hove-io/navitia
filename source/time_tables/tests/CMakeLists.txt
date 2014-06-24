@@ -8,11 +8,11 @@ target_link_libraries(get_stop_times time_tables ed data fare georef routing typ
 ADD_BOOST_TEST(get_stop_times)
 
 
-add_executable(thermometer thermometer.cpp)
-target_link_libraries(thermometer time_tables ptreferential ed data fare routing utils pb_lib georef ${BOOST_LIBS} log4cplus)
-ADD_BOOST_TEST(thermometer)
+add_executable(thermometer_test thermometer.cpp)
+target_link_libraries(thermometer_test time_tables ptreferential ed data fare routing utils pb_lib thermometer georef ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(thermometer_test)
 
 
 add_executable(departure_boards_test departure_boards_test.cpp)
-target_link_libraries(departure_boards_test time_tables ptreferential ed data fare routing utils pb_lib georef ${BOOST_LIBS} log4cplus pthread)
+target_link_libraries(departure_boards_test time_tables ptreferential ed data fare routing utils pb_lib thermometer georef ${BOOST_LIBS} log4cplus pthread)
 ADD_BOOST_TEST(departure_boards_test)
