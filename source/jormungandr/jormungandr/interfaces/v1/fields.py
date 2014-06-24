@@ -263,6 +263,7 @@ route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
+route["thermometer"] = PbField({"stop_points" : NonNullList(NonNullNested(stop_point))})
 route["codes"] = NonNullList(NonNullNested(code))
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
