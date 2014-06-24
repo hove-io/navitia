@@ -63,7 +63,6 @@ const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 struct Message;
 
-// Types qui sont exclus : JourneyPatternPointConnection
 #define ITERATE_NAVITIA_PT_TYPES(FUN)\
     FUN(ValidityPattern, validity_patterns)\
     FUN(Line, lines)\
@@ -95,7 +94,6 @@ enum class Type_e {
     Company                         = 11,
     Route                           = 12,
     POI                             = 13,
-    JourneyPatternPointConnection   = 14,
     StopPointConnection             = 15,
     Contributor                     = 16,
 
@@ -116,6 +114,13 @@ enum class Mode_e{
     Car = 2,        // Voiture
     Bss = 3         // Vls
     //Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
+};
+
+enum class OdtLevel_e{
+    none = 0,
+    mixt = 1,
+    zonal = 2,
+    all = 3
 };
 
 struct PT_Data;
@@ -408,31 +413,28 @@ struct JourneyPatternPoint;
 struct VehicleJourney;
 struct StopTime;
 
-template<typename T>
-struct Connection: public Header, hasProperties{
+struct StopPointConnection: public Header, hasProperties{
     const static Type_e type = Type_e::Connection;
-    T* departure;
-    T* destination;
+    StopPoint* departure;
+    StopPoint* destination;
     int display_duration;
     int duration;
     int max_duration;
     ConnectionType connection_type;
 
-    Connection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
+    StopPointConnection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
         max_duration(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & uri & departure & destination & display_duration & duration & max_duration & _properties;
+        ar & idx & uri & departure & destination & display_duration & duration &
+            max_duration & connection_type & _properties;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-    bool operator<(const Connection<T> &other) const;
+    bool operator<(const StopPointConnection &other) const;
 
 };
-
-typedef Connection<JourneyPatternPoint>  JourneyPatternPointConnection;
-typedef Connection<StopPoint>  StopPointConnection;
 
 struct ExceptionDate {
     enum class ExceptionType {
@@ -618,6 +620,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         }
         return this < &other;
     }
+    type::OdtLevel_e get_odt_level() const;
 };
 
 struct Route : public Header, Nameable, HasMessages, Codes{
@@ -626,7 +629,8 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     Route() : line(nullptr) {}
-    idx_t main_destination();
+    idx_t main_destination() const;
+    type::OdtLevel_e get_odt_level() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & journey_pattern_list & messages & codes;
@@ -640,6 +644,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 struct JourneyPattern : public Header, Nameable{
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence;
+    OdtLevel_e odt_level; // Calculated at serialization
     Route* route;
     CommercialMode* commercial_mode;
     PhysicalMode* physical_mode;
@@ -647,10 +652,10 @@ struct JourneyPattern : public Header, Nameable{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
 
-    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
+    JourneyPattern(): is_frequence(false), odt_level(OdtLevel_e::none), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & is_frequence & route & commercial_mode
+        ar & idx & name & uri & is_frequence & odt_level &  route & commercial_mode
                 & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 
@@ -681,6 +686,12 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<StopTime*> stop_time_list;
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
+
+    // These variables are used in the case of an extension of service
+    // They indicate what's the vj you can take directly after or before this one
+    // They have the same block id
+    VehicleJourney* next_vj = nullptr;
+    VehicleJourney* prev_vj = nullptr;
     ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
@@ -701,7 +712,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & messages & associated_calendars
-            & codes;
+            & codes & next_vj & prev_vj;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -721,6 +732,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool is_odt()  const{
         return vehicle_journey_type != VehicleJourneyType::regular;
     }
+
+    type::OdtLevel_e get_odt_level() const;
 };
 
 struct ValidityPattern : public Header {
@@ -849,6 +862,7 @@ struct StopTime {
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
+    bool is_odt_and_date_time_estimated() const{ return (this->odt() && this->date_time_estimated());}
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
     uint32_t section_end_time(bool clockwise, const u_int32_t hour = 0) const {
         if(this->is_frequency())

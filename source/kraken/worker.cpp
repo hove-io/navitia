@@ -73,6 +73,15 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     }
 }
 
+nt::OdtLevel_e get_odt_level(pbnavitia::OdtLevel pb_odt_level) {
+    switch(pb_odt_level){
+        case pbnavitia::OdtLevel::mixt: return nt::OdtLevel_e::mixt; break;
+        case pbnavitia::OdtLevel::zonal: return nt::OdtLevel_e::zonal; break;
+        case pbnavitia::OdtLevel::all: return nt::OdtLevel_e::all; break;
+        default: return nt::OdtLevel_e::none;
+    }
+}
+
 template<class T>
 std::vector<nt::Type_e> vector_of_pb_types(const T & pb_object){
     std::vector<nt::Type_e> result;
@@ -423,13 +432,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         return routing::make_response(*planner, origin, destination, datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.max_duration(),
+                request.disruption_active(), request.allow_odt(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
     } else {
         return navitia::routing::make_isochrone(*planner, origin, request.datetimes(0),
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
-                request.disruption_active(), request.max_duration(),
+                request.disruption_active(), request.allow_odt(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
     }
 }
@@ -442,6 +451,7 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
         forbidden_uri.push_back(request.forbidden_uri(i));
     return navitia::ptref::query_pb(get_type(request.requested_type()),
                                     request.filter(), forbidden_uri,
+                                    get_odt_level(request.odt_level()),
                                     request.depth(), request.show_codes(),
                                     request.start_page(),
                                     request.count(), *data);

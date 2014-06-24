@@ -34,10 +34,12 @@ import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.renderers import render_from_protobuf
+from jormungandr.interfaces.common import pb_odt_level
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
 from flask import current_app
+
 
 pb_type = {
     'stop_area': type_pb2.STOP_AREA,
@@ -47,6 +49,7 @@ pb_type = {
     'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
     'line': type_pb2.LINE
 }
+
 
 f_date_time = "%Y%m%dT%H%M%S"
 
@@ -89,8 +92,60 @@ def compare_journey_generator(journey):
         yield s.origin.uri if s.origin else 'no_origin'
         yield s.destination.uri if s.destination else 'no_destination'
 
+
 def count_typed_journeys(journeys):
         return sum(1 for journey in journeys if journey.type)
+
+
+class JourneySorter:
+    """
+    Journey comparator for sort
+
+    the comparison is different if the query is for clockwise search or not
+
+    NOTE: We ALWAYS want the best journeys to be first on the journey list
+    since end user wanting only 1 journey will take the first one
+    """
+    def __init__(self, clockwise):
+        self.clockwise = clockwise
+
+    def __call__(self, j1, j2):
+        #the best is detected because it is a rapid without tags
+        if j1.type == "rapid" and len(j1.tags) == 0:
+            return -1
+
+        if j2.type == "rapid" and len(j2.tags) == 0:
+            return 1
+
+        if self.clockwise:
+            #for clockwise query, we want to sort first on the arrival time
+            if j1.arrival_date_time != j2.arrival_date_time:
+                return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
+        else:
+            #for non clockwise the first sort is done on departure
+            if j1.departure_date_time != j2.departure_date_time:
+                return -1 if j1.departure_date_time > j2.departure_date_time else 1
+
+        # afterward we compare the duration, hence it will indirectly compare
+        # the departure for clockwise, and the arrival for not clockwise
+        if j1.duration != j2.duration:
+            return j2.duration - j1.duration
+
+        if j1.nb_transfers != j2.nb_transfers:
+            return j1.nb_transfers - j2.nb_transfers
+
+        #afterward we compare the non pt duration
+        non_pt_duration_j1 = non_pt_duration_j2 = None
+        for journey in [j1, j2]:
+            non_pt_duration = 0
+            for section in journey.sections:
+                if section.type != response_pb2.PUBLIC_TRANSPORT:
+                    non_pt_duration += section.duration
+            if not non_pt_duration_j1:
+                non_pt_duration_j1 = non_pt_duration
+            else:
+                non_pt_duration_j2 = non_pt_duration
+        return non_pt_duration_j1 - non_pt_duration_j2
 
 
 class Script(object):
@@ -163,6 +218,7 @@ class Script(object):
         req.disruptions.start_page = request['start_page']
         req.disruptions.datetime = request['datetime']
         req.disruptions.period = request['period']
+
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)
@@ -434,33 +490,27 @@ class Script(object):
             qualifier_one(resp.journeys, request_type)
         return resp
 
-    def journey_compare(self, j1, j2):
-        if j1.type == "rapid" and len(j1.tags) == 0:
-            return -2
-
-        if j2.type == "rapid" and len(j2.tags) == 0:
-            return 2
-
-        if j1.arrival_date_time != j2.arrival_date_time:
-            return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
-
-        if j1.duration != j2.duration:
-            return j2.duration - j1.duration
-
-        if j1.nb_transfers != j2.nb_transfers:
-            return j1.nb_transfers - j2.nb_transfers
-
-        non_pt_duration_j1 = non_pt_duration_j2 = None
-        for journey in [j1, j2]:
-            non_pt_duration = 0
+    def change_request(self, pb_req, resp):
+        result = copy.deepcopy(pb_req)
+        def get_uri_odt_with_zones(journey):
+            result = []
             for section in journey.sections:
-                if section.type != response_pb2.PUBLIC_TRANSPORT:
-                    non_pt_duration += section.duration
-            if not non_pt_duration_j1:
-                non_pt_duration_j1 = non_pt_duration
-            else:
-                non_pt_duration_j2 = non_pt_duration
-        return non_pt_duration_j1 - non_pt_duration_j2
+                if section.type == response_pb2.PUBLIC_TRANSPORT:
+                    if section.pt_display_informations.vehicle_journey_type in [type_pb2.virtual_without_stop_time,
+                                                                                type_pb2.stop_point_to_stop_point,
+                                                                                type_pb2.address_to_stop_point,
+                                                                                type_pb2.odt_point_to_point]:
+                        result.append(section.uris.line)
+                    else:
+                        return []
+            return result
+
+        map_forbidden_uris = map(get_uri_odt_with_zones, resp.journeys)
+        for forbidden_uris in map_forbidden_uris:
+            for line_uri in forbidden_uris:
+                if line_uri not in result.journeys.forbidden_uris:
+                    result.journeys.forbidden_uris.append(line_uri)
+        return result
 
     def fill_journeys(self, pb_req, request, instance):
         """
@@ -498,8 +548,7 @@ class Script(object):
                 l_date_time_f = datetime.strptime(l_date_time, f_date_time)
                 new_datetime = l_date_time_f + timedelta(minutes=-1)
 
-            # we copy the query not to have side effects
-            next_request = copy.deepcopy(pb_req)
+            next_request = self.change_request(pb_req, tmp_resp)
             next_request.journeys.datetimes[0] = new_datetime.strftime(f_date_time)
             del next_request.journeys.datetimes[1:]
             # we tag the journeys as 'next' or 'prev' journey
@@ -507,15 +556,15 @@ class Script(object):
                 for j in tmp_resp.journeys:
                     j.tags.append("next" if request['clockwise'] else "prev")
 
-            self.delete_journeys(tmp_resp, request)
+            self.delete_journeys(tmp_resp, request, filter_best=False)
             self.merge_response(resp, tmp_resp)
 
             nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
-        self.delete_journeys(resp, request)  # filter one last time to remove similar journeys
-        self.sort_journeys(resp,request['clockwise'])
+        self.sort_journeys(resp, request['clockwise'])
         self.choose_best(resp)
+        self.delete_journeys(resp, request, filter_best=True)  # filter one last time to remove similar journeys
         return resp
 
     def choose_best(self, resp):
@@ -569,7 +618,7 @@ class Script(object):
             for section in new_journey.sections:
                 section.id = section.id + '_' + str(journey_count)
 
-    def delete_journeys(self, resp, request):
+    def delete_journeys(self, resp, request, filter_best):
         if request["debug"] or not resp:
             return #in debug we want to keep all journeys
 
@@ -582,7 +631,9 @@ class Script(object):
         #filter on journey type (the qualifier)
         to_delete = []
         if request["type"] != "" and request["type"] != "all":
-            to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
+            #the best journey can only be filtered at the end. so we might want to filter anything but this journey
+            if request["type"] != "best" or filter_best:
+                to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
         else:
             #by default, we filter non tagged journeys
             tag_to_delete = ["", "possible_cheap"]
@@ -609,18 +660,8 @@ class Script(object):
             del resp.journeys[request["max_nb_journeys"]:]
 
     def sort_journeys(self, resp, clockwise=True):
-        if len(resp.journeys) > 0:
-            if clockwise:
-                resp.journeys.sort(self.journey_compare)
-            else:
-                def reverse_compare(a, b):
-                    # We reverse journeys that are not best journeys
-                    result = self.journey_compare(a, b)
-                    if result == 2 or result == -2:
-                        return result
-                    else:
-                        return result * -1
-                resp.journeys.sort(reverse_compare)
+        if len(resp.journeys) > 1:
+            resp.journeys.sort(JourneySorter(clockwise))
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)
@@ -645,6 +686,8 @@ class Script(object):
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
         req.ptref.show_codes = request["show_codes"]
+        if request["odt_level"]:
+            req.ptref.odt_level = pb_odt_level[request["odt_level"]]
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.ptref.forbidden_uri.append(forbidden_uri)

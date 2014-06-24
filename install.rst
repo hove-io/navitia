@@ -11,11 +11,14 @@ Dependencies
    * cmake
    * log4cplus
    * osmpbf (https://github.com/scrosby/OSM-binary)
-   * boost
+   * boost (test, chrono, regex, system, serialization, date-time, thread, filesystem, iostreams, program-options)
+   * popt
    * zeromq 2.2
    * libpqxx 3
-   * libgoogle-perftools-dev
+   * libgoogle-perftools-dev (tcmalloc)
    * protobuf
+   * proj
+   * xmlto
 
 #. Python
 
@@ -31,6 +34,7 @@ Dependencies
    * dict2xml
    * Flask-SQLAlchemy (only for Tyr currently)
    * Celery (>=3.0)
+   * kombu
 
 #. Other
 

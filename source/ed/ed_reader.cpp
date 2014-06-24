@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -73,7 +73,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->fill_stop_point_connections(data, work);
-    this->fill_journey_pattern_point_connections(data, work);
     this->fill_poi_types(data, work);
     this->fill_pois(data, work);
     this->fill_poi_properties(data, work);
@@ -598,29 +597,6 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
     }
 }
 
-void EdReader::fill_journey_pattern_point_connections(nt::Data& data, pqxx::work& work){
-    std::string request = "select departure_journey_pattern_point_id,"
-        "destination_journey_pattern_point_id, connection_kind_id, length "
-        "from navitia.journey_pattern_point_connection";
-
-    pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        auto id_departure = const_it["departure_journey_pattern_point_id"];
-        auto id_destination = const_it["destination_journey_pattern_point_id"];
-        auto it_departure = journey_pattern_point_map.find(id_departure.as<idx_t>());
-        auto it_destination = journey_pattern_point_map.find(id_destination.as<idx_t>());
-        if(it_departure!=journey_pattern_point_map.end() &&
-                it_destination!=journey_pattern_point_map.end()) {
-            auto* jppc= new nt::JourneyPatternPointConnection();
-            jppc->departure = it_departure->second;
-            jppc->destination = it_destination->second;
-            jppc->connection_type = static_cast<nt::ConnectionType>(const_it["connection_kind_id"].as<int>());
-            jppc->duration = const_it["length"].as<int>();
-            data.pt_data->journey_pattern_point_connections.push_back(jppc);
-        }
-    }
-}
-
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,"
@@ -631,6 +607,8 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
         "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
         "vj.external_code as external_code,"
+        "vj.next_vehicle_journey_id as prev_vj_id,"
+        "vj.previous_vehicle_journey_id as next_vj_id,"
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -643,6 +621,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "where vj.vehicle_properties_id = vp.id ";
 
     pqxx::result result = work.exec(request);
+    std::multimap<idx_t, nt::VehicleJourney*> prev_vjs, next_vjs;
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::VehicleJourney* vj = new nt::VehicleJourney();
 
@@ -692,8 +671,20 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         if (const_it["school_vehicle"].as<bool>()){
             vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
         }
+        if (!const_it["prev_vj_id"].is_null()) {
+            prev_vjs.insert(std::make_pair(const_it["prev_vj_id"].as<idx_t>(), vj));
+        }
+        if (!const_it["next_vj_id"].is_null()) {
+            next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj));
+        }
         data.pt_data->vehicle_journeys.push_back(vj);
         this->vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
+    }
+    for(auto vjid_vj: prev_vjs) {
+       vjid_vj.second->prev_vj = vehicle_journey_map[vjid_vj.first];
+    }
+    for(auto vjid_vj: next_vjs) {
+       vjid_vj.second->next_vj = vehicle_journey_map[vjid_vj.first];
     }
 }
 
@@ -1321,6 +1312,23 @@ void EdReader::check_coherence(navitia::type::Data& data) const {
     if (non_associated_lines) {
         LOG4CPLUS_WARN(log, non_associated_lines << " lines are not associated with any calendar (and "
                         << (data.pt_data->lines.size() - non_associated_lines) << " are associated with at least one");
+    }
+
+    //Check if every vehicle journey with a next_vj has a backlink
+    size_t nb_error_on_vj = 0;
+    for(auto vj : data.pt_data->vehicle_journeys) {
+        if (vj->next_vj && vj->next_vj->prev_vj != vj) {
+            LOG4CPLUS_ERROR(log, "Vehicle journey " << vj->uri << " has a next_vj, but the back link is invalid");
+            ++nb_error_on_vj;
+        }
+        if (vj->prev_vj && vj->prev_vj->next_vj != vj) {
+            LOG4CPLUS_ERROR(log, "Vehicle journey " << vj->uri << " has a prev_vj, but the back link is invalid");
+            ++nb_error_on_vj;
+        }
+    }
+    if(nb_error_on_vj > 0) {
+    LOG4CPLUS_INFO(log, "There was " << nb_error_on_vj << " vehicle journeys with consistency error over a total of " <<
+            data.pt_data->vehicle_journeys.size() << " vehicle journeys" );
     }
 }
 

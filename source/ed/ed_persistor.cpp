@@ -76,9 +76,6 @@ void EdPersistor::persist(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, "Begin: relation admin way");
     this->build_relation_way_admin(data);
     LOG4CPLUS_INFO(logger, "End: relation admin way");
-    LOG4CPLUS_INFO(logger, "Begin: update boundary admins");
-    this->update_boundary();
-    LOG4CPLUS_INFO(logger, "End: update boundary admins");
     LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -258,11 +255,6 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::update_boundary(){
-    PQclear(this->lotus.exec("SELECT georef.update_boundary(id) from georef.admin;",
-                "", PGRES_TUPLES_OK));
-}
-
 void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
 
     this->lotus.start_transaction();
@@ -325,9 +317,6 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert stop point connections");
     this->insert_stop_point_connections(data.stop_point_connections);
     LOG4CPLUS_INFO(logger, "End: insert stop point connections");
-    LOG4CPLUS_INFO(logger, "Begin: insert journey pattern point connections");
-    this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
-    LOG4CPLUS_INFO(logger, "End: insert journey pattern point connections");
     LOG4CPLUS_INFO(logger, "Begin: insert admin stop area");
     this->insert_admin_stop_areas(data.admin_stop_areas);
     LOG4CPLUS_INFO(logger, "End: insert admin stop area");
@@ -666,24 +655,6 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections){
-    this->lotus.prepare_bulk_insert("navitia.journey_pattern_point_connection",
-            {"departure_journey_pattern_point_id",
-            "destination_journey_pattern_point_id", "connection_kind_id",
-            "length"});
-
-    //@TODO properties!!
-    for(types::JourneyPatternPointConnection* co : connections){
-        std::vector<std::string> values;
-        values.push_back(std::to_string(co->departure->idx));
-        values.push_back(std::to_string(co->destination->idx));
-        values.push_back(std::to_string(static_cast<int>(co->connection_kind)));
-        values.push_back(std::to_string(co->length));
-        this->lotus.insert(values);
-    }
-
-    this->lotus.finish_bulk_insert();
-}
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
@@ -905,8 +876,28 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(vj->odt_message);
         this->lotus.insert(values);
     }
-
     this->lotus.finish_bulk_insert();
+    for(types::VehicleJourney* vj : vehicle_journeys) {
+        std::string values = "";
+        if(vj->prev_vj) {
+            values = "previous_vehicle_journey_id = " + boost::lexical_cast<std::string>(vj->prev_vj->idx);
+        }
+        if(vj->next_vj) {
+            if(!values.empty()) {
+                values += ", ";
+            }
+            values += "next_vehicle_journey_id = "+boost::lexical_cast<std::string>(vj->next_vj->idx);
+        }
+        if(!values.empty()) {
+            std::string query = "UPDATE navitia.vehicle_journey SET ";
+            query += values;
+            query += " WHERE id = ";
+            query += boost::lexical_cast<std::string>(vj->idx);
+            query += ";";
+            LOG4CPLUS_TRACE(logger, "query : " << query);
+            PQclear(this->lotus.exec(query, "", PGRES_COMMAND_OK));
+        }
+    }
 }
 
 

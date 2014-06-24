@@ -1,3 +1,31 @@
+navitia2 (0.98.0) unstable; urgency=low
+
+  * Attempt to remove libgeos warning  <https://github.com/CanalTP/navitia/pull/410>
+  * Jormungandr: don't abort stat if no token  <https://github.com/CanalTP/navitia/pull/409>
+  * jormungandr: correct filter  <https://github.com/CanalTP/navitia/pull/408>
+  * Add schema to route  <https://github.com/CanalTP/navitia/pull/407>
+  * Jormungandr: fix journey sort  <https://github.com/CanalTP/navitia/pull/406>
+  * Jormungandr: fix a typo in get_filter  <https://github.com/CanalTP/navitia/pull/405>
+  * Best filtering  <https://github.com/CanalTP/navitia/pull/403>
+  * Doc: update <https://github.com/CanalTP/navitia/pull/401>
+  * ed: route name  <https://github.com/CanalTP/navitia/pull/400>
+  * Visu: removal  <https://github.com/CanalTP/navitia/pull/396>
+  * Jormungandr: Add param show_codes to v0/Ptref  <https://github.com/CanalTP/navitia/pull/395>
+  * PTReferential: ForbiddenUri  <https://github.com/CanalTP/navitia/pull/394>
+  * Check consistency of vehicle journeys  <https://github.com/CanalTP/navitia/pull/393>
+  * Doc update  <https://github.com/CanalTP/navitia/pull/392>
+  * Manage odt  <https://github.com/CanalTP/navitia/pull/391>
+  * geopal2ed : rm update boundary admins  <https://github.com/CanalTP/navitia/pull/390>
+  * jormungandr: Error handling in stat_manger for RabbitMQ  <https://github.com/CanalTP/navitia/pull/388>
+  * Navitiaii 856  <https://github.com/CanalTP/navitia/pull/386>
+  * Jormungandr: add param to force https in link  <https://github.com/CanalTP/navitia/pull/385>
+  * Navitiaii 768 harminisation  <https://github.com/CanalTP/navitia/pull/384>
+  * Jormungandr: remove 'allow_odt' parameter  <https://github.com/CanalTP/navitia/pull/383>
+  * ed: better error handling  <https://github.com/CanalTP/navitia/pull/382>
+  * Fix get walking solutions  <https://github.com/CanalTP/navitia/pull/379>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 24 Jun 2014 16:06:58 +0100
+
 navitia2 (0.97.5) unstable; urgency=low
 
   * Jormungandr: hotfix for show codes and V0 

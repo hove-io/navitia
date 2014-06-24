@@ -246,13 +246,12 @@ struct GeoRef {
     RTree<nt::idx_t, double, 2> rtree;
 
     /// Indexe sur les noms de voirie
-    autocomplete::Autocomplete<unsigned int> fl_admin;
-
+    autocomplete::Autocomplete<unsigned int> fl_admin = autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::Admin);
     /// Indexe sur les noms de voirie
-    autocomplete::Autocomplete<unsigned int> fl_way;
+    autocomplete::Autocomplete<unsigned int> fl_way = autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::Way);
 
     /// Indexe sur les pois
-    autocomplete::Autocomplete<unsigned int> fl_poi;
+    autocomplete::Autocomplete<unsigned int> fl_poi = autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::POI);
 
     /// Indexe tous les nœuds
     proximitylist::ProximityList<vertex_t> pl;

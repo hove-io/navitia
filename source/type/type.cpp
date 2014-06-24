@@ -113,6 +113,33 @@ bool VehicleJourney::has_landing() const{
 
 }
 
+type::OdtLevel_e VehicleJourney::get_odt_level() const{
+    type::OdtLevel_e result = type::OdtLevel_e::none;
+    if (this->stop_time_list.empty()){
+        return result;
+    }
+
+    const StopTime* st = this->stop_time_list.front();
+    if (st->is_odt_and_date_time_estimated()){
+        result = type::OdtLevel_e::zonal;
+    }
+    for(idx_t idx = 1; idx < this->stop_time_list.size(); idx++){
+        st = this->stop_time_list[idx];
+        if (st->is_odt_and_date_time_estimated()){
+            if (result != type::OdtLevel_e::zonal){
+                result = type::OdtLevel_e::mixt;
+                break;
+            }
+        }else{
+            if(result == type::OdtLevel_e::zonal){
+                result = type::OdtLevel_e::mixt;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
 bool ValidityPattern::is_valid(int day) const {
     if(day < 0) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
@@ -412,6 +439,26 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     return result;
 }
 
+type::OdtLevel_e Line::get_odt_level() const{
+    type::OdtLevel_e result = type::OdtLevel_e::none;
+    if (this->route_list.empty()){
+        return result;
+    }
+
+    const Route* route = this->route_list.front();
+    result = route->get_odt_level();
+
+    for(idx_t idx = 1; idx < this->route_list.size(); idx++){
+        route = this->route_list[idx];
+        type::OdtLevel_e tmp = route->get_odt_level();
+        if (tmp != result){
+            result = type::OdtLevel_e::mixt;
+            break;
+        }
+    }
+    return result;
+}
+
 std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
@@ -422,7 +469,7 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-idx_t Route::main_destination(){
+idx_t Route::main_destination() const {
    // StopPoint_idx, count
     std::map<idx_t, size_t> stop_point_map;
     std::pair<idx_t, size_t> best{invalid_idx, 0};
@@ -441,6 +488,25 @@ idx_t Route::main_destination(){
         }
     }
     return best.first;
+}
+
+type::OdtLevel_e Route::get_odt_level() const{
+    type::OdtLevel_e result = type::OdtLevel_e::none;
+    if (this->journey_pattern_list.empty()){
+        return result;
+    }
+
+    const JourneyPattern* jp = this->journey_pattern_list.front();
+    result = jp->odt_level;
+
+    for(idx_t idx = 1; idx < this->journey_pattern_list.size(); idx++){
+        jp = this->journey_pattern_list[idx];
+        if (jp->odt_level != result){
+            result = type::OdtLevel_e::mixt;
+            break;
+        }
+    }
+    return result;
 }
 
 std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
@@ -493,8 +559,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-template<>
-std::vector<idx_t> Connection<StopPoint>::get(Type_e type, const PT_Data & ) const {
+std::vector<idx_t> StopPointConnection::get(Type_e type, const PT_Data & ) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopPoint:
@@ -505,10 +570,7 @@ std::vector<idx_t> Connection<StopPoint>::get(Type_e type, const PT_Data & ) con
     }
     return result;
 }
-template<>
-bool Connection<JourneyPatternPoint>::operator<(const Connection<JourneyPatternPoint> & other) const { return this < &other; }
-template<>
-bool Connection<StopPoint>::operator<(const Connection<StopPoint> & other) const { return this < &other; }
+bool StopPointConnection::operator<(const StopPointConnection& other) const { return this < &other; }
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri) : type(type), uri(uri) {
    // Gestion des adresses

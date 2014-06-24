@@ -140,7 +140,6 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
     LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.journey_pattern_point_connections.size());
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);

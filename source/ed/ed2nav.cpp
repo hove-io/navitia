@@ -117,7 +117,6 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.pt_data->journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.pt_data->physical_modes.size());
     LOG4CPLUS_INFO(logger, "validity pattern : " << data.pt_data->validity_patterns.size());
-    LOG4CPLUS_INFO(logger, "journey_pattern point connections : " << data.pt_data->journey_pattern_point_connections.size());
     LOG4CPLUS_INFO(logger, "calendars: " << data.pt_data->calendars.size());
     LOG4CPLUS_INFO(logger, "synonyms : " << data.geo_ref->synonyms.size());
     LOG4CPLUS_INFO(logger, "fare tickets: " << data.fare->fare_map.size());

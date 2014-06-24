@@ -119,6 +119,7 @@ pbnavitia::Response extract_data(const type::Data & data,
 
 pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
                              const std::vector<std::string>& forbidden_uris,
+                             const type::OdtLevel_e odt_level,
                              const int depth, const bool show_codes,
                              const int startPage,
                              const int count, const type::Data &data){
@@ -126,7 +127,7 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
     pbnavitia::Response pb_response;
     int total_result;
     try {
-        final_indexes = make_query(requested_type, request, forbidden_uris, data);
+        final_indexes = make_query(requested_type, request, forbidden_uris, odt_level, data);
     } catch(const parsing_error &parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse :" + parse_error.more, pb_response.mutable_error());
         return pb_response;

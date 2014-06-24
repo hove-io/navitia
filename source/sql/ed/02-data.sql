@@ -41,7 +41,6 @@ BEGIN
         (11, 'Company'),
         (12, 'Route'),
         (13, 'POI'),
-        (14, 'JourneyPatternPointConnection'),
         (15, 'StopPointConnection'),
         (16, 'Contributor'),
         (17, 'StopTime'),

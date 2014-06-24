@@ -47,8 +47,6 @@ struct dataRAPTOR {
     std::vector<pair_int> footpath_index_forward;
     std::vector<const navitia::type::StopPointConnection*> foot_path_backward;
     std::vector<pair_int> footpath_index_backward;
-    std::multimap<navitia::type::idx_t,const navitia::type::JourneyPatternPointConnection*> footpath_rp_forward;
-    std::multimap<navitia::type::idx_t,const navitia::type::JourneyPatternPointConnection*> footpath_rp_backward;
     std::vector<uint32_t> arrival_times;
     std::vector<uint32_t> departure_times;
     std::vector<uint32_t> start_times_frequencies;
@@ -67,12 +65,6 @@ struct dataRAPTOR {
     dataRAPTOR()  {}
     void load(const navitia::type::PT_Data &data);
 
-    const std::multimap<navitia::type::idx_t, const navitia::type::JourneyPatternPointConnection*> & footpath_rp(bool forward) const {
-        if(forward)
-            return footpath_rp_forward;
-        else
-            return footpath_rp_backward;
-    }
 
     inline int get_stop_time_order(const type::JourneyPattern & journey_pattern, int orderVj, int order) const{
         return first_stop_time[journey_pattern.idx] + (order * nb_trips[journey_pattern.idx]) + orderVj;
@@ -90,14 +82,6 @@ struct dataRAPTOR {
             return std::numeric_limits<uint32_t>::max();
         else
             return departure_times[get_stop_time_order(journey_pattern, orderVj, order)];
-    }
-
-    inline type::idx_t get_route_connection_idx(type::idx_t jpp_idx_origin, type::idx_t jpp_idx_destination, bool clockwise,const navitia::type::PT_Data &/*data*/)  const {
-        BOOST_FOREACH(auto conn, footpath_rp(clockwise).equal_range(jpp_idx_origin)) {
-            if(conn.second->destination->idx == jpp_idx_destination)
-                return conn.second->idx;
-        }
-        return type::invalid_idx;
     }
 
     inline type::idx_t get_stop_point_connection_idx(type::idx_t stop_point_idx_origin, type::idx_t stop_point_idx_destination, bool clockwise,const navitia::type::PT_Data &/*data*/)  const {

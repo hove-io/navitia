@@ -100,6 +100,12 @@ struct parsing_error : public ptref_error{
 std::vector<type::idx_t> make_query(type::Type_e requested_type,
                                     std::string request,
                                     const std::vector<std::string>& forbidden_uris,
+                                    const type::OdtLevel_e odt_level,
+                                    const type::Data &data);
+
+std::vector<type::idx_t> make_query(type::Type_e requested_type,
+                                    std::string request,
+                                    const std::vector<std::string>& forbidden_uris,
                                     const type::Data &data);
 
 std::vector<type::idx_t> make_query(type::Type_e requested_type,
@@ -116,4 +122,16 @@ std::vector<type::idx_t> get(Type_e source, Type_e destination, type::idx_t sour
 
 
 std::vector<Filter> parse(std::string request);
+
+std::vector<type::idx_t>::iterator sort_and_get_new_end(std::vector<type::idx_t>& list_idx);
+
+std::vector<type::idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
+                                        std::vector<type::idx_t>& list_idx2);
+
+std::vector<type::idx_t> get_intersection(std::vector<type::idx_t>& list_idx1,
+                                        std::vector<type::idx_t>& list_idx2);
+std::vector<type::idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexes,
+                                          const navitia::type::Type_e requested_type,
+                                          const navitia::type::OdtLevel_e,
+                                          const type::Data & data);
 }} //navitia::ptref

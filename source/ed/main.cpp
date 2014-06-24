@@ -150,7 +150,6 @@ int main(int argc, char * argv[])
     std::cout << "journey_pattern points: " << data.journey_pattern_points.size() << std::endl;
     std::cout << "modes: " << data.physical_modes.size() << std::endl;
     std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
-    std::cout << "journey_pattern point connections : " << data.journey_pattern_point_connections.size() << std::endl;
     std::cout << "voies (rues) : " << nav_data.geo_ref.ways.size() << std::endl;
 
 

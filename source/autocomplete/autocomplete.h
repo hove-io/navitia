@@ -96,6 +96,12 @@ struct Autocomplete
         }
     };
 
+    Autocomplete(navitia::type::Type_e otype): object_type(otype){}
+    Autocomplete(){}
+
+    /// Type of object
+    navitia::type::Type_e object_type;
+
     /// Structure temporaire pour construire l'indexe
     std::map<std::string, std::set<T> > temp_word_map;
 
@@ -113,7 +119,7 @@ struct Autocomplete
     std::map<T, word_quality> word_quality_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & word_dictionnary & word_quality_list &pattern_dictionnary;
+        ar & word_dictionnary & word_quality_list &pattern_dictionnary &object_type;
     }
 
     /// Efface les structures de données sérialisées
@@ -422,7 +428,8 @@ struct Autocomplete
         result -= (word_quality_list.at(ql.idx).word_count - ql.nb_found) * wordweight;//coeff  WordFound
 
         //Qualité sur la distance globale des mots.
-        result -= (word_quality_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1
+        if (object_type != navitia::type::Type_e::StopArea)
+            result -= (word_quality_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1
 
         //Qualité sur le score
         result -= (max_score - word_quality_list.at(ql.idx).score)/10;

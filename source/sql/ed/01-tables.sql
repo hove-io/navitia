@@ -244,7 +244,9 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     name TEXT NOT NULL,
     odt_type_id BIGINT NULL,
     vehicle_properties_id BIGINT NULL REFERENCES navitia.vehicle_properties,
-    theoric_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey
+    theoric_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey,
+    previous_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey,
+    next_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey
 );
 
 ALTER TABLE navitia.vehicle_journey DROP COLUMN IF EXISTS physical_mode_id;
@@ -295,15 +297,6 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern_point (
     "order" INTEGER NOT NULL,
     comment TEXT,
     stop_point_id BIGINT NOT NULL REFERENCES navitia.stop_point
-);
-
-
-CREATE TABLE IF NOT EXISTS navitia.journey_pattern_point_connection (
-    departure_journey_pattern_point_id BIGINT NOT NULL REFERENCES navitia.journey_pattern_point,
-    destination_journey_pattern_point_id BIGINT NOT NULL REFERENCES navitia.journey_pattern_point,
-    connection_kind_id BIGINT NOT NULL REFERENCES navitia.connection_kind,
-    length INTEGER NOT NULL,
-    CONSTRAINT journey_pattern_point_connection_pk PRIMARY KEY (departure_journey_pattern_point_id, destination_journey_pattern_point_id)
 );
 
 

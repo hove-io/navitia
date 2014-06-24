@@ -221,6 +221,7 @@ void Data::complete(){
 
     build_grid_validity_pattern();
     build_associated_calendar();
+    build_odt();
 
     start = pt::microsec_clock::local_time();
     pt_data->sort();
@@ -306,6 +307,25 @@ void Data::build_associated_calendar() {
     LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one calendar");
     if (nb_not_matched_vj) {
         LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
+    }
+}
+
+void Data::build_odt(){
+    for(JourneyPattern* jp : this->pt_data->journey_patterns){
+        jp->odt_level = type::OdtLevel_e::none;
+        VehicleJourney* vj;
+        if(jp->vehicle_journey_list.empty()){
+            continue;
+        }
+        vj = jp->vehicle_journey_list.front();
+        jp->odt_level = vj->get_odt_level();
+        for(idx_t idx = 1; idx < jp->vehicle_journey_list.size(); idx++){
+            vj = jp->vehicle_journey_list[idx];
+            if (vj->get_odt_level() != jp->odt_level){
+                jp->odt_level = type::OdtLevel_e::mixt;
+                break;
+            }
+        }
     }
 }
 

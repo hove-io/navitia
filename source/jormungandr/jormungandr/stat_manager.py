@@ -350,7 +350,7 @@ class StatManager(object):
             if self.save_stat:
                 self.producer.publish(stat_request.SerializeToString())
 
-    def fill_admin_from(self,stat_section, admins):
+    def fill_admin_from(self, stat_section, admins):
         for admin in admins:
             if admin['level'] == 8:
                 stat_section.from_admin_id = admin['id']

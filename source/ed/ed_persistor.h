@@ -83,7 +83,6 @@ private:
     void insert_stop_times(const std::vector<types::StopTime*>& stop_times);
 
     void insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections);
-    void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
     void insert_synonyms(const std::map<std::string, std::string>& synonyms);
 
     void insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas);
@@ -110,7 +109,6 @@ private:
     void insert_house_numbers(const ed::Georef& data);
     void insert_edges(const ed::Georef& data);
     void build_relation_way_admin(const ed::Georef& data);
-    void update_boundary();
 
     /// Données POI
     void insert_poi_types(const ed::PoiPoiType& data);

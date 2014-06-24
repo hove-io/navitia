@@ -46,18 +46,9 @@ void dataRAPTOR::load(const type::PT_Data &data)
     foot_path_backward.clear();
     footpath_index_backward.clear();
     footpath_index_forward.clear();
-    footpath_rp_backward.clear();
-    footpath_rp_forward.clear();
     std::vector<std::map<navitia::type::idx_t, const navitia::type::StopPointConnection*> > footpath_temp_forward, footpath_temp_backward;
     footpath_temp_forward.resize(data.stop_points.size());
     footpath_temp_backward.resize(data.stop_points.size());
-
-    // Build of connections between journey pattern points
-    // This is use for extension of service and guaranteed connection
-    for(const type::JourneyPatternPointConnection* jppc : data.journey_pattern_point_connections) {
-        footpath_rp_forward.insert(std::make_pair(jppc->departure->idx, jppc));
-        footpath_rp_backward.insert(std::make_pair(jppc->destination->idx, jppc));
-    }
 
     // Build of a structure to look for connections
     for(const type::StopPointConnection* connection : data.stop_point_connections) {
