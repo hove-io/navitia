@@ -78,6 +78,9 @@ bool Data::load(const std::string & filename) {
                 % pt_data->stop_times.size() % dataRaptor->arrival_times.size()
                 % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
                 );
+    } catch(const wrong_version& ex) {
+        LOG4CPLUS_ERROR(logger, boost::format("Data loading failed: %s") % ex.what());
+        last_load = false;
     } catch(const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
         last_load = false;
