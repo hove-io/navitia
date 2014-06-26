@@ -38,6 +38,8 @@ www.navitia.io
 #include "utils/csv.h"
 #include <utils/logger.h>
 #include <utils/functions.h>
+#include <boost/date_time/time_zone_base.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 /**
   * Read General Transit Feed Specifications Files
@@ -50,7 +52,9 @@ namespace ed { namespace connectors {
  * Temporary structure used in the GTFS parser, mainly to keep a relation between ids and the pointers
  */
 struct GtfsData {
-    GtfsData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
+    GtfsData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {
+        tz_db.load_from_file(std::string(FIXTURES_DIR) + "date_time_zonespec.csv"); //TODO real file handling
+    }
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
@@ -65,6 +69,16 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
+
+    //timezone management
+    boost::local_time::tz_database tz_db;
+    //the GTFS spec defines one tz by agency but put a constraint that all those tz must be the same
+    //we thus only put a default tz used if the stop area does not define one
+    std::pair<std::string, boost::local_time::time_zone_ptr> default_timezone; //associate the tz with it's name (like 'Europe/paris')
+    //we need to store the tz of the sp because it will be usefull is no parent stop area is found for the stop_point
+    //(and hence the sp is promoted to sa)
+    std::unordered_map<ed::types::StopPoint*, std::string> stop_point_tz;
+    std::pair<std::string, boost::local_time::time_zone_ptr> get_tz(const std::string&);
 
     // used only by fusio2ed
     std::unordered_map<std::string, std::string> comment_map;
@@ -135,7 +149,7 @@ struct GenericHandler {
 
 struct AgencyGtfsHandler : public GenericHandler {
     AgencyGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, name_c;
+    int id_c, name_c, time_zone_c;
     void init(Data&);
     types::Network* handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"agency_name", "agency_url", "agency_timezone"}; }
@@ -161,7 +175,8 @@ struct StopsGtfsHandler : public GenericHandler {
     type_c,
     parent_c,
     wheelchair_c,
-    platform_c;
+    platform_c,
+    timezone_c;
 
     int ignored = 0;
     std::vector<types::StopPoint*> wheelchair_heritance;

@@ -33,6 +33,7 @@ www.navitia.io
 #include <bitset>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 #include "type/type.h"
 
@@ -93,6 +94,7 @@ struct StopArea : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopArea;
     std::string external_code;
     nt::GeographicalCoord coord;
+    std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
 
     navitia::type::StopArea* get_navitia_type() const;
 
