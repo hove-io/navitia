@@ -116,6 +116,17 @@ uint32_t get_max_sp(const std::vector<vector_idx> &journey_patterns) {
     return max_sp;
 }
 
+void Thermometer::generate_thermometer(const type::Route* route) {
+        std::vector<vector_idx> stop_points;
+        for(auto jp : route->journey_pattern_list) {
+            stop_points.push_back(vector_idx());
+            for(auto jpp : jp->journey_pattern_point_list) {
+                stop_points.back().push_back(jpp->stop_point->idx);
+            }
+        }
+        this->generate_thermometer(stop_points);
+}
+
 void Thermometer::generate_thermometer(const std::vector<vector_idx> &journey_patterns) {
 
     uint32_t max_sp = get_max_sp(journey_patterns);

@@ -53,6 +53,7 @@ class Uri(ResourceUri):
     parsers = {}
 
     def __init__(self, is_collection, collection, *args, **kwargs):
+        kwargs['authentication'] = False
         ResourceUri.__init__(self, *args, **kwargs)
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
@@ -106,6 +107,8 @@ class Uri(ResourceUri):
                           % args["external_code"])
             else:
                 abort(503, message="Not implemented yet")
+        else:
+            authentification.authenticate(region, 'ALL', abort=True)
         self.region = i_manager.get_region(region, lon, lat)
         if not self.region:
             return {"error": "No region"}, 404

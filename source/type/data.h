@@ -37,6 +37,7 @@ www.navitia.io
 #include <atomic>
 #include "type/type.h"
 #include "utils/serialization_unique_ptr.h"
+#include "utils/exception.h"
 
 //forward declare
 namespace navitia{
@@ -56,6 +57,10 @@ namespace navitia{
 
 namespace navitia { namespace type {
 
+struct wrong_version : public navitia::exception {
+    wrong_version(const std::string& msg): navitia::exception(msg){}
+    virtual  ~wrong_version() noexcept {}
+};
 
 /** Contient toutes les données théoriques du référentiel transport en communs
   *
@@ -66,7 +71,7 @@ namespace navitia { namespace type {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 22; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
+    static const unsigned int data_version = 23; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
     unsigned int version = 0; //< Numéro de version des données chargées
     std::atomic<bool> loaded; //< Est-ce que lse données ont été chargées
 
@@ -128,9 +133,9 @@ public:
     template<class Archive> void serialize(Archive & ar, const unsigned int version) {
         this->version = version;
         if(this->version != data_version){
-            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             unsigned int v = data_version;//sinon ca link pas...
-            LOG4CPLUS_WARN(logger, boost::format("Attention le fichier de données est à la version %u (version actuelle : %d)") % version % v);
+            auto msg = boost::format("Warning data version don't match with the data version of kraken %u (current version: %d)") % version % v;
+            throw wrong_version(msg.str());
         }
 
         ar & pt_data & geo_ref & meta & fare;

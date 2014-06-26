@@ -88,7 +88,6 @@ class StatManager(object):
         if self.save_stat:
             self._init_rabbitmq()
 
-
     def _init_rabbitmq(self):
         """
         connection to rabbitmq and initialize queues
@@ -102,8 +101,6 @@ class StatManager(object):
             self.save_stat = False
             logging.getLogger(__name__).warn('Unable to activate the producer of stat')
 
-
-
     def manage_stat(self, start_time, call_result):
         """
         Function to fill stat objects (requests, parameters, journeys et sections) sand send them to Broker
@@ -112,11 +109,10 @@ class StatManager(object):
             return
 
         try:
-            stat_request = self._manage_stat(start_time, call_result)
+            self._manage_stat(start_time, call_result)
         except Exception as e:
             #if stat are not working we don't want jormungandr to stop.
             current_app.logger.exception('Error during stat management')
-
 
     def _manage_stat(self, start_time, call_result):
         end_time = time.time()
@@ -127,8 +123,6 @@ class StatManager(object):
         self.fill_parameters(stat_request)
         self.fill_result(stat_request, call_result)
         self.publish_request(stat_request)
-        return stat_request
-
 
     def fill_result(self, stat_request, call_result):
         if 'error' in call_result[0]:
@@ -140,14 +134,15 @@ class StatManager(object):
                 'to' in request.args:
             self.fill_journeys(stat_request, call_result)
 
-
     def fill_request(self, stat_request, call_result):
         """
         Remplir requests
         """
         dt = datetime.utcnow()
         stat_request.request_date = int(time.mktime(dt.timetuple()))
-        user = get_user()
+        # Note: for stat we don't want to abort if no token has been
+        # given (it's up to the authentication process)
+        user = get_user(abort_if_no_token=False)
         if user is not None:
             stat_request.user_id = user.id
             stat_request.user_name = user.login
@@ -164,19 +159,16 @@ class StatManager(object):
 
         stat_request.response_size = sys.getsizeof(call_result[0])
 
-
     def fill_parameters(self, stat_request):
         for item in request.args.iteritems():
             stat_parameter = stat_request.parameters.add()
             stat_parameter.key = item[0]
             stat_parameter.value = item[1]
 
-
     def fill_coverages(self, stat_request):
         stat_coverage = stat_request.coverages.add()
         if 'region' in request.view_args:
             stat_coverage.region_id = request.view_args['region']
-
 
     def fill_error(self, stat_request, error):
         stat_error = stat_request.error
@@ -184,7 +176,6 @@ class StatManager(object):
             stat_error.id = error['id']
         if 'message' in error:
             stat_error.message = error['message']
-
 
     def fill_journey(self, stat_journey, resp_journey):
         """"
@@ -214,7 +205,6 @@ class StatManager(object):
         if 'type' in resp_journey:
             stat_journey.type = resp_journey['type']
 
-
     def fill_journeys(self, stat_request, call_result):
         """
         Fill journeys and sections for each journey
@@ -225,7 +215,6 @@ class StatManager(object):
                 self.fill_journey(stat_journey, resp_journey)
                 self.fill_sections(stat_journey, resp_journey)
 
-
     def get_section_link(self, resp_section, link_type):
         result = ''
         if 'links' in resp_section:
@@ -235,7 +224,6 @@ class StatManager(object):
                     break
 
         return result
-
 
     def fill_section(self, stat_section, resp_section):
         if 'departure_date_time' in resp_section:
@@ -273,10 +261,10 @@ class StatManager(object):
         self.fill_section_display_informations(stat_section, resp_section)
 
     def fill_section_from(self, stat_section, section_point):
-        '''
+        """
         If EmbeddedType is stop_point then fill information of Stop_area
         instead of stop_point
-        '''
+        """
         stat_section.from_embedded_type = section_point['embedded_type']
         if 'administrative_regions' in section_point[stat_section.from_embedded_type]:
             self.fill_admin_from(stat_section, section_point[stat_section.from_embedded_type]['administrative_regions'])
@@ -295,10 +283,10 @@ class StatManager(object):
             self.fill_coord(stat_section.from_coord, section_point['coord'])
 
     def fill_section_to(self, stat_section, section_point):
-        '''
+        """
         If EmbeddedType is stop_point then fill information of Stop_area
         instead of stop_point
-        '''
+        """
         stat_section.to_embedded_type = section_point['embedded_type']
 
         if 'administrative_regions' in section_point[stat_section.to_embedded_type]:
@@ -316,7 +304,6 @@ class StatManager(object):
         if 'coord' in section_point:
             self.fill_coord(stat_section.to_coord, section_point['coord'])
 
-
     def fill_coord(self, stat_coord, point_coord):
         try:
             to_lat = point_coord['lat']
@@ -328,13 +315,11 @@ class StatManager(object):
         except ValueError as e:
             current_app.logger.warn('Unable to parse coordinates: %s', str(e))
 
-
     def fill_sections(self, stat_journey, resp_journey):
         if 'sections' in resp_journey:
             for resp_section in resp_journey['sections']:
                 stat_section = stat_journey.sections.add()
                 self.fill_section(stat_section, resp_section)
-
 
     def publish_request(self, stat_request):
         try:
@@ -350,7 +335,7 @@ class StatManager(object):
             if self.save_stat:
                 self.producer.publish(stat_request.SerializeToString())
 
-    def fill_admin_from(self,stat_section, admins):
+    def fill_admin_from(self, stat_section, admins):
         for admin in admins:
             if admin['level'] == 8:
                 stat_section.from_admin_id = admin['id']
@@ -364,7 +349,6 @@ class StatManager(object):
                 stat_section.to_admin_id = admin['id']
                 stat_section.to_admin_name = admin['name']
                 break
-
 
     def fill_section_display_informations(self, stat_section, resp_section):
         if 'display_informations' in resp_section:

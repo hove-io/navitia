@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/date_defs.hpp>
 #include "fare/fare.h"
+#include "time_tables/thermometer.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -304,6 +305,16 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         fill_pb_object(r->line, data, route->mutable_line(), depth-1,
                        now, action_period, show_codes);
     }
+
+    if(depth > 2) {
+        auto thermometer = timetables::Thermometer();
+        thermometer.generate_thermometer(r);
+        for(auto idx : thermometer.get_thermometer()) {
+            auto stop_point = data.pt_data->stop_points[idx];
+            fill_pb_object(stop_point, data, route->add_stop_points(), depth-1, now, action_period, show_codes);
+        }
+    }
+
     for(const auto& message : r->get_applicable_messages(now, action_period)){
         fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
     }
