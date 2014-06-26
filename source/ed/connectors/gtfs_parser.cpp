@@ -106,10 +106,6 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
 
     std::string timezone_name = row[time_zone_c];
 
-    if (timezone_name.empty()) {
-        throw navitia::exception("Error while reading " + csv.filename +
-                                 + " timezone is empty for agency " + network->uri);
-    }
     if (gtfs_data.default_timezone.second) {
         if (gtfs_data.default_timezone.first != timezone_name) {
             LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
@@ -117,13 +113,19 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
         }
         return network;
     }
+
+    if (timezone_name.empty()) {
+        throw navitia::exception("Error while reading " + csv.filename +
+                                 + " timezone is empty for agency " + network->uri);
+    }
+
     auto tz = gtfs_data.tz_db.time_zone_from_region(timezone_name);
     if (! tz) {
         throw navitia::exception("Error while reading " + csv.filename +
                                  + " timezone " + timezone_name + "is not valid for agency " + network->uri);
     }
     gtfs_data.default_timezone = {timezone_name, tz};
-    LOG4CPLUS_WARN(logger, "default agency tz " << gtfs_data.default_timezone.first
+    LOG4CPLUS_INFO(logger, "default agency tz " << gtfs_data.default_timezone.first
                    << " -> " << gtfs_data.default_timezone.second->std_zone_name());
 
     return network;
@@ -251,6 +253,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     stop->external_code = stop->uri;
     if (has_col(desc_c, row))
         stop->comment = row[desc_c];
+
     return true;
 }
 
@@ -485,15 +488,13 @@ void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     week[6] = (row[saturday_c] == "1");
     week[0] = (row[sunday_c] == "1");
 
-    nm::ValidityPattern * vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
-
-    for(unsigned int i = 0; i<366;++i)
-        vp->remove(i);
-
     //Initialisation des jours de la date de départ jusqu'à la date de fin du service
     boost::gregorian::date b_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
     boost::gregorian::date_period period = boost::gregorian::date_period(
                 (b_date > gtfs_data.production_date.begin() ? b_date : gtfs_data.production_date.begin()), boost::gregorian::from_undelimited_string(row[end_date_c]));
+
+    nm::ValidityPattern * vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
+
     for(boost::gregorian::day_iterator it(period.begin()); it<period.end(); ++it) {
         if(week.test((*it).day_of_week())) {
             vp->add((*it));
