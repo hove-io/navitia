@@ -151,9 +151,12 @@ class InstanceManager(object):
                     instance.geom = None
                     continue
                 if resp.HasField("metadatas"):
-                    try:
-                        instance.geom = wkt.loads(resp.metadatas.shape)
-                    except ReadingError:
+                    if resp.metadatas.shape and resp.metadatas.shape != "":
+                        try:
+                            instance.geom = wkt.loads(resp.metadatas.shape)
+                        except ReadingError:
+                            instance.geom = None
+                    else:
                         instance.geom = None
             self.thread_event.wait(timer)
 

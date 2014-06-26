@@ -158,6 +158,7 @@ message Route {
     repeated JourneyPattern journey_patterns = 8;
     repeated Message messages = 9;
     repeated Code codes = 10;
+    repeated StopPoint stop_points = 1;
 }
 
 message JourneyPattern {

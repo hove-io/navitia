@@ -149,7 +149,7 @@ def has_access(instance, abort=False):
     else:
         return res
 
-def get_user():
+def get_user(abort_if_no_token=True):
     """
     return the current authenticated User or None
     """
@@ -160,13 +160,16 @@ def get_user():
         if not token:
             #a token is mandatory for non public jormungandr
             if not current_app.config.get('PUBLIC', False):
-                flask_restful.abort(401)
+                if abort_if_no_token:
+                    flask_restful.abort(401)
+                else:
+                    return None
             else:  # for public one we allow unknown user
                 g.user = User(login="unknown_user")
                 g.user.id = 0
         else:
             g.user = User.get_from_token(token, datetime.datetime.now())
 
-        logging.info('user %s', g.user)
+        logging.debug('user %s', g.user)
 
         return g.user
