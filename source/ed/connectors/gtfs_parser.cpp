@@ -46,132 +46,17 @@ namespace ed{ namespace connectors {
 static int default_waiting_duration = 120;
 static int default_connection_duration = 120;
 
-std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string original_uri, int cpt_vj) {
-    // we change the name of the vj since we had to split the original GTFS vj because of dst
-    // WARNING: this code is uggly, but it's a quick fix.
-    for (int i = 0; i < 100; ++i) {
-        //for debugging purpose (since vj uri are useful only for dev purpose)
-        //we store if the vj is in conflict
-        const std::string separator = (i == 0 ? "dst" : "conflit");
-        const std::string vj_uri = original_uri + "_" + separator + "_" + std::to_string(cpt_vj + i);
-        //to avoid collision, we check if we find a vj with the name we want to create
-        if (gtfs_data.vj_uri.find(vj_uri) == gtfs_data.vj_uri.end()) {
-            return vj_uri;
-        }
-    }
-    // we haven't found a unique uri...
-    // If this case happens, we need to handle this differently.
-    // read all vj beforehand to know how to avoid conflict ?
-    throw navitia::exception("impossible to generate a unique uri for the vj " + original_uri +
-                             "there are some problems with the dataset. The current code cannot handle that");
-}
-
-std::pair<std::string, boost::local_time::time_zone_ptr> TzHandler::get_tz(const std::string& tz_name) {
+std::pair<std::string, boost::local_time::time_zone_ptr> GtfsData::get_tz(const std::string& tz_name) {
+    std::cout << "loading tz " << tz_name << std::endl;
     if (! tz_name.empty()) {
         auto tz = tz_db.time_zone_from_region(tz_name);
         if (tz) {
             return {tz_name, tz};
         }
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("ed"), "cannot find " << tz_name << " in tz db");
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("ed"), "cannot find " << tz_name << " in tz db");
     }
     //we fetch the default dataset timezone
     return default_timezone;
-}
-
-
-/*
- * we need the list of dst periods over the years of the validity period
- *
- *                                  validity period
- *                              [-----------------------]
- *                        2013                                  2014
- *       <------------------------------------><-------------------------------------->
- *[           non DST   )[  DST    )[        non DST     )[   DST     )[     non DST          )
- *
- * We thus create a partition of the time with all period with the UTC offset
- *
- *       [    +7h       )[  +8h    )[       +7h          )[   +8h     )[      +7h     )
- */
-std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
-
-    if (validity_period.is_null()) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "validity period is not valid");
-        throw navitia::exception("validity period is not valid");
-    }
-    std::vector<int> years;
-    //we want to have all the overlapping year
-    //so add each time 1 year and continue till the first day of the year is after the end of the period (cf gtfs_parser_test.boost_periods)
-    for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
-        years.push_back((*y_it).year());
-    }
-
-    BOOST_ASSERT(! years.empty());
-
-    std::vector<period_with_utc_shift> res;
-    for (int year: years) {
-        if (! res.empty()) {
-            //if res is not empty we add the additional period without the dst
-            //from the previous end date to the beggining of the dst next year
-            res.push_back({ {res.back().period.end(), tz->dst_local_start_time(year).date()},
-                            tz->base_utc_offset() });
-        } else {
-            //for the first elt, we add a non dst
-            auto first_day_of_year = boost::gregorian::date(year, 1, 1);
-            if (tz->dst_local_start_time(year).date() != first_day_of_year) {
-                res.push_back({ {first_day_of_year, tz->dst_local_start_time(year).date()},
-                                tz->base_utc_offset() });
-            }
-        }
-        res.push_back({ {tz->dst_local_start_time(year).date(), tz->dst_local_end_time(year).date()},
-                        tz->base_utc_offset() + tz->dst_offset() });
-    }
-    //we add the last non DST period
-    res.push_back({ {res.back().period.end(), boost::gregorian::date(years.back() + 1, 1, 1)},
-                    tz->base_utc_offset() });
-    return res;
-}
-
-std::vector<period_with_utc_shift>
-split_over_dst(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
-    std::vector<period_with_utc_shift> res;
-
-    if (! tz) {
-        LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), "no timezone available, cannot compute dst split");
-        return res;
-    }
-
-    boost::posix_time::time_duration utc_offset = tz->base_utc_offset();
-
-    if (! tz->has_dst()) {
-        //no dst -> easy way out, no split, we just have to take the utc offset into account
-        res.push_back({validity_period, utc_offset});
-        return res;
-    }
-
-    std::vector<period_with_utc_shift> dst_periods = get_dst_periods(validity_period, tz);
-
-    //we now compute all intersection between periods
-    //to use again the example of get_dst_periods:
-    //                                      validity period
-    //                                  [----------------------------]
-    //                            2013                                  2014
-    //           <------------------------------------><-------------------------------------->
-    //    [           non DST   )[  DST    )[        non DST     )[   DST     )[     non DST          )
-    //
-    // we create the periods:
-    //
-    //                                  [+8)[       +7h          )[+8h)
-    for (auto dst_period: dst_periods) {
-
-        if (! validity_period.intersects(dst_period.period)) {
-            //no intersection, we don't consider it
-            continue;
-        }
-        auto intersec = validity_period.intersection(dst_period.period);
-        res.push_back({intersec, dst_period.utc_shift});
-    }
-
-    return res;
 }
 
 int time_to_int(const std::string & time) {
@@ -221,27 +106,25 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
 
     std::string timezone_name = row[time_zone_c];
 
-    if (gtfs_data.tz.default_timezone.second) {
-        if (gtfs_data.tz.default_timezone.first != timezone_name) {
+    if (timezone_name.empty()) {
+        throw navitia::exception("Error while reading " + csv.filename +
+                                 + " timezone is empty for agency " + network->uri);
+    }
+    if (gtfs_data.default_timezone.second) {
+        if (gtfs_data.default_timezone.first != timezone_name) {
             LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
                             " all the time zone are not equals, only the first one will be considered as the default timezone");
         }
         return network;
     }
-
-    if (timezone_name.empty()) {
-        throw navitia::exception("Error while reading " + csv.filename +
-                                 + " timezone is empty for agency " + network->uri);
-    }
-
-    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(timezone_name);
+    auto tz = gtfs_data.tz_db.time_zone_from_region(timezone_name);
     if (! tz) {
         throw navitia::exception("Error while reading " + csv.filename +
-                                 + " timezone " + timezone_name + " is not valid for agency " + network->uri);
+                                 + " timezone " + timezone_name + "is not valid for agency " + network->uri);
     }
-    gtfs_data.tz.default_timezone = {timezone_name, tz};
-    LOG4CPLUS_INFO(logger, "default agency tz " << gtfs_data.tz.default_timezone.first
-                   << " -> " << gtfs_data.tz.default_timezone.second->std_zone_name());
+    gtfs_data.default_timezone = {timezone_name, tz};
+    LOG4CPLUS_WARN(logger, "default agency tz " << gtfs_data.default_timezone.first
+                   << " -> " << gtfs_data.default_timezone.second->std_zone_name());
 
     return network;
 }
@@ -331,12 +214,12 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
         sp->stop_area = sa;
 
         //if the stoppoint had a tz, it becomes the stop area's, else we fetch the default timezone
-        auto it_tz = gtfs_data.tz.stop_point_tz.find(sp);
-        if (it_tz != gtfs_data.tz.stop_point_tz.end()) {
-            sa->time_zone_with_name = gtfs_data.tz.get_tz(it_tz->second);
+        auto it_tz = gtfs_data.stop_point_tz.find(sp);
+        if (it_tz != gtfs_data.stop_point_tz.end()) {
+            sa->time_zone_with_name = gtfs_data.get_tz(it_tz->second);
         } else {
             //we fetch the defautl dataset timezone
-            sa->time_zone_with_name = gtfs_data.tz.default_timezone;
+            sa->time_zone_with_name = gtfs_data.default_timezone;
         }
         nb_added_sa ++;
     }
@@ -368,7 +251,6 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     stop->external_code = stop->uri;
     if (has_col(desc_c, row))
         stop->comment = row[desc_c];
-
     return true;
 }
 
@@ -399,9 +281,9 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
 
         if (has_col(timezone_c, row)) {
             auto tz_name = row[timezone_c];
-            sa->time_zone_with_name = gtfs_data.tz.get_tz(tz_name);
+            sa->time_zone_with_name = gtfs_data.get_tz(tz_name);
         } else {
-            sa->time_zone_with_name = gtfs_data.tz.default_timezone;
+            sa->time_zone_with_name = gtfs_data.default_timezone;
         }
     }
     // C'est un StopPoint
@@ -433,7 +315,7 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
 
         //we save the tz in case the stop point is later promoted to stop area
         if (has_col(timezone_c, row) && ! row[timezone_c].empty()) {
-            gtfs_data.tz.stop_point_tz[sp] = row[timezone_c];
+            gtfs_data.stop_point_tz[sp] = row[timezone_c];
         }
         return_wrapper.first = sp;
     }
@@ -477,19 +359,15 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         return nullptr;
     }
 
-    if (has_col(agency_c, row)) {
-        auto network_it = gtfs_data.network_map.find(row[agency_c]);
-        // The behaviour is not exactly the one described in the GTFS Specs
-        // We have to check what to do it that case
-        if(network_it != gtfs_data.network_map.end()) {
-            line->network = network_it->second;
-        }
+    if(has_col(agency_c, row)) {
+        auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
+        if(agency_it != gtfs_data.agency_map.end())
+            line->network = agency_it->second;
     }
-    if (line->network == nullptr) {
-        auto network_it = gtfs_data.network_map.find("default_network");
-        if(network_it != gtfs_data.network_map.end()) {
-            line->network = network_it->second;
-        }
+    else {
+        auto agency_it = gtfs_data.agency_map.find("default_agency");
+        if(agency_it != gtfs_data.agency_map.end())
+            line->network = agency_it->second;
     }
 
     gtfs_data.line_map[row[id_c]] = line;
@@ -585,20 +463,20 @@ void CalendarGtfsHandler::init(Data& data) {
 }
 
 void CalendarGtfsHandler::finish(Data& data) {
-    LOG4CPLUS_TRACE(logger, "Nb validity patterns : " << data.validity_patterns.size() << " nb lines : " << nb_lines);
-    BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.tz.vp_by_name.size());
+    LOG4CPLUS_TRACE(logger, "Nb validity patterns : " << data.validity_patterns.size() << " nb lines : " << nblignes);
+    BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.vp_map.size());
 }
 
 void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     if (row.empty())
         return;
     std::bitset<7> week;
-    nb_lines ++;
+    nblignes ++;
 
-    if (gtfs_data.tz.vp_by_name.find(row[id_c]) != gtfs_data.tz.vp_by_name.end()) {
+    if (gtfs_data.vp_map.find(row[id_c]) != gtfs_data.vp_map.end()) {
         return;
     }
-    //week day init (remember that sunday is the first day of week in the us)
+    //On initialise la semaine
     week[1] = (row[monday_c] == "1");
     week[2] = (row[tuesday_c] == "1");
     week[3] = (row[wednesday_c] == "1");
@@ -607,48 +485,26 @@ void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     week[6] = (row[saturday_c] == "1");
     week[0] = (row[sunday_c] == "1");
 
-    //Init the validity period
+    nm::ValidityPattern * vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
+
+    for(unsigned int i = 0; i<366;++i)
+        vp->remove(i);
+
+    //Initialisation des jours de la date de départ jusqu'à la date de fin du service
     boost::gregorian::date b_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
     boost::gregorian::date_period period = boost::gregorian::date_period(
                 (b_date > gtfs_data.production_date.begin() ? b_date : gtfs_data.production_date.begin()), boost::gregorian::from_undelimited_string(row[end_date_c]));
-
-    //Since all time have to be converted to UTC, we need to handle day saving time (DST) rules
-    //we thus need to split all periods for them to be on only one DST
-    //luckily in GTFS format all times are given in the same timezone (the default tz dataset) even if all stop areas are not on the same tz
-    auto split_periods = split_over_dst(period, gtfs_data.tz.default_timezone.second);
-
-    BOOST_ASSERT(! split_periods.empty() || period.is_null()); //by construction it cannot be empty if the validity period is not null
-
-    if (split_periods.size() > 1) {
-        LOG4CPLUS_INFO(logger, "the calendar " << row[id_c]
-                       << " is overlapping at least one day saving time (dst) thus we split it in "
-                       << split_periods.size());
+    for(boost::gregorian::day_iterator it(period.begin()); it<period.end(); ++it) {
+        if(week.test((*it).day_of_week())) {
+            vp->add((*it));
+        }
+        else
+            vp->remove((*it));
     }
 
-    size_t cpt(1);
-    for (const auto& split_period: split_periods) {
-        nm::ValidityPattern * vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
-
-        for(boost::gregorian::day_iterator it(split_period.period.begin()); it<split_period.period.end(); ++it) {
-            if(week.test((*it).day_of_week())) {
-                vp->add((*it));
-            }
-            else
-                vp->remove((*it));
-        }
-
-        if (split_periods.size() == 1) {
-            //we do not change the id if the period is not split
-            vp->uri = row[id_c];
-        } else {
-            vp->uri = row[id_c] + "_" + std::to_string(cpt);
-        }
-        //gtfs_data.vp_map[row[id_c]] = vp;
-        gtfs_data.tz.vp_by_name.insert({row[id_c], vp});
-        gtfs_data.tz.offset_by_vp.insert({vp, split_period.utc_shift});
-        data.validity_patterns.push_back(vp);
-        cpt++;
-    }
+    vp->uri = row[id_c];
+    gtfs_data.vp_map[row[id_c]] = vp;
+    data.validity_patterns.push_back(vp);
 }
 
 void CalendarDatesGtfsHandler::init(Data&) {
@@ -658,7 +514,7 @@ void CalendarDatesGtfsHandler::init(Data&) {
 
 void CalendarDatesGtfsHandler::finish(Data& data) {
     LOG4CPLUS_TRACE(logger, "Nb validity patterns : " << data.validity_patterns.size());
-    BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.tz.vp_by_name.size());
+    BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.vp_map.size());
     if (data.validity_patterns.empty())
         LOG4CPLUS_FATAL(logger, "No validity_patterns");
 }
@@ -667,11 +523,10 @@ void CalendarDatesGtfsHandler::handle_line(Data& data, const csv_row& row, bool)
     if(row.empty())
         return;
     nm::ValidityPattern* vp;
-    auto it = gtfs_data.tz.vp_by_name.find(row[id_c]);
-    if(it == gtfs_data.tz.vp_by_name.end()){
-        //TODO que faire ? splitter sur tous les dst de la periode de prod ?
+    std::unordered_map<std::string, nm::ValidityPattern*>::iterator it = gtfs_data.vp_map.find(row[id_c]);
+    if(it == gtfs_data.vp_map.end()){
         vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
-        gtfs_data.tz.vp_by_name.insert({row[id_c], vp});
+        gtfs_data.vp_map[row[id_c]] = vp;
         data.validity_patterns.push_back(vp);
     }
     else {
@@ -697,101 +552,77 @@ void TripsGtfsHandler::init(Data& data) {
 }
 
 void TripsGtfsHandler::finish(Data& data) {
-    BOOST_ASSERT(data.vehicle_journeys.size() == gtfs_data.tz.vj_by_name.size());
+    BOOST_ASSERT(data.vehicle_journeys.size() == gtfs_data.vj_map.size());
     LOG4CPLUS_TRACE(logger, "Nb vehicle journeys : " << data.vehicle_journeys.size());
     LOG4CPLUS_TRACE(logger, "Nb errors on service reference " << ignored);
     LOG4CPLUS_TRACE(logger, ignored_vj << " duplicated vehicule journey have been ignored");
 }
 
-void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     auto it = gtfs_data.line_map.find(row[id_c]);
     if (it == gtfs_data.line_map.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs route " + row[id_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
-        return;
+        return nullptr;
     }
 
     nm::Line* line = it->second;
 
-    auto vp_it = gtfs_data.tz.vp_by_name.lower_bound(row[service_c]);
-    if(vp_it == gtfs_data.tz.vp_by_name.end()) {
+    auto vp_it = gtfs_data.vp_map.find(row[service_c]);
+    if(vp_it == gtfs_data.vp_map.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the Gtfs service " + row[service_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
-        return;
+        return nullptr;
     }
+    nm::ValidityPattern* vp_xx = vp_it->second;
 
-    //we look in the meta vj table to see if we already have one such vj
-    if(data.meta_vj_map.find(row[trip_c]) != data.meta_vj_map.end()) {
-        LOG4CPLUS_DEBUG(logger, "vj " << row[trip_c] << " already read, we skip the second one");
+    auto vj_it = gtfs_data.vj_map.find(row[trip_c]);
+    if(vj_it != gtfs_data.vj_map.end()) {
         ignored_vj++;
-        return;
+        return nullptr;
+    }
+    nm::VehicleJourney* vj = new nm::VehicleJourney();
+    vj->uri = row[trip_c];
+    vj->external_code = vj->uri;
+    if(has_col(headsign_c, row))
+        vj->name = row[headsign_c];
+    else
+        vj->name = vj->uri;
+
+    vj->validity_pattern = vp_xx;
+    vj->adapted_validity_pattern = vp_xx;
+    vj->journey_pattern = 0;
+    vj->tmp_line = line;
+    if(has_col(block_id_c, row))
+        vj->block_id = row[block_id_c];
+    else
+        vj->block_id = "";
+    //                    if(has_col(wheelchair_c, row))
+    //                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
+    if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
+        vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+    if(has_col(bikes_c, row) && row[bikes_c] == "1")
+        vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+
+    auto itm = gtfs_data.physical_mode_map.find(line->commercial_mode->uri);
+    if (itm != gtfs_data.physical_mode_map.end()){
+        vj->physical_mode = itm->second;
     }
 
-    types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
-
-    const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
-
-    auto second_elt = vp_it;
-    bool has_been_split = (++second_elt != vp_end_it); //check if the trip has been split over dst
-
-    size_t cpt_vj(1);
-    //the validity pattern may have been split because of DST, so we need to create one vj for each
-    for (; vp_it != vp_end_it; ++vp_it, cpt_vj++) {
-
-        nm::ValidityPattern* vp_xx = vp_it->second;
-
-        nm::VehicleJourney* vj = new nm::VehicleJourney();
-        const std::string original_uri = row[trip_c];
-        std::string vj_uri = original_uri;
-        if (has_been_split) {
-            vj_uri = generate_unique_vj_uri(gtfs_data, original_uri, cpt_vj);
-        }
-
-        vj->uri = vj_uri;
-        vj->external_code = vj->uri;
-        if(has_col(headsign_c, row))
-            vj->name = row[headsign_c];
-        else
-            vj->name = vj->uri;
-
-        vj->validity_pattern = vp_xx;
-        vj->adapted_validity_pattern = vp_xx;
-        vj->journey_pattern = 0;
-        vj->tmp_line = line;
-        if(has_col(block_id_c, row))
-            vj->block_id = row[block_id_c];
-        else
-            vj->block_id = "";
-        //                    if(has_col(wheelchair_c, row))
-        //                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
-        if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
-            vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
-        if(has_col(bikes_c, row) && row[bikes_c] == "1")
-            vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
-
-        auto itm = gtfs_data.physical_mode_map.find(line->commercial_mode->uri);
-        if (itm != gtfs_data.physical_mode_map.end()){
-            vj->physical_mode = itm->second;
-        }
-
-        auto company_it = gtfs_data.company_map.find("default_company");
-        if (company_it != gtfs_data.company_map.end()){
-            vj->company = company_it->second;
-        } else {
-            //with no information, we take the first company attached to the line
-            vj->company = line->company;
-        }
-
-        gtfs_data.tz.vj_by_name.insert({original_uri, vj});
-
-        data.vehicle_journeys.push_back(vj);
-        //we add them on our meta vj
-        meta_vj.theoric_vj.push_back(vj);
-        vj->meta_vj_name = row[trip_c];
+    auto company_it = gtfs_data.company_map.find("default_company");
+    if (company_it != gtfs_data.company_map.end()){
+        vj->company = company_it->second;
+    } else {
+        //with no information, we take the first company attached to the line
+        vj->company = line->company;
     }
 
+    gtfs_data.vj_map[vj->uri] = vj;
+
+    data.vehicle_journeys.push_back(vj);
+    return vj;
 }
 
 void StopTimeGtfsHandler::init(Data&) {
@@ -805,63 +636,47 @@ void StopTimeGtfsHandler::init(Data&) {
 }
 
 void StopTimeGtfsHandler::finish(Data& data) {
-    LOG4CPLUS_TRACE(logger, "Nb stop times: " << data.stops.size());
+    LOG4CPLUS_TRACE(logger, "Nombre d'horaires : " << data.stops.size());
 }
 
-int to_utc(const std::string& local_time, int utc_offset) {
-    return time_to_int(local_time) + utc_offset;
-}
-
-std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+nm::StopTime* StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+    auto vj_it = gtfs_data.vj_map.find(row[id_c]);
+    if(vj_it == gtfs_data.vj_map.end()) {
+        LOG4CPLUS_WARN(logger, "Impossible to find the vehicle_journey " + row[id_c]);
+        return nullptr;
+    }
     auto stop_it = gtfs_data.stop_map.find(row[stop_c]);
-    if(stop_it == gtfs_data.stop_map.end()) {
+    if(stop_it == gtfs_data.stop_map.end()){
         LOG4CPLUS_WARN(logger, "Impossible to find the stop_point " + row[stop_c] + "!");
-        return {};
+        return nullptr;
     }
+    nm::StopTime* stop_time = new nm::StopTime();
+    stop_time->arrival_time = time_to_int(row[arrival_c]);
+    stop_time->departure_time = time_to_int(row[departure_c]);
+    stop_time->tmp_stop_point = stop_it->second;
+    //stop_time->journey_pattern_point = journey_pattern_point;
+    stop_time->order = boost::lexical_cast<int>(row[stop_seq_c]);
+    stop_time->vehicle_journey = vj_it->second;
 
-    auto vj_it = gtfs_data.tz.vj_by_name.lower_bound(row[id_c]);
-    if(vj_it == gtfs_data.tz.vj_by_name.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the vehicle_journey '" << row[id_c] << "'");
-        return {};
-    }
-    std::vector<nm::StopTime*> stop_times;
+    if(has_col(pickup_c, row) && has_col(drop_off_c, row))
+        stop_time->ODT = (row[pickup_c] == "2" && row[drop_off_c] == "2");
+    else
+        stop_time->ODT = false;
+    if(has_col(pickup_c, row))
+        stop_time->pick_up_allowed = row[pickup_c] != "1";
+    else
+        stop_time->pick_up_allowed = true;
+    if(has_col(drop_off_c, row))
+        stop_time->drop_off_allowed = row[drop_off_c] != "1";
+    else
+        stop_time->drop_off_allowed = true;
 
-    //the validity pattern may have been split because of DST, so we need to create one vj for each
-    for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[id_c]); vj_it != vj_end_it; ++vj_it) {
 
-        nm::StopTime* stop_time = new nm::StopTime();
-
-        //we need to convert the stop times in UTC
-        int utc_offset = gtfs_data.tz.offset_by_vp[vj_it->second->validity_pattern];
-
-        stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
-        stop_time->departure_time = to_utc(row[departure_c], utc_offset);
-
-        stop_time->tmp_stop_point = stop_it->second;
-        //stop_time->journey_pattern_point = journey_pattern_point;
-        stop_time->order = boost::lexical_cast<int>(row[stop_seq_c]);
-        stop_time->vehicle_journey = vj_it->second;
-
-        if(has_col(pickup_c, row) && has_col(drop_off_c, row))
-            stop_time->ODT = (row[pickup_c] == "2" && row[drop_off_c] == "2");
-        else
-            stop_time->ODT = false;
-        if(has_col(pickup_c, row))
-            stop_time->pick_up_allowed = row[pickup_c] != "1";
-        else
-            stop_time->pick_up_allowed = true;
-        if(has_col(drop_off_c, row))
-            stop_time->drop_off_allowed = row[drop_off_c] != "1";
-        else
-            stop_time->drop_off_allowed = true;
-
-        stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
-        stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;
-        data.stops.push_back(stop_time);
-        count++;
-        stop_times.push_back(stop_time);
-    }
-    return stop_times;
+    stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
+    stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;
+    data.stops.push_back(stop_time);
+    count++;
+    return stop_time;
 }
 
 void FrequenciesGtfsHandler::init(Data&) {
@@ -872,24 +687,11 @@ void FrequenciesGtfsHandler::init(Data&) {
 void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
     if(row.empty())
         return;
-    for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[trip_id_c]),
-         vj_it = gtfs_data.tz.vj_by_name.lower_bound(row[trip_id_c]);
-         vj_it != vj_end_it; ++vj_it) {
-
-        if (vj_it->second->stop_time_list.empty()) {
-             LOG4CPLUS_WARN(logger, "vj " << row[trip_id_c] << " is empty cannot add stoptimes in frequencies");
-             continue;
-        }
-
-        //we need to convert the stop times in UTC
-        int utc_offset = gtfs_data.tz.offset_by_vp[vj_it->second->validity_pattern];
-
-		vj->start_time = to_utc(row[start_time_c], utc_offset) + st->arrival_time - begin;
-		vj->end_time = to_utc(row[end_time_c], utc_offset) + st->arrival_time - begin;
-
-        vj->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
-            
-        int begin = vj_it->second->stop_time_list.front()->arrival_time;
+    auto vj_it = gtfs_data.vj_map.find(row[trip_id_c]);
+    if(vj_it != gtfs_data.vj_map.end()) {
+        vj_it->second->start_time = time_to_int(row[start_time_c]);
+        vj_it->second->end_time = time_to_int(row[end_time_c]) ;
+        vj_it->second->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
         for(auto st_it = vj_it->second->stop_time_list.begin(); st_it != vj_it->second->stop_time_list.end(); ++st_it) {
             (*st_it)->is_frequency = true;
         }
@@ -923,11 +725,6 @@ void GenericGtfsParser::fill_default_company(Data & data){
     company->name = "compagnie par défaut";
     data.companies.push_back(company);
     gtfs_data.company_map[company->uri] = company;
-    ed::types::Network* network = new ed::types::Network();
-    network->uri = "default_network";
-    network->name = "default network";
-    data.networks.push_back(network);
-    gtfs_data.network_map[network->uri] = network;
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data){
