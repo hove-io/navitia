@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
     required_fields = {"agency_name", "agency_url", "agency_timezone"};
 
     using file_parser = ed::connectors::FileParser<ed::connectors::AgencyGtfsHandler>;
-    //Check des champs obligatoires
+    //Check mandatory fields
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
@@ -79,12 +79,12 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 
-    //Check que les networks sont bien remplis
+    //Check that the networks are correctly filled
     {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",") << "\n";
-        sstream << "ratp, RATP,,,,,\n";
-        sstream << ", ACME,,,,,";
+        sstream << "ratp, RATP,,Europe/Paris,,,\n";
+        sstream << ", ACME,,America/New_York,,,";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         file_parser(parser.gtfs_data, sstream).fill(data);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
             required_fields = {"stop_id", "stop_name", "stop_lat", "stop_lon"};
 
     using file_parser = ed::connectors::FileParser<ed::connectors::StopsGtfsHandler>;
-    //Check des champs obligatoires
+    //Check mandatory fields
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(parse_transfers) {
             required_fields = {"from_stop_id","to_stop_id"};
 
     using file_parser = ed::connectors::FileParser<ed::connectors::TransfersGtfsHandler>;
-    //Check des champs obligatoires
+    //Check mandatory fields
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(parse_lines) {
                                "route_type"};
 
     using file_parser = ed::connectors::FileParser<ed::connectors::RouteGtfsHandler>;
-    //Check des champs obligatoires
+    //Check mandatory fields
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
             required_fields = {"route_id", "service_id", "trip_id"};
 
     using file_parser = ed::connectors::FileParser<ed::connectors::TripsGtfsHandler>;
-    //Check des champs obligatoires
+    //Check mandatory fields
     for(auto required_field : required_fields) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
@@ -252,6 +252,11 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.stop_areas[8]->name, "Amargosa Valley (Demo)");
     BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lat(), 36.641496, 0.1);
     BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lon(), -116.40094, 0.1);
+    //timzeone check
+    //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
+    for (auto sa: data.stop_areas) {
+        BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "America/Los_Angeles");
+    }
 
     //Stop points
     BOOST_REQUIRE_EQUAL(data.stop_points.size(), 9);

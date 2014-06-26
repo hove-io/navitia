@@ -46,6 +46,19 @@ namespace ed{ namespace connectors {
 static int default_waiting_duration = 120;
 static int default_connection_duration = 120;
 
+std::pair<std::string, boost::local_time::time_zone_ptr> GtfsData::get_tz(const std::string& tz_name) {
+    std::cout << "loading tz " << tz_name << std::endl;
+    if (! tz_name.empty()) {
+        auto tz = tz_db.time_zone_from_region(tz_name);
+        if (tz) {
+            return {tz_name, tz};
+        }
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("ed"), "cannot find " << tz_name << " in tz db");
+    }
+    //we fetch the default dataset timezone
+    return default_timezone;
+}
+
 int time_to_int(const std::string & time) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> sep(":");
@@ -68,6 +81,7 @@ int time_to_int(const std::string & time) {
 void AgencyGtfsHandler::init(Data&) {
     id_c = csv.get_pos_col("agency_id");
     name_c = csv.get_pos_col("agency_name");
+    time_zone_c = csv.get_pos_col("agency_timezone");
 }
 
 ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -89,6 +103,30 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
     data.networks.push_back(network);
 
     gtfs_data.network_map[network->uri] = network;
+
+
+    std::string timezone_name = row[time_zone_c];
+
+    if (timezone_name.empty()) {
+        throw navitia::exception("Error while reading " + csv.filename +
+                                 + " timezone is empty for agency " + network->uri);
+    }
+    if (gtfs_data.default_timezone.second) {
+        if (gtfs_data.default_timezone.first != timezone_name) {
+            LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
+                            " all the time zone are not equals, only the first one will be considered as the default timezone");
+        }
+        return network;
+    }
+    auto tz = gtfs_data.tz_db.time_zone_from_region(timezone_name);
+    if (! tz) {
+        throw navitia::exception("Error while reading " + csv.filename +
+                                 + " timezone " + timezone_name + "is not valid for agency " + network->uri);
+    }
+    gtfs_data.default_timezone = {timezone_name, tz};
+    LOG4CPLUS_WARN(logger, "default agency tz " << gtfs_data.default_timezone.first
+                   << " -> " << gtfs_data.default_timezone.second->std_zone_name());
+
     return network;
 }
 
@@ -113,8 +151,9 @@ void StopsGtfsHandler::init(Data& data) {
             parent_c = csv.get_pos_col("parent_station"),
             name_c = csv.get_pos_col("stop_name"),
             desc_c = csv.get_pos_col("stop_desc"),
-            wheelchair_c = csv.get_pos_col("wheelchair_boarding");
-            platform_c = csv.get_pos_col("platform_code");
+            wheelchair_c = csv.get_pos_col("wheelchair_boarding"),
+            platform_c = csv.get_pos_col("platform_code"),
+            timezone_c = csv.get_pos_col("stop_timezone");
     if (code_c == -1) {
         code_c = id_c;
     }
@@ -174,6 +213,15 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
         gtfs_data.stop_area_map[sa->uri] = sa;
         data.stop_areas.push_back(sa);
         sp->stop_area = sa;
+
+        //if the stoppoint had a tz, it becomes the stop area's, else we fetch the default timezone
+        auto it_tz = gtfs_data.stop_point_tz.find(sp);
+        if (it_tz != gtfs_data.stop_point_tz.end()) {
+            sa->time_zone_with_name = gtfs_data.get_tz(it_tz->second);
+        } else {
+            //we fetch the defautl dataset timezone
+            sa->time_zone_with_name = gtfs_data.default_timezone;
+        }
         nb_added_sa ++;
     }
 
@@ -188,7 +236,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
         stop->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
         stop->coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
     }
-    catch(boost::bad_lexical_cast ) {
+    catch(boost::bad_lexical_cast) {
         LOG4CPLUS_WARN(logger, "Impossible to parse the coordinate for "
                        + row[id_c] + " " + row[code_c] + " " + row[name_c]);
         return false;
@@ -204,6 +252,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     stop->external_code = stop->uri;
     if (has_col(desc_c, row))
         stop->comment = row[desc_c];
+
     return true;
 }
 
@@ -231,6 +280,13 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         gtfs_data.stop_area_map[sa->uri] = sa;
         data.stop_areas.push_back(sa);
         return_wrapper.second = sa;
+
+        if (has_col(timezone_c, row)) {
+            auto tz_name = row[timezone_c];
+            sa->time_zone_with_name = gtfs_data.get_tz(tz_name);
+        } else {
+            sa->time_zone_with_name = gtfs_data.default_timezone;
+        }
     }
     // C'est un StopPoint
     else {
@@ -257,6 +313,11 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
                 it = gtfs_data.sa_spmap.insert(std::make_pair(row[parent_c], GtfsData::vector_sp())).first;
             }
             it->second.push_back(sp);
+        }
+
+        //we save the tz in case the stop point is later promoted to stop area
+        if (has_col(timezone_c, row) && ! row[timezone_c].empty()) {
+            gtfs_data.stop_point_tz[sp] = row[timezone_c];
         }
         return_wrapper.first = sp;
     }
