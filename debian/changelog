@@ -1,3 +1,17 @@
+navitia2 (0.99.0) unstable; urgency=low
+
+  * Fix auth uri  <https://github.com/CanalTP/navitia/pull/417>
+  * Ed: ignore line without a network  <https://github.com/CanalTP/navitia/pull/416>
+  * Attempt to remove libgeos warning  <https://github.com/CanalTP/navitia/pull/410>
+  * Jormungandr: don't abort stat if no token  <https://github.com/CanalTP/navitia/pull/409>
+  * jormungandr: correct filter  <https://github.com/CanalTP/navitia/pull/408>
+  * Add schema to route  <https://github.com/CanalTP/navitia/pull/407>
+  * Jormungandr: fix journey sort  <https://github.com/CanalTP/navitia/pull/406>
+  * Jormungandr: fix a typo in get_filter  <https://github.com/CanalTP/navitia/pull/405>
+  * Best filtering  <https://github.com/CanalTP/navitia/pull/403>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Thu, 26 Jun 2014 18:06:13 +0100
+
 navitia2 (0.98.3) unstable; urgency=low
 
   * Jormungandr: authentication changes for lines api 
