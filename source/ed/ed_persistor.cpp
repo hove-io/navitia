@@ -621,8 +621,10 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 
         if(line->network != NULL){
             values.push_back(std::to_string(line->network->idx));
-        }else{
-            values.push_back(lotus.null_value);
+        } else {
+            LOG4CPLUS_INFO(logger, "Line " + line->uri + " ignored because it doesn't "
+                    "have any network");
+            continue;
         }
         values.push_back(std::to_string(line->sort));
         this->lotus.insert(values);
