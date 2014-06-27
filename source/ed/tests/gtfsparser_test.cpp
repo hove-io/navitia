@@ -339,3 +339,60 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
 //    BOOST_CHECK_EQUAL(stop_area->name, "16058601");
 //    BOOST_CHECK_EQUAL(stop_area->comment, "Siebengewald, Gochsedijk\\Centrum");
 //}
+
+BOOST_AUTO_TEST_CASE(boost_periods) {
+    std::cout << "------------------------------------" << std::endl;
+    {
+    boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20150102")};
+    std::vector<int> years;
+    for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
+        years.push_back((*y_it).year());
+        std::cout << (*y_it).year() << std::endl;
+    }
+    BOOST_REQUIRE_EQUAL(years.size(), 4);
+    }
+    {
+    boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20120104")};
+    std::vector<int> years;
+    for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
+        years.push_back((*y_it).year());
+        std::cout << (*y_it).year() << std::endl;
+    }
+    BOOST_REQUIRE_EQUAL(years.size(), 1);
+    }
+}
+
+/*
+ * test the get_dst_periods method
+ */
+BOOST_AUTO_TEST_CASE(get_dst_periods) {
+    boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20150102")};
+    ed::connectors::GtfsData gtfs_data;
+    auto tz_pair = gtfs_data.get_tz("Europe/Paris");
+
+    BOOST_REQUIRE(tz_pair.second);
+    BOOST_REQUIRE_EQUAL(tz_pair.first, "Europe/Paris");
+
+    auto res = ed::connectors::get_dst_periods(validity_period, tz_pair.second);
+
+    for (auto p: res) {
+        std::cout << " -- period " << p.period << " -> " << p.utc_shift << " (last = " << p.period.last() << std::endl;
+    }
+
+
+    for (boost::gregorian::day_iterator d(validity_period.begin()); d < validity_period.end(); ++d) {
+        //we must find all day in exactly one period
+        int nb_found = 0;
+        for (auto p: res) {
+            if (p.period.contains(*d)) {
+                ++nb_found;
+            }
+        }
+        if (nb_found == 0) {
+            std::cout << "day " << *d << " found in no period" << std::endl;
+        } else if (nb_found > 1) {
+            std::cout << "day " << *d << " found in more than one period" << std::endl;
+        }
+        BOOST_CHECK_EQUAL(nb_found, 1);
+    }
+}

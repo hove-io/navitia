@@ -59,6 +59,107 @@ std::pair<std::string, boost::local_time::time_zone_ptr> GtfsData::get_tz(const 
     return default_timezone;
 }
 
+
+/*
+ * we need the list of dst periods over the years of the validity period
+ *
+ *                                  validity period
+ *                              [-----------------------]
+ *                        2013                                  2014
+ *       <------------------------------------><-------------------------------------->
+ *[           non DST   )[  DST    )[        non DST     )[   DST     )[     non DST          )
+ *
+ * We thus create a partition of the time with all period with the UTC offset
+ *
+ *       [    +7h       )[  +8h    )[       +7h          )[   +8h     )[      +7h     )
+ */
+std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
+
+    std::vector<int> years;
+    //we want to have all the overlapping year
+    //so add each time 1 year and continue till the first day of the year is after the end of the period (cf gtfs_parser_test.boost_periods)
+    for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
+        years.push_back((*y_it).year());
+    }
+
+    BOOST_ASSERT(! years.empty());
+
+    std::vector<period_with_utc_shift> res;
+    for (int year: years) {
+        if (! res.empty()) {
+            //if res is not empty we add the additional period without the dst
+            //from the previous end date to the beggining of the dst next year
+            res.push_back({ {res.back().period.end(), tz->dst_local_start_time(year).date()},
+                            tz->base_utc_offset() });
+            std::cout << "adding period" << res.back().period << " for non dst with offset: " << res.back().utc_shift << std::endl;
+        } else {
+            //for the first elt, we add a non dst
+            auto first_day_of_year = boost::gregorian::date(year, 1, 1);
+            if (tz->dst_local_start_time(year).date() != first_day_of_year) {
+                res.push_back({ {first_day_of_year, tz->dst_local_start_time(year).date()},
+                                tz->base_utc_offset() });
+                std::cout << "adding period" << res.back().period << " for non dst with offset: " << res.back().utc_shift << std::endl;
+            }
+        }
+        res.push_back({ {tz->dst_local_start_time(year).date(), tz->dst_local_end_time(year).date()},
+                        tz->base_utc_offset() + tz->dst_offset() });
+        std::cout << "adding period" << res.back().period << " for dst with offset: " << res.back().utc_shift << std::endl;
+    }
+    //we add the last non DST period
+    res.push_back({ {res.back().period.end(), tz->dst_local_start_time(years.back()).date()},
+                    tz->base_utc_offset() });
+    std::cout << "adding last period" << res.back().period << " for non dst with offset: " << res.back().utc_shift << std::endl;
+    return res;
+}
+
+std::vector<period_with_utc_shift> split_over_dst(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
+    std::cout << "split over dst:" << std::endl;
+    std::vector<period_with_utc_shift> res;
+
+    if (! tz) {
+        LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), "no timezone available, cannot compute dst split");
+        return res;
+    }
+
+    boost::posix_time::time_duration utc_offset = tz->base_utc_offset();
+
+    if (! tz->has_dst()) {
+        //no dst -> easy way out, no split, we just have to take the utc offset into account
+        res.push_back({validity_period, utc_offset});
+        return res;
+    }
+
+    std::vector<period_with_utc_shift> dst_periods = get_dst_periods(validity_period, tz);
+
+    //we now compute all intersection between periods
+    //to use again the example of get_dst_periods:
+    //                                      validity period
+    //                                  [----------------------------]
+    //                            2013                                  2014
+    //           <------------------------------------><-------------------------------------->
+    //    [           non DST   )[  DST    )[        non DST     )[   DST     )[     non DST          )
+    //
+    // we create the periods:
+    //
+    //                                  [+8)[       +7h          )[+8h)
+    for (auto dst_period: dst_periods) {
+
+        std::cout << "- period" << dst_period.period << " for non dst with offset: " << dst_period.utc_shift << std::endl;
+
+        if (! validity_period.intersects(dst_period.period)) {
+            std::cout << "pas d'intersection avec" << validity_period << std::endl;
+            //no intersection, we don't consider it
+            continue;
+        }
+        auto intersec = validity_period.intersection(dst_period.period);
+        std::cout << "intersection: " << intersec << std::endl;
+        res.push_back({intersec, dst_period.utc_shift});
+        std::cout << "adding period" << res.back().period << " for non dst with offset: " << res.back().utc_shift << std::endl;
+    }
+
+    return res;
+}
+
 int time_to_int(const std::string & time) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> sep(":");
@@ -479,7 +580,7 @@ void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     if (gtfs_data.vp_map.find(row[id_c]) != gtfs_data.vp_map.end()) {
         return;
     }
-    //On initialise la semaine
+    //week day init (remember that sunday is the first day of week in the us)
     week[1] = (row[monday_c] == "1");
     week[2] = (row[tuesday_c] == "1");
     week[3] = (row[wednesday_c] == "1");
@@ -488,10 +589,15 @@ void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     week[6] = (row[saturday_c] == "1");
     week[0] = (row[sunday_c] == "1");
 
-    //Initialisation des jours de la date de départ jusqu'à la date de fin du service
+    //Init the validity period
     boost::gregorian::date b_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
     boost::gregorian::date_period period = boost::gregorian::date_period(
                 (b_date > gtfs_data.production_date.begin() ? b_date : gtfs_data.production_date.begin()), boost::gregorian::from_undelimited_string(row[end_date_c]));
+
+    //Since all time have to be converted to UTC, we need to handle day saving time (DST) rules
+    //we thus need to split all periods for them to be on only one DST
+    //luckily in GTFS format all times are given in the same timezone (the default tz dataset) even if all stop areas are not on the same tz
+    //auto split_periods = split_over_dst(period, gtfs_data.default_timezone.second);
 
     nm::ValidityPattern * vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
 
