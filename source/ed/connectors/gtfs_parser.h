@@ -36,8 +36,8 @@ www.navitia.io
 #include <boost/thread/condition_variable.hpp>
 #include <queue>
 #include "utils/csv.h"
-#include <utils/logger.h>
-#include <utils/functions.h>
+#include "utils/logger.h"
+#include "utils/functions.h"
 #include <boost/date_time/time_zone_base.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 
@@ -49,28 +49,15 @@ www.navitia.io
 namespace ed { namespace connectors {
 
 /**
- * Temporary structure used in the GTFS parser, mainly to keep a relation between ids and the pointers
+ * handle all tz specific stuff
+ *
+ * just used to separate those
  */
-struct GtfsData {
-    GtfsData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {
+struct TzHandler {
+    TzHandler() {
         tz_db.load_from_file(std::string(FIXTURES_DIR) + "date_time_zonespec.csv"); //TODO real file handling
     }
-    std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
-    std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
-    std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
-    std::unordered_map<std::string, ed::types::Line*> line_map;
-    std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
-    std::unordered_map<std::string, ed::types::Route*> route_map;
-    std::unordered_map<std::string, ed::types::ValidityPattern*> vp_map;
-    std::unordered_map<std::string, ed::types::VehicleJourney*> vj_map;
-    std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;
-    std::unordered_map<std::string, ed::types::Network*> agency_map;
-    std::unordered_map<std::string, ed::types::Company*> company_map;
-    std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
-    typedef std::vector<ed::types::StopPoint*> vector_sp;
-    std::unordered_map<std::string, vector_sp> sa_spmap;
 
-    //timezone management
     boost::local_time::tz_database tz_db;
     //the GTFS spec defines one tz by agency but put a constraint that all those tz must be the same
     //we thus only put a default tz used if the stop area does not define one
@@ -79,6 +66,35 @@ struct GtfsData {
     //(and hence the sp is promoted to sa)
     std::unordered_map<ed::types::StopPoint*, std::string> stop_point_tz;
     std::pair<std::string, boost::local_time::time_zone_ptr> get_tz(const std::string&);
+
+    //since a calendar might need to be split over several period because of dst, we need to track the splited calendar (to split also all vj on this calendar)
+    std::multimap<std::string, ed::types::ValidityPattern*> vp_by_name;
+    std::multimap<std::string, ed::types::VehicleJourney*> vj_by_name;
+    std::map<ed::types::ValidityPattern*, int> offset_by_vp; //each validity pattern are on only one dst, thus we can store the utc_offset
+};
+
+/**
+ * Temporary structure used in the GTFS parser, mainly to keep a relation between ids and the pointers
+ */
+struct GtfsData {
+    GtfsData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
+    std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
+    std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
+    std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
+    std::unordered_map<std::string, ed::types::Line*> line_map;
+    std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
+    std::unordered_map<std::string, ed::types::Route*> route_map;
+//    std::unordered_map<std::string, ed::types::ValidityPattern*> vp_map;
+//    std::unordered_map<std::string, ed::types::VehicleJourney*> vj_map;
+    std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;
+    std::unordered_map<std::string, ed::types::Network*> agency_map;
+    std::unordered_map<std::string, ed::types::Company*> company_map;
+    std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
+    typedef std::vector<ed::types::StopPoint*> vector_sp;
+    std::unordered_map<std::string, vector_sp> sa_spmap;
+
+    // timezone management
+    TzHandler tz;
 
     // used only by fusio2ed
     std::unordered_map<std::string, std::string> comment_map;
@@ -247,7 +263,7 @@ struct CalendarGtfsHandler : public GenericHandler {
             thursday_c, friday_c,
             saturday_c, sunday_c,
             start_date_c, end_date_c;
-    size_t nblignes = 0;
+    size_t nb_lines = 0;
     void init(Data& data);
     void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
@@ -280,7 +296,7 @@ struct TripsGtfsHandler : public GenericHandler {
 
     void init(Data& data);
     void finish(Data& data);
-    ed::types::VehicleJourney* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"route_id", "service_id", "trip_id"};
     }
@@ -295,7 +311,7 @@ struct StopTimeGtfsHandler : public GenericHandler {
     size_t count = 0;
     void init(Data& data);
     void finish(Data& data);
-    ed::types::StopTime* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    std::vector<ed::types::StopTime*> handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"trip_id" , "arrival_time", "departure_time", "stop_id", "stop_sequence"};
     }
