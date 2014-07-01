@@ -116,7 +116,7 @@ struct StopTimeFusioHandler : public StopTimeGtfsHandler {
     StopTimeFusioHandler(GtfsData& gdata, CsvReader& reader) : StopTimeGtfsHandler(gdata, reader) {}
     int desc_c, itl_c, date_time_estimated_c;
     void init(Data&);
-    ed::types::StopTime* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
 };
 
 struct ContributorFusioHandler : public GenericHandler {
