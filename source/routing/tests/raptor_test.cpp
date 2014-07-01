@@ -446,6 +446,25 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
 }
 */
 
+
+BOOST_AUTO_TEST_CASE(forbidden_uri){
+    ed::builder b("20120614");
+    b.vj("A")("stop1", 8000)("stop2", 8100,8150);
+    b.vj("B")("stop3", 9500)("stop4", 10000);
+    b.vj("C")("stop1", 8000, 8050)("stop4", 18000);
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    RAPTOR raptor(*b.data);
+
+    auto res1 = raptor.compute(b.data->pt_data->stop_areas[0],
+            b.data->pt_data->stop_areas[3], 7900, 0, DateTimeUtils::inf, false,
+            true, true, {}, std::numeric_limits<uint32_t>::max(), {"stop2"});
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), 18000);
+}
+
+
 BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     ed::builder b("20120614");
     b.vj("A", "11111111", "", true)("stop1", 8000,8050)("stop2", 8200,8250);
