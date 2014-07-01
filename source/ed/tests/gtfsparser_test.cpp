@@ -220,17 +220,20 @@ BOOST_AUTO_TEST_CASE(parse_raw_gtfs){
     data.complete();
     //data.clean();
     //data.sort();
-    std::cout << "Journey patterns size : " << data.journey_patterns.size() <<
-        std::endl;
+    std::cout << "Journey patterns size : " << data.journey_patterns.size() << std::endl;
     for(auto vj : data.vehicle_journeys)
-        std::cout  << vj->uri << "  " << vj->journey_pattern->uri << "  "<<
+        std::cout << vj->uri << "  " << vj->journey_pattern->uri << "  "<<
             vj->journey_pattern->route->uri << "  "<< vj->journey_pattern->route->line->uri <<
             std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(parse_gtfs){
+BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
+    /*
+     * use import the google gtfs example file with one difference, the time zone "America/Los_Angeles" of the dataset
+     * has been changed to "Africa/Abidjan" because "Africa/Abidjan" has no dst and no utc offset
+     */
     ed::Data data;
-    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example");
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example_no_dst");
     parser.fill(data);
 
     //Agency
@@ -253,7 +256,8 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     //timzeone check
     //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
     for (auto sa: data.stop_areas) {
-        BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "America/Los_Angeles");
+//        BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "America/Los_Angeles");
+        BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "Africa/Abidjan");
     }
 
     //Stop points
@@ -322,6 +326,127 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
 }
 
+
+BOOST_AUTO_TEST_CASE(parse_gtfs){
+    /*
+     * use import the raw google gtfs example file
+     *
+     * We check the diff that can occur because the dataset timezone has dst
+     */
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example");
+    parser.fill(data);
+
+    //Agency and stop areas should not have changed compared to parse_gtfs_no_dst
+    BOOST_REQUIRE_EQUAL(data.networks.size(), 1);
+    BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
+    BOOST_CHECK_EQUAL(data.networks[0]->uri, "DTA");
+
+    BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 9);
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->uri, "FUR_CREEK_RES");
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->name, "Furnace Creek Resort (Demo)");
+    BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lat(), 36.425288, 0.1);
+    BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lon(), -117.133162, 0.1);
+
+    BOOST_CHECK_EQUAL(data.stop_areas[8]->uri, "AMV");
+    BOOST_CHECK_EQUAL(data.stop_areas[8]->name, "Amargosa Valley (Demo)");
+    BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lat(), 36.641496, 0.1);
+    BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lon(), -116.40094, 0.1);
+    //timzeone check
+    //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
+    for (auto sa: data.stop_areas) {
+        BOOST_CHECK_EQUAL(sa->time_zone_with_name.first, "America/Los_Angeles");
+    }
+
+    //stop point, and lines shoudl be equals too
+    BOOST_REQUIRE_EQUAL(data.stop_points.size(), 9);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->uri, "FUR_CREEK_RES");
+    BOOST_CHECK_EQUAL(data.stop_points[0]->name, "Furnace Creek Resort (Demo)");
+    BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lat(), 36.425288, 0.1);
+    BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lon(), -117.133162, 0.1);
+
+    BOOST_CHECK_EQUAL(data.stop_points[8]->uri, "AMV");
+    BOOST_CHECK_EQUAL(data.stop_points[8]->name, "Amargosa Valley (Demo)");
+    BOOST_CHECK_CLOSE(data.stop_points[8]->coord.lat(), 36.641496, 0.1);
+    BOOST_CHECK_CLOSE(data.stop_points[8]->coord.lon(), -116.40094, 0.1);
+
+    BOOST_REQUIRE_EQUAL(data.stop_point_connections.size(), 0);
+
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 5);
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "AB");
+    BOOST_CHECK_EQUAL(data.lines[0]->name, "Airport - Bullfrog");
+    BOOST_REQUIRE(data.lines[0]->network != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "DTA");
+    BOOST_REQUIRE(data.lines[0]->commercial_mode != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[0]->commercial_mode->uri, "3");
+
+    BOOST_CHECK_EQUAL(data.lines[4]->uri, "AAMV");
+    BOOST_CHECK_EQUAL(data.lines[4]->name, "Airport - Amargosa Valley");
+    BOOST_REQUIRE(data.lines[4]->network != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[4]->network->uri, "DTA");
+    BOOST_REQUIRE(data.lines[4]->commercial_mode != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[4]->commercial_mode->uri, "3");
+
+    //Calendar, Trips and stop times are another matters
+    //we have to split the trip validity period in such a fashion that the period does not overlap a dst
+
+    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date, boost::gregorian::date_period(
+                            boost::gregorian::from_undelimited_string("20070101"),
+                            boost::gregorian::from_undelimited_string("20101231") + boost::gregorian::days(1)));
+    //the dst in los angeles is from the second sunday of march to the first sunday of november
+    // -> we thus have to split the period in 9
+    //          2007                       2008                     2009                    2010
+    // |------------------------|------------------------|------------------------|------------------------|
+    //        [----------]             [----------]             [----------]             [----------]
+    //            DST                       DST                      DST                     DST
+    //     1       2            3            4           5            6           7           8        9
+
+    //each validity pattern are valid on the entire period, so each are split in 9
+    BOOST_REQUIRE_EQUAL(data.validity_patterns.size(), 2 * 9);
+    BOOST_CHECK_EQUAL(data.validity_patterns[0]->uri, "FULLW_1");
+    BOOST_CHECK_EQUAL(data.validity_patterns[1]->uri, "FULLW_2");
+    BOOST_CHECK_EQUAL(data.validity_patterns[8]->uri, "FULLW_9");
+
+    BOOST_CHECK_EQUAL(data.validity_patterns[9]->uri, "WE_1");
+    BOOST_CHECK_EQUAL(data.validity_patterns[10]->uri, "WE_2");
+    BOOST_CHECK_EQUAL(data.validity_patterns[17]->uri, "WE_9");
+
+    // same for the vj, all have been split in 9
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11 * 9);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "AB1_1");
+    BOOST_REQUIRE(data.vehicle_journeys[0]->tmp_line != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->tmp_line->uri, "AB");
+    BOOST_REQUIRE(data.vehicle_journeys[0]->validity_pattern != nullptr);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->validity_pattern->uri, "FULLW_1");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "to Bullfrog");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->block_id, "1");
+    for (int i = 1; i <= 9; ++i) {
+        BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->uri, "AB1_" + std::to_string(i));
+        BOOST_REQUIRE(data.vehicle_journeys[i-1]->validity_pattern != nullptr);
+        BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->validity_pattern->uri, "FULLW_" + std::to_string(i));
+    }
+
+    //Stop time
+    BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 9);
+    BOOST_REQUIRE(data.stops[0]->vehicle_journey != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[0]->vehicle_journey->uri, "STBA_1");
+    BOOST_CHECK_EQUAL(data.stops[0]->arrival_time, 6*3600 - 480); //first day is on a non dst period, so the utc offset
+    BOOST_CHECK_EQUAL(data.stops[0]->departure_time, 6*3600 - 480); //for los angeles is -480
+    BOOST_REQUIRE(data.stops[0]->tmp_stop_point != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
+    BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
+
+    BOOST_REQUIRE(data.stops[1]->vehicle_journey != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[1]->vehicle_journey->uri, "STBA_2");
+    BOOST_CHECK_EQUAL(data.stops[1]->arrival_time, 6*3600 - 420); //the second st is on a dst period, so the utc offset
+    BOOST_CHECK_EQUAL(data.stops[1]->departure_time, 6*3600 - 420); //for los angeles is -420
+    BOOST_REQUIRE(data.stops[1]->tmp_stop_point != nullptr);
+    BOOST_CHECK_EQUAL(data.stops[1]->tmp_stop_point->uri, "STAGECOACH");
+    BOOST_CHECK_EQUAL(data.stops[1]->order, 1);
+
+
+}
+
 //TODO: work on this, we should be able to parse line with \\ in char
 //BOOST_AUTO_TEST_CASE(parse_gtfs_with_slashs) {
 //    ed::Data data;
@@ -340,45 +465,39 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
 //    BOOST_CHECK_EQUAL(stop_area->comment, "Siebengewald, Gochsedijk\\Centrum");
 //}
 
-BOOST_AUTO_TEST_CASE(boost_periods) {
-    std::cout << "------------------------------------" << std::endl;
+BOOST_AUTO_TEST_CASE(boost_year_iterator) {
     {
-    boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20150102")};
-    std::vector<int> years;
-    for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
-        years.push_back((*y_it).year());
-        std::cout << (*y_it).year() << std::endl;
-    }
-    BOOST_REQUIRE_EQUAL(years.size(), 4);
+        boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20150102")};
+        std::vector<int> years;
+        for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
+            years.push_back((*y_it).year());
+        }
+        BOOST_REQUIRE_EQUAL(years.size(), 4);
     }
     {
-    boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20120104")};
-    std::vector<int> years;
-    for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
-        years.push_back((*y_it).year());
-        std::cout << (*y_it).year() << std::endl;
-    }
-    BOOST_REQUIRE_EQUAL(years.size(), 1);
+        boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20120104")};
+        std::vector<int> years;
+        for (boost::gregorian::year_iterator y_it(validity_period.begin()); boost::gregorian::date((*y_it).year(), 1, 1) < validity_period.end(); ++y_it) {
+            years.push_back((*y_it).year());
+        }
+        BOOST_REQUIRE_EQUAL(years.size(), 1);
     }
 }
 
 /*
  * test the get_dst_periods method
+ *
+ * the returned periods must be a partition of the validity period => all day must be in exactly one period
  */
 BOOST_AUTO_TEST_CASE(get_dst_periods) {
     boost::gregorian::date_period validity_period { boost::gregorian::from_undelimited_string("20120101"), boost::gregorian::from_undelimited_string("20150102")};
     ed::connectors::GtfsData gtfs_data;
-    auto tz_pair = gtfs_data.get_tz("Europe/Paris");
+    auto tz_pair = gtfs_data.tz.get_tz("Europe/Paris");
 
     BOOST_REQUIRE(tz_pair.second);
     BOOST_REQUIRE_EQUAL(tz_pair.first, "Europe/Paris");
 
     auto res = ed::connectors::get_dst_periods(validity_period, tz_pair.second);
-
-    for (auto p: res) {
-        std::cout << " -- period " << p.period << " -> " << p.utc_shift << " (last = " << p.period.last() << std::endl;
-    }
-
 
     for (boost::gregorian::day_iterator d(validity_period.begin()); d < validity_period.end(); ++d) {
         //we must find all day in exactly one period
