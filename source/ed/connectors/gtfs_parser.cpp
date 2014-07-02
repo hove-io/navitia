@@ -412,7 +412,7 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
 
         //we save the tz in case the stop point is later promoted to stop area
         if (has_col(timezone_c, row) && ! row[timezone_c].empty()) {
-            gtfs_data.stop_point_tz[sp] = row[timezone_c];
+            gtfs_data.tz.stop_point_tz[sp] = row[timezone_c];
         }
         return_wrapper.first = sp;
     }
@@ -854,6 +854,14 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
              continue;
         }
 
+        //we need to convert the stop times in UTC
+        int utc_offset = gtfs_data.tz.offset_by_vp[vj_it->second->validity_pattern];
+
+		vj->start_time = to_utc(row[start_time_c], utc_offset) + st->arrival_time - begin;
+		vj->end_time = to_utc(row[end_time_c], utc_offset) + st->arrival_time - begin;
+
+        vj->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
+            
         int begin = vj_it->second->stop_time_list.front()->arrival_time;
         for(auto st_it = vj_it->second->stop_time_list.begin(); st_it != vj_it->second->stop_time_list.end(); ++st_it) {
             (*st_it)->is_frequency = true;
