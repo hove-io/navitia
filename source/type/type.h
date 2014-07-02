@@ -475,14 +475,16 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     GeographicalCoord coord;
     std::string additional_data;
     std::vector<navitia::georef::Admin*> admin_list;
-    bool wheelchair_boarding;
+    bool wheelchair_boarding = false;
+    //name of the time zone of the stop area
+    //the name must respect the format of the tz db, for example "Europe/Paris"
+    std::string timezone;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & uri & name & coord & stop_point_list & admin_list
-        & _properties & wheelchair_boarding & messages & visible & comment & codes;
+        & _properties & wheelchair_boarding & messages & visible
+                & comment & codes & timezone;
     }
-
-    StopArea(): wheelchair_boarding(false) {}
 
     std::vector<StopPoint*> stop_point_list;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
