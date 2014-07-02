@@ -64,7 +64,31 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     data.networks.push_back(network);
-    gtfs_data.network_map[network->uri] = network;
+        gtfs_data.network_map[network->uri] = network;
+
+    std::string timezone_name = row[time_zone_c];
+    if (gtfs_data.tz.default_timezone.second) {
+        if (gtfs_data.tz.default_timezone.first != timezone_name) {
+            LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
+                            " all the time zone are not equals, only the first one will be considered as the default timezone");
+        }
+        return;
+    }
+
+    if (timezone_name.empty()) {
+        throw navitia::exception("Error while reading " + csv.filename +
+                                 + " timezone is empty for agency " + network->uri);
+    }
+
+    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(timezone_name);
+    if (! tz) {
+        throw navitia::exception("Error while reading " + csv.filename +
+                                 + " timezone " + timezone_name + " is not valid for agency " + network->uri);
+    }
+    gtfs_data.tz.default_timezone = {timezone_name, tz};
+    LOG4CPLUS_INFO(logger, "default agency tz " << gtfs_data.tz.default_timezone.first
+                   << " -> " << gtfs_data.tz.default_timezone.second->std_zone_name());
+
 }
 
 void StopsFusioHandler::init(Data& data) {
@@ -262,125 +286,146 @@ void TripsFusioHandler::init(Data& d) {
     ext_code_c = csv.get_pos_col("external_code");
 }
 
-ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& row, bool){
+std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& data, const csv_row& row, bool){
     auto it = gtfs_data.route_map.find(row[route_id_c]);
     if (it == gtfs_data.route_map.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the route " + row[route_id_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
-        return nullptr;
+        return {};
+    }
+    ed::types::Route* route = it->second;
+
+    auto vp_it = gtfs_data.tz.vp_by_name.lower_bound(row[service_c]);
+    if(vp_it == gtfs_data.tz.vp_by_name.end()) {
+        LOG4CPLUS_WARN(logger, "Impossible to find the service " + row[service_c]
+                       + " referenced by trip " + row[trip_c]);
+        ignored++;
+        return {};
     }
 
-    ed::types::Route* route = it->second;
-    throw "todo!!";
+    if(gtfs_data.tz.vj_by_name.find(row[trip_c]) != gtfs_data.tz.vj_by_name.end()) {
+        ignored_vj++;
+        return {};
+    }
 
-//    auto vp_it = gtfs_data.vp_map.find(row[service_c]);
-//    if(vp_it == gtfs_data.vp_map.end()) {
-//        LOG4CPLUS_WARN(logger, "Impossible to find the service " + row[service_c]
-//                       + " referenced by trip " + row[trip_c]);
-//        ignored++;
-//        return nullptr;
-//    }
-//    ed::types::ValidityPattern* vp_xx = vp_it->second;
+    std::vector<ed::types::VehicleJourney*> res;
 
-//    auto vj_it = gtfs_data.vj_map.find(row[trip_c]);
-//    if(vj_it != gtfs_data.vj_map.end()) {
-//        ignored_vj++;
-//        return nullptr;
-//    }
-//    ed::types::VehicleJourney* vj = new ed::types::VehicleJourney();
-//    vj->uri = row[trip_c];
-//    if(is_valid(ext_code_c, row)){
-//        vj->external_code = row[ext_code_c];
-//    }
-//    if(is_valid(headsign_c, row))
-//        vj->name = row[headsign_c];
-//    else
-//        vj->name = vj->uri;
+    const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
-//    vj->validity_pattern = vp_xx;
-//    vj->adapted_validity_pattern = vp_xx;
-//    vj->journey_pattern = 0;
-//    vj->tmp_route = route;
-//    vj->tmp_line = vj->tmp_route->line;
-//    if(is_valid(block_id_c, row))
-//        vj->block_id = row[block_id_c];
-//    else
-//        vj->block_id = "";
+    auto second_elt = vp_it;
+    bool has_been_split = (++second_elt != vp_end_it); //check if the trip has been split over dst
 
-//    gtfs_data.vj_map[vj->uri] = vj;
+    size_t cpt_vj(1);
+    //the validity pattern may have been split because of DST, so we need to create one vj for each
+    for (; vp_it != vp_end_it; ++vp_it, cpt_vj++) {
 
-//    data.vehicle_journeys.push_back(vj);
-//    return vj;
+        ed::types::ValidityPattern* vp_xx = vp_it->second;
+
+        ed::types::VehicleJourney* vj = new ed::types::VehicleJourney();
+
+        const std::string original_uri = row[trip_c];
+        std::string vj_uri = original_uri;
+        if (has_been_split) {
+            //we change the name of the vj (all but the first one) since we had to split the original GTFS vj because of dst
+            vj_uri += "_" + std::to_string(cpt_vj);
+        }
+
+        if(is_valid(ext_code_c, row)){
+            vj->external_code = row[ext_code_c];
+        }
+        if(is_valid(headsign_c, row))
+            vj->name = row[headsign_c];
+        else
+            vj->name = vj->uri;
+
+        vj->validity_pattern = vp_xx;
+        vj->adapted_validity_pattern = vp_xx;
+        vj->journey_pattern = 0;
+        vj->tmp_route = route;
+        vj->tmp_line = vj->tmp_route->line;
+        if(is_valid(block_id_c, row))
+            vj->block_id = row[block_id_c];
+        else
+            vj->block_id = "";
+
+        gtfs_data.tz.vj_by_name.insert({original_uri, vj});
+
+        data.vehicle_journeys.push_back(vj);
+        res.push_back(vj);
+    }
+    return res;
 }
 
-ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    ed::types::VehicleJourney* vj = TripsFusioHandler::get_vj(data, row, is_first_line);
+void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+    auto split_vj = TripsFusioHandler::get_split_vj(data, row, is_first_line);
 
-    if (! vj)
-        return nullptr;
+    if (split_vj.empty())
+        return;
 
-    if (is_valid(ext_code_c, row))
-        vj->external_code = row[ext_code_c];
+    for (auto vj: split_vj) {
 
-    //if a physical_mode is given we override the value
-    vj->physical_mode = nullptr;
-    if (is_valid(physical_mode_c, row)){
-        auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
-        if (itm == gtfs_data.physical_mode_map.end()) {
-            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
-                           << " referenced by trip " << row[trip_c]);
-        }else{
+        if (is_valid(ext_code_c, row))
+            vj->external_code = row[ext_code_c];
+
+        //if a physical_mode is given we override the value
+        vj->physical_mode = nullptr;
+        if (is_valid(physical_mode_c, row)){
+            auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
+            if (itm == gtfs_data.physical_mode_map.end()) {
+                LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
+                               << " referenced by trip " << row[trip_c]);
+            }else{
+                vj->physical_mode = itm->second;
+            }
+        }
+
+        if(vj->physical_mode == nullptr){
+            auto itm = gtfs_data.physical_mode_map.find("default_physical_mode");
             vj->physical_mode = itm->second;
         }
-    }
 
-    if(vj->physical_mode == nullptr){
-        auto itm = gtfs_data.physical_mode_map.find("default_physical_mode");
-        vj->physical_mode = itm->second;
-    }
-
-    if (is_valid(odt_condition_id_c, row)){
-        auto it_odt_condition = gtfs_data.odt_conditions_map.find(row[odt_condition_id_c]);
-        if(it_odt_condition != gtfs_data.odt_conditions_map.end()){
-            vj->odt_message = it_odt_condition->second;
+        if (is_valid(odt_condition_id_c, row)){
+            auto it_odt_condition = gtfs_data.odt_conditions_map.find(row[odt_condition_id_c]);
+            if(it_odt_condition != gtfs_data.odt_conditions_map.end()){
+                vj->odt_message = it_odt_condition->second;
+            }
         }
-    }
 
-    if (is_valid(trip_propertie_id_c, row)) {
-        auto it_property = gtfs_data.hasVehicleProperties_map.find(row[trip_propertie_id_c]);
-        if(it_property != gtfs_data.hasVehicleProperties_map.end()){
-            vj->set_vehicles(it_property->second.vehicles());
+        if (is_valid(trip_propertie_id_c, row)) {
+            auto it_property = gtfs_data.hasVehicleProperties_map.find(row[trip_propertie_id_c]);
+            if(it_property != gtfs_data.hasVehicleProperties_map.end()){
+                vj->set_vehicles(it_property->second.vehicles());
+            }
         }
-    }
 
-    if (is_valid(comment_id_c, row)) {
-        auto it_comment = gtfs_data.comment_map.find(row[comment_id_c]);
-        if(it_comment != gtfs_data.comment_map.end()){
-            vj->comment = it_comment->second;
+        if (is_valid(comment_id_c, row)) {
+            auto it_comment = gtfs_data.comment_map.find(row[comment_id_c]);
+            if(it_comment != gtfs_data.comment_map.end()){
+                vj->comment = it_comment->second;
+            }
         }
-    }
 
-    if(is_valid(odt_type_c, row)){
-        vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
-    }
+        if(is_valid(odt_type_c, row)){
+            vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
+        }
 
-    vj->company = nullptr;
-    if(is_valid(company_id_c, row)){
-        auto it_company = gtfs_data.company_map.find(row[company_id_c]);
-        if(it_company == gtfs_data.company_map.end()){
-            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the company " << row[company_id_c]
-                           << " referenced by trip " << row[trip_c]);
-        }else{
+        vj->company = nullptr;
+        if(is_valid(company_id_c, row)){
+            auto it_company = gtfs_data.company_map.find(row[company_id_c]);
+            if(it_company == gtfs_data.company_map.end()){
+                LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the company " << row[company_id_c]
+                               << " referenced by trip " << row[trip_c]);
+            }else{
+                vj->company = it_company->second;
+            }
+        }
+
+        if(vj->company == nullptr){
+            auto it_company = gtfs_data.company_map.find("default_company");
             vj->company = it_company->second;
         }
     }
-
-    if(vj->company == nullptr){
-        auto it_company = gtfs_data.company_map.find("default_company");
-        vj->company = it_company->second;
-    }
-    return vj;
 }
 
 void ContributorFusioHandler::init(Data&) {
