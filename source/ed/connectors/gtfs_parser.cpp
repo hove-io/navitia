@@ -47,7 +47,6 @@ static int default_waiting_duration = 120;
 static int default_connection_duration = 120;
 
 std::pair<std::string, boost::local_time::time_zone_ptr> TzHandler::get_tz(const std::string& tz_name) {
-    std::cout << "loading tz " << tz_name << std::endl;
     if (! tz_name.empty()) {
         auto tz = tz_db.time_zone_from_region(tz_name);
         if (tz) {
@@ -95,24 +94,20 @@ std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_
             //from the previous end date to the beggining of the dst next year
             res.push_back({ {res.back().period.end(), tz->dst_local_start_time(year).date()},
                             tz->base_utc_offset() });
-            std::cout << "adding period" << res.back().period << " for non dst with offset: " << res.back().utc_shift << std::endl;
         } else {
             //for the first elt, we add a non dst
             auto first_day_of_year = boost::gregorian::date(year, 1, 1);
             if (tz->dst_local_start_time(year).date() != first_day_of_year) {
                 res.push_back({ {first_day_of_year, tz->dst_local_start_time(year).date()},
                                 tz->base_utc_offset() });
-                std::cout << "adding period" << res.back().period << " for non dst with offset: " << res.back().utc_shift << std::endl;
             }
         }
         res.push_back({ {tz->dst_local_start_time(year).date(), tz->dst_local_end_time(year).date()},
                         tz->base_utc_offset() + tz->dst_offset() });
-        std::cout << "adding period" << res.back().period << " for dst with offset: " << res.back().utc_shift << std::endl;
     }
     //we add the last non DST period
     res.push_back({ {res.back().period.end(), boost::gregorian::date(years.back() + 1, 1, 1)},
                     tz->base_utc_offset() });
-    std::cout << "adding last period" << res.back().period << " for non dst with offset: " << res.back().utc_shift << std::endl;
     return res;
 }
 
@@ -134,7 +129,6 @@ std::vector<period_with_utc_shift> split_over_dst(const boost::gregorian::date_p
 
     std::vector<period_with_utc_shift> dst_periods = get_dst_periods(validity_period, tz);
 
-    std::cout << "+++++++++" << std::endl;
     //we now compute all intersection between periods
     //to use again the example of get_dst_periods:
     //                                      validity period
@@ -149,13 +143,11 @@ std::vector<period_with_utc_shift> split_over_dst(const boost::gregorian::date_p
     for (auto dst_period: dst_periods) {
 
         if (! validity_period.intersects(dst_period.period)) {
-            std::cout << "pas d'intersection avec" << validity_period << std::endl;
             //no intersection, we don't consider it
             continue;
         }
         auto intersec = validity_period.intersection(dst_period.period);
         res.push_back({intersec, dst_period.utc_shift});
-        std::cout << "adding period" << res.back().period << " for non dst with offset: " << res.back().utc_shift << std::endl;
     }
 
     return res;
@@ -764,7 +756,6 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
             vj->company = line->company;
         }
 
-        std::cout << "adding " << original_uri << " for vj " << vj->uri << std::endl;
         gtfs_data.tz.vj_by_name.insert({original_uri, vj});
 
         data.vehicle_journeys.push_back(vj);
