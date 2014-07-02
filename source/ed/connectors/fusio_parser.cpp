@@ -39,7 +39,7 @@ void AgencyFusioHandler::init(Data& data) {
     agency_url_c = csv.get_pos_col("agency_url");
 }
 
-void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
 
     if(! is_valid(id_c, row)){
         LOG4CPLUS_WARN(logger, "AgencyFusioHandler : Invalid agency id " << row[id_c]);
@@ -67,7 +67,8 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
         gtfs_data.network_map[network->uri] = network;
 
     std::string timezone_name = row[time_zone_c];
-    if (gtfs_data.tz.default_timezone.second) {
+    if (! is_first_line) {
+        //we created a default agency, with a default time zone, but this will be overidden is we read at least one agency
         if (gtfs_data.tz.default_timezone.first != timezone_name) {
             LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
                             " all the time zone are not equals, only the first one will be considered as the default timezone");
@@ -947,12 +948,18 @@ void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool
 }
 
 void FusioParser::fill_default_agency(Data & data){
-    // création d'un réseau par defaut
-    ed::types::Network * network = new ed::types::Network();
+    // creation of a default network
+    ed::types::Network* network = new ed::types::Network();
     network->uri = "default_network";
     network->name = "réseau par défaut";
     data.networks.push_back(network);
     gtfs_data.agency_map[network->uri] = network;
+
+    //with the default agency comes the default timezone
+    const std::string default_tz = "Europe/Paris";
+    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
+    BOOST_ASSERT(tz);
+    gtfs_data.tz.default_timezone = {default_tz, tz};
 }
 
 void FusioParser::fill_default_commercial_mode(Data & data){
