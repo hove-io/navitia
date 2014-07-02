@@ -959,6 +959,13 @@ void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool
 }
 
 void FusioParser::fill_default_agency(Data & data){
+    // creation of a default network
+    ed::types::Network* network = new ed::types::Network();
+    network->uri = "default_network";
+    network->name = "réseau par défaut";
+    data.networks.push_back(network);
+    gtfs_data.agency_map[network->uri] = network;
+
     //with the default agency comes the default timezone
     const std::string default_tz = "Europe/Paris";
     auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
