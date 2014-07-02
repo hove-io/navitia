@@ -285,7 +285,7 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, "
-     "sa.comment as comment, sa.visible as visible, sa.external_code as external_code,"
+     "sa.comment as comment, sa.visible as visible, sa.external_code as external_code, sa.timezone"
      "ST_X(sa.coord::geometry) as lon, ST_Y(sa.coord::geometry) as lat,"
      "pr.wheelchair_boarding as wheelchair_boarding, pr.sheltered as sheltered,"
      "pr.elevator as elevator, pr.escalator as escalator,"
@@ -304,6 +304,7 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
         const_it["name"].to(sa->name);
         const_it["comment"].to(sa->comment);
         const_it["external_code"].to(sa->codes["external_code"]);
+        const_it["timezone"].to(sa->timezone);
         sa->coord.set_lon(const_it["lon"].as<double>());
         sa->coord.set_lat(const_it["lat"].as<double>());
         sa->visible = const_it["visible"].as<bool>();

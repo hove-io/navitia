@@ -554,7 +554,7 @@ void EdPersistor::insert_sa_sp_properties(const ed::Data& data){
 void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_areas){
     this->lotus.prepare_bulk_insert("navitia.stop_area",
             {"id", "uri", "external_code", "name", "coord", "comment",
-             "properties_id", "visible"});
+             "properties_id", "visible", "timezone"});
 
     for(types::StopArea* sa : stop_areas){
         std::vector<std::string> values;
@@ -566,6 +566,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
         values.push_back(sa->comment);
         values.push_back(std::to_string(sa->to_ulog()));
         values.push_back(std::to_string(sa->visible));
+        values.push_back(sa->time_zone_with_name.first);
         this->lotus.insert(values);
     }
 
