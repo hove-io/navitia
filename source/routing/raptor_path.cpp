@@ -175,6 +175,7 @@ void patch_datetimes(Path &path){
                 	    //Interlining do not add wait items
                         if (previous_item.type == waiting || previous_item.type == walking || item->type == guarantee){
                             previous_item.type = stay_in;
+                            -- path.nb_changes;
                         }
                     }else{
                         PathItem waitingItem=PathItem();
