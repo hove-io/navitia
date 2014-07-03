@@ -116,6 +116,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     b.vj("4462", "1111111", "block1", true)	("ht",  62760,62760)
     										("hto", 62940,62940)
     										("rs",  63180,63180);
+    b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.data->pt_data->index();
