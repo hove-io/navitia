@@ -136,6 +136,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.nb_transfers(), 0);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     pbnavitia::Section section = journey.sections(0);
@@ -186,6 +187,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     pbnavitia::Journey journey = resp.journeys(0);
 
+    BOOST_REQUIRE_EQUAL(journey.nb_transfers(), 0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     pbnavitia::Section section = journey.sections(0);
 
@@ -246,6 +248,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     pbnavitia::Journey journey = resp.journeys(0);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    BOOST_REQUIRE_EQUAL(journey.nb_transfers(), 0);
     pbnavitia::Section section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
@@ -304,6 +307,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     pbnavitia::Journey journey = resp.journeys(0);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    BOOST_REQUIRE_EQUAL(journey.nb_transfers(), 0);
     pbnavitia::Section section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
