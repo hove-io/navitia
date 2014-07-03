@@ -166,6 +166,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     b.vj("4462", "1111111", "block1", true) ("ht:4a",  62760,62760)
                                             ("hto", 62940,62940)
                                             ("rs",  63180,63180);
+    b.connection("ht:4", "ht:4a", 120);
+    b.connection("ht:4a", "ht:4", 120);
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
