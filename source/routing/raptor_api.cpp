@@ -277,7 +277,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         georef::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, navitia::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
+    LOG4CPLUS_DEBUG(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
     if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord
