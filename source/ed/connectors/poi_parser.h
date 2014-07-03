@@ -51,7 +51,7 @@ private:
     void fill_poi();
     void fill_poi_properties();
 public:
-    ed::PoiPoiType data;
+    ed::Georef data;
 
     PoiParser(const std::string & path, const ed::connectors::ConvCoord& conv_coord);
     void fill();
