@@ -82,7 +82,30 @@ Testing
 
 #. Configure the postgres database
 
-   #. TODO
+   #. Install the postgis extension http://postgis.net/docs/postgis_installation.html
+
+      #. if your postgis version is newer than 2.0, just call create extention
+
+         ``su postgres; #or the user you installed postgres with``
+      
+         ``psql -d yourdatabase -c "CREATE EXTENSION postgis;"``
+
+      #. else call the init_db.sh script with a settings file. 
+
+         Copy the file source/script/settings.sh and update it with your parameters
+
+         ``su postgres; #or the user you installed postgres with``
+
+         ``cd source/scripts;``
+
+         ``./init_db.sh your_settings.sh``
+
+         
+   #. Update the database scheme (with the usual user, not with 'postgres' anymore)
+
+      ``cd source/scripts;``
+
+      ``./update_db.sh your_settings.sh``
 
 #. Get some GTFS data. For instance from http://data.navitia.io
 
