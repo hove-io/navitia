@@ -172,8 +172,8 @@ void patch_datetimes(Path &path){
             } else {
                 if(previous_item.type != stay_in){
                     if(last_transit.type == public_transport && last_transit.get_vj()->next_vj == (*item).get_vj()){
-                	    //Interlining do not add wait items
-                        if (previous_item.type == waiting || previous_item.type == walking || item->type == guarantee){
+                        //Interlining do not add wait items
+                        if (previous_item.type == waiting || previous_item.type == walking || previous_item.type == guarantee){
                             previous_item.type = stay_in;
                             -- path.nb_changes;
                         }
