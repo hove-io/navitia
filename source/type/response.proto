@@ -142,8 +142,8 @@ message Section {
     optional string polyline = 14;
     optional int32 duration = 15;
 
-    optional string begin_date_time = 16;
-    optional string end_date_time = 17;
+    optional int32 begin_date_time = 16;
+    optional int32 end_date_time = 17;
     optional addInfoVehicleJourney add_info_vehicle_journey = 18;
     optional int32 length = 19;
     optional string id = 20;
@@ -152,9 +152,9 @@ message Section {
 message Journey {
     optional int32 duration = 1;
     optional int32 nb_transfers = 2;
-    optional string departure_date_time = 3;
-    optional string arrival_date_time = 4;
-    optional string requested_date_time = 5;
+    optional int32 departure_date_time = 3;
+    optional int32 arrival_date_time = 4;
+    optional int32 requested_date_time = 5;
     repeated Section sections = 6;
     optional Place origin = 7;
     optional Place destination = 8;
@@ -209,8 +209,11 @@ message PairStopTime {
 }
 
 message ScheduleStopTime {
-    optional string date_time = 1;
     optional Properties properties = 2;
+    // date time is split because sometimes 
+    // we want only time and no dates for the schedule
+    optional int32 time = 3; //time is the number of seconds since midnight
+    optional int32 date = 4; //date is a posix time stamp to midnight
 }
 
 message RouteScheduleRow {

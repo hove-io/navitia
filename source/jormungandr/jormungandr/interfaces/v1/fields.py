@@ -30,7 +30,8 @@
 from flask.ext.restful import fields
 from copy import deepcopy
 from collections import OrderedDict
-
+import datetime
+import logging
 
 class PbField(fields.Nested):
 
@@ -53,6 +54,19 @@ class NonNullNested(fields.Nested):
     def __init__(self, *args, **kwargs):
         super(NonNullNested, self).__init__(*args, **kwargs)
         self.display_null = False
+
+
+class DateTime(fields.Raw):
+    """
+    custom date format from timestamp
+    """
+
+    def format(self, value):
+        try:
+            #TODO timezone
+            return datetime.datetime.utcfromtimestamp(value).strftime("%Y%m%dT%H%M%S")
+        except AttributeError as ae:
+            raise fields.MarshallingException(ae)
 
 
 class enum_type(fields.Raw):

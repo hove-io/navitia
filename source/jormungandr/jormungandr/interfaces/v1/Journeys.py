@@ -47,8 +47,8 @@ from fields import stop_point, stop_area, line, physical_mode, \
 from jormungandr.interfaces.parsers import option_value
 #from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
-import datetime
 from functools import wraps
+from fields import DateTime
 from make_links import add_id_links, clean_links
 from errors import ManageError
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -215,8 +215,8 @@ section = {
                         attribute="street_network.path_items"),
     "transfer_type": enum_type(),
     "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
-    "departure_date_time": fields.String(attribute="begin_date_time"),
-    "arrival_date_time": fields.String(attribute="end_date_time"),
+    "departure_date_time": DateTime(attribute="begin_date_time"),
+    "arrival_date_time": DateTime(attribute="end_date_time"),
 }
 
 cost = {
@@ -233,9 +233,9 @@ fare = {
 journey = {
     'duration': fields.Integer(),
     'nb_transfers': fields.Integer(),
-    'departure_date_time': fields.String(),
-    'arrival_date_time': fields.String(),
-    'requested_date_time': fields.String(),
+    'departure_date_time': DateTime(),
+    'arrival_date_time': DateTime(),
+    'requested_date_time': DateTime(),
     'sections': NonNullList(NonNullNested(section)),
     'from': PbField(place, attribute='origin'),
     'to': PbField(place, attribute='destination'),
@@ -380,13 +380,12 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_journey['arrival_date_time'] \
                 and asap_journey['departure_date_time']:
-            second = timedelta(minutes=1)
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             s_arrival = asap_journey['arrival_date_time']
             f_arrival = datetime.strptime(s_arrival, f_datetime)
-            datetime_after = f_departure + second
-            datetime_before = f_arrival - second
+            datetime_after = f_departure + timedelta(minutes=1)
+            datetime_before = f_arrival - timedelta(minutes=1)
 
         return (datetime_before, datetime_after)
 
@@ -407,11 +406,11 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_min['departure_date_time'] and asap_max['arrival_date_time']:
             departure = asap_min['departure_date_time']
-            departure_date = datetime.strptime(departure, f_datetime).date()
+            departure_date = datetime.strptime(departure, f_datetime)
             midnight = datetime.strptime('0000', '%H%M').time()
             datetime_first = datetime.combine(departure_date, midnight)
             arrival = asap_max['arrival_date_time']
-            arrival_date = datetime.strptime(arrival, f_datetime).date()
+            arrival_date = datetime.strptime(arrival, f_datetime)
             almost_midnight = datetime.strptime('2359', '%H%M').time()
             datetime_last = datetime.combine(arrival_date, almost_midnight)
 
