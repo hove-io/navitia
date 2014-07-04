@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T165800");
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T171900");
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -201,8 +201,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht:4");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T165800");
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T171900");
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -214,8 +214,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     st2 = section.stop_date_times(2);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "ht:4a");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "rs");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T172600"));
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T173300"));
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T172600");
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T173300");
 }
 
 
@@ -261,8 +261,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht:4");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T165800");
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T171900");
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -274,8 +274,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     auto st4 = section.stop_date_times(2);
     BOOST_CHECK_EQUAL(st3.stop_point().uri(), "ht:4a");
     BOOST_CHECK_EQUAL(st4.stop_point().uri(), "rs");
-    BOOST_CHECK_EQUAL(st3.departure_date_time(), navitia::test::to_posix_timestamp("20120614T172000"));
-    BOOST_CHECK_EQUAL(st4.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T173300"));
+    BOOST_CHECK_EQUAL(st3.departure_date_time(), "20120614T172000");
+    BOOST_CHECK_EQUAL(st4.arrival_date_time(), "20120614T173300");
 }
 
 BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
@@ -320,8 +320,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht:4");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T165800");
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T171900");
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -333,8 +333,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     auto st4 = section.stop_date_times(2);
     BOOST_CHECK_EQUAL(st3.stop_point().uri(), "ht:4a");
     BOOST_CHECK_EQUAL(st4.stop_point().uri(), "rs");
-    BOOST_CHECK_EQUAL(st3.departure_date_time(), navitia::test::to_posix_timestamp("20120614T172000"));
-    BOOST_CHECK_EQUAL(st4.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T173300"));
+    BOOST_CHECK_EQUAL(st3.departure_date_time(), "20120614T172000");
+    BOOST_CHECK_EQUAL(st4.arrival_date_time(), "20120614T173300");
 }
 
 BOOST_AUTO_TEST_CASE(journey_array){

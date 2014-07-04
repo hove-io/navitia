@@ -49,6 +49,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
 from jormungandr.interfaces.parsers import option_value
 #from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
+import datetime
 from functools import wraps
 from fields import DateTime
 from jormungandr.timezone import set_request_timezone
@@ -386,6 +387,7 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_journey['arrival_date_time'] \
                 and asap_journey['departure_date_time']:
+
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             s_arrival = asap_journey['arrival_date_time']

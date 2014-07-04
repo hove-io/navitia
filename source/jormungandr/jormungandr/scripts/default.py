@@ -647,7 +647,7 @@ class Script(object):
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 
         #we want to keep only one non pt (the first one)
-        for tag in ["non_pt_bss", "non_pt_walk", "non_pt_bike", "car"]:
+        for tag in ["non_pt_bss", "non_pt_walk", "non_pt_bike"]:
             found_direct = False
             for idx, j in enumerate(resp.journeys):
                 if j.type != tag:
