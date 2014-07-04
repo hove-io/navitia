@@ -33,6 +33,8 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include "routing/raptor_api.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
+
 
 
 struct logger_initialized {
@@ -107,8 +109,8 @@ BOOST_AUTO_TEST_CASE(test1){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500")); //date are now posix timestamp
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
@@ -117,8 +119,8 @@ BOOST_AUTO_TEST_CASE(test1){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 }
 
 /*
@@ -137,8 +139,8 @@ BOOST_AUTO_TEST_CASE(test2){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -148,8 +150,8 @@ BOOST_AUTO_TEST_CASE(test2){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -170,8 +172,8 @@ BOOST_AUTO_TEST_CASE(test3){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -181,8 +183,8 @@ BOOST_AUTO_TEST_CASE(test3){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -204,8 +206,8 @@ BOOST_AUTO_TEST_CASE(test4){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -215,8 +217,8 @@ BOOST_AUTO_TEST_CASE(test4){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -239,8 +241,8 @@ BOOST_AUTO_TEST_CASE(test5){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -250,8 +252,8 @@ BOOST_AUTO_TEST_CASE(test5){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
     BOOST_CHECK_EQUAL(journey.duration(), 2400);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T103000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T103000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     vj1->stop_time_list.front()->set_odt(false);
     vj1->stop_time_list.front()->set_date_time_estimated(false);
     vj1->stop_time_list.back()->set_odt(false);
@@ -275,8 +277,8 @@ BOOST_AUTO_TEST_CASE(test6){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -286,8 +288,8 @@ BOOST_AUTO_TEST_CASE(test6){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -308,8 +310,8 @@ BOOST_AUTO_TEST_CASE(test7){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -319,8 +321,8 @@ BOOST_AUTO_TEST_CASE(test7){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -342,8 +344,8 @@ BOOST_AUTO_TEST_CASE(test8){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -353,8 +355,8 @@ BOOST_AUTO_TEST_CASE(test8){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -377,8 +379,8 @@ BOOST_AUTO_TEST_CASE(test9){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -388,8 +390,8 @@ BOOST_AUTO_TEST_CASE(test9){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -410,8 +412,8 @@ BOOST_AUTO_TEST_CASE(test10){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -421,8 +423,8 @@ BOOST_AUTO_TEST_CASE(test10){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -445,8 +447,8 @@ BOOST_AUTO_TEST_CASE(test11){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -456,8 +458,8 @@ BOOST_AUTO_TEST_CASE(test11){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -482,8 +484,8 @@ BOOST_AUTO_TEST_CASE(test12){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -493,8 +495,8 @@ BOOST_AUTO_TEST_CASE(test12){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
     unset_odt_jp();
 }
 
@@ -523,8 +525,8 @@ BOOST_AUTO_TEST_CASE(test13){
     displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj1");
     BOOST_CHECK_EQUAL(journey.duration(), 3300);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T101500");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140114T111000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T101500"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);

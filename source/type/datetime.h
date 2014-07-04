@@ -119,6 +119,21 @@ inline std::string to_iso_string_no_fractional(Time t) {
     return boost::posix_time::to_iso_string(strip_fractional_second(t));
 }
 
+static const boost::posix_time::ptime posix_epoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
+
+inline int32_t to_posix_timestamp(boost::posix_time::ptime ptime) {
+    return (ptime - posix_epoch).total_seconds();//todo bound/overflow check ?
+}
+
+inline int32_t to_posix_timestamp(DateTime datetime, const type::Data &d) {
+    return to_posix_timestamp(to_posix_time(datetime, d));
+}
+
+// date are represented as time stamp to midnight
+inline int32_t to_int_date(boost::posix_time::ptime ptime) {
+    return (boost::posix_time::ptime(ptime.date()) - posix_epoch).total_seconds();//todo bound/overflow check ?
+}
+
 /**
  * weekday enum (because boost::date_time::weekdays start on sunday and we want monday to be the first day)
  */

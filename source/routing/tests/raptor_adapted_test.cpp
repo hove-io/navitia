@@ -38,6 +38,7 @@ www.navitia.io
 #include "ed/adapted.h"
 #include "routing/raptor_api.h"
 #include "utils/functions.h"
+#include "tests/utils_test.h"
 
 
 /*
@@ -358,9 +359,9 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj3");
     BOOST_CHECK_EQUAL(journey.duration(), 3600);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140119T161000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140119T171000");
-    BOOST_CHECK_EQUAL(journey.requested_date_time(), "20140118T150000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140119T161000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140119T171000"));
+    BOOST_CHECK_EQUAL(journey.requested_date_time(), navitia::test::to_posix_timestamp("20140118T150000"));
 }
 {
     // Tests impacts on StopPoint
@@ -374,9 +375,9 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj3");
     BOOST_CHECK_EQUAL(journey.duration(), 3600);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140118T161000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140118T171000");
-    BOOST_CHECK_EQUAL(journey.requested_date_time(), "20140118T150000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140118T161000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140118T171000"));
+    BOOST_CHECK_EQUAL(journey.requested_date_time(), navitia::test::to_posix_timestamp("20140118T150000"));
 }
 {
     // Tests passe-minuit
@@ -390,8 +391,8 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
     BOOST_CHECK_EQUAL(journey.duration(), 6000);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T223000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140115T001000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T223000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140115T001000"));
 }
 {
     // Tests passe-minuit
@@ -405,8 +406,8 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
     BOOST_CHECK_EQUAL(journey.duration(), 6000);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140114T223000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140115T001000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T223000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140115T001000"));
 }
 {
     // Tests passe-minuit
@@ -420,8 +421,8 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
     BOOST_CHECK_EQUAL(journey.duration(), 6000);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140115T223000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140116T001000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140115T223000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140116T001000"));
 }
 {
     // Tests passe-minuit
@@ -435,8 +436,8 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
     BOOST_CHECK_EQUAL(journey.duration(), 6000);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140116T223000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140117T001000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140116T223000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140117T001000"));
 }
 {
     // Tests passe-minuit
@@ -450,8 +451,8 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4:adapted:0");
     BOOST_CHECK_EQUAL(journey.duration(), 2400);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140115T223000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140115T231000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140115T223000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140115T231000"));
 }
 {
     // Tests passe-minuit
@@ -465,8 +466,8 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
     pbnavitia::PtDisplayInfo displ = section.pt_display_informations();
     BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
     BOOST_CHECK_EQUAL(journey.duration(), 2400);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20140115T223000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20140115T231000");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140115T223000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140115T231000"));
 }
 }
 

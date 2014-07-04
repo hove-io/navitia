@@ -40,6 +40,10 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
+int32_t time_to_int(int h, int m, int s) {
+    auto dur = navitia::time_duration(h, m, s);
+    return dur.total_seconds(); //time are always number of seconds from midnight
+}
 
 using namespace navitia::timetables;
 
@@ -188,9 +192,12 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T151000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(15, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
+
     stop_date_time = stop_schedule.date_times(1);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T201000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(20, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     //the vj 'wednesday' is never matched
 }
 
@@ -209,11 +216,14 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 3);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T101000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(10, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     stop_date_time = stop_schedule.date_times(1);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T111000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(11, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     stop_date_time = stop_schedule.date_times(2);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T151000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(15, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     //the vj 'wednesday' is never matched
 }
 
@@ -268,7 +278,8 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 3);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T101000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(10, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
 
     auto properties = stop_date_time.properties();
     BOOST_REQUIRE_EQUAL(properties.exceptions_size(), 2);

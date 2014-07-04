@@ -30,6 +30,7 @@
 from ...scripts import qualifier
 import navitiacommon.response_pb2 as response_pb2
 from nose.tools import eq_
+from utils import to_time_stamp
 
 
 #journey.arrival_date_time
@@ -41,7 +42,7 @@ from nose.tools import eq_
 def qualifier_one_direct_test():
     journeys = []
     journey_direct = response_pb2.Journey()
-    journey_direct.arrival_date_time = "20131107T151200"
+    journey_direct.arrival_date_time = to_time_stamp("20131107T151200")
     journey_direct.duration = 25 * 60
     journey_direct.nb_transfers = 0
     journey_direct.sections.add()
@@ -69,7 +70,7 @@ def qualifier_two_test():
 
     journey_standard = response_pb2.Journey()
     journey_standard.type = "none"
-    journey_standard.arrival_date_time = "20131107T150000"
+    journey_standard.arrival_date_time = to_time_stamp("20131107T150000")
     journey_standard.duration = 60 * 60
     journey_standard.nb_transfers = 3
     journey_standard.sections.add()
@@ -85,7 +86,7 @@ def qualifier_two_test():
     journeys.append(journey_standard)
 
     journey_rapid = response_pb2.Journey()
-    journey_rapid.arrival_date_time = "20131107T150500"
+    journey_rapid.arrival_date_time = to_time_stamp("20131107T150500")
     journey_rapid.duration = 62 * 60
     journey_rapid.nb_transfers = 2
     journey_rapid.sections.add()
@@ -100,7 +101,7 @@ def qualifier_two_test():
     journeys.append(journey_rapid)
 
     journey_health = response_pb2.Journey()
-    journey_health.arrival_date_time = "20131107T151000"
+    journey_health.arrival_date_time = to_time_stamp("20131107T151000")
     journey_health.duration = 70 * 60
     journey_health.nb_transfers = 1
     journey_health.sections.add()
@@ -118,7 +119,7 @@ def qualifier_two_test():
     journeys.append(journey_health)
 
     journey_confort = response_pb2.Journey()
-    journey_confort.arrival_date_time = "20131107T152000"
+    journey_confort.arrival_date_time = to_time_stamp("20131107T152000")
     journey_confort.duration = 80 * 60
     journey_confort.nb_transfers = 1
     journey_confort.sections.add()
@@ -169,7 +170,7 @@ def standard_choice_test():
     journeys = []
     #the first is the worst one
     journey_worst = response_pb2.Journey()
-    journey_worst.arrival_date_time = "20131107T161200"
+    journey_worst.arrival_date_time = to_time_stamp("20131107T161200")
     journey_worst.sections.add()
 
     journey_worst.sections[0].type = response_pb2.STREET_NETWORK
@@ -179,7 +180,7 @@ def standard_choice_test():
 
     # arrive later but no car
     journey_not_good = response_pb2.Journey()
-    journey_not_good.arrival_date_time = "20131107T171200"
+    journey_not_good.arrival_date_time = to_time_stamp("20131107T171200")
     journey_not_good.sections.add()
 
     journey_not_good.sections[0].type = response_pb2.STREET_NETWORK
@@ -189,7 +190,7 @@ def standard_choice_test():
 
     #this is the standard
     journey_1 = response_pb2.Journey()
-    journey_1.arrival_date_time = "20131107T151200"
+    journey_1.arrival_date_time = to_time_stamp("20131107T151200")
     journey_1.sections.add()
 
     journey_1.sections[0].type = response_pb2.STREET_NETWORK
@@ -199,7 +200,7 @@ def standard_choice_test():
 
     # a better journey, but using car
     journey_2 = response_pb2.Journey()
-    journey_2.arrival_date_time = "20131107T151000"
+    journey_2.arrival_date_time = to_time_stamp("20131107T151000")
     journey_2.sections.add()
 
     journey_2.sections[0].type = response_pb2.STREET_NETWORK
@@ -223,7 +224,7 @@ def tranfers_cri_test():
     for i in range(6):
         journey = response_pb2.Journey()
         journey.nb_transfers = transfers[i]
-        journey.arrival_date_time = dates[i]
+        journey.arrival_date_time = to_time_stamp(dates[i])
 
         journeys.append(journey)
 
@@ -233,4 +234,4 @@ def tranfers_cri_test():
     #the transfert criterion is first, and then if 2 journeys have
     #the same nb_transfers, we compare the dates
     eq_(best.nb_transfers, 1)
-    eq_(best.arrival_date_time, "20131107T100000")
+    eq_(best.arrival_date_time, to_time_stamp("20131107T100000"))

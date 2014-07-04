@@ -39,6 +39,7 @@ from qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
 from flask import current_app
+import time
 
 
 pb_type = {
@@ -52,6 +53,10 @@ pb_type = {
 
 
 f_date_time = "%Y%m%dT%H%M%S"
+
+
+def date_to_time_stamp(date):
+    return int(time.mktime(date.timetuple()))
 
 
 def are_equals(journey1, journey2):
@@ -540,12 +545,10 @@ class Script(object):
 
             new_datetime = None
             if request['clockwise']:
-                l_date_time = last_best.departure_date_time
-                l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                l_date_time_f = datetime.utcfromtimestamp(float(last_best.departure_date_time))
                 new_datetime = l_date_time_f + timedelta(minutes=1)
             else:
-                l_date_time = last_best.arrival_date_time
-                l_date_time_f = datetime.strptime(l_date_time, f_date_time)
+                l_date_time_f = datetime.utcfromtimestamp(float(last_best.arrival_date_time))
                 new_datetime = l_date_time_f + timedelta(minutes=-1)
 
             next_request = self.change_request(pb_req, tmp_resp)

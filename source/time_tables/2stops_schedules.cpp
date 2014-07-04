@@ -113,15 +113,15 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         pbnavitia::PairStopTime * pair_stoptime = pb_response.mutable_stops_schedule()->add_board_items();
         auto stoptime = pair_stoptime->mutable_departure();
         const auto &dt_stop_time = pair_dt_idx.first;
-        stoptime->set_departure_date_time(iso_string(dt_stop_time.first, data));
-        stoptime->set_arrival_date_time(iso_string(dt_stop_time.first, data));
+        stoptime->set_departure_date_time(to_posix_timestamp(dt_stop_time.first, data));
+        stoptime->set_arrival_date_time(to_posix_timestamp(dt_stop_time.first, data));
         const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;
         fill_pb_object(jpp->stop_point, data, stoptime->mutable_stop_point(), depth, current_time, action_period);
 
         stoptime = pair_stoptime->mutable_arrival();
         const auto &dt_stop_time2 = pair_dt_idx.second;
-        stoptime->set_departure_date_time(iso_string(dt_stop_time2.first, data));
-        stoptime->set_arrival_date_time(navitia::iso_string(dt_stop_time2.first, data));
+        stoptime->set_departure_date_time(to_posix_timestamp(dt_stop_time2.first, data));
+        stoptime->set_arrival_date_time(to_posix_timestamp(dt_stop_time2.first, data));
         const type::JourneyPatternPoint* jpp2 = dt_stop_time2.second->journey_pattern_point;
         fill_pb_object(jpp2->stop_point, data, stoptime->mutable_stop_point(), depth, current_time, action_period);
     }

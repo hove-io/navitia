@@ -143,11 +143,11 @@ class and_functors:
 
 
 def get_arrival_datetime(journey):
-    return datetime.strptime(journey.arrival_date_time, "%Y%m%dT%H%M%S")
+    return datetime.utcfromtimestamp(float(journey.arrival_date_time))
 
 
 def get_departure_datetime(journey):
-    return datetime.strptime(journey.arrival_date_time, "%Y%m%dT%H%M%S")
+    return datetime.utcfromtimestamp(float(journey.arrival_date_time))
 
 
 def choose_standard(journeys, best_criteria):
