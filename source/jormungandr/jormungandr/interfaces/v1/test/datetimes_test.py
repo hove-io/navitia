@@ -27,9 +27,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from flask.ext.restful import marshal_with
+
 from jormungandr.interfaces.v1 import Journeys
 from jormungandr.interfaces.v1.fields import DateTime
-from jormungandr.scripts.tests.utils import to_time_stamp
+from jormungandr.utils import str_to_time_stamp
 from navitiacommon import response_pb2
 
 
@@ -37,7 +38,7 @@ class mock_obj:
     def __init__(self, tz=None, dt=None, nested=None):
         self.timezone = tz
         if dt:
-            self.date_time = to_time_stamp(dt)
+            self.date_time = str_to_time_stamp(dt)
         self.nested = nested
 
 
@@ -73,8 +74,8 @@ def journey_datetime_formater_test():
     D is in Los Angeles
     """
     pb_journey = response_pb2.Journey()
-    pb_journey.departure_date_time = to_time_stamp("20140705T100000")
-    pb_journey.arrival_date_time = to_time_stamp("20140705T130000")
+    pb_journey.departure_date_time = str_to_time_stamp("20140705T100000")
+    pb_journey.arrival_date_time = str_to_time_stamp("20140705T130000")
     pb_journey.duration = 60 * 60
     pb_journey.origin.stop_area.timezone = "Europe/Paris"
     pb_journey.destination.stop_area.timezone = "America/Los_Angeles"
@@ -87,22 +88,22 @@ def journey_datetime_formater_test():
     section.type = response_pb2.PUBLIC_TRANSPORT
     section.origin.stop_area.timezone = "Europe/Paris"
     section.destination.stop_area.timezone = "Europe/London"
-    section.begin_date_time = to_time_stamp("20140705T100000")
-    section.end_date_time = to_time_stamp("20140705T110000")
+    section.begin_date_time = str_to_time_stamp("20140705T100000")
+    section.end_date_time = str_to_time_stamp("20140705T110000")
 
     section = pb_journey.sections[1]
     section.type = response_pb2.PUBLIC_TRANSPORT
     section.origin.stop_area.timezone = "Europe/London"
     section.destination.stop_area.timezone = "Africa/Abidjan"
-    section.begin_date_time = to_time_stamp("20140705T110000")
-    section.end_date_time = to_time_stamp("20140705T120000")
+    section.begin_date_time = str_to_time_stamp("20140705T110000")
+    section.end_date_time = str_to_time_stamp("20140705T120000")
 
     section = pb_journey.sections[2]
     section.type = response_pb2.PUBLIC_TRANSPORT
     section.origin.stop_area.timezone = "Africa/Abidjan"
     section.destination.stop_area.timezone = "America/Los_Angeles"
-    section.begin_date_time = to_time_stamp("20140705T120000")
-    section.end_date_time = to_time_stamp("20140705T130000")
+    section.begin_date_time = str_to_time_stamp("20140705T120000")
+    section.end_date_time = str_to_time_stamp("20140705T130000")
 
     @marshal_with(Journeys.journey)
     def _mock():
