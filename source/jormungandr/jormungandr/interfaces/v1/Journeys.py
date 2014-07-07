@@ -242,7 +242,7 @@ journey = {
     'nb_transfers': fields.Integer(),
     'departure_date_time': DateTime(timezone='origin.stop_area.timezone'),
     'arrival_date_time': DateTime(timezone='destination.stop_area.timezone'),
-    'requested_date_time': fields.String(), #TODO datetime ?
+    'requested_date_time': DateTime(),
     'sections': NonNullList(NonNullNested(section)),
     'from': PbField(place, attribute='origin'),
     'to': PbField(place, attribute='destination'),
@@ -387,7 +387,6 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_journey['arrival_date_time'] \
                 and asap_journey['departure_date_time']:
-
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             s_arrival = asap_journey['arrival_date_time']

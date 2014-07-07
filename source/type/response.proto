@@ -209,8 +209,11 @@ message PairStopTime {
 }
 
 message ScheduleStopTime {
-    optional string date_time = 1;
     optional Properties properties = 2;
+    // date time is split because sometimes 
+    // we want only time and no dates for the schedule
+    optional uint32 time = 3; //time is the number of seconds since midnight
+    optional uint32 date = 4; //date is a posix time stamp to midnight
 }
 
 message RouteScheduleRow {
