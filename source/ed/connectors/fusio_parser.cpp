@@ -331,6 +331,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
             //we change the name of the vj (all but the first one) since we had to split the original GTFS vj because of dst
             vj_uri += "_" + std::to_string(cpt_vj);
         }
+        vj->uri = vj_uri;
 
         if(is_valid(ext_code_c, row)){
             vj->external_code = row[ext_code_c];

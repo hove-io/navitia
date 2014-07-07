@@ -29,8 +29,9 @@
 from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 from jormungandr import stat_manager
-from jormungandr.stat_manager import StatManager, get_posix_date_time
+from jormungandr.stat_manager import StatManager
 #from mock import patch
+from jormungandr.utils import str_to_time_stamp
 
 
 class MockWrapper:
@@ -84,18 +85,17 @@ class MockWrapper:
         #Verify elements of request.journeys
         assert len(stat.journeys) == 2
 
-#commented for the moment, will need to update that, but it is for another commit
-#        assert stat.journeys[0].requested_date_time == get_posix_date_time("20120614T080000") #1339653600
-        assert stat.journeys[0].departure_date_time == get_posix_date_time("20120614T080042") #1339653642
-        assert stat.journeys[0].arrival_date_time == get_posix_date_time("20120614T080222") #1339653742
+        assert stat.journeys[0].requested_date_time == str_to_time_stamp("20120614T080000") #1339653600
+        assert stat.journeys[0].departure_date_time == str_to_time_stamp("20120614T080042") #1339653642
+        assert stat.journeys[0].arrival_date_time == str_to_time_stamp("20120614T080222") #1339653742
         assert stat.journeys[0].duration == 99
         assert stat.journeys[0].type == "best"
         assert stat.journeys[0].nb_transfers == 0
 
         #Verify elements of request.journeys.sections
         assert len(stat.journeys[0].sections) == 3
-        assert stat.journeys[0].sections[1].departure_date_time == get_posix_date_time("20120614T080100") #1339653660
-        assert stat.journeys[0].sections[1].arrival_date_time == get_posix_date_time("20120614T080102") #1339653662
+        assert stat.journeys[0].sections[1].departure_date_time == str_to_time_stamp("20120614T080100") #1339653660
+        assert stat.journeys[0].sections[1].arrival_date_time == str_to_time_stamp("20120614T080102") #1339653662
         assert stat.journeys[0].sections[1].duration == 2
         assert stat.journeys[0].sections[1].from_embedded_type == "stop_area"
         assert stat.journeys[0].sections[1].from_id == "stopB"
@@ -112,8 +112,8 @@ class MockWrapper:
         assert abs(stat.journeys[0].sections[1].to_coord.lat - 0.000718649585564) < epsilon
         assert abs(stat.journeys[0].sections[1].to_coord.lon - 0.00107797437835) < epsilon
         assert len(stat.journeys[1].sections) == 1
-        assert stat.journeys[1].sections[0].departure_date_time == get_posix_date_time("20120614T080000") #1339653600
-        assert stat.journeys[1].sections[0].arrival_date_time == get_posix_date_time("20120614T080435") #1339653875
+        assert stat.journeys[1].sections[0].departure_date_time == str_to_time_stamp("20120614T080000") #1339653600
+        assert stat.journeys[1].sections[0].arrival_date_time == str_to_time_stamp("20120614T080435") #1339653875
         assert stat.journeys[1].sections[0].duration == 275
         assert stat.journeys[1].sections[0].from_embedded_type == "address"
         assert stat.journeys[1].sections[0].from_id == ""

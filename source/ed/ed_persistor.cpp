@@ -372,9 +372,10 @@ void EdPersistor::persist_fare(const ed::Data& data) {
 }
 
 void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
-    std::string request = "insert into navitia.parameters (beginning_date, end_date) "
+    std::string request = "insert into navitia.parameters (beginning_date, end_date, timezone) "
                           "VALUES ('" + bg::to_iso_extended_string(meta.production_date.begin()) +
-                          "', '" + bg::to_iso_extended_string(meta.production_date.last()) + "');";
+                          "', '" + bg::to_iso_extended_string(meta.production_date.end()) +
+                         "', '" + meta.timezone + "');";
     PQclear(this->lotus.exec(request));
 }
 

@@ -156,7 +156,7 @@ class Instance(db.Model):
             return res
         else:
             if cache_res[0]:
-                return  db.session.merge(cache_res[0], load=False)
+                return db.session.merge(cache_res[0], load=False)
             else:
                 return None
 
@@ -243,6 +243,7 @@ class Job(db.Model):
     def __repr__(self):
         return '<Job %r>' % self.id
 
+
 class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.Text, nullable=False)
@@ -250,10 +251,8 @@ class DataSet(db.Model):
 
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'))
 
-
     def __repr__(self):
         return '<DataSet %r>' % self.id
-
 
 
 class mixin_get_from_uri():
@@ -269,10 +268,9 @@ class mixin_get_from_uri():
             return res
         else:
             if cache_res[0]:
-                return  db.session.merge(cache_res[0], load=False)
+                return db.session.merge(cache_res[0], load=False)
             else:
                 return None
-
 
 
 class mixin_get_from_external_code():
@@ -308,7 +306,6 @@ class StopAreaInstance(db.Model):
         return '<StopAreaInstance %r, %r>' % (self.object_id, self.instance_id)
 
 
-
 class StopArea(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
@@ -320,10 +317,9 @@ class StopArea(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
                             lazy='joined')
     name = db.Column(db.Text, nullable=False)
     external_code = db.Column(db.Text, index=True)
+    timezone = db.Column(db.String, nullable=True)
     cls_rel_instance = StopAreaInstance
     prefix_ext_code = "external_code_sa"
-
-
 
     def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
@@ -332,9 +328,11 @@ class StopArea(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
         self.external_code = external_code
         self.name = name
 
-
     def __repr__(self):
         return '<StopArea %r>' % self.id
+
+    def get_timezone(self):
+        return self.timezone
 
 
 class StopPointInstance(db.Model):
@@ -366,14 +364,12 @@ class StopPoint(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     cls_rel_instance = StopPointInstance
     prefix_ext_code = "external_code_sp"
 
-
     def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.external_code = external_code
         self.name = name
-
 
     def __repr__(self):
         return '<StopPoint %r>' % self.id
@@ -408,14 +404,12 @@ class Poi(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     cls_rel_instance = PoiInstance
     prefix_ext_code = "external_code_poi"
 
-
     def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
         self.external_code = external_code
         self.name = name
-
 
     def __repr__(self):
         return '<Poi %r>' % self.id

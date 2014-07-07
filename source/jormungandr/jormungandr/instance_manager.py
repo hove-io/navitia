@@ -116,7 +116,6 @@ class InstanceManager(object):
                 functional_params = dict(conf.items('functional'))
                 instance.script.functional_params = functional_params
 
-
             self.instances[conf.get('instance', 'key')] = instance
 
         self.thread_event = Event()
@@ -158,6 +157,7 @@ class InstanceManager(object):
                             instance.geom = None
                     else:
                         instance.geom = None
+                    instance.timezone = resp.metadatas.timezone
             self.thread_event.wait(timer)
 
     def stop(self):
@@ -186,13 +186,7 @@ class InstanceManager(object):
         if ptobject:
             instances = ptobject.instances()
             if len(instances) > 0:
-                available_instances = []  #tmp debug, replace with list generator
-                for r in instances:
-                    if authentification.has_access(r, abort=False):
-                        logging.warn("instance {i} available for user".format(i=r))
-                        available_instances.append(r.name)
-                    else:
-                        logging.warn("instance {i} not available for user".format(i=r))
+                available_instances = [i.name for i in instances if authentification.has_access(i, abort=False)]
 
                 if not available_instances:
                     raise RegionNotFound(custom_msg="id {i} exists but not in regions available for user"
@@ -201,7 +195,6 @@ class InstanceManager(object):
                 if only_one:
                     return choose_best_instance(available_instances)
                 return available_instances
-                #return [i.name for i in instances if authentification.has_access(i, abort=False)]
 
         raise RegionNotFound(object_id=object_id)
 

@@ -256,6 +256,16 @@ DO $$
     END;
 $$;
 
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.paramaters ADD COLUMN timezone TEXT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column timezone already exists in navitia.parameters';
+        END;
+    END;
+$$;
+
 DROP TABLE IF EXISTS navitia.admin CASCADE;
 DROP TABLE IF EXISTS navitia.rel_admin_admin CASCADE;
 DROP TABLE IF EXISTS navitia.poi CASCADE;

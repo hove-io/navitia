@@ -42,6 +42,7 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 namespace nr = navitia::routing;
+namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 
 void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
@@ -87,7 +88,8 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -101,8 +103,8 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     auto st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_area:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T081100"));
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T082000"));
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), ntest::to_posix_timestamp("20120614T081100"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), ntest::to_posix_timestamp("20120614T082000"));
 }
 
 BOOST_AUTO_TEST_CASE(journey_stay_in) {
@@ -358,8 +360,9 @@ BOOST_AUTO_TEST_CASE(journey_array){
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
 
     // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
-    std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
-    pbnavitia::Response resp = nr::make_response(raptor, origin, destination, datetimes, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    std::vector<uint32_t> datetimes({ntest::to_posix_timestamp("20120614T080000"), ntest::to_posix_timestamp("20120614T090000")});
+    pbnavitia::Response resp = nr::make_response(raptor, origin, destination, datetimes, true,
+                                                 navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);

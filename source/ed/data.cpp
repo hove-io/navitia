@@ -273,9 +273,9 @@ void Data::clean(){
 
 
 
-    LOG4CPLUS_INFO(logger, "I have deleted" + boost::lexical_cast<std::string>(erase_overlap) + "vehicle_journeys's because they overlap, " +
-                   boost::lexical_cast<std::string>(erase_emptiness) + " because they do not contain any clean stop_times, and "
-                   +boost::lexical_cast<std::string>(erase_no_circulation)+ " because they are never valid");
+    LOG4CPLUS_INFO(logger, "Data::clean(): " << erase_overlap <<  " vehicle_journeys have been deleted because they overlap, "
+                   << erase_emptiness << " because they do not contain any clean stop_times, and "
+                   << erase_no_circulation << " because they are never valid");
 
     // Delete duplicate connections
     // Connections are sorted by departure,destination

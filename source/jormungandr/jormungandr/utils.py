@@ -31,7 +31,19 @@ import calendar
 from datetime import datetime
 
 
-def to_time_stamp(str):
+def str_to_time_stamp(str):
+    """
+    convert a string to a posix timestamp
+    the string must be in the YYYYMMDDTHHMMSS format
+    like 20170534T124500
+    """
     date = datetime.strptime(str, "%Y%m%dT%H%M%S")
 
+    return date_to_timestamp(date)
+
+
+def date_to_timestamp(date):
+    """
+    convert a datatime objet to a posix timestamp (number of seconds from 1070/1/1)
+    """
     return int(calendar.timegm(date.timetuple()))

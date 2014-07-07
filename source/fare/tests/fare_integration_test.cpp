@@ -37,12 +37,12 @@ www.navitia.io
 
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
-
 
 using namespace navitia;
 using namespace routing;
@@ -85,7 +85,8 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     type::EntryPoint destination(type::Type_e::StopArea, "stop5");
 
     georef::StreetNetwork sn_worker(*b.data->geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T080000"}, true, type::AccessibiliteParams(), {}, sn_worker, true, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {test::to_posix_timestamp("20120614T080000")},
+                                             true, type::AccessibiliteParams(), {}, sn_worker, true, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -145,7 +146,8 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     type::EntryPoint destination(type::Type_e::StopArea, "stop5");
 
     georef::StreetNetwork sn_worker(*b.data->geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T080000"}, true, type::AccessibiliteParams(), {}, sn_worker, true, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {test::to_posix_timestamp("20120614T080000")},
+                                             true, type::AccessibiliteParams(), {}, sn_worker, true, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);

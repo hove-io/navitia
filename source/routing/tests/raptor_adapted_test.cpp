@@ -279,8 +279,12 @@ impact-3
         b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2014,01,13), boost::gregorian::date(2014,01,25));
     }
     pbnavitia::Response make_response(const std::vector<std::string> &datetimes_str, bool disruption_active) {
+        std::vector<uint32_t> timestamps;
+        for (const auto& str: datetimes_str) {
+            timestamps.push_back(navitia::test::to_posix_timestamp(str));
+        }
         return ::make_response(*raptor, origin, destination,
-                               datetimes_str, true,
+                               timestamps, true,
                                type::AccessibiliteParams(),
                                forbidden,
                                *street_network, disruption_active, true);
