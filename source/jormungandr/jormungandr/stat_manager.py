@@ -48,7 +48,6 @@ import sys
 import kombu
 f_datetime = "%Y%m%dT%H%M%S"
 
-
 def init_journey(stat_journey):
     stat_journey.requested_date_time = 0
     stat_journey.departure_date_time = 0

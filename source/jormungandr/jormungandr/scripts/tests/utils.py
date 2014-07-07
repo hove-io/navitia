@@ -27,11 +27,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from time import mktime
+import calendar
 from datetime import datetime
 
 
 def to_time_stamp(str):
     date = datetime.strptime(str, "%Y%m%dT%H%M%S")
 
-    return int(mktime(date.timetuple()))
+    return int(calendar.timegm(date.timetuple()))
