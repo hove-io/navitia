@@ -47,6 +47,7 @@ import sys
 import kombu
 f_datetime = "%Y%m%dT%H%M%S"
 
+
 def init_journey(stat_journey):
     stat_journey.requested_date_time = 0
     stat_journey.departure_date_time = 0
@@ -54,6 +55,7 @@ def init_journey(stat_journey):
     stat_journey.duration = 0
     stat_journey.nb_transfers = 0
     stat_journey.type = ''
+
 
 def get_posix_date_time(date_time_value):
     if date_time_value:

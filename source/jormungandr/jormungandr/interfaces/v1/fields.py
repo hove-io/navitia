@@ -32,6 +32,8 @@ from copy import deepcopy
 from collections import OrderedDict
 import datetime
 import logging
+import pytz
+
 
 class PbField(fields.Nested):
 
@@ -60,13 +62,46 @@ class DateTime(fields.Raw):
     """
     custom date format from timestamp
     """
+    def __init__(self, timezone=None, *args, **kwargs):
+        super(DateTime, self).__init__(*args, **kwargs)
+        self.timezone = timezone
 
-    def format(self, value):
-        try:
-            #TODO timezone
-            return datetime.datetime.utcfromtimestamp(value).strftime("%Y%m%dT%H%M%S")
-        except AttributeError as ae:
-            raise fields.MarshallingException(ae)
+    def output(self, key, obj):
+        tz = None
+        if self.timezone:
+            cur = obj
+            for attr in self.timezone.split("."):
+                if hasattr(cur, attr):
+                    cur = getattr(cur, attr)
+                else:
+                    logging.getLogger(__name__).warn('DateTime format not possible, '
+                                                     'cannot to find attribute {} on object {}'
+                                                     .format(attr, obj))
+                    cur = None
+                    break
+
+            if cur:
+                logging.getLogger(__name__).debug('timezone is : {}'.format(cur))
+                tz = pytz.timezone(cur)
+                if not tz:
+                    logging.getLogger(__name__).warn('tz {} is not valid'.format(cur))
+
+        value = fields.get_value(key if self.attribute is None else self.attribute, obj)
+
+        if value is None:
+            return self.default
+
+        return self.format(value, tz)
+
+    def format(self, value, timezone):
+        dt = datetime.datetime.utcfromtimestamp(value)
+
+        if timezone:
+            print "val : {}".format(dt)
+            dt = pytz.utc.localize(dt)
+            print "time as: {}".format(dt.astimezone(timezone))
+            dt = dt.astimezone(timezone)
+        return dt.strftime("%Y%m%dT%H%M%S")
 
 
 class enum_type(fields.Raw):
@@ -251,6 +286,7 @@ stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
+stop_area["timezone"] = fields.String()
 journey_pattern_point = deepcopy(generic_type)
 journey_pattern = deepcopy(generic_type)
 jpps = NonNullList(NonNullNested(journey_pattern_point))
