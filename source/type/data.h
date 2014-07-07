@@ -71,20 +71,20 @@ struct wrong_version : public navitia::exception {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 23; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
-    unsigned int version = 0; //< Numéro de version des données chargées
-    std::atomic<bool> loaded; //< Est-ce que lse données ont été chargées
+    static const unsigned int data_version = 24; //< Data version number. *INCREMENT* every time serialized data are modified
+    unsigned int version = 0; //< Version of loaded data
+    std::atomic<bool> loaded; //< have the data been loaded ?
 
     std::unique_ptr<MetaData> meta;
 
-    // Référentiels de données
+    // data referential
 
-    /// Référentiel de transport en commun
+    /// public transport (PT) referential
     std::unique_ptr<PT_Data> pt_data;
 
     std::unique_ptr<navitia::georef::GeoRef> geo_ref;
 
-    /// Données précalculées pour le raptor
+    /// precomputed data for raptor (public transport routing algorithm)
     std::unique_ptr<navitia::routing::dataRAPTOR> dataRaptor;
 
     /// Fare data
@@ -126,10 +126,11 @@ public:
     Data();
     ~Data();
 
-    /** Fonction qui permet de sérialiser (aka binariser la structure de données
-      *
-      * Elle est appelée par boost et pas directement
-      */
+    /**
+     * serialization function.
+     *
+     * Called by boost and not directly
+     */
     template<class Archive> void serialize(Archive & ar, const unsigned int version) {
         this->version = version;
         if(this->version != data_version){

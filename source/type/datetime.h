@@ -121,11 +121,11 @@ inline std::string to_iso_string_no_fractional(Time t) {
 
 static const boost::posix_time::ptime posix_epoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
 
-inline int32_t to_posix_timestamp(boost::posix_time::ptime ptime) {
+inline uint32_t to_posix_timestamp(boost::posix_time::ptime ptime) {
     return (ptime - posix_epoch).total_seconds();//todo bound/overflow check ?
 }
 
-inline int32_t to_posix_timestamp(DateTime datetime, const type::Data &d) {
+inline uint32_t to_posix_timestamp(DateTime datetime, const type::Data &d) {
     return to_posix_timestamp(to_posix_time(datetime, d));
 }
 

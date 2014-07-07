@@ -41,6 +41,7 @@ import logging
 from jormungandr import app
 from jormungandr.instance import Instance
 from jormungandr.authentification import get_user
+from jormungandr import utils
 
 import time
 import sys
@@ -55,18 +56,6 @@ def init_journey(stat_journey):
     stat_journey.duration = 0
     stat_journey.nb_transfers = 0
     stat_journey.type = ''
-
-
-def get_posix_date_time(date_time_value):
-    if date_time_value:
-        try:
-            return int(time.mktime(datetime.strptime(date_time_value, f_datetime).timetuple()))
-        except ValueError as e:
-            logging.getLogger(__name__).warn("%s", str(e))
-        except Exception:
-            logging.exception("fail")
-
-    return 0
 
 
 class StatManager(object):
@@ -187,16 +176,13 @@ class StatManager(object):
         """
         init_journey(stat_journey)
         if 'requested_date_time' in resp_journey:
-            req_date_time = resp_journey['requested_date_time']
-            stat_journey.requested_date_time = get_posix_date_time(req_date_time)
+            stat_journey.requested_date_time = utils.str_to_time_stamp(resp_journey['requested_date_time'])
 
         if 'departure_date_time' in resp_journey:
-            dep_date_time = resp_journey['departure_date_time']
-            stat_journey.departure_date_time = get_posix_date_time(dep_date_time)
+            stat_journey.departure_date_time = utils.str_to_time_stamp(resp_journey['departure_date_time'])
 
         if 'arrival_date_time' in resp_journey:
-            arr_date_time = resp_journey['arrival_date_time']
-            stat_journey.arrival_date_time = get_posix_date_time(arr_date_time)
+            stat_journey.arrival_date_time = utils.str_to_time_stamp(resp_journey['arrival_date_time'])
 
         if 'duration' in resp_journey:
             stat_journey.duration = resp_journey['duration']
@@ -229,12 +215,10 @@ class StatManager(object):
 
     def fill_section(self, stat_section, resp_section):
         if 'departure_date_time' in resp_section:
-            dep_time = resp_section['departure_date_time']
-            stat_section.departure_date_time = get_posix_date_time(dep_time)
+            stat_section.departure_date_time = utils.str_to_time_stamp(resp_section['departure_date_time'])
 
         if 'arrival_date_time' in resp_section:
-            arr_time = resp_section['arrival_date_time']
-            stat_section.arrival_date_time = get_posix_date_time(arr_time)
+            stat_section.arrival_date_time = utils.str_to_time_stamp(resp_section['arrival_date_time'])
 
         if 'duration' in resp_section:
             stat_section.duration = resp_section['duration']

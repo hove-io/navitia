@@ -544,15 +544,15 @@ class Script(object):
                     break
 
             new_datetime = None
+            one_minute = 1 * 60
             if request['clockwise']:
-                l_date_time_f = datetime.utcfromtimestamp(float(last_best.departure_date_time))
-                new_datetime = l_date_time_f + timedelta(minutes=1)
+                #since dates are now posix time stamp, we only have to add the additional seconds
+                new_datetime = last_best.departure_date_time + one_minute
             else:
-                l_date_time_f = datetime.utcfromtimestamp(float(last_best.arrival_date_time))
-                new_datetime = l_date_time_f + timedelta(minutes=-1)
+                new_datetime = last_best.arrival_date_time - one_minute
 
             next_request = self.change_request(pb_req, tmp_resp)
-            next_request.journeys.datetimes[0] = new_datetime.strftime(f_date_time)
+            next_request.journeys.datetimes[0] = new_datetime
             del next_request.journeys.datetimes[1:]
             # we tag the journeys as 'next' or 'prev' journey
             if len(resp.journeys):

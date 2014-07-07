@@ -62,7 +62,7 @@ message StreetNetworkParams{
 message JourneysRequest {
     required string origin                              = 1;
     optional string destination                         = 2;
-    repeated string datetimes                           = 3;
+    repeated uint32 datetimes                           = 3;
     required bool clockwise                             = 4;
     repeated string forbidden_uris                      = 5;
     required int32 max_duration                         = 6;

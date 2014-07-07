@@ -28,7 +28,7 @@
 # www.navitia.io
 import navitiacommon.response_pb2 as response_pb2
 from ..default import Script, are_equals
-from utils import to_time_stamp
+from jormungandr.utils import str_to_time_stamp
 
 
 def empty_journeys_test():
@@ -42,7 +42,7 @@ def different_arrival_times_test():
     script = Script()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
-    journey1.arrival_date_time = to_time_stamp("20140422T0800")
+    journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
     journey1.duration = 5 * 60
     journey1.nb_transfers = 0
     journey1.sections.add()
@@ -50,7 +50,7 @@ def different_arrival_times_test():
     journey1.sections[0].duration = 5 * 60
 
     journey2 = response.journeys.add()
-    journey2.arrival_date_time = to_time_stamp("20140422T0758")
+    journey2.arrival_date_time = str_to_time_stamp("20140422T0758")
     journey2.duration = 2 * 60
     journey2.nb_transfers = 0
     journey2.sections.add()
@@ -58,15 +58,15 @@ def different_arrival_times_test():
     journey2.sections[0].duration = 2 * 60
 
     script.sort_journeys(response)
-    assert response.journeys[0].arrival_date_time == to_time_stamp("20140422T0758")
-    assert response.journeys[1].arrival_date_time == to_time_stamp("20140422T0800")
+    assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0758")
+    assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
 
 
 def different_duration_test():
     script = Script()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
-    journey1.arrival_date_time = to_time_stamp("20140422T0800")
+    journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
     journey1.duration = 5 * 60
     journey1.nb_transfers = 0
     journey1.sections.add()
@@ -74,7 +74,7 @@ def different_duration_test():
     journey1.sections[0].duration = 5 * 60
 
     journey2 = response.journeys.add()
-    journey2.arrival_date_time = to_time_stamp("20140422T0800")
+    journey2.arrival_date_time = str_to_time_stamp("20140422T0800")
     journey2.duration = 3 * 60
     journey2.nb_transfers = 0
     journey2.sections.add()
@@ -82,8 +82,8 @@ def different_duration_test():
     journey2.sections[0].duration = 3 * 60
 
     script.sort_journeys(response)
-    assert response.journeys[0].arrival_date_time == to_time_stamp("20140422T0800")
-    assert response.journeys[1].arrival_date_time == to_time_stamp("20140422T0800")
+    assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
+    assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 5*60
     assert response.journeys[1].duration == 3*60
 
@@ -92,7 +92,7 @@ def different_nb_transfers_test():
     script = Script()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
-    journey1.arrival_date_time = to_time_stamp("20140422T0800")
+    journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
     journey1.duration = 25 * 60
     journey1.nb_transfers = 1
     journey1.sections.add()
@@ -109,7 +109,7 @@ def different_nb_transfers_test():
     journey1.sections[3].duration = 15 * 60
 
     journey2 = response.journeys.add()
-    journey2.arrival_date_time = to_time_stamp("20140422T0800")
+    journey2.arrival_date_time = str_to_time_stamp("20140422T0800")
     journey2.duration = 25 * 60
     journey2.nb_transfers = 0
     journey2.sections.add()
@@ -117,8 +117,8 @@ def different_nb_transfers_test():
     journey2.sections[0].duration = 25 * 60
 
     script.sort_journeys(response)
-    assert response.journeys[0].arrival_date_time == to_time_stamp("20140422T0800")
-    assert response.journeys[1].arrival_date_time == to_time_stamp("20140422T0800")
+    assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
+    assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 25*60
     assert response.journeys[1].duration == 25*60
     assert response.journeys[0].nb_transfers == 0
@@ -129,7 +129,7 @@ def different_duration_non_pt_test():
     script = Script()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
-    journey1.arrival_date_time = to_time_stamp("20140422T0800")
+    journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
     journey1.duration = 25 * 60
     journey1.nb_transfers = 1
     journey1.sections.add()
@@ -149,7 +149,7 @@ def different_duration_non_pt_test():
     journey1.sections[4].duration = 10 * 60
 
     journey2 = response.journeys.add()
-    journey2.arrival_date_time = to_time_stamp("20140422T0800")
+    journey2.arrival_date_time = str_to_time_stamp("20140422T0800")
     journey2.duration = 25 * 60
     journey2.nb_transfers = 1
     journey2.sections.add()
@@ -166,8 +166,8 @@ def different_duration_non_pt_test():
     journey2.sections[3].duration = 15 * 60
 
     script.sort_journeys(response)
-    assert response.journeys[0].arrival_date_time == to_time_stamp("20140422T0800")
-    assert response.journeys[1].arrival_date_time == to_time_stamp("20140422T0800")
+    assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
+    assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 25 * 60
     assert response.journeys[1].duration == 25 * 60
     assert response.journeys[0].nb_transfers == 1
@@ -180,7 +180,7 @@ def different_duration_non_pt_test():
 
 def create_dummy_journey():
     journey = response_pb2.Journey()
-    journey.arrival_date_time = to_time_stamp("20140422T0800")
+    journey.arrival_date_time = str_to_time_stamp("20140422T0800")
     journey.duration = 25 * 60
     journey.nb_transfers = 1
 

@@ -407,26 +407,19 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
 
 
 std::vector<bt::ptime>
-parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
+parse_datetimes(RAPTOR &raptor,const std::vector<uint32_t>& timestamps,
                 pbnavitia::Response &response, bool clockwise) {
     std::vector<bt::ptime> datetimes;
 
-    for(std::string datetime: datetimes_str){
-        try {
-            bt::ptime ptime;
-            ptime = bt::from_iso_string(datetime);
-            if(!raptor.data.meta->production_date.contains(ptime.date())) {
-                fill_pb_error(pbnavitia::Error::date_out_of_bounds,
-                                "date is not in data production period",
-                                response.mutable_error());
-                response.set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
-            }
-            datetimes.push_back(ptime);
-        } catch(...){
-//            response.set_error("Impossible to parse date " + datetime);
-            fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime",response.mutable_error());
-            response.set_info("Example of invalid date: " + datetime);
+    for(uint32_t datetime: timestamps){
+        bt::ptime ptime = bt::from_time_t(datetime);
+        if(!raptor.data.meta->production_date.contains(ptime.date())) {
+            fill_pb_error(pbnavitia::Error::date_out_of_bounds,
+                            "date is not in data production period",
+                            response.mutable_error());
+            response.set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
         }
+        datetimes.push_back(ptime);
     }
     if(clockwise)
         std::sort(datetimes.begin(), datetimes.end(),
@@ -440,7 +433,7 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
 pbnavitia::Response
 make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination,
-              const std::vector<std::string> &datetimes_str, bool clockwise,
+              const std::vector<uint32_t> &datetimes_str, bool clockwise,
               const type::AccessibiliteParams & accessibilite_params,
               std::vector<std::string> forbidden,
               georef::StreetNetwork & worker,
@@ -514,7 +507,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
-                                   const std::string &datetime_str,bool clockwise,
+                                   const uint32_t datetime_timestamp,bool clockwise,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
@@ -524,7 +517,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     pbnavitia::Response response;
 
     bt::ptime datetime;
-    auto tmp_datetime = parse_datetimes(raptor, {datetime_str}, response, clockwise);
+    auto tmp_datetime = parse_datetimes(raptor, {datetime_timestamp}, response, clockwise);
     if(response.has_error() || tmp_datetime.size() == 0 ||
        response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;

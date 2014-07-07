@@ -81,7 +81,7 @@ public:
     }
     pbnavitia::Response make_response(bool allow_odt) {
         return navitia::routing::make_response(*raptor, origin, destination,
-                               {"20140114T101000"}, true,
+                               {navitia::test::to_posix_timestamp("20140114T101000")}, true,
                                navitia::type::AccessibiliteParams(),
                                forbidden,
                                *street_network, false, allow_odt);

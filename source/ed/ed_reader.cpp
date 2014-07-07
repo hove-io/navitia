@@ -173,7 +173,7 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 }
 
 void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
-    std::string request = "SELECT beginning_date, end_date FROM navitia.parameters";
+    std::string request = "SELECT beginning_date, end_date, timezone FROM navitia.parameters";
     pqxx::result result = work.exec(request);
 
     if (result.empty()) {
@@ -182,10 +182,11 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     }
     auto const_it = result.begin();
     bg::date begin = bg::from_string(const_it["beginning_date"].as<std::string>());
-    //on ajoute un jour car "end" n'est pas inclus dans la période
+    //we add a day because 'end' is not in the period (and we want it to be)
     bg::date end = bg::from_string(const_it["end_date"].as<std::string>()) + bg::days(1);
 
     nav_data.meta->production_date = bg::date_period(begin, end);
+    nav_data.meta->timezone = const_it["timezone"].as<std::string>();
     request = "SELECT ST_AsText(ST_MakeEnvelope("
               "(select min(ST_X(coord::geometry)) from georef.node),"
               "(select min(ST_Y(coord::geometry)) from georef.node),"
@@ -285,7 +286,7 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, "
-     "sa.comment as comment, sa.visible as visible, sa.external_code as external_code, sa.timezone"
+     "sa.comment as comment, sa.visible as visible, sa.external_code as external_code, sa.timezone as timezone, "
      "ST_X(sa.coord::geometry) as lon, ST_Y(sa.coord::geometry) as lat,"
      "pr.wheelchair_boarding as wheelchair_boarding, pr.sheltered as sheltered,"
      "pr.elevator as elevator, pr.escalator as escalator,"

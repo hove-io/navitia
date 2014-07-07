@@ -28,7 +28,9 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import calendar
 import logging
+import pytz
 
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with, abort
@@ -60,6 +62,7 @@ from copy import copy
 from datetime import datetime
 from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
+from jormungandr.utils import date_to_timestamp
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -237,7 +240,7 @@ journey = {
     'nb_transfers': fields.Integer(),
     'departure_date_time': DateTime(timezone='origin.stop_area.timezone'),
     'arrival_date_time': DateTime(timezone='destination.stop_area.timezone'),
-    'requested_date_time': fields.String(), #TODO datetime ?
+    'requested_date_time': DateTime(),
     'sections': NonNullList(NonNullNested(section)),
     'from': PbField(place, attribute='origin'),
     'to': PbField(place, attribute='destination'),
@@ -629,6 +632,11 @@ class Journeys(ResourceUri):
         if not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
 
+        original_datetime = datetime.strptime(args['datetime'], f_datetime)
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
+        args['datetime'] = date_to_timestamp(new_datetime)
+
         api = None
         if args['destination']:
             api = 'journeys'
@@ -651,3 +659,36 @@ class Journeys(ResourceUri):
             del splitted_address[1]
             return ':'.join(splitted_address)
         return id
+
+    def convert_to_utc(self, original_datetime):
+        """
+        convert the original_datetime in the args to UTC
+
+        for that we need to 'guess' the timezone wanted by the user
+
+        For the moment We only use the default instance timezone.
+
+        It won't obviously work for multi timezone instances, we'll have to do
+        something smarter.
+
+        We'll have to consider either the departure or the arrival of the journey
+        (depending on the `clockwise` param)
+        and fetch the tz of this point.
+        we'll have to store the tz for stop area and the coord for admin, poi, ...
+        """
+        instance = i_manager.instances[self.region]
+
+        tz_name = instance.timezone  # TODO store directly the tz?
+
+        if not tz_name:
+            logging.Logger(__name__).warn("unkown timezone for region {}"
+                                          .format(self.region))
+            return original_datetime
+        tz = pytz.timezone(tz_name)
+
+        if not tz:
+            return original_datetime
+
+        utctime = tz.normalize(tz.localize(original_datetime)).astimezone(pytz.utc)
+
+        return utctime
