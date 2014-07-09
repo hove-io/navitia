@@ -259,7 +259,7 @@ $$;
 DO $$
     BEGIN
         BEGIN
-            ALTER TABLE navitia.paramaters ADD COLUMN timezone TEXT;
+            ALTER TABLE navitia.parameters ADD COLUMN timezone TEXT;
         EXCEPTION
             WHEN duplicate_column THEN RAISE NOTICE 'column timezone already exists in navitia.parameters';
         END;

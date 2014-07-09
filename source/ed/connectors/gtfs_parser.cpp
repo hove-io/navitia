@@ -111,7 +111,8 @@ std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_
     return res;
 }
 
-std::vector<period_with_utc_shift> split_over_dst(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
+std::vector<period_with_utc_shift>
+split_over_dst(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
     std::vector<period_with_utc_shift> res;
 
     if (! tz) {

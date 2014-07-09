@@ -154,7 +154,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
             if(item.type == public_transport) {
                 pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
-                bt::ptime departure_ptime , arrival_ptime;
+                bt::ptime departure_ptime, arrival_ptime;
                 vj = item.get_vj();
                 int length = 0;
                 for(size_t i=0;i<item.stop_points.size();++i) {

@@ -62,9 +62,10 @@ class DateTime(fields.Raw):
     """
     custom date format from timestamp
     """
-    def __init__(self, timezone=None, *args, **kwargs):
+    def __init__(self, timezone=None, debug=False, *args, **kwargs):
         super(DateTime, self).__init__(*args, **kwargs)
         self.timezone = timezone
+        self.debug = debug  #temporary debug mode
 
     def output(self, key, obj):
         tz = None
@@ -81,12 +82,16 @@ class DateTime(fields.Raw):
                     break
 
             if cur:
-                logging.getLogger(__name__).debug('timezone is : {}'.format(cur))
+                if self.debug:
+                    logging.getLogger(__name__).debug('timezone is : {}'.format(cur))
                 tz = pytz.timezone(cur)
                 if not tz:
                     logging.getLogger(__name__).warn('tz {} is not valid'.format(cur))
 
         value = fields.get_value(key if self.attribute is None else self.attribute, obj)
+
+        if self.debug:
+            logging.getLogger(__name__).debug('value = {}, tz = {}, tzname = {}'.format(value, tz, self.timezone))
 
         if value is None:
             return self.default
@@ -97,9 +102,11 @@ class DateTime(fields.Raw):
         dt = datetime.datetime.utcfromtimestamp(value)
 
         if timezone:
-            print "val : {}".format(dt)
+            if self.debug:
+                logging.getLogger(__name__).debug("val : {}".format(dt))
             dt = pytz.utc.localize(dt)
-            print "time as: {}".format(dt.astimezone(timezone))
+            if self.debug:
+                logging.getLogger(__name__).debug("time as: {}".format(dt.astimezone(timezone)))
             dt = dt.astimezone(timezone)
         return dt.strftime("%Y%m%dT%H%M%S")
 
@@ -354,8 +361,8 @@ connection = {
 }
 
 stop_date_time = {
-    "departure_date_time": fields.String(),
-    "arrival_date_time": fields.String(),
+    "departure_date_time": DateTime(timezone='stop_point.stop_area.timezone', debug=True),
+    "arrival_date_time": DateTime(timezone='stop_point.stop_area.timezone'),
     "stop_point": PbField(stop_point),
     "additional_informations": additional_informations,
     "links": stop_time_properties_links
@@ -370,7 +377,7 @@ place = {
     "administrative_region": PbField(admin),
     "embedded_type": enum_type(),
     "name": fields.String(),
-    "quality" : fields.Integer(),
+    "quality": fields.Integer(),
     "id": fields.String(attribute='uri')
 }
 
