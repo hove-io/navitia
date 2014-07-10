@@ -28,33 +28,29 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "time_dependent.h"
 #include "raptor.h"
-//#include "static_raptor.h"
+#include "routing/raptor_api.h"
 #include "type/data.h"
 #include "utils/timer.h"
 #include <boost/program_options.hpp>
 
-using namespace navitia;
-using namespace routing;
+namespace nr = navitia::routing;
+namespace nt = navitia::type;
+namespace bt = boost::posix_time;
 namespace po = boost::program_options ;
 
 int main(int argc, char** argv){
     po::options_description desc("Options du calculateur simple");
-    std::vector<std::string> algos;
-    std::string start, target;
-    unsigned int date, hour;
-    bool verif;
+    std::string start, target, date;
     std::string file;
+    nt::Data data;
     desc.add_options()
-            ("help", "Affiche l'aide")
-            ("algo,a", po::value<decltype(algos)>(&algos), "Algorithme(s) à utiliser : raptor, time_dep")
-            ("start,s", po::value<std::string>(&start), "ExternalCode du stopArea de départ")
-            ("target,t", po::value<std::string>(&target), "ExternalCode du stopArea d'arrivée")
-            ("date,d", po::value<unsigned int>(&date)->default_value(0), "Indexe de date")
-            ("hour,h", po::value<unsigned int>(&hour)->default_value(8*3600), "Heure en secondes depuis minuit")
-            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"))
-            ("verif,v", po::value<bool>(&verif)->default_value(false), "Vérifier la cohérence des itinéraires");
+            ("help", "Show help")
+            ("start,s", po::value<std::string>(&start), "uri of point to start")
+            ("target,t", po::value<std::string>(&target), "uri of point to end")
+            ("date,d", po::value<std::string>(&date), "yyyymmddThhmmss")
+            ("clockwise,c", po::value<std::string>(&date), "Clockwise search")
+            ("file,f", po::value<std::string>(&file)->default_value("Path to data.nav.lz4"));
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -65,63 +61,22 @@ int main(int argc, char** argv){
         return 1;
     }
 
-    if(vm.count("algo") && vm.count("start") && vm.count("target")) {
-        type::Data data;
+    if(vm.count("start") && vm.count("target") && vm.count("date")) {
         {
-            Timer t("Charegement des données : " + file);
+            Timer t("Loading datafile : " + file);
             data.load(file);
         }
+        nr::RAPTOR raptor(data);
+        navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+        std::vector<std::string> forbidden;
 
-        type::idx_t start_idx, target_idx;
-        if(data.pt_data.stop_area_map.find(start) != data.pt_data.stop_area_map.end()){
-            start_idx = data.pt_data.stop_area_map[start];
-        } else {
-            std::cerr << "StopArea inconnu : " << start << std::endl;
-            return 1;
-        }
-        if(data.pt_data.stop_area_map.find(target) != data.pt_data.stop_area_map.end()){
-            target_idx = data.pt_data.stop_area_map[target];
-        } else {
-            std::cerr << "StopArea inconnu : " << target << std::endl;
-            return 1;
-        }
+        nt::Type_e origin_type = data.get_type_of_id(start);
+        nt::Type_e destination_type = data.get_type_of_id(start);
+        nt::EntryPoint origin(origin_type, start);
+        nt::EntryPoint destination(destination_type, target);
 
-        std::cout << "Calcul de " << data.pt_data.stop_areas[start_idx].name << "(" << start_idx << ")"<< " à " 
-                  << data.pt_data.stop_areas[target_idx].name  << "(" << target_idx << ")"<<  std::endl;
-        Verification verification(data.pt_data);
-        for(auto algo : algos){
-            std::cout << std::endl;
-            AbstractRouter * router;
-            if(algo == "raptor"){
-                data.build_raptor();
-                router = new raptor::RAPTOR(data);
-            } else if(algo == "time_dep"){
-                router = new timedependent::TimeDependent(data);
-       //     } else if(algo == "static"){
-       //         router = new StaticRaptor(data);
-            } else {
-                std::cerr << "Algorithme inconnu : " << algo << std::endl;
-                return 1;
-            }
-
-            Timer t("Calcul avec l'algorithme " + algo);
-            auto tmp = router->compute(start_idx, target_idx, hour, date);
-
-            if(tmp.size() > 0) {
-                for(auto res : tmp) {
-                    for(auto item : res.items) {
-                        std::cout << item.print(data.pt_data) << std::endl;
-                    }
-
-                    if(verif) {
-                        verification.verif(res);
-                    }
-                    std::cout << " --------------------------------" << std::endl;
-                }
-            }
-            std::cout << std::endl << "______________________________________" << std::endl << std::endl;
-            delete router;
-        }
+        pbnavitia::Response resp = make_response(raptor, origin, destination, {date}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+        std::cout << resp.DebugString() << "\n";
         return 0;
     } else {
         std::cout << desc << std::endl;
