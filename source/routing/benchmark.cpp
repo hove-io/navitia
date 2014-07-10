@@ -68,16 +68,18 @@ int main(int argc, char** argv){
 
     desc.add_options()
             ("help", "Affiche l'aide")
-            ("interations,i", po::value<int>(&iterations)->default_value(100), "Nombre d'itérations (10 calculs par itération)")
-            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"), "Données en entrée")
+            ("interations,i", po::value<int>(&iterations)->default_value(100), "Number of iterations (10 calcuations par iteration)")
+            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"), "Path to data.nav.lz4")
             ("start,s", po::value<int>(&start)->default_value(-1), "Start pour du debug")
             ("target,t", po::value<int>(&target)->default_value(-1), "Target pour du debug")
-            ("date,d", po::value<int>(&date)->default_value(-1), "Date pour du debug")
-            ("hour,h", po::value<int>(&hour)->default_value(-1), "Hour pour du debug")
-            ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"), "Fichier de sortie");
+            ("date,d", po::value<int>(&date)->default_value(-1), "Date for the debug")
+            ("hour,h", po::value<int>(&hour)->default_value(-1), "Hour for the debug")
+            ("verbose,v", "Verbose debugging output")
+            ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"), "Output file");
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
+    bool verbose = vm.count("verbose");
 
     if (vm.count("help")) {
         std::cout << desc << std::endl;
@@ -141,7 +143,15 @@ int main(int argc, char** argv){
     for(auto demand : demands){
         ++show_progress;
         Timer t2;
-
+        if (verbose){
+            std::cout << data.pt_data->stop_areas[demand.start]->uri
+                      << ", " << demand.start
+                      << ", " << data.pt_data->stop_areas[demand.target]->uri
+                      << ", " << demand.target
+                      << ", " << demand.date
+                      << ", " << demand.hour
+                      << "\n";
+        }
         auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target], demand.hour, demand.date, navitia::DateTimeUtils::inf,false, true);
 
         Path path;
@@ -157,7 +167,7 @@ int main(int argc, char** argv){
     //ProfilerStop();
 
 
-    Timer ecriture("Écriture du fichier de résultats");
+    Timer ecriture("Writing results");
     std::fstream out_file(output, std::ios::out);
     out_file << "Start, Start id, Target, Target id, Day, Hour";
         out_file << ", "
@@ -187,6 +197,6 @@ int main(int argc, char** argv){
     }
     out_file.close();
 
-    std::cout << "Nombre de demandes :" << demands.size() << std::endl;
-    std::cout << "Nombre de resultats avec solution" << nb_reponses << std::endl;
+    std::cout << "Number of requests :" << demands.size() << std::endl;
+    std::cout << "Number of results with solution" << nb_reponses << std::endl;
 }
