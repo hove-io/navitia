@@ -239,7 +239,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
         std::vector<Path> temp = makePathes(calc_dest, calc_dep, accessibilite_params, *this, !clockwise, disruption_active);
         result.insert(result.end(), temp.begin(), temp.end());
     }
-    BOOST_ASSERT( departures.size() > 0 );
+    BOOST_ASSERT( departures.size() > 0 );    //Assert that reversal search was symetric
     return result;
 }
 
