@@ -93,6 +93,13 @@ class InvalidArguments(Exception):
         self.code = 400
 
 
+class TechnicalError(Exception):
+
+    def __init__(self, msg):
+        self.data = format_error("technical_error", msg)
+        self.code = 400
+
+
 def log_exception(sender, exception, **extra):
     message = ""
     if hasattr(exception, "data") and "message" in exception.data:

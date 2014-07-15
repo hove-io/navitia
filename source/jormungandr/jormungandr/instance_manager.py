@@ -118,6 +118,10 @@ class InstanceManager(object):
 
             self.instances[conf.get('instance', 'key')] = instance
 
+        #we fetch the krakens metadata first
+        # not on the ping thread to always have the data available (for the tests for example
+        self.init_kraken_instances()
+
         self.thread_event = Event()
         self.thread = Thread(target=self.thread_ping)
         #daemon thread does'nt block the exit of a process
@@ -139,25 +143,34 @@ class InstanceManager(object):
         else:
             raise RegionNotFound(instance_name)
 
-    def thread_ping(self, timer=10):
+    def init_kraken_instances(self):
+        """
+        Call all kraken instances (as found in the instances dir) and store it's metadata
+        """
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
-        while not self.thread_event.is_set():
-            for key, instance in self.instances.iteritems():
-                try:
-                    resp = instance.send_and_receive(req, timeout=1000)
-                except DeadSocketException:
-                    instance.geom = None
-                    continue
-                if resp.HasField("metadatas"):
-                    if resp.metadatas.shape and resp.metadatas.shape != "":
-                        try:
-                            instance.geom = wkt.loads(resp.metadatas.shape)
-                        except ReadingError:
-                            instance.geom = None
-                    else:
+        for key, instance in self.instances.iteritems():
+            try:
+                resp = instance.send_and_receive(req, timeout=1000)
+            except DeadSocketException:
+                instance.geom = None
+                continue
+            if resp.HasField("metadatas"):
+                if resp.metadatas.shape and resp.metadatas.shape != "":
+                    try:
+                        instance.geom = wkt.loads(resp.metadatas.shape)
+                    except ReadingError:
                         instance.geom = None
-                    instance.timezone = resp.metadatas.timezone
+                else:
+                    instance.geom = None
+                instance.timezone = resp.metadatas.timezone
+
+    def thread_ping(self, timer=10):
+        """
+        fetch krakens metadata
+        """
+        while not self.thread_event.is_set():
+            self.init_kraken_instances()
             self.thread_event.wait(timer)
 
     def stop(self):

@@ -95,7 +95,7 @@ struct builder{
     /// Il faut préciser là date de début des différents validity patterns
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
         data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
-        data->meta->timezone = "Europe/Paris"; //default timezone is paris
+        data->meta->timezone = "UTC"; //default timezone is UTC
 		data->loaded = true;
     }
 
