@@ -16,13 +16,13 @@ set -e
 
 
 function mandatory() {
-# TODO!
-echo $1
-#if [ "a$($1)" == "a" ]
-#   then
-#       echo "$1 not set"
-#       exit 2
-#   fi
+echo "$1 => ${!var}"
+var=$1
+if [ -z "${!var}" ]
+then
+    echo "Error: $1 not set"
+    exit 2
+fi
 }
 
 echo "username $username"
@@ -30,12 +30,11 @@ mandatory username
 mandatory server
 mandatory dbname
 mandatory PGPASSWORD
-mandatory postgis_dir
 
 if [ "a$sql_dir" == "a" ]
 then
     echo "0 $0"
-    sql_dir=`pwd $0`/../sql/ed
+    sql_dir=`dirname $0`/../sql/ed
 fi
 
 pushd $sql_dir
