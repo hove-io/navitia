@@ -16,12 +16,22 @@
 navitia_du_user_password='navitia' #TODO recuperer un param
 navitia_dir=`pwd $0`
 gtfs_data_dir=$1  #TODO recup un param
-osm_file=  #TODO recup un param
+osm_file=$2  #TODO recup un param
 
-if [ "a$gtfs_data_dir" == "a" -o "a$osm_file" == "a" ]
+install_dependencies=1
+
+if [ -z "$gtfs_data_dir" ] || [ -z "$osm_file" ]
 then
     echo "no gtfs or osm file given, we'll take a test data set"
-    #TODO recuperer des fichiers a coup de wget 
+
+    echo "getting gtfs paris data from data.navitia.io"
+    wget -P /tmp http://data.navitia.io/gtfs_paris_20140502.zip
+    unzip -d /tmp/gtfs /tmp/gtfs_paris_20140502.zip
+    gtfs_data_dir=/tmp/gtfs
+
+    echo "getting paris osm data from metro.teczno.com"
+    wget -P /tmp http://osm-extracted-metros.s3.amazonaws.com/paris.osm.pbf
+    osm_file=/tmp/paris.osm.pbf
 fi
 
 run_dir=$navitia_dir/run
@@ -39,9 +49,9 @@ git submodule update --init
 #first the system and the c++ dependencies: 
 if [ $install_dependencies ]
 then
-    apt-get install git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
+    apt-get install -y git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
     
-    apt-get install postgresql-9.3 postgresql-9.3-postgis-2.1 #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier ton setup 
+    apt-get install -y postgresql-9.3 postgresql-9.3-postgis-2.1 #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier ton setup 
     
     
     # then you need to install all python dependencies: ::
@@ -83,8 +93,14 @@ username=navitia server=localhost dbname=navitia PGPASSWORD='$navitia_du_user_pa
 #=======
 
 # ** filling up the database **
+
 # we need to import the gtfs data
-$navitia_build_dir/ed/fusio2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner password=$navitia_du_user_password"
+$navitia_build_dir/ed/gtfs2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner password=$navitia_du_user_password"
+
+# we need to import the osm data
+$navitia_build_dir/ed/osm2ed -i $osm_file --connection-string="host=localhost user=$db_owner password=$navitia_du_user_password"
+
+
 
 
 
