@@ -104,6 +104,7 @@ date_time = {
     "additional_informations": additional_informations(),
     "links": stop_time_properties_links()
 }
+
 row = {
     "stop_point": PbField(stop_point),
     "date_times": fields.List(fields.Nested(date_time))
@@ -115,6 +116,7 @@ header = {
     "additional_informations": additional_informations_vj(),
     "links": UrisToLinks()
 }
+
 table_field = {
     "rows": fields.List(fields.Nested(row)),
     "headers": fields.List(fields.Nested(header))
