@@ -15,14 +15,55 @@
 
 navitia_du_user_password='navitia' #TODO recuperer un param
 navitia_dir=`pwd $0`
-gtfs_data_dir=$1  #TODO recup un param
-osm_file=$2  #TODO recup un param
+gtfs_data_dir=
+osm_file=
 
 install_dependencies=1
 
+usage()
+{
+cat << EOF
+usage: $0 options
+
+This script setup a running navitia
+No options are mandatory:
+ - if no dataset are given a default Paris one will be used
+ - by default all dependencies are installed
+
+OPTIONS:
+   -h                  Show this message
+   -g                  gtfs directory 
+   -o                  osm directory
+   -n                  don't install dependencies
+EOF
+}
+
+while getopts “hg:o:n” OPTION
+do
+     case $OPTION in
+         h)
+             usage
+             exit 1
+             ;;
+         g)
+             gtfs_data_dir=$OPTARG
+             ;;
+         o)
+             osm_file=$OPTARG
+             ;;
+         n)
+             install_dependencies=0
+             ;;
+         ?)
+             usage
+             exit
+             ;;
+     esac
+done
+
 if [ -z "$gtfs_data_dir" ] || [ -z "$osm_file" ]
 then
-    echo "no gtfs or osm file given, we'll take a test data set"
+    echo "no gtfs or osm file given, we'll take a default data set, Paris"
 
     echo "getting gtfs paris data from data.navitia.io"
     wget -P /tmp http://data.navitia.io/gtfs_paris_20140502.zip
