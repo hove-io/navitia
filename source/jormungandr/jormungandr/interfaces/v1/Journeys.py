@@ -222,10 +222,8 @@ section = {
                         attribute="street_network.path_items"),
     "transfer_type": enum_type(),
     "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
-    "departure_date_time": DateTime(attribute="begin_date_time",
-                                    timezone="origin.stop_area.timezone"),
-    "arrival_date_time": DateTime(attribute="end_date_time",
-                                  timezone="destination.stop_area.timezone"),
+    "departure_date_time": DateTime(attribute="begin_date_time"),
+    "arrival_date_time": DateTime(attribute="end_date_time"),
 }
 
 cost = {
@@ -242,8 +240,8 @@ fare = {
 journey = {
     'duration': fields.Integer(),
     'nb_transfers': fields.Integer(),
-    'departure_date_time': DateTime(timezone='origin.stop_area.timezone'),
-    'arrival_date_time': DateTime(timezone='destination.stop_area.timezone'),
+    'departure_date_time': DateTime(),
+    'arrival_date_time': DateTime(),
     'requested_date_time': DateTime(),
     'sections': NonNullList(NonNullNested(section)),
     'from': PbField(place, attribute='origin'),
@@ -262,6 +260,7 @@ ticket = {
     "cost": NonNullNested(cost),
     "links": TicketLinks(attribute="section_id")
 }
+
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
