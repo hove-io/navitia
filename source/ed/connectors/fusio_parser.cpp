@@ -68,7 +68,7 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fir
 
     std::string timezone_name = row[time_zone_c];
     if (! is_first_line) {
-        //we created a default agency, with a default time zone, but this will be overidden is we read at least one agency
+        //we created a default agency, with a default time zone, but this will be overidden if we read at least one agency
         if (gtfs_data.tz.default_timezone.first != timezone_name) {
             LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
                             " all the time zone are not equals, only the first one will be considered as the default timezone");
@@ -258,12 +258,11 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
             }
         }
 
-        if(is_valid(itl_c, row)){
+        if (is_valid(itl_c, row)) {
             uint16_t local_traffic_zone =  boost::lexical_cast<uint16_t>(row[itl_c]);
-            if (local_traffic_zone > 0)
+            if (local_traffic_zone > 0) {
                 stop_time->local_traffic_zone = local_traffic_zone;
-            else
-                stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
+            }
         }
         else
             stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
@@ -343,7 +342,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
 
         vj->validity_pattern = vp_xx;
         vj->adapted_validity_pattern = vp_xx;
-        vj->journey_pattern = 0;
+        vj->journey_pattern = nullptr;
         vj->tmp_route = route;
         vj->tmp_line = vj->tmp_route->line;
         if(is_valid(block_id_c, row))
@@ -362,13 +361,15 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
 void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     auto split_vj = TripsFusioHandler::get_split_vj(data, row, is_first_line);
 
-    if (split_vj.empty())
+    if (split_vj.empty()) {
         return;
+    }
 
     for (auto vj: split_vj) {
 
-        if (is_valid(ext_code_c, row))
+        if (is_valid(ext_code_c, row)) {
             vj->external_code = row[ext_code_c];
+        }
 
         //if a physical_mode is given we override the value
         vj->physical_mode = nullptr;
@@ -377,12 +378,12 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
             if (itm == gtfs_data.physical_mode_map.end()) {
                 LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
                                << " referenced by trip " << row[trip_c]);
-            }else{
+            } else {
                 vj->physical_mode = itm->second;
             }
         }
 
-        if(vj->physical_mode == nullptr){
+        if (vj->physical_mode == nullptr) {
             auto itm = gtfs_data.physical_mode_map.find("default_physical_mode");
             vj->physical_mode = itm->second;
         }
@@ -413,7 +414,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         }
 
         vj->company = nullptr;
-        if(is_valid(company_id_c, row)){
+        if (is_valid(company_id_c, row)) {
             auto it_company = gtfs_data.company_map.find(row[company_id_c]);
             if(it_company == gtfs_data.company_map.end()){
                 LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the company " << row[company_id_c]
@@ -423,7 +424,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
             }
         }
 
-        if(vj->company == nullptr){
+        if (vj->company == nullptr) {
             auto it_company = gtfs_data.company_map.find("default_company");
             vj->company = it_company->second;
         }
