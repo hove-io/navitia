@@ -66,29 +66,30 @@ int main(int, char** argv){
     zmq::context_t context(1);
     zmq::socket_t clients(context, ZMQ_ROUTER);
     std::string zmq_socket = conf->get_as<std::string>("GENERAL", "zmq_socket", "ipc:///tmp/default_navitia");
+    zmq::socket_t workers(context, ZMQ_DEALER);
     // Catch startup exceptions; without this, startup errors are on stdout
     try{
         clients.bind(zmq_socket.c_str());
-        zmq::socket_t workers(context, ZMQ_DEALER);
         workers.bind("inproc://workers");
-
-        threads.create_thread(navitia::MaintenanceWorker(data_manager));
-
-        int nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
-        // Launch pool of worker threads
-        for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
-            threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager)));
-        }
-
-        // Connect work threads to client threads via a queue
-        do{
-            try{
-                zmq::device(ZMQ_QUEUE, clients, workers);
-            }catch(zmq::error_t){}//lors d'un SIGHUP on restore la queue
-        }while(true);
     }catch(zmq::error_t& e){
-        LOG4CPLUS_ERROR(logger, "Fail to start: " << e.what());
+        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
+		return 1;
     }
+
+    threads.create_thread(navitia::MaintenanceWorker(data_manager));
+
+    int nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
+    // Launch pool of worker threads
+    for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager)));
+    }
+
+    // Connect work threads to client threads via a queue
+    do{
+        try{
+            zmq::device(ZMQ_QUEUE, clients, workers);
+        }catch(zmq::error_t){}//lors d'un SIGHUP on restore la queue
+    }while(true);
 
     return 0;
 }
