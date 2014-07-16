@@ -31,10 +31,11 @@
 
 from flask.ext.restful import fields, marshal_with, reqparse
 from jormungandr import i_manager
+from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, additional_informations_vj, UrisToLinks, error, \
-    enum_type
+    enum_type, SplitDateTime
 from ResourceUri import ResourceUri, complete_links
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -94,13 +95,14 @@ class Schedules(ResourceUri):
             self.region = i_manager.get_region(region, lon, lat)
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
+        timezone.set_request_timezone(self.region)
 
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)
 
 
 date_time = {
-    "date_time": fields.String(),
+    "date_time": SplitDateTime(date='date', time='time'),  # TODO!
     "additional_informations": additional_informations(),
     "links": stop_time_properties_links()
 }

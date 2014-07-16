@@ -83,7 +83,23 @@ class DateTime(fields.Raw):
             dt = pytz.utc.localize(dt)
             dt = dt.astimezone(timezone)
             return dt.strftime("%Y%m%dT%H%M%S")
-        return None # for the moment I prefer not to display anything instead of something wrong
+        return None  # for the moment I prefer not to display anything instead of something wrong
+
+
+class SplitDateTime(DateTime):
+    """
+    custom date format from 2 fields:
+      - one for the date (in timestamp to midnight)
+      - one for the time in seconds from midnight
+    """
+    def __init__(self, date, time, *args, **kwargs):
+        super(DateTime, self).__init__(*args, **kwargs)
+        self.date = date
+        self.time = time
+
+    def output(self, key, obj):
+        #TODO!!
+        return None
 
 
 class enum_type(fields.Raw):
