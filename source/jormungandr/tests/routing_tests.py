@@ -158,10 +158,8 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
 
         response = self.query_region(query, display=False)
         assert(len(response['journeys']) == 2)
-        logging.getLogger(__name__).info("debug arrival date: {}".format(response['journeys'][0]['arrival_date_time']))
         assert(response['journeys'][0]['arrival_date_time'] == "20120614T150000")
         assert(response['journeys'][0]['type'] == "")
-        logging.getLogger(__name__).info("debug arrival date2: {}".format(response['journeys'][1]['arrival_date_time']))
         assert(response['journeys'][1]['arrival_date_time'] == "20120614T160000")
         assert(response['journeys'][1]['type'] == "best")
 
