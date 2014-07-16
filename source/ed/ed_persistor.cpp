@@ -35,7 +35,7 @@ namespace bg = boost::gregorian;
 
 namespace ed{
 
-void EdPersistor::persist(const ed::PoiPoiType& data){
+void EdPersistor::persist_pois(const ed::Georef& data){
     this->lotus.start_transaction();
     LOG4CPLUS_INFO(logger, "Begin: TRUNCATE data!");
     this->clean_poi();
@@ -207,7 +207,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
 }
 
-void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
+void EdPersistor::insert_poi_types(const Georef &data){
     this->lotus.prepare_bulk_insert("georef.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
         this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
@@ -215,7 +215,7 @@ void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
     lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_pois(const ed::PoiPoiType& data){
+void EdPersistor::insert_pois(const Georef &data){
     this->lotus.prepare_bulk_insert("georef.poi",
     {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible", "address_number", "address_name"});
     for(const auto& itm : data.pois) {
@@ -232,7 +232,7 @@ void EdPersistor::insert_pois(const ed::PoiPoiType& data){
     lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_poi_properties(const ed::PoiPoiType& data){
+void EdPersistor::insert_poi_properties(const Georef &data){
     this->lotus.prepare_bulk_insert("georef.poi_properties", {"poi_id","key","value"});
     for(const auto& itm : data.pois){
         for(auto property : itm.second->properties){

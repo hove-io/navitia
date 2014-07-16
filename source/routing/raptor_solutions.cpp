@@ -127,10 +127,10 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                     if(st != nullptr) {
                         if(clockwise) {
                             auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(DateTimeUtils::hour(dt));
-                            DateTimeUtils::update(best_dt_jpp, arrival_time, !clockwise);
+                            DateTimeUtils::update(best_dt_jpp, arrival_time, false);
                         } else {
                             auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(DateTimeUtils::hour(dt));
-                            DateTimeUtils::update(best_dt_jpp, departure_time, !clockwise);
+                            DateTimeUtils::update(best_dt_jpp, departure_time, true);
                         }
                     }
                     if(clockwise)
