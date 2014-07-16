@@ -43,6 +43,17 @@ class LoadDataCommand(Command):
         ]
 
     def run(self, instance_name, data_dir):
-        logging.info("Run command load data")
+        logging.info("Run command load data, a tyr_worker has to be "
+                     "previously started")
         instance = models.Instance.query.filter_by(name=instance_name).first()
-        load_data.delay(instance.id, data_dir)
+
+        if not instance:
+            raise Exception("cannot find instance {}".format(instance_name))
+
+        futur_res = load_data.delay(instance.id, data_dir)
+
+        # this api is only used in artemis and artemis wants to know when this
+        # task is finished, so the easiest way for the moment is to wait for
+        # the answer
+        futur_res.get()
+
