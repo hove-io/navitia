@@ -97,7 +97,7 @@ class TechnicalError(Exception):
 
     def __init__(self, msg):
         self.data = format_error("technical_error", msg)
-        self.code = 400
+        self.code = 500
 
 
 def log_exception(sender, exception, **extra):
