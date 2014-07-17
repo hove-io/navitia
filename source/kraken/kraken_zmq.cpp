@@ -60,14 +60,21 @@ int main(int, char** argv){
 
     DataManager<navitia::type::Data> data_manager;
 
+    auto logger = log4cplus::Logger::getInstance("startup");
     boost::thread_group threads;
     // Prepare our context and sockets
     zmq::context_t context(1);
     zmq::socket_t clients(context, ZMQ_ROUTER);
     std::string zmq_socket = conf->get_as<std::string>("GENERAL", "zmq_socket", "ipc:///tmp/default_navitia");
-    clients.bind(zmq_socket.c_str());
     zmq::socket_t workers(context, ZMQ_DEALER);
-    workers.bind("inproc://workers");
+    // Catch startup exceptions; without this, startup errors are on stdout
+    try{
+        clients.bind(zmq_socket.c_str());
+        workers.bind("inproc://workers");
+    }catch(zmq::error_t& e){
+        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
+		return 1;
+    }
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager));
 
