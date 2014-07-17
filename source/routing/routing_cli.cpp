@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     /* Parse options, with --multiline we enable multi line editing. */
     linenoiseSetCompletionCallback(completion);
     linenoiseHistoryLoad("history.txt"); /* Load the history at startup */
-    while((line = linenoise("hello> ")) != NULL) {
+    while((line = linenoise("hello> ")) != nullptr) {
         linenoiseHistoryAdd(line);
         linenoiseHistorySave("history.txt");
         std::string str_line(line);
