@@ -91,6 +91,7 @@ int main(int argc, char **argv) {
         } else if (splitted_line[0] == "ptref") {
             if (splitted_line.size() < 2) {
                 std::cerr << "an ID is needed" << std::endl;
+                continue;
             }
             const std::string id = splitted_line[1];
             #define SHOW_ID_CLI(type_name, collection_name) \
