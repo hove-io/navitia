@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "autocomplete/autocomplete.h"
 #include "type/pt_data.h"
+#include "string.h"
 
 namespace navitia { namespace autocomplete {
 /**
@@ -351,7 +352,7 @@ pbnavitia::Response autocomplete(const std::string &q,
             const auto b_order = get_embedded_type_order(b.embedded_type());
             return  a_order< b_order;
         } else if(a.quality() == b.quality()) {
-            return a.name() < b.name();
+                return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
         }
         else {
             return a.quality() > b.quality();
