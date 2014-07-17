@@ -1,6 +1,15 @@
 project(Kraken)
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
+set(LOG4CPLUS_FIND_REQUIRED true)
+find_package(log4cplus)
+find_package(GoogleTcmalloc)
+find_package(Protoc)
+
+if(Boost_VERSION)
+    # be silent if already found
+    set(Boost_FIND_QUIETLY TRUE)
+endif()
 
 SET(KRAKEN_VERSION_MAJOR 0)
 SET(KRAKEN_VERSION_MINOR 99)
@@ -35,7 +44,7 @@ FIND_PACKAGE(Boost 1.47.0 COMPONENTS unit_test_framework thread regex
 
 
 
-#ajout a l'include path le repertoirre de compilation, pour géré le config.h
+#add current compilation dir to include path to handle config.h
 include_directories("${CMAKE_CURRENT_BINARY_DIR}"
                      "${CMAKE_SOURCE_DIR}"
                      "${CMAKE_SOURCE_DIR}/../"
@@ -94,7 +103,7 @@ set_tests_properties(connectors PROPERTIES ENVIRONMENT "PYTHONPATH=${CONNECTOR_P
 #ADD_TEST(connectors_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/connectors)
 
 #THIRD PARTY
-#on prend simpleamqpclient en lib static
+#build simpleamqpclient as static lib
 SET(BUILD_STATIC_LIBS ON CACHE BOOL "Build Rabbitmqc as static library")
 SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SimpleAmqpClient as static library")
 SET(BUILD_API_DOCS OFF CACHE BOOL "don't build doc of librabbimq-c")
