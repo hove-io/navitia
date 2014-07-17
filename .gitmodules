@@ -10,3 +10,6 @@
 [submodule "source/third_party/librabbitmq-c"]
 	path = source/third_party/librabbitmq-c
 	url = git@github.com:alanxz/rabbitmq-c.git
+[submodule "source/linenoise"]
+	path = source/linenoise
+	url = git@github.com:antirez/linenoise.git
