@@ -241,6 +241,16 @@ void GeoRef::add_way(const Way& w){
     ways.push_back(to_add);
 }
 
+void GeoRef::add_admin(const Admin& a){
+    Admin* to_add = new Admin;
+    to_add->name = a.name;
+    to_add->idx = a.idx;
+    to_add->uri = a.uri;
+    to_add->post_code = a.post_code;
+    to_add->level = a.level;
+    admins.push_back(to_add);
+}
+
 ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, const proximitylist::ProximityList<vertex_t> &prox) {
     edge_t edge;
     found = true;
