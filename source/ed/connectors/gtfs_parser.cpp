@@ -52,7 +52,7 @@ std::pair<std::string, boost::local_time::time_zone_ptr> TzHandler::get_tz(const
         if (tz) {
             return {tz_name, tz};
         }
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("ed"), "cannot find " << tz_name << " in tz db");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("ed"), "cannot find " << tz_name << " in tz db");
     }
     //we fetch the default dataset timezone
     return default_timezone;
@@ -76,7 +76,7 @@ std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_
 
     if (validity_period.is_null()) {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "validity period is not valid");
-        return {};
+        throw navitia::exception("validity period is not valid");
     }
     std::vector<int> years;
     //we want to have all the overlapping year
