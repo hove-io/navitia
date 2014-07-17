@@ -14,4 +14,9 @@ add_library(routing_cli_utils routing_cli_utils.cpp)
 add_executable(standalone single_run.cpp)
 target_link_libraries(standalone routing_cli_utils routing boost_program_options data fare routing thermometer time_tables pb_lib
     georef utils autocomplete ${BOOST_LIBS} log4cplus pthread)
+
+add_executable(cli raptor_cli.cpp)
+target_link_libraries(cli linenoise routing_cli_utils routing pb_lib boost_program_options data fare routing thermometer time_tables pb_lib
+    georef utils autocomplete ${BOOST_LIBS} log4cplus pthread)
+
 add_subdirectory(tests)
