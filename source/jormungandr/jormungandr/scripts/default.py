@@ -544,7 +544,7 @@ class Script(object):
                     break
 
             new_datetime = None
-            one_minute = 1 * 60
+            one_minute = 60
             if request['clockwise']:
                 #since dates are now posix time stamp, we only have to add the additional seconds
                 new_datetime = last_best.departure_date_time + one_minute
