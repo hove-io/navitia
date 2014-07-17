@@ -34,6 +34,7 @@ www.navitia.io
 #include "utils/timer.h"
 #include "type/response.pb.h"
 #include <boost/program_options.hpp>
+#include "routing_cli_utils.h"
 
 namespace nr = navitia::routing;
 namespace nt = navitia::type;
@@ -41,89 +42,32 @@ namespace bt = boost::posix_time;
 namespace po = boost::program_options ;
 namespace pb = pbnavitia;
 
-int main(int argc, char** argv){
-    po::options_description desc("Options du calculateur simple");
+int main(int argc, char** argv) {
+    po::options_description desc("Simple journey computation");
     std::string start, target, date;
     std::string file;
     nt::Data data;
+    navitia::cli::compute_options compute_opt;
     desc.add_options()
             ("help", "Show help")
-            ("start,s", po::value<std::string>(&start), "uri of point to start")
-            ("target,t", po::value<std::string>(&target), "uri of point to end")
-            ("date,d", po::value<std::string>(&date), "yyyymmddThhmmss")
-            ("counterclockwise,c", "Counter-clockwise search")
-            ("protobuf,p", "Full-output")
             ("file,f", po::value<std::string>(&file)->default_value("Path to data.nav.lz4"));
+    desc.add(compute_opt.desc);
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
-    bool clockwise = !vm.count("counterclockwise");
 
     if (vm.count("help")) {
         std::cout << desc << std::endl;
         return 1;
     }
-
-    if(vm.count("start") && vm.count("target") && vm.count("date")) {
-        {
-            Timer t("Loading datafile : " + file);
-            data.load(file);
-        }
-        nr::RAPTOR raptor(data);
-        navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-        std::vector<std::string> forbidden;
-
-        nt::Type_e origin_type = data.get_type_of_id(start);
-        nt::Type_e destination_type = data.get_type_of_id(start);
-        nt::EntryPoint origin(origin_type, start);
-        nt::EntryPoint destination(destination_type, target);
-        pb::Response resp = make_response(raptor, origin, destination, {date}, clockwise, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
-
-        if (vm.count("protobuf")){
-            std::cout << resp.DebugString() << "\n";
-        }else{
-            std::cout << "Response type: " <<  pb::ResponseStatus_Name(pb::ResponseStatus(resp.response_type())) << "\n";
-            if (resp.journeys_size() == 0){
-                std::cout << "No solutions found\n";
-            }
-            for (int i = 0; i < resp.journeys_size();i++){
-                auto journey = resp.journeys(i);
-                std::cout << "Journey " << journey.nb_transfers() << " transfers" << "\n";
-                for (int j = 0; j < journey.sections_size(); j++){
-                    auto section = journey.sections(j);
-                    std::cout << std::left << std::setw(18) << pb::SectionType_Name(pb::SectionType(section.type()));
-                    std::cout << std::left << std::setw(16) << section.begin_date_time();
-                    std::cout << std::left << std::setw(16) << section.end_date_time();
-                    if (section.has_transfer_type()){
-                        std::cout << std::left << std::setw(10) << pb::TransferType_Name(pb::TransferType(section.transfer_type()));
-                    }else if (section.has_pt_display_informations()){
-                        std::cout << std::left << std::setw(10) << section.pt_display_informations().physical_mode();
-                    }else{
-                        std::cout << std::left << std::setw(10) << "";
-                    }
-                    if (section.has_pt_display_informations()){
-                        std::cout << std::left << std::setw(10)
-                                  << section.pt_display_informations().code();
-                        std::cout << std::left << std::setw(20)
-                                  << section.pt_display_informations().headsign();
-                        std::cout << std::left << std::setw(10)
-                                  << section.pt_display_informations().network();
-                    }else{
-                        std::cout << std::left << std::setw(40) << "";
-                    }
-                    std::cout << std::left << std::setw(30) << section.origin().name();
-                    std::cout << section.destination().name();
-                    std::cout << std::endl;
-                }
-                std::cout << std::endl;
-            }
-        }
-        std::cout << std::endl;
-        return 0;
-    } else {
-        std::cout << desc << std::endl;
-        return 1;
+    if (vm.count("file") == 0) {
+        std::cerr << "file parameter is required";
     }
-
+    {
+        Timer t("Loading datafile : " + file);
+        data.load(file);
+    }
+    nr::RAPTOR raptor(data);
+    compute_opt.compute(vm, raptor);
 }
