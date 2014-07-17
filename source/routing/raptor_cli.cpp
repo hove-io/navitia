@@ -30,7 +30,7 @@ void completion(const char *buf, linenoiseCompletions *lc) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        std::cerr << "A filename is needed" ;
+        std::cerr << "A filename is needed" << std::endl;
         return 1;
     }
     std::string start, target, date;
