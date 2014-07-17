@@ -20,6 +20,9 @@
 #stop on errors
 set -e
 
+#kill the background job at the end
+trap 'kill $(jobs -p)' EXIT
+
 kraken_db_user_password=
 navitia_dir=`dirname $(readlink -f $0)`
 gtfs_data_dir=
@@ -114,6 +117,7 @@ git submodule update --init
 #first the system and the c++ dependencies: 
 if [ $install_dependencies ]
 then
+    echo "** instaling all dependencies"
     sudo apt-get install -y git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
     
     sudo apt-get install -y postgresql-9.3 postgresql-9.3-postgis-2.1 #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier ton setup 
@@ -125,6 +129,7 @@ then
 fi
 
 #the build procedure is explained is the install documentation
+echo "** building navitia"
 navitia_build_dir=$navitia_dir/release
 mkdir -p $navitia_build_dir && cd $navitia_build_dir
 cmake -DCMAKE_BUILD_TYPE=Release ../source
@@ -134,6 +139,7 @@ make -j$(($(grep -c '^processor' /proc/cpuinfo)+1))
 #=======================
 #Setting up the database
 #=======================
+echo "** setting up the database"
 #
 #Each kraken is backed by a postgres database
 #
@@ -151,8 +157,7 @@ else
 echo "user $db_owner already exists"
 fi
 
-sudo su postgres -c "psql -l" | grep "^ $kraken_db_name "
-if [ ! $? ]
+if ! sudo su postgres -c "psql -l" | grep "^ $kraken_db_name "
 then
 sudo su postgres -c "psql -c \"create database $kraken_db_name owner $db_owner; \""
 sudo su postgres -c "psql -c \"create extension postgis; \" $kraken_db_name"
@@ -166,29 +171,85 @@ fi
 username=$db_owner server=localhost dbname=$kraken_db_name PGPASSWORD=$kraken_db_user_password $navitia_dir/source/scripts/update_db.sh
 
 
-#Running
-#=======
+#====================
+# Filling up the data
+#====================
 
 # ** filling up the database **
 
 # we need to import the gtfs data
 #$navitia_build_dir/ed/gtfs2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
-
-# we need to import the osm data
+#
+## we need to import the osm data
 #$navitia_build_dir/ed/osm2ed -i $osm_file --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
+#
+## then we export the database into kraken's custom file format
+#$navitia_build_dir/ed/ed2nav -o $run_dir/data.nav.lz4 --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
 
-# then we export the database into kraken's custom file format
-$navitia_build_dir/ed/ed2nav -o $run_dir/data.nav.lz4 --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
+#========
+# Running
+#========
 
-# it's almost done, we now need to pop jormungandr (the python front end)
-# the configuration is in the source/jormungandr/jormungandr/settings.py file
-# default should be enough for the moment
+# * Kraken * 
+echo "** running kraken"
+# we now need to pop the kraken
 
-#TODO honcho start with procfile
+# Note we run Jormungandr and kraken in the same shell so the output might be messy
 
-#TODO kraken
+# We have to create the kraken configuration file
+cat << EOF > $run_dir/kraken.ini
+[GENERAL]
+#file to load
+database = data.nav.lz4
+#ipc socket in default.ini file in the jormungandr instances dir
+zmq_socket = ipc:///tmp/default_kraken
+#number of threads
+nb_threads = 1
+#name of the instance
+instance_name=default
+[LOG]
+log4cplus.rootLogger=DEBUG, ALL_MSGS
 
-#TODO curl
-echo "query on api endpoint: curl localhost:5000"
-echo "$(curl localhost:5000)"
+log4cplus.appender.ALL_MSGS=log4cplus::FileAppender
+log4cplus.appender.ALL_MSGS.File=kraken.log
+log4cplus.appender.ALL_MSGS.layout=log4cplus::PatternLayout
+log4cplus.appender.ALL_MSGS.layout.ConversionPattern=[%D{%y-%m-%d %H:%M:%S,%q}] %b:%L [%-5p] - %m %n
+EOF
 
+# WARNING, for the moment you have to run it in the kraken.ini directory
+cd $run_dir
+$navitia_build_dir/kraken/kraken &
+
+# * Jormungandr *
+echo "** running jormungandr"
+# it's almost done, we now need to pop Jormungandr (the python front end)
+
+# Jormungandr need to know how to call the kraken
+# The configuration for that is handle by a repository where every kraken is referenced by a .ini file
+mkdir -p $run_dir/jormungandr
+
+# For our test we only need one kraken
+cat << EOFJ > $run_dir/jormungandr/default.ini 
+[instance]
+# name of the kraken
+key = default
+# zmq socket used to talk to the kraken, should be the same as the one defined by the zmq_socket param in kraken
+socket = ipc:///tmp/default_kraken
+EOFJ
+
+# the Jormungnandr configuration is in the source/jormungandr/jormungandr/default_settings.py file
+# should be almost enough for the moment, we just need to change the location of the krakens configuration
+sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," $navitia_dir/source/jormungandr/jormungandr/default_settings.py > $run_dir/jormungandr_settings.py
+
+JORMUNGANDR_CONFIG_FILE=$run_dir/jormungandr_settings.py PYTHONPATH=$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr python $navitia_dir/source/jormungandr/jormungandr/manage.py runserver & 
+
+
+echo "That's it!"
+echo "you can now play with the api"
+echo "Note: you might have to wait a bit for the service to load the data"
+echo "open another shell and try for example:"
+echo "curl localhost:5000/v1/coverage/default/stop_areas"
+
+#we block the script for the user to test the api
+echo "when you are finished, hit CTRL+C to close kraken and jormungandr"
+wait
