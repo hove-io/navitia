@@ -27,7 +27,9 @@ void completion(const char *buf, linenoiseCompletions *lc) {
         linenoiseAddCompletion(lc,"ptref");
     } 
 }
-
+/* This program takes a path to a nav.lz4 navitia's file
+ * It will be loaded at the begginning of the program
+ */
 int main(int argc, char **argv) {
     if (argc < 2) {
         std::cerr << "A filename is needed" << std::endl;
