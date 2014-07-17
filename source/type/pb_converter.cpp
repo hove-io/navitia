@@ -82,6 +82,10 @@ void fill_pb_object(const navitia::georef::Admin* adm, const nt::Data&,
 }
 
 
+void fill_pb_object(const nt::Contributor*,
+                    const nt::Data& , pbnavitia::Contributor* ,
+                    int , const pt::ptime& ,
+                    const pt::time_period& , const bool ){}
 void fill_pb_object(const nt::StopArea * sa,
                     const nt::Data& data, pbnavitia::StopArea* stop_area,
                     int max_depth, const pt::ptime& now,
