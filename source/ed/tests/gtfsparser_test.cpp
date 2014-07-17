@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(required_files) {
     {
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) +  gtfs_path + "_sans_"+file);
-        BOOST_REQUIRE_THROW(parser.fill(data, "20130305"), ed::connectors::FileNotFoundException);
+        BOOST_REQUIRE_THROW(parser.fill(data, "20110105"), ed::connectors::FileNotFoundException);
     }
 }
 
@@ -213,20 +213,6 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(parse_raw_gtfs){
-    ed::Data data;
-    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-    parser.fill(data);
-    data.complete();
-    //data.clean();
-    //data.sort();
-    std::cout << "Journey patterns size : " << data.journey_patterns.size() << std::endl;
-    for(auto vj : data.vehicle_journeys)
-        std::cout << vj->uri << "  " << vj->journey_pattern->uri << "  "<<
-            vj->journey_pattern->route->uri << "  "<< vj->journey_pattern->route->line->uri <<
-            std::endl;
-}
-
 BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     /*
      * use import the google gtfs example file with one difference, the time zone "America/Los_Angeles" of the dataset
@@ -324,6 +310,8 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     BOOST_REQUIRE(data.stops[0]->tmp_stop_point != nullptr);
     BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
+
+    data.complete();
 }
 
 
