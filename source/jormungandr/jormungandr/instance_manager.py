@@ -119,7 +119,7 @@ class InstanceManager(object):
             self.instances[conf.get('instance', 'key')] = instance
 
         #we fetch the krakens metadata first
-        # not on the ping thread to always have the data available (for the tests for example
+        # not on the ping thread to always have the data available (for the tests for example)
         self.init_kraken_instances()
 
         self.thread_event = Event()
