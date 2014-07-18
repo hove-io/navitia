@@ -139,7 +139,8 @@ void fill_pb_placemark(const navitia::georef::POI* poi, const type::Data &data, 
 
 void fill_pb_placemark(const type::EntryPoint& origin, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes = false);
 
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination, boost::posix_time::ptime time,

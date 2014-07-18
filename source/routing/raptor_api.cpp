@@ -142,6 +142,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     const auto walking_time = temp.duration;
                     departure_time = path.items.front().departure - walking_time.to_posix();
                     fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure_time);
+                    auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
+                    bt::time_period action_period(boost::posix_time::from_iso_string(section->begin_date_time()),
+                                                  boost::posix_time::from_iso_string(section->end_date_time()));
+                    // We had coherence with the origin of the request
+                    fill_pb_placemark(origin, d, section->mutable_origin(), 2, now, action_period, show_codes);
+                    // We had coherence with the first pt section
+                    fill_pb_placemark(departure_stop_point, d, section->mutable_destination(), 2, now, action_period, show_codes);
                 }
             }
         }
@@ -282,6 +289,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                                 begin_section_time);
                         arrival_time = arrival_time + temp.duration.to_posix();
                     }
+                    // We had coherence with the last pt section
+                    auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
+                    bt::time_period action_period(boost::posix_time::from_iso_string(section->begin_date_time()),
+                                                  boost::posix_time::from_iso_string(section->end_date_time()));
+                    fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
+                    //We had coherence with the destination object of the request
+                    fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
                 }
             }
         }

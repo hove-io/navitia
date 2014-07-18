@@ -881,16 +881,16 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
 
 void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
                        pbnavitia::Place* place, int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
+                       const pt::time_period& action_period, const bool show_codes) {
     if (point.type == type::Type_e::StopPoint) {
         const auto it = data.pt_data->stop_points_map.find(point.uri);
         if (it != data.pt_data->stop_points_map.end()) {
-            fill_pb_placemark(it->second, data, place, max_depth, now, action_period);
+            fill_pb_placemark(it->second, data, place, max_depth, now, action_period, show_codes);
         }
     } else if (point.type == type::Type_e::StopArea) {
         const auto it = data.pt_data->stop_areas_map.find(point.uri);
         if (it != data.pt_data->stop_areas_map.end()) {
-            fill_pb_placemark(it->second, data, place, max_depth, now, action_period);
+            fill_pb_placemark(it->second, data, place, max_depth, now, action_period, show_codes);
         }
     } else if (point.type == type::Type_e::POI) {
         const auto it = data.geo_ref->poi_map.find(point.uri);
