@@ -342,7 +342,7 @@ struct Autocomplete
                 quality.idx = i;
                 quality.nb_found = wordCount;
                 quality.word_len = wordLength;
-                quality.quality = calc_quality_fl(quality, wordweight, max_score);
+                quality.quality = 100 - (max_score - word_quality_list.at(quality.idx).score)/10;
                 vec_quality.push_back(quality);
             }
         }
@@ -419,21 +419,6 @@ struct Autocomplete
         for(auto i : found){
             fl_result[i].nb_found++;
         }
-    }
-
-    int calc_quality_fl(const fl_quality & ql,  int wordweight, int max_score) const {
-        int result = 100;
-
-        //Qualité sur le nombres des mot trouvé
-        result -= (word_quality_list.at(ql.idx).word_count - ql.nb_found) * wordweight;//coeff  WordFound
-
-        //Qualité sur la distance globale des mots.
-        if (object_type != navitia::type::Type_e::StopArea)
-            result -= (word_quality_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1
-
-        //Qualité sur le score
-        result -= (max_score - word_quality_list.at(ql.idx).score)/10;
-        return result;
     }
 
     int calc_quality_pattern(const fl_quality & ql,  int wordweight, int max_score, int patt_count) const {

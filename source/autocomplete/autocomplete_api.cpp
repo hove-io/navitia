@@ -331,7 +331,13 @@ pbnavitia::Response autocomplete(const std::string &q,
     }
 
     auto compare = [](pbnavitia::Place a, pbnavitia::Place b){
-        return a.quality() > b.quality();
+        //return a.quality() > b.quality();
+        if (a.quality() == b.quality()){
+            return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
+        }
+        else {
+            return a.quality() > b.quality();
+        }
     };
 
     //Trier le résultat partiallement jusqu'au nbmax(10 par défaut) eléments et supprimer le reste.
