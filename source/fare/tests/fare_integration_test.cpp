@@ -97,15 +97,16 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
 
     BOOST_REQUIRE_EQUAL(pb_fare.ticket_id_size(), 2);
 
-    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
-    auto section = journey.sections(0);
-    BOOST_CHECK_EQUAL(section.id(), "section_0");
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 5);
+    // The first section is the crowfly
+    auto section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.id(), "section_1");
     BOOST_CHECK_EQUAL(section.origin().name(), "stop1");
     BOOST_CHECK_EQUAL(section.destination().name(), "stop2");
-    section = journey.sections(1);
-    BOOST_CHECK_EQUAL(section.id(), "section_1");//section_1 is the transfert
     section = journey.sections(2);
-    BOOST_CHECK_EQUAL(section.id(), "section_2");
+    BOOST_CHECK_EQUAL(section.id(), "section_2");//section_1 is the transfer
+    section = journey.sections(3);
+    BOOST_CHECK_EQUAL(section.id(), "section_3");
     BOOST_CHECK_EQUAL(section.origin().name(), "stop2");
     BOOST_CHECK_EQUAL(section.destination().name(), "stop5");
 
@@ -119,11 +120,11 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].cost().value(), 100);
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].cost().currency(), "euro");
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].section_id_size(), 1);
-    BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].section_id(0), "section_0");
+    BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].section_id(0), "section_1");
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].name(), "price2");
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].cost().value(), 200);
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].cost().currency(), "euro");
-    BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].section_id(0), "section_2");
+    BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].section_id(0), "section_3");
 
 }
 
