@@ -43,6 +43,8 @@ namespace navitia { namespace cli {
         po::options_description desc;
         std::string start, target, date;
         po::variables_map vm;
+        std::unique_ptr<nr::RAPTOR> raptor;
+        nt::Data data;
 
         compute_options() : desc("Simple journey computation"){
             desc.add_options()
@@ -52,7 +54,8 @@ namespace navitia { namespace cli {
             ("counterclockwise,c", "Counter-clockwise search")
             ("protobuf,p", "Full-output");
         }
-        bool compute(const boost::program_options::variables_map& vm, nr::RAPTOR& raptor);
+        bool compute();
+        void load(const std::string &file);
         private:
         void show_section(const pbnavitia::Section& section);
     };

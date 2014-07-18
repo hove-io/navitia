@@ -65,14 +65,11 @@ int main(int argc, char **argv) {
         std::cerr << "A filename is needed" << std::endl;
         return 1;
     }
-    std::string start, target, date;
-    nt::Data data;
-    data.load(std::string(argv[1]));
+
     navitia::cli::compute_options compute_opt;
+    compute_opt.load(argv[1]);
     po::variables_map vm;
     char *line;
-
-    nr::RAPTOR raptor(data);
     /* Parse options, with --multiline we enable multi line editing. */
     linenoiseSetCompletionCallback(completion);
     linenoiseHistoryLoad("history.txt"); /* Load the history at startup */
@@ -85,9 +82,9 @@ int main(int argc, char **argv) {
             continue;
         }
         if (splitted_line[0] == "journey") {
-            po::store(po::command_line_parser(splitted_line).options(compute_opt.desc).run(), vm);
-            po::notify(vm);
-            compute_opt.compute(vm, raptor);
+            po::store(po::command_line_parser(splitted_line).options(compute_opt.desc).run(), compute_opt.vm);
+            po::notify(compute_opt.vm);
+            compute_opt.compute();
         } else if (splitted_line[0] == "ptref") {
             if (splitted_line.size() < 2) {
                 std::cerr << "an ID is needed" << std::endl;
@@ -95,10 +92,10 @@ int main(int argc, char **argv) {
             }
             const std::string id = splitted_line[1];
             #define SHOW_ID_CLI(type_name, collection_name) \
-            auto collection_name##_map = data.pt_data->collection_name##_map;\
+            auto collection_name##_map = compute_opt.data.pt_data->collection_name##_map;\
             if ( collection_name##_map.find(id) != collection_name##_map.end()) {\
                 pbnavitia::type_name p;\
-                navitia::fill_pb_object(collection_name##_map.at(id), data, &p);\
+                navitia::fill_pb_object(collection_name##_map.at(id), compute_opt.data, &p);\
                 std::cout << p.DebugString() << std::endl;}
             ITERATE_NAVITIA_PT_TYPES(SHOW_ID_CLI)
         }
