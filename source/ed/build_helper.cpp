@@ -388,6 +388,10 @@ void builder::connection(const std::string & name1, const std::string & name2, f
      }
  }
 
+/*
+1. Initilise the first admin in the list to all stop_area and way
+2. Used for the autocomplete functional tests.
+*/
  void builder::manage_admin() {
      if (!data->geo_ref->admins.empty()) {
          navitia::georef::Admin * admin = data->geo_ref->admins[0];
