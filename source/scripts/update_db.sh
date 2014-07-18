@@ -16,7 +16,6 @@ set -e
 
 
 function mandatory() {
-echo "$1 => ${!var}"
 var=$1
 if [ -z "${!var}" ]
 then
@@ -25,7 +24,6 @@ then
 fi
 }
 
-echo "username $username"
 mandatory username
 mandatory server
 mandatory dbname
@@ -33,7 +31,6 @@ mandatory PGPASSWORD
 
 if [ "a$sql_dir" == "a" ]
 then
-    echo "0 $0"
     sql_dir=`dirname $0`/../sql/ed
 fi
 

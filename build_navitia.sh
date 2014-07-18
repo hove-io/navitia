@@ -9,6 +9,7 @@
 #
 # Here is a step by step guide for running navitia on a Ubuntu 14.04
 #
+#
 # It's more an install guide but it can help as an out-of-a-box build script
 # the prerequisite the run that script is to have cloned the sources repository
 #
@@ -16,6 +17,14 @@
 #
 # and to be in the cloned repository:
 # cd navitia
+
+# /!\ WARNING /!\
+# the script needs the sudo privileges for dependencies install and databases handling
+# If used as an out of the box script be sure to read it beforehand
+echo "!WARNING!"
+echo "The script needs to install dependencies and update databases so it needs some privileges"
+echo "It will thus prompt for your password"
+echo "Make sure to review what the script is doing and check if you are ok with it"
 
 #stop on errors
 set -e
@@ -112,7 +121,7 @@ git submodule update --init
 #Building
 #========
 #
-#First you need to install all dependecies. 
+#First you need to install all dependencies. 
 #
 #first the system and the c++ dependencies: 
 if [ $install_dependencies ]
@@ -159,7 +168,7 @@ fi
 
 if ! sudo su postgres -c "psql -l" | grep "^ $kraken_db_name "
 then
-sudo su postgres -c "psql -c \"create database $kraken_db_name owner $db_owner; \""
+sudo su postgres -c "createdb $kraken_db_name -O $db_owner"
 sudo su postgres -c "psql -c \"create extension postgis; \" $kraken_db_name"
 else 
 echo "db $kraken_db_name already exists"
@@ -178,13 +187,13 @@ username=$db_owner server=localhost dbname=$kraken_db_name PGPASSWORD=$kraken_db
 # ** filling up the database **
 
 # we need to import the gtfs data
-#$navitia_build_dir/ed/gtfs2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
-#
-## we need to import the osm data
-#$navitia_build_dir/ed/osm2ed -i $osm_file --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
-#
-## then we export the database into kraken's custom file format
-#$navitia_build_dir/ed/ed2nav -o $run_dir/data.nav.lz4 --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
+$navitia_build_dir/ed/gtfs2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
+
+# we need to import the osm data
+$navitia_build_dir/ed/osm2ed -i $osm_file --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
+
+# then we export the database into kraken's custom file format
+$navitia_build_dir/ed/ed2nav -o $run_dir/data.nav.lz4 --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
 
 #========
 # Running
