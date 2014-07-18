@@ -387,28 +387,4 @@ void builder::connection(const std::string & name1, const std::string & name2, f
          }
      }
  }
-
-/*
-1. Initilise the first admin in the list to all stop_area and way
-2. Used for the autocomplete functional tests.
-*/
- void builder::manage_admin() {
-     if (!data->geo_ref->admins.empty()) {
-         navitia::georef::Admin * admin = data->geo_ref->admins[0];
-        for(navitia::type::StopArea* sa : data->pt_data->stop_areas){
-            sa->admin_list.clear();
-            sa->admin_list.push_back(admin);
-        }
-
-        for(navitia::georef::Way * way : data->geo_ref->ways) {
-            way->admin_list.clear();
-            way->admin_list.push_back(admin);
-        }
-     }
- }
-
- void builder::build_autocomplete() {
-    data->pt_data->build_autocomplete(*(data->geo_ref));
-    data->geo_ref->build_autocomplete_list();
- }
 }
