@@ -48,7 +48,7 @@ namespace navitia { namespace cli {
                 data.load(file);
             }
             data.build_raptor();
-            raptor = new nr::RAPTOR(data);
+            raptor = std::unique_ptr<nr::RAPTOR>(new nr::RAPTOR(data));
         }
 
         bool compute_options::compute() {

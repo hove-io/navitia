@@ -43,7 +43,7 @@ namespace navitia { namespace cli {
         po::options_description desc;
         std::string start, target, date;
         po::variables_map vm;
-        nr::RAPTOR* raptor;
+        std::unique_ptr<nr::RAPTOR> raptor;
         nt::Data data;
 
         compute_options() : desc("Simple journey computation"){
