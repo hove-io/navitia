@@ -103,12 +103,33 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_journey->set_nb_transfers(path.nb_changes);
         pb_journey->set_requested_date_time(navitia::to_iso_string_no_fractional(path.request_time));
 
-        // First streetnetwork item if it starts with coordinates
-        if(!path.items.empty() && !path.items.front().stop_points.empty()) {
-            const auto& departure_stop_point = path.items.front().stop_points.front();
-            // for stop areas, we don't want to display the fallback section if start
-            // from one of the stop area's stop point
-            if (origin.uri != departure_stop_point->stop_area->uri) {
+        if (path.items.empty()) {
+            continue;
+        }
+        /*
+         * For the first section, we can distinguish 2 cases
+         * 1) We start from an area, we will add a crow fly section from the centroid of the area
+         *    to the origin stop point of the first section
+         * 2) We start from a ponctual place (everything but stop_area or admin)
+         * We had a street network section from this place to the departure of the first pt_section
+         * If the uri of the origin point and the uri of the departure of the first section are the
+         * same we do nothing
+         * */
+
+        if (origin.type == type::Type_e::Admin || origin.type == type::Type_e::StopArea) {
+            if (path.items.front().stop_times.empty()) {
+                continue;
+            }
+            const auto sp_dest = path.items.front().stop_times.front()->journey_pattern_point->stop_point;
+            type::EntryPoint destination(type::Type_e::StopPoint, sp_dest->uri);
+            bt::time_period action_period(path.items.front().departures.front(),
+                                          path.items.front().departures.front()+bt::minutes(1));
+            fill_crowfly_section(origin, destination, path.items.front().departures.front(),
+                                 d, enhanced_response, pb_journey, now, action_period);
+
+        } else {
+            if(!path.items.front().stop_points.empty()) {
+                const auto& departure_stop_point = path.items.front().stop_points.front();
                 auto temp = worker.get_path(departure_stop_point->idx);
                 if(temp.path_items.size() > 0) {
                     //because of projection problem, the walking path might not join exactly the routing one
@@ -124,6 +145,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 }
             }
         }
+        // Here we make origin and departure consistent with the parameters and the first section
 
         const type::VehicleJourney* vj(nullptr);
         size_t item_idx(0);
@@ -230,24 +252,36 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             arrival_time = item.arrival;
             pb_section->set_duration((item.arrival - item.departure).total_seconds());
         }
-        // La marche à pied finale si on avait donné une coordonnée
-        if(!path.items.empty() && !path.items.back().stop_points.empty()) {
-            const auto& arrival_stop_point = path.items.back().stop_points.back();
-            // for stop areas, we don't want to display the fallback section if start
-            // from one of the stop area's stop point
-            if (destination.uri != arrival_stop_point->stop_area->uri) {
-                auto temp = worker.get_path(arrival_stop_point->idx, true);
-                if(temp.path_items.size() > 0) {
-                   //add a junction between the routing path and the walking one if needed
-                    nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
-                    if (temp.path_items.front().coordinates.front() != routing_last_coord) {
-                        temp.path_items.front().coordinates.push_front(routing_last_coord);
-                    }
 
-                    auto begin_section_time = arrival_time;
-                    fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
-                            begin_section_time);
-                    arrival_time = arrival_time + temp.duration.to_posix();
+        if (destination.type == type::Type_e::Admin || destination.type == type::Type_e::StopArea) {
+            if (path.items.back().stop_times.empty()) {
+                continue;
+            }
+            const auto sp_orig = path.items.back().stop_times.back()->journey_pattern_point->stop_point;
+            type::EntryPoint origin(type::Type_e::StopPoint, sp_orig->uri);
+            bt::time_period action_period(path.items.back().departures.back(),
+                                          path.items.back().departures.back()+bt::minutes(1));
+            fill_crowfly_section(origin, destination,path.items.back().departures.back(),
+                                 d, enhanced_response, pb_journey, now, action_period);
+        } else {
+            if(!path.items.empty() && !path.items.back().stop_points.empty()) {
+                const auto& arrival_stop_point = path.items.back().stop_points.back();
+                // for stop areas, we don't want to display the fallback section if start
+                // from one of the stop area's stop point
+                if (destination.uri != arrival_stop_point->stop_area->uri) {
+                    auto temp = worker.get_path(arrival_stop_point->idx, true);
+                    if(temp.path_items.size() > 0) {
+                       //add a junction between the routing path and the walking one if needed
+                        nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
+                        if (temp.path_items.front().coordinates.front() != routing_last_coord) {
+                            temp.path_items.front().coordinates.push_front(routing_last_coord);
+                        }
+
+                        auto begin_section_time = arrival_time;
+                        fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
+                                begin_section_time);
+                        arrival_time = arrival_time + temp.duration.to_posix();
+                    }
                 }
             }
         }
