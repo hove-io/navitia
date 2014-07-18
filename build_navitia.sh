@@ -29,8 +29,16 @@ echo "Make sure to review what the script is doing and check if you are ok with 
 #stop on errors
 set -e
 
+kraken_pid=
+jormun_pid=
+clean_exit()
+{
 #kill the background job at the end
-trap 'kill $(jobs -p)' EXIT
+ echo "killing kraken (pid=$kraken_pid) and jormungandr (pid=$jormun_pid)";
+ kill $kraken_pid
+ kill -TERM $jormun_pid
+ exit 0
+}
 
 kraken_db_user_password=
 navitia_dir=`dirname $(readlink -f $0)`
@@ -186,14 +194,14 @@ username=$db_owner server=localhost dbname=$kraken_db_name PGPASSWORD=$kraken_db
 
 # ** filling up the database **
 
-# we need to import the gtfs data
-$navitia_build_dir/ed/gtfs2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
-
-# we need to import the osm data
-$navitia_build_dir/ed/osm2ed -i $osm_file --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
-
-# then we export the database into kraken's custom file format
-$navitia_build_dir/ed/ed2nav -o $run_dir/data.nav.lz4 --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
+## we need to import the gtfs data
+#$navitia_build_dir/ed/gtfs2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
+#
+## we need to import the osm data
+#$navitia_build_dir/ed/osm2ed -i $osm_file --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
+#
+## then we export the database into kraken's custom file format
+#$navitia_build_dir/ed/ed2nav -o $run_dir/data.nav.lz4 --connection-string="host=localhost user=$db_owner password=$kraken_db_user_password"
 
 #========
 # Running
@@ -229,6 +237,8 @@ EOF
 cd $run_dir
 $navitia_build_dir/kraken/kraken &
 
+kraken_pid=$!
+
 # * Jormungandr *
 echo "** running jormungandr"
 # it's almost done, we now need to pop Jormungandr (the python front end)
@@ -250,8 +260,9 @@ EOFJ
 # should be almost enough for the moment, we just need to change the location of the krakens configuration
 sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," $navitia_dir/source/jormungandr/jormungandr/default_settings.py > $run_dir/jormungandr_settings.py
 
-JORMUNGANDR_CONFIG_FILE=$run_dir/jormungandr_settings.py PYTHONPATH=$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr python $navitia_dir/source/jormungandr/jormungandr/manage.py runserver & 
+JORMUNGANDR_CONFIG_FILE=$run_dir/jormungandr_settings.py PYTHONPATH=$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr python $navitia_dir/source/jormungandr/jormungandr/manage.py runserver -d -r & 
 
+jormun_pid=$!
 
 echo "That's it!"
 echo "you can now play with the api"
@@ -260,5 +271,6 @@ echo "open another shell and try for example:"
 echo "curl localhost:5000/v1/coverage/default/stop_areas"
 
 #we block the script for the user to test the api
-echo "when you are finished, hit CTRL+C to close kraken and jormungandr"
-wait
+read -p "when you are finished, hit  a key to close kraken and jormungandr" n
+#wait
+clean_exit
