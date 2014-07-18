@@ -272,5 +272,4 @@ echo "curl localhost:5000/v1/coverage/default/stop_areas"
 
 #we block the script for the user to test the api
 read -p "when you are finished, hit  a key to close kraken and jormungandr" n
-#wait
 clean_exit
