@@ -353,7 +353,6 @@ struct GeoRef {
 
     void add_way(const Way& w);
 
-    void add_admin(const Admin& a);
     ///Add the projected start and end to the path
     void add_projections(Path& p, const ProjectionData& start, const ProjectionData& end) const;
 

@@ -721,13 +721,13 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     b.sa("chaptal", 0, 0);
 
     b.data->pt_data->index();
-    Admin ad;
-    ad.name = "Quimper";
-    ad.uri = "Quimper";
-    ad.level = 8;
-    ad.post_code = "29000";
-    ad.idx = 0;
-    b.data->geo_ref->add_admin(ad);
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->post_code = "29000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
     b.build_autocomplete();
 
@@ -775,13 +775,13 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
     b.sa("chaptal", 0, 0);
 
     b.data->pt_data->index();
-    Admin ad;
-    ad.name = "Quimper";
-    ad.uri = "Quimper";
-    ad.level = 8;
-    ad.post_code = "29000";
-    ad.idx = 0;
-    b.data->geo_ref->add_admin(ad);
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->post_code = "29000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
     b.build_autocomplete();
 
@@ -821,13 +821,13 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     w.uri = w.name;
     b.data->geo_ref->add_way(w);
 
-    Admin ad;
-    ad.name = "Quimper";
-    ad.uri = "Quimper";
-    ad.level = 8;
-    ad.post_code = "29000";
-    ad.idx = 0;
-    b.data->geo_ref->add_admin(ad);
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->post_code = "29000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
     b.build_autocomplete();
 
