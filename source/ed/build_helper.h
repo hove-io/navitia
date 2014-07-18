@@ -113,8 +113,6 @@ struct builder{
     void build_blocks();
     void finish();
     void generate_dummy_basis();
-    void manage_admin();
-    void build_autocomplete();
 };
 
 }
