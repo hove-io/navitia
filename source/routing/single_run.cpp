@@ -44,30 +44,23 @@ namespace pb = pbnavitia;
 
 int main(int argc, char** argv) {
     po::options_description desc("Simple journey computation");
-    std::string start, target, date;
     std::string file;
-    nt::Data data;
     navitia::cli::compute_options compute_opt;
     desc.add_options()
             ("help", "Show help")
             ("file,f", po::value<std::string>(&file)->default_value("Path to data.nav.lz4"));
     desc.add(compute_opt.desc);
 
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+    po::store(po::parse_command_line(argc, argv, desc), compute_opt.vm);
+    po::notify(compute_opt.vm);
 
-    if (vm.count("help")) {
+    if (compute_opt.vm.count("help")) {
         std::cout << desc << std::endl;
         return 1;
     }
-    if (vm.count("file") == 0) {
+    if (compute_opt.vm.count("file") == 0) {
         std::cerr << "file parameter is required";
     }
-    {
-        Timer t("Loading datafile : " + file);
-        data.load(file);
-    }
-    nr::RAPTOR raptor(data);
-    compute_opt.compute(vm, raptor);
+    compute_opt.load(file);
+    compute_opt.compute();
 }
