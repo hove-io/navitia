@@ -246,7 +246,10 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     vehicle_properties_id BIGINT NULL REFERENCES navitia.vehicle_properties,
     theoric_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey,
     previous_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey,
-    next_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey
+    next_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey,
+    start_time INTEGER,
+    end_time INTEGER,
+    headway_sec INTEGER
 );
 
 ALTER TABLE navitia.vehicle_journey DROP COLUMN IF EXISTS physical_mode_id;
@@ -307,9 +310,6 @@ CREATE TABLE IF NOT EXISTS navitia.stop_time (
     arrival_time INTEGER,
     departure_time INTEGER,
     local_traffic_zone INTEGER,
-    start_time INTEGER,
-    end_time INTEGER,
-    headway_sec INTEGER,
     odt BOOLEAN NOT NULL,
     pick_up_allowed BOOLEAN NOT NULL,
     drop_off_allowed BOOLEAN NOT NULL,

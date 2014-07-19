@@ -630,11 +630,10 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
         return;
     auto vj_it = gtfs_data.vj_map.find(row[trip_id_c]);
     if(vj_it != gtfs_data.vj_map.end()) {
-        int begin = vj_it->second->stop_time_list.front()->arrival_time;
         for(auto st_it = vj_it->second->stop_time_list.begin(); st_it != vj_it->second->stop_time_list.end(); ++st_it) {
-            (*st_it)->start_time = time_to_int(row[start_time_c]) + (*st_it)->arrival_time - begin;
-            (*st_it)->end_time = time_to_int(row[end_time_c]) + (*st_it)->arrival_time - begin;
-            (*st_it)->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
+            (*st_it)->vehicle_journey->start_time = time_to_int(row[start_time_c]);
+            (*st_it)->vehicle_journey->end_time = time_to_int(row[end_time_c]) ;
+            (*st_it)->vehicle_journey->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
             (*st_it)->is_frequency = true;
         }
     }

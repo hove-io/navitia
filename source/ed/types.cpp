@@ -337,9 +337,6 @@ nt::StopTime* StopTime::get_navitia_type() const {
     nt::StopTime* nt_stop = new nt::StopTime();
     nt_stop->arrival_time = this->arrival_time;
     nt_stop->departure_time = this->departure_time;
-    nt_stop->start_time = this->start_time;
-    nt_stop->end_time = this->end_time;
-    nt_stop->headway_secs = this->headway_secs;
     nt_stop->properties[nt::StopTime::ODT] = this->ODT;
     nt_stop->properties[nt::StopTime::DROP_OFF] = this->drop_off_allowed;
     nt_stop->properties[nt::StopTime::PICK_UP] = this->pick_up_allowed;
@@ -386,6 +383,9 @@ nt::VehicleJourney* VehicleJourney::get_navitia_type() const {
     nt_vj->name = this->name;
     nt_vj->uri = this->uri;
     nt_vj->comment = this->comment;
+    nt_vj->start_time = this->start_time;
+    nt_vj->end_time = this->end_time;
+    nt_vj->headway_secs = this->headway_secs;
 
     if(this->company != NULL)
         nt_vj->company->idx = this->company->idx;

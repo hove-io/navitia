@@ -36,17 +36,24 @@ namespace pt = boost::posix_time;
 namespace ed {
 
 VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs) {
-    navitia::type::StopTime* first_st = vj->stop_time_list.front();
+    vj->start_time = start_time;
+
     size_t nb_trips = std::ceil((end_time - start_time)/headway_secs);
+    vj->end_time = start_time + ( nb_trips * headway_secs );
+    vj->headway_secs = headway_secs;
+
+    navitia::type::StopTime* first_st = vj->stop_time_list.front();
+    uint32_t begin = first_st->arrival_time;
     for(navitia::type::StopTime* st : vj->stop_time_list) {
         st->set_is_frequency(true);
-        st->start_time = start_time+(st->arrival_time - first_st->arrival_time);
-        st->end_time = start_time + nb_trips * headway_secs + (st->departure_time - first_st->departure_time);
-        st->headway_secs = headway_secs;
+        //For frequency based trips, make arrival and departure time relative from the first stop.
+        if (begin > 0){
+            st->arrival_time -= begin;
+            st->departure_time -= begin;
+        }
     }
     return *this;
 }
-
 
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri) : b(b){
     vj = new navitia::type::VehicleJourney();

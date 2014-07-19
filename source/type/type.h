@@ -687,6 +687,10 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
 
+    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
+    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
+    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
+
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
     // They have the same block id
@@ -712,7 +716,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & messages & associated_calendars
-            & codes & next_vj & prev_vj;
+            & codes & next_vj & prev_vj & start_time & end_time & headway_secs;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -838,9 +842,6 @@ struct StopTime {
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
     uint32_t arrival_time = 0; ///< En secondes depuis minuit
     uint32_t departure_time = 0; ///< En secondes depuis minuit
-    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence, premiere arrivee
-    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence, dernier depart
-    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence
     VehicleJourney* vehicle_journey = nullptr;
     JourneyPatternPoint* journey_pattern_point = nullptr;
     std::string comment;
@@ -910,7 +911,8 @@ struct StopTime {
         if(!this->is_frequency())
             return true;
         else
-            return clockwise ? hour <= this->end_time : this->start_time <= hour;
+            return clockwise ? hour <= (this->vehicle_journey->end_time+departure_time) :
+                              (this->vehicle_journey->start_time+arrival_time) <= hour;
     }
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
@@ -928,7 +930,7 @@ struct StopTime {
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point
+            ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
             & properties & local_traffic_zone & comment;
     }
 

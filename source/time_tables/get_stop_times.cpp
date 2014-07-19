@@ -63,7 +63,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
                     test_add = true;
                     // Le prochain horaire observé doit être au minimum une seconde après
                     if(st.first->is_frequency()) {
-                        DateTimeUtils::update(dt_temp, st.first->end_time);
+                        DateTimeUtils::update(dt_temp, st.first->vehicle_journey->end_time+st.first->departure_time);
                     }
                     next_requested_datetime[jpp_idx] = dt_temp + 1;
                 }

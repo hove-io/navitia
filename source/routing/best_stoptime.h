@@ -59,11 +59,10 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
           const type::VehicleProperties & vehicle_properties,
           const bool clockwise, bool disruption_active, const type::Data &data, bool reconstructing_path = false);
 
-/// Pour les horaires en frequences
-
+/// For timetables in frequency-model
 inline u_int32_t f_arrival_time(uint32_t hour, const type::StopTime* st) {
-    const u_int32_t lower_bound = st->start_time;
-    const u_int32_t higher_bound = st->end_time - (st->departure_time - st->arrival_time);
+    const u_int32_t lower_bound = st->vehicle_journey->start_time + st->arrival_time;
+    const u_int32_t higher_bound = st->vehicle_journey->end_time  + st->arrival_time;
     // If higher bound is overmidnight the hour can be either in [lower_bound;midnight] or in
     // [midnight;higher_bound]
     if((higher_bound < DateTimeUtils::SECONDS_PER_DAY && hour>=lower_bound && hour<=higher_bound) ||
@@ -72,10 +71,10 @@ inline u_int32_t f_arrival_time(uint32_t hour, const type::StopTime* st) {
                  || (hour + DateTimeUtils::SECONDS_PER_DAY) <= higher_bound) )) {
         if(hour < lower_bound)
             hour += DateTimeUtils::SECONDS_PER_DAY;
-        const uint32_t x = std::floor(double(hour - lower_bound) / double(st->headway_secs));
-        BOOST_ASSERT(x*st->headway_secs+lower_bound <= hour);
-        BOOST_ASSERT(((hour - (x*st->headway_secs+lower_bound))%DateTimeUtils::SECONDS_PER_DAY) <= st->headway_secs);
-        return lower_bound + x * st->headway_secs;
+        const uint32_t x = std::floor(double(hour - lower_bound) / double(st->vehicle_journey->headway_secs));
+        BOOST_ASSERT(x*st->vehicle_journey->headway_secs+lower_bound <= hour);
+        BOOST_ASSERT(((hour - (x*st->vehicle_journey->headway_secs+lower_bound))%DateTimeUtils::SECONDS_PER_DAY) <= st->vehicle_journey->headway_secs);
+        return lower_bound + x * st->vehicle_journey->headway_secs;
     } else {
         return higher_bound;
     }
@@ -83,8 +82,8 @@ inline u_int32_t f_arrival_time(uint32_t hour, const type::StopTime* st) {
 
 
 inline u_int32_t f_departure_time(uint32_t hour, const type::StopTime* st) {
-    const u_int32_t lower_bound = st->start_time + (st->departure_time - st->arrival_time);
-    const u_int32_t higher_bound = st->end_time;
+    const u_int32_t lower_bound = st->vehicle_journey->start_time + st->departure_time;;
+    const u_int32_t higher_bound = st->vehicle_journey->end_time + st->departure_time;;
     // If higher bound is overmidnight the hour can be either in [lower_bound;midnight] or in
     // [midnight;higher_bound]
     if((higher_bound < DateTimeUtils::SECONDS_PER_DAY && hour>=lower_bound && hour<=higher_bound) ||
@@ -93,10 +92,10 @@ inline u_int32_t f_departure_time(uint32_t hour, const type::StopTime* st) {
                  || (hour + DateTimeUtils::SECONDS_PER_DAY) <= higher_bound) )) {
         if(hour < lower_bound)
             hour += DateTimeUtils::SECONDS_PER_DAY;
-        const uint32_t x = std::ceil(double(hour - lower_bound) / double(st->headway_secs));
-        BOOST_ASSERT((x*st->headway_secs+lower_bound) >= hour);
-        BOOST_ASSERT((((x*st->headway_secs+lower_bound) - hour)%DateTimeUtils::SECONDS_PER_DAY) <= st->headway_secs);
-        return lower_bound + x * st->headway_secs;
+        const uint32_t x = std::ceil(double(hour - lower_bound) / double(st->vehicle_journey->headway_secs));
+        BOOST_ASSERT((x*st->vehicle_journey->headway_secs+lower_bound) >= hour);
+        BOOST_ASSERT((((x*st->vehicle_journey->headway_secs+lower_bound) - hour)%DateTimeUtils::SECONDS_PER_DAY) <= st->vehicle_journey->headway_secs);
+        return lower_bound + x * st->vehicle_journey->headway_secs;
     } else {
         return lower_bound;
     }

@@ -110,8 +110,9 @@ BOOST_AUTO_TEST_CASE(moins) {
 
 BOOST_AUTO_TEST_CASE(freq_stop_time_validation){
     type::StopTime st;
-    st.start_time = 8000;
-    st.end_time = 9000;
+    st.vehicle_journey = new type::VehicleJourney();
+    st.vehicle_journey->start_time = 8000;
+    st.vehicle_journey->end_time = 9000;
     st.properties.set(type::StopTime::IS_FREQUENCY);
     BOOST_CHECK(st.valid_hour(7999, true));
     BOOST_CHECK(st.valid_hour(8000, true));
@@ -124,8 +125,8 @@ BOOST_AUTO_TEST_CASE(freq_stop_time_validation){
     BOOST_CHECK(st.valid_hour(9000, false));
     BOOST_CHECK(st.valid_hour(9001, false));
 
-    st.start_time = 23 * 3600;
-    st.end_time = 26 * 3600;
+    st.vehicle_journey->start_time = 23 * 3600;
+    st.vehicle_journey->end_time = 26 * 3600;
     BOOST_CHECK(st.valid_hour(3600, true));
     BOOST_CHECK(st.valid_hour(22*3600, true));
     BOOST_CHECK(!st.valid_hour(22*3600 + 24*3600, true));
