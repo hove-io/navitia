@@ -703,10 +703,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool is_adapted;
 
     VehicleJourney(): journey_pattern(nullptr), company(nullptr),
-        validity_pattern(nullptr),
-        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false),
-        adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
-
+        validity_pattern(nullptr), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr),
+        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
