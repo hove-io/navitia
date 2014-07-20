@@ -683,26 +683,24 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     JourneyPattern* journey_pattern;
     Company* company;
     ValidityPattern* validity_pattern;
+    ValidityPattern* adapted_validity_pattern;
+    VehicleJourney* theoric_vehicle_journey;
     std::vector<StopTime*> stop_time_list;
-    VehicleJourneyType vehicle_journey_type;
-    std::string odt_message;
-
-    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
-    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
-    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
-
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
     // They have the same block id
     VehicleJourney* next_vj = nullptr;
     VehicleJourney* prev_vj = nullptr;
+    std::string odt_message;
     ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
-    bool is_adapted;
-    ValidityPattern* adapted_validity_pattern;
+    VehicleJourneyType vehicle_journey_type;
+    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
+    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
+    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
-    VehicleJourney* theoric_vehicle_journey;
+    bool is_adapted;
 
     VehicleJourney(): journey_pattern(nullptr), company(nullptr),
         validity_pattern(nullptr),
