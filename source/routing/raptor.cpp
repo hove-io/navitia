@@ -151,9 +151,9 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     b_dest.reinit(journey_pattern_points_size, bound);
     this->make_queue();
     if(clockwise)
-        best_labels.assign(journey_pattern_points_size, DateTimeUtils::inf);
+        std::fill(best_labels.begin(),best_labels.end(),DateTimeUtils::inf);
     else
-        best_labels.assign(journey_pattern_points_size, DateTimeUtils::min);
+        std::fill(best_labels.begin(),best_labels.end(),DateTimeUtils::min);
 }
 
 
