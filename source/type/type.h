@@ -896,12 +896,12 @@ struct StopTime {
         }
     }
 
-    inline uint32_t end_time() const {
-        return this->vehicle_journey->end_time + this->departure_time;
+    inline uint32_t end_time(const bool is_departure) const {
+        return vehicle_journey->end_time + (is_departure? departure_time : arrival_time);
     }
 
-    inline uint32_t start_time() const {
-        return this->vehicle_journey->start_time + this->arrival_time;
+    inline uint32_t start_time(const bool is_departure) const {
+        return vehicle_journey->start_time + (is_departure? departure_time : arrival_time);
     }
 
     DateTime section_end_date(int date, bool clockwise) const {
@@ -917,7 +917,7 @@ struct StopTime {
         if(!this->is_frequency())
             return true;
         else
-            return clockwise ? hour <= (this->end_time()) :
+            return clockwise ? hour <= (this->end_time(true)) :
                               (this->vehicle_journey->start_time+arrival_time) <= hour;
     }
 
