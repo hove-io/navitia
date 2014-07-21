@@ -896,7 +896,17 @@ struct StopTime {
         }
     }
 
-    DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);}
+    inline uint32_t end_time() const {
+        return this->vehicle_journey->end_time + this->departure_time;
+    }
+
+    inline uint32_t start_time() const {
+        return this->vehicle_journey->start_time + this->arrival_time;
+    }
+
+    DateTime section_end_date(int date, bool clockwise) const {
+        return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);
+    }
 
 
     /** Is this hour valid : only concerns frequency data
