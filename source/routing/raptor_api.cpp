@@ -121,11 +121,19 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 continue;
             }
             const auto sp_dest = path.items.front().stop_times.front()->journey_pattern_point->stop_point;
-            type::EntryPoint destination(type::Type_e::StopPoint, sp_dest->uri);
+            type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
                                           path.items.front().departures.front()+bt::minutes(1));
-            fill_crowfly_section(origin, destination, path.items.front().departures.front(),
+            fill_crowfly_section(origin, destination_tmp, path.items.front().departures.front(),
                                  d, enhanced_response, pb_journey, now, action_period);
+            // If we start from a stop_area, and the last stop point is not from that stop_area,
+            // we indicate a time.
+            if (origin.type == type::Type_e::StopArea && origin.uri != sp_dest->stop_area->uri) {
+                auto duration = worker.get_distance(sp_dest->idx);
+                if (!duration.is_pos_infinity() && !duration.is_neg_infinity() && !duration.is_not_a_date_time()) {
+                    pb_journey->mutable_sections(0)->set_duration(duration.total_seconds());
+                }
+            }
 
         } else {
             if(!path.items.front().stop_points.empty()) {
@@ -265,11 +273,20 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 continue;
             }
             const auto sp_orig = path.items.back().stop_times.back()->journey_pattern_point->stop_point;
-            type::EntryPoint origin(type::Type_e::StopPoint, sp_orig->uri);
+            type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
                                           path.items.back().departures.back()+bt::minutes(1));
-            fill_crowfly_section(origin, destination,path.items.back().departures.back(),
+            fill_crowfly_section(origin_tmp, destination,path.items.back().departures.back(),
                                  d, enhanced_response, pb_journey, now, action_period);
+            // If we go to a stop_area, and the last stop point is not from that stop_area,
+            // we indicate a time.
+            if (destination.type == type::Type_e::StopArea &&
+                    destination.uri != sp_orig->stop_area->uri && pb_journey->sections_size() > 0) {
+                auto duration = worker.get_distance(sp_orig->idx, true);
+                if (!duration.is_pos_infinity() && !duration.is_neg_infinity() && !duration.is_not_a_date_time()) {
+                    pb_journey->mutable_sections(pb_journey->sections_size()-1)->set_duration(duration.total_seconds());
+                }
+            }
         } else {
             if(!path.items.empty() && !path.items.back().stop_points.empty()) {
                 const auto& arrival_stop_point = path.items.back().stop_points.back();
