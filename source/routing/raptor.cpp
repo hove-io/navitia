@@ -277,13 +277,13 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
         valid_journey_patterns = data.dataRaptor->jp_validity_patterns[date];
     }
     valid_journey_pattern_points.set();
-    boost::dynamic_bitset<> forbidden_journey_patterns(data.pt_data->journey_patterns.size(), false);
+    // We will forbiden every object designated in forbidden
     for (const auto& uri : forbidden) {
         const auto it_line = data.pt_data->lines_map.find(uri);
         if (it_line != data.pt_data->lines_map.end()) {
             for (const auto route : it_line->second->route_list) {
                 for (const auto jp  : route->journey_pattern_list) {
-                    forbidden_journey_patterns.set(jp->idx);
+                    valid_journey_patterns.set(jp->idx, false);
                 }
             }
             continue;
@@ -291,7 +291,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
         const auto it_route = data.pt_data->routes_map.find(uri);
         if (it_route != data.pt_data->routes_map.end()) {
             for (const auto jp  : it_route->second->journey_pattern_list) {
-                forbidden_journey_patterns.set(jp->idx);
+                valid_journey_patterns.set(jp->idx, false);
             }
             continue;
         }
@@ -300,7 +300,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
             for (const auto line : it_commercial_mode->second->line_list) {
                 for (auto route : line->route_list) {
                     for (const auto jp  : route->journey_pattern_list) {
-                        forbidden_journey_patterns.set(jp->idx);
+                        valid_journey_patterns.set(jp->idx, false);
                     }
                 }
             }
@@ -309,7 +309,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
         const auto it_physical_mode = data.pt_data->physical_modes_map.find(uri);
         if (it_physical_mode != data.pt_data->physical_modes_map.end()) {
             for (const auto jp  : it_physical_mode->second->journey_pattern_list) {
-                forbidden_journey_patterns.set(jp->idx);
+                valid_journey_patterns.set(jp->idx, false);
             }
             continue;
         }
@@ -318,7 +318,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
             for (const auto line : it_network->second->line_list) {
                 for (const auto route : line->route_list) {
                     for (const auto jp  : route->journey_pattern_list) {
-                        forbidden_journey_patterns.set(jp->idx);
+                        valid_journey_patterns.set(jp->idx, false);
                     }
                 }
             }
@@ -326,7 +326,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
         }
         const auto it_jp = data.pt_data->journey_patterns_map.find(uri);
         if (it_jp != data.pt_data->journey_patterns_map.end()) {
-            forbidden_journey_patterns.set(it_jp->second->idx);
+            valid_journey_patterns.set(it_jp->second->idx, false);
         }
         const auto it_jpp = data.pt_data->journey_pattern_points_map.find(uri);
         if (it_jpp !=  data.pt_data->journey_pattern_points_map.end()) {
@@ -353,12 +353,11 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
     if (!allow_odt) {
         for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
             if (journey_pattern->odt_level == type::OdtLevel_e::zonal) {
-                    forbidden_journey_patterns.set(journey_pattern->idx);
+                    valid_journey_patterns.set(journey_pattern->idx, false);
                     continue;
             }
         }
     }
-    valid_journey_patterns &= ~forbidden_journey_patterns;
 }
 
 template<typename Visitor>
