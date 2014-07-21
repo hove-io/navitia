@@ -276,42 +276,89 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
     }else{
         valid_journey_patterns = data.dataRaptor->jp_validity_patterns[date];
     }
-    boost::dynamic_bitset<> forbidden_journey_patterns(data.pt_data->journey_patterns.size());
-    for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
-        if ((!allow_odt) && (journey_pattern->odt_level == type::OdtLevel_e::zonal)){
-            forbidden_journey_patterns.set(journey_pattern->idx);
+    valid_journey_pattern_points.set();
+    boost::dynamic_bitset<> forbidden_journey_patterns(data.pt_data->journey_patterns.size(), false);
+    for (const auto& uri : forbidden) {
+        const auto it_line = data.pt_data->lines_map.find(uri);
+        if (it_line != data.pt_data->lines_map.end()) {
+            for (const auto route : it_line->second->route_list) {
+                for (const auto jp  : route->journey_pattern_list) {
+                    forbidden_journey_patterns.set(jp->idx);
+                }
+            }
             continue;
         }
-        const type::Line* line = journey_pattern->route->line;
-        // On gère la liste des interdits
-        for(auto forbid_uri : forbidden){
-            if       ( (line && forbid_uri == line->uri)
-                    || (journey_pattern->route && forbid_uri == journey_pattern->route->uri)
-                    || (forbid_uri == journey_pattern->uri)
-                    || (journey_pattern->commercial_mode && forbid_uri == journey_pattern->commercial_mode->uri)
-                    || (journey_pattern->physical_mode && forbid_uri == journey_pattern->physical_mode->uri)
-                    || (line->network && forbid_uri == line->network->uri) )
-            {
-                forbidden_journey_patterns.set(journey_pattern->idx);
-                break;
+        const auto it_route = data.pt_data->routes_map.find(uri);
+        if (it_route != data.pt_data->routes_map.end()) {
+            for (const auto jp  : it_route->second->journey_pattern_list) {
+                forbidden_journey_patterns.set(jp->idx);
+            }
+            continue;
+        }
+        const auto it_commercial_mode = data.pt_data->commercial_modes_map.find(uri);
+        if (it_commercial_mode != data.pt_data->commercial_modes_map.end()) {
+            for (const auto line : it_commercial_mode->second->line_list) {
+                for (auto route : line->route_list) {
+                    for (const auto jp  : route->journey_pattern_list) {
+                        forbidden_journey_patterns.set(jp->idx);
+                    }
+                }
+            }
+            continue;
+        }
+        const auto it_physical_mode = data.pt_data->physical_modes_map.find(uri);
+        if (it_physical_mode != data.pt_data->physical_modes_map.end()) {
+            for (const auto jp  : it_physical_mode->second->journey_pattern_list) {
+                forbidden_journey_patterns.set(jp->idx);
+            }
+            continue;
+        }
+        const auto it_network = data.pt_data->networks_map.find(uri);
+        if (it_network != data.pt_data->networks_map.end()) {
+            for (const auto line : it_network->second->line_list) {
+                for (const auto route : line->route_list) {
+                    for (const auto jp  : route->journey_pattern_list) {
+                        forbidden_journey_patterns.set(jp->idx);
+                    }
+                }
+            }
+            continue;
+        }
+        const auto it_jp = data.pt_data->journey_patterns_map.find(uri);
+        if (it_jp != data.pt_data->journey_patterns_map.end()) {
+            forbidden_journey_patterns.set(it_jp->second->idx);
+        }
+        const auto it_jpp = data.pt_data->journey_pattern_points_map.find(uri);
+        if (it_jpp !=  data.pt_data->journey_pattern_points_map.end()) {
+            valid_journey_pattern_points.set(it_jpp->second->idx, false);
+            continue;
+        }
+        const auto it_sp = data.pt_data->stop_points_map.find(uri);
+        if (it_sp !=  data.pt_data->stop_points_map.end()) {
+            for (const auto jpp : it_sp->second->journey_pattern_point_list) {
+                valid_journey_pattern_points.set(jpp->idx, false);
+            }
+            continue;
+        }
+        const auto it_sa = data.pt_data->stop_areas_map.find(uri);
+        if (it_sa !=  data.pt_data->stop_areas_map.end()) {
+            for (const auto sp : it_sa->second->stop_point_list) {
+                for (const auto jpp : sp->journey_pattern_point_list) {
+                    valid_journey_pattern_points.set(jpp->idx, false);
+                }
+            }
+            continue;
+        }
+    }
+    if (!allow_odt) {
+        for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
+            if (journey_pattern->odt_level == type::OdtLevel_e::zonal) {
+                    forbidden_journey_patterns.set(journey_pattern->idx);
+                    continue;
             }
         }
     }
     valid_journey_patterns &= ~forbidden_journey_patterns;
-
-    for(const type::JourneyPatternPoint* jpp: data.pt_data->journey_pattern_points) {
-        auto it_uri = std::find(forbidden.begin(), forbidden.end(), jpp->stop_point->uri);
-        if(it_uri != forbidden.end()) {
-            valid_journey_pattern_points.set(jpp->idx, false);
-        } else {
-            it_uri = std::find(forbidden.begin(), forbidden.end(), jpp->stop_point->stop_area->uri);
-            if(it_uri != forbidden.end()) {
-                valid_journey_pattern_points.set(jpp->idx, false);
-            } else {
-                valid_journey_pattern_points.set(jpp->idx, true);
-            }
-        }
-    }
 }
 
 template<typename Visitor>
