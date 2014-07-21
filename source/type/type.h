@@ -917,7 +917,7 @@ struct StopTime {
         if(!this->is_frequency())
             return true;
         else
-            return clockwise ? hour <= (this->vehicle_journey->end_time+departure_time) :
+            return clockwise ? hour <= (this->end_time()) :
                               (this->vehicle_journey->start_time+arrival_time) <= hour;
     }
 

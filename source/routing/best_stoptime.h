@@ -61,8 +61,8 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
 
 /// For timetables in frequency-model
 inline u_int32_t f_arrival_time(uint32_t hour, const type::StopTime* st) {
-    const u_int32_t lower_bound = st->vehicle_journey->start_time + st->arrival_time;
-    const u_int32_t higher_bound = st->vehicle_journey->end_time  + st->arrival_time;
+    const u_int32_t lower_bound = st->start_time();
+    const u_int32_t higher_bound = st->end_time();
     // If higher bound is overmidnight the hour can be either in [lower_bound;midnight] or in
     // [midnight;higher_bound]
     if((higher_bound < DateTimeUtils::SECONDS_PER_DAY && hour>=lower_bound && hour<=higher_bound) ||
@@ -82,8 +82,8 @@ inline u_int32_t f_arrival_time(uint32_t hour, const type::StopTime* st) {
 
 
 inline u_int32_t f_departure_time(uint32_t hour, const type::StopTime* st) {
-    const u_int32_t lower_bound = st->vehicle_journey->start_time + st->departure_time;;
-    const u_int32_t higher_bound = st->vehicle_journey->end_time + st->departure_time;;
+    const u_int32_t lower_bound = st->start_time();
+    const u_int32_t higher_bound = st->end_time();
     // If higher bound is overmidnight the hour can be either in [lower_bound;midnight] or in
     // [midnight;higher_bound]
     if((higher_bound < DateTimeUtils::SECONDS_PER_DAY && hour>=lower_bound && hour<=higher_bound) ||
@@ -101,7 +101,8 @@ inline u_int32_t f_departure_time(uint32_t hour, const type::StopTime* st) {
     }
 }
 
-inline uint32_t compute_gap(const uint32_t hour, const uint32_t start_time, const uint32_t end_time, const  uint32_t headway_secs, const bool clockwise) {
+inline uint32_t compute_gap(const uint32_t hour, const uint32_t start_time,
+        const uint32_t end_time, const  uint32_t headway_secs, const bool clockwise) {
     if((hour>=start_time && hour <= end_time)
             || (end_time>DateTimeUtils::SECONDS_PER_DAY && ((end_time-DateTimeUtils::SECONDS_PER_DAY)>=hour))) {
         const double tmp = double(hour - start_time) / double(headway_secs);

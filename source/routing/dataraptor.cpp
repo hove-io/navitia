@@ -108,11 +108,11 @@ void dataRAPTOR::load(const type::PT_Data &data)
                         if(!st1->is_frequency())
                             time1 = DateTimeUtils::hour(st1->departure_time);
                         else
-                            time1 = DateTimeUtils::hour(st1->vehicle_journey->end_time+st1->departure_time);
+                            time1 = DateTimeUtils::hour(st1->end_time());
                         if(!st2->is_frequency())
                             time2 = DateTimeUtils::hour(st2->departure_time);
                         else
-                            time2 = DateTimeUtils::hour(st2->vehicle_journey->end_time+st2->departure_time);
+                            time2 = DateTimeUtils::hour(st2->end_time());
                         if(time1 == time2) {
                             auto st1_first = st1->vehicle_journey->stop_time_list.front();
                             auto st2_first = st2->vehicle_journey->stop_time_list.front();
@@ -140,11 +140,11 @@ void dataRAPTOR::load(const type::PT_Data &data)
                       if(!st1->is_frequency())
                           time1 = DateTimeUtils::hour(st1->arrival_time);
                       else
-                          time1 = DateTimeUtils::hour(st1->vehicle_journey->start_time+st1->arrival_time);
+                          time1 = DateTimeUtils::hour(st1->start_time());
                       if(!st2->is_frequency())
                           time2 = DateTimeUtils::hour(st2->arrival_time);
                       else
-                          time2 = DateTimeUtils::hour(st2->vehicle_journey->start_time+st2->arrival_time);
+                          time2 = DateTimeUtils::hour(st2->start_time());
                       if(time1 == time2) {
                           auto st1_first = st1->vehicle_journey->stop_time_list.front();
                           auto st2_first = st2->vehicle_journey->stop_time_list.front();
@@ -161,7 +161,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                 if(!st->is_frequency())
                     time = DateTimeUtils::hour(st->arrival_time);
                 else
-                    time = DateTimeUtils::hour(st->vehicle_journey->start_time+st->arrival_time);
+                    time = DateTimeUtils::hour(st->start_time());
                 arrival_times.push_back(time);
             }
         }
