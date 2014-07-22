@@ -201,7 +201,8 @@ std::bitset<N> get_difference(const std::bitset<N>& calendar, const std::bitset<
 }
 
 std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>
-find_matching_calendar(const Data& data, const VehicleJourney* vehicle_journey, double relative_threshold = 0.1);
+find_matching_calendar(const Data&, const std::string& name, const ValidityPattern& validity_pattern,
+                       const std::vector<Calendar*>& calendar_list, double relative_threshold = 0.1);
 
 }} //namespace navitia::type
 

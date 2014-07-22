@@ -55,8 +55,18 @@ VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
     return *this;
 }
 
-VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri) : b(b){
+
+VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri, std::string meta_vj_name) : b(b){
     vj = new navitia::type::VehicleJourney();
+
+    //if we have a meta_vj, we add it in that
+    if (! meta_vj_name.empty()) {
+        b.data->pt_data->meta_vj[meta_vj_name].theoric_vj.push_back(vj);
+    } else {
+        b.data->pt_data->meta_vj[uri].theoric_vj.push_back(vj); //we add a meta vj around this vj
+    }
+
+
     vj->idx = b.data->pt_data->vehicle_journeys.size();
     b.data->pt_data->vehicle_journeys.push_back(vj);
 
@@ -250,14 +260,15 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
 }
 
 
-VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
-    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri);
+VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id,
+               const bool wheelchair_boarding, const std::string& uri, std::string meta_vj){
+    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj);
 }
 
 VJ builder::vj(const std::string &network_name, const std::string &line_name,
                const std::string &validity_pattern, const std::string & block_id,
-               const bool wheelchair_boarding, const std::string& uri){
-    auto res = VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
+               const bool wheelchair_boarding, const std::string& uri, std::string meta_vj){
+    auto res = VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj);
     auto vj = this->data->pt_data->vehicle_journeys.back();
     auto it = this->nts.find(network_name);
     if(it == this->nts.end()){
