@@ -646,7 +646,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 struct JourneyPattern : public Header, Nameable{
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence;
-    OdtLevel_e odt_level; // Calculated at serialization
+    OdtLevel_e odt_level; // Computed at serialization
     Route* route;
     CommercialMode* commercial_mode;
     PhysicalMode* physical_mode;
@@ -973,6 +973,29 @@ struct Calendar : public Nameable, public Header, public Codes {
     }
 };
 
+/**
+ * A meta vj is a shell around some vehicle journeys
+ *
+ * It have 2 purposes:
+ *
+ *  - to store the adapted and real time vj
+ *
+ *  - sometime we have to split a vj.
+ *    For example we have to split a vj because of dst (day saving light see gtfs parser for that)
+ *    the meta vj can thus make the link between the split vjs
+ *
+ *
+ */
+struct MetaVehicleJourney {
+    //store the name ?
+    std::vector<VehicleJourney*> theoric_vj;
+    std::vector<VehicleJourney*> adapted_vj;
+    std::vector<VehicleJourney*> real_time_vj;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & theoric_vj & adapted_vj & real_time_vj;
+    }
+};
 
 struct static_data {
 private:

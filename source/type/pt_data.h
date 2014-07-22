@@ -51,6 +51,9 @@ struct PT_Data : boost::noncopyable{
     std::vector<StopTime*> stop_times;
     std::vector<StopPointConnection*> stop_point_connections;
 
+    // meta vj map
+    std::map<std::string, MetaVehicleJourney> meta_vj;
+
     //associated cal for vj
     std::vector<AssociatedCalendar*> associated_calendars;
 
@@ -75,14 +78,16 @@ struct PT_Data : boost::noncopyable{
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
                 & stop_times
-                // Les firstLetter
-                & stop_area_autocomplete & stop_point_autocomplete
-                // Les proximity list
-                & stop_area_proximity_list & stop_point_proximity_list & line_autocomplete
-                // Les types un peu spéciaux
+                // the first letters for autocomplete
+                & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
+                // the proximity lists
+                & stop_area_proximity_list & stop_point_proximity_list
+                // custom types
                 & stop_point_connections
-                //les messages
-                & message_holder;
+                //messages
+                & message_holder
+                //the meta vjs
+                & meta_vj;
     }
 
     /** Initialise tous les indexes

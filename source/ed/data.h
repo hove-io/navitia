@@ -73,6 +73,8 @@ public:
 
     std::vector<ed::types::AdminStopArea*>  admin_stop_areas;
 
+    std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
+
     /**
          * trie les différentes donnée et affecte l'idx
          *

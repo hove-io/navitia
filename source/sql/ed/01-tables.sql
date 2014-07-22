@@ -583,3 +583,26 @@ CREATE TABLE IF NOT EXISTS navitia.admin_stop_area(
     admin_id Text NOT NULL,
     stop_area_id BIGINT NOT NULL REFERENCES navitia.stop_area
 );
+
+-- enum for meta vj 
+DO $$
+BEGIN
+    CASE WHEN (SELECT count(*) = 0 FROM pg_type where pg_type.typname='vj_classification')
+    THEN
+        CREATE TYPE vj_classification AS ENUM ('Theoric', 'Adapted', 'RealTime');
+    ELSE
+        RAISE NOTICE 'vj_classification already exists, skipping';
+    END CASE;
+
+END$$;
+
+CREATE TABLE IF NOT EXISTS navitia.meta_vj(
+    id BIGINT PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS navitia.meta_vj_link(
+    meta_vj BIGINT REFERENCES navitia.meta_vj,
+    vehicle_journey BIGINT REFERENCES navitia.vehicle_journey,
+    vj_class vj_classification NOT NULL
+);

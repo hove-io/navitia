@@ -304,12 +304,15 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         return {};
     }
 
-    if(gtfs_data.tz.vj_by_name.find(row[trip_c]) != gtfs_data.tz.vj_by_name.end()) {
+    //we look in the meta vj table to see if we already have one such vj
+    if(data.meta_vj_map.find(row[trip_c]) != data.meta_vj_map.end()) {
+        LOG4CPLUS_DEBUG(logger, "a vj with trip id = " << row[trip_c] << " already read, we skip the other one");
         ignored_vj++;
         return {};
     }
-
     std::vector<ed::types::VehicleJourney*> res;
+
+    types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
 
     const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
@@ -328,7 +331,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         std::string vj_uri = original_uri;
         if (has_been_split) {
             //we change the name of the vj (all but the first one) since we had to split the original GTFS vj because of dst
-            vj_uri += "_" + std::to_string(cpt_vj);
+            vj_uri = generate_unique_vj_uri(gtfs_data, original_uri, cpt_vj);
         }
         vj->uri = vj_uri;
 
@@ -354,7 +357,10 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
 
         data.vehicle_journeys.push_back(vj);
         res.push_back(vj);
+        meta_vj.theoric_vj.push_back(vj);
+        vj->meta_vj_name = row[trip_c];
     }
+
     return res;
 }
 
@@ -428,6 +434,13 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
             auto it_company = gtfs_data.company_map.find("default_company");
             vj->company = it_company->second;
         }
+    }
+}
+
+
+void TripsFusioHandler::finish(Data&) {
+    if (ignored_vj) {
+        LOG4CPLUS_WARN(logger, "TripsFusioHandler:" << ignored_vj << " vehicle journeys ignored");
     }
 }
 
