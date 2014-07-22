@@ -59,6 +59,8 @@ import sys
 from copy import copy
 from datetime import datetime
 from collections import defaultdict
+from navitiacommon.type_pb2 import NavitiaType
+from navitiacommon.response_pb2 import SectionType
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -122,7 +124,7 @@ class GeoJson(fields.Raw):
         coords = []
         length = 0
         enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_name
-        if obj.type == enum['STREET_NETWORK'].number:
+        if obj.type == SectionType.Value('STREET_NETWORK'):
             try:
                 if obj.HasField("street_network"):
                     coords = obj.street_network.coordinates
@@ -130,11 +132,24 @@ class GeoJson(fields.Raw):
                     return None
             except ValueError:
                 return None
-        elif obj.type == enum['PUBLIC_TRANSPORT'].number:
+        elif obj.type == SectionType.Value('PUBLIC_TRANSPORT'):
             coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
-        elif obj.type == enum['TRANSFER'].number:
+        elif obj.type == SectionType.Value('TRANSFER'):
             coords.append(obj.origin.stop_point.coord)
             coords.append(obj.destination.stop_point.coord)
+        elif obj.type == SectionType.Value('CROW_FLY'):
+            for place in [obj.origin, obj.destination]:
+                type_ = place.embedded_type
+                if type_ == NavitiaType.Value('STOP_POINT'):
+                    coords.append(place.stop_point.coord)
+                elif type_ == NavitiaType.Value('STOP_AREA'):
+                    coords.append(place.stop_area.coord)
+                elif type_ == NavitiaType.Value('POI'):
+                    coords.append(place.poi.coord)
+                elif type_ == NavitiaType.Value('ADDRESS'):
+                    coords.append(place.address.coord)
+                elif type_ == NavitiaType.Value('ADMINISTRATIVE_REGION'):
+                    coords.append(place.administrative_region.coord)
         else:
             return None
 
