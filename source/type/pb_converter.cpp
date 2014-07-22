@@ -1304,4 +1304,15 @@ void fill_pb_object(const std::string comment, const nt::Data&,
     note->set_uri("note:"+std::to_string(hash_fn(comment)));
     note->set_note(comment);
 }
+
+pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
+    switch (mode) {
+        case navitia::type::Mode_e::Walking : return pbnavitia::Walking;
+        case navitia::type::Mode_e::Bike : return pbnavitia::Bike;
+        case navitia::type::Mode_e::Car : return pbnavitia::Car;
+        case navitia::type::Mode_e::Bss : return pbnavitia::Bss;
+    }
+    return pbnavitia::Walking;
+}
+
 }//namespace navitia
