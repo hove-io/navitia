@@ -122,8 +122,6 @@ class GeoJson(fields.Raw):
 
     def output(self, key, obj):
         coords = []
-        length = 0
-        enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_name
         if obj.type == SectionType.Value('STREET_NETWORK'):
             try:
                 if obj.HasField("street_network"):
