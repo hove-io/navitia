@@ -129,9 +129,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             // If we start from a stop_area, and the last stop point is not from that stop_area,
             // we indicate a time.
             if (origin.type == type::Type_e::StopArea && origin.uri != sp_dest->stop_area->uri) {
-                auto duration = worker.get_distance(sp_dest->idx);
+                const auto duration = worker.get_distance(sp_dest->idx);
                 if (!duration.is_pos_infinity() && !duration.is_neg_infinity() && !duration.is_not_a_date_time()) {
-                    pb_journey->mutable_sections(0)->set_duration(duration.total_seconds());
+                    auto* first_section = pb_journey->mutable_sections(0);
+                    first_section->set_duration(duration.total_seconds());
+                    first_section->mutable_street_network()->set_mode(convert(origin.streetnetwork_params.mode));
                 }
             }
 
@@ -140,7 +142,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 const auto& departure_stop_point = path.items.front().stop_points.front();
                 auto temp = worker.get_path(departure_stop_point->idx);
                 if(temp.path_items.size() > 0) {
-                    //because of projection problem, the walking path might not join exactly the routing one
+                    //because of projection problem, the walking path might not join
+                    //exactly the routing one
                     nt::GeographicalCoord routing_first_coord = departure_stop_point->coord;
                     if (temp.path_items.back().coordinates.back() != routing_first_coord) {
                         //if it's the case, we artificialy add the missing segment
@@ -149,7 +152,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
                     const auto walking_time = temp.duration;
                     departure_time = path.items.front().departure - walking_time.to_posix();
-                    fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure_time);
+                    fill_street_sections(enhanced_response, origin, temp, d, pb_journey,
+                        departure_time);
                     auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
                     bt::time_period action_period(boost::posix_time::from_iso_string(section->begin_date_time()),
                                                   boost::posix_time::from_iso_string(section->end_date_time()));
@@ -284,7 +288,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     destination.uri != sp_orig->stop_area->uri && pb_journey->sections_size() > 0) {
                 auto duration = worker.get_distance(sp_orig->idx, true);
                 if (!duration.is_pos_infinity() && !duration.is_neg_infinity() && !duration.is_not_a_date_time()) {
-                    pb_journey->mutable_sections(pb_journey->sections_size()-1)->set_duration(duration.total_seconds());
+                    auto* last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
+                    last_section->set_duration(duration.total_seconds());
+                    last_section->mutable_street_network()->set_mode(convert(destination.streetnetwork_params.mode));
                 }
             }
         } else {
