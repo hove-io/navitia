@@ -90,6 +90,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
+    std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
 
     // timezone management
     TzHandler tz;
@@ -132,6 +133,8 @@ inline bool is_active(int col_idx, const std::vector<std::string>& row) {
 inline bool is_valid(int col_idx, const std::vector<std::string>& row) {
     return (has_col(col_idx, row) && (!row[col_idx].empty()));
 }
+
+std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string original_uri, int cpt_vj);
 
 
 /**
