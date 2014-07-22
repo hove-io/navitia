@@ -307,6 +307,10 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     LOG4CPLUS_INFO(logger, "Begin: insert vehicle journeys");
     this->insert_vehicle_journeys(data.vehicle_journeys);
     LOG4CPLUS_INFO(logger, "End: insert vehicle journeys");
+    LOG4CPLUS_INFO(logger, "Begin: insert meta vehicle journeys");
+    this->insert_meta_vj(data.meta_vj_map);
+    LOG4CPLUS_INFO(logger, "End: insert meta vehicle journeys");
+
     LOG4CPLUS_INFO(logger, "Begin: insert journey pattern points");
     this->insert_journey_pattern_point(data.journey_pattern_points);
     LOG4CPLUS_INFO(logger, "End: insert journey pattern points");
@@ -402,7 +406,9 @@ void EdPersistor::clean_db(){
                 "navitia.vehicle_properties, navitia.properties, "
                 "navitia.validity_pattern, navitia.network, navitia.parameters, "
                 "navitia.connection, navitia.calendar, navitia.period, "
-                "navitia.week_pattern CASCADE"));
+                "navitia.week_pattern, "
+                "navitia.meta_vj, navitia.meta_vj_link"
+                " CASCADE"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -907,6 +913,40 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
     }
 }
 
+void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJourney>& meta_vjs) {
+    //we insert first the meta vj
+    this->lotus.prepare_bulk_insert("navitia.meta_vj", {"id", "name"});
+    size_t cpt(0);
+    for (const auto& meta_vj_pair: meta_vjs) {
+        this->lotus.insert({std::to_string(cpt), meta_vj_pair.first});
+        cpt++;
+    }
+    this->lotus.finish_bulk_insert();
+
+    //then the links
+    this->lotus.prepare_bulk_insert("navitia.meta_vj_link", {"meta_vj", "vehicle_journey", "vj_class"});
+    cpt = 0;
+    for (const auto& meta_vj_pair: meta_vjs) {
+        const types::MetaVehicleJourney& meta_vj = meta_vj_pair.second;
+        const std::vector<std::pair<std::string, const std::vector<types::VehicleJourney*>& > > list_vj = {
+            {"Theoric", meta_vj.theoric_vj},
+            {"Adapted", meta_vj.adapted_vj},
+            {"RealTime", meta_vj.real_time_vj}
+        };
+
+        for (const auto& name_list: list_vj) {
+            for (const types::VehicleJourney* vj: name_list.second) {
+
+                this->lotus.insert({std::to_string(cpt),
+                                    std::to_string(vj->idx),
+                                    name_list.first
+                                   });
+            }
+        }
+        cpt++;
+    }
+    this->lotus.finish_bulk_insert();
+}
 
 void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas) {
     this->lotus.prepare_bulk_insert("navitia.admin_stop_area", {"admin_id", "stop_area_id"});

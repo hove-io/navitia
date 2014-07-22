@@ -224,6 +224,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     StopTime * first_stop_time = nullptr;
     std::string block_id;
     std::string odt_message;
+    std::string meta_vj_name; //link to it's meta vj
 
     int start_time = std::numeric_limits<int>::max(); /// First departure of vehicle
     int end_time = std::numeric_limits<int>::max(); /// Last departure of vehicle journey
@@ -324,6 +325,13 @@ struct StopTime : public Nameable {
     navitia::type::StopTime* get_navitia_type() const;
 
     bool operator<(const StopTime& other) const;
+};
+
+
+struct MetaVehicleJourney {
+    std::vector<VehicleJourney*> theoric_vj;
+    std::vector<VehicleJourney*> adapted_vj;
+    std::vector<VehicleJourney*> real_time_vj;
 };
 
 /// Données Geographique

@@ -64,6 +64,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     this->fill_validity_patterns(data, work);
     this->fill_vehicle_journeys(data, work);
+    this->fill_meta_vehicle_journeys(data, work);
 
 
     this->fill_stop_times(data, work);
@@ -702,7 +703,42 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     }
 }
 
-void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
+
+void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
+    //then we fill the links
+    std::string request = "SELECT l.meta_vj as metavj, "
+            " l.vehicle_journey as vehicle_journey, l.vj_class as vj_class, meta.name as name"
+            " from navitia.meta_vj as meta, navitia.meta_vj_link as l"
+            " WHERE meta.id = l.meta_vj";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        const std::string name = const_it["name"].as<std::string>();
+
+        auto& meta_vj = data.pt_data->meta_vj[name];
+
+        const auto vj_idx = const_it["vehicle_journey"].as<idx_t>();
+        const auto vj_it = vehicle_journey_map.find(vj_idx);
+
+        if ( vj_it == vehicle_journey_map.end()) {
+            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Impossible to find the vj " << vj_idx << ", we won't add it in a meta vj");
+            continue;
+        }
+        auto* vj = vj_it->second;
+
+        const std::string vj_class = const_it["vj_class"].as<std::string>();
+        if (vj_class == "Theoric") {
+            meta_vj.theoric_vj.push_back(vj);
+        } else if (vj_class == "Adapted") {
+            meta_vj.adapted_vj.push_back(vj);
+        } else if (vj_class == "RealTime") {
+            meta_vj.real_time_vj.push_back(vj);
+        } else {
+            throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
+        }
+    }
+}
+
+void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
     std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, " // 0, 1, 2, 3
         "local_traffic_zone, odt, pick_up_allowed, " // 4, 5, 6, 7
         "drop_off_allowed, is_frequency, date_time_estimated, comment " // 8, 9

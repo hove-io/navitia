@@ -109,6 +109,7 @@ private:
 
     void fill_journey_pattern_points(navitia::type::Data& data, pqxx::work& work);
     void fill_vehicle_journeys(navitia::type::Data& data, pqxx::work& work);
+    void fill_meta_vehicle_journeys(navitia::type::Data& data, pqxx::work& work);
 
     void fill_stop_times(navitia::type::Data& data, pqxx::work& work);
 

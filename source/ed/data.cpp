@@ -259,19 +259,35 @@ void Data::clean(){
     // The same but now with vehicle_journey's
     num_elements = vehicle_journeys.size();
     for(size_t to_erase : erasest) {
-        if(vehicle_journeys[to_erase]->next_vj) {
-            vehicle_journeys[to_erase]->next_vj->prev_vj = nullptr;
+        auto vj = vehicle_journeys[to_erase];
+        if(vj->next_vj) {
+            vj->next_vj->prev_vj = nullptr;
         }
-        if(vehicle_journeys[to_erase]->prev_vj) {
-            vehicle_journeys[to_erase]->prev_vj->next_vj = nullptr;
+        if(vj->prev_vj) {
+            vj->prev_vj->next_vj = nullptr;
         }
-        delete vehicle_journeys[to_erase];
+        //we need to remove the vj from the meta vj
+        auto& metavj = meta_vj_map[vj->meta_vj_name];
+        bool found = false;
+        for (auto it = metavj.theoric_vj.begin() ; it != metavj.theoric_vj.end() ; ++it) {
+            if (*it == vj) {
+                metavj.theoric_vj.erase(it);
+                found = true;
+                break;
+            }
+        }
+        if (! found) {
+            throw navitia::exception("construction problem, impossible to find the vj " + vj->uri + " in the meta vj " + vj->meta_vj_name);
+        }
+        if (metavj.theoric_vj.empty()) {
+            //we remove the meta vj
+            meta_vj_map.erase(vj->meta_vj_name);
+        }
+        delete vj;
         vehicle_journeys[to_erase] = vehicle_journeys[num_elements - 1];
         num_elements--;
     }
     vehicle_journeys.resize(num_elements);
-
-
 
     LOG4CPLUS_INFO(logger, "Data::clean(): " << erase_overlap <<  " vehicle_journeys have been deleted because they overlap, "
                    << erase_emptiness << " because they do not contain any clean stop_times, and "
@@ -290,7 +306,8 @@ void Data::clean(){
     //@TODO : Attention, it's leaking, it should succeed in erasing objects
     //Ce qu'il y a dans la fin du vecteur apres unique n'est pas garanti, on ne peut pas itérer sur la suite pour effacer
     stop_point_connections.resize(std::distance(stop_point_connections.begin(), it_end));
-    LOG4CPLUS_INFO(logger, "I deleted" + boost::lexical_cast<std::string>(num_elements-stop_point_connections.size()) + " duplicate connections");
+    LOG4CPLUS_INFO(logger, num_elements-stop_point_connections.size()
+                   << " stop point connections deleted because of duplicate connections");
 }
 
 // Functor used to transform an ed object in to an navitia objet.
