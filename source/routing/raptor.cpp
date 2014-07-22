@@ -181,13 +181,20 @@ void RAPTOR::init(Solutions departs,
         const type::StopPoint* sp = data.pt_data->stop_points[item.first];
         if(sp->accessible(required_properties)) {
             for(auto journey_pattern_point : sp->journey_pattern_point_list) {
-                type::idx_t jppidx = journey_pattern_point->idx;
+                type::idx_t jpp_idx = journey_pattern_point->idx;
                 if(journey_patterns_valides.test(journey_pattern_point->journey_pattern->idx)) {
-                        b_dest.add_destination(jppidx, item.second, clockwise);
-                        best_labels[jppidx] = clockwise ?
-                                    std::min(bound, labels[0][jppidx].dt) :
-                                    std::max(bound, labels[0][jppidx].dt);
-                    }
+                        b_dest.add_destination(jpp_idx, item.second, clockwise);
+                        best_labels[jpp_idx] = clockwise ?
+                                    std::min(bound, labels[0][jpp_idx].dt) :
+                                    std::max(bound, labels[0][jpp_idx].dt);
+                        if (labels[0][jpp_idx].type == boarding_type::departure) {
+                            if (clockwise) {
+                                b_dest.add_best_clockwise(jpp_idx, labels[0][jpp_idx].dt, 0);
+                            } else {
+                                b_dest.add_best_unclockwise(jpp_idx, labels[0][jpp_idx].dt, 0);
+                            }
+                        }
+                }
             }
         }
     }
@@ -215,10 +222,11 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     init(departures, calc_dest, bound, clockwise);
 
     boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
+    /// @todo put that commented lines in a ifdef only compiled when we want
     //auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
     //result.insert(result.end(), tmp.begin(), tmp.end());
-    // Aucune solution n’a été trouvée :'(
-    if(b_dest.best_now_jpp_idx == type::invalid_idx) {
+    // No solution found, or the solution has initialize with init
+    if(b_dest.best_now_jpp_idx == type::invalid_idx || b_dest.count == 0) {
         return result;
     }
 
@@ -347,8 +355,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             // We want to update the labels, if it's better than the one computed before
                             // Or if it's an destination point if it's equal and not unitialized before
                             const bool best_add_result = this->b_dest.add_best(visitor, jpp->idx, workingDt, this->count);
-                            if(visitor.comp(workingDt, bound) ||
-                                    (best_add_result && get_type(this->count-1, jpp_idx) == boarding_type::uninitialized)) {
+                            if(visitor.comp(workingDt, bound) || best_add_result ) {
                                 working_labels[jpp_idx].dt = workingDt;
                                 working_labels[jpp_idx].boarding_jpp = boarding->idx;
                                 working_labels[jpp_idx].type = boarding_type::vj;
