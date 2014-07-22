@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
 
     // same for the vj, all have been split in 9
     BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11 * 9);
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "AB1_1");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "AB1_dst_1");
     BOOST_REQUIRE(data.vehicle_journeys[0]->tmp_line != nullptr);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->tmp_line->uri, "AB");
     BOOST_REQUIRE(data.vehicle_journeys[0]->validity_pattern != nullptr);
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "to Bullfrog");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->block_id, "1");
     for (int i = 1; i <= 9; ++i) {
-        BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->uri, "AB1_" + std::to_string(i));
+        BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->uri, "AB1_dst_" + std::to_string(i));
         BOOST_REQUIRE(data.vehicle_journeys[i-1]->validity_pattern != nullptr);
         BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->validity_pattern->uri, "FULLW_" + std::to_string(i));
     }
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     //Stop time
     BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 9);
     BOOST_REQUIRE(data.stops[0]->vehicle_journey != nullptr);
-    BOOST_CHECK_EQUAL(data.stops[0]->vehicle_journey->uri, "STBA_1");
+    BOOST_CHECK_EQUAL(data.stops[0]->vehicle_journey->uri, "STBA_dst_1");
     BOOST_CHECK_EQUAL(data.stops[0]->arrival_time, 6*3600 - 480); //first day is on a non dst period, so the utc offset
     BOOST_CHECK_EQUAL(data.stops[0]->departure_time, 6*3600 - 480); //for los angeles is -480
     BOOST_REQUIRE(data.stops[0]->tmp_stop_point != nullptr);
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
 
     BOOST_REQUIRE(data.stops[1]->vehicle_journey != nullptr);
-    BOOST_CHECK_EQUAL(data.stops[1]->vehicle_journey->uri, "STBA_2");
+    BOOST_CHECK_EQUAL(data.stops[1]->vehicle_journey->uri, "STBA_dst_2");
     BOOST_CHECK_EQUAL(data.stops[1]->arrival_time, 6*3600 - 420); //the second st is on a dst period, so the utc offset
     BOOST_CHECK_EQUAL(data.stops[1]->departure_time, 6*3600 - 420); //for los angeles is -420
     BOOST_REQUIRE(data.stops[1]->tmp_stop_point != nullptr);

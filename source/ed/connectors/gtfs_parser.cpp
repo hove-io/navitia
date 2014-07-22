@@ -46,6 +46,26 @@ namespace ed{ namespace connectors {
 static int default_waiting_duration = 120;
 static int default_connection_duration = 120;
 
+std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string original_uri, int cpt_vj) {
+    // we change the name of the vj since we had to split the original GTFS vj because of dst
+    // WARNING: this code is uggly, but it's a quick fix.
+    for (int i = 0; i < 100; ++i) {
+        //for debugging purpose (since vj uri are useful only for dev purpose)
+        //we store if the vj is in conflict
+        const std::string separator = (i == 0 ? "dst" : "conflit");
+        const std::string vj_uri = original_uri + "_" + separator + "_" + std::to_string(cpt_vj + i);
+        //to avoid collision, we check if we find a vj with the name we want to create
+        if (gtfs_data.vj_uri.find(vj_uri) == gtfs_data.vj_uri.end()) {
+            return vj_uri;
+        }
+    }
+    // we haven't found a unique uri...
+    // If this case happens, we need to handle this differently.
+    // read all vj beforehand to know how to avoid conflict ?
+    throw navitia::exception("impossible to generate a unique uri for the vj " + original_uri +
+                             "there are some problems with the dataset. The current code cannot handle that");
+}
+
 std::pair<std::string, boost::local_time::time_zone_ptr> TzHandler::get_tz(const std::string& tz_name) {
     if (! tz_name.empty()) {
         auto tz = tz_db.time_zone_from_region(tz_name);
@@ -698,10 +718,14 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         return;
     }
 
-    if(gtfs_data.tz.vj_by_name.find(row[trip_c]) != gtfs_data.tz.vj_by_name.end()) {
+    //we look in the meta vj table to see if we already have one such vj
+    if(data.meta_vj_map.find(row[trip_c]) != data.meta_vj_map.end()) {
+        LOG4CPLUS_DEBUG(logger, "vj " << row[trip_c] << " already read, we skip the second one");
         ignored_vj++;
         return;
     }
+
+    types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
 
     const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
@@ -718,8 +742,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         const std::string original_uri = row[trip_c];
         std::string vj_uri = original_uri;
         if (has_been_split) {
-            //we change the name of the vj (all but the first one) since we had to split the original GTFS vj because of dst
-            vj_uri += "_" + std::to_string(cpt_vj);
+            vj_uri = generate_unique_vj_uri(gtfs_data, original_uri, cpt_vj);
         }
 
         vj->uri = vj_uri;
@@ -760,6 +783,9 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         gtfs_data.tz.vj_by_name.insert({original_uri, vj});
 
         data.vehicle_journeys.push_back(vj);
+        //we add them on our meta vj
+        meta_vj.theoric_vj.push_back(vj);
+        vj->meta_vj_name = row[trip_c];
     }
 
 }
