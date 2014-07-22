@@ -235,7 +235,7 @@ departure_board(const std::string& request,
             if(jpp->journey_pattern->route != route) {
                 continue;
             }
-            if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx){ // dans le cas de terminus
+            if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx) { // dans le cas de terminus
                 response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
                 continue;
             }

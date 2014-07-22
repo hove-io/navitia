@@ -186,17 +186,58 @@ struct associated_cal_fixture {
         b.vj("network:R", "line:A", "", "", true, "vj1")
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
+
+
+        b.vj("network:R", "line:A", "", "", true, "vj2", "meta_vj")
+                ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
+                ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
+        b.vj("network:R", "line:A", "", "", true, "vj2_bis", "meta_vj")
+                ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
+                ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
+
         b.lines["line:A"]->calendar_list.push_back(always_on_cal);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
         b.lines["line:A"]->calendar_list.push_back(monday_cal);
         b.data->build_uri();
 
-        // Toute la semaine sauf samedi et dimanche
+        // The whole week but saturday and sunday
         navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];
         vj->validity_pattern->add(date("20140101"), date("20140111"), always_on_cal->week_pattern);
 
+        //for the meta vj we use the same, but split
+        navitia::type::VehicleJourney* vj2 = b.data->pt_data->vehicle_journeys_map["vj2"];
+        vj2->validity_pattern->add(date("20140101"), date("20140105"), always_on_cal->week_pattern);
+        navitia::type::VehicleJourney* vj2_b = b.data->pt_data->vehicle_journeys_map["vj2_bis"];
+        vj2_b->validity_pattern->add(date("20140106"), date("20140111"), always_on_cal->week_pattern);
+
         b.data->geo_ref->init();
         b.data->complete();
+    }
+
+    void check_vj(const navitia::type::VehicleJourney* vj) {
+        BOOST_REQUIRE(vj);
+
+        BOOST_REQUIRE_EQUAL(vj->associated_calendars.size(), 2);
+
+        auto it_associated_always_cal = vj->associated_calendars.find(always_on_cal->uri);
+        BOOST_REQUIRE(it_associated_always_cal != vj->associated_calendars.end());
+
+        //no restriction
+        auto associated_always_cal = it_associated_always_cal->second;
+        BOOST_CHECK_EQUAL(associated_always_cal->calendar, always_on_cal);
+        BOOST_CHECK(associated_always_cal->exceptions.empty());
+
+        auto it_associated_wednesday_cal = vj->associated_calendars.find(wednesday_cal->uri);
+        BOOST_REQUIRE(it_associated_wednesday_cal != vj->associated_calendars.end());
+
+        //no restriction
+        auto associated_wednesday_cal = it_associated_wednesday_cal->second;
+        BOOST_CHECK_EQUAL(associated_wednesday_cal->calendar, wednesday_cal);
+        BOOST_CHECK(associated_wednesday_cal->exceptions.empty());
+
+        auto it_associated_monday_cal = vj->associated_calendars.find(monday_cal->uri);
+        BOOST_REQUIRE(it_associated_monday_cal == vj->associated_calendars.end());
+
     }
     ed::builder b;
     navitia::type::Calendar* always_on_cal;
@@ -204,32 +245,16 @@ struct associated_cal_fixture {
     navitia::type::Calendar* monday_cal;
 };
 
+
 BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
-
     navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];
-
-    BOOST_REQUIRE(vj);
-
-    BOOST_REQUIRE_EQUAL(vj->associated_calendars.size(), 2);
-
-    auto it_associated_always_cal = vj->associated_calendars.find(always_on_cal->uri);
-    BOOST_REQUIRE(it_associated_always_cal != vj->associated_calendars.end());
-
-    //no restriction
-    auto associated_always_cal = it_associated_always_cal->second;
-    BOOST_CHECK_EQUAL(associated_always_cal->calendar, always_on_cal);
-    BOOST_CHECK(associated_always_cal->exceptions.empty());
+    check_vj(vj);
+}
 
 
-    auto it_associated_wednesday_cal = vj->associated_calendars.find(wednesday_cal->uri);
-    BOOST_REQUIRE(it_associated_wednesday_cal != vj->associated_calendars.end());
-
-    //no restriction
-    auto associated_wednesday_cal = it_associated_wednesday_cal->second;
-    BOOST_CHECK_EQUAL(associated_wednesday_cal->calendar, wednesday_cal);
-    BOOST_CHECK(associated_wednesday_cal->exceptions.empty());
-
-    auto it_associated_monday_cal = vj->associated_calendars.find(monday_cal->uri);
-    BOOST_REQUIRE(it_associated_monday_cal == vj->associated_calendars.end());
-
+BOOST_FIXTURE_TEST_CASE(meta_vj_association_test, associated_cal_fixture) {
+    //we split the vj under a meta vj (like it's done for dst)
+    //should have the same thing than non split vj
+    check_vj(b.data->pt_data->vehicle_journeys_map["vj2"]);
+    check_vj(b.data->pt_data->vehicle_journeys_map["vj2_bis"]);
 }
