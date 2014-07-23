@@ -111,7 +111,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
          * 1) We start from an area, we will add a crow fly section from the centroid of the area
          *    to the origin stop point of the first section
          * 2) We start from a ponctual place (everything but stop_area or admin)
-         * We had a street network section from this place to the departure of the first pt_section
+         * We add a street network section from this place to the departure of the first pt_section
          * If the uri of the origin point and the uri of the departure of the first section are the
          * same we do nothing
          * */
@@ -126,7 +126,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                                           path.items.front().departures.front()+bt::minutes(1));
             fill_crowfly_section(origin, destination_tmp, path.items.front().departures.front(),
                                  d, enhanced_response, pb_journey, now, action_period);
-            // If we start from a stop_area, and the last stop point is not from that stop_area,
+            // If we start from a stop_area, and the first stop point is not from that stop_area,
             // we indicate a time.
             if (origin.type == type::Type_e::StopArea && origin.uri != sp_dest->stop_area->uri) {
                 const auto duration = worker.get_distance(sp_dest->idx);
@@ -157,14 +157,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
                     bt::time_period action_period(boost::posix_time::from_iso_string(section->begin_date_time()),
                                                   boost::posix_time::from_iso_string(section->end_date_time()));
-                    // We had coherence with the origin of the request
+                    // We add coherence with the origin of the request
                     fill_pb_placemark(origin, d, section->mutable_origin(), 2, now, action_period, show_codes);
-                    // We had coherence with the first pt section
+                    // We add coherence with the first pt section
                     fill_pb_placemark(departure_stop_point, d, section->mutable_destination(), 2, now, action_period, show_codes);
                 }
             }
         }
-        // Here we make origin and departure consistent with the parameters and the first section
 
         const type::VehicleJourney* vj(nullptr);
         size_t item_idx(0);
@@ -312,12 +311,12 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                                 begin_section_time);
                         arrival_time = arrival_time + temp.duration.to_posix();
                     }
-                    // We had coherence with the last pt section
+                    // We add coherence with the last pt section
                     auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
                     bt::time_period action_period(boost::posix_time::from_iso_string(section->begin_date_time()),
                                                   boost::posix_time::from_iso_string(section->end_date_time()));
                     fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
-                    //We had coherence with the destination object of the request
+                    //We add coherence with the destination object of the request
                     fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
                 }
             }
