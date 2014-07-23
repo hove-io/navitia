@@ -63,6 +63,7 @@ enum SectionType {
     landing = 7;
     BSS_RENT = 8;
     BSS_PUT_BACK = 9;
+    CROW_FLY = 10;
 }
 
 enum TransferType {
