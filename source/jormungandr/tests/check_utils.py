@@ -82,7 +82,7 @@ def is_valid_days(days):
 
 def get_valid_datetime(str):
     """
-    Check is the string is a valid date
+    Check is the string is a valid date and return it
     >>> get_valid_datetime("bob")
     Traceback (most recent call last):
     AssertionError
@@ -100,7 +100,35 @@ def get_valid_datetime(str):
     try:
         return datetime.strptime(str, "%Y%m%dT%H%M%S")
     except ValueError:
-        logging.error("string '{}' is no valid date".format(str))
+        logging.error("string '{}' is no valid datetime".format(str))
+        assert False
+
+
+def get_valid_time(str):
+    """
+    Check is the string is a valid time and return it
+    >>> get_valid_time("bob")
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_time("")
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_time("20120131T215030")  # it's a datetime, not valid
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_time("215030")  #time is HHMMSS
+    datetime.datetime(1900, 1, 1, 21, 50, 30)
+    >>> get_valid_time("501230")  # MMHHSS, not valid
+    Traceback (most recent call last):
+    AssertionError
+    """
+    assert str
+
+    try:
+        #AD:we use a datetime anyway because I don't know what to use instead
+        return datetime.strptime(str, "%H%M%S")
+    except ValueError:
+        logging.error("string '{}' is no valid time".format(str))
         assert False
 
 
@@ -137,15 +165,14 @@ def is_valid_bool(str):
     return lower == "true" or lower == "false"
 
 
-def is_valid_float(str):
+def get_valid_float(str):
     if type(str) is float:
-        return True
+        return str
 
     try:
-        float(str)
+        return float(str)
     except ValueError:
-        return False
-    return True
+        assert "cannot convert {} to float".format(str)
 
 
 def get_valid_int(str):
@@ -157,6 +184,18 @@ def get_valid_int(str):
         return int(str)
     except ValueError:
         assert False
+
+
+def is_valid_lat(str):
+    lat = get_valid_float(str)
+
+    assert 90.0 >= lat >= 0.0, "lat should be between 0 and 90"
+
+
+def is_valid_lon(str):
+    lat = get_valid_float(str)
+
+    assert 180.0 >= lat >= -180.0, "lon should be between -180 and 180"
 
 
 def get_links_dict(response):
@@ -308,6 +347,7 @@ def check_internal_links(response, tester):
     assert not internal_links_id, "cannot find correct ref for internal links : {}".\
         format([lid for lid in internal_links_id])
 
+
 class unique_dict(dict):
     """
     We often have to check that a set of values are uniq, this container is there to do the job
@@ -435,12 +475,45 @@ def is_valid_ticket(ticket, tester):
         #for found ticket, we must have a non empty currency
         get_not_null(cost, 'currency')
 
-    assert is_valid_float(get_not_null(cost, 'value'))
+    get_valid_float(get_not_null(cost, 'value'))
 
     check_links(ticket, tester)
 
 
-#default journey query used in varius test
+def is_valid_stop_area(stop_area, depth_check=1):
+    """
+    check the structure of a stop area
+    """
+    get_not_null(stop_area, "name")
+    is_valid_lat(stop_area["coord"]["lat"])
+    is_valid_lon(stop_area["coord"]["lon"])
+
+
+def is_valid_stop_point(stop_point, depth_check=1):
+    """
+    check the structure of a stop point
+    """
+    get_not_null(stop_point, "name")
+    is_valid_lat(stop_point["coord"]["lat"])
+    is_valid_lon(stop_point["coord"]["lon"])
+
+    if depth_check > 1:
+        is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
+
+
+def is_valid_route(route, depth_check=1):
+    get_not_null(route, "name")
+    is_valid_bool(get_not_null(route, "is_frequence"))
+
+    if depth_check > 1:
+        is_valid_line(get_not_null(route, "line"), depth_check-1)
+
+
+def is_valid_line(route, depth_check=1):
+    pass  # TODO!
+
+
+#default journey query used in various test
 journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
     .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
             to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset

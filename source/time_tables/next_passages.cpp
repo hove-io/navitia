@@ -50,7 +50,7 @@ next_passages(const std::string &request,
               const type::AccessibiliteParams & accessibilite_params,
               type::Data & data, bool disruption_active, Visitor vis, uint32_t count,
               uint32_t start_page, const bool show_codes) {
-    RequestHandle handler(vis.api_str, request, forbidden_uris, str_dt, duration,data);
+    RequestHandle handler(vis.api_str, request, forbidden_uris, str_dt, duration, data, {});
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;

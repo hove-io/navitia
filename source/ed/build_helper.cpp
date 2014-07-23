@@ -81,6 +81,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         b.data->pt_data->lines.push_back(line);
         navitia::type::Route* route = new navitia::type::Route();
         route->idx = b.data->pt_data->routes.size();
+        route->name = line->name;
         route->uri = line_name + ":" + std::to_string(b.data->pt_data->routes.size());
         b.data->pt_data->routes.push_back(route);
         line->route_list.push_back(route);
