@@ -1312,7 +1312,9 @@ pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
         case navitia::type::Mode_e::Car : return pbnavitia::Car;
         case navitia::type::Mode_e::Bss : return pbnavitia::Bss;
     }
-    return pbnavitia::Walking;
+    throw navitia::exception("Techinical Error, unable to convert mode " +
+            std::to_string(static_cast<int>(mode)));
+
 }
 
 }//namespace navitia
