@@ -501,16 +501,18 @@ bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * v
     return true;
 }
 
-
+//For frequency based trips, make arrival and departure time relative from first stop.
 void Data::finalize_frequency() {
     for(auto * vj : this->vehicle_journeys) {
         if(!vj->stop_time_list.empty() && vj->stop_time_list.front()->is_frequency) {
             auto * first_st = vj->stop_time_list.front();
-            size_t nb_trips = std::ceil((first_st->end_time - first_st->start_time)/first_st->headway_secs);
+            int begin = first_st->arrival_time;
+            if (begin == 0){
+                continue; //Time is already relative to 0
+            }
             for(auto * st : vj->stop_time_list) {
-                st->start_time = first_st->start_time+(st->arrival_time - first_st->arrival_time);
-                st->end_time = first_st->start_time + nb_trips * st->headway_secs;
-                st->end_time += (st->departure_time - first_st->departure_time);
+                st->arrival_time   -= begin;
+                st->departure_time -= begin;
             }
         }
     }
