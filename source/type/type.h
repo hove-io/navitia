@@ -799,22 +799,18 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
 
 struct JourneyPatternPoint : public Header{
     const static Type_e type = Type_e::JourneyPatternPoint;
-    int order;
-    bool main_stop_point;
-    int fare_section;
     JourneyPattern* journey_pattern;
     StopPoint* stop_point;
+    uint16_t order;
 
-    JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern(nullptr), stop_point(nullptr){}
+    JourneyPatternPoint() : journey_pattern(nullptr), stop_point(nullptr), order(0){}
 
     // Attention la sérialisation est répartrie dans deux methode: save et load
     template<class Archive> void save(Archive & ar, const unsigned int) const{
-        ar & idx & uri & order & main_stop_point & fare_section & journey_pattern
-                & stop_point & order ;
+        ar & idx & uri & order & journey_pattern & stop_point & order ;
     }
     template<class Archive> void load(Archive & ar, const unsigned int) {
-        ar & idx & uri & order & main_stop_point & fare_section & journey_pattern
-                & stop_point & order;
+        ar & idx & uri & order & journey_pattern & stop_point & order;
         //on remplit le tableau des stoppoints, bizarrement ca segfault au chargement si on le fait à la bina...
         this->stop_point->journey_pattern_point_list.push_back(this);
     }
