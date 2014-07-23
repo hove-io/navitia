@@ -175,6 +175,11 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     std::string request = "SELECT beginning_date, end_date FROM navitia.parameters";
     pqxx::result result = work.exec(request);
+
+    if (result.empty()) {
+        throw navitia::exception("Cannot find beginning_date and end_date in navitia.parameters, "
+        " it's likely that no gtfs data have been imported, we cannot create a nav file");
+    }
     auto const_it = result.begin();
     bg::date begin = bg::from_string(const_it["beginning_date"].as<std::string>());
     //on ajoute un jour car "end" n'est pas inclus dans la période
