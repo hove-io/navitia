@@ -407,7 +407,7 @@ void EdPersistor::clean_db(){
                 "navitia.validity_pattern, navitia.network, navitia.parameters, "
                 "navitia.connection, navitia.calendar, navitia.period, "
                 "navitia.week_pattern, "
-                "navitia.meta_vj, navitia.meta_vj_link"
+                "navitia.meta_vj, navitia.rel_metavj_vj"
                 " CASCADE"));
 }
 
@@ -924,7 +924,7 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
     this->lotus.finish_bulk_insert();
 
     //then the links
-    this->lotus.prepare_bulk_insert("navitia.meta_vj_link", {"meta_vj", "vehicle_journey", "vj_class"});
+    this->lotus.prepare_bulk_insert("navitia.rel_metavj_vj", {"meta_vj", "vehicle_journey", "vj_class"});
     cpt = 0;
     for (const auto& meta_vj_pair: meta_vjs) {
         const types::MetaVehicleJourney& meta_vj = meta_vj_pair.second;
