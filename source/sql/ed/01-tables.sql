@@ -601,7 +601,7 @@ CREATE TABLE IF NOT EXISTS navitia.meta_vj(
     name TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS navitia.meta_vj_link(
+CREATE TABLE IF NOT EXISTS navitia.rel_metavj_vj(
     meta_vj BIGINT REFERENCES navitia.meta_vj,
     vehicle_journey BIGINT REFERENCES navitia.vehicle_journey,
     vj_class vj_classification NOT NULL

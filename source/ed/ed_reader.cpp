@@ -708,7 +708,7 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
     //then we fill the links
     std::string request = "SELECT l.meta_vj as metavj, "
             " l.vehicle_journey as vehicle_journey, l.vj_class as vj_class, meta.name as name"
-            " from navitia.meta_vj as meta, navitia.meta_vj_link as l"
+            " from navitia.meta_vj as meta, navitia.rel_metavj_vj as l"
             " WHERE meta.id = l.meta_vj";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {

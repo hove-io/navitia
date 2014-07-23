@@ -976,7 +976,7 @@ struct Calendar : public Nameable, public Header, public Codes {
 /**
  * A meta vj is a shell around some vehicle journeys
  *
- * It have 2 purposes:
+ * It has 2 purposes:
  *
  *  - to store the adapted and real time vj
  *
