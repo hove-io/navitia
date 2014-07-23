@@ -177,7 +177,7 @@ departure_board(const std::string& request,
                 int count, int start_page, const type::Data &data, bool disruption_active,
                 bool show_codes) {
 
-    RequestHandle handler("DEPARTURE_BOARD", request, forbidden_uris, date,  duration, data);
+    RequestHandle handler("DEPARTURE_BOARD", request, forbidden_uris, date,  duration, data, calendar_id);
 
     if(handler.pb_response.has_error())
         return handler.pb_response;
