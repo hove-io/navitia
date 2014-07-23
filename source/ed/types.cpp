@@ -369,8 +369,6 @@ nt::JourneyPatternPoint* JourneyPatternPoint::get_navitia_type() const {
     nt_journey_pattern_point->idx = this->idx;
     nt_journey_pattern_point->uri = this->uri;
     nt_journey_pattern_point->order = this->order;
-    nt_journey_pattern_point->main_stop_point = this->main_stop_point;
-    nt_journey_pattern_point->fare_section = this->fare_section;
 
     nt_journey_pattern_point->stop_point->idx = this->stop_point->idx;
     nt_journey_pattern_point->journey_pattern->idx = this->journey_pattern->idx;

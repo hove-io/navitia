@@ -607,8 +607,6 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
         "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
         "vj.external_code as external_code,"
-        "vj.next_vehicle_journey_id as prev_vj_id,"
-        "vj.previous_vehicle_journey_id as next_vj_id,"
         "vj.start_time as start_time,"
         "vj.end_time as end_time,"
         "vj.headway_sec as headway_sec,"

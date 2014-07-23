@@ -689,8 +689,75 @@ BOOST_AUTO_TEST_CASE(stay_in_basic) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
+
+BOOST_AUTO_TEST_CASE(stay_in_short) {
+    ed::builder b("20120614");
+    b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "1111111", "block1", true)("stop2", 8*3600+10*60)("stop3", 8*3600 + 20*60);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
+}
+
+BOOST_AUTO_TEST_CASE(stay_in_nl) {
+    ed::builder b("20120614");
+    b.vj("9658", "1111111", "block1", true) ("ehv", 60300,60600)
+                                            ("ehb", 60780,60780)
+                                            ("bet", 61080,61080)
+                                            ("btl", 61560,61560)
+                                            ("vg",  61920,61920)
+                                            ("ht",  62340,62340);
+    b.vj("4462", "1111111", "block1", true) ("ht",  62760,62760)
+                                            ("hto", 62940,62940)
+                                            ("rs",  63180,63180);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["bet"], d.stop_areas_map["rs"], 60780, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 63180);
+}
+
+BOOST_AUTO_TEST_CASE(stay_in_nl_counterclock) {
+    ed::builder b("20120614");
+    b.vj("9658", "1111111", "block1", true) ("ehv", 60300,60600)
+                                            ("ehb", 60780,60780)
+                                            ("bet", 61080,61080)
+                                            ("btl", 61560,61560)
+                                            ("vg",  61920,61920)
+                                            ("ht",  62340,62340);
+    b.vj("4462", "1111111", "block1", true) ("ht",  62760,62760)
+                                            ("hto", 62940,62940)
+                                            ("rs",  63180,63180);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["bet"], d.stop_areas_map["rs"], 63200, 0, DateTimeUtils::inf, false, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
+    BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 63180);
+}
+
 
 BOOST_AUTO_TEST_CASE(stay_in_teleport) {
     ed::builder b("20120614");
@@ -705,6 +772,7 @@ BOOST_AUTO_TEST_CASE(stay_in_teleport) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 5*60, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.back().items[1].type,stay_in);
     BOOST_CHECK_EQUAL(res1.back().items[2].arrival.time_of_day().total_seconds(), 8*3600 + 20*60);
 }
 

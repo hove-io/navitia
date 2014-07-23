@@ -160,6 +160,8 @@ void patch_datetimes(Path &path){
     }
 
     PathItem previous_item = *path.items.begin();
+    // We take the last transit path item to inspect interling cases.
+    PathItem last_transit = *path.items.begin();
     std::vector<std::pair<int, PathItem>> to_insert;
     for(auto item = path.items.begin() + 1; item!= path.items.end(); ++item) {
         if(previous_item.departure != boost::posix_time::pos_infin) {
@@ -169,17 +171,28 @@ void patch_datetimes(Path &path){
                 item->arrival = item->departure + duration;
             } else {
                 if(previous_item.type != stay_in){
-                    PathItem waitingItem=PathItem();
-                    waitingItem.departure = previous_item.arrival;
-                    waitingItem.arrival = item->departure;
-                    waitingItem.type = waiting;
-                    waitingItem.stop_points.push_back(previous_item.stop_points.front());
-                    to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
-                    BOOST_ASSERT(previous_item.arrival <= waitingItem.departure);
-                    BOOST_ASSERT(waitingItem.arrival <= item->departure);
-                    BOOST_ASSERT(previous_item.arrival <= item->departure);
+                    if(last_transit.type == public_transport && last_transit.get_vj()->next_vj == (*item).get_vj()){
+                        //Interlining do not add wait items
+                        if (previous_item.type == waiting || previous_item.type == walking || previous_item.type == guarantee){
+                            previous_item.type = stay_in;
+                            -- path.nb_changes;
+                        }
+                    }else{
+                        PathItem waitingItem=PathItem();
+                        waitingItem.departure = previous_item.arrival;
+                        waitingItem.arrival = item->departure;
+                        waitingItem.type = waiting;
+                        waitingItem.stop_points.push_back(previous_item.stop_points.front());
+                        to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
+                        BOOST_ASSERT(previous_item.arrival <= waitingItem.departure);
+                        BOOST_ASSERT(waitingItem.arrival <= item->departure);
+                        BOOST_ASSERT(previous_item.arrival <= item->departure);
+                    }
                 }
             }
+        }
+        if (item->type == public_transport){
+            last_transit = *item;
         }
         previous_item = *item;
     }
