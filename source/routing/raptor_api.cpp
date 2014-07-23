@@ -130,7 +130,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             // we indicate a time.
             if (origin.type == type::Type_e::StopArea && origin.uri != sp_dest->stop_area->uri) {
                 const auto duration = worker.get_distance(sp_dest->idx);
-                if (!duration.is_pos_infinity() && !duration.is_neg_infinity() && !duration.is_not_a_date_time()) {
+                if (!duration.is_special()) {
                     auto* first_section = pb_journey->mutable_sections(0);
                     first_section->set_duration(duration.total_seconds());
                     first_section->mutable_street_network()->set_mode(convert(origin.streetnetwork_params.mode));
@@ -286,7 +286,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             if (destination.type == type::Type_e::StopArea &&
                     destination.uri != sp_orig->stop_area->uri && pb_journey->sections_size() > 0) {
                 auto duration = worker.get_distance(sp_orig->idx, true);
-                if (!duration.is_pos_infinity() && !duration.is_neg_infinity() && !duration.is_not_a_date_time()) {
+                if (!duration.is_special()) {
                     auto* last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
                     last_section->set_duration(duration.total_seconds());
                     last_section->mutable_street_network()->set_mode(convert(destination.streetnetwork_params.mode));
