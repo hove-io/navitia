@@ -774,7 +774,7 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
 const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
     const navitia::georef::POI* vls = nullptr;
     //we loop through all poi near the coord to find a vls station within 50 meter
-    for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 50)) {
+    for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
         const auto poi = data.geo_ref->pois[poi_idx];
         const auto poi_type = data.geo_ref->poitypes[poi->poitype_idx];
