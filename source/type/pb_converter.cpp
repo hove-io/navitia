@@ -813,7 +813,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
     if (item.transportation == georef::PathItem::TransportCaracteristic::BssPutBack) {
-        const auto vls_station = get_nearest_bss_station(data, last_item.coordinates.front());
+        const auto vls_station = get_nearest_bss_station(data, item.coordinates.front());
         if (vls_station) {
             fill_pb_placemark(vls_station, data, dest_place, depth, now, action_period);
             poi_found = true;
