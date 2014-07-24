@@ -576,7 +576,8 @@ void StopTimeGtfsHandler::init(Data&) {
             stop_c = csv.get_pos_col("stop_id"),
             stop_seq_c = csv.get_pos_col("stop_sequence"),
             pickup_c = csv.get_pos_col("pickup_type"),
-            drop_off_c = csv.get_pos_col("drop_off_type");
+            drop_off_c = csv.get_pos_col("drop_off_type"),
+            headsign_c = csv.get_pos_col("stop_headsign");
 }
 
 void StopTimeGtfsHandler::finish(Data& data) {
@@ -601,6 +602,10 @@ nm::StopTime* StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, b
     //stop_time->journey_pattern_point = journey_pattern_point;
     stop_time->order = boost::lexical_cast<int>(row[stop_seq_c]);
     stop_time->vehicle_journey = vj_it->second;
+
+    if (has_col(headsign_c,row) && row[headsign_c].size() > 0){
+        stop_time->headsign = row[headsign_c];
+    }
 
     if(has_col(pickup_c, row) && has_col(drop_off_c, row))
         stop_time->ODT = (row[pickup_c] == "2" && row[drop_off_c] == "2");

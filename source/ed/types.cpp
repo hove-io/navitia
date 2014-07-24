@@ -337,6 +337,8 @@ nt::StopTime* StopTime::get_navitia_type() const {
     nt::StopTime* nt_stop = new nt::StopTime();
     nt_stop->arrival_time = this->arrival_time;
     nt_stop->departure_time = this->departure_time;
+    nt_stop->information->headsign = this->headsign;
+    nt_stop->information->comment = this->comment;
     nt_stop->properties[nt::StopTime::ODT] = this->ODT;
     nt_stop->properties[nt::StopTime::DROP_OFF] = this->drop_off_allowed;
     nt_stop->properties[nt::StopTime::PICK_UP] = this->pick_up_allowed;

@@ -315,6 +315,11 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_REQUIRE(data.stops[0]->tmp_stop_point != nullptr);
     BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
+
+    //Headsign in stop time
+    BOOST_REQUIRE(data.stops[0]->headsign.empty());
+    BOOST_CHECK_EQUAL(data.stops[2]->headsign, "EMSI via NADAV");
+    BOOST_CHECK_EQUAL(data.stops[5]->headsign, "EMSI");
 }
 
 //TODO: work on this, we should be able to parse line with \\ in char

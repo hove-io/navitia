@@ -306,6 +306,7 @@ struct StopTime : public Nameable {
     VehicleJourney* vehicle_journey;
     JourneyPatternPoint* journey_pattern_point;
     StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
+    std::string headsign;
     int order;
     bool ODT;
     bool pick_up_allowed;

@@ -551,8 +551,8 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
     pbnavitia::Properties* properties = stop_date_time->mutable_properties();
     fill_pb_object(st, data, properties, max_depth, now, action_period);
 
-    if(!st->comment.empty()){
-        fill_pb_object(st->comment, data,  properties->add_notes(), max_depth, now, action_period);
+    if(!st->information->comment.empty()){
+        fill_pb_object(st->information->comment, data,  properties->add_notes(), max_depth, now, action_period);
     }
 }
 
@@ -1113,8 +1113,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         destination->set_uri("destination:"+std::to_string(hash_fn(spt->name)));
         destination->set_destination(spt->name);
     }
-    if (!stop_time->comment.empty()){
-        fill_pb_object(stop_time->comment, data,  hn->add_notes(),max_depth,now,action_period);
+    if (!stop_time->information->comment.empty()){
+        fill_pb_object(stop_time->information->comment, data,  hn->add_notes(),max_depth,now,action_period);
     }
     if (stop_time->vehicle_journey != nullptr) {
         if(!stop_time->vehicle_journey->information->odt_message.empty()){
@@ -1196,7 +1196,8 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period)
+                    const pt::ptime& now, const pt::time_period& action_period,
+                    const nt::StopTime* st_boarding)
 {
     if(vj == nullptr)
         return ;
@@ -1210,7 +1211,13 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     for(auto message : vj->information->get_applicable_messages(now, action_period)){
         fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
     }
-    pt_display_info->set_headsign(vj->information->headsign);
+
+    if (st_boarding == nullptr || st_boarding->information->headsign.empty()){
+        pt_display_info->set_headsign(vj->information->headsign);
+    }else{
+        pt_display_info->set_headsign(st_boarding->information->headsign);
+    }
+
     pt_display_info->set_name(vj->information->name);
     pt_display_info->set_direction(vj->get_direction());
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->physical_mode != nullptr)){

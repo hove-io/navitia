@@ -214,6 +214,16 @@ DO $$
 $$;
 
 DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.stop_time ADD COLUMN headsign TEXT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column headsign already exists in navitia.stop_time';
+        END;
+    END;
+$$;
+
+DO $$
     DECLARE count_admin int;
 BEGIN
     count_admin := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='admin'), 0);

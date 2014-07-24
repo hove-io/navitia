@@ -847,6 +847,18 @@ struct JourneyPatternPoint : public Header{
 
 };
 
+struct StopTimeInformation {
+
+    std::string comment;
+    std::string headsign;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & headsign & comment;
+    }
+
+    StopTimeInformation() {}
+
+};
+
 struct StopTime {
     static const uint8_t PICK_UP = 0;
     static const uint8_t DROP_OFF = 1;
@@ -861,7 +873,20 @@ struct StopTime {
     uint32_t departure_time = 0; ///< En secondes depuis minuit
     VehicleJourney* vehicle_journey = nullptr;
     JourneyPatternPoint* journey_pattern_point = nullptr;
-    std::string comment;
+    std::unique_ptr<StopTimeInformation> information;
+
+    StopTime(): vehicle_journey(nullptr), journey_pattern_point(nullptr) {
+        information = std::unique_ptr<StopTimeInformation>(new StopTimeInformation());
+    }
+
+    StopTime(const StopTime &obj) : vehicle_journey(obj.vehicle_journey),
+            journey_pattern_point(obj.journey_pattern_point){
+        properties = obj.properties;
+        arrival_time = obj.arrival_time;
+        departure_time = obj.departure_time;
+        local_traffic_zone = obj.local_traffic_zone;
+        information = std::unique_ptr<StopTimeInformation>(new StopTimeInformation(*obj.information));
+    }
 
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
@@ -874,8 +899,6 @@ struct StopTime {
     inline void set_odt(bool value) {properties[ODT] = value;}
     inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
     inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
-
-
 
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
@@ -958,7 +981,7 @@ struct StopTime {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
-            & properties & local_traffic_zone & comment;
+            & properties & local_traffic_zone & information;
     }
 
     bool operator<(const StopTime& other) const {

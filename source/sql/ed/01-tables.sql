@@ -317,7 +317,8 @@ CREATE TABLE IF NOT EXISTS navitia.stop_time (
     is_frequency BOOLEAN NOT NULL,
     comment TEXT,
     date_time_estimated BOOLEAN NOT NULL DEFAULT false,
-    properties_id BIGINT REFERENCES navitia.properties
+    properties_id BIGINT REFERENCES navitia.properties,
+    headsign TEXT
 );
 
 CREATE TABLE IF NOT EXISTS navitia.week_pattern (

@@ -703,9 +703,9 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, " // 0, 1, 2, 3
-        "local_traffic_zone, odt, pick_up_allowed, " // 4, 5, 6, 7
-        "drop_off_allowed, is_frequency, date_time_estimated, comment " // 8, 9
+    std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, "
+        "local_traffic_zone, odt, pick_up_allowed, "
+        "drop_off_allowed, is_frequency, date_time_estimated, comment, headsign "
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
@@ -714,7 +714,8 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         const_it["arrival_time"].to(stop->arrival_time);
         const_it["departure_time"].to(stop->departure_time);
         const_it["local_traffic_zone"].to(stop->local_traffic_zone);
-        const_it["comment"].to(stop->comment);
+        const_it["comment"].to(stop->information->comment);
+        const_it["headsign"].to(stop->information->headsign);
 
         stop->set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
 

@@ -258,7 +258,7 @@ struct StopTimeGtfsHandler : public GenericHandler {
     int id_c, arrival_c,
     departure_c, stop_c,
     stop_seq_c, pickup_c,
-    drop_off_c;
+    drop_off_c, headsign_c;
 
     size_t count = 0;
     void init(Data& data);
