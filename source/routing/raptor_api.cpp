@@ -576,7 +576,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             type::idx_t initial_jpp;
             DateTime initial_dt;
             boost::tie(initial_jpp, initial_dt) = get_final_jppidx_and_date(best_round,
-                    best_jpp, clockwise, disruption_active, accessibilite_params, raptor);
+                    best_jpp, !clockwise, disruption_active, accessibilite_params, raptor);
 
             int duration = ::abs(label - init_dt);
 

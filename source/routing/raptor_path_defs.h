@@ -92,13 +92,13 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
                bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
                const RAPTOR &raptor_) {
     v.init_vj();
-    auto boarding_jpp = raptor_.get_boarding_jpp(countb, current_jpp_idx);
+    auto boarding_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx);
     const type::StopTime* current_st;
     DateTime workingDate;
     std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_jpp_idx, raptor_.labels,
                                                               accessibilite_params, clockwise,
                                                               raptor_.data, disruption_active);
-    while(boarding_jpp != current_jpp_idx) {
+    while(boarding_jpp_idx != current_jpp_idx) {
         // There is a side effect on workingDate caused by workingDate
         auto departure_arrival = handle_st(current_st, workingDate, clockwise, raptor_.data);
         v.loop_vj(current_st, departure_arrival.first, departure_arrival.second);
@@ -133,7 +133,7 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
     // There is a side effect on workingDate caused by workingDate
     auto departure_arrival = handle_st(current_st, workingDate, clockwise, raptor_.data);
     v.loop_vj(current_st, departure_arrival.first, departure_arrival.second);
-    boarding_jpp = navitia::type::invalid_idx ;
+    boarding_jpp_idx = navitia::type::invalid_idx ;
     v.finish_vj(clockwise);
 }
 
