@@ -218,5 +218,5 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data,
                     pbnavitia::Properties* properties, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 
-pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode);
+pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode, const bool is_crowfly = false);
 }//namespace navitia
