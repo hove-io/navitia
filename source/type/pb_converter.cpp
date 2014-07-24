@@ -1218,7 +1218,6 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
         pt_display_info->set_headsign(st_boarding->information->headsign);
     }
 
-    pt_display_info->set_name(vj->information->name);
     pt_display_info->set_direction(vj->get_direction());
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->physical_mode != nullptr)){
         pt_display_info->set_physical_mode(vj->journey_pattern->physical_mode->name);
@@ -1299,6 +1298,7 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& ,
         return ;
     add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
     add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
+    add_info_vehicle_journey->set_name(vj->information->name);
 }
 
 
