@@ -41,6 +41,21 @@ $$;
 DO $$
     BEGIN
         BEGIN
+            ALTER TABLE navitia.vehicle_journey ADD COLUMN start_time integer;
+            ALTER TABLE navitia.vehicle_journey ADD COLUMN end_time integer;
+            ALTER TABLE navitia.vehicle_journey ADD COLUMN headway_sec integer;
+            ALTER TABLE navitia.stop_time DROP COLUMN start_time;
+            ALTER TABLE navitia.stop_time DROP COLUMN end_time;
+            ALTER TABLE navitia.stop_time DROP COLUMN headway_sec;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column start_time,end_time,headway_sec already exists in navitia.vehicle_journey';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
             ALTER TABLE navitia.stop_point ADD COLUMN platform_code TEXT NULL DEFAULT NULL;
         EXCEPTION
             WHEN duplicate_column THEN RAISE NOTICE 'column platform_code already exists in navitia.stop_point.';

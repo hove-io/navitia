@@ -683,28 +683,28 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     JourneyPattern* journey_pattern;
     Company* company;
     ValidityPattern* validity_pattern;
+    ValidityPattern* adapted_validity_pattern;
+    VehicleJourney* theoric_vehicle_journey;
     std::vector<StopTime*> stop_time_list;
-    VehicleJourneyType vehicle_journey_type;
-    std::string odt_message;
-
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
     // They have the same block id
     VehicleJourney* next_vj = nullptr;
     VehicleJourney* prev_vj = nullptr;
+    std::string odt_message;
     ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
-    bool is_adapted;
-    ValidityPattern* adapted_validity_pattern;
+    VehicleJourneyType vehicle_journey_type;
+    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
+    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
+    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
-    VehicleJourney* theoric_vehicle_journey;
+    bool is_adapted;
 
     VehicleJourney(): journey_pattern(nullptr), company(nullptr),
-        validity_pattern(nullptr),
-        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false),
-        adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
-
+        validity_pattern(nullptr), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr),
+        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
@@ -712,7 +712,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & messages & associated_calendars
-            & codes & next_vj & prev_vj;
+            & codes & next_vj & prev_vj & start_time & end_time & headway_secs;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -799,22 +799,18 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
 
 struct JourneyPatternPoint : public Header{
     const static Type_e type = Type_e::JourneyPatternPoint;
-    int order;
-    bool main_stop_point;
-    int fare_section;
     JourneyPattern* journey_pattern;
     StopPoint* stop_point;
+    uint16_t order;
 
-    JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern(nullptr), stop_point(nullptr){}
+    JourneyPatternPoint() : journey_pattern(nullptr), stop_point(nullptr), order(0){}
 
     // Attention la sérialisation est répartrie dans deux methode: save et load
     template<class Archive> void save(Archive & ar, const unsigned int) const{
-        ar & idx & uri & order & main_stop_point & fare_section & journey_pattern
-                & stop_point & order ;
+        ar & idx & uri & order & journey_pattern & stop_point & order ;
     }
     template<class Archive> void load(Archive & ar, const unsigned int) {
-        ar & idx & uri & order & main_stop_point & fare_section & journey_pattern
-                & stop_point & order;
+        ar & idx & uri & order & journey_pattern & stop_point & order;
         //on remplit le tableau des stoppoints, bizarrement ca segfault au chargement si on le fait à la bina...
         this->stop_point->journey_pattern_point_list.push_back(this);
     }
@@ -838,9 +834,6 @@ struct StopTime {
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
     uint32_t arrival_time = 0; ///< En secondes depuis minuit
     uint32_t departure_time = 0; ///< En secondes depuis minuit
-    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence, premiere arrivee
-    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence, dernier depart
-    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Si horaire en fréquence
     VehicleJourney* vehicle_journey = nullptr;
     JourneyPatternPoint* journey_pattern_point = nullptr;
     std::string comment;
@@ -899,7 +892,17 @@ struct StopTime {
         }
     }
 
-    DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);}
+    inline uint32_t end_time(const bool is_departure) const {
+        return vehicle_journey->end_time + (is_departure? departure_time : arrival_time);
+    }
+
+    inline uint32_t start_time(const bool is_departure) const {
+        return vehicle_journey->start_time + (is_departure? departure_time : arrival_time);
+    }
+
+    DateTime section_end_date(int date, bool clockwise) const {
+        return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);
+    }
 
 
     /** Is this hour valid : only concerns frequency data
@@ -910,7 +913,8 @@ struct StopTime {
         if(!this->is_frequency())
             return true;
         else
-            return clockwise ? hour <= this->end_time : this->start_time <= hour;
+            return clockwise ? hour <= (this->end_time(true)) :
+                              (this->vehicle_journey->start_time+arrival_time) <= hour;
     }
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
@@ -928,7 +932,7 @@ struct StopTime {
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point
+            ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
             & properties & local_traffic_zone & comment;
     }
 

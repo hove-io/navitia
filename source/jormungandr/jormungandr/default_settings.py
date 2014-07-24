@@ -43,7 +43,8 @@ LOGGER = {
     'handlers': {
         'default': {
             'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
+            'class': 'logging.FileHandler',
+            'filename': 'jormungandr.log',
             'formatter': 'default',
         },
     },

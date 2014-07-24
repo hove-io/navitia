@@ -1,3 +1,35 @@
+navitia2 (0.100.0) unstable; urgency=low
+
+  * fare : currency serialization  <https://github.com/CanalTP/navitia/pull/455>
+  * Add coherence bss  <https://github.com/CanalTP/navitia/pull/454>
+  * Fix isochrones  <https://github.com/CanalTP/navitia/pull/452>
+  * Ed: error message when no pt data in db  <https://github.com/CanalTP/navitia/pull/451>
+  * Tyr: Change url to flask restful to https  <https://github.com/CanalTP/navitia/pull/450>
+  * Jormungandr: Change url to flask restful to https  <https://github.com/CanalTP/navitia/pull/449>
+  * Jormungandr: add kombu dependency  <https://github.com/CanalTP/navitia/pull/448>
+  * Kraken: Better handling of departure that are also destinations  <https://github.com/CanalTP/navitia/pull/447>
+  * Remove unused members of JourneyPatternPoint  <https://github.com/CanalTP/navitia/pull/446>
+  * Use std::fill instead of assign  <https://github.com/CanalTP/navitia/pull/445>
+  * Move frequency paramaters to VJ   <https://github.com/CanalTP/navitia/pull/444>
+  * Add coherence to sections  <https://github.com/CanalTP/navitia/pull/441>
+  * Autocomplete test functional init  <https://github.com/CanalTP/navitia/pull/440>
+  * Revert 437 autocomplete test functional init  <https://github.com/CanalTP/navitia/pull/439>
+  * Cli: factorize loading  <https://github.com/CanalTP/navitia/pull/438>
+  * Autocomplete test functional init  <https://github.com/CanalTP/navitia/pull/437>
+  * Add requirements in cmake to help compilation preparation  <https://github.com/CanalTP/navitia/pull/436>
+  * Doc install  <https://github.com/CanalTP/navitia/pull/435>
+  * Cli  <https://github.com/CanalTP/navitia/pull/434>
+  * Tyr: do not run load_data async  <https://github.com/CanalTP/navitia/pull/433>
+  * Add debug tools  <https://github.com/CanalTP/navitia/pull/432>
+  * Assert on reversal errors  <https://github.com/CanalTP/navitia/pull/430>
+  * Use constants instead of double negation  <https://github.com/CanalTP/navitia/pull/429>
+  * Navitiacommon&tyr: remove coordinates from ptobjects  <https://github.com/CanalTP/navitia/pull/428>
+  * Stay in fixes  <https://github.com/CanalTP/navitia/pull/427>
+  * Translation <https://github.com/CanalTP/navitia/pull/426> and <https://github.com/CanalTP/navitia/pull/422>
+  * Remove poipoitype  <https://github.com/CanalTP/navitia/pull/424>
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 24 Jun 2014 18:26:13 +0100
+
 navitia2 (0.99.0) unstable; urgency=low
 
   * Fix auth uri  <https://github.com/CanalTP/navitia/pull/417>

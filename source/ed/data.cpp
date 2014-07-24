@@ -103,12 +103,11 @@ void Data::complete(){
     build_journey_pattern_points();
     build_block_id();
     finalize_frequency();
-    //on construit les codes externe des journey pattern
+    //We build the external_codes of the journey_pattern
     ::ed::normalize_uri(journey_patterns);
     ::ed::normalize_uri(routes);
 
-    //Ajoute les connections entre les stop points d'un meme stop area
-
+    //Add stop_point_connections between stoppoints of the same stop_area.
     std::multimap<std::string, std::string> conns;
     for(auto conn : stop_point_connections) {
         conns.insert(std::make_pair(conn->departure->uri, conn->destination->uri));
@@ -172,7 +171,7 @@ void Data::complete(){
             }
         }
     }
-    std::cout << "On a ajouté " << stop_point_connections.size() - connections_size << " connections lors de la completion" << std::endl;
+    std::cout << "We have added " << stop_point_connections.size() - connections_size << " connections" << std::endl;
 }
 
 
@@ -236,8 +235,8 @@ void Data::clean(){
         }
     }
 
-    // Pour chaque stopTime à supprimer on le détruit, et on remet le dernier élément du vector à la place
-    // On ne redimentionne pas tout de suite le tableau pour des raisons de perf
+    // For each stop_time to remove, we delete and put the last element of the vector in it's place
+    // We avoid resizing the vector until completition for performance reasons.
     size_t num_elements = stops.size();
     for(size_t to_erase : erasest) {
         delete stops[to_erase];
@@ -256,7 +255,7 @@ void Data::clean(){
         }
     }
 
-    //Meme chose mais avec les vj
+    // The same but now with vehicle_journey's
     num_elements = vehicle_journeys.size();
     for(size_t to_erase : erasest) {
         if(vehicle_journeys[to_erase]->next_vj) {
@@ -273,12 +272,12 @@ void Data::clean(){
 
 
 
-    LOG4CPLUS_INFO(logger, "J'ai supprimé " + boost::lexical_cast<std::string>(erase_overlap) + "vehicle journey pour cause de dépassement, " +
-                   boost::lexical_cast<std::string>(erase_emptiness) + " car il n'y avait pas de stop time dans le clean, et "
-                   +boost::lexical_cast<std::string>(erase_no_circulation)+ " car ils ne circulaient jamais.");
+    LOG4CPLUS_INFO(logger, "I have deleted" + boost::lexical_cast<std::string>(erase_overlap) + "vehicle_journeys's because they overlap, " +
+                   boost::lexical_cast<std::string>(erase_emptiness) + " because they do not contain any clean stop_times, and "
+                   +boost::lexical_cast<std::string>(erase_no_circulation)+ " because they are never valid");
 
-    // Suppression des connections en doublons
-    // On trie les connections par departure, destination
+    // Delete duplicate connections
+    // Connections are sorted by departure,destination
     auto sort_function = [](types::StopPointConnection * spc1, types::StopPointConnection *spc2) {return spc1->uri < spc2->uri
                                                                                                     || (spc1->uri == spc2->uri && spc1 < spc2 );};
 
@@ -287,14 +286,14 @@ void Data::clean(){
     std::sort(stop_point_connections.begin(), stop_point_connections.end(), sort_function);
     num_elements = stop_point_connections.size();
     auto it_end = std::unique(stop_point_connections.begin(), stop_point_connections.end(), unique_function);
-    //@TODO : Attention ça fuit, il faudrait réussir à effacer les objets
+    //@TODO : Attention, it's leaking, it should succeed in erasing objects
     //Ce qu'il y a dans la fin du vecteur apres unique n'est pas garanti, on ne peut pas itérer sur la suite pour effacer
     stop_point_connections.resize(std::distance(stop_point_connections.begin(), it_end));
-    LOG4CPLUS_INFO(logger, "J'ai supprimé " + boost::lexical_cast<std::string>(num_elements-stop_point_connections.size()) + " doublons dans les connections");
+    LOG4CPLUS_INFO(logger, "I deleted" + boost::lexical_cast<std::string>(num_elements-stop_point_connections.size()) + " duplicate connections");
 }
 
-// Functor qui sert à transformer un objet ed en objet navitia
-// Il appelle la methode get_navitia_type
+// Functor used to transform an ed object in to an navitia objet.
+// It calls to the method get_navitia_type
 struct Transformer {
     template<class T> auto operator()(T * object) -> decltype(object->get_navitia_type()){
         return object->get_navitia_type();
@@ -404,17 +403,17 @@ std::string Data::compute_bounding_box(navitia::type::PT_Data &data) {
     return os.str();
 }
 
-// TODO : pour l'instant on construit une route par journey pattern
-// Il faudrait factoriser les routes
+// TODO : For now we construct one route per journey pattern
+// We should factorise the routes.
 void Data::build_journey_patterns(){
     auto logger = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_TRACE(logger, "On calcule les journey_patterns");
 
-    // Associe à chaque line uri le nombre de journey_pattern trouvées jusqu'à present
+    // Associate each line-uri with the number of journey_pattern's found up to now
     for(auto it1 = this->vehicle_journeys.begin(); it1 != this->vehicle_journeys.end(); ++it1){
         types::VehicleJourney * vj1 = *it1;
         ed::types::Route* route = vj1->tmp_route;
-        // Si le vj n'appartient encore à aucune journey_pattern
+        // If the VehicleJourney does not belong to any journey_pattern
         if(vj1->journey_pattern == 0) {
             std::string journey_pattern_uri = vj1->tmp_line->uri;
             journey_pattern_uri += "-";
@@ -442,12 +441,12 @@ void Data::build_journey_patterns(){
             }
         }
     }
-    LOG4CPLUS_TRACE(logger, "Nombre de journey_patterns : " +boost::lexical_cast<std::string>(this->journey_patterns.size()));
+    LOG4CPLUS_TRACE(logger, "Number of journey_patterns : " +boost::lexical_cast<std::string>(this->journey_patterns.size()));
 }
 
 void Data::build_journey_pattern_points(){
     auto logger = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_TRACE(logger, "Construction des journey_pattern points");
+    LOG4CPLUS_TRACE(logger, "Construct journey_pattern points");
     std::map<std::string, ed::types::JourneyPatternPoint*> journey_pattern_point_map;
 
     int stop_seq;
@@ -486,10 +485,10 @@ void Data::build_journey_pattern_points(){
             }
         }
     }
-    LOG4CPLUS_TRACE(logger, "Nombre de journey_pattern points : "+ boost::lexical_cast<std::string>(this->journey_pattern_points.size()));
+    LOG4CPLUS_TRACE(logger, "Number of journey_pattern points : "+ boost::lexical_cast<std::string>(this->journey_pattern_points.size()));
 }
 
-// Compare si deux vehicle journey appartiennent à la même journey_pattern
+// Check if two vehicle_journey's belong to the same journey_pattern
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2){
 
     if(vj1->stop_time_list.size() != vj2->stop_time_list.size())
@@ -502,16 +501,18 @@ bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * v
     return true;
 }
 
-
+//For frequency based trips, make arrival and departure time relative from first stop.
 void Data::finalize_frequency() {
     for(auto * vj : this->vehicle_journeys) {
         if(!vj->stop_time_list.empty() && vj->stop_time_list.front()->is_frequency) {
             auto * first_st = vj->stop_time_list.front();
-            size_t nb_trips = std::ceil((first_st->end_time - first_st->start_time)/first_st->headway_secs);
+            int begin = first_st->arrival_time;
+            if (begin == 0){
+                continue; //Time is already relative to 0
+            }
             for(auto * st : vj->stop_time_list) {
-                st->start_time = first_st->start_time+(st->arrival_time - first_st->arrival_time);
-                st->end_time = first_st->start_time + nb_trips * st->headway_secs;
-                st->end_time += (st->departure_time - first_st->departure_time);
+                st->arrival_time   -= begin;
+                st->departure_time -= begin;
             }
         }
     }
@@ -528,12 +529,10 @@ Georef::~Georef(){
          delete itm.second;
     for(auto itm : this->admins)
          delete itm.second;
-}
-
-PoiPoiType::~PoiPoiType(){
     for(auto itm : this->poi_types)
          delete itm.second;
     for(auto itm : this->pois)
          delete itm.second;
 }
+
 }//namespace

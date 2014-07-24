@@ -112,7 +112,7 @@ struct Ticket {
         key(key), caption(caption), value(value), comment(comment), type(type){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & key & caption & value & comment & type;
+        ar & key & caption & value & comment & type & currency;
     }
 };
 

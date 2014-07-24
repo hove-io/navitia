@@ -69,6 +69,9 @@ Installation
 ============
 For the installation procedure, please refer to the `installation documentation <https://github.com/canaltp/navitia/blob/dev/install.rst>`_
 
+You can also refer to the `automated build script <https://github.com/canaltp/navitia/blob/dev/build_navitia.sh` to have a step by step setup guide for ubuntu 14.04
+
+
 How to contribute
 =================
 Fork the github repo, create a new branch from dev, and submit your pull request!

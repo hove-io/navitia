@@ -35,7 +35,7 @@ namespace bg = boost::gregorian;
 
 namespace ed{
 
-void EdPersistor::persist(const ed::PoiPoiType& data){
+void EdPersistor::persist_pois(const ed::Georef& data){
     this->lotus.start_transaction();
     LOG4CPLUS_INFO(logger, "Begin: TRUNCATE data!");
     this->clean_poi();
@@ -207,7 +207,7 @@ void EdPersistor::insert_edges(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, to_insert_count<<"/"<<all_count<<" edges inserées");
 }
 
-void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
+void EdPersistor::insert_poi_types(const Georef &data){
     this->lotus.prepare_bulk_insert("georef.poi_type", {"id", "uri", "name"});
     for(const auto& itm : data.poi_types) {
         this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
@@ -215,7 +215,7 @@ void EdPersistor::insert_poi_types(const ed::PoiPoiType& data){
     lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_pois(const ed::PoiPoiType& data){
+void EdPersistor::insert_pois(const Georef &data){
     this->lotus.prepare_bulk_insert("georef.poi",
     {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible", "address_number", "address_name"});
     for(const auto& itm : data.pois) {
@@ -232,7 +232,7 @@ void EdPersistor::insert_pois(const ed::PoiPoiType& data){
     lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_poi_properties(const ed::PoiPoiType& data){
+void EdPersistor::insert_poi_properties(const Georef &data){
     this->lotus.prepare_bulk_insert("georef.poi_properties", {"poi_id","key","value"});
     for(const auto& itm : data.pois){
         for(auto property : itm.second->properties){
@@ -724,8 +724,8 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
 
 void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_times){
     this->lotus.prepare_bulk_insert("navitia.stop_time",
-            {"arrival_time", "departure_time", "local_traffic_zone", "start_time",
-             "end_time", "headway_sec", "odt", "pick_up_allowed", "drop_off_allowed",
+            {"arrival_time", "departure_time", "local_traffic_zone", "odt",
+             "pick_up_allowed", "drop_off_allowed",
              "is_frequency", "journey_pattern_point_id", "vehicle_journey_id",
              "comment", "date_time_estimated"});
     size_t inserted_count = 0;
@@ -739,9 +739,6 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }else{
             values.push_back(lotus.null_value);
         }
-        values.push_back(std::to_string(stop->start_time));
-        values.push_back(std::to_string(stop->end_time));
-        values.push_back(std::to_string(stop->headway_secs));
         values.push_back(std::to_string(stop->ODT));
         values.push_back(std::to_string(stop->pick_up_allowed));
         values.push_back(std::to_string(stop->drop_off_allowed));
@@ -765,10 +762,8 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
             lotus.finish_bulk_insert();
             LOG4CPLUS_INFO(logger, inserted_count<<"/"<< size_st <<" inserted stop times");
             this->lotus.prepare_bulk_insert("navitia.stop_time",
-            {"arrival_time", "departure_time", "local_traffic_zone", "start_time",
-             "end_time", "headway_sec", "odt", "pick_up_allowed", "drop_off_allowed",
-             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id",
-             "comment", "date_time_estimated"});
+            {"arrival_time", "departure_time", "local_traffic_zone", "odt", "pick_up_allowed", "drop_off_allowed",
+             "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "comment", "date_time_estimated"});
         }
     }
     this->lotus.finish_bulk_insert();
@@ -836,6 +831,7 @@ void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJour
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey",
             {"id", "uri", "external_code", "name", "comment", "validity_pattern_id",
+             "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "journey_pattern_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
              "odt_type_id", "odt_message"});
@@ -847,11 +843,17 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(vj->external_code);
         values.push_back(vj->name);
         values.push_back(vj->comment);
+
         if(vj->validity_pattern != NULL){
             values.push_back(std::to_string(vj->validity_pattern->idx));
         }else{
             values.push_back(lotus.null_value);
         }
+
+        values.push_back(std::to_string(vj->start_time));
+        values.push_back(std::to_string(vj->end_time));
+        values.push_back(std::to_string(vj->headway_secs));
+
         if(vj->adapted_validity_pattern != NULL){
             values.push_back(std::to_string(vj->adapted_validity_pattern->idx));
         }else{

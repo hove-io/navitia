@@ -1,5 +1,5 @@
 Flask==0.10.1
--e git://github.com/l-vincent-l/flask-restful.git@b20d61f88b41f41a85f2cae4d6a831ab327ebaf7#egg=Flask_RESTful-master
+-e git+https://github.com/l-vincent-l/flask-restful.git@b20d61f88b41f41a85f2cae4d6a831ab327ebaf7#egg=Flask_RESTful-master
 Flask-SQLAlchemy==1.0
 Flask-Script==0.6.7
 GeoAlchemy2==0.2.3
@@ -20,3 +20,4 @@ pyzmq==2.1.11
 redis==2.9.1
 six==1.6.1
 wsgiref==0.1.2
+kombu==3.0.8

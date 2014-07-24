@@ -223,6 +223,10 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     std::string block_id;
     std::string odt_message;
 
+    int start_time = std::numeric_limits<int>::max(); /// First departure of vehicle
+    int end_time = std::numeric_limits<int>::max(); /// Last departure of vehicle journey
+    int headway_secs = std::numeric_limits<int>::max(); /// Seconds between each departure.
+
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern = nullptr;
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
@@ -298,9 +302,6 @@ struct StopPoint : public Header, Nameable, hasProperties{
 struct StopTime : public Nameable {
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
-    int start_time; /// Si horaire en fréquence
-    int end_time; /// Si horaire en fréquence
-    int headway_secs; /// Si horaire en fréquence
     VehicleJourney* vehicle_journey;
     JourneyPatternPoint* journey_pattern_point;
     StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
@@ -314,8 +315,7 @@ struct StopTime : public Nameable {
 
     uint16_t local_traffic_zone;
 
-    StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
-        headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
         ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),date_time_estimated(false),
                 local_traffic_zone(std::numeric_limits<uint16_t>::max()) {}
 

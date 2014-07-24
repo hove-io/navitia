@@ -64,7 +64,8 @@ struct RAPTOR
     /// Used by footpath()
     std::vector<type::idx_t> best_jpp_by_sp;
     ///La journey_pattern est elle valide ?
-    boost::dynamic_bitset<> journey_patterns_valides;
+    boost::dynamic_bitset<> valid_journey_patterns;
+    boost::dynamic_bitset<> valid_journey_pattern_points;
     ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
     queue_t Q;
 
@@ -72,7 +73,8 @@ struct RAPTOR
     RAPTOR(const navitia::type::Data &data) :
         data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
         best_jpp_by_sp(data.pt_data->stop_points.size()),
-        journey_patterns_valides(data.pt_data->journey_patterns.size()),
+        valid_journey_patterns(data.pt_data->journey_patterns.size()),
+        valid_journey_pattern_points(data.pt_data->journey_pattern_points.size()),
         Q(data.pt_data->journey_patterns.size()) {
             labels.assign(10, data.dataRaptor->labels_const);
     }
@@ -96,7 +98,8 @@ struct RAPTOR
             bool clockwise = true,
             /*const type::Properties &required_properties = 0*/
             const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
-            max_transfers=std::numeric_limits<uint32_t>::max());
+            max_transfers=std::numeric_limits<uint32_t>::max(),
+            const std::vector<std::string>& forbidden_uris = {});
 
 
     /** Calcul d'itinéraires dans le sens horaire à partir de plusieurs 
@@ -129,7 +132,7 @@ struct RAPTOR
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
-    void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden,
+    void set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> & forbidden,
                                       bool disruption_active,
                                       bool allow_odt);
 

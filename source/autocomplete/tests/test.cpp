@@ -32,6 +32,7 @@ www.navitia.io
 #define BOOST_TEST_MODULE test_autocomplete
 
 #include "autocomplete/autocomplete.h"
+#include "autocomplete/autocomplete_api.h"
 #include "type/data.h"
 #include <boost/test/unit_test.hpp>
 #include <vector>
@@ -42,9 +43,15 @@ www.navitia.io
 #include<unordered_map>
 #include "type/type.h"
 #include <boost/regex.hpp>
+#include "georef/adminref.h"
+#include "georef/georef.h"
+#include "routing/raptor.h"
+#include "ed/build_helper.h"
+
 
 namespace pt = boost::posix_time;
 using namespace navitia::autocomplete;
+using namespace navitia::georef;
 
 BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     int word_weight = 5;
@@ -386,7 +393,6 @@ BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
         1           2       50              13-7 = 6    2       50-6-2 = 42
         2           1       33              16-7 = 9    2       33-9-2 = 22
         5           2       66              13-7 = 6    2       66-6-2 = 58
-
     Result [] = {1,5,0,2}
 
     Recherche : "jean";
@@ -690,4 +696,160 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
     BOOST_REQUIRE_EQUAL(res3.at(8).idx, 14);//Corberie, Les Sorinières
     BOOST_REQUIRE_EQUAL(res3.at(9).quality, 86);
     BOOST_REQUIRE_EQUAL(res3.at(9).idx, 18);//cimetière, Les Sorinières
+}
+
+/*
+1. We have 1 administrative_region and 9  stop_area
+2. All the stop_areas are attached to the same administrative_region.
+3. Call with "quimer" and count = 10
+4. In the result the administrative_region is the first one
+5. All the stop_areas with same quality are sorted by name (case insensitive).
+6. There 10 elements in the result.
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("IUT", 0, 0);
+    b.sa("Gare", 0, 0);
+    b.sa("Resistance", 0, 0);
+    b.sa("Becharles", 0, 0);
+    b.sa("Luther King", 0, 0);
+    b.sa("Napoleon III", 0, 0);
+    b.sa("MPT kerfeunteun", 0, 0);
+    b.sa("Marcel Paul", 0, 0);
+    b.sa("chaptal", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->post_code = "29000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, 10, admins, 0, *(b.data));
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 90);
+    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 93);
+    BOOST_REQUIRE_EQUAL(resp.places(9).quality(), 88);
+    BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_REQUIRE_EQUAL(resp.places(1).uri(), "Becharles");
+    BOOST_REQUIRE_EQUAL(resp.places(9).uri(), "Napoleon III");
+
+    resp = navitia::autocomplete::autocomplete("qui", type_filter , 1, 10, admins, 0, *(b.data));
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 86);
+    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 93);
+    BOOST_REQUIRE_EQUAL(resp.places(9).quality(), 88);
+    BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_REQUIRE_EQUAL(resp.places(1).uri(), "Becharles");
+    BOOST_REQUIRE_EQUAL(resp.places(9).uri(), "Napoleon III");
+}
+
+/*
+1. We have 1 administrative_region and 9  stop_area
+2. All the stop_areas are attached to the same administrative_region.
+3. Call with "quimer" and count = 5
+4. In the result the administrative_region is absent
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("IUT", 0, 0);
+    b.sa("Gare", 0, 0);
+    b.sa("Resistance", 0, 0);
+    b.sa("Becharles", 0, 0);
+    b.sa("Luther King", 0, 0);
+    b.sa("Napoleon III", 0, 0);
+    b.sa("MPT kerfeunteun", 0, 0);
+    b.sa("Marcel Paul", 0, 0);
+    b.sa("chaptal", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->post_code = "29000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, 5, admins, 0, *(b.data));
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 93);
+    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 93);
+    BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Becharles");
+    BOOST_REQUIRE_EQUAL(resp.places(4).uri(), "Resistance");
+}
+
+BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("IUT", 0, 0);
+    b.sa("Gare", 0, 0);
+    b.sa("Becharles", 0, 0);
+    b.sa("Luther King", 0, 0);
+    b.sa("Napoleon III", 0, 0);
+    b.sa("MPT kerfeunteun", 0, 0);
+    b.data->pt_data->index();
+    Way w;
+    w.idx = 0;
+    w.name = "rue DU TREGOR";
+    w.uri = w.name;
+    b.data->geo_ref->add_way(w);
+    w.name = "rue VIS";
+    w.uri = w.name;
+    w.idx = 1;
+    b.data->geo_ref->add_way(w);
+    w.idx = 2;
+    w.name = "quai NEUF";
+    w.uri = w.name;
+    b.data->geo_ref->add_way(w);
+
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->post_code = "29000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, 10, admins, 0, *(b.data));
+    //Here we want only Admin and StopArea
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 7);
+    type_filter.push_back(navitia::type::Type_e::Address);
+    resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, 10, admins, 0, *(b.data));
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 90);
+    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 93);
+
+    BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_REQUIRE_EQUAL(resp.places(1).uri(), "Becharles");
+    BOOST_REQUIRE_EQUAL(resp.places(7).uri(), "rue VIS");
+    BOOST_REQUIRE_EQUAL(resp.places(7).quality(), 66);
+    BOOST_REQUIRE_EQUAL(resp.places(8).uri(), "quai NEUF");
+    BOOST_REQUIRE_EQUAL(resp.places(8).quality(), 64);
+    BOOST_REQUIRE_EQUAL(resp.places(9).uri(), "rue DU TREGOR");
+    BOOST_REQUIRE_EQUAL(resp.places(9).quality(), 56);
 }

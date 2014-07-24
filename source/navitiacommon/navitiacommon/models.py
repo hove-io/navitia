@@ -312,8 +312,6 @@ class StopAreaInstance(db.Model):
 class StopArea(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
-    coord = db.Column(Geography(geometry_type="POINT", srid=4326,
-                                spatial_index=False))
     instances = db.relationship("Instance",
                             secondary="rel_stop_area_instance",
                             backref="stop_area",
@@ -327,11 +325,10 @@ class StopArea(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
 
 
 
-    def __init__(self, id=None, uri=None, coord=None, external_code=None,
+    def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
-        self.coord = coord
         self.external_code = external_code
         self.name = name
 
@@ -358,8 +355,6 @@ class StopPointInstance(db.Model):
 class StopPoint(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
-    coord = db.Column(Geography(geometry_type="POINT", srid=4326,
-                                spatial_index=False))
     instances = db.relationship("Instance",
                             secondary="rel_stop_point_instance",
                             backref="stop_point",
@@ -372,11 +367,10 @@ class StopPoint(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     prefix_ext_code = "external_code_sp"
 
 
-    def __init__(self, id=None, uri=None, coord=None, external_code=None,
+    def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
-        self.coord = coord
         self.external_code = external_code
         self.name = name
 
@@ -403,8 +397,6 @@ class PoiInstance(db.Model):
 class Poi(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.Text, nullable=False, unique=True)
-    coord = db.Column(Geography(geometry_type="POINT", srid=4326,
-                                spatial_index=False))
     instances = db.relationship("Instance",
                             secondary="rel_poi_instance",
                             backref="poi",
@@ -417,11 +409,10 @@ class Poi(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     prefix_ext_code = "external_code_poi"
 
 
-    def __init__(self, id=None, uri=None, coord=None, external_code=None,
+    def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
-        self.coord = coord
         self.external_code = external_code
         self.name = name
 
@@ -460,11 +451,10 @@ class Admin(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     cls_rel_instance = AdminInstance
     prefix_ext_code = "external_code_poi"
 
-    def __init__(self, id=None, uri=None, coord=None, external_code=None,
+    def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
-        self.coord = coord
         self.external_code = external_code
         self.name = name
 
@@ -503,11 +493,10 @@ class Line(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     prefix_ext_code = "external_code_line"
 
 
-    def __init__(self, id=None, uri=None, coord=None, external_code=None,
+    def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
-        self.coord = coord
         self.external_code = external_code
         self.name = name
 
@@ -546,11 +535,10 @@ class Route(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     prefix_ext_code = "external_code_route"
 
 
-    def __init__(self, id=None, uri=None, coord=None, external_code=None,
+    def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
-        self.coord = coord
         self.external_code = external_code
         self.name = name
 
@@ -588,11 +576,10 @@ class Network(db.Model, mixin_get_from_uri, mixin_get_from_external_code):
     prefix_ext_code = "external_code_network"
 
 
-    def __init__(self, id=None, uri=None, coord=None, external_code=None,
+    def __init__(self, id=None, uri=None, external_code=None,
                  name=None):
         self.id = id
         self.uri = uri
-        self.coord = coord
         self.external_code = external_code
         self.name = name
 

@@ -50,6 +50,8 @@ namespace navitia{
         class Ticket;
     }
 }
+namespace pt = boost::posix_time;
+
 #define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
 
 namespace navitia {
@@ -65,8 +67,9 @@ struct EnhancedResponse {
         return routing_section_map[{j, section_idx}];
     }
 
-    std::string register_section(const georef::PathItem& /*georef_item*/) {
-        //we don't need to register the georef item
+    std::string register_section() {
+        // For some section (transfer, waiting, streetnetwork, corwfly) we don't need info
+        // about the item
         return "section_" + boost::lexical_cast<std::string>(nb_sections++);
     }
 
@@ -133,6 +136,16 @@ void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &da
 void fill_pb_placemark(const navitia::georef::POI* poi, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(const type::EntryPoint& origin, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes = false);
+
+
+void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination, boost::posix_time::ptime time,
+                          const type::Data& data, EnhancedResponse &response,  pbnavitia::Journey* pb_journey,
+                          const pt::ptime& now, const pt::time_period& action_period);
 
 void fill_fare_section(EnhancedResponse& pb_response, pbnavitia::Journey* pb_journey, const fare::results& fare);
 
@@ -204,4 +217,6 @@ void fill_pb_object(const std::string comment, const type::Data& data,
 void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data,
                     pbnavitia::Properties* properties, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
+
+pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode);
 }//namespace navitia

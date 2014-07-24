@@ -82,6 +82,10 @@ void fill_pb_object(const navitia::georef::Admin* adm, const nt::Data&,
 }
 
 
+void fill_pb_object(const nt::Contributor*,
+                    const nt::Data& , pbnavitia::Contributor* ,
+                    int , const pt::ptime& ,
+                    const pt::time_period& , const bool ){}
 void fill_pb_object(const nt::StopArea * sa,
                     const nt::Data& data, pbnavitia::StopArea* stop_area,
                     int max_depth, const pt::ptime& now,
@@ -673,7 +677,7 @@ void fill_pb_placemark(const navitia::georef::Admin* admin,
 void fill_pb_placemark(const navitia::georef::POI* poi,
                        const type::Data &data, pbnavitia::Place* place,
                        int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period){
+                       const pt::time_period& action_period) {
     if(poi == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -770,7 +774,7 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
 const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
     const navitia::georef::POI* vls = nullptr;
     //we loop through all poi near the coord to find a vls station within 50 meter
-    for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 50)) {
+    for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
         const auto poi = data.geo_ref->pois[poi_idx];
         const auto poi_type = data.geo_ref->poitypes[poi->poitype_idx];
@@ -784,8 +788,9 @@ const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& d
 }
 
 void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,
-                      const navitia::type::Data& data, const boost::posix_time::ptime departure,
-                      int depth, const pt::ptime& now, const pt::time_period& action_period) {
+        const navitia::georef::PathItem& item, const navitia::type::Data& data,
+        const boost::posix_time::ptime departure, int depth, const pt::ptime& now,
+        const pt::time_period& action_period) {
 
     double total_duration = 0;
     double total_length = 0;
@@ -807,8 +812,8 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
 
     bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
-    if (last_item.transportation == georef::PathItem::TransportCaracteristic::BssPutBack) {
-        const auto vls_station = get_nearest_bss_station(data, last_item.coordinates.front());
+    if (item.transportation == georef::PathItem::TransportCaracteristic::BssPutBack) {
+        const auto vls_station = get_nearest_bss_station(data, item.coordinates.front());
         if (vls_station) {
             fill_pb_placemark(vls_station, data, dest_place, depth, now, action_period);
             poi_found = true;
@@ -816,7 +821,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
             LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS putback station poi for coord " << last_item.coordinates.front());
         }
     }
-    if (! poi_found) {
+    if (! poi_found && last_item.transportation != georef::PathItem::TransportCaracteristic::BssTake) {
         auto way = data.geo_ref->ways[last_item.way_idx];
         type::GeographicalCoord coord = last_item.coordinates.back();
         fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
@@ -847,32 +852,81 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
 pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey,
         const navitia::georef::PathItem& first_item, const navitia::type::Data& data,
         int depth, const pt::ptime& now, const pt::time_period& action_period) {
-
+    pbnavitia::Section* prev_section = (pb_journey->sections_size() > 0) ?
+            pb_journey->mutable_sections(pb_journey->sections_size()-1) : nullptr;
     auto section = pb_journey->add_sections();
-    section->set_id(response.register_section(first_item));
+    section->set_id(response.register_section());
     section->set_type(pbnavitia::STREET_NETWORK);
 
     pbnavitia::Place* orig_place = section->mutable_origin();
-    bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
     if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
         const auto vls_station = get_nearest_bss_station(data, first_item.coordinates.front());
         if (vls_station) {
-            fill_pb_placemark(vls_station, data, orig_place, depth, now, action_period);
-            poi_found = true;
+            fill_pb_placemark(vls_station, data, section->mutable_destination(), depth, now, action_period);
         } else {
             LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS rent station poi for coord " << first_item.coordinates.front());
         }
     }
-    if (! poi_found && first_item.way_idx != nt::invalid_idx) {
+    if (prev_section) {
+        orig_place->CopyFrom(prev_section->destination());
+    } else if (first_item.way_idx != nt::invalid_idx) {
         auto way = data.geo_ref->ways[first_item.way_idx];
         type::GeographicalCoord departure_coord = first_item.coordinates.front();
         fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
-                          depth, now, action_period);
+            depth, now, action_period);
     }
+
     //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
 
     return section;
+}
+
+void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
+                       pbnavitia::Place* place, int max_depth, const pt::ptime& now,
+                       const pt::time_period& action_period, const bool show_codes) {
+    if (point.type == type::Type_e::StopPoint) {
+        const auto it = data.pt_data->stop_points_map.find(point.uri);
+        if (it != data.pt_data->stop_points_map.end()) {
+            fill_pb_placemark(it->second, data, place, max_depth, now, action_period, show_codes);
+        }
+    } else if (point.type == type::Type_e::StopArea) {
+        const auto it = data.pt_data->stop_areas_map.find(point.uri);
+        if (it != data.pt_data->stop_areas_map.end()) {
+            fill_pb_placemark(it->second, data, place, max_depth, now, action_period, show_codes);
+        }
+    } else if (point.type == type::Type_e::POI) {
+        const auto it = data.geo_ref->poi_map.find(point.uri);
+        if (it != data.geo_ref->poi_map.end()) {
+            fill_pb_placemark(data.geo_ref->pois[it->second], data, place, max_depth, now, action_period);
+        }
+    } else if (point.type == type::Type_e::Admin) {
+        const auto it = data.geo_ref->admin_map.find(point.uri);
+        if (it != data.geo_ref->admin_map.end()) {
+            fill_pb_placemark(data.geo_ref->admins[it->second], data, place, max_depth, now, action_period);
+        }
+    }
+}
+
+void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
+                          boost::posix_time::ptime time, const type::Data& data, EnhancedResponse& response,
+                          pbnavitia::Journey* pb_journey, const pt::ptime& now,
+                          const pt::time_period& action_period) {
+    pbnavitia::Section* section = pb_journey->add_sections();
+    section->set_id(response.register_section());
+    fill_pb_placemark(origin, data, section->mutable_origin(), 2, now, action_period);
+    fill_pb_placemark(destination, data, section->mutable_destination(), 2, now, action_period);
+    section->set_begin_date_time(navitia::to_iso_string_no_fractional(time));
+    section->set_duration(0);
+    section->set_length(0);
+    section->set_end_date_time(navitia::to_iso_string_no_fractional(time));
+    section->set_type(pbnavitia::SectionType::CROW_FLY);
+    auto coord = section->mutable_street_network()->add_coordinates();
+    coord->set_lat(origin.coordinates.lat());
+    coord->set_lon(origin.coordinates.lon());
+    coord = section->mutable_street_network()->add_coordinates();
+    coord->set_lat(destination.coordinates.lat());
+    coord->set_lon(destination.coordinates.lon());
 }
 
 void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,
@@ -896,7 +950,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
 
         if (last_transportation_carac && transport_carac != *last_transportation_carac) {
             //we end the last section
-            finalize_section(section, last_item, data, session_departure, depth, now, action_period);
+            finalize_section(section, last_item, item, data, session_departure, depth, now, action_period);
             session_departure += bt::seconds(section->duration());
 
             //and be create a new one
@@ -909,7 +963,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
         last_item = item;
     }
 
-    finalize_section(section, path.path_items.back(), data, session_departure, depth, now, action_period);
+    finalize_section(section, path.path_items.back(), {}, data, session_departure, depth, now, action_period);
 }
 
 
@@ -1253,4 +1307,17 @@ void fill_pb_object(const std::string comment, const nt::Data&,
     note->set_uri("note:"+std::to_string(hash_fn(comment)));
     note->set_note(comment);
 }
+
+pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
+    switch (mode) {
+        case navitia::type::Mode_e::Walking : return pbnavitia::Walking;
+        case navitia::type::Mode_e::Bike : return pbnavitia::Bike;
+        case navitia::type::Mode_e::Car : return pbnavitia::Car;
+        case navitia::type::Mode_e::Bss : return pbnavitia::Bss;
+    }
+    throw navitia::exception("Techinical Error, unable to convert mode " +
+            std::to_string(static_cast<int>(mode)));
+
+}
+
 }//namespace navitia

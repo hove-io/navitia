@@ -175,6 +175,11 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     std::string request = "SELECT beginning_date, end_date FROM navitia.parameters";
     pqxx::result result = work.exec(request);
+
+    if (result.empty()) {
+        throw navitia::exception("Cannot find beginning_date and end_date in navitia.parameters, "
+        " it's likely that no gtfs data have been imported, we cannot create a nav file");
+    }
     auto const_it = result.begin();
     bg::date begin = bg::from_string(const_it["beginning_date"].as<std::string>());
     //on ajoute un jour car "end" n'est pas inclus dans la période
@@ -607,8 +612,11 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
         "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
         "vj.external_code as external_code,"
-        "vj.next_vehicle_journey_id as prev_vj_id,"
-        "vj.previous_vehicle_journey_id as next_vj_id,"
+        "vj.next_vehicle_journey_id as next_vj_id,"
+        "vj.previous_vehicle_journey_id as prev_vj_id,"
+        "vj.start_time as start_time,"
+        "vj.end_time as end_time,"
+        "vj.headway_sec as headway_sec,"
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -638,6 +646,10 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         vj->company = company_map[const_it["company_id"].as<idx_t>()];
 
         vj->adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
+
+        const_it["start_time"].to(vj->start_time);
+        const_it["end_time"].to(vj->end_time);
+        const_it["headway_sec"].to(vj->headway_secs);
 
         if(!const_it["validity_pattern_id"].is_null()){
             vj->validity_pattern = validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
@@ -690,8 +702,8 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, " // 0, 1, 2, 3
-        "local_traffic_zone, start_time, end_time, headway_sec, odt, pick_up_allowed, " // 4, 5, 6, 7, 8, 9, 10
-        "drop_off_allowed, is_frequency, date_time_estimated, comment " // 11, 12
+        "local_traffic_zone, odt, pick_up_allowed, " // 4, 5, 6, 7
+        "drop_off_allowed, is_frequency, date_time_estimated, comment " // 8, 9
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
@@ -700,9 +712,6 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         const_it["arrival_time"].to(stop->arrival_time);
         const_it["departure_time"].to(stop->departure_time);
         const_it["local_traffic_zone"].to(stop->local_traffic_zone);
-        const_it["start_time"].to(stop->start_time);
-        const_it["end_time"].to(stop->end_time);
-        const_it["headway_sec"].to(stop->headway_secs);
         const_it["comment"].to(stop->comment);
 
         stop->set_date_time_estimated(const_it["date_time_estimated"].as<bool>());

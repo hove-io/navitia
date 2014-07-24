@@ -36,17 +36,24 @@ namespace pt = boost::posix_time;
 namespace ed {
 
 VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs) {
-    navitia::type::StopTime* first_st = vj->stop_time_list.front();
+    vj->start_time = start_time;
+
     size_t nb_trips = std::ceil((end_time - start_time)/headway_secs);
+    vj->end_time = start_time + ( nb_trips * headway_secs );
+    vj->headway_secs = headway_secs;
+
+    navitia::type::StopTime* first_st = vj->stop_time_list.front();
+    uint32_t begin = first_st->arrival_time;
     for(navitia::type::StopTime* st : vj->stop_time_list) {
         st->set_is_frequency(true);
-        st->start_time = start_time+(st->arrival_time - first_st->arrival_time);
-        st->end_time = start_time + nb_trips * headway_secs + (st->departure_time - first_st->departure_time);
-        st->headway_secs = headway_secs;
+        //For frequency based trips, make arrival and departure time relative from the first stop.
+        if (begin > 0){
+            st->arrival_time -= begin;
+            st->departure_time -= begin;
+        }
     }
     return *this;
 }
-
 
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri) : b(b){
     vj = new navitia::type::VehicleJourney();
@@ -386,5 +393,29 @@ void builder::connection(const std::string & name1, const std::string & name2, f
             vj->stop_time_list.back()->set_pick_up_allowed(false);
          }
      }
+ }
+
+/*
+1. Initilise the first admin in the list to all stop_area and way
+2. Used for the autocomplete functional tests.
+*/
+ void builder::manage_admin() {
+     if (!data->geo_ref->admins.empty()) {
+         navitia::georef::Admin * admin = data->geo_ref->admins[0];
+        for(navitia::type::StopArea* sa : data->pt_data->stop_areas){
+            sa->admin_list.clear();
+            sa->admin_list.push_back(admin);
+        }
+
+        for(navitia::georef::Way * way : data->geo_ref->ways) {
+            way->admin_list.clear();
+            way->admin_list.push_back(admin);
+        }
+     }
+ }
+
+ void builder::build_autocomplete() {
+    data->pt_data->build_autocomplete(*(data->geo_ref));
+    data->geo_ref->build_autocomplete_list();
  }
 }

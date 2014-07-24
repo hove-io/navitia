@@ -146,13 +146,6 @@ public:
 
 };
 
-struct PoiPoiType{
-    std::unordered_map<std::string, types::PoiType *> poi_types;
-    std::unordered_map<std::string, types::Poi *> pois;
-
-    PoiPoiType(){};
-    ~PoiPoiType();
-};
 
 struct Georef{
     std::unordered_map<std::string, types::Node* > nodes;
@@ -162,6 +155,9 @@ struct Georef{
     std::unordered_map<std::string, types::Admin *> admins;
                       // Old uri way, New uri way
     std::unordered_map<std::string, types::Way*> fusion_ways;
+
+    std::unordered_map<std::string, types::PoiType *> poi_types;
+    std::unordered_map<std::string, types::Poi *> pois;
     ~Georef();
 };
 
