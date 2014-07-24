@@ -859,26 +859,22 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
     section->set_type(pbnavitia::STREET_NETWORK);
 
     pbnavitia::Place* orig_place = section->mutable_origin();
-    bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
     if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
         const auto vls_station = get_nearest_bss_station(data, first_item.coordinates.front());
         if (vls_station) {
             fill_pb_placemark(vls_station, data, section->mutable_destination(), depth, now, action_period);
-            poi_found = true;
         } else {
             LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS rent station poi for coord " << first_item.coordinates.front());
         }
     }
-    if (!poi_found) {
-        if (prev_section) {
-            orig_place->CopyFrom(prev_section->destination());
-        } else if (first_item.way_idx != nt::invalid_idx) {
-            auto way = data.geo_ref->ways[first_item.way_idx];
-            type::GeographicalCoord departure_coord = first_item.coordinates.front();
-            fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
-                              depth, now, action_period);
-        }
+    if (prev_section) {
+        orig_place->CopyFrom(prev_section->destination());
+    } else if (first_item.way_idx != nt::invalid_idx) {
+        auto way = data.geo_ref->ways[first_item.way_idx];
+        type::GeographicalCoord departure_coord = first_item.coordinates.front();
+        fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
+            depth, now, action_period);
     }
 
     //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
