@@ -788,8 +788,9 @@ const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& d
 }
 
 void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,
-                      const navitia::type::Data& data, const boost::posix_time::ptime departure,
-                      int depth, const pt::ptime& now, const pt::time_period& action_period) {
+        const navitia::georef::PathItem& item, const navitia::type::Data& data,
+        const boost::posix_time::ptime departure, int depth, const pt::ptime& now,
+        const pt::time_period& action_period) {
 
     double total_duration = 0;
     double total_length = 0;
@@ -811,7 +812,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
 
     bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
-    if (last_item.transportation == georef::PathItem::TransportCaracteristic::BssPutBack) {
+    if (item.transportation == georef::PathItem::TransportCaracteristic::BssPutBack) {
         const auto vls_station = get_nearest_bss_station(data, last_item.coordinates.front());
         if (vls_station) {
             fill_pb_placemark(vls_station, data, dest_place, depth, now, action_period);
@@ -820,7 +821,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
             LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS putback station poi for coord " << last_item.coordinates.front());
         }
     }
-    if (! poi_found) {
+    if (! poi_found && last_item.transportation != georef::PathItem::TransportCaracteristic::BssTake) {
         auto way = data.geo_ref->ways[last_item.way_idx];
         type::GeographicalCoord coord = last_item.coordinates.back();
         fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
@@ -851,7 +852,8 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
 pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey,
         const navitia::georef::PathItem& first_item, const navitia::type::Data& data,
         int depth, const pt::ptime& now, const pt::time_period& action_period) {
-
+    pbnavitia::Section* prev_section = (pb_journey->sections_size() > 0) ?
+            pb_journey->mutable_sections(pb_journey->sections_size()-1) : nullptr;
     auto section = pb_journey->add_sections();
     section->set_id(response.register_section());
     section->set_type(pbnavitia::STREET_NETWORK);
@@ -862,18 +864,23 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
     if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
         const auto vls_station = get_nearest_bss_station(data, first_item.coordinates.front());
         if (vls_station) {
-            fill_pb_placemark(vls_station, data, orig_place, depth, now, action_period);
+            fill_pb_placemark(vls_station, data, section->mutable_destination(), depth, now, action_period);
             poi_found = true;
         } else {
             LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS rent station poi for coord " << first_item.coordinates.front());
         }
     }
-    if (! poi_found && first_item.way_idx != nt::invalid_idx) {
-        auto way = data.geo_ref->ways[first_item.way_idx];
-        type::GeographicalCoord departure_coord = first_item.coordinates.front();
-        fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
-                          depth, now, action_period);
+    if (!poi_found) {
+        if (prev_section) {
+            orig_place->CopyFrom(prev_section->destination());
+        } else if (first_item.way_idx != nt::invalid_idx) {
+            auto way = data.geo_ref->ways[first_item.way_idx];
+            type::GeographicalCoord departure_coord = first_item.coordinates.front();
+            fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
+                              depth, now, action_period);
+        }
     }
+
     //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
 
     return section;
@@ -947,7 +954,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
 
         if (last_transportation_carac && transport_carac != *last_transportation_carac) {
             //we end the last section
-            finalize_section(section, last_item, data, session_departure, depth, now, action_period);
+            finalize_section(section, last_item, item, data, session_departure, depth, now, action_period);
             session_departure += bt::seconds(section->duration());
 
             //and be create a new one
@@ -960,7 +967,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
         last_item = item;
     }
 
-    finalize_section(section, path.path_items.back(), data, session_departure, depth, now, action_period);
+    finalize_section(section, path.path_items.back(), {}, data, session_departure, depth, now, action_period);
 }
 
 

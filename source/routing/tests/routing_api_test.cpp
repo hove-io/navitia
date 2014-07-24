@@ -615,7 +615,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     section = journey.sections(1);
     BOOST_CHECK(! section.id().empty());
     //check bss station placemark, it must be a poi
-    const auto& first_vls_section = section.origin(); //the last place of the walking section must be the vls station
+    const auto& first_vls_section = section.destination(); //the last place of the walking section must be the vls station
     BOOST_CHECK_EQUAL(first_vls_section.embedded_type(), pbnavitia::POI);
     BOOST_CHECK_EQUAL(first_vls_section.name(), "first station");
 
@@ -630,8 +630,8 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     section = journey.sections(2);
     BOOST_CHECK(! section.id().empty());
     BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_CHECK_EQUAL(section.origin().address().name(), "rue kb");
-    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue gh");
+    BOOST_CHECK_EQUAL(section.origin().poi().name(), "first station");
+    BOOST_CHECK_EQUAL(section.destination().poi().name(), "second station");
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 5);
     int cpt_item(0);
@@ -660,7 +660,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(pathitem.duration(), bike_sharing_return.total_seconds());
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
     BOOST_CHECK_EQUAL(pathitem.length(), 0);
-    const auto& last_vls_section = section.destination(); //the last place of the walking section must be the vls station
+    const auto& last_vls_section = section.origin(); //the last place of the walking section must be the vls station
     BOOST_CHECK_EQUAL(last_vls_section.embedded_type(), pbnavitia::POI);
     BOOST_CHECK_EQUAL(last_vls_section.name(), "second station");
 
