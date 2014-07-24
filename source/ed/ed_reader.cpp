@@ -617,6 +617,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.start_time as start_time,"
         "vj.end_time as end_time,"
         "vj.headway_sec as headway_sec,"
+        "vj.headsign as headsign,"
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -634,16 +635,17 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         nt::VehicleJourney* vj = new nt::VehicleJourney();
 
         const_it["uri"].to(vj->uri);
-        const_it["name"].to(vj->name);
-        const_it["comment"].to(vj->comment);
-        const_it["odt_message"].to(vj->odt_message);
-        const_it["external_code"].to(vj->codes["external_code"]);
+        const_it["name"].to(vj->information->name);
+        const_it["headsign"].to(vj->information->headsign);
+        const_it["comment"].to(vj->information->comment);
+        const_it["odt_message"].to(vj->information->odt_message);
+        const_it["external_code"].to(vj->information->codes["external_code"]);
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
 
         vj->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
         vj->journey_pattern->vehicle_journey_list.push_back(vj);
 
-        vj->company = company_map[const_it["company_id"].as<idx_t>()];
+        vj->information->company = company_map[const_it["company_id"].as<idx_t>()];
 
         vj->adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
 

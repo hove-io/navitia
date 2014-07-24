@@ -241,7 +241,7 @@ struct TripsGtfsHandler : public GenericHandler {
     int id_c, service_c,
             trip_c, headsign_c,
             block_id_c, wheelchair_c,
-            bikes_c;
+            bikes_c, name_c;
 
     int ignored = 0;
     int ignored_vj = 0;

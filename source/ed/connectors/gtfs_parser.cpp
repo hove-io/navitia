@@ -488,8 +488,8 @@ void TripsGtfsHandler::init(Data& data) {
 
     id_c = csv.get_pos_col("route_id"), service_c = csv.get_pos_col("service_id"),
             trip_c = csv.get_pos_col("trip_id"), headsign_c = csv.get_pos_col("trip_headsign"),
-            block_id_c = csv.get_pos_col("block_id"), wheelchair_c = csv.get_pos_col("wheelchair_accessible"),
-            bikes_c = csv.get_pos_col("bikes_allowed");
+            name_c = csv.get_pos_col("trip_short_name"), block_id_c = csv.get_pos_col("block_id"),
+            wheelchair_c = csv.get_pos_col("wheelchair_accessible"), bikes_c = csv.get_pos_col("bikes_allowed");
 }
 
 void TripsGtfsHandler::finish(Data& data) {
@@ -528,9 +528,12 @@ nm::VehicleJourney* TripsGtfsHandler::handle_line(Data& data, const csv_row& row
     vj->uri = row[trip_c];
     vj->external_code = vj->uri;
     if(has_col(headsign_c, row))
-        vj->name = row[headsign_c];
+        vj->headsign = row[headsign_c];
     else
-        vj->name = vj->uri;
+        vj->headsign = vj->uri;
+
+    if(has_col(name_c, row))
+        vj->name = row[name_c];
 
     vj->validity_pattern = vp_xx;
     vj->adapted_validity_pattern = vp_xx;

@@ -291,11 +291,15 @@ ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& 
     vj->uri = row[trip_c];
     if(is_valid(ext_code_c, row)){
         vj->external_code = row[ext_code_c];
-    }
-    if(is_valid(headsign_c, row))
-        vj->name = row[headsign_c];
-    else
+        vj->name = row[ext_code_c];
+    }else{
         vj->name = vj->uri;
+    }
+
+    if(is_valid(headsign_c, row))
+        vj->headsign = row[headsign_c];
+    else
+        vj->headsign = vj->uri;
 
     vj->validity_pattern = vp_xx;
     vj->adapted_validity_pattern = vp_xx;

@@ -235,6 +235,7 @@ message StopTime {
 message VehicleJourney {
     optional string name = 3;
     optional string uri = 4;
+    optional string headsign = 5;
     repeated StopTime stop_times = 6;
     optional Route route = 7;
     optional JourneyPattern journey_pattern = 8;

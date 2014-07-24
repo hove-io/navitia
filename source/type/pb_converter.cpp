@@ -452,12 +452,13 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    vehicle_journey->set_name(vj->name);
+    vehicle_journey->set_name(vj->information->name);
+    vehicle_journey->set_headsign(vj->information->headsign);
     vehicle_journey->set_uri(vj->uri);
-    if(!vj->comment.empty()) {
-        vehicle_journey->set_comment(vj->comment);
+    if(!vj->information->comment.empty()) {
+        vehicle_journey->set_comment(vj->information->comment);
     }
-    vehicle_journey->set_odt_message(vj->odt_message);
+    vehicle_journey->set_odt_message(vj->information->odt_message);
     vehicle_journey->set_is_adapted(vj->is_adapted);
     vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
 
@@ -494,20 +495,20 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
         fill_pb_object(vj->adapted_validity_pattern, data, vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
     }
 
-    for(auto message : vj->get_applicable_messages(now, action_period)){
+    for(auto message : vj->information->get_applicable_messages(now, action_period)){
         fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
     }
 
     //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
     if(vj->theoric_vehicle_journey != nullptr){
-        for(auto message : vj->theoric_vehicle_journey->get_applicable_messages(now, action_period)){
+        for(auto message : vj->theoric_vehicle_journey->information->get_applicable_messages(now, action_period)){
             fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
         }
     }
 
 
     if(show_codes) {
-        for(auto type_value : vj->codes) {
+        for(auto type_value : vj->information->codes) {
             fill_codes(type_value.first, type_value.second, vehicle_journey->add_codes());
         }
     }
@@ -1116,8 +1117,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         fill_pb_object(stop_time->comment, data,  hn->add_notes(),max_depth,now,action_period);
     }
     if (stop_time->vehicle_journey != nullptr) {
-        if(!stop_time->vehicle_journey->odt_message.empty()){
-            fill_pb_object(stop_time->vehicle_journey->odt_message, data, hn->add_notes(),max_depth,now,action_period);
+        if(!stop_time->vehicle_journey->information->odt_message.empty()){
+            fill_pb_object(stop_time->vehicle_journey->information->odt_message, data, hn->add_notes(),max_depth,now,action_period);
         }
     }
 
@@ -1206,16 +1207,17 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
         uris->set_route(vj->journey_pattern->route->uri);
         uris->set_journey_pattern(vj->journey_pattern->uri);
     }
-    for(auto message : vj->get_applicable_messages(now, action_period)){
+    for(auto message : vj->information->get_applicable_messages(now, action_period)){
         fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
     }
-    pt_display_info->set_headsign(vj->name);
+    pt_display_info->set_headsign(vj->information->headsign);
+    pt_display_info->set_name(vj->information->name);
     pt_display_info->set_direction(vj->get_direction());
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->physical_mode != nullptr)){
         pt_display_info->set_physical_mode(vj->journey_pattern->physical_mode->name);
         uris->set_physical_mode(vj->journey_pattern->physical_mode->uri);
     }
-    pt_display_info->set_description(vj->odt_message);
+    pt_display_info->set_description(vj->information->odt_message);
     pt_display_info->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
 
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();

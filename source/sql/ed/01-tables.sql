@@ -249,7 +249,8 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     next_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey,
     start_time INTEGER,
     end_time INTEGER,
-    headway_sec INTEGER
+    headway_sec INTEGER,
+    headsign TEXT
 );
 
 ALTER TABLE navitia.vehicle_journey DROP COLUMN IF EXISTS physical_mode_id;
