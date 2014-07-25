@@ -683,11 +683,9 @@ struct MetaVehicleJourney;
 
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes{
     const static Type_e type = Type_e::VehicleJourney;
-    JourneyPattern* journey_pattern;
-    Company* company;
-    ValidityPattern* validity_pattern;
-    ValidityPattern* adapted_validity_pattern;
-    VehicleJourney* theoric_vehicle_journey;
+    JourneyPattern* journey_pattern = nullptr;
+    Company* company = nullptr;
+    ValidityPattern* validity_pattern = nullptr;
     std::vector<StopTime*> stop_time_list;
 
     // These variables are used in the case of an extension of service
@@ -696,19 +694,24 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     VehicleJourney* next_vj = nullptr;
     VehicleJourney* prev_vj = nullptr;
     //associated meta vj
-    const MetaVehicleJourney* meta_vj;
+    const MetaVehicleJourney* meta_vj = nullptr;
     std::string odt_message;
 
-    VehicleJourneyType vehicle_journey_type;
+    VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
     uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
     uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     bool is_adapted;
+    ValidityPattern* adapted_validity_pattern;
+    std::vector<VehicleJourney*> adapted_vehicle_journey_list;
+    VehicleJourney* theoric_vehicle_journey;
 
     VehicleJourney(): journey_pattern(nullptr), company(nullptr),
-        validity_pattern(nullptr), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr),
-        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false){}
+        validity_pattern(nullptr),
+        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false),
+        adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
+
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
