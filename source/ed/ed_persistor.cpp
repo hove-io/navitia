@@ -842,7 +842,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
              "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "journey_pattern_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
-             "odt_type_id", "odt_message"});
+             "odt_type_id", "odt_message, utc_to_local_offset"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -886,6 +886,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(vj->to_ulog()));
         values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));
         values.push_back(vj->odt_message);
+        values.push_back(std::to_string(vj->utc_to_local_offset));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();

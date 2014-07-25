@@ -91,6 +91,14 @@ class SplitDateTime(DateTime):
     custom date format from 2 fields:
       - one for the date (in timestamp to midnight)
       - one for the time in seconds from midnight
+
+      the date can be null (for example when the time is for a period like for calendar schedule)
+
+      if the date is not null be convert to local using the default timezone
+
+      if the date is null, we do not convert anything.
+            Thus the given date HAS to be previously converted to local
+            if that is what is wanted
     """
     def __init__(self, date, time, *args, **kwargs):
         super(DateTime, self).__init__(*args, **kwargs)
@@ -98,8 +106,21 @@ class SplitDateTime(DateTime):
         self.time = time
 
     def output(self, key, obj):
-        #TODO!!
-        return None
+
+        date = fields.get_value(self.date, obj)
+        time = fields.get_value(self.time, obj)
+
+        if not date:
+            return self.format_time(time)
+
+        date_time = date + time
+        tz = get_timezone()
+        return self.format(date_time, timezone=tz)
+
+    @staticmethod
+    def format_time(time):
+        t = datetime.datetime.utcfromtimestamp(time)
+        return t.strftime("%H%M%S")
 
 
 class enum_type(fields.Raw):

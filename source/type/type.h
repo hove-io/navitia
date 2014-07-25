@@ -702,6 +702,12 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
 
+    // all times are stored in UTC
+    // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
+    // For example for departure board over a period (calendar)
+    // thus we store the shit needed to convert all stop times of the vehicle journey to local
+    int16_t utc_to_local_offset = 0; //in minutes
+
     bool is_adapted = false; //REMOVE (change to enum ?)
     ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
     std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
@@ -714,7 +720,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & messages
             & codes & next_vj & prev_vj & start_time & end_time & headway_secs
-			& meta_vj;
+            & meta_vj & utc_to_local_offset;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;

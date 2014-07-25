@@ -137,6 +137,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
             const DateTime tmp_dt = f_departure_time(DateTimeUtils::hour(first_st.second), first_st.first);
             DateTimeUtils::update(first_st.second, DateTimeUtils::hour(tmp_dt));
         }
+
         return first_st;
     }
     return {nullptr, 0};
@@ -187,6 +188,10 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
                     DateTimeUtils::hour(f_departure_time(time, st)) :
                     //else we only got the departure of the stop time
                     st->departure_time;
+
+        //we need to convert this to local there since we do not have a precise date (just a period)
+        departure_time += vj->utc_to_local_offset;
+
         if (departure_time < time) {
             continue;
         }
