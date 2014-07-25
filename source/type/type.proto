@@ -217,16 +217,16 @@ message hasEquipments{
 }
 
 message StopDateTime {
-    optional uint32 arrival_date_time = 1; //posix time
-    optional uint32 departure_date_time = 2;
+    optional uint64 arrival_date_time = 1; //posix time
+    optional uint64 departure_date_time = 2;
     optional StopPoint stop_point = 3;
     optional Properties properties = 4;
 }
 
 
 message StopTime {
-    optional uint32 arrival_time = 1;
-    optional uint32 departure_time = 3; //nb seconds from midnight
+    optional uint64 arrival_time = 1;
+    optional uint64 departure_time = 3; //nb seconds from midnight
     optional VehicleJourney vehicle_journey = 4;
     optional JourneyPatternPoint journey_pattern_point = 5;
     optional bool pickup_allowed = 6;
