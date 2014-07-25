@@ -714,7 +714,15 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string name = const_it["name"].as<std::string>();
 
-        auto& meta_vj = data.pt_data->meta_vj[name];
+        nt::MetaVehicleJourney* meta_vj;
+
+        auto it_mvj = data.pt_data->meta_vj.find(name);
+        if (it_mvj == data.pt_data->meta_vj.end()) {
+            meta_vj = new nt::MetaVehicleJourney();
+            data.pt_data->meta_vj.insert({name, meta_vj});
+        } else {
+            meta_vj = it_mvj->second;
+        }
 
         const auto vj_idx = const_it["vehicle_journey"].as<idx_t>();
         const auto vj_it = vehicle_journey_map.find(vj_idx);
@@ -727,11 +735,11 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
 
         const std::string vj_class = const_it["vj_class"].as<std::string>();
         if (vj_class == "Theoric") {
-            meta_vj.theoric_vj.push_back(vj);
+            meta_vj->theoric_vj.push_back(vj);
         } else if (vj_class == "Adapted") {
-            meta_vj.adapted_vj.push_back(vj);
+            meta_vj->adapted_vj.push_back(vj);
         } else if (vj_class == "RealTime") {
-            meta_vj.real_time_vj.push_back(vj);
+            meta_vj->real_time_vj.push_back(vj);
         } else {
             throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
         }

@@ -679,6 +679,7 @@ struct AssociatedCalendar {
         ar & calendar & exceptions;
     }
 };
+struct MetaVehicleJourney;
 
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes{
     const static Type_e type = Type_e::VehicleJourney;
@@ -688,14 +689,15 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     ValidityPattern* adapted_validity_pattern;
     VehicleJourney* theoric_vehicle_journey;
     std::vector<StopTime*> stop_time_list;
+
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
     // They have the same block id
     VehicleJourney* next_vj = nullptr;
     VehicleJourney* prev_vj = nullptr;
+    //associated meta vj
+    const MetaVehicleJourney* meta_vj;
     std::string odt_message;
-    ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
-    std::map<std::string, AssociatedCalendar*> associated_calendars;
 
     VehicleJourneyType vehicle_journey_type;
     uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
@@ -714,7 +716,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & messages & associated_calendars
-            & codes & next_vj & prev_vj & start_time & end_time & headway_secs;
+            & codes & next_vj & prev_vj & start_time & end_time & headway_secs
+			& meta_vj;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -798,6 +801,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     bool operator<(const StopPoint & other) const { return this < &other; }
 
 };
+
 
 struct JourneyPatternPoint : public Header{
     const static Type_e type = Type_e::JourneyPatternPoint;
@@ -996,8 +1000,12 @@ struct MetaVehicleJourney {
     std::vector<VehicleJourney*> adapted_vj;
     std::vector<VehicleJourney*> real_time_vj;
 
+    /// map of the calendars that nearly match union of the validity pattern
+    /// of the theoric vj, key is the calendar name
+    std::map<std::string, AssociatedCalendar*> associated_calendars;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & theoric_vj & adapted_vj & real_time_vj;
+        ar & theoric_vj & adapted_vj & real_time_vj & associated_calendars;
     }
 };
 

@@ -38,7 +38,7 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
                const type::VehicleProperties& vehicle_properties,
                const bool clockwise, bool disruption_active, const type::Data &data, bool reconstructing_path) {
     if(clockwise)
-        return earliest_stop_time(jpp, dt, data, disruption_active, reconstructing_path, {}, vehicle_properties);
+        return earliest_stop_time(jpp, dt, data, disruption_active, reconstructing_path, vehicle_properties);
     else
         return tardiest_stop_time(jpp, dt, data, disruption_active, reconstructing_path, vehicle_properties);
 }
@@ -89,29 +89,6 @@ valid_pick_up(const std::vector<uint32_t>::const_iterator begin, type::idx_t idx
     return {first_st, working_dt};
 }
 
-const type::StopTime* valid_pick_up(type::idx_t idx, const type::idx_t end, const uint32_t hour,
-        const std::string calendar_id,
-        const type::Data& data, bool reconstructing_path,
-        const type::VehicleProperties& required_vehicle_properties) {
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor->st_idx_forward[idx];
-        if (! st->valid_end(reconstructing_path)) {
-            continue; //we must be able to stop is this stop point
-        }
-        if (! st->valid_hour(hour, true)) {
-            continue; //the stop must be after the given hour
-        }
-        if (st->vehicle_journey->associated_calendars.find(calendar_id) == st->vehicle_journey->associated_calendars.end()) {
-            continue; //the calendar must be valid for this stop time
-        }
-        if (! st->vehicle_journey->accessible(required_vehicle_properties)) {
-            continue; //the stop time must be accessible
-        }
-        return st;
-    }
-    return nullptr;
-}
-
 const type::StopTime* valid_drop_off(type::idx_t idx, const type::idx_t end, const DateTime dt,
                const type::Data &data, bool reconstructing_path,
                const type::VehicleProperties &required_vehicle_properties,
@@ -135,9 +112,8 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
                    const DateTime dt, const type::Data &data,
                    bool disruption_active,
                    bool reconstructing_path,
-                   boost::optional<const std::string> calendar_id,
                    const type::VehicleProperties& vehicle_properties) {
-    //On cherche le plus petit stop time de la journey_pattern >= dt.hour()
+    //We look for the earliest stop time of the journey_pattern >= dt.hour()
     auto begin = data.dataRaptor->departure_times.begin() +
             data.dataRaptor->first_stop_time[jpp->journey_pattern->idx] +
             jpp->order * data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
@@ -149,14 +125,9 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
     type::idx_t end_idx = (begin - data.dataRaptor->departure_times.begin()) +
                            data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
 
-    //On renvoie le premier trip valide
-    std::pair<const type::StopTime*, DateTime> first_st = {nullptr, 0};
-    if (! calendar_id) {
-        first_st = valid_pick_up(begin, idx, end_idx, dt, data, reconstructing_path, vehicle_properties, disruption_active);
-    } else {
-        first_st.first = valid_pick_up(idx, end_idx, DateTimeUtils::hour(dt), *calendar_id, data, reconstructing_path, vehicle_properties);
-        first_st.second = dt;
-    }
+    //Return the first valid trip
+    std::pair<const type::StopTime*, DateTime> first_st =
+            valid_pick_up(begin, idx, end_idx, dt, data, reconstructing_path, vehicle_properties, disruption_active);
 
     if(first_st.first != nullptr) {
         if(!first_st.first->is_frequency()) {
@@ -169,6 +140,63 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
         return first_st;
     }
     return {nullptr, 0};
+}
+
+std::pair<const type::StopTime*, uint32_t>
+earliest_stop_time(const type::JourneyPatternPoint* jpp,
+                   const uint32_t time, const type::Data &/*data*/,
+                   const std::string calendar_id,
+                   const type::VehicleProperties& vehicle_properties) {
+    // earliest stop time for calendar is different than for a datetime
+    // we have to consider only the first theoric vj of all meta vj for the given jpp
+    // for all those vj, we select the one associated to the calendar,
+    // and we loop through all stop times for the stop point,
+    // and we select the earliest one
+    std::set<const type::MetaVehicleJourney*> meta_vjs;
+    for (auto vj: jpp->journey_pattern->vehicle_journey_list) {
+        if (! vj->meta_vj) {
+            throw navitia::exception("vj " + vj->uri + " has been ill constructed, it has no meta vj");
+        }
+        meta_vjs.insert(vj->meta_vj);
+    }
+    std::vector<const type::VehicleJourney*> vjs;
+    for (const auto meta_vj: meta_vjs) {
+        if (meta_vj->associated_calendars.find(calendar_id) == meta_vj->associated_calendars.end()) {
+            //meta vj not associated with the calender, we skip
+            continue;
+        }
+        //we can get only the first theoric one, because BY CONSTRUCTION all theoric vj have the same local times
+        vjs.push_back(meta_vj->theoric_vj.front());
+    }
+    if (vjs.empty()) {
+        return {nullptr, 0};
+    }
+
+    std::pair<const type::StopTime*, uint32_t> best_st = {nullptr, 0};
+    for (const auto vj: vjs) {
+        //loop through stop times for stop jpp->stop_point
+        auto st = *(vj->stop_time_list.begin() + jpp->order);
+        if (! st->valid_hour(time, true)) {
+            continue; //the stop must be after the given hour
+        }
+        if (! st->vehicle_journey->accessible(vehicle_properties)) {
+            continue; //the stop time must be accessible
+        }
+        uint32_t departure_time = st->is_frequency() ?
+                    //if it is a frequency, we got the hour of the next departure after the wanted hour
+                    DateTimeUtils::hour(f_departure_time(time, st)) :
+                    //else we only got the departure of the stop time
+                    st->departure_time;
+        if (departure_time < time) {
+            continue;
+        }
+        if (best_st.first == nullptr || departure_time < best_st.second) {
+            best_st = {st, departure_time};
+        }
+    }
+
+
+    return best_st;
 }
 
 

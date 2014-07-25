@@ -216,27 +216,28 @@ struct associated_cal_fixture {
 
     void check_vj(const navitia::type::VehicleJourney* vj) {
         BOOST_REQUIRE(vj);
+        BOOST_REQUIRE(vj->meta_vj);
 
-        BOOST_REQUIRE_EQUAL(vj->associated_calendars.size(), 2);
+        BOOST_REQUIRE_EQUAL(vj->meta_vj->associated_calendars.size(), 2);
 
-        auto it_associated_always_cal = vj->associated_calendars.find(always_on_cal->uri);
-        BOOST_REQUIRE(it_associated_always_cal != vj->associated_calendars.end());
+        auto it_associated_always_cal = vj->meta_vj->associated_calendars.find(always_on_cal->uri);
+        BOOST_REQUIRE(it_associated_always_cal != vj->meta_vj->associated_calendars.end());
 
         //no restriction
         auto associated_always_cal = it_associated_always_cal->second;
         BOOST_CHECK_EQUAL(associated_always_cal->calendar, always_on_cal);
         BOOST_CHECK(associated_always_cal->exceptions.empty());
 
-        auto it_associated_wednesday_cal = vj->associated_calendars.find(wednesday_cal->uri);
-        BOOST_REQUIRE(it_associated_wednesday_cal != vj->associated_calendars.end());
+        auto it_associated_wednesday_cal = vj->meta_vj->associated_calendars.find(wednesday_cal->uri);
+        BOOST_REQUIRE(it_associated_wednesday_cal != vj->meta_vj->associated_calendars.end());
 
         //no restriction
         auto associated_wednesday_cal = it_associated_wednesday_cal->second;
         BOOST_CHECK_EQUAL(associated_wednesday_cal->calendar, wednesday_cal);
         BOOST_CHECK(associated_wednesday_cal->exceptions.empty());
 
-        auto it_associated_monday_cal = vj->associated_calendars.find(monday_cal->uri);
-        BOOST_REQUIRE(it_associated_monday_cal == vj->associated_calendars.end());
+        auto it_associated_monday_cal = vj->meta_vj->associated_calendars.find(monday_cal->uri);
+        BOOST_REQUIRE(it_associated_monday_cal == vj->meta_vj->associated_calendars.end());
 
     }
     ed::builder b;

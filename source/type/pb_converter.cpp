@@ -1124,8 +1124,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     }
 
     if((calendar_id) && (stop_time->vehicle_journey != nullptr)) {
-        auto asso_cal_it = stop_time->vehicle_journey->associated_calendars.find(*calendar_id);
-        if(asso_cal_it != stop_time->vehicle_journey->associated_calendars.end()){
+        auto asso_cal_it = stop_time->vehicle_journey->meta_vj->associated_calendars.find(*calendar_id);
+        if(asso_cal_it != stop_time->vehicle_journey->meta_vj->associated_calendars.end()){
             for(const type::ExceptionDate& excep : asso_cal_it->second->exceptions){
                 fill_pb_object(excep, data, hn->add_exceptions(), max_depth, now, action_period);
             }

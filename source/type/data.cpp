@@ -254,10 +254,10 @@ void Data::complete(){
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
 }
 
-ValidityPattern get_union_validity_pattern(const MetaVehicleJourney& meta_vj) {
+ValidityPattern get_union_validity_pattern(const MetaVehicleJourney* meta_vj) {
     ValidityPattern validity;
 
-    for (auto* vj: meta_vj.theoric_vj) {
+    for (auto* vj: meta_vj->theoric_vj) {
         if (validity.beginning_date.is_not_a_date()) {
             validity.beginning_date = vj->validity_pattern->beginning_date;
         } else {
@@ -275,19 +275,19 @@ void Data::build_associated_calendar() {
     std::multimap<ValidityPattern, AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     size_t nb_matched(0);
-    for(auto& meta_vj_pair : this->pt_data->meta_vj) {
-        auto& meta_vj = meta_vj_pair.second;
+    for(auto meta_vj_pair : this->pt_data->meta_vj) {
+        auto meta_vj = meta_vj_pair.second;
 
-        assert (! meta_vj.theoric_vj.empty());
+        assert (! meta_vj->theoric_vj.empty());
 
         // we check the theoric vj of a meta vj
         // because we start from the postulate that the theoric VJs are the same VJ
         // split because of dst (day saving time)
         // because of that we try to match the calendar with the union of all theoric vj validity pattern
-        ValidityPattern meta_vj_validity_patern = get_union_validity_pattern(meta_vj);
+        ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(meta_vj);
 
         //some check can be done on any theoric vj, we do them on the first
-        auto* first_vj = meta_vj.theoric_vj.front();
+        auto* first_vj = meta_vj->theoric_vj.front();
         const std::vector<Calendar*> calendar_list = first_vj->journey_pattern->route->line->calendar_list;
         if (calendar_list.empty()) {
             LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no calendar");
@@ -297,17 +297,15 @@ void Data::build_associated_calendar() {
 
         //we check if we already computed the associated val for this validity pattern
         //since a validity pattern can be shared by many vj
-        auto it = associated_vp.find(meta_vj_validity_patern);
+        auto it = associated_vp.find(meta_vj_validity_pattern);
         if (it != associated_vp.end()) {
-            for (; it->first == meta_vj_validity_patern; ++it) {
-                for (auto vj: meta_vj.theoric_vj) {
-                    vj->associated_calendars.insert({it->second->calendar->uri, it->second});
-                }
+            for (; it->first == meta_vj_validity_pattern; ++it) {
+                meta_vj->associated_calendars.insert({it->second->calendar->uri, it->second});
             }
             continue;
         }
 
-        auto close_cal = find_matching_calendar(*this, meta_vj_pair.first, meta_vj_validity_patern, calendar_list);
+        auto close_cal = find_matching_calendar(*this, meta_vj_pair.first, meta_vj_validity_pattern, calendar_list);
 
         if (close_cal.empty()) {
             LOG4CPLUS_TRACE(log, "the meta vj " << meta_vj_pair.first << " has been attached to no calendar");
@@ -328,16 +326,14 @@ void Data::build_associated_calendar() {
                     continue; //cal_bit_set.second is the resulting differences, so 0 means no exception
                 }
                 ExceptionDate ex;
-                ex.date = meta_vj_validity_patern.beginning_date + boost::gregorian::days(i);
+                ex.date = meta_vj_validity_pattern.beginning_date + boost::gregorian::days(i);
                 //if the vj is active this day it's an addition, else a removal
-                ex.type = (meta_vj_validity_patern.days[i] ? ExceptionDate::ExceptionType::add : ExceptionDate::ExceptionType::sub);
+                ex.type = (meta_vj_validity_pattern.days[i] ? ExceptionDate::ExceptionType::add : ExceptionDate::ExceptionType::sub);
                 associated_calendar->exceptions.push_back(ex);
             }
 
-            for (auto vj: meta_vj.theoric_vj) {
-                vj->associated_calendars.insert({associated_calendar->calendar->uri, associated_calendar});
-            }
-            associated_vp.insert({meta_vj_validity_patern, associated_calendar});
+            meta_vj->associated_calendars.insert({associated_calendar->calendar->uri, associated_calendar});
+            associated_vp.insert({meta_vj_validity_pattern, associated_calendar});
             cal_uri << associated_calendar->calendar->uri << " ";
         }
 
