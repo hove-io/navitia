@@ -701,24 +701,18 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
     uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
-    std::vector<VehicleJourney*> adapted_vehicle_journey_list;
-    bool is_adapted;
-    ValidityPattern* adapted_validity_pattern;
-    std::vector<VehicleJourney*> adapted_vehicle_journey_list;
-    VehicleJourney* theoric_vehicle_journey;
 
-    VehicleJourney(): journey_pattern(nullptr), company(nullptr),
-        validity_pattern(nullptr),
-        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false),
-        adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
-
+    bool is_adapted = false; //REMOVE (change to enum ?)
+    ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
+    std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
+    VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages & associated_calendars
+            & odt_message & _vehicle_properties & messages
             & codes & next_vj & prev_vj & start_time & end_time & headway_secs
 			& meta_vj;
     }
