@@ -1,3 +1,9 @@
+navitia2 (0.100.1) unstable; urgency=low
+
+  * autocomplete: correction calculation quality  <https://github.com/CanalTP/navitia/pull/442> 
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 25 Jul 2014 16:26:13 +0100
+
 navitia2 (0.100.0) unstable; urgency=low
 
   * fare : currency serialization  <https://github.com/CanalTP/navitia/pull/455>
