@@ -47,12 +47,12 @@ def check_departure_board(schedules, tester, only_time=False):
 
     assert len(datetimes) != 0, "we have to have date_times"
     #TODO, make that works before merging the time zone
-    # for dt_wrapper in datetimes:
-    #     dt = dt_wrapper["date_time"]
-    #     if only_time:
-    #         get_valid_time(dt)
-    #     else:
-    #         get_valid_datetime(dt)
+    for dt_wrapper in datetimes:
+        dt = dt_wrapper["date_time"]
+        if only_time:
+            get_valid_time(dt)
+        else:
+            get_valid_datetime(dt)
 
     #TODO uncomment after link refactor
     #check_links(schedule, tester)

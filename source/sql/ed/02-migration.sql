@@ -204,6 +204,17 @@ DO $$
 $$;
 
 DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.vehicle_journey ADD
+                COLUMN utc_to_local_offset INT REFERENCES navitia.vehicle_journey;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column utc_to_local_offset already exists in navitia.vehicle_journey';
+        END;
+    END;
+$$;
+
+DO $$
     DECLARE count_admin int;
 BEGIN
     count_admin := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='admin'), 0);

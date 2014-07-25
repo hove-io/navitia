@@ -102,7 +102,7 @@ class Schedules(ResourceUri):
 
 
 date_time = {
-    "date_time": SplitDateTime(date='date', time='time'),  # TODO!
+    "date_time": SplitDateTime(date='date', time='time'),
     "additional_informations": additional_informations(),
     "links": stop_time_properties_links()
 }

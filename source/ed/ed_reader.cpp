@@ -620,6 +620,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.start_time as start_time,"
         "vj.end_time as end_time,"
         "vj.headway_sec as headway_sec,"
+        "vj.utc_to_local_offset as utc_to_local_offset, "
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -640,6 +641,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["name"].to(vj->name);
         const_it["comment"].to(vj->comment);
         const_it["odt_message"].to(vj->odt_message);
+        const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
         const_it["external_code"].to(vj->codes["external_code"]);
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
 
@@ -743,6 +745,7 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
         } else {
             throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
         }
+        vj->meta_vj = meta_vj;
     }
 }
 

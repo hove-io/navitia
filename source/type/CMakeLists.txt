@@ -3,7 +3,7 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto response.proto request.pr
 
 
 add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
-target_link_libraries(pb_lib ${PROTOBUF_LIBRARY})
+target_link_libraries(pb_lib pthread ${PROTOBUF_LIBRARY})
 add_custom_command (TARGET pb_lib
     PRE_BUILD
     COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/navitiacommon/navitiacommon" type.proto

@@ -359,6 +359,10 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         res.push_back(vj);
         meta_vj.theoric_vj.push_back(vj);
         vj->meta_vj_name = row[trip_c];
+
+        // we store the split vj utc shift
+        auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];
+        vj->utc_to_local_offset = utc_offset;
     }
 
     return res;
