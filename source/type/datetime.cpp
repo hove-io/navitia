@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "type/datetime.h"
 #include "type/data.h"
+#include "type/time_duration.h"
 #include "type/meta_data.h"
 
 namespace navitia {
@@ -80,4 +81,9 @@ DateTime to_datetime(boost::posix_time::ptime ptime, const type::Data &d) {
     int time = ptime.time_of_day().total_seconds();
     return DateTimeUtils::set(day, time);
 }
+
+boost::posix_time::ptime from_posix_timestamp(uint32_t val) {
+    return posix_epoch + navitia::seconds(val).to_posix();
+}
+
 }

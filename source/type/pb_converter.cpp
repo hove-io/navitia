@@ -919,10 +919,10 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     section->set_id(response.register_section());
     fill_pb_placemark(origin, data, section->mutable_origin(), 2, now, action_period);
     fill_pb_placemark(destination, data, section->mutable_destination(), 2, now, action_period);
-    section->set_begin_date_time(navitia::to_iso_string_no_fractional(time));
+    section->set_begin_date_time(navitia::to_posix_timestamp(time));
     section->set_duration(0);
     section->set_length(0);
-    section->set_end_date_time(navitia::to_iso_string_no_fractional(time));
+    section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
     auto coord = section->mutable_street_network()->add_coordinates();
     coord->set_lat(origin.coordinates.lat());
