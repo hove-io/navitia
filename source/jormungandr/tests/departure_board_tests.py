@@ -28,6 +28,7 @@
 # www.navitia.io
 from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
+import datetime
 
 
 def check_departure_board(schedules, tester, only_time=False):
@@ -69,8 +70,8 @@ class TestDepartureBoard(AbstractTestFixture):
         Same test as departure_board_test.cpp/test_calendar_week
         but after jormungandr
         """
-        response = self.query_region("stop_areas/stop1/stop_schedules?"
-                                     "calendar=week_cal")
+        response = self.query_region("stop_points/stop1/stop_schedules?"
+                                     "calendar=week_cal&from_datetime=20120615T080000")
 
         assert "stop_schedules" in response
         #all datetime in the response should be only time (no dates since we query if on a period (a calendar))
@@ -79,13 +80,19 @@ class TestDepartureBoard(AbstractTestFixture):
         #after the structure check, we check some test specific stuff
         assert response["stop_schedules"][0]["stop_point"]["id"] == "stop1"
         assert response["stop_schedules"][0]["route"]["line"]["id"] == "line:A"
+        dts = response["stop_schedules"][0]["date_times"]
+
+        assert len(dts) == 3
+        assert get_valid_time(dts[0]["date_time"]) == datetime.datetime(1900, 1, 1, 10, 10, 00)
+        assert get_valid_time(dts[1]["date_time"]) == datetime.datetime(1900, 1, 1, 11, 10, 00)
+        assert get_valid_time(dts[2]["date_time"]) == datetime.datetime(1900, 1, 1, 15, 10, 00)
 
     def test_no_calendar_error(self):
         """
         bob_the_calendar does not exists, we got an error
         """
         response, error_code = self.query_region("stop_areas/stop1/stop_schedules?"
-                                     "calendar=bob_the_calendar", check=False)
+                                                 "calendar=bob_the_calendar", check=False)
 
         assert error_code == 404
 
@@ -99,7 +106,7 @@ class TestDepartureBoard(AbstractTestFixture):
         departure board for a given date
         """
         response = self.query_region("stop_areas/stop1/stop_schedules?"
-                                     "from_datetime=20120615T080000", display=True)
+                                     "from_datetime=20120615T080000")
 
         assert "stop_schedules" in response
         #all datetime in the response should be only time (no dates since we query if on a period (a calendar))
