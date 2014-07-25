@@ -129,7 +129,7 @@ std::vector<nt::StopTime*> get_stop_from_impact(
 std::string make_adapted_uri(const nt::VehicleJourney* vj, nt::PT_Data&){
     return vj->uri + ":adapted:"
         + boost::lexical_cast<std::string>(
-                vj->adapted_vehicle_journey_list.size());
+                vj->information->adapted_vehicle_journey_list.size());
 }
 
 //duplique un VJ et tout ce qui lui est lié pour construire un VJ adapté
@@ -143,7 +143,7 @@ nt::VehicleJourney* create_adapted_vj(
     data.vehicle_journeys_map[vj_adapted->uri] = vj_adapted;
     //le nouveau VJ garde bien une référence vers le théorique, et non pas sur le VJ adapté dont il est issu.
     vj_adapted->theoric_vehicle_journey = theorical_vj;
-    theorical_vj->adapted_vehicle_journey_list.push_back(vj_adapted);
+    theorical_vj->information->adapted_vehicle_journey_list.push_back(vj_adapted);
 
     //si on pointe vers le meme validity pattern pour l'adapté et le théorique, on duplique
     if(theorical_vj->adapted_validity_pattern == theorical_vj->validity_pattern){
@@ -205,7 +205,7 @@ std::pair<bool, nt::VehicleJourney*> find_reference_vj(
             && !vehicle_journey->adapted_validity_pattern->check(day_index)){
         nt::VehicleJourney* tmp_vj = NULL;
         //le VJ théorique ne circule pas: on recherche le vj adapté qui circule ce jour:
-        for(auto* vj: vehicle_journey->adapted_vehicle_journey_list){
+        for(auto* vj: vehicle_journey->information->adapted_vehicle_journey_list){
             if(vj->adapted_validity_pattern->check(day_index)){
                 tmp_vj = vj;
                 break;
@@ -361,7 +361,7 @@ void AtAdaptedLoader::apply_update_on_vj(nt::VehicleJourney* vehicle_journey,
         }
     }
     //une fois tous les messages traités pour un vj, on renumérote les horaires des vj adapté
-    for(nt::VehicleJourney* vj : vehicle_journey->adapted_vehicle_journey_list){
+    for(nt::VehicleJourney* vj : vehicle_journey->information->adapted_vehicle_journey_list){
         for(unsigned int i=0; i < vj->stop_time_list.size(); i++){
             vj->stop_time_list[i]->journey_pattern_point->order = i;
         }

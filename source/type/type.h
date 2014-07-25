@@ -678,10 +678,23 @@ struct AssociatedCalendar {
     }
 };
 
-struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes{
+struct VehicleJourneyInformation: public Nameable, HasMessages, Codes {
+    std::vector<VehicleJourney*> adapted_vehicle_journey_list;
+    std::string odt_message;
+    std::string headsign;
+
+    Company* company;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & comment & messages & codes & headsign & adapted_vehicle_journey_list;
+    }
+
+    VehicleJourneyInformation() : company(nullptr) {}
+};
+
+struct VehicleJourney: public Header, hasVehicleProperties {
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
-    Company* company;
     ValidityPattern* validity_pattern;
     ValidityPattern* adapted_validity_pattern;
     VehicleJourney* theoric_vehicle_journey;
@@ -691,28 +704,40 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     // They have the same block id
     VehicleJourney* next_vj = nullptr;
     VehicleJourney* prev_vj = nullptr;
-    std::string odt_message;
+
     ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
     std::map<std::string, AssociatedCalendar*> associated_calendars;
 
+    std::unique_ptr<VehicleJourneyInformation> information;
     VehicleJourneyType vehicle_journey_type;
     uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
     uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
-    std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     bool is_adapted;
 
-    VehicleJourney(): journey_pattern(nullptr), company(nullptr),
+    VehicleJourney(): journey_pattern(nullptr),
         validity_pattern(nullptr), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr),
-        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false){}
+        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false) {
+        information = std::unique_ptr<VehicleJourneyInformation>(new VehicleJourneyInformation());
+    }
+
+    VehicleJourney(const VehicleJourney &obj) : journey_pattern(obj.journey_pattern),
+            validity_pattern(obj.validity_pattern), adapted_validity_pattern(obj.adapted_validity_pattern),
+            theoric_vehicle_journey(obj.theoric_vehicle_journey), stop_time_list(obj.stop_time_list),
+            next_vj(obj.next_vj), prev_vj(obj.prev_vj),  associated_calendars(obj.associated_calendars),
+            vehicle_journey_type(obj.vehicle_journey_type), is_adapted(obj.is_adapted){
+        start_time = obj.start_time;
+        end_time = obj.end_time;
+        headway_secs = obj.headway_secs;
+        information = std::unique_ptr<VehicleJourneyInformation>(new VehicleJourneyInformation(*obj.information));
+    }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern & company & validity_pattern
+        ar & uri & journey_pattern & validity_pattern
             & idx & stop_time_list & is_adapted
-            & adapted_validity_pattern & adapted_vehicle_journey_list
-            & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages & associated_calendars
-            & codes & next_vj & prev_vj & start_time & end_time & headway_secs;
+            & adapted_validity_pattern & theoric_vehicle_journey & vehicle_journey_type
+            & _vehicle_properties & next_vj & prev_vj & associated_calendars
+            & start_time & end_time & headway_secs & information;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -822,6 +847,18 @@ struct JourneyPatternPoint : public Header{
 
 };
 
+struct StopTimeInformation {
+
+    std::string comment;
+    std::string headsign;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & headsign & comment;
+    }
+
+    StopTimeInformation() {}
+
+};
+
 struct StopTime {
     static const uint8_t PICK_UP = 0;
     static const uint8_t DROP_OFF = 1;
@@ -836,7 +873,20 @@ struct StopTime {
     uint32_t departure_time = 0; ///< En secondes depuis minuit
     VehicleJourney* vehicle_journey = nullptr;
     JourneyPatternPoint* journey_pattern_point = nullptr;
-    std::string comment;
+    std::unique_ptr<StopTimeInformation> information;
+
+    StopTime(): vehicle_journey(nullptr), journey_pattern_point(nullptr) {
+        information = std::unique_ptr<StopTimeInformation>(new StopTimeInformation());
+    }
+
+    StopTime(const StopTime &obj) : vehicle_journey(obj.vehicle_journey),
+            journey_pattern_point(obj.journey_pattern_point){
+        properties = obj.properties;
+        arrival_time = obj.arrival_time;
+        departure_time = obj.departure_time;
+        local_traffic_zone = obj.local_traffic_zone;
+        information = std::unique_ptr<StopTimeInformation>(new StopTimeInformation(*obj.information));
+    }
 
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
@@ -849,8 +899,6 @@ struct StopTime {
     inline void set_odt(bool value) {properties[ODT] = value;}
     inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
     inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
-
-
 
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
@@ -933,7 +981,7 @@ struct StopTime {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
-            & properties & local_traffic_zone & comment;
+            & properties & local_traffic_zone & information;
     }
 
     bool operator<(const StopTime& other) const {

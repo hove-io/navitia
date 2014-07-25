@@ -364,11 +364,11 @@ void Data::build_relations(navitia::type::PT_Data &data){
                 navitia::type::Route* route = jp->route;
                 if(route != nullptr) {
                     navitia::type::Line* line = route->line;
-                    if(vj->company != nullptr){
-                        if(std::find(line->company_list.begin(), line->company_list.end(), vj->company) == line->company_list.end())
-                            line->company_list.push_back(vj->company);
-                        if(std::find(vj->company->line_list.begin(), vj->company->line_list.end(), line) == vj->company->line_list.end())
-                            vj->company->line_list.push_back(line);
+                    if(vj->information->company != nullptr){
+                        if(std::find(line->company_list.begin(), line->company_list.end(), vj->information->company) == line->company_list.end())
+                            line->company_list.push_back(vj->information->company);
+                        if(std::find(vj->information->company->line_list.begin(), vj->information->company->line_list.end(), line) == vj->information->company->line_list.end())
+                            vj->information->company->line_list.push_back(line);
                     }
                 }
             }

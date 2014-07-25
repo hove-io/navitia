@@ -337,6 +337,8 @@ nt::StopTime* StopTime::get_navitia_type() const {
     nt::StopTime* nt_stop = new nt::StopTime();
     nt_stop->arrival_time = this->arrival_time;
     nt_stop->departure_time = this->departure_time;
+    nt_stop->information->headsign = this->headsign;
+    nt_stop->information->comment = this->comment;
     nt_stop->properties[nt::StopTime::ODT] = this->ODT;
     nt_stop->properties[nt::StopTime::DROP_OFF] = this->drop_off_allowed;
     nt_stop->properties[nt::StopTime::PICK_UP] = this->pick_up_allowed;
@@ -377,16 +379,18 @@ nt::JourneyPatternPoint* JourneyPatternPoint::get_navitia_type() const {
 
 nt::VehicleJourney* VehicleJourney::get_navitia_type() const {
     nt::VehicleJourney* nt_vj = new nt::VehicleJourney();
+
     nt_vj->idx = this->idx;
-    nt_vj->name = this->name;
+    nt_vj->information->name = this->name;
     nt_vj->uri = this->uri;
-    nt_vj->comment = this->comment;
+    nt_vj->information->comment = this->comment;
+    nt_vj->information->headsign = this->headsign;
     nt_vj->start_time = this->start_time;
     nt_vj->end_time = this->end_time;
     nt_vj->headway_secs = this->headway_secs;
 
     if(this->company != NULL)
-        nt_vj->company->idx = this->company->idx;
+        nt_vj->information->company->idx = this->company->idx;
 
     nt_vj->journey_pattern->idx = this->journey_pattern->idx;
 

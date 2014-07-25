@@ -222,6 +222,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     StopTime * first_stop_time = nullptr;
     std::string block_id;
     std::string odt_message;
+    std::string headsign;
 
     int start_time = std::numeric_limits<int>::max(); /// First departure of vehicle
     int end_time = std::numeric_limits<int>::max(); /// Last departure of vehicle journey
@@ -305,6 +306,7 @@ struct StopTime : public Nameable {
     VehicleJourney* vehicle_journey;
     JourneyPatternPoint* journey_pattern_point;
     StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
+    std::string headsign;
     int order;
     bool ODT;
     bool pick_up_allowed;

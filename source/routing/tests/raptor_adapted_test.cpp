@@ -197,7 +197,7 @@ impact-3
         message->active_days = std::bitset<8>("11111111");
         message->application_daily_start_hour = pt::duration_from_string("08:00");
         message->application_daily_end_hour = pt::duration_from_string("18:00");
-        vj2->messages.push_back(message);
+        vj2->information->messages.push_back(message);
         add_perturbation(message);
 
         //Impact-2 on vj2 from 2014-01-16 00:00:00 à 08h00text_format to 2014-01-17 23:59:59 à 10h35
@@ -212,7 +212,7 @@ impact-3
         message->active_days = std::bitset<8>("11111111");
         message->application_daily_start_hour = pt::duration_from_string("08:30");
         message->application_daily_end_hour = pt::duration_from_string("10:35");
-        vj2->messages.push_back(message);
+        vj2->information->messages.push_back(message);
         add_perturbation(message);
 
         //Impact-3 on vj2 from 2014-01-18 00:00:00 à 11h00 to 2014-01-18 23:59:59 à 14h00
@@ -227,7 +227,7 @@ impact-3
         message->active_days = std::bitset<8>("11111111");
         message->application_daily_start_hour = pt::duration_from_string("08:30");
         message->application_daily_end_hour = pt::duration_from_string("10:29");
-        vj2->messages.push_back(message);
+        vj2->information->messages.push_back(message);
         add_perturbation(message);
 
         //Impact-4 on stop_area:stop02 from 2014-01-18 00:00:00 à 11h00 to 2014-01-18 23:59:59 à 18h00

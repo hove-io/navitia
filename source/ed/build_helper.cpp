@@ -126,7 +126,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
             vj->journey_pattern->physical_mode = b.data->pt_data->physical_modes.front();
 
     if(!b.data->pt_data->companies.empty())
-        vj->company = b.data->pt_data->companies.front();
+        vj->information->company = b.data->pt_data->companies.front();
 }
 
 

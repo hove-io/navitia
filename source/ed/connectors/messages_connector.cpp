@@ -150,7 +150,7 @@ void apply_messages(navitia::type::Data& data){
         if(message_pair.second->object_type ==  navitia::type::Type_e::VehicleJourney){
             auto it = data.pt_data->vehicle_journeys_map.find(message_pair.second->object_uri);
             if(it != data.pt_data->vehicle_journeys_map.end()){
-                it->second->messages.push_back(message_pair.second);
+                it->second->information->messages.push_back(message_pair.second);
             }
         }
 

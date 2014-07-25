@@ -41,6 +41,7 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj,
+        const type::StopTime* st,
         const nt::Data & d, bt::ptime now, bt::time_period action_period) {
 
     if (vj->has_boarding()){
@@ -53,7 +54,7 @@ void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj
     }
     auto* vj_pt_display_information = pb_section->mutable_pt_display_informations();
     auto* add_info_vehicle_journey = pb_section->mutable_add_info_vehicle_journey();
-    fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period);
+    fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period,st);
     fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
 }
 
@@ -242,7 +243,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 pb_section->set_length(length);
                 if( item.get_vj() != nullptr) { // TODO : réfléchir si ça peut vraiment arriver
                     bt::time_period action_period(departure_ptime, arrival_ptime);
-                    fill_section(pb_section, item.get_vj(), d, now, action_period);
+                    const type::StopTime* boarding_st = item.stop_times.size() == 0 ? nullptr : item.stop_times[0];
+                    fill_section(pb_section, item.get_vj(), boarding_st, d, now, action_period);
                 }
             } else {
                 pb_section->set_type(pbnavitia::TRANSFER);

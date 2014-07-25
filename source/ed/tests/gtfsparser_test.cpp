@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->tmp_line->uri, "AB");
     BOOST_REQUIRE(data.vehicle_journeys[0]->validity_pattern != nullptr);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->validity_pattern->uri, "FULLW");
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "to Bullfrog");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->headsign, "to Bullfrog");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->block_id, "1");
 
     BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->uri, "AAMV4");
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->tmp_line->uri, "AAMV");
     BOOST_REQUIRE(data.vehicle_journeys[10]->validity_pattern != nullptr);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->validity_pattern->uri, "WE");
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->name, "to Airport");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->headsign, "to Airport");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[10]->block_id, "");
 
     //Calendar
@@ -315,6 +315,11 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_REQUIRE(data.stops[0]->tmp_stop_point != nullptr);
     BOOST_CHECK_EQUAL(data.stops[0]->tmp_stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[0]->order, 1);
+
+    //Headsign in stop time
+    BOOST_REQUIRE(data.stops[0]->headsign.empty());
+    BOOST_CHECK_EQUAL(data.stops[2]->headsign, "EMSI via NADAV");
+    BOOST_CHECK_EQUAL(data.stops[5]->headsign, "EMSI");
 }
 
 //TODO: work on this, we should be able to parse line with \\ in char
