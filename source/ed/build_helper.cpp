@@ -55,17 +55,29 @@ VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
     return *this;
 }
 
+nt::MetaVehicleJourney* get_or_create_metavj(builder& b, const std::string name) {
+    auto it = b.data->pt_data->meta_vj.find(name);
+
+    if (it == b.data->pt_data->meta_vj.end()) {
+        auto mvj = new nt::MetaVehicleJourney;
+        b.data->pt_data->meta_vj.insert({name, mvj});
+        return mvj;
+    }
+    return it->second;
+}
 
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri, std::string meta_vj_name) : b(b){
     vj = new navitia::type::VehicleJourney();
 
     //if we have a meta_vj, we add it in that
+    nt::MetaVehicleJourney* mvj;
     if (! meta_vj_name.empty()) {
-        b.data->pt_data->meta_vj[meta_vj_name].theoric_vj.push_back(vj);
+        mvj = get_or_create_metavj(b, meta_vj_name);
     } else {
-        b.data->pt_data->meta_vj[uri].theoric_vj.push_back(vj); //we add a meta vj around this vj
+        mvj = get_or_create_metavj(b, uri);
     }
-
+    mvj->theoric_vj.push_back(vj);
+    vj->meta_vj = mvj;
 
     vj->idx = b.data->pt_data->vehicle_journeys.size();
     b.data->pt_data->vehicle_journeys.push_back(vj);

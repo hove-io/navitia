@@ -92,16 +92,17 @@ BOOST_FIXTURE_TEST_CASE(test_data_set, calendar_fixture) {
 
     //we check that each vj is associated with the right calendar
     //NOTE: this is better checked in the UT for associated cal
-    BOOST_REQUIRE_EQUAL(vj_week->associated_calendars.size(), 1);
-    BOOST_REQUIRE(vj_week_bis->associated_calendars["week_cal"]);
-    BOOST_REQUIRE_EQUAL(vj_week_bis->associated_calendars.size(), 1);
-    BOOST_REQUIRE(vj_week_bis->associated_calendars["week_cal"]);
-    BOOST_REQUIRE_EQUAL(vj_weekend->associated_calendars.size(), 1);
-    BOOST_REQUIRE(vj_weekend->associated_calendars["weekend_cal"]);
-    BOOST_REQUIRE_EQUAL(vj_all->associated_calendars.size(), 2);
-    BOOST_REQUIRE(vj_all->associated_calendars["week_cal"]);
-    BOOST_REQUIRE(vj_all->associated_calendars["weekend_cal"]);
-    BOOST_REQUIRE(vj_wednesday->associated_calendars.empty());
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["week"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["week"]->associated_calendars["week_cal"]);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["week_bis"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["week_bis"]->associated_calendars["week_cal"]);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["weekend"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["weekend"]->associated_calendars["weekend_cal"]);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["all"]->associated_calendars.size(), 2);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["all"]->associated_calendars["week_cal"]);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["all"]->associated_calendars["weekend_cal"]);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["wednesday"]->associated_calendars.empty());
 }
 /*
  * unknown calendar in request => error
@@ -145,7 +146,6 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
  * we thus will get the 2 'week' vj + the 'all' vj
  */
 BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
-
     boost::optional<const std::string> calendar_id{"week_cal"};
 
     pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, "20120615T080000", 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
@@ -170,7 +170,6 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
  * when asked with a calendar not associated with the line, we got an empty schedule
  */
 BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
-
     boost::optional<const std::string> calendar_id{"not_associated_cal"};
 
     pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, "20120615T080000", 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);

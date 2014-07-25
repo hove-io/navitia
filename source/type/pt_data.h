@@ -52,7 +52,7 @@ struct PT_Data : boost::noncopyable{
     std::vector<StopPointConnection*> stop_point_connections;
 
     // meta vj map
-    std::map<std::string, MetaVehicleJourney> meta_vj;
+    std::map<std::string, MetaVehicleJourney*> meta_vj;
 
     //associated cal for vj
     std::vector<AssociatedCalendar*> associated_calendars;
