@@ -46,7 +46,39 @@ from datetime import datetime, timedelta
 f_datetime = "%Y%m%dT%H%M%S"
 
 
-class Journeys(Resource, ResourceUtc):
+class FindAndFormatJourneys():
+
+    def find_and_transform_datetimes(self, response):
+        if not 'journeys' in response or len(response['journeys']) == 0:
+            return response
+        for i_journey in range(0, len(response['journeys'])-1):
+            journey = response['journeys'][i_journey]
+            if "arrival_date_time" in journey:
+                journey['arrival_date_time'] = self.format(journey['arrival_date_time'])
+            if "departure_date_time" in journey:
+                journey['departure_date_time'] = self.format(journey['departure_date_time'])
+            if "requested_date_time" in journey:
+                journey['requested_date_time'] = self.format(journey['requested_date_time'])
+            if not "sections" in journey:
+                continue
+            for i_section in range(0, len(journey['sections'])-1):
+                section = journey['sections'][i_section]
+                if "end_date_time" in section:
+                    section['end_date_time'] = self.format(section['end_date_time'])
+                if "begin_date_time" in section:
+                    section['begin_date_time'] = self.format(section['begin_date_time'])
+                    if not "stop_date_times" in section:
+                        continue
+                    for i_st in range(0, len(section['stop_date_times'])-1):
+                        st = section['stop_date_times'][i_st]
+                        if "arrival_date_time" in journey:
+                            st['arrival_date_time'] = self.format(st['arrival_date_time'])
+                        if "departure_date_time" in st:
+                            st['departure_date_time'] = self.format(st['departure_date_time'])
+        return response
+
+
+class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
 
     """ Compute journeys"""
     parsers = {}
@@ -141,35 +173,7 @@ class Journeys(Resource, ResourceUtc):
 
         return self.find_and_transform_datetimes(protobuf_to_dict(response, use_enum_labels=True)), 200
 
-    def find_and_transform_datetimes(self, response):
-        if not 'journeys' in response or len(response['journeys']) == 0:
-            return response
-        for i_journey in range(0, len(response['journeys'])-1):
-            journey = response['journeys'][i_journey]
-            if "arrival_date_time" in journey:
-                journey['arrival_date_time'] = self.format(journey['arrival_date_time'])
-            if "departure_date_time" in journey:
-                journey['departure_date_time'] = self.format(journey['departure_date_time'])
-            if "requested_date_time" in journey:
-                journey['requested_date_time'] = self.format(journey['requested_date_time'])
-            if not "sections" in journey:
-                continue
-            for i_section in range(0, len(journey['sections'])-1):
-                section = journey['sections'][i_section]
-                if "end_date_time" in section:
-                    section['end_date_time'] = self.format(section['end_date_time'])
-                if "begin_date_time" in section:
-                    section['begin_date_time'] = self.format(section['begin_date_time'])
-                    if not "stop_date_times" in section:
-                        continue
-                    for i_st in range(0, len(section['stop_date_times'])-1):
-                        st = section['stop_date_times'][i_st]
-                        if "arrival_date_time" in journey:
-                            st['arrival_date_time'] = self.format(st['arrival_date_time'])
-                        if "departure_date_time" in st:
-                            st['departure_date_time'] = self.format(st['departure_date_time'])
 
-        return response
 
 
 
