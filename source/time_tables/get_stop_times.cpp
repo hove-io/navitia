@@ -58,7 +58,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
             auto st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, disruption_active, false, calendar_id, accessibilite_params.vehicle_properties);
             if(st.first != nullptr) {
                 DateTime dt_temp = st.second;
-                if(dt_temp <= max_dt && result.size() < max_departures) {
+                if(dt_temp <= max_dt) {
                     result.push_back(std::make_pair(dt_temp, st.first));
                     test_add = true;
                     // Le prochain horaire observé doit être au minimum une seconde après
@@ -71,6 +71,9 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
         }
      }
     std::sort(result.begin(), result.end(),[](datetime_stop_time dst1, datetime_stop_time dst2) {return dst1.first < dst2.first;});
+    if (result.size() > max_departures) {
+        result.resize(max_departures);
+    }
 
     return result;
 }
