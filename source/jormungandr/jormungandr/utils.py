@@ -29,6 +29,8 @@
 
 import calendar
 from datetime import datetime
+from jormungandr import i_manager
+import pytz
 
 
 def str_to_time_stamp(str):
@@ -47,3 +49,45 @@ def date_to_timestamp(date):
     convert a datatime objet to a posix timestamp (number of seconds from 1070/1/1)
     """
     return int(calendar.timegm(date.timetuple()))
+
+class ResourceUtc:
+    def __init__(self):
+        self._tz = None
+
+    def tz(self):
+        if not self._tz:
+            instance = i_manager.instances[self.region]
+
+            tz_name = instance.timezone  # TODO store directly the tz?
+
+            if not tz_name:
+                logging.Logger(__name__).warn("unkown timezone for region {}"
+                                              .format(self.region))
+                return original_datetime
+            self._tz = (pytz.timezone(tz_name),)
+        return self._tz[0]
+
+    def convert_to_utc(self, original_datetime):
+        """
+        convert the original_datetime in the args to UTC
+
+        for that we need to 'guess' the timezone wanted by the user
+
+        For the moment We only use the default instance timezone.
+
+        It won't obviously work for multi timezone instances, we'll have to do
+        something smarter.
+
+        We'll have to consider either the departure or the arrival of the journey
+        (depending on the `clockwise` param)
+        and fetch the tz of this point.
+        we'll have to store the tz for stop area and the coord for admin, poi, ...
+        """
+
+        if self.tz() is None:
+            return original_datetime
+
+        utctime = self.tz().normalize(self.tz().localize(original_datetime)).astimezone(pytz.utc)
+
+        return utctime
+
