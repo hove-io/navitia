@@ -60,6 +60,7 @@ from copy import copy
 from datetime import datetime
 from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
+import json
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -572,6 +573,11 @@ class Journeys(ResourceUri):
 
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
+        
+        # ludo
+        self.parsers["post"] = self.parsers["get"]
+        parser_post = self.parsers["post"]
+        parser_post.add_argument("details", type=boolean, default=False)  
 
     @clean_links()
     @add_id_links()
@@ -650,3 +656,65 @@ class Journeys(ResourceUri):
             del splitted_address[1]
             return ':'.join(splitted_address)
         return id
+
+    @clean_links()
+    @add_id_links()
+    @add_journey_pagination()
+    @add_journey_href()
+    @marshal_with(journeys)
+    @ManageError()
+    def post(self, region=None, lon=None, lat=None, uri=None):
+        args = self.parsers['post'].parse_args()
+        #parse json structures for origin & destination
+        args['from'] = json.loads(args['origin'])
+        args['to'] = json.loads(args['destination'])
+
+        #check that we have at least one departure and one arrival
+        if len(args['from']) == 0:
+            return {'error': 'origin must contain at least one item'}, 503
+        if len(args['to']) == 0:
+            return {'error': 'destination must contain at least one item'}, 503
+
+        # TODO : Changer le protobuff pour que ce soit propre
+        if args['destination_mode'] == 'vls':
+            args['destination_mode'] = 'bss'
+        if args['origin_mode'] == 'vls':
+            args['origin_mode'] = 'bss'
+
+        #count override min_nb_journey or max_nb_journey
+        if 'count' in args and args['count']:
+            args['min_nb_journeys'] = args['count']
+            args['max_nb_journeys'] = args['count']
+
+        if region:
+            self.region = i_manager.get_region(region)
+            #we check that the user can use this api
+            authentification.authenticate(region, 'ALL', abort=True)
+
+        if not region:
+            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
+            self.region = compute_regions(args)
+
+        # On deroule les structures JSON en 4 tableaux
+        args['origin'] = []
+        args['origin_access_duration'] = []
+        args['destination'] = []
+        args['destination_access_duration'] = []
+        for loop in [('from','origin',True),('to','destination',False)]:
+            for location in args[loop[0]]:
+                if "access_duration" in location:
+                    args[loop[1]+'_access_duration'].append(location["access_duration"])
+                else:
+                    args[loop[1]+'_access_duration'].append(0)
+                stop_uri = location["uri"]
+                stop_uri = self.transform_id(stop_uri)
+                args[loop[1]].append(stop_uri)
+
+        # Date par defaut
+        if not args['datetime']:
+            args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
+
+        api = 'nem_journeys'
+
+        response = i_manager.dispatch(args, api, instance_name=self.region)
+        return response

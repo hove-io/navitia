@@ -42,7 +42,7 @@ from flask import request
             |date_out_of_bounds					|  404                  |
             |no_origin							|  404                  |
             |no_destination						|  404                  |
-            |no_origin_nor_destionation			|  404                  |
+            |no_origin_nor_destination			|  404                  |
             |unknown_object						|  404                  |
             |                                   |                       |
             |no_solution                        |  204                  |
@@ -68,7 +68,7 @@ class ManageError(object):
                 response_pb2.Error.date_out_of_bounds: 404,
                 response_pb2.Error.no_origin: 404,
                 response_pb2.Error.no_destination: 404,
-                response_pb2.Error.no_origin_nor_destionation: 404,
+                response_pb2.Error.no_origin_nor_destination: 404,
                 response_pb2.Error.unknown_object: 404,
                 response_pb2.Error.unable_to_parse: 400,
                 response_pb2.Error.bad_filter: 400,

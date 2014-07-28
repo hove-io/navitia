@@ -1029,13 +1029,15 @@ struct EntryPoint {
     Type_e type;//< Le type de l'objet
     std::string uri; //< Le code externe de l'objet
     int house_number;
+    int access_duration;
     GeographicalCoord coordinates;  // < coordonnées du point d'entrée
     StreetNetworkParams streetnetwork_params;        // < paramètres de rabatement du point d'entrée
 
     /// Construit le type à partir d'une chaîne
     EntryPoint(const Type_e type, const std::string & uri);
+    EntryPoint(const Type_e type, const std::string & uri, int access_duration);
 
-    EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
+    EntryPoint() : type(Type_e::Unknown), house_number(-1), access_duration(0) {}
 };
 } //namespace navitia::type
 

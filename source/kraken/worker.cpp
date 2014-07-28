@@ -386,23 +386,30 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
 
-    Type_e origin_type = data->get_type_of_id(request.origin());
-    type::EntryPoint origin = type::EntryPoint(origin_type, request.origin());
+    std::vector<type::EntryPoint> origins;
+    for(int i = 0; i < request.origin().size(); i++) {
+        Type_e origin_type = data->get_type_of_id(request.origin(i).place());
+        type::EntryPoint origin = type::EntryPoint(origin_type, request.origin(i).place(), request.origin(i).access_duration());
 
-    if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin
-            || origin.type == type::Type_e::StopArea || origin.type == type::Type_e::StopPoint
-            || origin.type == type::Type_e::POI) {
-        origin.coordinates = this->coord_of_entry_point(origin, data);
+        if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin
+                || origin.type == type::Type_e::StopArea || origin.type == type::Type_e::StopPoint
+                || origin.type == type::Type_e::POI) {
+            origin.coordinates = this->coord_of_entry_point(origin, data);
+        }
+        origins.push_back(origin);
     }
 
-    type::EntryPoint destination;
+    std::vector<type::EntryPoint> destinations;
     if(api != pbnavitia::ISOCHRONE) {
-        Type_e destination_type = data->get_type_of_id(request.destination());
-        destination = type::EntryPoint(destination_type, request.destination());
-        if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
-                || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
-                || destination.type == type::Type_e::POI) {
-            destination.coordinates = this->coord_of_entry_point(destination, data);
+        for(int i = 0; i < request.destination().size(); i++) {
+            Type_e destination_type = data->get_type_of_id(request.destination(i).place());
+            type::EntryPoint destination = type::EntryPoint(destination_type, request.destination(i).place(), request.destination(i).access_duration());
+            if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
+                    || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
+                    || destination.type == type::Type_e::POI) {
+                destination.coordinates = this->coord_of_entry_point(destination, data);
+            }
+            destinations.push_back(destination);
         }
     }
 
@@ -415,27 +422,44 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         datetimes.push_back(request.datetimes(i));
 
     /// Récupération des paramètres de rabattement au départ
-    if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)
-            || (origin.type == type::Type_e::Admin) || (origin.type == type::Type_e::POI) || (origin.type == type::Type_e::StopArea)){
-        origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), data);
+    for(int i = 0; i < origins.size(); i++) {
+        type::EntryPoint &origin = origins[i];
+        if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)
+                || (origin.type == type::Type_e::Admin) || (origin.type == type::Type_e::POI) || (origin.type == type::Type_e::StopArea)){
+            origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), data);
+        }
     }
+
     /// Récupération des paramètres de rabattement à l'arrivée
-    if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
-            || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI) || (destination.type == type::Type_e::StopArea)){
-        destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), data, false);
+    for(int i = 0; i < destinations.size(); i++) {
+        type::EntryPoint &destination = destinations[i];
+        if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
+                    || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI) || (destination.type == type::Type_e::StopArea)){
+                destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), data, false);
+        }
     }
-/// Accessibilité, il faut initialiser ce paramètre
+
+    /// Accessibilité, il faut initialiser ce paramètre
     //HOT FIX degueulasse
     type::AccessibiliteParams accessibilite_params;
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
-    if(api != pbnavitia::ISOCHRONE){
-        return routing::make_response(*planner, origin, destination, datetimes,
+    switch(api) {
+        case pbnavitia::ISOCHRONE:
+            return navitia::routing::make_isochrone(*planner, origins[0], request.datetimes(0),
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.allow_odt(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
-    } else {
-        return navitia::routing::make_isochrone(*planner, origin, request.datetimes(0),
+
+        case pbnavitia::NEMPLANNER:
+            return navitia::routing::make_nem_response(*planner, origins, destinations, datetimes[0],
+                request.clockwise(), accessibilite_params,
+                forbidden, *street_network_worker,
+                request.disruption_active(), request.allow_odt(), request.max_duration(),
+                request.max_transfers(), request.show_codes());
+
+        default: // case pbnavitia::PLANNER:
+            return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.allow_odt(), request.max_duration(),
@@ -475,6 +499,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::DEPARTURE_BOARDS:
             return next_stop_times(request.next_stop_times(), request.requested_api()); break;
         case pbnavitia::ISOCHRONE:
+        case pbnavitia::NEMPLANNER:
         case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
         case pbnavitia::places_nearby: return proximity_list(request.places_nearby()); break;
         case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;

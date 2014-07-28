@@ -467,7 +467,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
-        fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point nor destination point",response.mutable_error());
+        fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
     }
@@ -517,6 +517,81 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         std::reverse(result.begin(), result.end());
 
     return make_pathes(result, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
+}
+
+
+pbnavitia::Response
+make_nem_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
+              const std::vector<type::EntryPoint> &destinations,
+              const std::string &datetimes_str, bool clockwise,
+              const type::AccessibiliteParams & accessibilite_params,
+              std::vector<std::string> forbidden,
+              georef::StreetNetwork & worker,
+              bool disruption_active,
+              bool allow_odt,
+              uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
+
+    pbnavitia::Response response;
+
+    std::vector<bt::ptime> datetimes;
+    datetimes = parse_datetimes(raptor, {datetimes_str}, response, clockwise);
+    if(response.has_error() || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
+        return response;
+    }
+    worker.init(origins[0], {destinations[0]});
+    auto departures = get_stop_points(origins[0], raptor.data, worker);
+    auto arrivals = get_stop_points(destinations[0], raptor.data, worker, true);
+    if(departures.size() == 0 && destinations.size() == 0){
+        fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point",response.mutable_error());
+        response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
+        return response;
+    }
+
+    if(departures.size() == 0){
+        fill_pb_error(pbnavitia::Error::no_origin, "no origin point",response.mutable_error());
+        response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
+        return response;
+    }
+
+    if(arrivals.size() == 0){
+        fill_pb_error(pbnavitia::Error::no_destination, "no destination point",response.mutable_error());
+        response.set_response_type(pbnavitia::NO_DESTINATION_POINT);
+        return response;
+    }
+
+    std::vector<Path> result;
+
+    DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+
+    for(bt::ptime datetime : datetimes) {
+        int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
+        int time = datetime.time_of_day().total_seconds();
+        DateTime init_dt = DateTimeUtils::set(day, time);
+
+        if(max_duration!=std::numeric_limits<uint32_t>::max()) {
+            bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
+        }
+
+        std::vector<Path> tmp = raptor.compute_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+
+        // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
+        if(datetimes.size() == 1) {
+            result = tmp;
+            for(auto & path : result) {
+                path.request_time = datetime;
+            }
+        } else if(!tmp.empty()) {
+            // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
+            tmp.back().request_time = datetime;
+            result.push_back(tmp.back());
+            bound = to_datetime(tmp.back().items.back().arrival, raptor.data);
+        } else // Lorsqu'on demande plusieurs horaires, et qu'il n'y a pas de résultat, on retourne un itinéraire vide
+            result.push_back(Path());
+    }
+    if(clockwise)
+        std::reverse(result.begin(), result.end());
+
+    return make_pathes(result, raptor.data, worker, origins[0], destinations[0], datetimes, clockwise, show_codes);
 }
 
 
