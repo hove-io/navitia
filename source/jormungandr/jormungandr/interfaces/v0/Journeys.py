@@ -165,26 +165,25 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
         args['datetime'] = date_to_timestamp(new_datetime)
         
         response = i_manager.dispatch(args, "journeys", instance_name=region)
-        #if response.journeys:
-        #    (before, after) = extremes(response, request)
-        #    if before and after:
-        #        response.prev = before
-        #        response.next = after
+        if response.journeys:
+            (before, after) = extremes(response, request)
+            if before and after:
+                response.prev = self.format(before)
+                response.next = self.format(after)
 
         return self.find_and_transform_datetimes(protobuf_to_dict(response, use_enum_labels=True)), 200
 
 
 
-
-
-class Isochrone(Resource):
+class Isochrone(Resource, ResourceUtc, FindAndFormatJourneys):
 
     """ Compute isochrones """
     method_decorators = [authentification_required]
 
     def __init__(self):
+        ResourceUtc.__init__(self)
         self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser()
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("origin", type=str, required=True)
         parser_get.add_argument("datetime", type=str, required=True)
@@ -204,6 +203,7 @@ class Isochrone(Resource):
         parser_get.add_argument("car_speed", type=float, default=16.8)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("wheelchair", type=boolean, default=False)
+        parser_get.add_argument("disruption_active", type=boolean, default=False)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
 
@@ -211,14 +211,19 @@ class Isochrone(Resource):
         args = self.parsers["get"].parse_args()
         if region is None:
             region = i_manager.key_of_id(args["origin"])
+        self.region = region
         original_datetime = datetime.strptime(args['datetime'], f_datetime)
         new_datetime = self.convert_to_utc(original_datetime)
         args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
         args['datetime'] = date_to_timestamp(new_datetime)
-        response = i_manager.dispatch(args, "isochrone", instance_name=region)
+        #default value for compatibility with v1
+        args["min_nb_journeys"] = None
+        args["max_nb_journeys"] = None
+        args["show_codes"] = False
+        response = i_manager.dispatch(args, "isochrone", instance_name=self.region)
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:
-                response.prev = before
-                response.next = after
-        return protobuf_to_dict(response, use_enum_labels=True), 200
+                response.prev = self.format(before)
+                response.next = self.format(after)
+        return self.find_and_transform_datetimes(protobuf_to_dict(response, use_enum_labels=True)), 200
