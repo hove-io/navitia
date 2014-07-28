@@ -40,9 +40,13 @@ from flask.ext.restful.types import boolean
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from jormungandr.authentification import authentification_required
+from jormungandr.utils import date_to_timestamp, ResourceUtc
+from datetime import datetime, timedelta
+
+f_datetime = "%Y%m%dT%H%M%S"
 
 
-class Journeys(Resource):
+class Journeys(Resource, ResourceUtc):
 
     """ Compute journeys"""
     parsers = {}
@@ -110,6 +114,7 @@ class Journeys(Resource):
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
+        self.region = None
 
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
@@ -118,15 +123,20 @@ class Journeys(Resource):
         args["min_nb_journeys"] = None
         args["max_nb_journeys"] = None
         args["show_codes"] = False
-
         if region is None:
             region = i_manager.key_of_id(args["origin"])
+        self.region = region
+        original_datetime = datetime.strptime(args['datetime'], f_datetime)
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
+        args['datetime'] = date_to_timestamp(new_datetime)
+        
         response = i_manager.dispatch(args, "journeys", instance_name=region)
-        if response.journeys:
-            (before, after) = extremes(response, request)
-            if before and after:
-                response.prev = before
-                response.next = after
+        #if response.journeys:
+        #    (before, after) = extremes(response, request)
+        #    if before and after:
+        #        response.prev = before
+        #        response.next = after
 
         return protobuf_to_dict(response, use_enum_labels=True), 200
 
@@ -165,6 +175,10 @@ class Isochrone(Resource):
         args = self.parsers["get"].parse_args()
         if region is None:
             region = i_manager.key_of_id(args["origin"])
+        original_datetime = datetime.strptime(args['datetime'], f_datetime)
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
+        args['datetime'] = date_to_timestamp(new_datetime)
         response = i_manager.dispatch(args, "isochrone", instance_name=region)
         if response.journeys:
             (before, after) = extremes(response, request)

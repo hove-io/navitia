@@ -32,6 +32,7 @@ from datetime import datetime
 from jormungandr import i_manager
 import pytz
 
+
 def str_to_time_stamp(str):
     """
     convert a string to a posix timestamp

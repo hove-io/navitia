@@ -7,7 +7,7 @@ server='localhost'
 username='navitia'
 
 #nom de la base de données
-dbname='centre'
+dbname='navitia'
 
 # http://www.postgresql.org/docs/9.1/static/libpq-envars.html
 export PGPASSWORD='navitia'

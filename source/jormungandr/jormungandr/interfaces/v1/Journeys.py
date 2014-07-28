@@ -30,7 +30,6 @@
 # www.navitia.io
 import calendar
 import logging
-import pytz
 
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with, abort
@@ -64,7 +63,7 @@ from copy import copy
 from datetime import datetime
 from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, ResourceUtc
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -509,7 +508,7 @@ def compute_regions(args):
     return _region
 
 
-class Journeys(ResourceUri):
+class Journeys(ResourceUri, ResourceUtc):
 
     def __init__(self):
         # journeys must have a custom authentication process
@@ -667,35 +666,3 @@ class Journeys(ResourceUri):
             return ':'.join(splitted_address)
         return id
 
-    def convert_to_utc(self, original_datetime):
-        """
-        convert the original_datetime in the args to UTC
-
-        for that we need to 'guess' the timezone wanted by the user
-
-        For the moment We only use the default instance timezone.
-
-        It won't obviously work for multi timezone instances, we'll have to do
-        something smarter.
-
-        We'll have to consider either the departure or the arrival of the journey
-        (depending on the `clockwise` param)
-        and fetch the tz of this point.
-        we'll have to store the tz for stop area and the coord for admin, poi, ...
-        """
-        instance = i_manager.instances[self.region]
-
-        tz_name = instance.timezone  # TODO store directly the tz?
-
-        if not tz_name:
-            logging.Logger(__name__).warn("unkown timezone for region {}"
-                                          .format(self.region))
-            return original_datetime
-        tz = pytz.timezone(tz_name)
-
-        if not tz:
-            return original_datetime
-
-        utctime = tz.normalize(tz.localize(original_datetime)).astimezone(pytz.utc)
-
-        return utctime
