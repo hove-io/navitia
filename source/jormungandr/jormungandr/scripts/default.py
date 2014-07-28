@@ -628,7 +628,7 @@ class Script(object):
         if request["debug"] or not resp:
             return #in debug we want to keep all journeys
 
-        if not request['destination']:
+        if "destination" not in request or not request['destination']:
             return #for isochrone we don't want to filter
 
         if resp.HasField("error"):
