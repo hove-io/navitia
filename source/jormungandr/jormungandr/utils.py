@@ -32,7 +32,6 @@ from datetime import datetime
 from jormungandr import i_manager
 import pytz
 
-
 def str_to_time_stamp(str):
     """
     convert a string to a posix timestamp
@@ -91,3 +90,11 @@ class ResourceUtc:
 
         return utctime
 
+    def format(self, value):
+        dt = datetime.utcfromtimestamp(value)
+
+        if self.tz() is not None:
+            dt = pytz.utc.localize(dt)
+            dt = dt.astimezone(self.tz())
+            return dt.strftime("%Y%m%dT%H%M%S")
+        return None  # for the moment I prefer not to display anything instead of something wrong
