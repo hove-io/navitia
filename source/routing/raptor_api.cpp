@@ -120,7 +120,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             if (path.items.front().stop_times.empty()) {
                 continue;
             }
-            const auto sp_dest = path.items.front().stop_times.front()->journey_pattern_point->stop_point;
+            const auto sp_dest = path.items.front().stop_points.front();
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
                                           path.items.front().departures.front()+bt::minutes(1));
@@ -263,7 +263,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             if (path.items.back().stop_times.empty()) {
                 continue;
             }
-            const auto sp_orig = path.items.back().stop_times.back()->journey_pattern_point->stop_point;
+            const auto sp_orig = path.items.back().stop_points.back();
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
                                           path.items.back().departures.back()+bt::minutes(1));
