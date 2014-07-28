@@ -120,7 +120,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             if (path.items.front().stop_times.empty()) {
                 continue;
             }
-            const auto sp_dest = path.items.front().stop_times.front()->journey_pattern_point->stop_point;
+            const auto sp_dest = path.items.front().stop_points.front();
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
                                           path.items.front().departures.front()+bt::minutes(1));
@@ -216,28 +216,14 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     auto arr_time = item.arrivals[0];
                     auto dep_time = item.departures[0];
                     bt::time_period action_period(dep_time, arr_time);
-                    // On the first item, if the type of the origin point is a stop area
-                    // we want to display a stop area, otherwise a stop point
-                    if(path_i == path.items.begin() && origin.type == nt::Type_e::StopArea
-                            && origin.uri == item.stop_points.front()->stop_area->uri) {
-                        fill_pb_placemark(item.stop_points.front()->stop_area, d,
+
+                    fill_pb_placemark(item.stop_points.front(), d,
                                 pb_section->mutable_origin(), 1, now, action_period,
                                 show_codes);
-                    } else {
-                        fill_pb_placemark(item.stop_points.front(), d,
-                                pb_section->mutable_origin(), 1, now, action_period,
-                                show_codes);
-                    }
-                    if(path_i == path.items.end()-1 && destination.type == nt::Type_e::StopArea
-                            && destination.uri == item.stop_points.back()->stop_area->uri) {
-                        fill_pb_placemark(item.stop_points.back()->stop_area, d,
+
+                    fill_pb_placemark(item.stop_points.back(), d,
                                 pb_section->mutable_destination(), 1, now,
                                 action_period, show_codes);
-                    } else {
-                        fill_pb_placemark(item.stop_points.back(), d,
-                                pb_section->mutable_destination(), 1, now,
-                                action_period, show_codes);
-                    }
                 }
                 pb_section->set_length(length);
                 if( item.get_vj() != nullptr) { // TODO : réfléchir si ça peut vraiment arriver
@@ -277,7 +263,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             if (path.items.back().stop_times.empty()) {
                 continue;
             }
-            const auto sp_orig = path.items.back().stop_times.back()->journey_pattern_point->stop_point;
+            const auto sp_orig = path.items.back().stop_points.back();
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
                                           path.items.back().departures.back()+bt::minutes(1));
