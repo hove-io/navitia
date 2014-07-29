@@ -64,7 +64,7 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     data.networks.push_back(network);
-    gtfs_data.agency_map[network->uri] = network;
+    gtfs_data.network_map[network->uri] = network;
 }
 
 void StopsFusioHandler::init(Data& data) {
@@ -446,24 +446,24 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
 
     line->network = nullptr;
     if (is_valid(network_c, row)) {
-        auto itm = gtfs_data.agency_map.find(row[network_c]);
-        if(itm == gtfs_data.agency_map.end()){
+        auto itm = gtfs_data.network_map.find(row[network_c]);
+        if (itm == gtfs_data.network_map.end()) {
             line->network = nullptr;
             LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the network " << row[network_c]
                            << " referenced by line " << row[id_c]);
-        }else{
+        } else {
             line->network = itm->second;
         }
     }
 
-    if(line->network == nullptr){
-        auto itm = gtfs_data.agency_map.find("default_network");
+    if (line->network == nullptr) {
+        auto itm = gtfs_data.network_map.find("default_company");
         line->network = itm->second;
     }
 
     if (is_valid(comment_c, row)) {
         auto itm = gtfs_data.comment_map.find(row[comment_c]);
-        if(itm != gtfs_data.comment_map.end()){
+        if (itm != gtfs_data.comment_map.end()) {
             line->comment = itm->second;
         }
     }
@@ -902,7 +902,7 @@ void FusioParser::fill_default_agency(Data & data){
     network->uri = "default_network";
     network->name = "réseau par défaut";
     data.networks.push_back(network);
-    gtfs_data.agency_map[network->uri] = network;
+    gtfs_data.network_map[network->uri] = network;
 }
 
 void FusioParser::fill_default_commercial_mode(Data & data){

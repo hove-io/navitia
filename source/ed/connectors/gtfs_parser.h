@@ -60,7 +60,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::ValidityPattern*> vp_map;
     std::unordered_map<std::string, ed::types::VehicleJourney*> vj_map;
     std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;
-    std::unordered_map<std::string, ed::types::Network*> agency_map;
+    std::unordered_map<std::string, ed::types::Network*> network_map;
     std::unordered_map<std::string, ed::types::Company*> company_map;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
     typedef std::vector<ed::types::StopPoint*> vector_sp;

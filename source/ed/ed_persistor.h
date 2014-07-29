@@ -46,6 +46,8 @@ struct EdPersistor{
     EdPersistor(const std::string& connection_string) : lotus(connection_string),
                         logger(log4cplus::Logger::getInstance("log")){}
 
+    std::set<std::string> ignored_uris;
+
     void persist(const ed::Data& data, const navitia::type::MetaData& meta);
     void persist_fare(const ed::Data& data);
     /// Données Georef

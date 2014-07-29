@@ -88,7 +88,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
     network->name = row[name_c];
     data.networks.push_back(network);
 
-    gtfs_data.agency_map[network->uri] = network;
+    gtfs_data.network_map[network->uri] = network;
     return network;
 }
 
@@ -300,15 +300,19 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         return nullptr;
     }
 
-    if(has_col(agency_c, row)) {
-        auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
-        if(agency_it != gtfs_data.agency_map.end())
-            line->network = agency_it->second;
+    if (has_col(agency_c, row)) {
+        auto network_it = gtfs_data.network_map.find(row[agency_c]);
+        // The behaviour is not exactly the one described in the GTFS Specs
+        // We have to check what to do it that case
+        if(network_it != gtfs_data.network_map.end()) {
+            line->network = network_it->second;
+        }
     }
-    else {
-        auto agency_it = gtfs_data.agency_map.find("default_agency");
-        if(agency_it != gtfs_data.agency_map.end())
-            line->network = agency_it->second;
+    if (line->network == nullptr) {
+        auto network_it = gtfs_data.network_map.find("default_network");
+        if(network_it != gtfs_data.network_map.end()) {
+            line->network = network_it->second;
+        }
     }
 
     gtfs_data.line_map[row[id_c]] = line;
@@ -666,6 +670,11 @@ void GenericGtfsParser::fill_default_company(Data & data){
     company->name = "compagnie par défaut";
     data.companies.push_back(company);
     gtfs_data.company_map[company->uri] = company;
+    ed::types::Network* network = new ed::types::Network();
+    network->uri = "default_network";
+    network->name = "default network";
+    data.networks.push_back(network);
+    gtfs_data.network_map[network->uri] = network;
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data){
