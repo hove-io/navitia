@@ -300,15 +300,17 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         return nullptr;
     }
 
-    if(has_col(agency_c, row)) {
+    if (has_col(agency_c, row)) {
         auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
-        if(agency_it != gtfs_data.agency_map.end())
+        if(agency_it != gtfs_data.agency_map.end()) {
             line->network = agency_it->second;
+        }
     }
-    else {
-        auto agency_it = gtfs_data.agency_map.find("default_agency");
-        if(agency_it != gtfs_data.agency_map.end())
+    if (line->network == nullptr) {
+        auto agency_it = gtfs_data.agency_map.find("default_network");
+        if(agency_it != gtfs_data.agency_map.end()) {
             line->network = agency_it->second;
+        }
     }
 
     gtfs_data.line_map[row[id_c]] = line;
