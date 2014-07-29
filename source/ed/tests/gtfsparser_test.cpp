@@ -234,9 +234,11 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     parser.fill(data);
 
     //Agency
-    BOOST_REQUIRE_EQUAL(data.networks.size(), 1);
-    BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
-    BOOST_CHECK_EQUAL(data.networks[0]->uri, "DTA");
+    BOOST_REQUIRE_EQUAL(data.networks.size(), 2);
+    BOOST_CHECK_EQUAL(data.networks[0]->name, "default network");
+    BOOST_CHECK_EQUAL(data.networks[0]->uri, "default_network");
+    BOOST_CHECK_EQUAL(data.networks[1]->name, "Demo Transit Authority");
+    BOOST_CHECK_EQUAL(data.networks[1]->uri, "DTA");
 
     //=> no stop area in the file, so one area has been created for each stop point
     //Stop areas
