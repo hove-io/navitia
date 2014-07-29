@@ -624,6 +624,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         } else {
             LOG4CPLUS_INFO(logger, "Line " + line->uri + " ignored because it doesn't "
                     "have any network");
+            ignored_uris.insert(line->uri);
             continue;
         }
         values.push_back(std::to_string(line->sort));
@@ -669,7 +670,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
         values.push_back(route->external_code);
         values.push_back(route->name);
         values.push_back(route->comment);
-        if(route->line != NULL){
+        if(route->line != NULL || ignored_uris.find(route->line->uri) != ignored_uris.end()){
             values.push_back(std::to_string(route->line->idx));
         }else{
             values.push_back(lotus.null_value);
@@ -995,7 +996,13 @@ void EdPersistor::insert_periods(const std::vector<types::Calendar*>& calendars)
 void EdPersistor::insert_rel_calendar_line(const std::vector<types::Calendar*>& calendars){
     this->lotus.prepare_bulk_insert("navitia.rel_calendar_line", {"calendar_id", "line_id"});
     for(const types::Calendar* cal : calendars){
-        for(const types::Line* line : cal->line_list){
+        for(const types::Line* line : cal->line_list) {
+            if (line == nullptr || ignored_uris.find(line->uri) != ignored_uris.end()) {
+                std::string line_uri = line != nullptr ? line->uri : "nullptr";
+                LOG4CPLUS_WARN(logger, "calendar " << cal->uri << " hasn't be associated to the"
+                               << " the line " << line_uri << " because the line isn't is the database");
+                continue;
+            }
             std::vector<std::string> values;
             values.push_back(std::to_string(cal->idx));
             values.push_back(std::to_string(line->idx));
