@@ -46,6 +46,10 @@ api.add_resource(resources.Key, '/v0/users/<int:user_id>/keys/',
 api.add_resource(resources.Authorization,
         '/v0/users/<int:user_id>/authorizations/')
 
+api.add_resource(resources.Index, '/')
+api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint='jobs')
+
+
 
 @app.errorhandler(Exception)
 def error_handler(exception):

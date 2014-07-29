@@ -35,9 +35,13 @@ from navitiacommon.cache import get_cache
 from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref
+from datetime import datetime
 
 db = SQLAlchemy()
 
+class TimestampMixin(object):
+    created_at = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime(), default=None, onupdate=datetime.utcnow)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -227,7 +231,7 @@ class Authorization(db.Model):
                 % (self.user_id, self.instance_id, self.api_id)
 
 
-class Job(db.Model):
+class Job(db.Model, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
     task_uuid = db.Column(db.Text)
     instance_id = db.Column(db.Integer,
