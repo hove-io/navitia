@@ -33,6 +33,10 @@
 from tyr import resources
 
 from tyr import app, api
+import flask_restful
+
+#we always want pretty json
+flask_restful.representations.json.settings = {'indent': 4}
 
 api.add_resource(resources.Instance, '/v0/instances/')
 api.add_resource(resources.Api, '/v0/api/')
