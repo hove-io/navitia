@@ -88,7 +88,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
     network->name = row[name_c];
     data.networks.push_back(network);
 
-    gtfs_data.agency_map[network->uri] = network;
+    gtfs_data.network_map[network->uri] = network;
     return network;
 }
 
@@ -301,14 +301,14 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     if (has_col(agency_c, row)) {
-        auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
-        if(agency_it != gtfs_data.agency_map.end()) {
+        auto agency_it = gtfs_data.network_map.find(row[agency_c]);
+        if(agency_it != gtfs_data.network_map.end()) {
             line->network = agency_it->second;
         }
     }
     if (line->network == nullptr) {
-        auto agency_it = gtfs_data.agency_map.find("default_network");
-        if(agency_it != gtfs_data.agency_map.end()) {
+        auto agency_it = gtfs_data.network_map.find("default_network");
+        if(agency_it != gtfs_data.network_map.end()) {
             line->network = agency_it->second;
         }
     }
@@ -672,7 +672,7 @@ void GenericGtfsParser::fill_default_company(Data & data){
     network->uri = "default_network";
     network->name = "default network";
     data.networks.push_back(network);
-    gtfs_data.agency_map[network->uri] = network;
+    gtfs_data.network_map[network->uri] = network;
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data){
