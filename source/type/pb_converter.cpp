@@ -733,8 +733,11 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     for (const fare::Ticket& ticket : fare.tickets) {
         if (! currency)
             currency = ticket.currency;
-        if (ticket.currency != *currency)
-            throw navitia::exception("cannot have different currencies for tickets"); //if we really had to handle different currencies it could be done, but I don't see the point
+        if (ticket.currency != *currency) {
+            throw navitia::exception("cannot have different currencies for tickets");
+
+        } //if we really had to handle different currencies it could be done, but I don't see the point
+        // It may happen when not all tickets were found
 
         pbnavitia::Ticket* pb_ticket = nullptr;
         if (ticket.is_default_ticket()) {

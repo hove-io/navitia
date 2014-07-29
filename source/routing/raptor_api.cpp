@@ -67,6 +67,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
     pbnavitia::Response& pb_response = enhanced_response.response;
 
     bt::ptime now = bt::second_clock::local_time();
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     auto temp = worker.get_direct_path();
     if(!temp.path_items.empty()) {
@@ -320,7 +321,12 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
         //fare computation, done at the end for the journey to be complete
         auto fare = d.fare->compute_fare(path);
-        fill_fare_section(enhanced_response, pb_journey, fare);
+        try {
+            fill_fare_section(enhanced_response, pb_journey, fare);
+        } catch(const navitia::exception& e) {
+            pb_journey->clear_fare();
+            LOG4CPLUS_TRACE(logger, "Unable to compute fare, error : " << e.what());
+        }
     }
 
     if (pb_response.journeys().size() == 0) {
