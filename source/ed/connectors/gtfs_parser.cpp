@@ -301,15 +301,17 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     if (has_col(agency_c, row)) {
-        auto agency_it = gtfs_data.network_map.find(row[agency_c]);
-        if(agency_it != gtfs_data.network_map.end()) {
-            line->network = agency_it->second;
+        auto network_it = gtfs_data.network_map.find(row[agency_c]);
+        // The behaviour is not exactly the one described in the GTFS Specs
+        // We have to check what to do it that case
+        if(network_it != gtfs_data.network_map.end()) {
+            line->network = network_it->second;
         }
     }
     if (line->network == nullptr) {
-        auto agency_it = gtfs_data.network_map.find("default_network");
-        if(agency_it != gtfs_data.network_map.end()) {
-            line->network = agency_it->second;
+        auto network_it = gtfs_data.network_map.find("default_network");
+        if(network_it != gtfs_data.network_map.end()) {
+            line->network = network_it->second;
         }
     }
 
