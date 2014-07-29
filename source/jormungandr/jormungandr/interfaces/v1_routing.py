@@ -111,6 +111,7 @@ def v1_routing(api):
     api.add_resource(Coverage.Coverage,
                      coverage,
                      region,
+                     coord,
                      endpoint='v1.coverage')
 
     api.add_resource(Coord.Coord,
