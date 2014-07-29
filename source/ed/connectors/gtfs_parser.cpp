@@ -666,6 +666,11 @@ void GenericGtfsParser::fill_default_company(Data & data){
     company->name = "compagnie par défaut";
     data.companies.push_back(company);
     gtfs_data.company_map[company->uri] = company;
+    ed::types::Network* network = new ed::types::Network();
+    network->uri = "default_network";
+    network->name = "default network";
+    data.networks.push_back(network);
+    gtfs_data.agency_map[network->uri] = network;
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data){
