@@ -447,23 +447,23 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     line->network = nullptr;
     if (is_valid(network_c, row)) {
         auto itm = gtfs_data.agency_map.find(row[network_c]);
-        if(itm == gtfs_data.agency_map.end()){
+        if (itm == gtfs_data.agency_map.end()) {
             line->network = nullptr;
             LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the network " << row[network_c]
                            << " referenced by line " << row[id_c]);
-        }else{
+        } else {
             line->network = itm->second;
         }
     }
 
-    if(line->network == nullptr){
-        auto itm = gtfs_data.agency_map.find("default_network");
+    if (line->network == nullptr) {
+        auto itm = gtfs_data.agency_map.find("default_company");
         line->network = itm->second;
     }
 
     if (is_valid(comment_c, row)) {
         auto itm = gtfs_data.comment_map.find(row[comment_c]);
-        if(itm != gtfs_data.comment_map.end()){
+        if (itm != gtfs_data.comment_map.end()) {
             line->comment = itm->second;
         }
     }
