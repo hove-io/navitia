@@ -1,3 +1,10 @@
+navitia2 (0.100.2) unstable; urgency=low
+
+  * fare: Fix a bug when currencies are diffrent
+  * next_departures: Retrieve the right number of departures
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 28 Jul 2014 18:00:13 +0100
+
 navitia2 (0.100.1) unstable; urgency=low
 
   * autocomplete: correction calculation quality  <https://github.com/CanalTP/navitia/pull/442> 
