@@ -46,23 +46,26 @@ namespace bt = boost::posix_time;
 void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
     if (! debug_info)
         return;
-    pbnavitia::Journey journey = resp.journeys(0);
-    std::cout << test_name << ": " << std::endl;
-    for (int idx_section = 0; idx_section < journey.sections().size(); ++idx_section) {
-        auto& section = journey.sections(idx_section);
-        std::cout << "section " << (int)(section.type()) << std::endl
-                     << " -- coordinates :" << std::endl;
-        for (int i = 0; i < section.street_network().coordinates_size(); ++i)
-            std::cout << "coord: " << section.street_network().coordinates(i).lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
-                      << ", " << section.street_network().coordinates(i).lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
-                      << std::endl;
+    for (int idx_journey = 0; idx_journey < resp.journeys_size(); ++ idx_journey) {
+        pbnavitia::Journey journey = resp.journeys(idx_journey);
+        std::cout << test_name << ": " << std::endl;
+        for (int idx_section = 0; idx_section < journey.sections().size(); ++idx_section) {
+            auto& section = journey.sections(idx_section);
+            std::cout << "section " << (int)(section.type()) << std::endl
+                         << " -- coordinates :" << std::endl;
+            for (int i = 0; i < section.street_network().coordinates_size(); ++i)
+                std::cout << "coord: " << section.street_network().coordinates(i).lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
+                          << ", " << section.street_network().coordinates(i).lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
+                          << std::endl;
 
-        std::cout << "dump item : " << std::endl;
-        for (int i = 0; i < section.street_network().path_items_size(); ++i)
-            std::cout << "- " << section.street_network().path_items(i).name()
-                      << " with " << section.street_network().path_items(i).length()
-                      << "m | " << section.street_network().path_items(i).duration() << "s"
-                      << std::endl;
+            std::cout << "dump item : " << std::endl;
+            for (int i = 0; i < section.street_network().path_items_size(); ++i)
+                std::cout << "- " << section.street_network().path_items(i).name()
+                          << " with " << section.street_network().path_items(i).length()
+                          << "m | " << section.street_network().path_items(i).duration() << "s"
+                          << std::endl;
+        }
+        std::cout << "_______________" << std::endl << std::endl;
     }
 
 
@@ -591,15 +594,24 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     auto resp = make_response();
 
+    std::cout << resp.DebugString() << std::endl;
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
-    auto journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
+    pbnavitia::Journey* journey = nullptr;
+    for (int i=0; i < resp.journeys_size(); ++ i) {
+        auto j = resp.mutable_journeys(i);
+        if (j->sections_size() >=2 && j->sections(1).type() == pbnavitia::SectionType::BSS_RENT) {
+            journey = j;
+            break;
+        }
+    }
+    BOOST_REQUIRE(journey != nullptr);
     dump_response(resp, "bss");
 
-    BOOST_REQUIRE_EQUAL(journey.sections_size(), 5);
+    BOOST_REQUIRE_EQUAL(journey->sections_size(), 5);
     //we should have 5 sections
     //1 walk, 1 boarding, 1 bike, 1 landing, and 1 final walking section
-    auto section = journey.sections(0);
+    auto section = journey->sections(0);
 
     //walk
     BOOST_CHECK(! section.id().empty());
@@ -613,7 +625,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     auto prev_section = section;
     //getting the bss bike
-    section = journey.sections(1);
+    section = journey->sections(1);
     BOOST_CHECK_EQUAL(prev_section.destination().name(), section.origin().name());
     BOOST_CHECK_EQUAL(prev_section.destination().uri(), section.origin().uri());
     BOOST_CHECK(! section.id().empty());
@@ -631,7 +643,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     //bike
     prev_section = section;
-    section = journey.sections(2);
+    section = journey->sections(2);
     BOOST_CHECK(! section.id().empty());
     BOOST_CHECK_EQUAL(prev_section.destination().name(), section.origin().name());
     BOOST_CHECK_EQUAL(prev_section.destination().uri(), section.origin().uri());
@@ -659,7 +671,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     //putting back the bss bike
     prev_section = section;
-    section = journey.sections(3);
+    section = journey->sections(3);
     BOOST_CHECK(! section.id().empty());
     BOOST_CHECK_EQUAL(prev_section.destination().name(), section.origin().name());
     BOOST_CHECK_EQUAL(prev_section.destination().uri(), section.origin().uri());
@@ -675,7 +687,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     prev_section = section;
     //walking
-    section = journey.sections(4);
+    section = journey->sections(4);
     BOOST_CHECK(! section.id().empty());
     BOOST_CHECK_EQUAL(prev_section.destination().name(), section.origin().name());
     BOOST_CHECK_EQUAL(prev_section.destination().uri(), section.origin().uri());
