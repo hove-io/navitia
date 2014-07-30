@@ -113,7 +113,7 @@ pbnavitia::Response Worker::status() {
     const auto d = data_manager.get_data();
     status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
     status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
-    status->set_end_production_date(bg::to_iso_string(d->meta->production_date.end()));
+    status->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
     status->set_data_version(d->version);
     status->set_navimake_version(d->meta->navimake_version);
     status->set_navitia_version(KRAKEN_VERSION);
@@ -134,7 +134,7 @@ pbnavitia::Response Worker::metadatas() {
     auto metadatas = result.mutable_metadatas();
     const auto d = data_manager.get_data();
     metadatas->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
-    metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.end()));
+    metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
     metadatas->set_shape(d->meta->shape);
     metadatas->set_status("running");
     for(const type::Contributor* contributor : d->pt_data->contributors){
