@@ -95,8 +95,8 @@ class User(flask_restful.Resource):
 
     def get(self, user_id=None):
         if user_id:
-            return marshal(models.User.query.get_or_404(user_id),
-                    user_fields_full)
+            user = models.User.query.get_or_404(user_id)
+            return marshal(user, user_fields_full)
         else:
             parser = reqparse.RequestParser()
             parser.add_argument('login', type=unicode, required=False,
@@ -133,7 +133,7 @@ class User(flask_restful.Resource):
             db.session.add(user)
             db.session.commit()
             return marshal(user, user_fields_full)
-        except sqlalchemy.exc.IntegrityError:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return ({'error': 'duplicate user'}, 409)
         except Exception:
             logging.exception("fail")
@@ -155,7 +155,7 @@ class User(flask_restful.Resource):
             user.email = args['email']
             db.session.commit()
             return marshal(user, user_fields_full)
-        except sqlalchemy.exc.IntegrityError:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return ({'error': 'duplicate user'}, 409)  # Conflict
         except Exception:
             logging.exception("fail")
@@ -246,16 +246,16 @@ class Authorization(flask_restful.Resource):
 
         try:
             user = models.User.query.get_or_404(user_id)
-            authorization = user.authorizations.filter_by(
-                    api_id=args['api_id'], instance_id=args['instance_id'])
-            if not authorization:
+            authorizations = [a for a in user.authorizations if a.api_id == args['api_id'] and  a.instance_id == args['instance_id']]
+            if not authorizations:
                 abort(404)
-            db.session.delete(authorization)
+            for authorization in authorizations:
+                db.session.delete(authorization)
             db.session.commit()
         except Exception:
             logging.exception("fail")
             raise
-        return user
+        return marshal(user, user_fields_full)
 
     def post(self, user_id):
         parser = reqparse.RequestParser()
@@ -277,7 +277,7 @@ class Authorization(flask_restful.Resource):
             user.authorizations.append(authorization)
             db.session.add(authorization)
             db.session.commit()
-        except sqlalchemy.exc.IntegrityError:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return ({'error': 'duplicate entry'}, 409)
         except Exception:
             logging.exception("fail")
