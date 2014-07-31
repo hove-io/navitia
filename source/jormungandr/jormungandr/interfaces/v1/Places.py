@@ -171,6 +171,8 @@ class PlacesNearby(ResourceUri):
                     args["uri"] = id
             else:
                 abort(404)
+        elif lon and lat:
+            args["uri"] = "coord:" + str(float(lon)) + ":" + str(float(lat))
         else:
             abort(404)
         args["filter"] = args["filter"].replace(".id", ".uri")
