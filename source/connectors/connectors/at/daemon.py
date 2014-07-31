@@ -48,24 +48,26 @@ class ConnectorAT(object):
         initialize the service with the configuration file taken in parameters
         """
         self.config.load(filename)
-        self._init_logger(self.config.logger_file, self.config.logger_level)
+        self._init_logger(self.config.logger_file, self.config.logger_level,
+                self.config.sqlalchemy_log_level)
         self.at_realtime_reader = AtRealtimeReader(self.config)
         self._init_rabbitmq()
 
-    def _init_logger(self, filename='/tmp/connector.log', level='debug'):
+    def _init_logger(self, filename='/tmp/connector.log', level='debug',
+            sqlalchemy_log_level='warn'):
         """
         initialise loggers, by default to debug level and with output on stdout
         """
         level = getattr(logging, level.upper(), logging.DEBUG)
-        logging.basicConfig(filename=filename, level=level)
+        logging.basicConfig(filename=filename, level=level,
+                format='[%(asctime)s] [%(levelname)5s] [%(name)10s] %(message)s')
 
-        if level == logging.DEBUG:
-            #on active les logs de sqlalchemy si on est en debug:
-            #log des requetes et des resultats
-            logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
-            logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
-            logging.getLogger('sqlalchemy.dialects.postgresql') \
-                .setLevel(logging.INFO)
+        level = getattr(logging, sqlalchemy_log_level.upper(), logging.WARN)
+        #log des requetes et des resultats
+        logging.getLogger('sqlalchemy.engine').setLevel(level)
+        logging.getLogger('sqlalchemy.pool').setLevel(level)
+        logging.getLogger('sqlalchemy.dialects.postgresql') \
+                .setLevel(level)
 
 
     def _init_rabbitmq(self):
