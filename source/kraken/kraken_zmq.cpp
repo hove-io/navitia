@@ -73,7 +73,7 @@ int main(int, char** argv){
         workers.bind("inproc://workers");
     }catch(zmq::error_t& e){
         LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
-		return 1;
+        return 1;
     }
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager));
