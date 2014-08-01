@@ -131,6 +131,7 @@ int main(int argc, char * argv[])
     } catch(const navitia::exception &e) {
         LOG4CPLUS_ERROR(logger, "Unable to save");
         LOG4CPLUS_ERROR(logger, e.what());
+        return 1;
     }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
     LOG4CPLUS_INFO(logger, "Data saved");
