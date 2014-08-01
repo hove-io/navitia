@@ -158,7 +158,7 @@ class Script(object):
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
                      "status", "load", "networks", "place_uri", "disruptions",
-                     "calendars", "nem_journeys"]
+                     "calendars", "nm_journeys"]
         self.functional_params = {}
 
     def __pagination(self, request, ressource_name, resp):
@@ -698,7 +698,7 @@ class Script(object):
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
-    def nem_journeys(self, request, instance):
+    def nm_journeys(self, request, instance):
         return self.__on_journeys(type_pb2.NEMPLANNER, request, instance)
 
     def isochrone(self, request, instance):

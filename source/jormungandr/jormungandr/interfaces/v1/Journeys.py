@@ -574,10 +574,52 @@ class Journeys(ResourceUri):
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
         
-        # ludo
-        self.parsers["post"] = self.parsers["get"]
+        # manage post protocol (n-m calculation)
+        self.parsers["post"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_post = self.parsers["post"]
-        parser_post.add_argument("details", type=boolean, default=False)  
+        parser_post.add_argument("from", type=list,location="json")  
+        parser_post.add_argument("to", type=list, location="json")  
+        parser_post.add_argument("datetime", type=str, location="json")  
+        parser_post.add_argument("datetime_represents", dest="clockwise",
+                                type=dt_represents, default=True, location="json")  
+        parser_post.add_argument("max_nb_transfers", type=int, default=10,
+                                dest="max_transfers", location="json")  
+        parser_post.add_argument("first_section_mode[]",
+                                type=option_value(modes),
+                                default=["walking"],
+                                dest="origin_mode", action="append", location="json")  
+        parser_post.add_argument("last_section_mode[]",
+                                type=option_value(modes),
+                                default=["walking"],
+                                dest="destination_mode", action="append", location="json")  
+        parser_post.add_argument("max_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of non public \
+                                transport in second", location="json")  
+        parser_post.add_argument("walking_speed", type=float, default=1.12, location="json")  
+        parser_post.add_argument("bike_speed", type=float, default=4.1, location="json")  
+        parser_post.add_argument("bss_speed", type=float, default=4.1, location="json")  
+        parser_post.add_argument("car_speed", type=float, default=16.8, location="json")  
+        parser_post.add_argument("forbidden_uris", type=str, action="append", location="json")  
+        parser_post.add_argument("count", type=int, location="json")  
+        parser_post.add_argument("min_nb_journeys", type=int, location="json")  
+        parser_post.add_argument("max_nb_journeys", type=int, location="json")  
+        parser_post.add_argument("type", type=option_value(types),
+                                default="all", location="json")  
+        parser_post.add_argument("disruption_active",
+                                type=boolean, default=False, location="json")  
+        parser_post.add_argument("details", type=bool, default=False, location="json")  
+# a supprimer
+        parser_post.add_argument("max_duration", type=int, default=3600*24, location="json")  
+        parser_post.add_argument("wheelchair", type=boolean, default=False, location="json")  
+        parser_post.add_argument("debug", type=boolean, default=False,
+                                hidden=True, location="json") 
+        # for retrocompatibility purpose, we duplicate (without []):
+        parser_post.add_argument("first_section_mode",
+                                type=option_value(modes), action="append", location="json")  
+        parser_post.add_argument("last_section_mode",
+                                type=option_value(modes), action="append", location="json")  
+        parser_post.add_argument("show_codes", type=boolean, default=False,
+                            description="show more identification codes", location="json")  
 
     @clean_links()
     @add_id_links()
@@ -665,15 +707,11 @@ class Journeys(ResourceUri):
     @ManageError()
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
-        #parse json structures for origin & destination
-        args['from'] = json.loads(args['origin'])
-        args['to'] = json.loads(args['destination'])
-
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:
-            return {'error': 'origin must contain at least one item'}, 503
+            abort(400, message="from argument must contain at least one item")
         if len(args['to']) == 0:
-            return {'error': 'destination must contain at least one item'}, 503
+            abort(400, message="to argument must contain at least one item")
 
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
@@ -714,7 +752,7 @@ class Journeys(ResourceUri):
         if not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
 
-        api = 'nem_journeys'
+        api = 'nm_journeys'
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
         return response
