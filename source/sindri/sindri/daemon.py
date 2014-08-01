@@ -75,7 +75,8 @@ class Sindri(ConsumerMixin):
         initialise loggers, by default to debug level and with output on stdout
         """
         level = getattr(logging, level.upper(), logging.DEBUG)
-        logging.basicConfig(filename=filename, level=level)
+        logging.basicConfig(filename=filename, level=level,
+                format='[%(asctime)s] [%(levelname)5s] [%(name)10s] %(message)s')
 
         if level == logging.DEBUG:
             # if we are in debug we log all sql request and results
