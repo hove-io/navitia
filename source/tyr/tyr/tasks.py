@@ -80,13 +80,14 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(files, instance, backup_file):
+def import_data(files, instance, backup_file, async=True):
     """
     import the data contains in the list of 'files' in the 'instance'
 
     :param files: files to import
     :param instance: instance to receive the data
     :param backup_file: If True the files are moved to a backup directory, else they are not moved
+    :param async: If True all jobs are run in background, else the jobs are run in sequence the function will only return when all of them are finish
 
     run the whole data import process:
 
@@ -148,7 +149,11 @@ def import_data(files, instance, backup_file):
         actions.append(group(chain(*binarisation), aggregate))
         actions.append(reload_data.si(instance_config, job.id))
         actions.append(finish_job.si(job.id))
-        chain(*actions).delay()
+        if async:
+            chain(*actions).delay()
+        else:
+            # all job are run in sequence and import_data will only return when all the jobs are finish
+            chain(*actions).apply()
 
 
 @celery.task()
@@ -229,7 +234,7 @@ def load_data(instance_id, data_path):
     models.db.session.commit()
     files = glob.glob(data_path + "/*")
 
-    import_data(files, instance, backup_file=False)
+    import_data(files, instance, backup_file=False, async=False)
 
 
 @task_postrun.connect
