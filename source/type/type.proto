@@ -39,7 +39,7 @@ enum API {
     UNKNOWN_API = 16;
     disruptions = 17;
     calendars = 18;
-    NEMPLANNER = 19;
+    NMPLANNER = 19;
 }
 
 enum VehicleJourneyType{

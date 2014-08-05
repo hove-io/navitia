@@ -60,7 +60,7 @@ from copy import copy
 from datetime import datetime
 from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
-import json
+from copy import deepcopy
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -575,51 +575,14 @@ class Journeys(ResourceUri):
         self.method_decorators.append(update_journeys_status(self))
         
         # manage post protocol (n-m calculation)
-        self.parsers["post"] = reqparse.RequestParser(argument_class=ArgumentDoc)
+        self.parsers["post"] = deepcopy(parser_get)
         parser_post = self.parsers["post"]
-        parser_post.add_argument("from", type=list,location="json")  
-        parser_post.add_argument("to", type=list, location="json")  
-        parser_post.add_argument("datetime", type=str, location="json")  
-        parser_post.add_argument("datetime_represents", dest="clockwise",
-                                type=dt_represents, default=True, location="json")  
-        parser_post.add_argument("max_nb_transfers", type=int, default=10,
-                                dest="max_transfers", location="json")  
-        parser_post.add_argument("first_section_mode[]",
-                                type=option_value(modes),
-                                default=["walking"],
-                                dest="origin_mode", action="append", location="json")  
-        parser_post.add_argument("last_section_mode[]",
-                                type=option_value(modes),
-                                default=["walking"],
-                                dest="destination_mode", action="append", location="json")  
-        parser_post.add_argument("max_duration_to_pt", type=int, default=15*60,
-                                description="maximal duration of non public \
-                                transport in second", location="json")  
-        parser_post.add_argument("walking_speed", type=float, default=1.12, location="json")  
-        parser_post.add_argument("bike_speed", type=float, default=4.1, location="json")  
-        parser_post.add_argument("bss_speed", type=float, default=4.1, location="json")  
-        parser_post.add_argument("car_speed", type=float, default=16.8, location="json")  
-        parser_post.add_argument("forbidden_uris", type=str, action="append", location="json")  
-        parser_post.add_argument("count", type=int, location="json")  
-        parser_post.add_argument("min_nb_journeys", type=int, location="json")  
-        parser_post.add_argument("max_nb_journeys", type=int, location="json")  
-        parser_post.add_argument("type", type=option_value(types),
-                                default="all", location="json")  
-        parser_post.add_argument("disruption_active",
-                                type=boolean, default=False, location="json")  
+        for index, elem in enumerate(parser_post.args):
+			if elem.name in ["from", "to"]:
+				parser_post.args[index].type = list
+				parser_post.args[index].dest = elem.name
+			parser_post.args[index].location = "json"
         parser_post.add_argument("details", type=bool, default=False, location="json")  
-# a supprimer
-        parser_post.add_argument("max_duration", type=int, default=3600*24, location="json")  
-        parser_post.add_argument("wheelchair", type=boolean, default=False, location="json")  
-        parser_post.add_argument("debug", type=boolean, default=False,
-                                hidden=True, location="json") 
-        # for retrocompatibility purpose, we duplicate (without []):
-        parser_post.add_argument("first_section_mode",
-                                type=option_value(modes), action="append", location="json")  
-        parser_post.add_argument("last_section_mode",
-                                type=option_value(modes), action="append", location="json")  
-        parser_post.add_argument("show_codes", type=boolean, default=False,
-                            description="show more identification codes", location="json")  
 
     @clean_links()
     @add_id_links()

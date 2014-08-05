@@ -52,7 +52,7 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
                                   bool show_codes = false);
 
-pbnavitia::Response make_nem_response(RAPTOR &raptor,
+pbnavitia::Response make_nm_response(RAPTOR &raptor,
                                       const std::vector<type::EntryPoint> &origins,
                                       const std::vector<type::EntryPoint> &destinations,
                                       const std::string &datetimes_str, bool clockwise,

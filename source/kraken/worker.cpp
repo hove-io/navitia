@@ -451,8 +451,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                 request.disruption_active(), request.allow_odt(), request.max_duration(),
                 request.max_transfers(), request.show_codes());
 
-        case pbnavitia::NEMPLANNER:
-            return navitia::routing::make_nem_response(*planner, origins, destinations, datetimes[0],
+        case pbnavitia::NMPLANNER:
+            return navitia::routing::make_nm_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.allow_odt(), request.max_duration(),
@@ -499,7 +499,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::DEPARTURE_BOARDS:
             return next_stop_times(request.next_stop_times(), request.requested_api()); break;
         case pbnavitia::ISOCHRONE:
-        case pbnavitia::NEMPLANNER:
+        case pbnavitia::NMPLANNER:
         case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
         case pbnavitia::places_nearby: return proximity_list(request.places_nearby()); break;
         case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;

@@ -521,7 +521,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 
 
 pbnavitia::Response
-make_nem_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
+make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
               const std::vector<type::EntryPoint> &destinations,
               const std::string &datetimes_str, bool clockwise,
               const type::AccessibiliteParams & accessibilite_params,

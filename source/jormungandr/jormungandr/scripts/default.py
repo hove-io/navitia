@@ -323,7 +323,7 @@ class Script(object):
         req = request_pb2.Request()
         req.requested_api = requested_type
         if "origin" in request and request["origin"]:
-            if requested_type != type_pb2.NEMPLANNER:
+            if requested_type != type_pb2.NMPLANNER:
                 request["origin"] = [request["origin"]]
                 request["origin_access_duration"] = [0]
             for i in range(0, len(request["origin"])):
@@ -331,7 +331,7 @@ class Script(object):
                 location.place = request["origin"][i]
                 location.access_duration = request["origin_access_duration"][i]
         if "destination" in request and request["destination"]:
-            if requested_type != type_pb2.NEMPLANNER:
+            if requested_type != type_pb2.NMPLANNER:
                 request["destination"] = [request["destination"]]
                 request["destination_access_duration"] = [0]
             for i in range(0, len(request["destination"])):
@@ -493,7 +493,7 @@ class Script(object):
     def get_journey(self, pb_req, instance, original_request):
         resp = self.call_kraken(pb_req, instance)
 
-        if not resp or (pb_req.requested_api != type_pb2.PLANNER and pb_req.requested_api != type_pb2.NEMPLANNER and pb_req.requested_api != type_pb2.ISOCHRONE):
+        if not resp or (pb_req.requested_api != type_pb2.PLANNER and pb_req.requested_api != type_pb2.NMPLANNER and pb_req.requested_api != type_pb2.ISOCHRONE):
             return
 
         new_request, tag = self.check_missing_journey(resp.journeys, pb_req)
@@ -699,7 +699,7 @@ class Script(object):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
     def nm_journeys(self, request, instance):
-        return self.__on_journeys(type_pb2.NEMPLANNER, request, instance)
+        return self.__on_journeys(type_pb2.NMPLANNER, request, instance)
 
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
