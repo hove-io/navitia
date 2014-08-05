@@ -34,7 +34,7 @@ from flask_sqlalchemy import SQLAlchemy
 from navitiacommon.cache import get_cache
 from geoalchemy2.types import Geography
 from flask import current_app
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, backref
 
 db = SQLAlchemy()
 
@@ -46,7 +46,7 @@ class User(db.Model):
     keys = db.relationship('Key', backref='user', lazy='dynamic')
 
     authorizations = db.relationship('Authorization', backref='user',
-                                     lazy='dynamic')
+                                     lazy='joined')
     cache_prefix = "user"
 
     def __init__(self, login=None, email=None, keys=None, authorizations=None):
@@ -132,7 +132,7 @@ class Instance(db.Model):
 
     cache_prefix = "Instance"
 
-    authorizations = db.relationship('Authorization', backref='instance',
+    authorizations = db.relationship('Authorization', backref=backref('instance', lazy='joined'),
             lazy='dynamic')
 
     jobs = db.relationship('Job', backref='instance', lazy='dynamic')
@@ -197,7 +197,7 @@ class Api(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
 
-    authorizations = db.relationship('Authorization', backref='api',
+    authorizations = db.relationship('Authorization', backref=backref('api', lazy='joined'),
                                      lazy='dynamic')
 
     def __init__(self, name=None):
