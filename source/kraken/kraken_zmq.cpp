@@ -28,6 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "config.h"
 #include "type/type.pb.h"
 #include <google/protobuf/descriptor.h>
 
@@ -61,6 +62,7 @@ int main(int, char** argv){
     DataManager<navitia::type::Data> data_manager;
 
     auto logger = log4cplus::Logger::getInstance("startup");
+    LOG4CPLUS_INFO(logger, "starting kraken: " << KRAKEN_VERSION);
     boost::thread_group threads;
     // Prepare our context and sockets
     zmq::context_t context(1);
