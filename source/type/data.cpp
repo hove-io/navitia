@@ -122,6 +122,7 @@ void Data::save_lz4(const std::string & filename) {
     }
     try {
         std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
+        ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
         out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);
         out.push(ofs);
@@ -144,6 +145,8 @@ void Data::save_lz4(const std::string & filename) {
             LOG4CPLUS_ERROR(logger, "Operation not permitted while writing " << p);
         LOG4CPLUS_ERROR(logger, e.what());
        throw navitia::exception("Unable to write file");
+    }catch(const std::ofstream::failure& e){
+       throw navitia::exception(std::string("Unable to write file: ") + e.what());
     }
 }
 
