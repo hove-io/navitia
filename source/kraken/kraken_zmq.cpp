@@ -41,7 +41,7 @@ www.navitia.io
 #include "utils/zmq_compat.h"
 
 
-int main(int, char** argv){
+int main(int argn, char** argv){
     navitia::init_app();
     Configuration* conf = Configuration::get();
 
@@ -54,8 +54,13 @@ int main(int, char** argv){
         perror("getcwd");
         return 1;
     }
-
-    std::string conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
+    std::string conf_file;
+    if(argn > 1){
+        // The first argument is the path to the configuration file
+        conf_file = argv[1];
+    }else{
+        conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
+    }
     conf->load_ini(conf_file);
     init_logger(conf_file);
 
@@ -75,7 +80,7 @@ int main(int, char** argv){
         workers.bind("inproc://workers");
     }catch(zmq::error_t& e){
         LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
-		return 1;
+        return 1;
     }
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager));
