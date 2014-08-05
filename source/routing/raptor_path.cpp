@@ -125,6 +125,7 @@ makePath(type::idx_t destination_idx, size_t countb, bool clockwise, bool disrup
             std::reverse(item.stop_points.begin(), item.stop_points.end());
             std::reverse(item.arrivals.begin(), item.arrivals.end());
             std::reverse(item.departures.begin(), item.departures.end());
+            std::reverse(item.stop_times.begin(), item.stop_times.end());
         }
     }
 
