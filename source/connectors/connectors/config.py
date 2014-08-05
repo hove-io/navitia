@@ -48,6 +48,7 @@ class Config(object):
         self.jormungandr_token = None
         self.logger_file = None
         self.logger_level = None
+        self.sqlalchemy_log_level = None
 
     def build_error(self, config, validate_result):
         """
@@ -83,6 +84,7 @@ class Config(object):
         confspec.append('jormungandr-token = string(default=None)')
         confspec.append('logger-file = string(default="./connector_at.log")')
         confspec.append('logger-level = string(default="DEBUG")')
+        confspec.append('sqlalchemy-log-level = string(default="WARN")')
 
         config = ConfigObj(config_file, configspec=confspec, stringify=True)
 
@@ -102,3 +104,4 @@ class Config(object):
         self.jormungandr_token = config['connector-at']['jormungandr-token']
         self.logger_file = config['connector-at']['logger-file']
         self.logger_level = config['connector-at']['logger-level']
+        self.sqlalchemy_log_level = config['connector-at']['sqlalchemy-log-level']
