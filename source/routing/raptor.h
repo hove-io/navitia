@@ -174,6 +174,11 @@ struct RAPTOR
     inline
     void mark_all_jpp_of_sp(const type::StopPoint* stop_point, const DateTime dt, const type::idx_t boarding_jpp,
                             label_vector_t& working_labels, Visitor visitor) {
+        if (stop_point->journey_pattern_point_list.empty() ||
+                b_dest.is_destination(stop_point)) {
+            return;
+        }
+
         for(auto jpp : stop_point->journey_pattern_point_list) {
             type::idx_t jpp_idx = jpp->idx;
             if(jpp_idx != boarding_jpp && visitor.comp(dt, best_labels[jpp_idx])) {
