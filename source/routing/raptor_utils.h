@@ -79,17 +79,23 @@ inline void memset32(T*buf, uint n, T c)
 
 struct best_dest {
     std::vector<navitia::time_duration> jpp_idx_duration;
+    std::set<type::idx_t> sp_destinations;
     DateTime best_now;
     type::idx_t best_now_jpp_idx;
     size_t count;
 
-    void add_destination(type::idx_t jpp_idx, const navitia::time_duration duration_to_dest, bool /*clockwise*/) {
-        jpp_idx_duration[jpp_idx] = duration_to_dest; //AD, check if there are some rounding problems
+    void add_destination(const type::JourneyPatternPoint* jpp, const time_duration duration_to_dest) {
+        jpp_idx_duration[jpp->idx] = duration_to_dest; //AD, check if there are some rounding problems
+        sp_destinations.insert(jpp->stop_point->idx);
     }
 
 
-    inline bool is_eligible_solution(type::idx_t jpp_idx) {
+    inline bool is_eligible_solution(const type::idx_t jpp_idx) const {
         return jpp_idx_duration[jpp_idx] != boost::posix_time::pos_infin;
+    }
+
+    inline bool is_destination(const type::StopPoint* sp) const {
+        return sp_destinations.find(sp->idx) != sp_destinations.end();
     }
 
 

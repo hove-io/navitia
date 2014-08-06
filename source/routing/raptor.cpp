@@ -184,7 +184,7 @@ void RAPTOR::init(Solutions departs,
                 type::idx_t jpp_idx = journey_pattern_point->idx;
                 if(valid_journey_patterns.test(journey_pattern_point->journey_pattern->idx) &&
                    valid_journey_pattern_points.test(journey_pattern_point->idx)) {
-                    b_dest.add_destination(jpp_idx, item.second, clockwise);
+                    b_dest.add_destination(journey_pattern_point, item.second);
                     best_labels[jpp_idx] = clockwise ?
                                     std::min(bound, labels[0][jpp_idx].dt) :
                                     std::max(bound, labels[0][jpp_idx].dt);
