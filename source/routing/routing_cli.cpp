@@ -82,6 +82,7 @@ int main(int argc, char **argv) {
             continue;
         }
         if (splitted_line[0] == "journey") {
+            compute_opt.vm.clear();
             po::store(po::command_line_parser(splitted_line).options(compute_opt.desc).run(), compute_opt.vm);
             po::notify(compute_opt.vm);
             compute_opt.compute();
