@@ -37,24 +37,25 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
-enum class boarding_type {
-    vj,
-    connection,
-    uninitialized,
-    departure,
-    connection_stay_in,
-    connection_guarantee
-};
-
 struct Label {
-    DateTime dt;
-    boarding_type type = boarding_type::uninitialized;
-    navitia::type::idx_t boarding_jpp = navitia::type::invalid_idx;
+    DateTime dt_pt, // At what time can we reach this label with public transport
+             dt_transfer; // At what time wan we reach this label with a transfer
+    navitia::type::idx_t boarding_jpp_pt = type::invalid_idx,
+                         boarding_jpp_transfer = type::invalid_idx;
 
     void init(bool clockwise) {
-        type = boarding_type::uninitialized;
-        boarding_jpp = type::invalid_idx;
-        dt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+        boarding_jpp_pt = type::invalid_idx;
+        boarding_jpp_transfer = type::invalid_idx;
+        dt_pt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+        dt_transfer = dt_pt;
+    }
+
+    inline bool pt_is_initialized() const {
+        return dt_pt != DateTimeUtils::inf && dt_pt != DateTimeUtils::min;
+    }
+
+    inline bool transfer_is_initialized() const {
+        return dt_transfer != DateTimeUtils::inf && dt_transfer != DateTimeUtils::min;
     }
 };
 
@@ -79,23 +80,17 @@ inline void memset32(T*buf, uint n, T c)
 
 struct best_dest {
     std::vector<navitia::time_duration> jpp_idx_duration;
-    std::set<type::idx_t> sp_destinations;
     DateTime best_now;
     type::idx_t best_now_jpp_idx;
     size_t count;
 
     void add_destination(const type::JourneyPatternPoint* jpp, const time_duration duration_to_dest) {
         jpp_idx_duration[jpp->idx] = duration_to_dest; //AD, check if there are some rounding problems
-        sp_destinations.insert(jpp->stop_point->idx);
     }
 
 
     inline bool is_eligible_solution(const type::idx_t jpp_idx) const {
         return jpp_idx_duration[jpp_idx] != boost::posix_time::pos_infin;
-    }
-
-    inline bool is_destination(const type::StopPoint* sp) const {
-        return sp_destinations.find(sp->idx) != sp_destinations.end();
     }
 
 
@@ -155,10 +150,4 @@ struct best_dest {
         best_now = DateTimeUtils::min;
     }
 };
-
-inline
-boarding_type get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<std::vector<boarding_type> > &boarding_types, const navitia::type::Data &/*data*/){
-    return boarding_types[count][journey_pattern_point];
-}
-
 }}

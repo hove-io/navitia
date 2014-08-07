@@ -55,9 +55,9 @@ std::pair<const type::StopTime*, uint32_t>
 get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels,
                       const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data, bool disruption_active) {
     const auto& label = labels[count][journey_pattern_point];
-    if(label.type == boarding_type::vj || label.type == boarding_type::connection_stay_in) {
+    if(label.pt_is_initialized()) {
         const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[journey_pattern_point];
-        return best_stop_time(jpp, label.dt, accessibilite_params.vehicle_properties, clockwise, disruption_active, data, true);
+        return best_stop_time(jpp, label.dt_pt, accessibilite_params.vehicle_properties, clockwise, disruption_active, data, true);
     }
     return std::make_pair(nullptr, std::numeric_limits<uint32_t>::max());
 }

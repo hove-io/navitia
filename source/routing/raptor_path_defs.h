@@ -10,11 +10,11 @@ template<typename Visitor>
 void handle_connection(const size_t countb, const navitia::type::idx_t current_jpp_idx, Visitor& v,
                        bool clockwise, const RAPTOR &raptor_) {
     auto departure = raptor_.data.pt_data->journey_pattern_points[current_jpp_idx]->stop_point;
-    const auto boarding_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx);
+    const auto boarding_jpp_idx = raptor_.labels[countb][current_jpp_idx].boarding_jpp_transfer;
     auto destination_jpp = raptor_.data.pt_data->journey_pattern_points[boarding_jpp_idx];
     auto destination = destination_jpp->stop_point;
     auto connections = departure->stop_point_connection_list;
-    auto l = raptor_.labels[countb][current_jpp_idx].dt;
+    auto l = raptor_.labels[countb][current_jpp_idx].dt_pt;
     // We try to find the connection that was taken by the algorithm
     auto find_predicate = [&](type::StopPointConnection* connection)->bool {
         return departure == connection->departure && destination == connection->destination;
@@ -25,13 +25,13 @@ void handle_connection(const size_t countb, const navitia::type::idx_t current_j
     boost::posix_time::ptime dep_ptime, arr_ptime;
     // It might not be find, for instance if we stayed on the same stop point
     if(it == connections.end()) {
-        auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)];
+        auto r2 = raptor_.labels[countb][boarding_jpp_idx];
         if(clockwise) {
-            dep_ptime = to_posix_time(r2.dt, raptor_.data);
+            dep_ptime = to_posix_time(r2.dt_pt, raptor_.data);
             arr_ptime = to_posix_time(l, raptor_.data);
         } else {
             dep_ptime = to_posix_time(l, raptor_.data);
-            arr_ptime = to_posix_time(r2.dt, raptor_.data);
+            arr_ptime = to_posix_time(r2.dt_pt, raptor_.data);
         }
     } else {
         stop_point_connection = *it;
@@ -92,7 +92,7 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
                bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
                const RAPTOR &raptor_) {
     v.init_vj();
-    auto boarding_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx);
+    auto boarding_jpp_idx = raptor_.labels[countb][current_jpp_idx].boarding_jpp_pt;
     const type::StopTime* current_st;
     DateTime workingDate;
     std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_jpp_idx, raptor_.labels,
@@ -123,8 +123,8 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
             } else {
                 current_st = current_st->vehicle_journey->next_vj->stop_time_list.front();
             }
-            auto prev_time = raptor_.labels[countb][prev_st->journey_pattern_point->idx].dt,
-                 current_time = raptor_.labels[countb][current_st->journey_pattern_point->idx].dt;
+            auto prev_time = raptor_.labels[countb][prev_st->journey_pattern_point->idx].dt_pt,
+                 current_time = raptor_.labels[countb][current_st->journey_pattern_point->idx].dt_pt;
             v.change_vj(prev_st, current_st, to_posix_time(prev_time, raptor_.data),
                         to_posix_time(current_time, raptor_.data), clockwise);
         }
@@ -147,18 +147,16 @@ template<typename Visitor>
 void read_path(Visitor& v, type::idx_t destination_idx, size_t countb, bool clockwise, bool disruption_active,
           const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_) {
     type::idx_t current_jpp_idx = destination_idx;
-    auto label_type = raptor_.get_type(countb, current_jpp_idx);
-    while(label_type != boarding_type::departure) {
-        if(label_type == boarding_type::connection) {
-            handle_connection(countb, current_jpp_idx, v, clockwise, raptor_);
-            current_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx);
-        } else if(label_type == boarding_type::vj ||
-                  label_type == boarding_type::connection_stay_in) {
-            handle_vj(countb, current_jpp_idx, v, clockwise, disruption_active, accessibilite_params, raptor_);
-            current_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx);
-            --countb;
+    while (countb>0) {
+        handle_vj(countb, current_jpp_idx, v, clockwise, disruption_active, accessibilite_params, raptor_);
+        current_jpp_idx = raptor_.labels[countb][current_jpp_idx].boarding_jpp_pt;
+        --countb;
+        v.final_step(current_jpp_idx, countb, raptor_.labels);
+        if (countb == 0) {
+            break;
         }
-        label_type = raptor_.get_type(countb, current_jpp_idx);
+        handle_connection(countb, current_jpp_idx, v, clockwise, raptor_);
+        current_jpp_idx = raptor_.labels[countb][current_jpp_idx].boarding_jpp_transfer;
         v.final_step(current_jpp_idx, countb, raptor_.labels);
     }
 }
