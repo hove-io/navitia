@@ -451,6 +451,8 @@ struct Autocomplete
         vec_str.push_back(std::make_pair("À","a"));
         vec_str.push_back(std::make_pair("â","a"));
         vec_str.push_back(std::make_pair("Â","a"));
+        vec_str.push_back(std::make_pair("ä","a"));
+        vec_str.push_back(std::make_pair("Ä","a"));
         vec_str.push_back(std::make_pair("æ","ae"));
         vec_str.push_back(std::make_pair("é","e"));
         vec_str.push_back(std::make_pair("É","e"));
@@ -458,16 +460,24 @@ struct Autocomplete
         vec_str.push_back(std::make_pair("È","e"));
         vec_str.push_back(std::make_pair("ê","e"));
         vec_str.push_back(std::make_pair("Ê","e"));
+        vec_str.push_back(std::make_pair("ë","e"));
+        vec_str.push_back(std::make_pair("Ë","e"));
         vec_str.push_back(std::make_pair("ô","o"));
         vec_str.push_back(std::make_pair("Ô","o"));
+        vec_str.push_back(std::make_pair("ö","o"));
+        vec_str.push_back(std::make_pair("Ö","o"));
         vec_str.push_back(std::make_pair("û","u"));
         vec_str.push_back(std::make_pair("Û","u"));
         vec_str.push_back(std::make_pair("ù","u"));
         vec_str.push_back(std::make_pair("Ù","u"));
+        vec_str.push_back(std::make_pair("ü","u"));
+        vec_str.push_back(std::make_pair("Ü","u"));
         vec_str.push_back(std::make_pair("ç","c"));
         vec_str.push_back(std::make_pair("Ç","c"));
         vec_str.push_back(std::make_pair("ï","i"));
         vec_str.push_back(std::make_pair("Ï","i"));
+        vec_str.push_back(std::make_pair("î","i"));
+        vec_str.push_back(std::make_pair("Î","i"));
         vec_str.push_back(std::make_pair("œ","oe"));
 
         auto vec = vec_str.begin();

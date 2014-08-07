@@ -156,6 +156,8 @@ BOOST_AUTO_TEST_CASE(regex_strip_accents_tests){
     Autocomplete<unsigned int> ac;
     std::string test("républiquê");
     BOOST_CHECK_EQUAL(ac.strip_accents(test) ,"republique");
+    test = "ÂâÄäçÇÉéÈèÊêËëÖöÔôÜüÎîÏïæœ";
+    BOOST_CHECK_EQUAL(ac.strip_accents(test) ,"aaaacceeeeeeeeoooouuiiiiaeoe");
 }
 
 
