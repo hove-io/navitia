@@ -204,7 +204,7 @@ struct StreetNetwork {
      * Build the direct path between the start and the end by connecting the 2 sub path (from departure and from arrival).
      * If the 2 sub path does not connect return an empty path
      **/
-    Path get_direct_path();
+    Path get_direct_path(const type::EntryPoint& origin, const type::EntryPoint& destination);
 
     const GeoRef & geo_ref;
     PathFinder departure_path_finder;

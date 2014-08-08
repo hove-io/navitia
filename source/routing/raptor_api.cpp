@@ -69,7 +69,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
     bt::ptime now = bt::second_clock::local_time();
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    auto temp = worker.get_direct_path();
+    auto temp = worker.get_direct_path(origin, destination);
     if(!temp.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
 

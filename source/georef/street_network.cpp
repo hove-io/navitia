@@ -119,10 +119,21 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
     return result;
 }
 
-Path StreetNetwork::get_direct_path() {
-    if (!departure_launched() || !arrival_launched())
-        return {};
-    //Cherche s'il y a des nœuds en commun, et retient le chemin le plus court
+Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
+        const type::EntryPoint& destination) {
+    if (!departure_launched()) {
+        proximitylist::ProximityList<type::idx_t> pl;
+        departure_path_finder.init(origin.coordinates, origin.streetnetwork_params.mode,
+                                   origin.streetnetwork_params.speed_factor);
+        departure_path_finder.find_nearest_stop_points(origin.streetnetwork_params.max_duration, pl);
+    }
+    if (!arrival_launched() || origin.streetnetwork_params.mode != destination.streetnetwork_params.mode) {
+        proximitylist::ProximityList<type::idx_t> pl;
+        arrival_path_finder.init(destination.coordinates, origin.streetnetwork_params.mode,
+                                 origin.streetnetwork_params.speed_factor);
+        arrival_path_finder.find_nearest_stop_points(origin.streetnetwork_params.max_duration, pl);
+    }
+
     size_t num_vertices = boost::num_vertices(geo_ref.graph);
 
     navitia::time_duration min_dist = bt::pos_infin;
