@@ -28,6 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "config.h"
 #include "type/type.pb.h"
 #include <google/protobuf/descriptor.h>
 
@@ -40,7 +41,7 @@ www.navitia.io
 #include "utils/zmq_compat.h"
 
 
-int main(int, char** argv){
+int main(int argn, char** argv){
     navitia::init_app();
     Configuration* conf = Configuration::get();
 
@@ -53,14 +54,20 @@ int main(int, char** argv){
         perror("getcwd");
         return 1;
     }
-
-    std::string conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
+    std::string conf_file;
+    if(argn > 1){
+        // The first argument is the path to the configuration file
+        conf_file = argv[1];
+    }else{
+        conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
+    }
     conf->load_ini(conf_file);
     init_logger(conf_file);
 
     DataManager<navitia::type::Data> data_manager;
 
     auto logger = log4cplus::Logger::getInstance("startup");
+    LOG4CPLUS_INFO(logger, "starting kraken: " << KRAKEN_VERSION);
     boost::thread_group threads;
     // Prepare our context and sockets
     zmq::context_t context(1);
@@ -73,7 +80,7 @@ int main(int, char** argv){
         workers.bind("inproc://workers");
     }catch(zmq::error_t& e){
         LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
-		return 1;
+        return 1;
     }
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager));

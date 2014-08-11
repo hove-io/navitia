@@ -1091,3 +1091,28 @@ BOOST_AUTO_TEST_CASE(max_transfers){
     }
 }
 
+BOOST_AUTO_TEST_CASE(destination_over_writing) {
+    /*
+     * In this test case we reach the destination with a transfer, and we don't want that.
+     * This can seem silly, but we actually want to be able to say that we arrive at stop 2
+     * at 30000
+     */
+    ed::builder b("20120614");
+    b.vj("A")("stop1", 8000)("stop2", 30000);
+    b.vj("B")("stop1", 9000)("stop3", 9200);
+    b.connection("stop2", "stop3", 10*60);
+    b.connection("stop3", "stop2", 10*60);
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 7900, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    auto res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.time_of_day().total_seconds(), 30000);
+}

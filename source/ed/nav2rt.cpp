@@ -155,6 +155,7 @@ ITERATE_NAVITIA_PT_TYPES(COMP_SIZE)
     } catch(const navitia::exception &e) {
         std::cout << "Impossible de sauvegarder" << std::endl;
         std::cout << e.what() << std::endl;
+        return 1;
     }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 

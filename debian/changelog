@@ -1,3 +1,22 @@
+navitia2 (0.101.0) unstable; urgency=low
+
+  * Jormungandr: display stop_points of a route  <https://github.com/CanalTP/navitia/pull/481>
+  * Always do direct path  <https://github.com/CanalTP/navitia/pull/480>
+  * Kraken: Improve overlapping check  <https://github.com/CanalTP/navitia/pull/479>
+  * Kraken: Add transfer arrival_time  <https://github.com/CanalTP/navitia/pull/478>
+  * Kraken: autocomplete: some accented characters added  <https://github.com/CanalTP/navitia/pull/477>
+  * Kraken: revert stop_times  <https://github.com/CanalTP/navitia/pull/476>
+  * Ed check if there is no error when writing the .nav  <https://github.com/CanalTP/navitia/pull/475>
+  * Kraken: log the version of kraken on startup  <https://github.com/CanalTP/navitia/pull/474>
+  * Connector at: Disable debug log of sqlalchemy  <https://github.com/CanalTP/navitia/pull/473>
+  * Kraken: you can now pass the path to the config file of kraken on startup  <https://github.com/CanalTP/navitia/pull/472>
+  * Kraken: fix production_period in navitia  <https://github.com/CanalTP/navitia/pull/472>
+  * Ed: The default network was already created  <https://github.com/CanalTP/navitia/pulls/470>
+  * Tyr: User api didn't return the real authorizations  <https://github.com/CanalTP/navitia/pulls/469>
+  * Kraken: fix crow_fly_duration of BSS
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 11 Aug 2014 15:29:13 +0100
+
 navitia2 (0.100.2) unstable; urgency=low
 
   * fare: Fix a bug when currencies are diffrent

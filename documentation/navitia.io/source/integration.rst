@@ -23,8 +23,12 @@ All the resources return a response containing a links object, a paging object, 
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/*region_id*                                 | Information about a specific region |
 +---------------------------------------------------------------+-------------------------------------+
-| ``get`` /coverage/*lon;lat*                                   | Information about a specific region |
+| ``get`` /coverage/*region_id*/coords/*lon;lat*                | Information about a specific region |
 +---------------------------------------------------------------+-------------------------------------+
+
+Example
+*******
+https://api.navitia.io/v1/coverage/fr-idf/coords/2.6667;48.7667/places_nearby
 
 * **Public transportation objects** : List of the public transport objects of a region
 

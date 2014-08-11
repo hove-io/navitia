@@ -40,7 +40,9 @@ const auto source_e = ProjectionData::Direction::Source;
 const auto target_e = ProjectionData::Direction::Target;
 
 navitia::time_duration PathFinder::crow_fly_duration(const double distance) const {
-    return navitia::seconds(distance / (default_speed[mode] * speed_factor));
+    // For BSS we want the default speed of walking, because on extremities we walk !
+    const auto mode_ = mode == nt::Mode_e::Bss ? nt::Mode_e::Walking : mode;
+    return navitia::seconds(distance / (default_speed[mode_] * speed_factor));
 }
 
 StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
@@ -119,10 +121,19 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
     return result;
 }
 
-Path StreetNetwork::get_direct_path() {
-    if (!departure_launched() || !arrival_launched())
-        return {};
-    //Cherche s'il y a des nœuds en commun, et retient le chemin le plus court
+Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
+        const type::EntryPoint& destination) {
+    if (!departure_launched()) {
+        departure_path_finder.init(origin.coordinates, origin.streetnetwork_params.mode,
+                                   origin.streetnetwork_params.speed_factor);
+        departure_path_finder.start_distance_dijkstra(origin.streetnetwork_params.max_duration);
+    }
+    if (!arrival_launched() || origin.streetnetwork_params.mode != destination.streetnetwork_params.mode) {
+        arrival_path_finder.init(destination.coordinates, origin.streetnetwork_params.mode,
+                                 origin.streetnetwork_params.speed_factor);
+        arrival_path_finder.start_distance_dijkstra(origin.streetnetwork_params.max_duration);
+    }
+
     size_t num_vertices = boost::num_vertices(geo_ref.graph);
 
     navitia::time_duration min_dist = bt::pos_infin;
@@ -186,6 +197,20 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
     }
 }
 
+void PathFinder::start_distance_dijkstra(navitia::time_duration radius) {
+    if (! starting_edge.found)
+        return ;
+    computation_launch = true;
+    // We start dijkstra from source and target nodes
+    try {
+        dijkstra(starting_edge[source_e], distance_visitor(radius, distances));
+    } catch(DestinationFound){}
+
+    try {
+        dijkstra(starting_edge[target_e], distance_visitor(radius, distances));
+    } catch(DestinationFound){}
+}
+
 std::vector<std::pair<type::idx_t, navitia::time_duration>>
 PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proximitylist::ProximityList<type::idx_t>& pl) {
     if (! starting_edge.found)
@@ -197,20 +222,10 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proxim
     if(elements.empty())
         return {};
 
-    computation_launch = true;
+    start_distance_dijkstra(radius);
+
     std::vector<std::pair<type::idx_t, navitia::time_duration>> result;
-
-    // On lance un dijkstra depuis les deux nœuds de départ
-    try {
-        dijkstra(starting_edge[source_e], distance_visitor(radius, distances));
-    } catch(DestinationFound){}
-
-    try {
-        dijkstra(starting_edge[target_e], distance_visitor(radius, distances));
-    } catch(DestinationFound){}
-
     const auto max = bt::pos_infin;
-
     for (auto element: elements) {
         ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
         // Est-ce que le stop point a pu être raccroché au street network
