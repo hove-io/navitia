@@ -121,6 +121,8 @@ struct PathFinder {
      */
     void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
+    void start_distance_dijkstra(navitia::time_duration radius);
+
     /// compute the reachable stop points within the radius
     std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(navitia::time_duration radius,
                                                                          const proximitylist::ProximityList<type::idx_t>& pl);
