@@ -121,6 +121,8 @@ struct PathFinder {
      */
     void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
+    void start_distance_dijkstra(navitia::time_duration radius);
+
     /// compute the reachable stop points within the radius
     std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(navitia::time_duration radius,
                                                                          const proximitylist::ProximityList<type::idx_t>& pl);
@@ -204,7 +206,7 @@ struct StreetNetwork {
      * Build the direct path between the start and the end by connecting the 2 sub path (from departure and from arrival).
      * If the 2 sub path does not connect return an empty path
      **/
-    Path get_direct_path();
+    Path get_direct_path(const type::EntryPoint& origin, const type::EntryPoint& destination);
 
     const GeoRef & geo_ref;
     PathFinder departure_path_finder;
