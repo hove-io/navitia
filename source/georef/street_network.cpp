@@ -40,7 +40,9 @@ const auto source_e = ProjectionData::Direction::Source;
 const auto target_e = ProjectionData::Direction::Target;
 
 navitia::time_duration PathFinder::crow_fly_duration(const double distance) const {
-    return navitia::seconds(distance / (default_speed[mode] * speed_factor));
+    // For BSS we want the default speed of walking, because on extremities we walk !
+    const auto mode_ = mode == nt::Mode_e::Bss ? nt::Mode_e::Walking : mode;
+    return navitia::seconds(distance / (default_speed[mode_] * speed_factor));
 }
 
 StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
