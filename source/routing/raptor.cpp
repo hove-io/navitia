@@ -139,11 +139,14 @@ void RAPTOR::foot_path(const Visitor & v) {
 void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     const int queue_value = clockwise ?  std::numeric_limits<int>::max() : -1;
     memset32<int>(&Q[0],  data.pt_data->journey_patterns.size(), queue_value);
-    labels.resize(5);
+    if (labels.empty()) {
+        labels.resize(5);
+    }
+    Label l;
+    l.dt_pt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+    l.dt_transfer = l.dt_pt;
     for(auto& lbl_list : labels) {
-        for(Label& l : lbl_list) {
-            l.init(clockwise);
-        }
+        std::fill(lbl_list.begin(), lbl_list.end(), l);
     }
 
     const size_t journey_pattern_points_size = data.pt_data->journey_pattern_points.size();
