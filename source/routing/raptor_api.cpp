@@ -69,31 +69,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
     bt::ptime now = bt::second_clock::local_time();
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    auto temp = worker.get_direct_path(origin, destination);
-    if(!temp.path_items.empty()) {
-        pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
-
-        //for each date time we add a direct street journey
-        for(bt::ptime datetime : datetimes) {
-            pbnavitia::Journey* pb_journey = pb_response.add_journeys();
-            pb_journey->set_requested_date_time(navitia::to_iso_string_no_fractional(datetime));
-            pb_journey->set_duration(temp.duration.total_seconds());
-
-            bt::ptime departure;
-            if (clockwise) {
-                departure = datetime;
-            } else {
-                departure = datetime - temp.duration.to_posix();
-            }
-            fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
-
-            const auto str_departure = navitia::to_iso_string_no_fractional(departure);
-            const auto str_arrival = navitia::to_iso_string_no_fractional(departure + temp.duration.to_posix());
-            pb_journey->set_departure_date_time(str_departure);
-            pb_journey->set_arrival_date_time(str_arrival);
-        }
-    }
-
     pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
 
     for(Path path : paths) {
@@ -326,6 +301,31 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         } catch(const navitia::exception& e) {
             pb_journey->clear_fare();
             LOG4CPLUS_TRACE(logger, "Unable to compute fare, error : " << e.what());
+        }
+    }
+
+    auto temp = worker.get_direct_path(origin, destination);
+    if(!temp.path_items.empty()) {
+        pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
+
+        //for each date time we add a direct street journey
+        for(bt::ptime datetime : datetimes) {
+            pbnavitia::Journey* pb_journey = pb_response.add_journeys();
+            pb_journey->set_requested_date_time(navitia::to_iso_string_no_fractional(datetime));
+            pb_journey->set_duration(temp.duration.total_seconds());
+
+            bt::ptime departure;
+            if (clockwise) {
+                departure = datetime;
+            } else {
+                departure = datetime - temp.duration.to_posix();
+            }
+            fill_street_sections(enhanced_response, origin, temp, d, pb_journey, departure);
+
+            const auto str_departure = navitia::to_iso_string_no_fractional(departure);
+            const auto str_arrival = navitia::to_iso_string_no_fractional(departure + temp.duration.to_posix());
+            pb_journey->set_departure_date_time(str_departure);
+            pb_journey->set_arrival_date_time(str_arrival);
         }
     }
 

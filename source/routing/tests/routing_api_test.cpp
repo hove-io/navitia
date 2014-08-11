@@ -414,7 +414,7 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     dump_response(resp, "walking");
 
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct path by date and 1 path with bus
-    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Journey journey = resp.journeys(1);
     BOOST_CHECK_EQUAL(journey.departure_date_time(), "20120614T080000");
     BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20120614T080510");
 
@@ -450,7 +450,7 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct path by date and 1 path with bus
-    auto journey = resp.journeys(0);
+    auto journey = resp.journeys(1);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
 
@@ -500,7 +500,7 @@ BOOST_FIXTURE_TEST_CASE(biking_walking, streetnetworkmode_fixture<test_speed_pro
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct path by date and 1 path with bus
-    auto journey = resp.journeys(0);
+    auto journey = resp.journeys(1);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
 
@@ -550,7 +550,7 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct path by date and 1 path with bus
-    auto journey = resp.journeys(0);
+    auto journey = resp.journeys(1);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
 
