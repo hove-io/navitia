@@ -457,8 +457,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     }
                 }
                 if(boarding) {
-                    this->apply_vj_extension(visitor, global_pruning, (*it_st)->vehicle_journey, boarding->idx,
-                                             workingDt, l_zone, disruption_active);
+                    apply_vj_extension(visitor, global_pruning, (*it_st)->vehicle_journey, boarding->idx,
+                        workingDt, l_zone, disruption_active);
                 }
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();

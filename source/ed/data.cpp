@@ -215,7 +215,8 @@ void Data::clean(){
                     }
 
                     for(auto rp = (*vj1)->journey_pattern->journey_pattern_point_list.begin(); rp != (*vj1)->journey_pattern->journey_pattern_point_list.end();++rp) {
-                        if(vjs1->stop_time_list.at((*rp)->order)->departure_time > vjs2->stop_time_list.at((*rp)->order)->departure_time) {
+                        if(vjs1->stop_time_list.at((*rp)->order)->departure_time >= vjs2->stop_time_list.at((*rp)->order)->departure_time ||
+                           vjs1->stop_time_list.at((*rp)->order)->arrival_time >= vjs2->stop_time_list.at((*rp)->order)->arrival_time) {
                             toErase.insert((*vj2)->uri);
                             ++erase_overlap;
                             break;
