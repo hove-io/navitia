@@ -61,11 +61,18 @@ namespace navitia { namespace cli {
             }
             bool clockwise = !vm.count("counterclockwise");
             navitia::georef::StreetNetwork sn_worker(*raptor->data.geo_ref);
+
             
             nt::Type_e origin_type = raptor->data.get_type_of_id(start);
             nt::Type_e destination_type = raptor->data.get_type_of_id(target);
             nt::EntryPoint origin(origin_type, start);
+            if (!first_section_mode.empty() && !origin.set_mode(first_section_mode)) {
+                return false;
+            }
             nt::EntryPoint destination(destination_type, target);
+            if (!last_section_mode.empty() && !destination.set_mode(last_section_mode)) {
+                return false;
+            }
             pb::Response resp = make_response(*raptor, origin, destination, {ntest::to_posix_timestamp(date)},
                     clockwise, navitia::type::AccessibiliteParams(), forbidden,
                     sn_worker, false, true);
@@ -74,7 +81,7 @@ namespace navitia { namespace cli {
                 std::cout << resp.DebugString() << "\n";
                 return true;
             }
-            std::cout << "Response type: " <<  pb::ResponseStatus_Name(pb::ResponseStatus(resp.response_type())) << "\n";
+            std::cout << "Response type: " <<  pb::ResponseType_Name(pb::ResponseType(resp.response_type())) << "\n";
             if (resp.journeys_size() == 0) {
                 std::cout << "No solutions found\n";
                 return false;
