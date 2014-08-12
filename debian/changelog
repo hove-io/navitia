@@ -1,3 +1,9 @@
+navitia2 (0.101.2) unstable; urgency=low
+
+  * Kraken: Fix a bug in path building
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 12 Aug 2014 11:44:13 +0100
+
 navitia2 (0.101.1) unstable; urgency=low
 
   * Kraken: Add routing dependency to pb_lib
