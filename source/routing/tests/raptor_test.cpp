@@ -1116,3 +1116,27 @@ BOOST_AUTO_TEST_CASE(destination_over_writing) {
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].arrival.time_of_day().total_seconds(), 30000);
 }
+
+
+BOOST_AUTO_TEST_CASE(over_midnight_special) {
+    ed::builder b("20120614");
+    b.vj("A")("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B")("stop1", 7*3600)("stop3", 7*3600+5*60);
+    b.vj("C")("stop2", 7*3600+10*60)("stop3", 7*3600+15*60)("stop4", 7*3600+20*60);
+
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    auto res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.time_of_day().total_seconds(), 7*3600+20*60);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.date().day(), 14);
+
+}
