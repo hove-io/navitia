@@ -14,7 +14,7 @@ void handle_connection(const size_t countb, const navitia::type::idx_t current_j
     auto destination_jpp = raptor_.data.pt_data->journey_pattern_points[boarding_jpp_idx];
     auto destination = destination_jpp->stop_point;
     auto connections = departure->stop_point_connection_list;
-    auto l = raptor_.labels[countb][current_jpp_idx].dt_pt;
+    auto l = raptor_.labels[countb][current_jpp_idx].dt_transfer;
     // We try to find the connection that was taken by the algorithm
     auto find_predicate = [&](type::StopPointConnection* connection)->bool {
         return departure == connection->departure && destination == connection->destination;
