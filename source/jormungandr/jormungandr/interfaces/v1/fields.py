@@ -265,14 +265,19 @@ class GeoJson(fields.Raw):
         if test_geojson:
             obj = obj.geojson
             coords = obj.coordinates
-        elif obj.type == response_pb2.STREET_NETWORK:
+        try:
+            obj.HasField("type")
+        except ValueError:
+            return None
+
+        if obj.type == response_pb2.STREET_NETWORK:
             try:
                 if obj.HasField("street_network"):
                     coords = obj.street_network.coordinates
                 else:
-                    return {"type": "pas de sn"}
+                    return None
             except ValueError:
-                return {"type": "valueError"}
+                return None
         elif obj.type == response_pb2.PUBLIC_TRANSPORT:
             coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
         elif obj.type == response_pb2.TRANSFER:
@@ -292,7 +297,7 @@ class GeoJson(fields.Raw):
                 elif type_ == type_pb2.ADMINISTRATIVE_REGION:
                     coords.append(place.administrative_region.coord)
         else:
-            return {"type" : "vide"}
+            return None
 
         response = {
             "type": "LineString",
@@ -304,6 +309,7 @@ class GeoJson(fields.Raw):
         for coord in coords:
             response["coordinates"].append([coord.lon, coord.lat])
         return response
+
 
 
 code = {

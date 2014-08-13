@@ -192,6 +192,7 @@ route_schedule(const std::string& filter,
                 }
             }
         }
+        fill_pb_object(&thermometer, d, schedule->mutable_geojson());
     }
     auto pagination = handler.pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);
