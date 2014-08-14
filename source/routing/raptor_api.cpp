@@ -548,7 +548,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         for(auto jpp : sp->journey_pattern_point_list) {
             if(raptor.best_labels[jpp->idx] < best) {
                 int round = raptor.best_round(jpp->idx);
-                if(round != -1 && raptor.labels[round][jpp->idx].type == boarding_type::vj) {
+                if(round != -1 && raptor.labels[round][jpp->idx].pt_is_initialized()) {
                     best = raptor.best_labels[jpp->idx];
                     best_jpp = jpp->idx;
                     best_round = round;

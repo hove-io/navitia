@@ -210,7 +210,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
     if(has_col(id_c, row)) {
         network->uri = row[id_c];
     } else {
-        network->uri = "default_agency";
+        network->uri = "default_network";
     }
     network->external_code = network->uri;
 
@@ -478,14 +478,14 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     if(has_col(agency_c, row)) {
-        auto agency_it = gtfs_data.agency_map.find(row[agency_c]);
-        if(agency_it != gtfs_data.agency_map.end())
-            line->network = agency_it->second;
+        auto network_it = gtfs_data.network_map.find(row[agency_c]);
+        if(network_it != gtfs_data.network_map.end())
+            line->network = network_it->second;
     }
     else {
-        auto agency_it = gtfs_data.agency_map.find("default_agency");
-        if(agency_it != gtfs_data.agency_map.end())
-            line->network = agency_it->second;
+        auto network_it = gtfs_data.network_map.find("default_network");
+        if(network_it != gtfs_data.network_map.end())
+            line->network = network_it->second;
     }
 
     gtfs_data.line_map[row[id_c]] = line;

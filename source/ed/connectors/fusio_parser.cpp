@@ -962,21 +962,6 @@ void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool
     admin_stop_area->stop_area.push_back(sa->second);
 }
 
-void FusioParser::fill_default_agency(Data & data){
-    // creation of a default network
-    ed::types::Network* network = new ed::types::Network();
-    network->uri = "default_network";
-    network->name = "réseau par défaut";
-    data.networks.push_back(network);
-    gtfs_data.agency_map[network->uri] = network;
-
-    //with the default agency comes the default timezone
-    const std::string default_tz = "Europe/Paris";
-    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
-    BOOST_ASSERT(tz);
-    gtfs_data.tz.default_timezone = {default_tz, tz};
-}
-
 void FusioParser::fill_default_commercial_mode(Data & data){
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->name = "mode commercial par défaut";
@@ -993,10 +978,18 @@ void FusioParser::fill_default_physical_mode(Data & data){
     gtfs_data.physical_mode_map[mode->uri] = mode;
 }
 
+void FusioParser::fill_default_timezone(Data & data){
+    //with the default agency comes the default timezone
+    const std::string default_tz = "Europe/Paris";
+    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
+    BOOST_ASSERT(tz);
+    gtfs_data.tz.default_timezone = {default_tz, tz};
+}
+
 void FusioParser::parse_files(Data& data) {
 
     fill_default_company(data);
-    fill_default_agency(data);
+    fill_default_timezone(data);
     fill_default_commercial_mode(data);
     fill_default_physical_mode(data);
     parse<AgencyFusioHandler>(data, "agency.txt", true);
