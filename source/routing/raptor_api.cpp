@@ -449,6 +449,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
 
     pbnavitia::Response response;
+    std::vector<Path> pathes;
 
     std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, datetimes_str, response, clockwise);
@@ -459,24 +460,36 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
-        fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point nor destination point",response.mutable_error());
-        response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
+        response = make_pathes(pathes, raptor.data, worker, origin, destination,
+                               datetimes, clockwise, show_codes);
+        if (response.response_type() == pbnavitia::NO_SOLUTION) {
+            fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point nor destination point",response.mutable_error());
+            response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
+        }
         return response;
     }
 
     if(departures.size() == 0){
-        fill_pb_error(pbnavitia::Error::no_origin, "no origin point",response.mutable_error());
-        response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
+        response = make_pathes(pathes, raptor.data, worker, origin, destination,
+                               datetimes, clockwise, show_codes);
+        if (response.response_type() == pbnavitia::NO_SOLUTION) {
+            fill_pb_error(pbnavitia::Error::no_origin, "no origin point",response.mutable_error());
+            response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
+        }
         return response;
     }
 
     if(destinations.size() == 0){
-        fill_pb_error(pbnavitia::Error::no_destination, "no destination point",response.mutable_error());
-        response.set_response_type(pbnavitia::NO_DESTINATION_POINT);
+        response = make_pathes(pathes, raptor.data, worker, origin, destination,
+                               datetimes, clockwise, show_codes);
+        if (response.response_type() == pbnavitia::NO_SOLUTION) {
+            fill_pb_error(pbnavitia::Error::no_destination, "no destination point",response.mutable_error());
+            response.set_response_type(pbnavitia::NO_DESTINATION_POINT);
+        }
         return response;
     }
 
-    std::vector<Path> result;
+
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
 
@@ -493,22 +506,22 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1) {
-            result = tmp;
-            for(auto & path : result) {
+            pathes = tmp;
+            for(auto & path : pathes) {
                 path.request_time = datetime;
             }
         } else if(!tmp.empty()) {
             // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
             tmp.back().request_time = datetime;
-            result.push_back(tmp.back());
+            pathes.push_back(tmp.back());
             bound = to_datetime(tmp.back().items.back().arrival, raptor.data);
         } else // Lorsqu'on demande plusieurs horaires, et qu'il n'y a pas de résultat, on retourne un itinéraire vide
-            result.push_back(Path());
+            pathes.push_back(Path());
     }
     if(clockwise)
-        std::reverse(result.begin(), result.end());
+        std::reverse(pathes.begin(), pathes.end());
 
-    return make_pathes(result, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
+    return make_pathes(pathes, raptor.data, worker, origin, destination, datetimes, clockwise, show_codes);
 }
 
 
