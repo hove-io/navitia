@@ -538,10 +538,21 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
     if(response.has_error() || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
-    worker.init(origins[0], {destinations[0]});
-    auto departures = get_stop_points(origins[0], raptor.data, worker);
-    auto arrivals = get_stop_points(destinations[0], raptor.data, worker, true);
-    if(departures.size() == 0 && destinations.size() == 0){
+
+    std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > departures;
+    std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > arrivals;
+
+    worker.init(origins[0]);
+
+    for(auto org : origins) {
+        departures.push_back(std::make_pair(org, get_stop_points(org, raptor.data, worker)));
+    }
+
+    for(auto dst : destinations) {
+        arrivals.push_back(std::make_pair(dst, get_stop_points(dst, raptor.data, worker)));
+    }
+
+    if(departures.size() == 0 && arrivals.size() == 0){
         fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
@@ -572,7 +583,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_nm_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1) {
