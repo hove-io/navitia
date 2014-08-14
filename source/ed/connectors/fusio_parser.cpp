@@ -397,7 +397,6 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
             auto itm = gtfs_data.physical_mode_map.find("default_physical_mode");
             vj->physical_mode = itm->second;
         }
-    }
 
         if (is_valid(odt_condition_id_c, row)){
             auto it_odt_condition = gtfs_data.odt_conditions_map.find(row[odt_condition_id_c]);
@@ -412,7 +411,6 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
                 vj->set_vehicles(it_property->second.vehicles());
             }
         }
-    }
 
         if (is_valid(comment_id_c, row)) {
             auto it_comment = gtfs_data.comment_map.find(row[comment_id_c]);
@@ -420,12 +418,10 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
                 vj->comment = it_comment->second;
             }
         }
-    }
 
         if(is_valid(odt_type_c, row)){
             vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
         }
-    }
 
         vj->company = nullptr;
         if (is_valid(company_id_c, row)) {
@@ -516,8 +512,8 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
 
     line->network = nullptr;
     if (is_valid(network_c, row)) {
-        auto itm = gtfs_data.agency_map.find(row[network_c]);
-        if(itm == gtfs_data.agency_map.end()){
+        auto itm = gtfs_data.network_map.find(row[network_c]);
+        if(itm == gtfs_data.network_map.end()){
             line->network = nullptr;
             LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the network " << row[network_c]
                            << " referenced by line " << row[id_c]);
@@ -527,7 +523,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     }
 
     if(line->network == nullptr){
-        auto itm = gtfs_data.agency_map.find("default_network");
+        auto itm = gtfs_data.network_map.find("default_network");
         line->network = itm->second;
     }
 
@@ -966,21 +962,6 @@ void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool
     admin_stop_area->stop_area.push_back(sa->second);
 }
 
-void FusioParser::fill_default_agency(Data & data){
-    // creation of a default network
-    ed::types::Network* network = new ed::types::Network();
-    network->uri = "default_network";
-    network->name = "réseau par défaut";
-    data.networks.push_back(network);
-    gtfs_data.agency_map[network->uri] = network;
-
-    //with the default agency comes the default timezone
-    const std::string default_tz = "Europe/Paris";
-    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
-    BOOST_ASSERT(tz);
-    gtfs_data.tz.default_timezone = {default_tz, tz};
-}
-
 void FusioParser::fill_default_commercial_mode(Data & data){
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->name = "mode commercial par défaut";
@@ -997,10 +978,19 @@ void FusioParser::fill_default_physical_mode(Data & data){
     gtfs_data.physical_mode_map[mode->uri] = mode;
 }
 
+
+void FusioParser::fill_default_timezone(Data & data){
+    //with the default agency comes the default timezone
+    const std::string default_tz = "Europe/Paris";
+    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
+    BOOST_ASSERT(tz);
+    gtfs_data.tz.default_timezone = {default_tz, tz};
+}
+
 void FusioParser::parse_files(Data& data) {
 
     fill_default_company(data);
-    fill_default_agency(data);
+    fill_default_timezone(data);
     fill_default_commercial_mode(data);
     fill_default_physical_mode(data);
     parse<AgencyFusioHandler>(data, "agency.txt", true);
