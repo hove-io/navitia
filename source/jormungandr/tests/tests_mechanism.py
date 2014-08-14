@@ -176,14 +176,15 @@ class AbstractTestFixture:
         assert json_response
         return json_response
 
-    def query_region(self, url, check=True, display=False):
+    def query_region(self, url, check=True, display=False, version="v1"):
         """
             helper if the test in only one region,
             to shorten the test url query /v1/coverage/{region}/url
         """
         assert len(self.krakens_pool) == 1, "the helper can only work with one region"
-
-        real_url = "/v1/coverage/{region}/{url}".format(region=self.krakens_pool.iterkeys().next(), url=url)
+        str_url = "/v1/coverage" if version == "v1" else "/v0"
+        str_url += "/{region}/{url}"
+        real_url = str_url.format(region=self.krakens_pool.iterkeys().next(), url=url)
 
         if check:
             return self.query(real_url, display)
