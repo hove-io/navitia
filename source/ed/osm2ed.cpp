@@ -72,12 +72,12 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
             switch(ref.member_type) {
             case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
                 if (ref.role == "outer" || ref.role == "" || ref.role == "exclave") {
-                    cache.ways.emplace(ref.member_id);
+                    cache.ways.insert(OSMWay(ref.member_id));
                 }
                 break;
             case OSMPBF::Relation_MemberType::Relation_MemberType_NODE:
                 if (ref.role == "admin_centre" || ref.role == "admin_center") {
-                    cache.nodes.emplace(ref.member_id);
+                    cache.nodes.insert(OSMNode(ref.member_id));
                 }
                 break;
             case OSMPBF::Relation_MemberType::Relation_MemberType_RELATION:
@@ -93,8 +93,8 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
         if(tags.find("addr:postcode") != tags.end()){
             postal_code = tags.at("addr:postcode");
         }
-        cache.relations.emplace(osm_id, refs, insee, postal_code, name,
-                boost::lexical_cast<uint32_t>(tmp_admin_level->second));
+        cache.relations.insert(OSMRelation(osm_id, refs, insee, postal_code, name,
+                boost::lexical_cast<uint32_t>(tmp_admin_level->second)));
     } else if(tags.find("type") != tags.end() && tags.at("type") == "associatedStreet") {
         uint64_t way_id = std::numeric_limits<uint64_t>::max();
         std::vector<uint64_t> osm_ids;
@@ -128,7 +128,7 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
         auto tag_name = tags.find("streetname");
         const std::string name = tag_name != tags.end() ? tag_name->second : "";
         for (const auto id : osm_ids) {
-            cache.associated_streets.emplace(id, way_id, name);
+            cache.associated_streets.insert(AssociateStreetRelation(id, way_id, name));
         }
     }
 }
@@ -151,7 +151,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, c
     }
     if (is_street) {
         const auto name = name_it != tags.end() ? name_it->second : "";
-        it_way = cache.ways.emplace(osm_id, properties, name).first;
+        it_way = cache.ways.insert(OSMWay(osm_id, properties, name)).first;
     } else if(is_used_by_relation) {
         it_way->set_properties(properties);
         if (name_it != tags.end()) {
@@ -159,7 +159,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, c
         }
     }
     for (auto osm_id : nodes_refs) {
-        auto v = cache.nodes.emplace(osm_id);
+        auto v = cache.nodes.insert(OSMNode(osm_id));
         if (is_street && !v.second) {
             v.first->set_used_more_than_once();
         }
@@ -173,7 +173,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, c
  * We fill needed nodes with their coordinates
  */
 void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
-        const CanalTP::Tags& tags) {
+        const CanalTP::Tags& ) {
     auto node_it = cache.nodes.find(OSMNode(osm_id));
     if (node_it != cache.nodes.end()) {
         node_it->set_coord(lon, lat);
@@ -702,7 +702,7 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
     if (candidate_way == nullptr) {
         return;
     }
-    house_numbers.emplace_back(str_to_int(it_hn->second), lon, lat, candidate_way->way_ref);
+    house_numbers.push_back(OSMHouseNumber(str_to_int(it_hn->second), lon, lat, candidate_way->way_ref));
 }
 
 void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags,
