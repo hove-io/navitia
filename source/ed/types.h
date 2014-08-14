@@ -385,11 +385,11 @@ struct HouseNumber{
 
 };
 
-struct PoiType{
-    size_t id;
-    std::string name;
-
-    PoiType(): id(0), name(""){}
+struct PoiType {
+    size_t id = 0;
+    std::string name = "";
+    
+    PoiType() {}
     PoiType(size_t id, const std::string& name): id(id), name(name){}
 };
 
