@@ -33,6 +33,7 @@ www.navitia.io
 #include <bitset>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 #include "type/type.h"
 
@@ -93,6 +94,7 @@ struct StopArea : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopArea;
     std::string external_code;
     nt::GeographicalCoord coord;
+    std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
 
     navitia::type::StopArea* get_navitia_type() const;
 
@@ -222,6 +224,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     StopTime * first_stop_time = nullptr;
     std::string block_id;
     std::string odt_message;
+    std::string meta_vj_name; //link to it's meta vj
+    int16_t utc_to_local_offset = 0; // shift used to convert the local time from the data to utc, in minute
 
     int start_time = std::numeric_limits<int>::max(); /// First departure of vehicle
     int end_time = std::numeric_limits<int>::max(); /// Last departure of vehicle journey
@@ -322,6 +326,13 @@ struct StopTime : public Nameable {
     navitia::type::StopTime* get_navitia_type() const;
 
     bool operator<(const StopTime& other) const;
+};
+
+
+struct MetaVehicleJourney {
+    std::vector<VehicleJourney*> theoric_vj;
+    std::vector<VehicleJourney*> adapted_vj;
+    std::vector<VehicleJourney*> real_time_vj;
 };
 
 /// Données Geographique

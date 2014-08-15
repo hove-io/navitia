@@ -79,6 +79,7 @@ private:
     void insert_validity_patterns(const std::vector<types::ValidityPattern*>& validity_patterns);
     void insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys);
+    void insert_meta_vj(const std::map<std::string, types::MetaVehicleJourney>& meta_vjs);
 
     void insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points);
 

@@ -98,6 +98,7 @@ int main(int argc, char * argv[])
 
     navitia::type::MetaData meta;
     meta.production_date = gtfs_parser.gtfs_data.production_date;
+    meta.timezone = gtfs_parser.gtfs_data.tz.default_timezone.first;
 
     start = pt::microsec_clock::local_time();
     data.complete();

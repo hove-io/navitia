@@ -95,6 +95,7 @@ void fill_pb_object(const nt::StopArea * sa,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_area->set_uri(sa->uri);
     stop_area->set_name(sa->name);
+    stop_area->set_timezone(sa->timezone);
     if(!sa->comment.empty()) {
         stop_area->set_comment(sa->comment);
     }
@@ -520,12 +521,11 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data,
     if(st == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
-    auto p = boost::posix_time::seconds(st->arrival_time);
 
-    stop_time->set_arrival_time(navitia::to_iso_string_no_fractional(p));
+    //arrival/departure in protobuff are also as seconds from midnight (in UTC of course)
+    stop_time->set_arrival_time(st->arrival_time);
+    stop_time->set_departure_time(st->departure_time);
 
-    p = boost::posix_time::seconds(st->departure_time);
-    stop_time->set_departure_time(navitia::to_iso_string_no_fractional(p));
     stop_time->set_pickup_allowed(st->pick_up_allowed());
     stop_time->set_drop_off_allowed(st->drop_off_allowed());
     if(st->journey_pattern_point != nullptr && depth > 0) {
@@ -807,8 +807,8 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     section->set_duration(total_duration);
     section->set_length(total_length);
 
-    section->set_begin_date_time(navitia::to_iso_string_no_fractional(departure));
-    section->set_end_date_time(navitia::to_iso_string_no_fractional(departure + bt::seconds(total_duration)));
+    section->set_begin_date_time(navitia::to_posix_timestamp(departure));
+    section->set_end_date_time(navitia::to_posix_timestamp(departure + bt::seconds(total_duration)));
 
     //add the destination as a placemark
     pbnavitia::Place* dest_place = section->mutable_destination();
@@ -919,10 +919,10 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     section->set_id(response.register_section());
     fill_pb_placemark(origin, data, section->mutable_origin(), 2, now, action_period);
     fill_pb_placemark(destination, data, section->mutable_destination(), 2, now, action_period);
-    section->set_begin_date_time(navitia::to_iso_string_no_fractional(time));
+    section->set_begin_date_time(navitia::to_posix_timestamp(time));
     section->set_duration(0);
     section->set_length(0);
-    section->set_end_date_time(navitia::to_iso_string_no_fractional(time));
+    section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
     auto coord = section->mutable_street_network()->add_coordinates();
     coord->set_lat(origin.coordinates.lat());
@@ -1089,16 +1089,15 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     boost::optional<const std::string> calendar_id,
                     const navitia::type::StopPoint* destination){
     if (stop_time == nullptr) {
-        rs_date_time->set_date_time("");
         return;
     }
-    std::string str_datetime;
-    if (!calendar_id) {
-        str_datetime = iso_string(date_time, data);
-    } else {
-        str_datetime = iso_hour_string(date_time, data);
+
+    rs_date_time->set_time(DateTimeUtils::hour(date_time));
+
+    if (! calendar_id) {
+        //for calendar we don't want to have a date
+        rs_date_time->set_date(to_int_date(to_posix_time(date_time, data)));
     }
-    rs_date_time->set_date_time(str_datetime);
     pbnavitia::Properties* hn = rs_date_time->mutable_properties();
     fill_pb_object(stop_time, data, hn, max_depth, now, action_period);
 
@@ -1125,8 +1124,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     }
 
     if((calendar_id) && (stop_time->vehicle_journey != nullptr)) {
-        auto asso_cal_it = stop_time->vehicle_journey->associated_calendars.find(*calendar_id);
-        if(asso_cal_it != stop_time->vehicle_journey->associated_calendars.end()){
+        auto asso_cal_it = stop_time->vehicle_journey->meta_vj->associated_calendars.find(*calendar_id);
+        if(asso_cal_it != stop_time->vehicle_journey->meta_vj->associated_calendars.end()){
             for(const type::ExceptionDate& excep : asso_cal_it->second->exceptions){
                 fill_pb_object(excep, data, hn->add_exceptions(), max_depth, now, action_period);
             }

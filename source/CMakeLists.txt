@@ -42,6 +42,9 @@ FIND_PACKAGE(Boost 1.47.0 COMPONENTS unit_test_framework thread regex
     serialization date_time filesystem system regex chrono iostreams
     program_options REQUIRED)
 
+#boost 1.53/1.54 bugs with local datetime...
+#see http://stackoverflow.com/questions/15234527/boost-1-53-local-date-time-compiler-error-with-std-c0x
+add_definitions(-DBOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS)
 
 
 #add current compilation dir to include path to handle config.h

@@ -1860,7 +1860,7 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
     cal->uri="cal1";
     auto associated_cal = new type::AssociatedCalendar();
     associated_cal->calendar = cal;
-    b.data->pt_data->vehicle_journeys[0]->associated_calendars.insert({cal->uri, associated_cal});
+    b.data->pt_data->meta_vj.begin()->second->associated_calendars.insert({cal->uri, associated_cal});
 
     b.finish();
     b.data->pt_data->index();
@@ -1873,28 +1873,19 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
     const type::StopTime* st1;
     uint32_t dt1;
 
-    boost::optional<const std::string> cal_id (cal->uri);
     //calendar is not associated to stop time => no answer
     {
-        DateTime dt_test = DateTimeUtils::set(0, sp1_departure - 1);
-        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, *(b.data), false, false, cal_id);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure));
+        uint32_t hour = sp1_departure - 1;
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, hour, *(b.data), cal->uri);
+        BOOST_CHECK_EQUAL(dt1, sp1_departure);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
     }
     {
-        DateTime dt_test = DateTimeUtils::set(0, sp1_departure);
-        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, *(b.data), false, false, cal_id);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(0, sp1_departure));
-        BOOST_REQUIRE(st1 != nullptr);
-        BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
-        BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
-    }
-    {
-        DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
-        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, *(b.data), false, false, cal_id);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::set(1, sp1_departure));
+        uint32_t hour = sp1_departure;
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, hour, *(b.data), cal->uri);
+        BOOST_CHECK_EQUAL(dt1, sp1_departure);
         BOOST_REQUIRE(st1 != nullptr);
         BOOST_CHECK_EQUAL(st1->departure_time, sp1_departure);
         BOOST_CHECK_EQUAL(st1->journey_pattern_point->stop_point->stop_area->name, spa1);
@@ -1937,23 +1928,17 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
     const type::StopTime*st1;
     uint32_t dt1;
 
-    boost::optional<const std::string> calendar {"calendar_bob"};
+    const std::string calendar = "calendar_bob";
     //calendar is not associated to stop time => no answer
     {
-        DateTime dt_test = DateTimeUtils::set(0, sp1_departure - 1);
-        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, *(b.data), false, false, calendar);
+        uint32_t hour = sp1_departure - 1;
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, hour, *(b.data), calendar);
         BOOST_CHECK_EQUAL(dt1, 0);
         BOOST_CHECK(st1 == nullptr);
     }
     {
-        DateTime dt_test = DateTimeUtils::set(0, sp1_departure);
-        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, *(b.data), false, false, calendar);
-        BOOST_CHECK_EQUAL(dt1, 0);
-        BOOST_CHECK(st1 == nullptr);
-    }
-    {
-        DateTime dt_test = DateTimeUtils::set(1, sp1_departure);
-        std::tie(st1, dt1) = earliest_stop_time(jpp1, dt_test, *(b.data), false, false, calendar);
+        uint32_t hour = sp1_departure;
+        std::tie(st1, dt1) = earliest_stop_time(jpp1, hour, *(b.data), calendar);
         BOOST_CHECK_EQUAL(dt1, 0);
         BOOST_CHECK(st1 == nullptr);
     }

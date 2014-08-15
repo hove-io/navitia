@@ -80,27 +80,56 @@ def is_valid_days(days):
     return m
 
 
-def is_valid_datetime(str):
+def get_valid_datetime(str):
     """
-    Check is the string is a valid date
-    >>> is_valid_datetime("bob")
-    False
-    >>> is_valid_datetime("")
+    Check is the string is a valid date and return it
+    >>> get_valid_datetime("bob")
     Traceback (most recent call last):
     AssertionError
-    >>> is_valid_datetime("20123101T215030")  # month is badly set
-    False
-    >>> is_valid_datetime("20120131T215030")
-    True
+    >>> get_valid_datetime("")
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_datetime("20123101T215030")  # month is badly set
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_datetime("20120131T215030")
+    datetime.datetime(2012, 1, 31, 21, 50, 30)
     """
     assert str
 
     try:
-        datetime.strptime(str, "%Y%m%dT%H%M%S")
+        return datetime.strptime(str, "%Y%m%dT%H%M%S")
     except ValueError:
-        logging.error("string '{}' is no valid date".format(str))
-        return False
-    return True
+        logging.error("string '{}' is no valid datetime".format(str))
+        assert False
+
+
+def get_valid_time(str):
+    """
+    Check is the string is a valid time and return it
+    >>> get_valid_time("bob")
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_time("")
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_time("20120131T215030")  # it's a datetime, not valid
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_time("215030")  #time is HHMMSS
+    datetime.datetime(1900, 1, 1, 21, 50, 30)
+    >>> get_valid_time("501230")  # MMHHSS, not valid
+    Traceback (most recent call last):
+    AssertionError
+    """
+    assert str
+
+    try:
+        #AD:we use a datetime anyway because I don't know what to use instead
+        return datetime.strptime(str, "%H%M%S")
+    except ValueError:
+        logging.error("string '{}' is no valid time".format(str))
+        assert False
 
 
 def is_valid_date(str):
@@ -136,15 +165,37 @@ def is_valid_bool(str):
     return lower == "true" or lower == "false"
 
 
-def is_valid_float(str):
+def get_valid_float(str):
     if type(str) is float:
-        return True
+        return str
 
     try:
-        float(str)
+        return float(str)
     except ValueError:
-        return False
-    return True
+        assert "cannot convert {} to float".format(str)
+
+
+def get_valid_int(str):
+    assert str != ""
+    if type(str) is int:
+        return str
+
+    try:
+        return int(str)
+    except ValueError:
+        assert False
+
+
+def is_valid_lat(str):
+    lat = get_valid_float(str)
+
+    assert 90.0 >= lat >= 0.0, "lat should be between 0 and 90"
+
+
+def is_valid_lon(str):
+    lat = get_valid_float(str)
+
+    assert 180.0 >= lat >= -180.0, "lon should be between -180 and 180"
 
 
 def get_links_dict(response):
@@ -296,6 +347,7 @@ def check_internal_links(response, tester):
     assert not internal_links_id, "cannot find correct ref for internal links : {}".\
         format([lid for lid in internal_links_id])
 
+
 class unique_dict(dict):
     """
     We often have to check that a set of values are uniq, this container is there to do the job
@@ -318,13 +370,30 @@ class unique_dict(dict):
         dict.__setitem__(self, key, value)
 
 
-def is_valid_journey_response(response, tester):
+def query_from_str(str):
+    """
+    for convenience, convert a url to a dict
+
+    >>> query_from_str("toto/tata?bob=toto&bobette=tata&bobinos=tutu")
+    {'bobette': 'tata', 'bobinos': 'tutu', 'bob': 'toto'}
+    """
+    query = {}
+    last_elt = str.split("?")[-1]
+    for s in last_elt.split("&"):
+        k, v = s.split("=")
+        query[k] = v
+
+    return query
+
+
+def is_valid_journey_response(response, tester, query_str):
+    query_dict = query_from_str(query_str)
     journeys = get_not_null(response, "journeys")
 
     all_sections = unique_dict('id')
     assert len(journeys) > 0, "we must at least have one journey"
     for j in journeys:
-        is_valid_journey(j, tester)
+        is_valid_journey(j, tester, query_dict)
 
         for s in j['sections']:
             all_sections[s['id']] = s
@@ -343,9 +412,56 @@ def is_valid_journey_response(response, tester):
     #TODO check journey links (prev/next)
 
 
-def is_valid_journey(journey, tester):
-    #TODO!
-    pass
+def is_valid_journey(journey, tester, query):
+    arrival = get_valid_datetime(journey['arrival_date_time'])
+    departure = get_valid_datetime(journey['departure_date_time'])
+    request = get_valid_datetime(journey['requested_date_time'])
+
+    assert arrival >= departure
+
+    if 'datetime_represents' not in query or query['datetime_represents'] == "departure":
+        #for 'departure after' query, the departure must be... after \o/
+        assert departure >= request
+    else:
+        assert arrival <= request
+
+    #we want to test that all departure match de previous section arrival
+    last_arrival = departure
+    for s in journey['sections']:
+        is_valid_section(s, query)
+        section_departure = get_valid_datetime(s['departure_date_time'])
+        assert (section_departure - last_arrival).seconds <= 1  # there cannot be more than one second between the 2
+
+        last_arrival = get_valid_datetime(s['arrival_date_time'])
+
+    assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
+
+
+def is_valid_section(section, query):
+    arrival = get_valid_datetime(section['arrival_date_time'])
+    departure = get_valid_datetime(section['departure_date_time'])
+
+    assert (arrival - departure).seconds == section['duration']
+
+    assert section['type']  # type cannot be empty
+
+    #for street network section, we must have a valid path
+    if section['type'] == 'street_network':
+        assert section['mode']  # mode cannot be empty for street network
+        total_duration = 0
+        for p in section['path']:
+            assert get_valid_int(p['length']) >= 0
+            assert -180 <= get_valid_int(p['direction']) <= 180  # direction is an angle
+            #No constraint on name, it can be empty
+            dur = get_valid_int(p['duration'])
+            assert dur >= 0
+            total_duration += dur
+
+        assert total_duration == section['duration']
+
+    #TODO check geojson
+    #TODO check stop_date_times
+    #TODO check from/to
 
 
 def is_valid_ticket(ticket, tester):
@@ -359,12 +475,45 @@ def is_valid_ticket(ticket, tester):
         #for found ticket, we must have a non empty currency
         get_not_null(cost, 'currency')
 
-    assert is_valid_float(get_not_null(cost, 'value'))
+    get_valid_float(get_not_null(cost, 'value'))
 
     check_links(ticket, tester)
 
 
-#default journey query used in varius test
+def is_valid_stop_area(stop_area, depth_check=1):
+    """
+    check the structure of a stop area
+    """
+    get_not_null(stop_area, "name")
+    is_valid_lat(stop_area["coord"]["lat"])
+    is_valid_lon(stop_area["coord"]["lon"])
+
+
+def is_valid_stop_point(stop_point, depth_check=1):
+    """
+    check the structure of a stop point
+    """
+    get_not_null(stop_point, "name")
+    is_valid_lat(stop_point["coord"]["lat"])
+    is_valid_lon(stop_point["coord"]["lon"])
+
+    if depth_check > 1:
+        is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
+
+
+def is_valid_route(route, depth_check=1):
+    get_not_null(route, "name")
+    is_valid_bool(get_not_null(route, "is_frequence"))
+
+    if depth_check > 1:
+        is_valid_line(get_not_null(route, "line"), depth_check-1)
+
+
+def is_valid_line(route, depth_check=1):
+    pass  # TODO!
+
+
+#default journey query used in various test
 journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
     .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
             to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset

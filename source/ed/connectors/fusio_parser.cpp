@@ -39,7 +39,7 @@ void AgencyFusioHandler::init(Data& data) {
     agency_url_c = csv.get_pos_col("agency_url");
 }
 
-void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
 
     if(! is_valid(id_c, row)){
         LOG4CPLUS_WARN(logger, "AgencyFusioHandler : Invalid agency id " << row[id_c]);
@@ -64,7 +64,32 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 
     data.networks.push_back(network);
-    gtfs_data.network_map[network->uri] = network;
+        gtfs_data.network_map[network->uri] = network;
+
+    std::string timezone_name = row[time_zone_c];
+    if (! is_first_line) {
+        //we created a default agency, with a default time zone, but this will be overidden if we read at least one agency
+        if (gtfs_data.tz.default_timezone.first != timezone_name) {
+            LOG4CPLUS_WARN(logger, "Error while reading "<< csv.filename <<
+                            " all the time zone are not equals, only the first one will be considered as the default timezone");
+        }
+        return;
+    }
+
+    if (timezone_name.empty()) {
+        throw navitia::exception("Error while reading " + csv.filename +
+                                 + " timezone is empty for agency " + network->uri);
+    }
+
+    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(timezone_name);
+    if (! tz) {
+        throw navitia::exception("Error while reading " + csv.filename +
+                                 + " timezone " + timezone_name + " is not valid for agency " + network->uri);
+    }
+    gtfs_data.tz.default_timezone = {timezone_name, tz};
+    LOG4CPLUS_INFO(logger, "default agency tz " << gtfs_data.tz.default_timezone.first
+                   << " -> " << gtfs_data.tz.default_timezone.second->std_zone_name());
+
 }
 
 void StopsFusioHandler::init(Data& data) {
@@ -214,35 +239,34 @@ void StopTimeFusioHandler::init(Data& data) {
             date_time_estimated_c = csv.get_pos_col("date_time_estimated");
 }
 
-ed::types::StopTime* StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    auto stop_time = StopTimeGtfsHandler::handle_line(data, row, is_first_line);
-
-    if (! stop_time) {
-        return nullptr;
+void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+    auto stop_times = StopTimeGtfsHandler::handle_line(data, row, is_first_line);
+    //gtfs can return many stoptimes for one line because of DST periods
+    if (stop_times.empty()) {
+        return;
     }
-    if (is_valid(date_time_estimated_c, row))
-        stop_time->date_time_estimated = (row[date_time_estimated_c] == "1");
-    else
-        stop_time->date_time_estimated = false;
+    for (auto stop_time: stop_times) {
+        if (is_valid(date_time_estimated_c, row))
+            stop_time->date_time_estimated = (row[date_time_estimated_c] == "1");
+        else
+            stop_time->date_time_estimated = false;
 
-    if ( is_valid(desc_c, row) ){
-        auto it_comment = gtfs_data.comment_map.find(row[desc_c]);
-        if(it_comment != gtfs_data.comment_map.end()){
-            stop_time->comment = it_comment->second;
+        if ( is_valid(desc_c, row) ){
+            auto it_comment = gtfs_data.comment_map.find(row[desc_c]);
+            if(it_comment != gtfs_data.comment_map.end()){
+                stop_time->comment = it_comment->second;
+            }
         }
-    }
 
-    if(is_valid(itl_c, row)){
-        uint16_t local_traffic_zone =  boost::lexical_cast<uint16_t>(row[itl_c]);
-        if (local_traffic_zone > 0)
-            stop_time->local_traffic_zone = local_traffic_zone;
+        if (is_valid(itl_c, row)) {
+            uint16_t local_traffic_zone =  boost::lexical_cast<uint16_t>(row[itl_c]);
+            if (local_traffic_zone > 0) {
+                stop_time->local_traffic_zone = local_traffic_zone;
+            }
+        }
         else
             stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
     }
-    else
-        stop_time->local_traffic_zone = std::numeric_limits<uint16_t>::max();
-    return stop_time;
-
 }
 
 void TripsFusioHandler::init(Data& d) {
@@ -262,124 +286,166 @@ void TripsFusioHandler::init(Data& d) {
     ext_code_c = csv.get_pos_col("external_code");
 }
 
-ed::types::VehicleJourney* TripsFusioHandler::get_vj(Data& data, const csv_row& row, bool){
+std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& data, const csv_row& row, bool){
     auto it = gtfs_data.route_map.find(row[route_id_c]);
     if (it == gtfs_data.route_map.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the route " + row[route_id_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
-        return nullptr;
+        return {};
     }
-
     ed::types::Route* route = it->second;
 
-    auto vp_it = gtfs_data.vp_map.find(row[service_c]);
-    if(vp_it == gtfs_data.vp_map.end()) {
+    auto vp_it = gtfs_data.tz.vp_by_name.lower_bound(row[service_c]);
+    if(vp_it == gtfs_data.tz.vp_by_name.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the service " + row[service_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
-        return nullptr;
+        return {};
     }
-    ed::types::ValidityPattern* vp_xx = vp_it->second;
 
-    auto vj_it = gtfs_data.vj_map.find(row[trip_c]);
-    if(vj_it != gtfs_data.vj_map.end()) {
+    //we look in the meta vj table to see if we already have one such vj
+    if(data.meta_vj_map.find(row[trip_c]) != data.meta_vj_map.end()) {
+        LOG4CPLUS_DEBUG(logger, "a vj with trip id = " << row[trip_c] << " already read, we skip the other one");
         ignored_vj++;
-        return nullptr;
+        return {};
     }
-    ed::types::VehicleJourney* vj = new ed::types::VehicleJourney();
-    vj->uri = row[trip_c];
-    if(is_valid(ext_code_c, row)){
-        vj->external_code = row[ext_code_c];
+    std::vector<ed::types::VehicleJourney*> res;
+
+    types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
+
+    const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
+
+    auto second_elt = vp_it;
+    bool has_been_split = (++second_elt != vp_end_it); //check if the trip has been split over dst
+
+    size_t cpt_vj(1);
+    //the validity pattern may have been split because of DST, so we need to create one vj for each
+    for (; vp_it != vp_end_it; ++vp_it, cpt_vj++) {
+
+        ed::types::ValidityPattern* vp_xx = vp_it->second;
+
+        ed::types::VehicleJourney* vj = new ed::types::VehicleJourney();
+
+        const std::string original_uri = row[trip_c];
+        std::string vj_uri = original_uri;
+        if (has_been_split) {
+            //we change the name of the vj (all but the first one) since we had to split the original GTFS vj because of dst
+            vj_uri = generate_unique_vj_uri(gtfs_data, original_uri, cpt_vj);
+        }
+        vj->uri = vj_uri;
+
+        if(is_valid(ext_code_c, row)){
+            vj->external_code = row[ext_code_c];
+        }
+        if(is_valid(headsign_c, row))
+            vj->name = row[headsign_c];
+        else
+            vj->name = vj->uri;
+
+        vj->validity_pattern = vp_xx;
+        vj->adapted_validity_pattern = vp_xx;
+        vj->journey_pattern = nullptr;
+        vj->tmp_route = route;
+        vj->tmp_line = vj->tmp_route->line;
+        if(is_valid(block_id_c, row))
+            vj->block_id = row[block_id_c];
+        else
+            vj->block_id = "";
+
+        gtfs_data.tz.vj_by_name.insert({original_uri, vj});
+
+        data.vehicle_journeys.push_back(vj);
+        res.push_back(vj);
+        meta_vj.theoric_vj.push_back(vj);
+        vj->meta_vj_name = row[trip_c];
+
+        // we store the split vj utc shift
+        auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];
+        vj->utc_to_local_offset = utc_offset;
     }
-    if(is_valid(headsign_c, row))
-        vj->name = row[headsign_c];
-    else
-        vj->name = vj->uri;
 
-    vj->validity_pattern = vp_xx;
-    vj->adapted_validity_pattern = vp_xx;
-    vj->journey_pattern = 0;
-    vj->tmp_route = route;
-    vj->tmp_line = vj->tmp_route->line;
-    if(is_valid(block_id_c, row))
-        vj->block_id = row[block_id_c];
-    else
-        vj->block_id = "";
-
-    gtfs_data.vj_map[vj->uri] = vj;
-
-    data.vehicle_journeys.push_back(vj);
-    return vj;
+    return res;
 }
 
-ed::types::VehicleJourney* TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    ed::types::VehicleJourney* vj = TripsFusioHandler::get_vj(data, row, is_first_line);
+void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+    auto split_vj = TripsFusioHandler::get_split_vj(data, row, is_first_line);
 
-    if (! vj)
-        return nullptr;
+    if (split_vj.empty()) {
+        return;
+    }
 
-    if (is_valid(ext_code_c, row))
-        vj->external_code = row[ext_code_c];
+    for (auto vj: split_vj) {
 
-    //if a physical_mode is given we override the value
-    vj->physical_mode = nullptr;
-    if (is_valid(physical_mode_c, row)){
-        auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
-        if (itm == gtfs_data.physical_mode_map.end()) {
-            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
-                           << " referenced by trip " << row[trip_c]);
-        }else{
+        if (is_valid(ext_code_c, row)) {
+            vj->external_code = row[ext_code_c];
+        }
+
+        //if a physical_mode is given we override the value
+        vj->physical_mode = nullptr;
+        if (is_valid(physical_mode_c, row)){
+            auto itm = gtfs_data.physical_mode_map.find(row[physical_mode_c]);
+            if (itm == gtfs_data.physical_mode_map.end()) {
+                LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the physical mode " << row[physical_mode_c]
+                               << " referenced by trip " << row[trip_c]);
+            } else {
+                vj->physical_mode = itm->second;
+            }
+        }
+
+        if (vj->physical_mode == nullptr) {
+            auto itm = gtfs_data.physical_mode_map.find("default_physical_mode");
             vj->physical_mode = itm->second;
         }
-    }
 
-    if(vj->physical_mode == nullptr){
-        auto itm = gtfs_data.physical_mode_map.find("default_physical_mode");
-        vj->physical_mode = itm->second;
-    }
-
-    if (is_valid(odt_condition_id_c, row)){
-        auto it_odt_condition = gtfs_data.odt_conditions_map.find(row[odt_condition_id_c]);
-        if(it_odt_condition != gtfs_data.odt_conditions_map.end()){
-            vj->odt_message = it_odt_condition->second;
+        if (is_valid(odt_condition_id_c, row)){
+            auto it_odt_condition = gtfs_data.odt_conditions_map.find(row[odt_condition_id_c]);
+            if(it_odt_condition != gtfs_data.odt_conditions_map.end()){
+                vj->odt_message = it_odt_condition->second;
+            }
         }
-    }
 
-    if (is_valid(trip_propertie_id_c, row)) {
-        auto it_property = gtfs_data.hasVehicleProperties_map.find(row[trip_propertie_id_c]);
-        if(it_property != gtfs_data.hasVehicleProperties_map.end()){
-            vj->set_vehicles(it_property->second.vehicles());
+        if (is_valid(trip_propertie_id_c, row)) {
+            auto it_property = gtfs_data.hasVehicleProperties_map.find(row[trip_propertie_id_c]);
+            if(it_property != gtfs_data.hasVehicleProperties_map.end()){
+                vj->set_vehicles(it_property->second.vehicles());
+            }
         }
-    }
 
-    if (is_valid(comment_id_c, row)) {
-        auto it_comment = gtfs_data.comment_map.find(row[comment_id_c]);
-        if(it_comment != gtfs_data.comment_map.end()){
-            vj->comment = it_comment->second;
+        if (is_valid(comment_id_c, row)) {
+            auto it_comment = gtfs_data.comment_map.find(row[comment_id_c]);
+            if(it_comment != gtfs_data.comment_map.end()){
+                vj->comment = it_comment->second;
+            }
         }
-    }
 
-    if(is_valid(odt_type_c, row)){
-        vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
-    }
+        if(is_valid(odt_type_c, row)){
+            vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
+        }
 
-    vj->company = nullptr;
-    if(is_valid(company_id_c, row)){
-        auto it_company = gtfs_data.company_map.find(row[company_id_c]);
-        if(it_company == gtfs_data.company_map.end()){
-            LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the company " << row[company_id_c]
-                           << " referenced by trip " << row[trip_c]);
-        }else{
+        vj->company = nullptr;
+        if (is_valid(company_id_c, row)) {
+            auto it_company = gtfs_data.company_map.find(row[company_id_c]);
+            if(it_company == gtfs_data.company_map.end()){
+                LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the company " << row[company_id_c]
+                               << " referenced by trip " << row[trip_c]);
+            }else{
+                vj->company = it_company->second;
+            }
+        }
+
+        if (vj->company == nullptr) {
+            auto it_company = gtfs_data.company_map.find("default_company");
             vj->company = it_company->second;
         }
     }
+}
 
-    if(vj->company == nullptr){
-        auto it_company = gtfs_data.company_map.find("default_company");
-        vj->company = it_company->second;
+
+void TripsFusioHandler::finish(Data&) {
+    if (ignored_vj) {
+        LOG4CPLUS_WARN(logger, "TripsFusioHandler:" << ignored_vj << " vehicle journeys ignored");
     }
-    return vj;
 }
 
 void ContributorFusioHandler::init(Data&) {
@@ -447,23 +513,23 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     line->network = nullptr;
     if (is_valid(network_c, row)) {
         auto itm = gtfs_data.network_map.find(row[network_c]);
-        if (itm == gtfs_data.network_map.end()) {
+        if(itm == gtfs_data.network_map.end()){
             line->network = nullptr;
             LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the network " << row[network_c]
                            << " referenced by line " << row[id_c]);
-        } else {
+        }else{
             line->network = itm->second;
         }
     }
 
-    if (line->network == nullptr) {
-        auto itm = gtfs_data.network_map.find("default_company");
+    if(line->network == nullptr){
+        auto itm = gtfs_data.network_map.find("default_network");
         line->network = itm->second;
     }
 
     if (is_valid(comment_c, row)) {
         auto itm = gtfs_data.comment_map.find(row[comment_c]);
-        if (itm != gtfs_data.comment_map.end()) {
+        if(itm != gtfs_data.comment_map.end()){
             line->comment = itm->second;
         }
     }
@@ -912,9 +978,19 @@ void FusioParser::fill_default_physical_mode(Data & data){
     gtfs_data.physical_mode_map[mode->uri] = mode;
 }
 
+
+void FusioParser::fill_default_timezone(Data & data){
+    //with the default agency comes the default timezone
+    const std::string default_tz = "Europe/Paris";
+    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
+    BOOST_ASSERT(tz);
+    gtfs_data.tz.default_timezone = {default_tz, tz};
+}
+
 void FusioParser::parse_files(Data& data) {
 
     fill_default_company(data);
+    fill_default_timezone(data);
     fill_default_commercial_mode(data);
     fill_default_physical_mode(data);
     parse<AgencyFusioHandler>(data, "agency.txt", true);

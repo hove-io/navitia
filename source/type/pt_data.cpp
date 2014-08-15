@@ -190,6 +190,9 @@ PT_Data::~PT_Data() {
     for(StopTime* st : stop_times) {
         delete st;
     }
+    for (auto metavj: meta_vj) {
+        delete metavj.second;
+    }
     for (auto cal: associated_calendars) {
         delete cal;
     }

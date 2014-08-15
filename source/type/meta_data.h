@@ -42,14 +42,17 @@ namespace navitia { namespace type {
 struct MetaData{
 
     boost::gregorian::date_period production_date;
-    boost::posix_time::ptime publication_date;
 
+    boost::posix_time::ptime publication_date;
 
     std::string navimake_version;
 
     std::vector<std::string> data_sources;
 
     std::string shape;
+
+    /// default dataset timezone
+    std::string timezone;
 
     MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()),
     navimake_version(KRAKEN_VERSION) {}
@@ -59,7 +62,7 @@ struct MetaData{
       * Elle est appelée par boost et pas directement
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & production_date & publication_date & navimake_version & data_sources & shape;
+        ar & production_date & publication_date & navimake_version & data_sources & shape & timezone;
     }
 
     friend class boost::serialization::access;

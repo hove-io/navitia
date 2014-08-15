@@ -49,6 +49,8 @@ class Instance(object):
         self.lock = Lock()
         self.context = context
         self.name = name
+        self.timezone = None  # timezone will be fetched from the kraken
+
 
     @contextmanager
     def socket(self, context):
