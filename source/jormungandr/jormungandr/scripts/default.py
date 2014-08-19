@@ -679,6 +679,9 @@ class Script(object):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
     def isochrone(self, request, instance):
+        #hotfix: isochrone make kraken crash so we forbid this api
+        from flask import abort
+        abort(501)
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
 
     def __on_ptref(self, resource_name, requested_type, request, instance):
