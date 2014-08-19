@@ -82,7 +82,7 @@ DateTime to_datetime(boost::posix_time::ptime ptime, const type::Data &d) {
     return DateTimeUtils::set(day, time);
 }
 
-boost::posix_time::ptime from_posix_timestamp(uint32_t val) {
+boost::posix_time::ptime from_posix_timestamp(uint64_t val) {
     return posix_epoch + navitia::seconds(val).to_posix();
 }
 
