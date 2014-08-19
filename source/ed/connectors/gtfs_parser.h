@@ -40,6 +40,7 @@ www.navitia.io
 #include "utils/functions.h"
 #include <boost/date_time/time_zone_base.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
+#include "tz_db_wrapper.h"
 
 /**
   * Read General Transit Feed Specifications Files
@@ -54,9 +55,7 @@ namespace ed { namespace connectors {
  * just used to separate those
  */
 struct TzHandler {
-    TzHandler() {
-        tz_db.load_from_file(std::string(FIXTURES_DIR) + "date_time_zonespec.csv"); //TODO real file handling
-    }
+    TzHandler() : tz_db(ed::utils::fill_tz_db()) {}
 
     boost::local_time::tz_database tz_db;
     //the GTFS spec defines one tz by agency but put a constraint that all those tz must be the same

@@ -13,6 +13,7 @@ SET(SOURCE_LIB
     data_cleaner.cpp
     poi_parser.cpp
     synonym_parser.cpp
+    tz_db_wrapper.cpp
 )
 
 add_library(connectors ${SOURCE_LIB})
