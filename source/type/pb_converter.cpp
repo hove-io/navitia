@@ -747,6 +747,7 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
                 pb_ticket = enhanced_response.response.add_tickets();
                 pb_ticket->set_name(ticket.key);
                 pb_ticket->set_id("unknown_ticket");
+                pb_ticket->set_comment("unknown ticket");
                 enhanced_response.unkown_ticket = pb_ticket;
                 pb_fare->add_ticket_id(pb_ticket->id());
             }
@@ -758,6 +759,7 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
             pb_ticket = enhanced_response.response.add_tickets();
 
             pb_ticket->set_name(ticket.key);
+            pb_ticket->set_comment(ticket.comment);
             pb_ticket->set_id("ticket_" + boost::lexical_cast<std::string>(++cpt_ticket));
             pb_ticket->mutable_cost()->set_currency(*currency);
             pb_ticket->mutable_cost()->set_value(ticket.value.value);

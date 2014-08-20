@@ -196,6 +196,8 @@ class section_place(PbField):
             return None
         else:
             return super(PbField, self).output(key, obj)
+
+
 section = {
     "type": section_type(),
     "id": fields.String(),
@@ -248,6 +250,7 @@ journey = {
 ticket = {
     "id": fields.String(),
     "name": fields.String(),
+    "comment": fields.String(),
     "found": fields.Boolean(),
     "cost": NonNullNested(cost),
     "links": TicketLinks(attribute="section_id")
@@ -633,7 +636,6 @@ class Journeys(ResourceUri):
             api = 'journeys'
         else:
             api = 'isochrone'
-
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
         return response
