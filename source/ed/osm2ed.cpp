@@ -140,12 +140,12 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
 void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, const std::vector<uint64_t> & nodes_refs) {
     const auto properties = parse_way_tags(tags);
     const auto name_it = tags.find("name");
-    const bool is_street= properties.any();
+    const bool is_street = properties.any();
     auto it_way = cache.ways.find(OSMWay(osm_id));
     const bool is_used_by_relation = it_way != cache.ways.end(),
                is_hn = tags.find("addr:housenumber") != tags.end(),
                is_poi = tags.find("amenity") != tags.end() || tags.find("leisure") != tags.end();
-    
+
     if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
         return;
     }
@@ -284,7 +284,7 @@ void OSMCache::insert_ways(){
 /*
  * Insert edges of the streetnetwork graph into the database.
  * For that we read ways, if a node of a way is used several times it's a node
- * of the streetnetwork graph, so there's a new edge between the last node and 
+ * of the streetnetwork graph, so there's a new edge between the last node and
  * this node.
  */
 void OSMCache::insert_edges() {
@@ -299,7 +299,7 @@ void OSMCache::insert_edges() {
     for (const auto& way : ways) {
         std::set<OSMNode>::iterator prev_node = nodes.end();
         const auto ref_way_id = way.way_ref == nullptr ? way.osm_id : way.way_ref->osm_id;
-        for (const auto& node : way.nodes) { 
+        for (const auto& node : way.nodes) {
             if (!node->is_defined()) {
                 continue;
             }
@@ -307,7 +307,7 @@ void OSMCache::insert_edges() {
                 // If a node is used more than once, it is an intersection,
                 // hence it's a node of the street network graph
                 geog << node->coord_to_string() << ")";
-                lotus.insert({std::to_string(prev_node->osm_id), 
+                lotus.insert({std::to_string(prev_node->osm_id),
                         std::to_string(node->osm_id), std::to_string(ref_way_id),
                         geog.str(), std::to_string(way.properties[OSMWay::FOOT_FWD]),
                         std::to_string(way.properties[OSMWay::CYCLE_FWD]),
@@ -321,6 +321,7 @@ void OSMCache::insert_edges() {
                         std::to_string(way.properties[OSMWay::CYCLE_BWD]),
                         std::to_string(way.properties[OSMWay::CAR_BWD])});
                 prev_node = nodes.end();
+                n_inserted = n_inserted + 2;
             }
             if (prev_node == nodes.end()) {
                 geog.str("");
@@ -329,7 +330,6 @@ void OSMCache::insert_edges() {
             }
             geog << node->coord_to_string() << ", ";
         }
-        ++n_inserted;
         if ((n_inserted % max_n_inserted) == 0) {
             lotus.finish_bulk_insert();
             LOG4CPLUS_INFO(logger, n_inserted << " edges inserted" );
@@ -411,7 +411,7 @@ void OSMCache::build_way_map() {
     }
 }
 
-const OSMWay*  get_way(const OSMWay* w) {
+const OSMWay* get_way(const OSMWay* w) {
     while (w != nullptr && w->way_ref != nullptr && w->way_ref->osm_id != w->osm_id) {
         w = w->way_ref;
     }
@@ -492,10 +492,10 @@ void OSMRelation::build_geometry(OSMCache& cache) const {
             envelope.max_corner().get<0>(), envelope.max_corner().get<1>());
     cache.admin_tree.Insert(r.min, r.max, this);
     cache.max_search_distance = std::max(cache.max_search_distance, bg::distance(centre, envelope.min_corner()));
-    
+
     const auto front = tmp_polygon.outer().front();
     const auto back = tmp_polygon.outer().back();
-    if (front.get<0>()!= back.get<0>() || front.get<1>() != back.get<1>()) {
+    if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
         tmp_polygon.outer().push_back(tmp_polygon.outer().front());
     }
     polygon.push_back(tmp_polygon);
@@ -575,7 +575,7 @@ void PoiHouseNumberVisitor::finish() {
  * Insertion of house numbers
  */
 void PoiHouseNumberVisitor::insert_house_numbers() {
-    persistor.lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side","way_id"});
+    persistor.lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side", "way_id"});
     for(const auto& hn : house_numbers) {
         std::string way_id("NULL");
         if(hn.way != nullptr){
@@ -679,7 +679,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
             const auto distance = way.distance(p);
             if (distance < min_distance) {
                 min_distance = distance;
-                candidate_way = &*way_it;
+                candidate_way = &way;
             }
         }
     }
@@ -777,28 +777,29 @@ int main(int argc, char** argv) {
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE );
+        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE);
         return 0;
     }
 
     if(vm.count("help")) {
-        LOG4CPLUS_INFO(logger, desc );
+        LOG4CPLUS_INFO(logger, desc);
         return 1;
     }
 
     start = pt::microsec_clock::local_time();
     po::notify(vm);
+
     ed::EdPersistor persistor(connection_string);
     persistor.clean_georef();
     persistor.clean_poi();
-    po::notify(vm);
+
     ed::connectors::OSMCache cache(connection_string);
-    ed::connectors::ReadRelationsVisitor v(cache);
-    CanalTP::read_osm_pbf(input, v);
-    ed::connectors::ReadWaysVisitor v2(cache);
-    CanalTP::read_osm_pbf(input, v2);
-    ed::connectors::ReadNodesVisitor v3(cache);
-    CanalTP::read_osm_pbf(input, v3);
+    ed::connectors::ReadRelationsVisitor relations_visitor(cache);
+    CanalTP::read_osm_pbf(input, relations_visitor);
+    ed::connectors::ReadWaysVisitor ways_visitor(cache);
+    CanalTP::read_osm_pbf(input, ways_visitor);
+    ed::connectors::ReadNodesVisitor node_visitor(cache);
+    CanalTP::read_osm_pbf(input, node_visitor);
     cache.build_relations_geometries();
     cache.match_nodes_admin();
     cache.build_way_map();
@@ -807,10 +808,10 @@ int main(int argc, char** argv) {
     cache.insert_ways();
     cache.insert_edges();
     cache.insert_relations();
-    
+
     ed::Georef data;
-    ed::connectors::PoiHouseNumberVisitor v4(persistor, cache, data);
-    CanalTP::read_osm_pbf(input, v4);
-    v4.finish();
+    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data);
+    CanalTP::read_osm_pbf(input, poi_visitor);
+    poi_visitor.finish();
     return 0;
 }

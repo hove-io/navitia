@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -57,9 +57,13 @@ typedef bg::model::linestring<point> ls_type;
 namespace ed { namespace connectors {
 
 struct OSMRelation;
+struct OSMCache;
 
 struct OSMNode {
     uint64_t osm_id = std::numeric_limits<uint64_t>::max();
+    // these attributes are mutable because this object would be use in a set, and
+    // all object in a set are const, since these attributes are not used in the key we can modify them
+
     // We use int32_t to save memory, these are coordinates *  factor
     mutable int32_t ilon = std::numeric_limits<int32_t>::max(),
                     ilat = std::numeric_limits<int32_t>::max();
@@ -72,7 +76,7 @@ struct OSMNode {
     bool operator<(const OSMNode& other) const {
         return this->osm_id < other.osm_id;
     }
-    
+
     // Even if it's const, it modifies the variable used_more_than_once,
     // cause it's mutable, and doesn't affect the operator <
     void set_used_more_than_once() const {
@@ -109,7 +113,6 @@ struct OSMNode {
     std::string to_geographic_point() const;
 };
 
-struct OSMCache;
 
 struct OSMRelation {
     const u_int64_t osm_id;
@@ -118,6 +121,9 @@ struct OSMRelation {
                       postal_code = "",
                       name = "";
     const uint32_t level = std::numeric_limits<uint32_t>::max();
+
+    // these attributes are mutable because this object would be use in a set, and
+    // all object in a set are const, since these attributes are not used in the key we can modify them
     mutable mpolygon_type polygon;
     mutable point centre = point(0.0, 0.0);
 
@@ -147,7 +153,11 @@ struct OSMWay {
     const static uint8_t FOOT_BWD = 5;
 
     const u_int64_t osm_id;
-    /// Propriétés du way : est-ce qu'on peut "circuler" dessus
+
+    // these attributes are mutable because this object would be use in a set, and
+    // all object in a set are const, since these attributes are not used in the key we can modify them
+
+    /// Properties of a way : can we use it
     mutable std::bitset<8> properties;
     mutable std::string name = "";
     mutable std::vector<std::set<OSMNode>::const_iterator> nodes;
@@ -215,7 +225,8 @@ struct OSMHouseNumber {
     const double lon, lat;
     const OSMWay* way = nullptr;
     OSMHouseNumber(const size_t number, const double lon, const double lat,
-            const OSMWay* way) : number(number), lon(lon), lat(lat), way(way) {}
+            const OSMWay* way) : number(number), lon(lon), lat(lat), way(way) {
+    }
 };
 
 struct AssociateStreetRelation {
@@ -231,7 +242,7 @@ struct AssociateStreetRelation {
 
 
     bool operator<(const AssociateStreetRelation& other) const {
-        return this->osm_id  < other.osm_id;
+        return this->osm_id < other.osm_id;
     }
 };
 
@@ -240,6 +251,7 @@ typedef std::set<OSMWay>::const_iterator it_way;
 typedef std::map<const OSMRelation*, std::vector<it_way>> rel_ways;
 typedef std::set<OSMRelation>::const_iterator admin_type;
 typedef std::pair<admin_type, double> admin_distance;
+
 struct OSMCache {
     std::set<OSMRelation> relations;
     std::set<OSMNode> nodes;
@@ -256,7 +268,7 @@ struct OSMCache {
     OSMCache(const std::string& connection_string) : lotus(connection_string) {}
 
     void build_relations_geometries();
-    const OSMRelation *match_coord_admin(const double lon, const double lat);
+    const OSMRelation* match_coord_admin(const double lon, const double lat);
     void match_nodes_admin();
     void insert_nodes();
     void insert_ways();
@@ -295,8 +307,8 @@ struct ReadNodesVisitor {
     ReadNodesVisitor(OSMCache& cache) : cache(cache) {}
 
     void node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tag);
-    void relation_callback(uint64_t , const CanalTP::Tags & , const CanalTP::References & ) {}
-    void way_callback(uint64_t , const CanalTP::Tags &, const std::vector<uint64_t> &) {}
+    void relation_callback(uint64_t , const CanalTP::Tags& , const CanalTP::References& ) {}
+    void way_callback(uint64_t , const CanalTP::Tags& , const std::vector<uint64_t>&) {}
 };
 
 struct Rect{
@@ -333,7 +345,7 @@ struct PoiHouseNumberVisitor {
     PoiHouseNumberVisitor(EdPersistor& persistor, /*const*/ OSMCache& cache,
             Georef& data) :
         persistor(persistor), cache(cache), data(data)  {
-        data.poi_types = 
+        data.poi_types =
          {
             {"college" , new ed::types::PoiType(0,  "école")},
             {"university" , new ed::types::PoiType(1, "université")},
@@ -357,7 +369,7 @@ struct PoiHouseNumberVisitor {
         properties_to_ignore.insert("addr:city");
         properties_to_ignore.insert("addr:postcode");
         properties_to_ignore.insert("addr:country");
-        
+
         persistor.insert_poi_types(data);
     }
 
