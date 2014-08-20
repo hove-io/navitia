@@ -1,3 +1,9 @@
+navitia2 (0.102.0) unstable; urgency=low
+
+  * Fare: fix cg37 fare <https://github.com/CanalTP/navitia/pull/494> 
+
+ -- Antoine Desbordes <antoine.desbordes@canaltp.fr>  Wed, 20 Aug 2014 16:44:13 +0100
+
 navitia2 (0.101.2) unstable; urgency=low
 
   * Kraken: Fix a bug in path building

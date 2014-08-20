@@ -731,13 +731,15 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
 
     boost::optional<std::string> currency;
     for (const fare::Ticket& ticket : fare.tickets) {
-        if (! currency)
-            currency = ticket.currency;
-        if (ticket.currency != *currency) {
-            throw navitia::exception("cannot have different currencies for tickets");
+        if (! ticket.is_default_ticket()) {
+            if (! currency)
+                currency = ticket.currency;
+            if (ticket.currency != *currency) {
+                throw navitia::exception("cannot have different currencies for tickets");
+            } //if we really had to handle different currencies it could be done, but I don't see the point
+            // It may happen when not all tickets were found
+        }
 
-        } //if we really had to handle different currencies it could be done, but I don't see the point
-        // It may happen when not all tickets were found
 
         pbnavitia::Ticket* pb_ticket = nullptr;
         if (ticket.is_default_ticket()) {
@@ -745,6 +747,7 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
                 pb_ticket = enhanced_response.response.add_tickets();
                 pb_ticket->set_name(ticket.key);
                 pb_ticket->set_id("unknown_ticket");
+                pb_ticket->set_comment("unknown ticket");
                 enhanced_response.unkown_ticket = pb_ticket;
                 pb_fare->add_ticket_id(pb_ticket->id());
             }
@@ -756,6 +759,7 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
             pb_ticket = enhanced_response.response.add_tickets();
 
             pb_ticket->set_name(ticket.key);
+            pb_ticket->set_comment(ticket.comment);
             pb_ticket->set_id("ticket_" + boost::lexical_cast<std::string>(++cpt_ticket));
             pb_ticket->mutable_cost()->set_currency(*currency);
             pb_ticket->mutable_cost()->set_value(ticket.value.value);
