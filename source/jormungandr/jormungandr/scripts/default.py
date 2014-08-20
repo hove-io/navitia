@@ -605,7 +605,6 @@ class Script(object):
     def change_ids(new_journeys, journey_count):
         #we need to change the fare id, the section id and the fare ref in the journey
         for ticket in new_journeys.tickets:
-            journey_count += 1
             ticket.id = ticket.id + '_' + str(journey_count)
             for i in range(len(ticket.section_id)):
                 ticket.section_id[i] = ticket.section_id[i] + '_' + str(journey_count)
