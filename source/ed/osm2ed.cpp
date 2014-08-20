@@ -695,7 +695,10 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
     const OSMWay *candidate_way = nullptr;
     auto asso_it = cache.associated_streets.find(AssociateStreetRelation(osm_id)) ;
     if (asso_it != cache.associated_streets.end()) {
-        candidate_way = &*cache.ways.find(OSMWay(asso_it->way_id));
+        auto it_cache = cache.ways.find(OSMWay(asso_it->way_id));
+        if(it_cache != cache.ways.end()){
+            candidate_way = &*it_cache;
+        }
     } else {
         candidate_way = find_way(tags, lon, lat);
     }
