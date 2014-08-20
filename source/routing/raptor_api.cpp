@@ -300,7 +300,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             fill_fare_section(enhanced_response, pb_journey, fare);
         } catch(const navitia::exception& e) {
             pb_journey->clear_fare();
-            LOG4CPLUS_TRACE(logger, "Unable to compute fare, error : " << e.what());
+            LOG4CPLUS_WARN(logger, "Unable to compute fare, error : " << e.what());
         }
     }
 
