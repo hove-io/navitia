@@ -1,3 +1,9 @@
+navitia2 (0.101.3) unstable; urgency=medium
+
+  * fix segfault on fusio2ed
+
+ -- Alexandre JACQUIN <alexandre.jacquin@canaltp.fr>  Thu, 21 Aug 2014 09:23:12 +0200
+
 navitia2 (0.101.2) unstable; urgency=low
 
   * Kraken: Fix a bug in path building
