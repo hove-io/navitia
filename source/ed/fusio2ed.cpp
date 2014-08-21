@@ -119,16 +119,16 @@ int main(int argc, char * argv[])
 
     data.normalize_uri();
 
-    if(vm.count("fare")){
+    if(vm.count("fare") || boost::filesystem::exists(fare_dir + "/fares.csv")) {
         start = pt::microsec_clock::local_time();
-        LOG4CPLUS_INFO(logger, "Alimentation de fare");
+        LOG4CPLUS_INFO(logger, "loading fare");
+
         ed::connectors::fare_parser fareParser(data, fare_dir + "/fares.csv",
                                            fare_dir + "/prices.csv",
                                            fare_dir + "/od_fares.csv");
         fareParser.load();
         fare = (pt::microsec_clock::local_time() - start).total_milliseconds();
     }
-
 
     LOG4CPLUS_INFO(logger, "line: " << data.lines.size());
     LOG4CPLUS_INFO(logger, "route: " << data.routes.size());

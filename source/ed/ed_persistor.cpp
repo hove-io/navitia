@@ -1181,7 +1181,6 @@ void EdPersistor::insert_origin_destination(const ed::Data& data) {
                 destination_ticket.first.value, //destination
                 ed::connectors::to_string(destination_ticket.first.type), //destination mode
             };
-            std::cout << "origin_destination : " << boost::algorithm::join(values, ",") << std::endl;
             this->lotus.insert(values);
         }
     }
@@ -1200,7 +1199,6 @@ void EdPersistor::insert_origin_destination(const ed::Data& data) {
                     std::to_string(cpt),
                     ticket
                 };
-                LOG4CPLUS_INFO(logger, "origin_destination : " << boost::algorithm::join(values, ","));
                 this->lotus.insert(values);
             }
             cpt++;

@@ -884,9 +884,7 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
         //we need to convert the stop times in UTC
         int utc_offset = gtfs_data.tz.offset_by_vp[vj_it->second->validity_pattern];
 
-        int begin = vj_it->second->stop_time_list.front()->arrival_time;
-		
-		vj_it->second->start_time = to_utc(row[start_time_c], utc_offset);
+        vj_it->second->start_time = to_utc(row[start_time_c], utc_offset);
         vj_it->second->end_time = to_utc(row[end_time_c], utc_offset);
         vj_it->second->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
         for(auto st: vj_it->second->stop_time_list) {
@@ -913,6 +911,14 @@ void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
     parse_files(data);
 
     normalize_extcodes(data);
+
+    //small check, we need a default timezone
+
+    if (gtfs_data.tz.default_timezone.first.empty()) {
+        std::string error = "no default time zone found while loading the data feed, feed is not correct";
+        LOG4CPLUS_FATAL(logger, error);
+        throw navitia::exception(error);
+    }
 }
 
 void GenericGtfsParser::fill_default_company(Data & data){
