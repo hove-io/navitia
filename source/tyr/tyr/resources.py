@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import abort, current_app
+from flask import abort, current_app, url_for
 import flask_restful
 from flask_restful import fields, marshal_with, marshal, reqparse, types
 import sqlalchemy
@@ -63,6 +63,18 @@ user_fields_full = {'id': fields.Raw, 'login': fields.Raw, \
             {'instance': fields.Nested(instance_fields),
                 'api': fields.Nested(api_fields)}))}
 
+jobs_fields = {'jobs': fields.List(fields.Nested({
+        'id': fields.Raw,
+        'state': fields.Raw,
+        'created_at': FieldDate,
+        'updated_at': FieldDate,
+        'data_sets': fields.List(fields.Nested({
+            'type': fields.Raw,
+            'name': fields.Raw
+        })),
+        'instance': fields.Nested(instance_fields)
+}))}
+
 
 class Api(flask_restful.Resource):
     def __init__(self):
@@ -71,6 +83,18 @@ class Api(flask_restful.Resource):
     def get(self):
         return marshal(models.Api.query.all(), api_fields)
 
+
+class Index(flask_restful.Resource):
+    def get(self):
+        return {'jobs': {'href': url_for('jobs', _external=True)}}
+
+class Job(flask_restful.Resource):
+    @marshal_with(jobs_fields)
+    def get(self, instance_name=None):
+        query = models.Job.query
+        if instance_name:
+            query = query.filter(models.Instance.name == instance_name)
+        return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
 
 class Instance(flask_restful.Resource):
     def __init__(self):
