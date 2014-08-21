@@ -457,7 +457,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     }
 
     if (line->network == nullptr) {
-        auto itm = gtfs_data.network_map.find("default_company");
+        auto itm = gtfs_data.network_map.find("default_network");
         line->network = itm->second;
     }
 
