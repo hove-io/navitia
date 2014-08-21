@@ -43,6 +43,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from errors import ManageError
 from Coord import Coord
+from jormungandr.timezone import set_request_timezone
 from navitiacommon.models import PtObject
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
@@ -110,12 +111,16 @@ class Uri(ResourceUri):
         else:
             authentification.authenticate(region, 'ALL', abort=True)
         self.region = i_manager.get_region(region, lon, lat)
+
+        #we store the region in the 'g' object, which is local to a request
+        set_request_timezone(self.region)
+
         if not self.region:
             return {"error": "No region"}, 404
-        if(collection and id):
+        if collection and id:
             args["filter"] = collections_to_resource_type[collection] + ".uri="
             args["filter"] += id
-        elif(uri):
+        elif uri:
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")

@@ -50,7 +50,7 @@ next_passages(const std::string &request,
               const type::AccessibiliteParams & accessibilite_params,
               type::Data & data, bool disruption_active, Visitor vis, uint32_t count,
               uint32_t start_page, const bool show_codes) {
-    RequestHandle handler(vis.api_str, request, forbidden_uris, str_dt, duration,data);
+    RequestHandle handler(vis.api_str, request, forbidden_uris, str_dt, duration, data, {});
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
@@ -74,8 +74,8 @@ next_passages(const std::string &request,
             passage = handler.pb_response.add_next_arrivals();
         else
             passage = handler.pb_response.add_next_departures();
-        auto departure_date = navitia::iso_string(dt_stop_time.first, data);
-        auto arrival_date = navitia::iso_string(dt_stop_time.first, data);
+        auto departure_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
+        auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
         const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;

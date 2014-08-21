@@ -51,7 +51,7 @@ struct VJ {
     navitia::type::VehicleJourney * vj;
 
     /// Construit un nouveau vehicle journey
-    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true, const std::string& uri="");
+    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true, const std::string& uri="", std::string meta_vj_name = "");
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
@@ -95,12 +95,13 @@ struct builder{
     /// Il faut préciser là date de début des différents validity patterns
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
         data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
+        data->meta->timezone = "UTC"; //default timezone is UTC
 		data->loaded = true;
     }
 
     /// Crée un vehicle journey
-    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="");
-    VJ vj(const std::string &network_name, const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="");
+    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="", std::string meta_vj="");
+    VJ vj(const std::string &network_name, const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="", std::string meta_vj="");
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0, const bool is_adapted = true);

@@ -55,8 +55,30 @@ VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
     return *this;
 }
 
-VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri) : b(b){
+nt::MetaVehicleJourney* get_or_create_metavj(builder& b, const std::string name) {
+    auto it = b.data->pt_data->meta_vj.find(name);
+
+    if (it == b.data->pt_data->meta_vj.end()) {
+        auto mvj = new nt::MetaVehicleJourney;
+        b.data->pt_data->meta_vj.insert({name, mvj});
+        return mvj;
+    }
+    return it->second;
+}
+
+VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri, std::string meta_vj_name) : b(b){
     vj = new navitia::type::VehicleJourney();
+
+    //if we have a meta_vj, we add it in that
+    nt::MetaVehicleJourney* mvj;
+    if (! meta_vj_name.empty()) {
+        mvj = get_or_create_metavj(b, meta_vj_name);
+    } else {
+        mvj = get_or_create_metavj(b, uri);
+    }
+    mvj->theoric_vj.push_back(vj);
+    vj->meta_vj = mvj;
+
     vj->idx = b.data->pt_data->vehicle_journeys.size();
     b.data->pt_data->vehicle_journeys.push_back(vj);
 
@@ -71,6 +93,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         b.data->pt_data->lines.push_back(line);
         navitia::type::Route* route = new navitia::type::Route();
         route->idx = b.data->pt_data->routes.size();
+        route->name = line->name;
         route->uri = line_name + ":" + std::to_string(b.data->pt_data->routes.size());
         b.data->pt_data->routes.push_back(route);
         line->route_list.push_back(route);
@@ -250,14 +273,15 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
 }
 
 
-VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
-    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri);
+VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id,
+               const bool wheelchair_boarding, const std::string& uri, std::string meta_vj){
+    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj);
 }
 
 VJ builder::vj(const std::string &network_name, const std::string &line_name,
                const std::string &validity_pattern, const std::string & block_id,
-               const bool wheelchair_boarding, const std::string& uri){
-    auto res = VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
+               const bool wheelchair_boarding, const std::string& uri, std::string meta_vj){
+    auto res = VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj);
     auto vj = this->data->pt_data->vehicle_journeys.back();
     auto it = this->nts.find(network_name);
     if(it == this->nts.end()){

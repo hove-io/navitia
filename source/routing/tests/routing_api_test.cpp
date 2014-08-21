@@ -34,6 +34,7 @@ www.navitia.io
 #include "routing/raptor_api.h"
 #include "ed/build_helper.h"
 #include "routing_api_test_data.h"
+#include "tests/utils_test.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -41,31 +42,29 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 namespace nr = navitia::routing;
+namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 
 void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
     if (! debug_info)
         return;
-    for (int idx_journey = 0; idx_journey < resp.journeys_size(); ++ idx_journey) {
-        pbnavitia::Journey journey = resp.journeys(idx_journey);
-        std::cout << test_name << ": " << std::endl;
-        for (int idx_section = 0; idx_section < journey.sections().size(); ++idx_section) {
-            auto& section = journey.sections(idx_section);
-            std::cout << "section " << (int)(section.type()) << std::endl
-                         << " -- coordinates :" << std::endl;
-            for (int i = 0; i < section.street_network().coordinates_size(); ++i)
-                std::cout << "coord: " << section.street_network().coordinates(i).lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
-                          << ", " << section.street_network().coordinates(i).lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
-                          << std::endl;
+    pbnavitia::Journey journey = resp.journeys(0);
+    std::cout << test_name << ": " << std::endl;
+    for (int idx_section = 0; idx_section < journey.sections().size(); ++idx_section) {
+        auto& section = journey.sections(idx_section);
+        std::cout << "section " << (int)(section.type()) << std::endl
+                     << " -- coordinates :" << std::endl;
+        for (int i = 0; i < section.street_network().coordinates_size(); ++i)
+            std::cout << "coord: " << section.street_network().coordinates(i).lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
+                      << ", " << section.street_network().coordinates(i).lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
+                      << std::endl;
 
-            std::cout << "dump item : " << std::endl;
-            for (int i = 0; i < section.street_network().path_items_size(); ++i)
-                std::cout << "- " << section.street_network().path_items(i).name()
-                          << " with " << section.street_network().path_items(i).length()
-                          << "m | " << section.street_network().path_items(i).duration() << "s"
-                          << std::endl;
-        }
-        std::cout << "_______________" << std::endl << std::endl;
+        std::cout << "dump item : " << std::endl;
+        for (int i = 0; i < section.street_network().path_items_size(); ++i)
+            std::cout << "- " << section.street_network().path_items(i).name()
+                      << " with " << section.street_network().path_items(i).length()
+                      << "m | " << section.street_network().path_items(i).duration() << "s"
+                      << std::endl;
     }
 
 
@@ -89,7 +88,8 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     auto st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_area:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), ntest::to_posix_timestamp("20120614T081100"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), ntest::to_posix_timestamp("20120614T082000"));
 }
 
 BOOST_AUTO_TEST_CASE(journey_stay_in) {
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     navitia::type::EntryPoint destination(destination_type, "rs");
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T165300"}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T165800");
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T171900");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     navitia::type::EntryPoint destination(destination_type, "rs");
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T165300"}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -201,8 +201,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht:4");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T165800");
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T171900");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -214,8 +214,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     st2 = section.stop_date_times(2);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "ht:4a");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "rs");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T172600");
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T173300");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T172600"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T173300"));
 }
 
 
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     navitia::type::EntryPoint destination(destination_type, "rs");
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T165300"}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -261,8 +261,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht:4");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T165800");
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T171900");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -274,8 +274,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     auto st4 = section.stop_date_times(2);
     BOOST_CHECK_EQUAL(st3.stop_point().uri(), "ht:4a");
     BOOST_CHECK_EQUAL(st4.stop_point().uri(), "rs");
-    BOOST_CHECK_EQUAL(st3.departure_date_time(), "20120614T172000");
-    BOOST_CHECK_EQUAL(st4.arrival_date_time(), "20120614T173300");
+    BOOST_CHECK_EQUAL(st3.departure_date_time(), navitia::test::to_posix_timestamp("20120614T172000"));
+    BOOST_CHECK_EQUAL(st4.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T173300"));
 }
 
 BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     navitia::type::EntryPoint destination(destination_type, "rs");
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T174000"}, false, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, false);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T174000")}, false, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -320,8 +320,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     auto st2 = section.stop_date_times(3);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "bet");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "ht:4");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T165800");
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T171900");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T165800"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T171900"));
 
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
@@ -333,8 +333,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     auto st4 = section.stop_date_times(2);
     BOOST_CHECK_EQUAL(st3.stop_point().uri(), "ht:4a");
     BOOST_CHECK_EQUAL(st4.stop_point().uri(), "rs");
-    BOOST_CHECK_EQUAL(st3.departure_date_time(), "20120614T172000");
-    BOOST_CHECK_EQUAL(st4.arrival_date_time(), "20120614T173300");
+    BOOST_CHECK_EQUAL(st3.departure_date_time(), navitia::test::to_posix_timestamp("20120614T172000"));
+    BOOST_CHECK_EQUAL(st4.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T173300"));
 }
 
 BOOST_AUTO_TEST_CASE(journey_array){
@@ -360,8 +360,9 @@ BOOST_AUTO_TEST_CASE(journey_array){
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
 
     // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
-    std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
-    pbnavitia::Response resp = nr::make_response(raptor, origin, destination, datetimes, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    std::vector<uint32_t> datetimes({ntest::to_posix_timestamp("20120614T080000"), ntest::to_posix_timestamp("20120614T090000")});
+    pbnavitia::Response resp = nr::make_response(raptor, origin, destination, datetimes, true,
+                                                 navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
@@ -374,8 +375,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     auto st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_area:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T081100"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T082000"));
 
     journey = resp.journeys(1);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
@@ -385,8 +386,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_area:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T091100");
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T092000");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T091100"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T092000"));
 }
 
 
@@ -418,8 +419,8 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
 
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //1 direct path by date and 1 path with bus
     pbnavitia::Journey journey = resp.journeys(1);
-    BOOST_CHECK_EQUAL(journey.departure_date_time(), "20120614T080000");
-    BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20120614T080510");
+    BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20120614T080000"));
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T080510"));
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
@@ -644,7 +645,6 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
 
     auto resp = make_response();
 
-    std::cout << resp.DebugString() << std::endl;
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
     pbnavitia::Journey* journey = nullptr;

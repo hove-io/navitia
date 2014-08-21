@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import logging
 
 from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
@@ -42,7 +43,7 @@ class TestJourneys(AbstractTestFixture):
         #not to use the jormungandr database
         response = self.query_region(journey_basic_query, display=False)
 
-        is_valid_journey_response(response, self.tester)
+        is_valid_journey_response(response, self.tester, journey_basic_query)
 
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""
@@ -64,10 +65,10 @@ class TestJourneys(AbstractTestFixture):
 
     def test_best_filtering(self):
         """Filter to get the best journey, we should have only one journey, the best one"""
+        query = "{query}&type=best".format(query=journey_basic_query)
+        response = self.query_region(query, display=False)
 
-        response = self.query_region("{query}&type=best".format(query=journey_basic_query), display=False)
-
-        is_valid_journey_response(response, self.tester)
+        is_valid_journey_response(response, self.tester, query)
         assert len(response['journeys']) == 1
 
         assert response['journeys'][0]["type"] == "best"
@@ -141,6 +142,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
 
         response = self.query_region(query, display=False)
         assert(len(response['journeys']) == 1)
+        logging.getLogger(__name__).info("arrival date: {}".format(response['journeys'][0]['arrival_date_time']))
         assert(response['journeys'][0]['arrival_date_time'] == "20120614T160000")
         assert(response['journeys'][0]['type'] == "best")
 

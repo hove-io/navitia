@@ -475,14 +475,16 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
     GeographicalCoord coord;
     std::string additional_data;
     std::vector<navitia::georef::Admin*> admin_list;
-    bool wheelchair_boarding;
+    bool wheelchair_boarding = false;
+    //name of the time zone of the stop area
+    //the name must respect the format of the tz db, for example "Europe/Paris"
+    std::string timezone;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & uri & name & coord & stop_point_list & admin_list
-        & _properties & wheelchair_boarding & messages & visible & comment & codes;
+        & _properties & wheelchair_boarding & messages & visible
+                & comment & codes & timezone;
     }
-
-    StopArea(): wheelchair_boarding(false) {}
 
     std::vector<StopPoint*> stop_point_list;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -644,7 +646,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 struct JourneyPattern : public Header, Nameable{
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence;
-    OdtLevel_e odt_level; // Calculated at serialization
+    OdtLevel_e odt_level; // Computed at serialization
     Route* route;
     CommercialMode* commercial_mode;
     PhysicalMode* physical_mode;
@@ -677,42 +679,48 @@ struct AssociatedCalendar {
         ar & calendar & exceptions;
     }
 };
+struct MetaVehicleJourney;
 
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes{
     const static Type_e type = Type_e::VehicleJourney;
-    JourneyPattern* journey_pattern;
-    Company* company;
-    ValidityPattern* validity_pattern;
-    ValidityPattern* adapted_validity_pattern;
-    VehicleJourney* theoric_vehicle_journey;
+    JourneyPattern* journey_pattern = nullptr;
+    Company* company = nullptr;
+    ValidityPattern* validity_pattern = nullptr;
     std::vector<StopTime*> stop_time_list;
+
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
     // They have the same block id
     VehicleJourney* next_vj = nullptr;
     VehicleJourney* prev_vj = nullptr;
+    //associated meta vj
+    const MetaVehicleJourney* meta_vj = nullptr;
     std::string odt_message;
-    ///map of the calendars that nearly match the validity pattern of the vj, key is the calendar name
-    std::map<std::string, AssociatedCalendar*> associated_calendars;
 
-    VehicleJourneyType vehicle_journey_type;
+    VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
     uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
     uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
-    std::vector<VehicleJourney*> adapted_vehicle_journey_list;
-    bool is_adapted;
 
-    VehicleJourney(): journey_pattern(nullptr), company(nullptr),
-        validity_pattern(nullptr), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr),
-        vehicle_journey_type(VehicleJourneyType::regular), is_adapted(false){}
+    // all times are stored in UTC
+    // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
+    // For example for departure board over a period (calendar)
+    // thus we store the shit needed to convert all stop times of the vehicle journey to local
+    int16_t utc_to_local_offset = 0; //in minutes
+
+    bool is_adapted = false; //REMOVE (change to enum ?)
+    ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
+    std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
+    VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages & associated_calendars
-            & codes & next_vj & prev_vj & start_time & end_time & headway_secs;
+            & odt_message & _vehicle_properties & messages
+            & codes & next_vj & prev_vj & start_time & end_time & headway_secs
+            & meta_vj & utc_to_local_offset;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -796,6 +804,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     bool operator<(const StopPoint & other) const { return this < &other; }
 
 };
+
 
 struct JourneyPatternPoint : public Header{
     const static Type_e type = Type_e::JourneyPatternPoint;
@@ -971,6 +980,37 @@ struct Calendar : public Nameable, public Header, public Codes {
     }
 };
 
+/**
+ * A meta vj is a shell around some vehicle journeys
+ *
+ * It has 2 purposes:
+ *
+ *  - to store the adapted and real time vj
+ *
+ *  - sometime we have to split a vj.
+ *    For example we have to split a vj because of dst (day saving light see gtfs parser for that)
+ *    the meta vj can thus make the link between the split vjs
+ *    *NOTE*: An IMPORTANT prerequisite is that ALL theoric vj have the same local time
+ *            (even if the UTC time is different because of DST)
+ *            That prerequisite is very important for calendar association and departure board over period
+ *
+ *
+ */
+struct MetaVehicleJourney {
+    //store the name ?
+    //TODO if needed use a flat_enum_map
+    std::vector<VehicleJourney*> theoric_vj;
+    std::vector<VehicleJourney*> adapted_vj;
+    std::vector<VehicleJourney*> real_time_vj;
+
+    /// map of the calendars that nearly match union of the validity pattern
+    /// of the theoric vj, key is the calendar name
+    std::map<std::string, AssociatedCalendar*> associated_calendars;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & theoric_vj & adapted_vj & real_time_vj & associated_calendars;
+    }
+};
 
 struct static_data {
 private:

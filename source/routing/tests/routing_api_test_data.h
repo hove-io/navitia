@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 #include "routing/raptor_api.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
 
 namespace ng = navitia::georef;
 
@@ -423,7 +424,7 @@ struct routing_api_data {
     ed::builder b = {"20120614"};
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;
-    std::vector<std::string> datetimes = {"20120614T080000"};
+    std::vector<uint32_t> datetimes = {navitia::test::to_posix_timestamp("20120614T080000")};
     std::vector<std::string> forbidden;
 
     double distance_ag;

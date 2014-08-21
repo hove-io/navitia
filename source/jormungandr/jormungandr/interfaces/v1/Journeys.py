@@ -28,7 +28,9 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import calendar
 import logging
+import pytz
 
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with, abort
@@ -49,6 +51,8 @@ from jormungandr.interfaces.parsers import option_value
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
 import datetime
 from functools import wraps
+from fields import DateTime
+from jormungandr.timezone import set_request_timezone
 from make_links import add_id_links, clean_links
 from errors import ManageError
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -60,6 +64,7 @@ from copy import copy
 from datetime import datetime
 from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
+from jormungandr.utils import date_to_timestamp
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -217,8 +222,8 @@ section = {
                         attribute="street_network.path_items"),
     "transfer_type": enum_type(),
     "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
-    "departure_date_time": fields.String(attribute="begin_date_time"),
-    "arrival_date_time": fields.String(attribute="end_date_time"),
+    "departure_date_time": DateTime(attribute="begin_date_time"),
+    "arrival_date_time": DateTime(attribute="end_date_time"),
 }
 
 cost = {
@@ -235,9 +240,9 @@ fare = {
 journey = {
     'duration': fields.Integer(),
     'nb_transfers': fields.Integer(),
-    'departure_date_time': fields.String(),
-    'arrival_date_time': fields.String(),
-    'requested_date_time': fields.String(),
+    'departure_date_time': DateTime(),
+    'arrival_date_time': DateTime(),
+    'requested_date_time': DateTime(),
     'sections': NonNullList(NonNullNested(section)),
     'from': PbField(place, attribute='origin'),
     'to': PbField(place, attribute='destination'),
@@ -255,6 +260,7 @@ ticket = {
     "cost": NonNullNested(cost),
     "links": TicketLinks(attribute="section_id")
 }
+
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
@@ -383,13 +389,12 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_journey['arrival_date_time'] \
                 and asap_journey['departure_date_time']:
-            second = timedelta(minutes=1)
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             s_arrival = asap_journey['arrival_date_time']
             f_arrival = datetime.strptime(s_arrival, f_datetime)
-            datetime_after = f_departure + second
-            datetime_before = f_arrival - second
+            datetime_after = f_departure + timedelta(minutes=1)
+            datetime_before = f_arrival - timedelta(minutes=1)
 
         return (datetime_before, datetime_after)
 
@@ -410,11 +415,11 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_min['departure_date_time'] and asap_max['arrival_date_time']:
             departure = asap_min['departure_date_time']
-            departure_date = datetime.strptime(departure, f_datetime).date()
+            departure_date = datetime.strptime(departure, f_datetime)
             midnight = datetime.strptime('0000', '%H%M').time()
             datetime_first = datetime.combine(departure_date, midnight)
             arrival = asap_max['arrival_date_time']
-            arrival_date = datetime.strptime(arrival, f_datetime).date()
+            arrival_date = datetime.strptime(arrival, f_datetime)
             almost_midnight = datetime.strptime('2359', '%H%M').time()
             datetime_last = datetime.combine(arrival_date, almost_midnight)
 
@@ -631,11 +636,20 @@ class Journeys(ResourceUri):
         if not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
 
+        original_datetime = datetime.strptime(args['datetime'], f_datetime)
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
+        args['datetime'] = date_to_timestamp(new_datetime)
+
         api = None
         if args['destination']:
             api = 'journeys'
         else:
             api = 'isochrone'
+
+        #we store the region in the 'g' object, which is local to a request
+        set_request_timezone(self.region)
+
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
         return response
@@ -652,3 +666,36 @@ class Journeys(ResourceUri):
             del splitted_address[1]
             return ':'.join(splitted_address)
         return id
+
+    def convert_to_utc(self, original_datetime):
+        """
+        convert the original_datetime in the args to UTC
+
+        for that we need to 'guess' the timezone wanted by the user
+
+        For the moment We only use the default instance timezone.
+
+        It won't obviously work for multi timezone instances, we'll have to do
+        something smarter.
+
+        We'll have to consider either the departure or the arrival of the journey
+        (depending on the `clockwise` param)
+        and fetch the tz of this point.
+        we'll have to store the tz for stop area and the coord for admin, poi, ...
+        """
+        instance = i_manager.instances[self.region]
+
+        tz_name = instance.timezone  # TODO store directly the tz?
+
+        if not tz_name:
+            logging.Logger(__name__).warn("unkown timezone for region {}"
+                                          .format(self.region))
+            return original_datetime
+        tz = pytz.timezone(tz_name)
+
+        if not tz:
+            return original_datetime
+
+        utctime = tz.normalize(tz.localize(original_datetime)).astimezone(pytz.utc)
+
+        return utctime

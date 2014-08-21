@@ -30,6 +30,10 @@
 from flask.ext.restful import fields
 from copy import deepcopy
 from collections import OrderedDict
+import datetime
+import logging
+import pytz
+from jormungandr.timezone import get_timezone
 
 
 class PbField(fields.Nested):
@@ -53,6 +57,70 @@ class NonNullNested(fields.Nested):
     def __init__(self, *args, **kwargs):
         super(NonNullNested, self).__init__(*args, **kwargs)
         self.display_null = False
+
+
+class DateTime(fields.Raw):
+    """
+    custom date format from timestamp
+    """
+    def __init__(self, *args, **kwargs):
+        super(DateTime, self).__init__(*args, **kwargs)
+
+    def output(self, key, obj):
+        tz = get_timezone()
+
+        value = fields.get_value(key if self.attribute is None else self.attribute, obj)
+
+        if value is None:
+            return self.default
+
+        return self.format(value, tz)
+
+    def format(self, value, timezone):
+        dt = datetime.datetime.utcfromtimestamp(value)
+
+        if timezone:
+            dt = pytz.utc.localize(dt)
+            dt = dt.astimezone(timezone)
+            return dt.strftime("%Y%m%dT%H%M%S")
+        return None  # for the moment I prefer not to display anything instead of something wrong
+
+
+class SplitDateTime(DateTime):
+    """
+    custom date format from 2 fields:
+      - one for the date (in timestamp to midnight)
+      - one for the time in seconds from midnight
+
+      the date can be null (for example when the time is for a period like for calendar schedule)
+
+      if the date is not null be convert to local using the default timezone
+
+      if the date is null, we do not convert anything.
+            Thus the given date HAS to be previously converted to local
+            if that is what is wanted
+    """
+    def __init__(self, date, time, *args, **kwargs):
+        super(DateTime, self).__init__(*args, **kwargs)
+        self.date = date
+        self.time = time
+
+    def output(self, key, obj):
+
+        date = fields.get_value(self.date, obj)
+        time = fields.get_value(self.time, obj)
+
+        if not date:
+            return self.format_time(time)
+
+        date_time = date + time
+        tz = get_timezone()
+        return self.format(date_time, timezone=tz)
+
+    @staticmethod
+    def format_time(time):
+        t = datetime.datetime.utcfromtimestamp(time)
+        return t.strftime("%H%M%S")
 
 
 class enum_type(fields.Raw):
@@ -237,6 +305,7 @@ stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
+stop_area["timezone"] = fields.String()
 journey_pattern_point = deepcopy(generic_type)
 journey_pattern = deepcopy(generic_type)
 jpps = NonNullList(NonNullNested(journey_pattern_point))
@@ -304,8 +373,8 @@ connection = {
 }
 
 stop_date_time = {
-    "departure_date_time": fields.String(),
-    "arrival_date_time": fields.String(),
+    "departure_date_time": DateTime(),
+    "arrival_date_time": DateTime(),
     "stop_point": PbField(stop_point),
     "additional_informations": additional_informations,
     "links": stop_time_properties_links
@@ -320,7 +389,7 @@ place = {
     "administrative_region": PbField(admin),
     "embedded_type": enum_type(),
     "name": fields.String(),
-    "quality" : fields.Integer(),
+    "quality": fields.Integer(),
     "id": fields.String(attribute='uri')
 }
 
