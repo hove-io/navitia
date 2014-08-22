@@ -187,6 +187,11 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     bg::date end = bg::from_string(const_it["end_date"].as<std::string>()) + bg::days(1);
 
     nav_data.meta->production_date = bg::date_period(begin, end);
+
+    if (const_it["timezone"].is_null()) {
+        throw navitia::exception("no default timezone in navitia.parameters, cannot load dataset");
+    }
+
     nav_data.meta->timezone = const_it["timezone"].as<std::string>();
     request = "SELECT ST_AsText(ST_MakeEnvelope("
               "(select min(ST_X(coord::geometry)) from georef.node),"
