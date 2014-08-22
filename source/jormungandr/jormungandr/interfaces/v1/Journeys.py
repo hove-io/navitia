@@ -513,6 +513,7 @@ class Journeys(ResourceUri, ResourceUtc):
     def __init__(self):
         # journeys must have a custom authentication process
         ResourceUri.__init__(self, authentication=False)
+        ResourceUtc.__init__(self)
         modes = ["walking", "car", "bike", "bss"]
         types = {
             "all": "All types",
