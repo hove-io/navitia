@@ -60,31 +60,31 @@ class TestDepartureBoards(AbstractTestFixture):
     def test_structure(self):
         url = "departure_boards.json?filter=stop_area.uri=stopB&from_datetime=20120614T000000"
         response = self.query_region(url, display=False, version="v0")
-        assert("departure_boards" in response)
+        assert "departure_boards" in response
         departure_boards = response['departure_boards']
-        assert(len(departure_boards) == 1)
+        assert len(departure_boards) == 1
         departure_board = departure_boards[0]
-        assert("stop_point" in departure_board)
-        assert("route" in departure_board)
-        assert("board_items" in departure_board)
+        assert "stop_point" in departure_board
+        assert "route" in departure_board
+        assert "board_items" in departure_board
         board_items = departure_board["board_items"]
-        assert(len(board_items) == 1)
-        assert(check_departure_board_structure(board_items[0]))
+        assert len(board_items) == 1
+        assert check_departure_board_structure(board_items[0])
 
 
     def test_content(self):
         url = "departure_boards.json?filter=stop_area.uri=stopB&from_datetime=20120614T000000"
         response = self.query_region(url, display=False, version="v0")
-        assert("departure_boards" in response)
-        assert(len(response["departure_boards"]) == 1)
-        assert(len(response["departure_boards"][0]["board_items"]) == 1)
-        assert(response["departure_boards"][0]["board_items"][0]["hour"] == "8")
-        assert(len(response["departure_boards"][0]["board_items"][0]["minutes"]) == 1)
-        assert(response["departure_boards"][0]["board_items"][0]["minutes"][0] == "1")
+        assert "departure_boards" in response
+        assert len(response["departure_boards"]) == 1
+        assert len(response["departure_boards"][0]["board_items"]) == 1
+        assert response["departure_boards"][0]["board_items"][0]["hour"] == "8"
+        assert len(response["departure_boards"][0]["board_items"][0]["minutes"]) == 1
+        assert response["departure_boards"][0]["board_items"][0]["minutes"][0] == "1"
 
 def check_struct_row(row):
     return type(row) == dict and "stop_point" in row and "stop_times" in row and type(row["stop_times"]) == list and\
-        reduce(lambda a,b: a and b, map(lambda a : is_valid_datetime(a), row["stop_times"] ))
+        reduce(lambda a,b: a and b, map(lambda a : get_valid_datetime(a), row["stop_times"] ))
 
 @dataset(["main_routing_test"])
 class TestDepartureBoards(AbstractTestFixture):
@@ -96,39 +96,39 @@ class TestDepartureBoards(AbstractTestFixture):
     def test_structure(self):
         url = "route_schedules.json?filter=stop_area.uri=stopB&from_datetime=20120614T000000"
         response = self.query_region(url, display=False, version="v0")
-        assert("route_schedules" in response)
+        assert "route_schedules" in response
         route_schedules = response["route_schedules"]
-        assert(type(route_schedules) == list)
-        assert(len(route_schedules) == 1)
+        assert type(route_schedules) == list
+        assert len(route_schedules) == 1
         route_schedule = route_schedules[0]
-        assert("pt_display_informations" in route_schedule)
+        assert "pt_display_informations" in route_schedule
         informations = route_schedule["pt_display_informations"]
-        assert(type(informations) == dict)
-        assert("direction" in informations)
-        assert("code" in informations)
-        assert("network" in informations)
-        assert("color" in informations)
-        assert("uris" in informations)
-        assert(type(informations["uris"]) == dict)
-        assert("line" in informations["uris"])
-        assert("route" in informations["uris"])
-        assert("network" in informations["uris"])
-        assert("name" in informations)
-        assert("table" in route_schedule)
+        assert type(informations) == dict
+        assert "direction" in informations
+        assert "code" in informations
+        assert "network" in informations
+        assert "color" in informations
+        assert "uris" in informations
+        assert type(informations["uris"]) == dict
+        assert "line" in informations["uris"]
+        assert "route" in informations["uris"]
+        assert "network" in informations["uris"]
+        assert "name" in informations
+        assert "table" in route_schedule
         table = route_schedule["table"]
-        assert(type(table) == dict)
-        assert("headers" in table)
-        assert("rows" in table)
+        assert type(table) == dict
+        assert "headers" in table
+        assert "rows" in table
         headers = table["headers"]
         rows = table["rows"]
-        assert(reduce(lambda a,b : a and b, map(check_struct_row, rows)))
+        assert reduce(lambda a,b : a and b, map(check_struct_row, rows))
 
 
     def test_content(self):
         url = "route_schedules.json?filter=stop_area.uri=stopB&from_datetime=20120614T000000"
         response = self.query_region(url, display=False, version="v0")
-        assert(response["route_schedules"][0]["table"]["rows"][0]["stop_times"][0] == "20120614T080100")
-        assert(response["route_schedules"][0]["table"]["rows"][1]["stop_times"][0] == "20120614T080102")
+        assert response["route_schedules"][0]["table"]["rows"][0]["stop_times"][0] == "20120614T080100"
+        assert response["route_schedules"][0]["table"]["rows"][1]["stop_times"][0] == "20120614T080102"
 
 
 @dataset(["basic_routing_test"])
@@ -147,30 +147,30 @@ class TestJourneys(AbstractTestFixture):
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
 
         response = self.query_region(query, display=False, version="v0")
-        assert("journeys" in response)
-        assert(type(response["journeys"]) == list)
-        assert(len(response["journeys"]) == 1)
+        assert "journeys" in response
+        assert type(response["journeys"]) == list
+        assert len(response["journeys"]) == 1
         journey = response["journeys"][0]
-        assert("arrival_date_time" in journey)
-        assert(is_valid_datetime(journey["arrival_date_time"]))
-        assert(journey["arrival_date_time"] == "20120614T160000")
-        assert(is_valid_datetime(journey["departure_date_time"]))
-        assert(journey["departure_date_time"] == "20120614T150000")
-        assert(is_valid_datetime(journey["requested_date_time"]))
-        assert(journey["requested_date_time"] == "20120614T080100")
-        assert("sections" in journey)
-        assert(type(journey["sections"]) == list)
-        assert(len(journey["sections"]) == 4)
+        assert "arrival_date_time" in journey
+        assert get_valid_datetime(journey["arrival_date_time"])
+        assert journey["arrival_date_time"] == "20120614T160000"
+        assert get_valid_datetime(journey["departure_date_time"])
+        assert journey["departure_date_time"] == "20120614T150000"
+        assert get_valid_datetime(journey["requested_date_time"])
+        assert journey["requested_date_time"] == "20120614T080100"
+        assert "sections" in journey
+        assert type(journey["sections"]) == list
+        assert len(journey["sections"]) == 4
         sections = journey["sections"]
         section = sections[0]
-        assert(section["begin_date_time"] == "20120614T150000")
-        assert(section["end_date_time"] == "20120614T150500")
+        assert section["begin_date_time"] == "20120614T150000"
+        assert section["end_date_time"] == "20120614T150500"
         section = sections[1]
-        assert(section["begin_date_time"] == "20120614T150500")
-        assert(section["end_date_time"] == "20120614T150700")
+        assert section["begin_date_time"] == "20120614T150500"
+        assert section["end_date_time"] == "20120614T150700"
         section = sections[2]
-        assert(section["begin_date_time"] == "20120614T150700")
-        assert(section["end_date_time"] == "20120614T151000")
+        assert section["begin_date_time"] == "20120614T150700"
+        assert section["end_date_time"] == "20120614T151000"
         section = sections[3]
-        assert(section["begin_date_time"] == "20120614T151000")
-        assert(section["end_date_time"] == "20120614T160000")
+        assert section["begin_date_time"] == "20120614T151000"
+        assert section["end_date_time"] == "20120614T160000"
