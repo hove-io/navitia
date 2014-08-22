@@ -523,6 +523,7 @@ class Script(object):
         nb_typed_journeys = 0
         cpt_attempt = 0
         max_attempts = 2 if not request["min_nb_journeys"] else request["min_nb_journeys"]*2
+        at_least_one_journey_found = False
         while ((request["min_nb_journeys"] and request["min_nb_journeys"] > nb_typed_journeys) or\
             (not request["min_nb_journeys"] and nb_typed_journeys == 0)) and cpt_attempt < max_attempts:
             tmp_resp = self.get_journey(next_request, instance, request)
@@ -531,6 +532,7 @@ class Script(object):
                 if len(resp.journeys) == 0:
                     resp = tmp_resp
                 break
+            at_least_one_journey_found = True
             last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
             if not last_best:
                 last_best = next((j for j in tmp_resp.journeys), None)
@@ -565,6 +567,12 @@ class Script(object):
         self.sort_journeys(resp, request['clockwise'])
         self.choose_best(resp)
         self.delete_journeys(resp, request, final_filter=True)  # filter one last time to remove similar journeys
+
+        if len(resp.journeys) == 0 and at_least_one_journey_found and not resp.HasField("error"):
+            error = resp.error
+            error.id = response_pb2.Error.no_solution
+            error.message = "No journey found, all were filtered"
+
         return resp
 
     def choose_best(self, resp):
