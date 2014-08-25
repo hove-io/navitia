@@ -174,6 +174,42 @@ split_over_dst(const boost::gregorian::date_period& validity_period, const boost
     return res;
 }
 
+
+ed::types::Network* GtfsData::get_or_create_default_network(ed::Data& data) {
+    if (! default_network) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "creating default network");
+        default_network = new ed::types::Network();
+        default_network->uri = "default_network";
+        default_network->name = "default network";
+        data.networks.push_back(default_network);
+        network_map[default_network->uri] = default_network;
+
+        //with the default agency comes the default timezone (only if none was provided before)
+        if (tz.default_timezone.first.empty()) {
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "no time zone defined, we create a default one for paris");
+            const std::string default_tz = "Europe/Paris";
+            auto timezone = tz.tz_db.time_zone_from_region(default_tz);
+            BOOST_ASSERT(timezone);
+            tz.default_timezone = {default_tz, timezone};
+        }
+    }
+    return default_network;
+}
+
+
+ed::types::Company* GtfsData::get_or_create_default_company(Data & data) {
+    if (! default_company) {
+        // default compagny creation
+        default_company = new ed::types::Company();
+        default_company->uri = "default_company";
+        default_company->name = "compagnie par défaut";
+        data.companies.push_back(default_company);
+        company_map[default_company->uri] = default_company;
+    }
+    return default_company;
+}
+
+
 int time_to_int(const std::string & time) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> sep(":");
@@ -211,6 +247,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
         network->uri = row[id_c];
     } else {
         network->uri = "default_network";
+        gtfs_data.default_network = network;
     }
     network->external_code = network->uri;
 
@@ -477,15 +514,18 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         return nullptr;
     }
 
-    if(has_col(agency_c, row)) {
+    if(is_valid(agency_c, row)) {
         auto network_it = gtfs_data.network_map.find(row[agency_c]);
-        if(network_it != gtfs_data.network_map.end())
+        if(network_it != gtfs_data.network_map.end()) {
             line->network = network_it->second;
+        }
+        else {
+            throw navitia::exception("line " + line->uri + " has an unknown network: " + row[agency_c] + ", the dataset is not valid");
+        }
     }
     else {
-        auto network_it = gtfs_data.network_map.find("default_network");
-        if(network_it != gtfs_data.network_map.end())
-            line->network = network_it->second;
+        //if the line has no network, we get_or_create the default one
+        line->network = gtfs_data.get_or_create_default_network(data);
     }
 
     gtfs_data.line_map[row[id_c]] = line;
@@ -775,13 +815,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
             vj->physical_mode = itm->second;
         }
 
-        auto company_it = gtfs_data.company_map.find("default_company");
-        if (company_it != gtfs_data.company_map.end()){
-            vj->company = company_it->second;
-        } else {
-            //with no information, we take the first company attached to the line
-            vj->company = line->company;
-        }
+        vj->company = gtfs_data.get_or_create_default_company(data);
 
         gtfs_data.tz.vj_by_name.insert({original_uri, vj});
 
@@ -922,15 +956,6 @@ void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
         LOG4CPLUS_FATAL(logger, error);
         throw navitia::exception(error);
     }
-}
-
-void GenericGtfsParser::fill_default_company(Data & data){
-    // création d'une compagnie par defaut
-    ed::types::Company * company = new ed::types::Company();
-    company->uri = "default_company";
-    company->name = "compagnie par défaut";
-    data.companies.push_back(company);
-    gtfs_data.company_map[company->uri] = company;
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data){
@@ -1146,7 +1171,6 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
 
 void GtfsParser::parse_files(Data& data) {
     fill_default_modes(data);
-    fill_default_company(data);
 
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<DefaultContributorHandler>(data);

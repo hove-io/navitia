@@ -437,6 +437,32 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
 
 }
 
+BOOST_AUTO_TEST_CASE(parse_gtfs_line_without_network){
+    /*
+     * import the google gtfs example file with one difference, there is one line without a agency (a network for us)
+     *
+     * this line should thus be linked to a default_network
+     */
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_line_without_network");
+    parser.fill(data);
+
+    //since there is a real network in the dataset, we got 2 network
+    BOOST_REQUIRE_EQUAL(data.networks.size(), 2);
+    BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
+    BOOST_CHECK_EQUAL(data.networks[0]->uri, "DTA");
+    BOOST_CHECK_EQUAL(data.networks[1]->name, "default network");
+    BOOST_CHECK_EQUAL(data.networks[1]->uri, "default_network");
+
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 5);
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "AB");
+    BOOST_CHECK_EQUAL(data.lines[0]->name, "Airport - Bullfrog");
+    BOOST_REQUIRE(data.lines[0]->network != nullptr);
+    BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "default_network");
+
+}
+
+
 //TODO: work on this, we should be able to parse line with \\ in char
 //BOOST_AUTO_TEST_CASE(parse_gtfs_with_slashs) {
 //    ed::Data data;

@@ -394,8 +394,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         }
 
         if (vj->physical_mode == nullptr) {
-            auto itm = gtfs_data.physical_mode_map.find("default_physical_mode");
-            vj->physical_mode = itm->second;
+            vj->physical_mode = gtfs_data.get_or_create_default_physical_mode(data);
         }
 
         if (is_valid(odt_condition_id_c, row)){
@@ -435,8 +434,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         }
 
         if (vj->company == nullptr) {
-            auto it_company = gtfs_data.company_map.find("default_company");
-            vj->company = it_company->second;
+            vj->company = gtfs_data.get_or_create_default_company(data);
         }
     }
 }
@@ -514,17 +512,15 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if (is_valid(network_c, row)) {
         auto itm = gtfs_data.network_map.find(row[network_c]);
         if (itm == gtfs_data.network_map.end()) {
-            line->network = nullptr;
-            LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the network " << row[network_c]
-                           << " referenced by line " << row[id_c]);
+            throw navitia::exception("line " + line->uri + " has an unknown network: " + row[network_c] + ", the dataset is not valid");
         } else {
             line->network = itm->second;
         }
     }
 
     if (line->network == nullptr) {
-        auto itm = gtfs_data.network_map.find("default_network");
-        line->network = itm->second;
+        //if the line has no network data or an empty one, we get_or_create the default one
+        line->network = gtfs_data.get_or_create_default_network(data);
     }
 
     if (is_valid(comment_c, row)) {
@@ -546,8 +542,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     }
 
     if(line->commercial_mode == nullptr){
-        auto itm = gtfs_data.commercial_mode_map.find("default_commercial_mode");
-        line->commercial_mode = itm->second;
+        line->commercial_mode = gtfs_data.get_or_create_default_commercial_mode(data);
     }
     if (is_valid(sort_c, row)) {
         line->sort =  boost::lexical_cast<int>(row[sort_c]);
@@ -962,36 +957,29 @@ void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool
     admin_stop_area->stop_area.push_back(sa->second);
 }
 
-void FusioParser::fill_default_commercial_mode(Data & data){
-    ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->name = "mode commercial par défaut";
-    commercial_mode->uri = "default_commercial_mode";
-    data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map[commercial_mode->uri] = commercial_mode;
+ed::types::CommercialMode* GtfsData::get_or_create_default_commercial_mode(Data & data) {
+    if (! default_commercial_mode) {
+        default_commercial_mode = new ed::types::CommercialMode();
+        default_commercial_mode->name = "mode commercial par défaut";
+        default_commercial_mode->uri = "default_commercial_mode";
+        data.commercial_modes.push_back(default_commercial_mode);
+        commercial_mode_map[default_commercial_mode->uri] = default_commercial_mode;
+    }
+    return default_commercial_mode;
 }
 
-void FusioParser::fill_default_physical_mode(Data & data){
-    ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
-    mode->name = "mode physique par défaut";
-    mode->uri = "default_physical_mode";
-    data.physical_modes.push_back(mode);
-    gtfs_data.physical_mode_map[mode->uri] = mode;
-}
-
-void FusioParser::fill_default_timezone(Data & data){
-    //with the default agency comes the default timezone
-    const std::string default_tz = "Europe/Paris";
-    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
-    BOOST_ASSERT(tz);
-    gtfs_data.tz.default_timezone = {default_tz, tz};
+ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & data) {
+    if (! default_physical_mode) {
+        ed::types::PhysicalMode* default_physical_mode = new ed::types::PhysicalMode();
+        default_physical_mode->name = "mode physique par défaut";
+        default_physical_mode->uri = "default_physical_mode";
+        data.physical_modes.push_back(default_physical_mode);
+        physical_mode_map[default_physical_mode->uri] = default_physical_mode;
+    }
+    return default_physical_mode;
 }
 
 void FusioParser::parse_files(Data& data) {
-
-    fill_default_company(data);
-    fill_default_timezone(data);
-    fill_default_commercial_mode(data);
-    fill_default_physical_mode(data);
     parse<AgencyFusioHandler>(data, "agency.txt", true);
     parse<ContributorFusioHandler>(data, "contributors.txt");
     parse<CompanyFusioHandler>(data, "company.txt");
