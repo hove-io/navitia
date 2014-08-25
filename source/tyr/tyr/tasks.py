@@ -54,11 +54,13 @@ def type_of_data(filename):
         return 'osm'
     if filename.endswith('.zip'):
         zipf = zipfile.ZipFile(filename)
-        if 'fares.csv' in zipf.namelist():
-            return 'fare'
 
+        #first we try fusio, because it can load fares too
         if "contributors.txt" in zipf.namelist():
             return 'fusio'
+
+        if 'fares.csv' in zipf.namelist():
+            return 'fare'
         else:
             return 'gtfs'
     if filename.endswith('.geopal'):
