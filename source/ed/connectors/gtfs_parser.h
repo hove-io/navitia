@@ -85,8 +85,10 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::Route*> route_map;
     std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;
     std::unordered_map<std::string, ed::types::Network*> network_map;
+    ed::types::Network* default_network = nullptr;
     std::unordered_map<std::string, ed::types::Company*> company_map;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
+
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
     std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
@@ -102,6 +104,8 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::Calendar*> calendars_map;
 
     boost::gregorian::date_period production_date;// Data validity period
+
+    ed::types::Network* get_or_create_default_network(ed::Data&);
 };
 
 //a bit of abstraction around tz time shift to be able to change from boost::date_time::timezone if we need to

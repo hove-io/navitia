@@ -514,17 +514,15 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if (is_valid(network_c, row)) {
         auto itm = gtfs_data.network_map.find(row[network_c]);
         if (itm == gtfs_data.network_map.end()) {
-            line->network = nullptr;
-            LOG4CPLUS_WARN(logger, "LineFusioHandler : Impossible to find the network " << row[network_c]
-                           << " referenced by line " << row[id_c]);
+            throw navitia::exception("line " + line->uri + " has an unknown network: " + row[network_c] + ", the dataset is not valid");
         } else {
             line->network = itm->second;
         }
     }
 
     if (line->network == nullptr) {
-        auto itm = gtfs_data.network_map.find("default_network");
-        line->network = itm->second;
+        //if the line has no network data or an empty one, we get_or_create the default one
+        line->network = gtfs_data.get_or_create_default_network(data);
     }
 
     if (is_valid(comment_c, row)) {
@@ -978,7 +976,7 @@ void FusioParser::fill_default_physical_mode(Data & data){
     gtfs_data.physical_mode_map[mode->uri] = mode;
 }
 
-void FusioParser::fill_default_timezone(Data & data){
+void FusioParser::fill_default_timezone(){
     //with the default agency comes the default timezone
     const std::string default_tz = "Europe/Paris";
     auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
@@ -989,7 +987,7 @@ void FusioParser::fill_default_timezone(Data & data){
 void FusioParser::parse_files(Data& data) {
 
     fill_default_company(data);
-    fill_default_timezone(data);
+    fill_default_timezone();
     fill_default_commercial_mode(data);
     fill_default_physical_mode(data);
     parse<AgencyFusioHandler>(data, "agency.txt", true);

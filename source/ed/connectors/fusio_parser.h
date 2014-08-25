@@ -294,7 +294,7 @@ struct FusioParser : public GenericGtfsParser {
     /// Add default Physical_mode
     void fill_default_physical_mode(Data & data);
     /// Add default timezone
-    void fill_default_timezone(Data & data);
+    void fill_default_timezone();
 };
 }
 }

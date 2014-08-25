@@ -174,6 +174,20 @@ split_over_dst(const boost::gregorian::date_period& validity_period, const boost
     return res;
 }
 
+
+ed::types::Network* GtfsData::get_or_create_default_network(ed::Data& data) {
+    if (! default_network) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "creating default network");
+        default_network = new ed::types::Network();
+        default_network->uri = "default_network";
+        default_network->name = "default network";
+        data.networks.push_back(default_network);
+        network_map[default_network->uri] = default_network;
+    }
+    return default_network;
+}
+
+
 int time_to_int(const std::string & time) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> sep(":");
@@ -211,6 +225,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
         network->uri = row[id_c];
     } else {
         network->uri = "default_network";
+        gtfs_data.default_network = network;
     }
     network->external_code = network->uri;
 
@@ -477,15 +492,18 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         return nullptr;
     }
 
-    if(has_col(agency_c, row)) {
+    if(is_valid(agency_c, row)) {
         auto network_it = gtfs_data.network_map.find(row[agency_c]);
-        if(network_it != gtfs_data.network_map.end())
+        if(network_it != gtfs_data.network_map.end()) {
             line->network = network_it->second;
+        }
+        else {
+            throw navitia::exception("line " + line->uri + " has an unknown network: " + row[agency_c] + ", the dataset is not valid");
+        }
     }
     else {
-        auto network_it = gtfs_data.network_map.find("default_network");
-        if(network_it != gtfs_data.network_map.end())
-            line->network = network_it->second;
+        //if the line has no network, we get_or_create the default one
+        line->network = gtfs_data.get_or_create_default_network(data);
     }
 
     gtfs_data.line_map[row[id_c]] = line;
