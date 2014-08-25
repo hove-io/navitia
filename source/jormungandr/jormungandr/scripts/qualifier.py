@@ -295,6 +295,7 @@ def qualifier_one(journeys, request_type):
         ("car", trip_carac([
             partial(is_not_possible_cheap),
             partial(has_car),
+            partial(has_pt),  # We don't want car only solution, we MUST have PT
             partial(nonTC_abs_constraint, max_allow_duration=3600*6)
         ],
             [
@@ -389,6 +390,7 @@ def qualifier_one(journeys, request_type):
         ("non_pt_walk", trip_carac([
             partial(is_not_possible_cheap),
             partial(non_pt_journey),
+            partial(has_no_car),
             partial(has_walk)
         ],
             [
@@ -400,6 +402,7 @@ def qualifier_one(journeys, request_type):
         ("non_pt_bike", trip_carac([
             partial(is_not_possible_cheap),
             partial(non_pt_journey),
+            partial(has_no_car),
             partial(has_bike)
         ],
             [
@@ -409,6 +412,7 @@ def qualifier_one(journeys, request_type):
         ("non_pt_bss", trip_carac([
             partial(is_not_possible_cheap),
             partial(non_pt_journey),
+            partial(has_no_car),
             partial(has_bss),
         ],
             [

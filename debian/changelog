@@ -1,3 +1,10 @@
+navitia2 (0.102.2) unstable; urgency=low
+
+  * cherry pick of commits from <https://github.com/CanalTP/navitia/pull/497>
+  * Fare: hand made corrections from <https://github.com/CanalTP/navitia/pull/496> (it was not possible to really cherry-pick because of conflict)
+
+ -- Antoine Desbordes <antoine.desbordes@canaltp.fr>  Mon, 25 Aug 2014 10:44:13 +0100
+
 navitia2 (0.102.1) unstable; urgency=low
 
   * Gtfs: fix segfault on fusio2ed <https://github.com/CanalTP/navitia/pull/495>
