@@ -83,12 +83,15 @@ class TestJourneys(AbstractTestFixture):
         assert response['journeys'][0]["type"] == "non_pt_walk"
 
     def test_not_existent_filtering(self):
-        """if we filter with a real type but not present, we don't get any journey"""
+        """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
 
         response = self.query_region("{query}&type=car".
                                      format(query=journey_basic_query), display=False)
 
         assert not 'journeys' in response or len(response['journeys']) == 0
+        assert 'error' in response
+        assert response['error']['id'] == 'no_solution'
+        assert response['error']['message'] == 'No journey found, all were filtered'
 
     def test_dumb_filtering(self):
         """if we filter with non existent type, we get an error"""
