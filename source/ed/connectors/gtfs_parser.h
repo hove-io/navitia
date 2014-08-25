@@ -87,6 +87,8 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::Network*> network_map;
     ed::types::Network* default_network = nullptr;
     std::unordered_map<std::string, ed::types::Company*> company_map;
+    ed::types::Company* get_or_create_default_company(Data & data);
+    ed::types::Company* default_company = nullptr;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
 
     typedef std::vector<ed::types::StopPoint*> vector_sp;
@@ -102,6 +104,10 @@ struct GtfsData {
     std::unordered_map<std::string, navitia::type::hasProperties> hasProperties_map;
     std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
     std::unordered_map<std::string, ed::types::Calendar*> calendars_map;
+    ed::types::CommercialMode* get_or_create_default_commercial_mode(Data & data);
+    ed::types::CommercialMode* default_commercial_mode = nullptr;
+    ed::types::PhysicalMode* get_or_create_default_physical_mode(Data & data);
+    ed::types::PhysicalMode* default_physical_mode = nullptr;
 
     boost::gregorian::date_period production_date;// Data validity period
 
@@ -357,9 +363,6 @@ public:
 
     /// Ajout des objets par défaut
     void fill_default_modes(Data & data);
-
-    /// Ajout des companies
-    void fill_default_company(Data & data);
 
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string &beginning_date);

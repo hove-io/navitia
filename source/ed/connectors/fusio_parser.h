@@ -289,12 +289,6 @@ struct AdminStopAreaFusioHandler : public GenericHandler {
 struct FusioParser : public GenericGtfsParser {
     void parse_files(Data&);
     FusioParser(const std::string & path) : GenericGtfsParser(path) {}
-    /// Add default Commercial_mode
-    void fill_default_commercial_mode(Data & data);
-    /// Add default Physical_mode
-    void fill_default_physical_mode(Data & data);
-    /// Add default timezone
-    void fill_default_timezone();
 };
 }
 }
