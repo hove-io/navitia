@@ -606,7 +606,10 @@ void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     //Init the validity period
     boost::gregorian::date b_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
     boost::gregorian::date_period period = boost::gregorian::date_period(
-                (b_date > gtfs_data.production_date.begin() ? b_date : gtfs_data.production_date.begin()), boost::gregorian::from_undelimited_string(row[end_date_c]));
+                (b_date > gtfs_data.production_date.begin() ? b_date : gtfs_data.production_date.begin()), boost::gregorian::from_undelimited_string(row[end_date_c]) + boost::gregorian::days(1));
+    //we add one day to the last day of the period because end_date_c is included in the period
+    //and as say the constructor of boost periods, the second args is "end" so it is not included
+
 
     //Since all time have to be converted to UTC, we need to handle day saving time (DST) rules
     //we thus need to split all periods for them to be on only one DST
@@ -625,12 +628,12 @@ void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     for (const auto& split_period: split_periods) {
         nm::ValidityPattern * vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
 
-        for(boost::gregorian::day_iterator it(split_period.period.begin()); it<split_period.period.end(); ++it) {
+        for(boost::gregorian::day_iterator it(split_period.period.begin()); it < split_period.period.end(); ++it) {
             if(week.test((*it).day_of_week())) {
                 vp->add((*it));
-            }
-            else
+            }else{
                 vp->remove((*it));
+            }
         }
 
         if (split_periods.size() == 1) {
