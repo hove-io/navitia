@@ -30,7 +30,9 @@
 import calendar
 from datetime import datetime
 from jormungandr import i_manager
+import logging
 import pytz
+from jormungandr.exceptions import RegionNotFound
 
 
 def str_to_time_stamp(str):
@@ -50,20 +52,24 @@ def date_to_timestamp(date):
     """
     return int(calendar.timegm(date.timetuple()))
 
+
 class ResourceUtc:
     def __init__(self):
         self._tz = None
 
     def tz(self):
         if not self._tz:
-            instance = i_manager.instances[self.region]
+            instance = i_manager.instances.get(self.region, None)
+
+            if not instance:
+                raise RegionNotFound(self.region)
 
             tz_name = instance.timezone  # TODO store directly the tz?
 
             if not tz_name:
                 logging.Logger(__name__).warn("unkown timezone for region {}"
                                               .format(self.region))
-                return original_datetime
+                return None
             self._tz = (pytz.timezone(tz_name),)
         return self._tz[0]
 
