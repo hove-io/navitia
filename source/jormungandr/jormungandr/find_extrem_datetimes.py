@@ -32,17 +32,12 @@ from operator import attrgetter
 
 
 def extremes(resp, request):
-    before = None
-    after = None
+    if len(resp.journeys) == 0:
+        return None, None
 
-    try:
-        asap_journey = min([journey for journey in
-                            resp.journeys if journey.arrival_date_time != None],
-                           key=attrgetter('arrival_date_time'))
-    except:
-        # print "Unexpected error in prev/next datetime:", sys.exc_info()[0]
-        return (None, None)
-
+    asap_journey = min([journey for journey in
+                        resp.journeys if journey.arrival_date_time is not None],
+                       key=attrgetter('arrival_date_time'))
     query_args = ""
     for arg in request.args:
         if arg != "datetime" and arg != "clockwise":
@@ -51,10 +46,18 @@ def extremes(resp, request):
                     query_args += arg + "=" + str(v) + "&"
             else:
                 query_args += arg + "=" + str(request.args.get(arg)) + "&"
+
     before = after = None
     if asap_journey.arrival_date_time and asap_journey.departure_date_time:
-        minute = timedelta(minutes=1)
-        after = asap_journey.departure_date_time + 60
-        before = asap_journey.arrival_date_time - 60
+        minute = 60
+        datetime_after = asap_journey.departure_date_time + minute
+        d_after = datetime.utcfromtimestamp(datetime_after)
+        after = query_args + "clockwise=true&datetime=" + d_after.strftime("%Y%m%dT%H%M%S")
 
-    return (before, after)
+        datetime_before = asap_journey.arrival_date_time - minute
+        d_before = datetime.utcfromtimestamp(datetime_before)
+        before = query_args + "clockwise=false&datetime="
+
+        before += d_before.strftime("%Y%m%dT%H%M%S")
+
+    return before, after
