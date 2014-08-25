@@ -183,6 +183,15 @@ ed::types::Network* GtfsData::get_or_create_default_network(ed::Data& data) {
         default_network->name = "default network";
         data.networks.push_back(default_network);
         network_map[default_network->uri] = default_network;
+
+        //with the default agency comes the default timezone (only if none was provided before)
+        if (tz.default_timezone.first.empty()) {
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "no time zone defined, we create a default one for paris");
+            const std::string default_tz = "Europe/Paris";
+            auto timezone = tz.tz_db.time_zone_from_region(default_tz);
+            BOOST_ASSERT(timezone);
+            tz.default_timezone = {default_tz, timezone};
+        }
     }
     return default_network;
 }

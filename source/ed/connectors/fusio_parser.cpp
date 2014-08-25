@@ -976,18 +976,9 @@ void FusioParser::fill_default_physical_mode(Data & data){
     gtfs_data.physical_mode_map[mode->uri] = mode;
 }
 
-void FusioParser::fill_default_timezone(){
-    //with the default agency comes the default timezone
-    const std::string default_tz = "Europe/Paris";
-    auto tz = gtfs_data.tz.tz_db.time_zone_from_region(default_tz);
-    BOOST_ASSERT(tz);
-    gtfs_data.tz.default_timezone = {default_tz, tz};
-}
-
 void FusioParser::parse_files(Data& data) {
 
     fill_default_company(data);
-    fill_default_timezone();
     fill_default_commercial_mode(data);
     fill_default_physical_mode(data);
     parse<AgencyFusioHandler>(data, "agency.txt", true);
