@@ -41,8 +41,9 @@ def get_nontransport_duration(journey):
     current_duration = 0
     for section in sections:
         if section.type == response_pb2.STREET_NETWORK \
-                or section.type == response_pb2.TRANSFER\
-                or section.type == response_pb2.WAITING:
+                or section.type == response_pb2.TRANSFER \
+                or section.type == response_pb2.WAITING \
+                or section.type == response_pb2.CROW_FLY:
             current_duration += section.duration
     return current_duration
 
