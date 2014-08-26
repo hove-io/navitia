@@ -263,6 +263,7 @@ struct ValidityPattern: public Header {
     const static nt::Type_e type = nt::Type_e::ValidityPattern;
 private:
     bool is_valid(int duration);
+    int slide(boost::gregorian::date day) const;
 public:
     std::bitset<366> days;
     boost::gregorian::date beginning_date;
@@ -275,6 +276,7 @@ public:
     void remove(int day);
 
     bool check(int day) const;
+    bool check(boost::gregorian::date day) const;
 
     nt::ValidityPattern* get_navitia_type() const;
 

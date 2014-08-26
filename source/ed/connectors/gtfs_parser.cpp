@@ -625,15 +625,20 @@ void CalendarGtfsHandler::finish(Data& data) {
     BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.tz.vp_by_name.size());
 }
 
-void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+void CalendarGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
     if (row.empty())
         return;
     std::bitset<7> week;
     nb_lines ++;
 
-    if (gtfs_data.tz.vp_by_name.find(row[id_c]) != gtfs_data.tz.vp_by_name.end()) {
+    if (gtfs_data.tz.non_split_vp.find(row[id_c]) != gtfs_data.tz.non_split_vp.end()) {
         return;
     }
+    //we only build temporary validity pattern that will be split after the CalendarDateParser has been called
+    nm::ValidityPattern& vp = gtfs_data.tz.non_split_vp[row[id_c]];
+    vp.beginning_date = gtfs_data.production_date.begin();
+    vp.uri = row[id_c];
+
     //week day init (remember that sunday is the first day of week in the us)
     week[1] = (row[monday_c] == "1");
     week[2] = (row[tuesday_c] == "1");
@@ -650,44 +655,84 @@ void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     //we add one day to the last day of the period because end_date_c is included in the period
     //and as say the constructor of boost periods, the second args is "end" so it is not included
 
+    for(boost::gregorian::day_iterator it(period.begin()); it<period.end(); ++it) {
+        if(week.test((*it).day_of_week())) {
+            vp.add((*it));
+        } else {
+            vp.remove((*it));
+        }
+    }
+}
 
+boost::gregorian::date_period compute_smallest_active_period(const nm::ValidityPattern& vp) {
+    size_t beg(std::numeric_limits<size_t>::max()), end(std::numeric_limits<size_t>::min());
+
+    for (size_t i = 0; i < vp.days.size(); ++i) {
+        if (vp.check(i)) {
+            if (i < beg) {
+                beg = i;
+            }
+            if (i > end) {
+                end = i;
+            }
+        }
+    }
+
+    if (beg == std::numeric_limits<size_t>::max()) {
+        assert(end == std::numeric_limits<size_t>::min()); //if we did not find beg, end canot be found too
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the calendar " << vp.uri
+                       << " has an empty validity period, we will ignore it");
+        return boost::gregorian::date_period(vp.beginning_date, vp.beginning_date); //return null period
+    }
+
+    return boost::gregorian::date_period(vp.beginning_date + boost::gregorian::days(beg),
+                                         vp.beginning_date + boost::gregorian::days(end + 1));
+}
+
+void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
     //Since all time have to be converted to UTC, we need to handle day saving time (DST) rules
     //we thus need to split all periods for them to be on only one DST
     //luckily in GTFS format all times are given in the same timezone (the default tz dataset) even if all stop areas are not on the same tz
-    auto split_periods = split_over_dst(period, gtfs_data.tz.default_timezone.second);
 
-    BOOST_ASSERT(! split_periods.empty() || period.is_null()); //by construction it cannot be empty if the validity period is not null
+    for (const auto& name_and_vp: gtfs_data.tz.non_split_vp) {
+        const nm::ValidityPattern& original_vp = name_and_vp.second;
 
-    if (split_periods.size() > 1) {
-        LOG4CPLUS_INFO(logger, "the calendar " << row[id_c]
-                       << " is overlapping at least one day saving time (dst) thus we split it in "
-                       << split_periods.size());
-    }
+        boost::gregorian::date_period smallest_active_period = compute_smallest_active_period(original_vp);
 
-    size_t cpt(1);
-    for (const auto& split_period: split_periods) {
-        nm::ValidityPattern * vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
+        auto split_periods = split_over_dst(smallest_active_period, gtfs_data.tz.default_timezone.second);
 
-        for(boost::gregorian::day_iterator it(split_period.period.begin()); it < split_period.period.end(); ++it) {
-            if(week.test((*it).day_of_week())) {
-                vp->add((*it));
-            }else{
-                vp->remove((*it));
+        BOOST_ASSERT(! split_periods.empty() || period.is_null()); //by construction it cannot be empty if the validity period is not null
+
+        if (split_periods.size() > 1) {
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the calendar " << original_vp.uri
+                           << " is overlapping at least one day saving time (dst) thus we split it in "
+                           << split_periods.size());
+        }
+
+        size_t cpt(1);
+        for (const auto& split_period: split_periods) {
+            nm::ValidityPattern* vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
+
+            for(boost::gregorian::day_iterator it(split_period.period.begin()); it < split_period.period.end(); ++it) {
+                if (original_vp.check(*it)) {
+                    vp->add(*it);
+                }
             }
+
+            if (split_periods.size() == 1) {
+                //we do not change the id if the period is not split
+                vp->uri = original_vp.uri;
+            } else {
+                vp->uri = original_vp.uri + "_" + std::to_string(cpt);
+            }
+            gtfs_data.tz.vp_by_name.insert({original_vp.uri, vp});
+            gtfs_data.tz.offset_by_vp.insert({vp, split_period.utc_shift});
+            data.validity_patterns.push_back(vp);
+            cpt++;
         }
 
-        if (split_periods.size() == 1) {
-            //we do not change the id if the period is not split
-            vp->uri = row[id_c];
-        } else {
-            vp->uri = row[id_c] + "_" + std::to_string(cpt);
-        }
-        //gtfs_data.vp_map[row[id_c]] = vp;
-        gtfs_data.tz.vp_by_name.insert({row[id_c], vp});
-        gtfs_data.tz.offset_by_vp.insert({vp, split_period.utc_shift});
-        data.validity_patterns.push_back(vp);
-        cpt++;
     }
+
 }
 
 void CalendarDatesGtfsHandler::init(Data&) {
@@ -705,23 +750,21 @@ void CalendarDatesGtfsHandler::finish(Data& data) {
 void CalendarDatesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(row.empty())
         return;
-    nm::ValidityPattern* vp;
-    auto it = gtfs_data.tz.vp_by_name.find(row[id_c]);
-    if(it == gtfs_data.tz.vp_by_name.end()){
-        //TODO que faire ? splitter sur tous les dst de la periode de prod ?
-        vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
-        gtfs_data.tz.vp_by_name.insert({row[id_c], vp});
-        data.validity_patterns.push_back(vp);
-    }
-    else {
-        vp = it->second;
+
+    bool new_vp = gtfs_data.tz.non_split_vp.find(row[id_c]) == gtfs_data.tz.non_split_vp.end();
+
+    nm::ValidityPattern& vp = gtfs_data.tz.non_split_vp[row[id_c]];
+
+    if (new_vp) {
+        vp.beginning_date = gtfs_data.production_date.begin();
+        vp.uri = row[id_c];
     }
 
     auto date = boost::gregorian::from_undelimited_string(row[date_c]);
     if(row[e_type_c] == "1")
-        vp->add(date);
+        vp.add(date);
     else if(row[e_type_c] == "2")
-        vp->remove(date);
+        vp.remove(date);
     else
         LOG4CPLUS_WARN(logger, "Exception pour le service " << row[id_c] << " inconnue : " << row[e_type_c]);
 }
@@ -1177,8 +1220,12 @@ void GtfsParser::parse_files(Data& data) {
     parse<StopsGtfsHandler>(data, "stops.txt", true);
     parse<RouteGtfsHandler>(data, "routes.txt", true);
     parse<TransfersGtfsHandler>(data, "transfers.txt");
+
     parse<CalendarGtfsHandler>(data, "calendar.txt");
     parse<CalendarDatesGtfsHandler>(data, "calendar_dates.txt");
+    //after the calendar load, we need to split the validitypattern
+    split_validity_pattern_over_dst(data, gtfs_data);
+
     parse<TripsGtfsHandler>(data, "trips.txt", true);
     parse<StopTimeGtfsHandler>(data, "stop_times.txt", true);
     parse<FrequenciesGtfsHandler>(data, "frequencies.txt");

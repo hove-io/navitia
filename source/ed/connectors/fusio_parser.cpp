@@ -991,8 +991,12 @@ void FusioParser::parse_files(Data& data) {
     parse<StopsFusioHandler>(data, "stops.txt", true);
     parse<RouteFusioHandler>(data, "routes.txt", true);
     parse<TransfersFusioHandler>(data, "transfers.txt");
+
     parse<CalendarGtfsHandler>(data, "calendar.txt");
     parse<CalendarDatesGtfsHandler>(data, "calendar_dates.txt");
+    //after the calendar load, we need to split the validitypattern
+    split_validity_pattern_over_dst(data, gtfs_data);
+
     parse<TripPropertiesFusioHandler>(data, "trip_properties.txt");
     parse<OdtConditionsFusioHandler>(data, "odt_conditions.txt");
     parse<TripsFusioHandler>(data, "trips.txt", true);
