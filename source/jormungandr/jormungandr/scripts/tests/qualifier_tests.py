@@ -237,3 +237,95 @@ def tranfers_cri_test():
     #the same nb_transfers, we compare the dates
     eq_(best.nb_transfers, 1)
     eq_(best.arrival_date_time, str_to_time_stamp("20131107T100000"))
+
+def qualifier_crowfly_test():
+    journeys = []
+
+    journey_standard = response_pb2.Journey()
+    journey_standard.arrival_date_time = str_to_time_stamp('20140825T113224')
+    journey_standard.duration = 2620
+    journey_standard.nb_transfers = 1
+    journey_standard.sections.add()
+    journey_standard.sections.add()
+    journey_standard.sections.add()
+
+    journey_standard.sections[0].type = response_pb2.CROW_FLY
+    journey_standard.sections[0].duration = 796
+
+    journey_standard.sections[-1].type = response_pb2.CROW_FLY
+    journey_standard.sections[-1].duration = 864
+    journeys.append(journey_standard)
+
+    journey_health = response_pb2.Journey()
+    journey_health.arrival_date_time = str_to_time_stamp('20140825T114000')
+    journey_health.duration = 3076
+    journey_health.nb_transfers = 1
+    journey_health.sections.add()
+    journey_health.sections.add()
+    journey_health.sections.add()
+
+    journey_health.sections[0].type = response_pb2.CROW_FLY
+    journey_health.sections[0].duration = 796
+
+    journey_health.sections[-1].type = response_pb2.CROW_FLY
+    journey_health.sections[-1].duration = 0
+    journeys.append(journey_health)
+
+    qualifier.qualifier_one(journeys, "departure")
+
+    eq_(journey_standard.type, "rapid")  # the standard should be the fastest
+    eq_(journey_health.type, "less_fallback_walk")
+
+
+def qualifier_nontransport_duration_only_walk_test():
+    journey = response_pb2.Journey()
+    journey.arrival_date_time = str_to_time_stamp('20140825T113224')
+    journey.duration = 2620
+    journey.nb_transfers = 1
+    journey.sections.add()
+    journey.sections.add()
+    journey.sections.add()
+
+    journey.sections[0].type = response_pb2.CROW_FLY
+    journey.sections[0].duration = 796
+
+    journey.sections[1].type = response_pb2.TRANSFER
+    journey.sections[1].duration = 328
+
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].duration = 864
+
+    eq_(qualifier.get_nontransport_duration(journey), 1988)
+
+
+def qualifier_nontransport_duration_with_tc_test():
+    journey = response_pb2.Journey()
+    journey.arrival_date_time = str_to_time_stamp('20140825T113224')
+    journey.duration = 2620
+    journey.nb_transfers = 2
+    journey.sections.add()
+    journey.sections.add()
+    journey.sections.add()
+    journey.sections.add()
+    journey.sections.add()
+    journey.sections.add()
+
+    journey.sections[0].type = response_pb2.CROW_FLY
+    journey.sections[0].duration = 796
+
+    journey.sections[1].type = response_pb2.PUBLIC_TRANSPORT
+    journey.sections[1].duration = 328
+
+    journey.sections[2].type = response_pb2.TRANSFER
+    journey.sections[2].duration = 418
+
+    journey.sections[3].type = response_pb2.WAITING
+    journey.sections[3].duration = 719
+
+    journey.sections[4].type = response_pb2.PUBLIC_TRANSPORT
+    journey.sections[4].duration = 175
+
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].duration = 864
+
+    eq_(qualifier.get_nontransport_duration(journey), 2797)

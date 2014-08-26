@@ -41,8 +41,9 @@ def get_nontransport_duration(journey):
     current_duration = 0
     for section in sections:
         if section.type == response_pb2.STREET_NETWORK \
-                or section.type == response_pb2.TRANSFER\
-                or section.type == response_pb2.WAITING:
+                or section.type == response_pb2.TRANSFER \
+                or section.type == response_pb2.WAITING \
+                or section.type == response_pb2.CROW_FLY:
             current_duration += section.duration
     return current_duration
 
@@ -210,6 +211,7 @@ def qualifier_one(journeys, request_type):
         transfers_crit,
         nonTC_crit]))
     assert standard is not None
+    standard.tags.append('standard')
 
     #constraints
     def journey_length_constraint(journey, max_evolution):
