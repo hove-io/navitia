@@ -1075,7 +1075,7 @@ boost::gregorian::date_period GenericGtfsParser::basic_production_date(const std
         throw UnableToFindProductionDateException();
     } else {
         boost::gregorian::date b_date(boost::gregorian::from_undelimited_string(beginning_date)),
-                e_date(b_date + boost::gregorian::date_duration(365));
+                e_date(b_date + boost::gregorian::days(365 + 1));
 
         return boost::gregorian::date_period(b_date, e_date);
     }
@@ -1204,12 +1204,18 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     boost::gregorian::date b_date(boost::gregorian::min_date_time);
     if(beginning_date != "")
         b_date = boost::gregorian::from_undelimited_string(beginning_date);
+
+     boost::gregorian::date beginning = std::max(start_date, b_date);
+
+     //technically we cannot handle more than one year of data
+     boost::gregorian::date end = std::min(end_date, beginning + boost::gregorian::days(365));
+
     LOG4CPLUS_INFO(logger, "date de production: " +
-                    boost::gregorian::to_simple_string((start_date>b_date ? start_date : b_date))
-                    + " - " + boost::gregorian::to_simple_string(end_date));
+                    boost::gregorian::to_simple_string(beginning)
+                    + " - " + boost::gregorian::to_simple_string(end));
     //the end of a boost::gregorian::date_period is not in the period
     //since end_date is the last day is the data, we want the end to be the next day
-    return boost::gregorian::date_period((start_date>b_date ? start_date : b_date), end_date + boost::gregorian::days(1));
+    return boost::gregorian::date_period(beginning, end + boost::gregorian::days(1));
 }
 
 void GtfsParser::parse_files(Data& data) {

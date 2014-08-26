@@ -380,9 +380,10 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     //Calendar, Trips and stop times are another matters
     //we have to split the trip validity period in such a fashion that the period does not overlap a dst
 
-    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date, boost::gregorian::date_period(
+    BOOST_CHECK_EQUAL(parser.gtfs_data.production_date, boost::gregorian::date_period(
                             boost::gregorian::from_undelimited_string("20070101"),
-                            boost::gregorian::from_undelimited_string("20101231") + boost::gregorian::days(1)));
+                            boost::gregorian::from_undelimited_string("20080102")));
+
     //the dst in los angeles is from the second sunday of march to the first sunday of november
     // -> we thus have to split the period in 9
     //          2007                       2008                     2009                    2010
