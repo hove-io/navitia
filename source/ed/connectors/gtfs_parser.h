@@ -294,7 +294,6 @@ struct CalendarDatesGtfsHandler : public GenericHandler {
     CalendarDatesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, date_c, e_type_c;
     void init(Data&);
-    void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"service_id", "date", "exception_type"};

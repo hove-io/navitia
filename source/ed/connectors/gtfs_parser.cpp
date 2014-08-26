@@ -733,18 +733,17 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
 
     }
 
+
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Nb validity patterns : " << data.validity_patterns.size());
+    BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.tz.vp_by_name.size());
+    if (data.validity_patterns.empty())
+        LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), "No validity_patterns");
+
 }
 
 void CalendarDatesGtfsHandler::init(Data&) {
     id_c = csv.get_pos_col("service_id"), date_c = csv.get_pos_col("date"),
             e_type_c = csv.get_pos_col("exception_type");
-}
-
-void CalendarDatesGtfsHandler::finish(Data& data) {
-    LOG4CPLUS_TRACE(logger, "Nb validity patterns : " << data.validity_patterns.size());
-    BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.tz.vp_by_name.size());
-    if (data.validity_patterns.empty())
-        LOG4CPLUS_FATAL(logger, "No validity_patterns");
 }
 
 void CalendarDatesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
