@@ -316,16 +316,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     data.complete();
 }
 
-
-BOOST_AUTO_TEST_CASE(parse_gtfs){
-    /*
-     * use import the raw google gtfs example file
-     *
-     * We check the diff that can occur because the dataset timezone has dst
-     */
-    ed::Data data;
-    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example");
-    parser.fill(data);
+void check_gtfs_google_example(const ed::Data& data, const ed::connectors::GtfsParser& parser) {
 
     //Agency and stop areas should not have changed compared to parse_gtfs_no_dst
     BOOST_REQUIRE_EQUAL(data.networks.size(), 1);
@@ -380,9 +371,10 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     //Calendar, Trips and stop times are another matters
     //we have to split the trip validity period in such a fashion that the period does not overlap a dst
 
-    BOOST_REQUIRE_EQUAL(parser.gtfs_data.production_date, boost::gregorian::date_period(
+    BOOST_CHECK_EQUAL(parser.gtfs_data.production_date, boost::gregorian::date_period(
                             boost::gregorian::from_undelimited_string("20070101"),
-                            boost::gregorian::from_undelimited_string("20101231") + boost::gregorian::days(1)));
+                            boost::gregorian::from_undelimited_string("20080102")));
+
     //the dst in los angeles is from the second sunday of march to the first sunday of november
     // -> we thus have to split the period in 9
     //          2007                       2008                     2009                    2010
@@ -390,19 +382,22 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     //        [----------]             [----------]             [----------]             [----------]
     //            DST                       DST                      DST                     DST
     //     1       2            3            4           5            6           7           8        9
+    //
+    // technically we can handle only one year of data in navitia, so we limit the period to 2007 -> 2008
+    // -> we split the period in 3
 
     //each validity pattern are valid on the entire period, so each are split in 9
-    BOOST_REQUIRE_EQUAL(data.validity_patterns.size(), 2 * 9);
+    BOOST_REQUIRE_EQUAL(data.validity_patterns.size(), 2 * 3);
     BOOST_CHECK_EQUAL(data.validity_patterns[0]->uri, "FULLW_1");
     BOOST_CHECK_EQUAL(data.validity_patterns[1]->uri, "FULLW_2");
-    BOOST_CHECK_EQUAL(data.validity_patterns[8]->uri, "FULLW_9");
+    BOOST_CHECK_EQUAL(data.validity_patterns[2]->uri, "FULLW_3");
 
-    BOOST_CHECK_EQUAL(data.validity_patterns[9]->uri, "WE_1");
-    BOOST_CHECK_EQUAL(data.validity_patterns[10]->uri, "WE_2");
-    BOOST_CHECK_EQUAL(data.validity_patterns[17]->uri, "WE_9");
+    BOOST_CHECK_EQUAL(data.validity_patterns[3]->uri, "WE_1");
+    BOOST_CHECK_EQUAL(data.validity_patterns[4]->uri, "WE_2");
+    BOOST_CHECK_EQUAL(data.validity_patterns[5]->uri, "WE_3");
 
     // same for the vj, all have been split in 9
-    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11 * 9);
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 11 * 3);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "AB1_dst_1");
     BOOST_REQUIRE(data.vehicle_journeys[0]->tmp_line != nullptr);
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->tmp_line->uri, "AB");
@@ -410,14 +405,15 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->validity_pattern->uri, "FULLW_1");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "to Bullfrog");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->block_id, "1");
-    for (int i = 1; i <= 9; ++i) {
+
+    for (int i = 1; i <= 3; ++i) {
         BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->uri, "AB1_dst_" + std::to_string(i));
         BOOST_REQUIRE(data.vehicle_journeys[i-1]->validity_pattern != nullptr);
         BOOST_CHECK_EQUAL(data.vehicle_journeys[i-1]->validity_pattern->uri, "FULLW_" + std::to_string(i));
     }
 
     //Stop time
-    BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 9);
+    BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 3);
     BOOST_REQUIRE(data.stops[0]->vehicle_journey != nullptr);
     BOOST_CHECK_EQUAL(data.stops[0]->vehicle_journey->uri, "STBA_dst_1");
     BOOST_CHECK_EQUAL(data.stops[0]->arrival_time, 6*3600 - 480); //first day is on a non dst period, so the utc offset
@@ -435,6 +431,34 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.stops[1]->order, 1);
 
 
+}
+
+BOOST_AUTO_TEST_CASE(parse_gtfs){
+    /*
+     * use import the raw google gtfs example file
+     *
+     * We check the diff that can occur because the dataset timezone has dst
+     */
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example");
+    parser.fill(data);
+
+    check_gtfs_google_example(data, parser);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(parse_gtfs_without_calendar) {
+    //calendar.txt is not a mandatory file
+    //we created the same data set than the standard one but with calendar_date.txt filled
+    //instead of calendar.
+    //we must have the exact same thing
+
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example_no_calendar");
+    parser.fill(data);
+
+    check_gtfs_google_example(data, parser);
 }
 
 BOOST_AUTO_TEST_CASE(parse_gtfs_line_without_network){

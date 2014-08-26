@@ -70,6 +70,11 @@ struct TzHandler {
     std::multimap<std::string, ed::types::ValidityPattern*> vp_by_name;
     std::multimap<std::string, ed::types::VehicleJourney*> vj_by_name;
     std::map<ed::types::ValidityPattern*, int> offset_by_vp; //each validity pattern are on only one dst, thus we can store the utc_offset
+
+    //since 2 files are mandatory to build validity pattern
+    //we need to build first the list of validity pattern,
+    //then split them all by dst
+    std::map<std::string, ed::types::ValidityPattern> non_split_vp;
 };
 
 /**
@@ -130,6 +135,8 @@ struct period_with_utc_shift {
 
 std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
 std::vector<period_with_utc_shift> split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
+
+void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);
 
 inline bool has_col(int col_idx, const std::vector<std::string>& row) {
     return col_idx >= 0 && static_cast<size_t>(col_idx) < row.size();
@@ -287,7 +294,6 @@ struct CalendarDatesGtfsHandler : public GenericHandler {
     CalendarDatesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, date_c, e_type_c;
     void init(Data&);
-    void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"service_id", "date", "exception_type"};
