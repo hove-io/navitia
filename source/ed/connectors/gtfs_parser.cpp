@@ -866,7 +866,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         meta_vj.theoric_vj.push_back(vj);
         vj->meta_vj_name = row[trip_c];
 
-        // we store the split vj utc shift
+        // we store the split vj utc shift, in minutes
         auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];
         vj->utc_to_local_offset = utc_offset;
     }
@@ -888,7 +888,7 @@ void StopTimeGtfsHandler::finish(Data& data) {
 }
 
 int to_utc(const std::string& local_time, int utc_offset) {
-    return time_to_int(local_time) + utc_offset;
+    return time_to_int(local_time) - utc_offset * 60;
 }
 
 std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
