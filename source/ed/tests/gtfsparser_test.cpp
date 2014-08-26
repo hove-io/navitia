@@ -316,16 +316,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     data.complete();
 }
 
-
-BOOST_AUTO_TEST_CASE(parse_gtfs){
-    /*
-     * use import the raw google gtfs example file
-     *
-     * We check the diff that can occur because the dataset timezone has dst
-     */
-    ed::Data data;
-    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example");
-    parser.fill(data);
+void check_gtfs_google_example(const ed::Data& data, const ed::connectors::GtfsParser& parser) {
 
     //Agency and stop areas should not have changed compared to parse_gtfs_no_dst
     BOOST_REQUIRE_EQUAL(data.networks.size(), 1);
@@ -440,6 +431,34 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.stops[1]->order, 1);
 
 
+}
+
+BOOST_AUTO_TEST_CASE(parse_gtfs){
+    /*
+     * use import the raw google gtfs example file
+     *
+     * We check the diff that can occur because the dataset timezone has dst
+     */
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example");
+    parser.fill(data);
+
+    check_gtfs_google_example(data, parser);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(parse_gtfs_without_calendar) {
+    //calendar.txt is not a mandatory file
+    //we created the same data set than the standard one but with calendar_date.txt filled
+    //instead of calendar.
+    //we must have the exact same thing
+
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example_no_calendar");
+    parser.fill(data);
+
+    check_gtfs_google_example(data, parser);
 }
 
 BOOST_AUTO_TEST_CASE(parse_gtfs_line_without_network){
