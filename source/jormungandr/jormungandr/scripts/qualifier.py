@@ -211,6 +211,7 @@ def qualifier_one(journeys, request_type):
         transfers_crit,
         nonTC_crit]))
     assert standard is not None
+    standard.tags.append('standard')
 
     #constraints
     def journey_length_constraint(journey, max_evolution):
