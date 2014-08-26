@@ -478,10 +478,6 @@ Parameters
 |          |                     |           |                                           |                 |
 |          |                     |           | More in `multiple_journeys`_              |                 |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | type                | string    | Allows you to filter the type of journeys |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | More in `journey_qualif`_                 |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
 +----------+---------------------+-----------+-------------------------------------------+-----------------+
 | nop      | disruption_active   | boolean   | If true the algorithm take the disruptions| False           |
