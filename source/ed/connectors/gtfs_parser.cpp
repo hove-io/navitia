@@ -701,7 +701,7 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
 
         auto split_periods = split_over_dst(smallest_active_period, gtfs_data.tz.default_timezone.second);
 
-        BOOST_ASSERT(! split_periods.empty() || period.is_null()); //by construction it cannot be empty if the validity period is not null
+        BOOST_ASSERT(! split_periods.empty() || smallest_active_period.is_null()); //by construction it cannot be empty if the validity period is not null
 
         if (split_periods.size() > 1) {
             LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the calendar " << original_vp.uri
