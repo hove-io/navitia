@@ -207,9 +207,20 @@ DO $$
     BEGIN
         BEGIN
             ALTER TABLE navitia.vehicle_journey ADD
-                COLUMN utc_to_local_offset INT REFERENCES navitia.vehicle_journey;
+                COLUMN utc_to_local_offset INT;
         EXCEPTION
             WHEN duplicate_column THEN RAISE NOTICE 'column utc_to_local_offset already exists in navitia.vehicle_journey';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
+	    ALTER TABLE navitia.vehicle_journey
+		DROP CONSTRAINT IF EXISTS vehicle_journey_utc_to_local_offset_fkey;
+        EXCEPTION
+            RAISE NOTICE 'constraint vehicle_journey_utc_to_local_offset_fkey cannot be dropped';
         END;
     END;
 $$;
