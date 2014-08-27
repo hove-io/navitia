@@ -138,6 +138,10 @@ std::vector<period_with_utc_shift> split_over_dst(const boost::gregorian::date_p
 
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);
 
+
+// Africa/Abidjan is equivalent to utc since there is no dst and 0 offset from utc
+const std::string UTC_TIMEZONE = "Africa/Abidjan";
+
 inline bool has_col(int col_idx, const std::vector<std::string>& row) {
     return col_idx >= 0 && static_cast<size_t>(col_idx) < row.size();
 }
