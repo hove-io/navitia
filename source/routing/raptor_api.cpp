@@ -109,7 +109,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 if (!duration.is_special()) {
                     auto* first_section = pb_journey->mutable_sections(0);
                     first_section->set_duration(duration.total_seconds());
-                    first_section->mutable_street_network()->set_mode(convert(origin.streetnetwork_params.mode));
+                    first_section->mutable_street_network()->set_mode(convert(origin.streetnetwork_params.mode, true));
                     departure_time = path.items.front().departures.front() - duration.to_posix();
                     first_section->set_begin_date_time(navitia::to_posix_timestamp(departure_time));
                 }
@@ -253,7 +253,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                 if (!duration.is_special()) {
                     auto* last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
                     last_section->set_duration(duration.total_seconds());
-                    last_section->mutable_street_network()->set_mode(convert(destination.streetnetwork_params.mode));
+                    last_section->mutable_street_network()->set_mode(convert(destination.streetnetwork_params.mode, true));
                     arrival_time = path.items.back().departures.back() + duration.to_posix();
                     last_section->set_end_date_time(navitia::to_posix_timestamp(arrival_time));
                 }

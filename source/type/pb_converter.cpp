@@ -1316,12 +1316,12 @@ void fill_pb_object(const std::string comment, const nt::Data&,
     note->set_note(comment);
 }
 
-pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
+pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode, const bool is_crowfly) {
     switch (mode) {
         case navitia::type::Mode_e::Walking : return pbnavitia::Walking;
         case navitia::type::Mode_e::Bike : return pbnavitia::Bike;
         case navitia::type::Mode_e::Car : return pbnavitia::Car;
-        case navitia::type::Mode_e::Bss : return pbnavitia::Bss;
+        case navitia::type::Mode_e::Bss : return !is_crowfly ? pbnavitia::Bss : pbnavitia::Walking;
     }
     throw navitia::exception("Techinical Error, unable to convert mode " +
             std::to_string(static_cast<int>(mode)));
