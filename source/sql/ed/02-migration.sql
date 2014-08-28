@@ -216,12 +216,8 @@ $$;
 
 DO $$
     BEGIN
-        BEGIN
 	    ALTER TABLE navitia.vehicle_journey
 		DROP CONSTRAINT IF EXISTS vehicle_journey_utc_to_local_offset_fkey;
-        EXCEPTION
-            RAISE NOTICE 'constraint vehicle_journey_utc_to_local_offset_fkey cannot be dropped';
-        END;
     END;
 $$;
 
