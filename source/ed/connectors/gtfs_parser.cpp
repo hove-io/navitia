@@ -187,7 +187,7 @@ ed::types::Network* GtfsData::get_or_create_default_network(ed::Data& data) {
         //with the default agency comes the default timezone (only if none was provided before)
         if (tz.default_timezone.first.empty()) {
             LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "no time zone defined, we create a default one for paris");
-            const std::string default_tz = "Europe/Paris";
+            const std::string default_tz = UTC_TIMEZONE;//"Europe/Paris";
             auto timezone = tz.tz_db.time_zone_from_region(default_tz);
             BOOST_ASSERT(timezone);
             tz.default_timezone = {default_tz, timezone};
@@ -256,7 +256,9 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
 
     gtfs_data.network_map[network->uri] = network;
 
-    std::string timezone_name = row[time_zone_c];
+    //for the moment we have to deactivate the timezone handling, so we considere all timezone as UTC
+    // (Africa/Abidjan is equivalent to utc since there is no dst and 0 offset from utc)
+    std::string timezone_name = UTC_TIMEZONE;//row[time_zone_c];
 
     if (gtfs_data.tz.default_timezone.second) {
         if (gtfs_data.tz.default_timezone.first != timezone_name) {
@@ -679,7 +681,7 @@ boost::gregorian::date_period compute_smallest_active_period(const nm::ValidityP
     }
 
     if (beg == std::numeric_limits<size_t>::max()) {
-        assert(end == std::numeric_limits<size_t>::min()); //if we did not find beg, end canot be found too
+        assert(end == std::numeric_limits<size_t>::min()); //if we did not find beg, end cannot be found too
         LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the calendar " << vp.uri
                        << " has an empty validity period, we will ignore it");
         return boost::gregorian::date_period(vp.beginning_date, vp.beginning_date); //return null period
