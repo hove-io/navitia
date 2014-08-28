@@ -124,15 +124,15 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
                                 description=
                                 "maximal duration of non public "\
                                 "transport in second")
-        parser_get.add_argument("walking_speed", type=float, default=1.68,
+        parser_get.add_argument("walking_speed", type=float, default=1.12,
                                 description=
                                 "Walking speed in meter/second")
-        parser_get.add_argument("bike_speed", type=float, default=8.8,
+        parser_get.add_argument("bike_speed", type=float, default=4.1,
                                 description="Bike speed in meter/second")
-        parser_get.add_argument("bss_speed", type=float, default=8.8,
+        parser_get.add_argument("bss_speed", type=float, default=4.1,
                                 description="Bike rental speed in "\
                                 "meter/second")
-        parser_get.add_argument("car_speed", type=float, default=16.8,
+        parser_get.add_argument("car_speed", type=float, default=11.11,
                                 description=
                                 "Car speed in meter/second")
         parser_get.add_argument("forbidden_uris[]", type=str, action="append",
@@ -194,10 +194,10 @@ class Isochrone(Resource, ResourceUtc, FindAndFormatJourneys):
         parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
                                 description="maximal duration of non public \
                                 transport in second")
-        parser_get.add_argument("walking_speed", type=float, default=1.68)
-        parser_get.add_argument("bike_speed", type=float, default=8.8)
-        parser_get.add_argument("bss_speed", type=float, default=8.8)
-        parser_get.add_argument("car_speed", type=float, default=16.8)
+        parser_get.add_argument("walking_speed", type=float, default=1.12)
+        parser_get.add_argument("bike_speed", type=float, default=4.1)
+        parser_get.add_argument("bss_speed", type=float, default=4.1)
+        parser_get.add_argument("car_speed", type=float, default=11.11)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("wheelchair", type=boolean, default=False)
         parser_get.add_argument("disruption_active", type=boolean, default=False)
