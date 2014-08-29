@@ -57,6 +57,26 @@ void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj
     fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
 }
 
+/**
+ * Choose if we must use a crowfly or a streetnework for a section. This function is call for the first and last section of a journey
+ *
+ * @param point: the object where we are going/coming: the requested origin for the first section or the destination for the last section
+ * @param stop_point: for the first section, the stop point where we are going, or for the last section the stop point from where we come
+ */
+bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point){
+    if(point.type == type::Type_e::StopArea){
+        //if we have a stop area in the request, we only do a crowfly section if the used stop point belongs to this stop area
+        return point.uri == stop_point->stop_area->uri;
+    }else if(point.type == type::Type_e::Admin){
+        //if we have a admin in the request, we only do a crowfly section if the used stop point belongs to this admin
+        auto admin_it = find_if(begin(stop_point->stop_area->admin_list), end(stop_point->stop_area->admin_list),
+                [point](const navitia::georef::Admin* admin){return admin->uri == point.uri;});
+        return admin_it != end(stop_point->stop_area->admin_list);
+    }else{
+        //if the request is on any other type we don't want a crowfly section
+        return false;
+    }
+}
 
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths,
@@ -83,37 +103,28 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             continue;
         }
         /*
-         * For the first section, we can distinguish 2 cases
-         * 1) We start from an area, we will add a crow fly section from the centroid of the area
-         *    to the origin stop point of the first section
-         * 2) We start from a ponctual place (everything but stop_area or admin)
+         * For the first section, we can distinguish 3 cases
+         * 1) We start from an area(stop_area or admin), we will add a crow fly section from the centroid of the area
+         *    to the origin stop point of the first section only if the stop point belongs to this area.
+         *
+         * 2) we start from an area but the chosen stop point don't belongs to this area, for example we want to start
+         * from an city, but the pt part of the journey start in another city, in this case 
+         * we add a street network section from the centroid of this area to the departure of the first pt_section
+         *
+         * 3) We start from a ponctual place (everything but stop_area or admin)
          * We add a street network section from this place to the departure of the first pt_section
+         *
          * If the uri of the origin point and the uri of the departure of the first section are the
          * same we do nothing
-         * */
+         **/
 
-        if (origin.type == type::Type_e::Admin || origin.type == type::Type_e::StopArea) {
-            if (path.items.front().stop_times.empty()) {
-                continue;
-            }
+        if (!path.items.front().stop_points.empty() && use_crow_fly(origin, path.items.front().stop_points.front())){
             const auto sp_dest = path.items.front().stop_points.front();
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
                                           path.items.front().departures.front()+bt::minutes(1));
             fill_crowfly_section(origin, destination_tmp, path.items.front().departures.front(),
                                  d, enhanced_response, pb_journey, now, action_period);
-            // If we start from a stop_area, and the first stop point is not from that stop_area,
-            // we indicate a time.
-            if (origin.type == type::Type_e::StopArea && origin.uri != sp_dest->stop_area->uri) {
-                const auto duration = worker.get_distance(sp_dest->idx);
-                if (!duration.is_special()) {
-                    auto* first_section = pb_journey->mutable_sections(0);
-                    first_section->set_duration(duration.total_seconds());
-                    first_section->mutable_street_network()->set_mode(convert(origin.streetnetwork_params.mode));
-                    departure_time = path.items.front().departures.front() - duration.to_posix();
-                    first_section->set_begin_date_time(navitia::to_posix_timestamp(departure_time));
-                }
-            }
 
         } else {
             if(!path.items.front().stop_points.empty()) {
@@ -235,29 +246,14 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             pb_section->set_duration((item.arrival - item.departure).total_seconds());
         }
 
-        if (destination.type == type::Type_e::Admin || destination.type == type::Type_e::StopArea) {
-            if (path.items.back().stop_times.empty()) {
-                continue;
-            }
+        if (!path.items.back().stop_points.empty() && use_crow_fly(destination, path.items.back().stop_points.back())){
             const auto sp_orig = path.items.back().stop_points.back();
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
                                           path.items.back().departures.back()+bt::minutes(1));
             fill_crowfly_section(origin_tmp, destination,path.items.back().departures.back(),
                                  d, enhanced_response, pb_journey, now, action_period);
-            // If we go to a stop_area, and the last stop point is not from that stop_area,
-            // we indicate a time.
-            if (destination.type == type::Type_e::StopArea &&
-                    destination.uri != sp_orig->stop_area->uri && pb_journey->sections_size() > 0) {
-                auto duration = worker.get_distance(sp_orig->idx, true);
-                if (!duration.is_special()) {
-                    auto* last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
-                    last_section->set_duration(duration.total_seconds());
-                    last_section->mutable_street_network()->set_mode(convert(destination.streetnetwork_params.mode));
-                    arrival_time = path.items.back().departures.back() + duration.to_posix();
-                    last_section->set_end_date_time(navitia::to_posix_timestamp(arrival_time));
-                }
-            }
+
         } else {
             if(!path.items.empty() && !path.items.back().stop_points.empty()) {
                 const auto& arrival_stop_point = path.items.back().stop_points.back();
