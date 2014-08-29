@@ -127,9 +127,6 @@ struct PathFinder {
     std::vector<std::pair<type::idx_t, navitia::time_duration>> find_nearest_stop_points(navitia::time_duration radius,
                                                                          const proximitylist::ProximityList<type::idx_t>& pl);
 
-    /// Compute the path from the starting point to the the target geographical coord
-    Path compute_path(const type::GeographicalCoord& target_coord);
-
     /// compute the distance from the starting point to the target stop point
     navitia::time_duration get_distance(type::idx_t target_idx);
 
@@ -161,14 +158,17 @@ struct PathFinder {
                                                color
                                                );
     }
-private:
+
+    //shouldn't be used outside of class apart from tests
     Path get_path(const ProjectionData& target, std::pair<navitia::time_duration, ProjectionData::Direction> nearest_edge);
 
+    //shouldn't be used outside of class apart from tests
     /** compute the path to the target and update the distances/pred
      *  return a pair with the edge corresponding to the target and the distance
      */
     std::pair<navitia::time_duration, ProjectionData::Direction> update_path(const ProjectionData& target);
 
+private:
     /// find the nearest vertex from the projection. return the distance to this vertex and the vertex
     std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target) const;
 
@@ -242,12 +242,20 @@ struct target_visitor : public boost::dijkstra_visitor<> {
 struct distance_visitor : public boost::dijkstra_visitor<> {
     navitia::time_duration max_duration;
     const std::vector<navitia::time_duration>& durations;
-    distance_visitor(navitia::time_duration max_dur, const std::vector<navitia::time_duration> & dur) :
-        max_duration(max_dur), durations(dur){}
+    SpeedDistanceCombiner comb;
 
+    distance_visitor(navitia::time_duration max_dur, const std::vector<navitia::time_duration> & dur, float speed_factor) :
+        max_duration(max_dur), durations(dur), comb(speed_factor){}
+
+    /*
+     * we don't want the dijskstra to update the distance over the limit,
+     * so we have to check it before the finish_vertex call_back
+     */
     template <typename graph_type>
-    void finish_vertex(vertex_t u, const graph_type&){
-        if(durations[u] > max_duration)
+    void examine_edge(edge_t e, const graph_type& g) {
+        assert (durations[boost::source(e, g)] != bt::pos_infin);
+
+        if (comb(durations[boost::source(e, g)], g[e].duration) > max_duration)
             throw DestinationFound();
     }
 };
