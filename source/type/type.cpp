@@ -146,7 +146,7 @@ bool ValidityPattern::is_valid(int day) const {
                        << day << " is too early");
         return false;
     }
-    if(day >= days.size()) {
+    if(size_t(day) >= days.size()) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
                        << day << " is late");
         return false;

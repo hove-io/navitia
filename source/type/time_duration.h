@@ -210,7 +210,7 @@ public:
             }
             throw navitia::exception("unhandled case for duration construction");
         }
-        auto dur = time_duration(d.hours(), d.minutes(), d.seconds(), d.fractional_seconds());
+        auto dur = time_duration(d.hours(), d.minutes(), d.seconds(), fractional_seconds_type(d.fractional_seconds()));
 
         //check for overflow
         if (dur.total_seconds() != d.total_seconds()) {

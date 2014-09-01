@@ -82,7 +82,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_vertex(data, work);
     this->fill_graph(data, work);
 //    this->clean_graph(data, work);
-    this->fill_graph_vls(data, work);
+    this->fill_graph_bss(data, work);
 
     //Charger les synonymes
     this->fill_synonyms(data, work);
@@ -1084,7 +1084,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
 }
 
 //get the minimum distance and the vertex to start from between 2 edges
-std::tuple<float, navitia::georef::vertex_t, navitia::georef::vertex_t>
+static std::tuple<float, navitia::georef::vertex_t, navitia::georef::vertex_t>
 get_min_distance(navitia::type::Data& data, navitia::georef::edge_t walking_e, navitia::georef::edge_t biking_e) {
     navitia::georef::vertex_t source_a_idx = boost::source(walking_e, data.geo_ref->graph);
     navitia::georef::Vertex source_a = data.geo_ref->graph[source_a_idx];
@@ -1114,7 +1114,7 @@ get_min_distance(navitia::type::Data& data, navitia::georef::edge_t walking_e, n
     return res;
 }
 
-void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
+void EdReader::fill_graph_bss(navitia::type::Data& data, pqxx::work& work){
     data.geo_ref->build_proximity_list();
     std::string request = "SELECT poi.id as id, ST_X(poi.coord::geometry) as lon,";
                 request += "ST_Y(poi.coord::geometry) as lat";
