@@ -65,7 +65,7 @@ void SynonymParser::fill_synonyms(){
                 this->synonym_map[key]=value;
             }
     }
-    LOG4CPLUS_TRACE(logger, "synonyms : " + this->synonym_map.size());
+    LOG4CPLUS_TRACE(logger, "synonyms : " << this->synonym_map.size());
 }
 
 void SynonymParser::fill(){

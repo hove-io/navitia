@@ -748,7 +748,7 @@ void CalendarDatesGtfsHandler::init(Data&) {
             e_type_c = csv.get_pos_col("exception_type");
 }
 
-void CalendarDatesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+void CalendarDatesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
     if(row.empty())
         return;
 
