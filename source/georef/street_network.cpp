@@ -131,7 +131,7 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
     if (!arrival_launched() || origin.streetnetwork_params.mode != destination.streetnetwork_params.mode) {
         arrival_path_finder.init(destination.coordinates, origin.streetnetwork_params.mode,
                                  origin.streetnetwork_params.speed_factor);
-        arrival_path_finder.start_distance_dijkstra(origin.streetnetwork_params.max_duration);
+        arrival_path_finder.start_distance_dijkstra(destination.streetnetwork_params.max_duration);
     }
 
     size_t num_vertices = boost::num_vertices(geo_ref.graph);
@@ -143,6 +143,7 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
                 && (arrival_path_finder.distances[u] != bt::pos_infin)
                 && ((departure_path_finder.distances[u] + arrival_path_finder.distances[u]) < min_dist)) {
             target = u;
+
             min_dist = departure_path_finder.distances[u] + arrival_path_finder.distances[u];
         }
     }
@@ -203,12 +204,13 @@ void PathFinder::start_distance_dijkstra(navitia::time_duration radius) {
     computation_launch = true;
     // We start dijkstra from source and target nodes
     try {
-        dijkstra(starting_edge[source_e], distance_visitor(radius, distances));
+        dijkstra(starting_edge[source_e], distance_visitor(radius, distances, speed_factor));
     } catch(DestinationFound){}
 
     try {
-        dijkstra(starting_edge[target_e], distance_visitor(radius, distances));
+        dijkstra(starting_edge[target_e], distance_visitor(radius, distances, speed_factor));
     } catch(DestinationFound){}
+
 }
 
 std::vector<std::pair<type::idx_t, navitia::time_duration>>
@@ -218,6 +220,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proxim
 
     // On trouve tous les élements à moins radius mètres en vol d'oiseau
     float crow_flies_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
+
     std::vector< std::pair<nt::idx_t, type::GeographicalCoord> > elements = pl.find_within(start_coord, crow_flies_dist);
     if(elements.empty())
         return {};
@@ -361,16 +364,6 @@ Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_
 
     return result;
 }
-
-
-Path PathFinder::compute_path(const type::GeographicalCoord& target_coord) {
-    ProjectionData dest(target_coord, geo_ref, geo_ref.pl);
-
-    auto best_pair = update_path(dest);
-
-    return get_path(dest, best_pair);
-}
-
 
 void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
     //we need to find out which side of the projection has been used to compute the right length
