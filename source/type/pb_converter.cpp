@@ -930,12 +930,6 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     section->set_length(0);
     section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
-    auto coord = section->mutable_street_network()->add_coordinates();
-    coord->set_lat(origin.coordinates.lat());
-    coord->set_lon(origin.coordinates.lon());
-    coord = section->mutable_street_network()->add_coordinates();
-    coord->set_lat(destination.coordinates.lat());
-    coord->set_lon(destination.coordinates.lon());
 }
 
 void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,

@@ -32,6 +32,7 @@ www.navitia.io
 #include "routing/raptor_api.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
+#include "type/pt_data.h"
 
 namespace ng = navitia::georef;
 

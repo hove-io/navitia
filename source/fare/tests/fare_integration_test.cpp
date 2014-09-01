@@ -34,10 +34,10 @@ www.navitia.io
 #include "fare/fare.h"
 #include "type/data.h"
 #include "routing/raptor_api.h"
-
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
+#include "georef/street_network.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }

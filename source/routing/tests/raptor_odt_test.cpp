@@ -34,7 +34,8 @@ www.navitia.io
 #include "routing/raptor_api.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
-
+#include "routing/raptor.h"
+#include "georef/street_network.h"
 
 
 struct logger_initialized {

@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "raptor.h"
 #include "routing/raptor_api.h"
+#include "georef/street_network.h"
 #include "type/data.h"
 #include "utils/timer.h"
 #include "type/response.pb.h"

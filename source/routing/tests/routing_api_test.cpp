@@ -35,6 +35,9 @@ www.navitia.io
 #include "ed/build_helper.h"
 #include "routing_api_test_data.h"
 #include "tests/utils_test.h"
+#include "routing/raptor.h"
+#include "georef/street_network.h"
+#include "type/data.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -110,15 +113,15 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
 BOOST_AUTO_TEST_CASE(journey_stay_in) {
     std::vector<std::string> forbidden;
     ed::builder b("20120614");
-    b.vj("9658", "1111111", "block1", true)	("ehv", 60300,60600)
-    		                            	("ehb", 60780,60780)
-    		                            	("bet", 61080,61080)
-    		                            	("btl", 61560,61560)
-    		                            	("vg",  61920,61920)
-    		                            	("ht",  62340,62340);
-    b.vj("4462", "1111111", "block1", true)	("ht",  62760,62760)
-    										("hto", 62940,62940)
-    										("rs",  63180,63180);
+    b.vj("9658", "1111111", "block1", true) ("ehv", 60300,60600)
+                                            ("ehb", 60780,60780)
+                                            ("bet", 61080,61080)
+                                            ("btl", 61560,61560)
+                                            ("vg",  61920,61920)
+                                            ("ht",  62340,62340);
+    b.vj("4462", "1111111", "block1", true) ("ht",  62760,62760)
+                                            ("hto", 62940,62940)
+                                            ("rs",  63180,63180);
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
@@ -937,3 +940,39 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     BOOST_REQUIRE_EQUAL(journey.sections(2).type(), pbnavitia::SectionType::STREET_NETWORK);
 
 }*/
+
+BOOST_AUTO_TEST_CASE(use_crow_fly){
+    navitia::type::EntryPoint ep;
+    navitia::type::StopPoint sp;
+    navitia::type::StopArea sa;
+    navitia::georef::Admin admin;
+    sp.stop_area = &sa;
+    sa.admin_list.push_back(&admin);
+
+    sa.uri = "sa:foo";
+    admin.uri = "admin";
+    ep.uri = "foo";
+    ep.type = navitia::type::Type_e::Address;
+
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+
+    ep.type = navitia::type::Type_e::POI;
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+
+    ep.type = navitia::type::Type_e::Coord;
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+
+    ep.type = navitia::type::Type_e::StopArea;
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+
+    ep.type = navitia::type::Type_e::Admin;
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+
+    ep.type = navitia::type::Type_e::Admin;
+    ep.uri = "admin";
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp));
+
+    ep.type = navitia::type::Type_e::StopArea;
+    ep.uri = "sa:foo";
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp));
+}
