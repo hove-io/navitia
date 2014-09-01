@@ -543,7 +543,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("walking_speed", type=float, default=1.12)
         parser_get.add_argument("bike_speed", type=float, default=4.1)
         parser_get.add_argument("bss_speed", type=float, default=4.1,)
-        parser_get.add_argument("car_speed", type=float, default=16.8)
+        parser_get.add_argument("car_speed", type=float, default=11.11)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("min_nb_journeys", type=int)
