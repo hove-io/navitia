@@ -39,6 +39,7 @@ www.navitia.io
 #include "routing/raptor_api.h"
 #include "utils/functions.h"
 #include "tests/utils_test.h"
+#include "georef/street_network.h"
 
 
 /*

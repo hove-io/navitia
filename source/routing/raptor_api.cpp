@@ -29,6 +29,8 @@ www.navitia.io
 */
 
 #include "raptor_api.h"
+#include "raptor.h"
+#include "georef/street_network.h"
 #include "type/pb_converter.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/datetime.h"
@@ -36,6 +38,7 @@ www.navitia.io
 #include <chrono>
 #include "type/meta_data.h"
 #include "fare/fare.h"
+
 
 
 namespace navitia { namespace routing {
@@ -55,27 +58,6 @@ void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj
     auto* add_info_vehicle_journey = pb_section->mutable_add_info_vehicle_journey();
     fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period);
     fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
-}
-
-/**
- * Choose if we must use a crowfly or a streetnework for a section. This function is call for the first and last section of a journey
- *
- * @param point: the object where we are going/coming: the requested origin for the first section or the destination for the last section
- * @param stop_point: for the first section, the stop point where we are going, or for the last section the stop point from where we come
- */
-bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point){
-    if(point.type == type::Type_e::StopArea){
-        //if we have a stop area in the request, we only do a crowfly section if the used stop point belongs to this stop area
-        return point.uri == stop_point->stop_area->uri;
-    }else if(point.type == type::Type_e::Admin){
-        //if we have a admin in the request, we only do a crowfly section if the used stop point belongs to this admin
-        auto admin_it = find_if(begin(stop_point->stop_area->admin_list), end(stop_point->stop_area->admin_list),
-                [point](const navitia::georef::Admin* admin){return admin->uri == point.uri;});
-        return admin_it != end(stop_point->stop_area->admin_list);
-    }else{
-        //if the request is on any other type we don't want a crowfly section
-        return false;
-    }
 }
 
 

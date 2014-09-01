@@ -31,8 +31,9 @@ www.navitia.io
 #include "routing_cli_utils.h"
 #include "type/response.pb.h"
 #include <boost/program_options.hpp>
-#include "raptor.h"
 #include "routing/raptor_api.h"
+#include "raptor.h"
+#include "georef/street_network.h"
 #include "tests/utils_test.h"
 
 namespace nr = navitia::routing;
