@@ -202,7 +202,16 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             } else {
                 pb_section->set_type(pbnavitia::TRANSFER);
                 switch(item.type) {
-                    case stay_in : pb_section->set_transfer_type(pbnavitia::stay_in); break;
+                    case stay_in :{
+                        pb_section->set_transfer_type(pbnavitia::stay_in);
+                        //We "stay in" the precedent section, this one is only a transfer
+                        int section_idx = pb_journey->sections_size() - 2;
+                        if(section_idx >= 0){
+                            auto* prec_section = pb_journey->mutable_sections(section_idx);
+                            prec_section->mutable_add_info_vehicle_journey()->set_stay_in(true);
+                        }
+                        break;
+                    }
                     case guarantee : pb_section->set_transfer_type(pbnavitia::guaranteed); break;
                     case waiting : pb_section->set_type(pbnavitia::WAITING); break;
                     default : pb_section->set_transfer_type(pbnavitia::walking); break;
