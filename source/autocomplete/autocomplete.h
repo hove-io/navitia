@@ -312,7 +312,7 @@ struct Autocomplete
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str,
                                           const autocomplete_map& synonyms,
-                                          const int wordweight,
+                                          const int,
                                           size_t nbmax,
                                           std::function<bool(T)> keep_element)
                                           const{

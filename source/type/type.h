@@ -423,7 +423,7 @@ struct StopPointConnection: public Header, hasProperties{
     ConnectionType connection_type;
 
     StopPointConnection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
-        max_duration(0){};
+        max_duration(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & uri & departure & destination & display_duration & duration &
