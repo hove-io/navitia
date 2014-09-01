@@ -223,11 +223,11 @@ Path create_path(const GeoRef& georef, std::vector<vertex_t> reverse_path, bool 
 /// Compute the angle between the last segment of the path and the next point
 int compute_directions(const navitia::georef::Path& path, const nt::GeographicalCoord& c_coord);
 
-// Exception levée dès que l'on trouve une destination
+// Exception thrown when a destination is found in the djisktra
 struct DestinationFound{};
 struct DestinationNotFound{};
 
-// Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
+// Visitor who stops (throw a DestinationFound exception) when one of the targets have been reached
 struct target_visitor : public boost::dijkstra_visitor<> {
     const std::vector<vertex_t> & destinations;
     target_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
@@ -238,7 +238,7 @@ struct target_visitor : public boost::dijkstra_visitor<> {
     }
 };
 
-// Visiteur qui s'arrête au bout d'une certaine distance
+// Visitor who stops (throw a DestinationFound exception) when a certain distance is reached
 struct distance_visitor : public boost::dijkstra_visitor<> {
     navitia::time_duration max_duration;
     const std::vector<navitia::time_duration>& durations;
@@ -260,7 +260,7 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
     }
 };
 
-// Visitor who throw a DestinationFound exception when all target has been visited
+//Visitor who stops (throw a DestinationFound exception) when all targets has been visited
 struct target_all_visitor : public boost::dijkstra_visitor<> {
     std::vector<vertex_t> destinations;
     size_t nbFound = 0;
@@ -276,7 +276,7 @@ struct target_all_visitor : public boost::dijkstra_visitor<> {
     }
 };
 
-// Visiteur qui lève une exception dès que la cible souhaitée est atteinte
+//Visitor who stops (throw a DestinationFound exception) when a target has been visited
 struct target_unique_visitor : public boost::dijkstra_visitor<> {
     const vertex_t & destination;
 
