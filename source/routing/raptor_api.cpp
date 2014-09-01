@@ -175,13 +175,16 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                         departure_ptime = p_deptime;
                     // L'heure d'arrivée au dernier stop point
                     arrival_ptime = p_arrtime;
-                    if(i>0) {
+                    if(i > 0) {
                         const auto & previous_coord = item.stop_points[i-1]->coord;
                         const auto & current_coord = item.stop_points[i]->coord;
                         length += previous_coord.distance_to(current_coord);
                     }
                 }
-                if (item.stop_points.size() > 1) {
+                if (! item.stop_points.empty()) {
+                    //some time there is only one stop points, typically in case of "extension of services"
+                    //if the passenger as to board on the last stop_point of a VJ (yes, it's possible...)
+                    //in this case we want to display this only point as the departure and the destination of this section
                     auto arr_time = item.arrivals[0];
                     auto dep_time = item.departures[0];
                     bt::time_period action_period(dep_time, arr_time);
