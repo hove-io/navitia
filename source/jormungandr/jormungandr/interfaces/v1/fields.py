@@ -171,6 +171,9 @@ class additional_informations_vj(fields.Raw):
         if (addinfo.has_date_time_estimated):
             result.append("has_date_time_estimated")
 
+        if (addinfo.stay_in):
+            result.append('stay_in')
+
         descriptor = addinfo.DESCRIPTOR
         enum_t = descriptor.fields_by_name['vehicle_journey_type'].enum_type
         values = enum_t.values_by_name
