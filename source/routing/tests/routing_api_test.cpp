@@ -459,11 +459,77 @@ template <typename speed_provider_trait>
 struct streetnetworkmode_fixture : public routing_api_data<speed_provider_trait> {
 
     pbnavitia::Response make_response() {
-        navitia::georef::StreetNetwork sn_worker(*(this->b.data->geo_ref));
-        nr::RAPTOR raptor(*(this->b.data));
+        navitia::georef::StreetNetwork sn_worker(*this->b.data->geo_ref);
+        nr::RAPTOR raptor(*this->b.data);
         return nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false, true);
     }
 };
+
+
+struct direct_path_routing_api_data : routing_api_data<test_speed_provider> {
+    direct_path_routing_api_data():
+        routing_api_data<test_speed_provider>(100),
+        // note: we need to set the A->B distance to 100 to have something coherent concerning the crow fly distance between A and B
+        // note2: we set it to 200 in the routing_api_data not to have projection problems
+        worker(*this->b.data->geo_ref) {
+        origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
+        origin.streetnetwork_params.offset = 0;
+        origin.streetnetwork_params.max_duration = bt::pos_infin; //not used, overloaded in find_neares_stop_points call
+        origin.streetnetwork_params.speed_factor = 1;
+
+        worker.init(origin);
+    }
+    navitia::georef::StreetNetwork worker;
+};
+
+BOOST_FIXTURE_TEST_CASE(direct_path_under_the_limit, direct_path_routing_api_data) {
+    //we limit the search to the limit of A->distance minus 1, so we can't find A (just B)
+    auto a_s_distance = B.distance_to(S) + distance_ab;
+    auto a_s_dur = to_duration(a_s_distance, navitia::type::Mode_e::Walking);
+
+    auto sp = worker.find_nearest_stop_points(a_s_dur - navitia::seconds(1), b.data->pt_data->stop_point_proximity_list, false);
+
+    BOOST_REQUIRE_EQUAL(sp.size(), 1);
+    auto res_sp = sp[0];
+    BOOST_CHECK_EQUAL(res_sp.second, to_duration(B.distance_to(S), navitia::type::Mode_e::Walking));
+    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopB");
+}
+
+BOOST_FIXTURE_TEST_CASE(direct_path_exactly_the_limit, direct_path_routing_api_data) {
+    //we limit the search to the limit of A->distance so we can find A (and B)
+    auto a_s_distance = B.distance_to(S) + distance_ab;
+    auto a_s_dur = to_duration(a_s_distance, navitia::type::Mode_e::Walking);
+
+    auto sp = worker.find_nearest_stop_points(a_s_dur, b.data->pt_data->stop_point_proximity_list, false);
+
+    BOOST_REQUIRE_EQUAL(sp.size(), 2);
+
+    auto res_sp = sp[0];
+    BOOST_CHECK_EQUAL(res_sp.second, to_duration(B.distance_to(S), navitia::type::Mode_e::Walking));
+    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopB");
+
+    res_sp = sp[1];
+    BOOST_CHECK_EQUAL(res_sp.second, a_s_dur);
+    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopA");
+}
+
+BOOST_FIXTURE_TEST_CASE(direct_path_over_the_limit, direct_path_routing_api_data) {
+    //we limit the search to the limit of A->distance plus 1, so we can find A (and B)
+    auto a_s_distance = B.distance_to(S) + distance_ab;
+    auto a_s_dur = to_duration(a_s_distance, navitia::type::Mode_e::Walking);
+
+    auto sp = worker.find_nearest_stop_points(a_s_dur + navitia::seconds(1), b.data->pt_data->stop_point_proximity_list, false);
+
+    BOOST_REQUIRE_EQUAL(sp.size(), 2);
+
+    auto res_sp = sp[0];
+    BOOST_CHECK_EQUAL(res_sp.second, to_duration(B.distance_to(S), navitia::type::Mode_e::Walking));
+    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopB");
+
+    res_sp = sp[1];
+    BOOST_CHECK_EQUAL(res_sp.second, a_s_dur);
+    BOOST_CHECK_EQUAL(b.data->pt_data->stop_points[res_sp.first]->name, "stop_point:stopA");
+}
 
 // Walking
 BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provider>) {
