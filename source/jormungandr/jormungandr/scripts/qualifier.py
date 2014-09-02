@@ -49,7 +49,7 @@ def get_nontransport_duration(journey):
 
 
 def has_fall_back_mode(journey, mode):
-    return any(s.type == response_pb2.STREET_NETWORK and
+    return any(s.type in [response_pb2.STREET_NETWORK, response_pb2.CROW_FLY] and
             s.street_network.mode == mode for s in journey.sections)
 
 
