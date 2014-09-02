@@ -125,7 +125,7 @@ private:
     void fill_vertex(navitia::type::Data& data, pqxx::work& work);
     void fill_graph(navitia::type::Data& data, pqxx::work& work);
     void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work, const double percent_delete);
-    void fill_graph_vls(navitia::type::Data& data, pqxx::work& work);
+    void fill_graph_bss(navitia::type::Data& data, pqxx::work& work);
 
     //Synonyms:
     void fill_synonyms(navitia::type::Data& data, pqxx::work& work);

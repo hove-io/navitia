@@ -99,7 +99,6 @@ BOOST_AUTO_TEST_CASE(approx_distance){
 
 BOOST_AUTO_TEST_CASE(find_nearest){
     constexpr double M_TO_DEG = 1.0/111320.0;
-    typedef std::pair<unsigned int, GeographicalCoord> p;
     ProximityList<unsigned int> pl;
 
     GeographicalCoord c;

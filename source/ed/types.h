@@ -201,7 +201,7 @@ struct JourneyPattern : public Header, Nameable{
     PhysicalMode* physical_mode;
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
 
-    JourneyPattern(): is_frequence(false), route(NULL), physical_mode(NULL){};
+    JourneyPattern(): is_frequence(false), route(NULL), physical_mode(NULL){}
 
     navitia::type::JourneyPattern* get_navitia_type() const;
 
@@ -343,7 +343,7 @@ struct Node{
     size_t id;
     bool is_used;
     navitia::type::GeographicalCoord coord;
-    Node():id(0), is_used(false){};
+    Node():id(0), is_used(false){}
 };
 
 struct Admin{
@@ -354,7 +354,7 @@ struct Admin{
     std::string name;
     std::string postcode;
     navitia::type::GeographicalCoord coord;
-    Admin():id(0), is_used(false), level("8"){};
+    Admin():id(0), is_used(false), level("8"){}
 };
 struct Edge;
 struct Way{
@@ -365,7 +365,7 @@ struct Way{
     std::string name;
     std::string type;
     std::vector<Edge*> edges;
-    Way():id(0), uri(""), is_used(true), admin(nullptr), name(""), type(""){};
+    Way():id(0), uri(""), is_used(true), admin(nullptr), name(""), type(""){}
 };
 
 struct Edge{

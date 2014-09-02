@@ -85,7 +85,7 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
 
         //we have to reverse the path
         std::reverse(result.path_items.begin(), result.path_items.end());
-        boost::optional<int> last_angle = {};
+        int last_angle = 0;
         for (auto& item : result.path_items) {
             std::reverse(item.coordinates.begin(), item.coordinates.end());
 
@@ -93,11 +93,7 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
             // the first direction become 0,
             // and we 'shift' all directions to the next path_item after reverting them
             int current_angle = -1 * item.angle;
-            if (! last_angle) {
-                item.angle = 0;
-            } else {
-                item.angle = *last_angle;
-            }
+            item.angle = last_angle;
             last_angle = current_angle;
 
             // FIXME: ugly temporary fix

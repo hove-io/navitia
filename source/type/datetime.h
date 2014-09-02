@@ -50,8 +50,8 @@ namespace DateTimeUtils{
     const navitia::DateTime inf = std::numeric_limits<uint32_t>::max();
     const navitia::DateTime min = 0;
 
-    inline navitia::DateTime set(int date, int hour) {
-        return date * SECONDS_PER_DAY + hour;
+    inline navitia::DateTime set(int date, int time_of_day) {
+        return date * SECONDS_PER_DAY + time_of_day;
     }
 
     inline uint32_t hour(navitia::DateTime datetime) {
