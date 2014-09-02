@@ -184,6 +184,16 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
     BOOST_CHECK_THROW(sn.nearest_edge(c), navitia::proximitylist::NotFound);
 }
 
+
+/// Compute the path from the starting point to the the target geographical coord
+Path compute_path(PathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
+    ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
+
+    auto best_pair = finder.update_path(dest);
+
+    return finder.get_path(dest, best_pair);
+}
+
 //not used for the moment so it is not possible anymore (but it would not be difficult to do again)
 // Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
 //BOOST_AUTO_TEST_CASE(compute_route_n_n){
@@ -281,7 +291,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 
     PathFinder path_finder(sn);
     path_finder.init({0, 0, true}, Mode_e::Walking, 1); //starting from a
-    Path p = path_finder.compute_path({4, 4, true}); //going to e
+    Path p = compute_path(path_finder, {4, 4, true}); //going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
     BOOST_CHECK_EQUAL(p.path_items[1].way_idx, 1);
@@ -291,7 +301,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 //    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
 
     path_finder.init({3, 3, true}, Mode_e::Walking, 1); //starting from d
-    p = path_finder.compute_path({4, 4, true}); //going to e
+    p = compute_path(path_finder, {4, 4, true}); //going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
 }
@@ -333,7 +343,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     destination.set_xy(4, 11);
     sn.init();
     path_finder.init(start, Mode_e::Walking, 1);
-    Path p = path_finder.compute_path(destination);
+    Path p = compute_path(path_finder, destination);
     auto coords = get_coords_from_path(p);
     print_coord(coords);
     BOOST_REQUIRE_EQUAL(coords.size(), 4);
@@ -351,7 +361,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     // Trajet partiel : on ne parcourt pas un arc en entier, mais on passe par un nœud
     start.set_xy(7,6);
     path_finder.init(start, Mode_e::Walking, 1);
-    p = path_finder.compute_path(destination);
+    p = compute_path(path_finder, destination);
     coords = get_coords_from_path(p);
     print_coord(coords);
     BOOST_CHECK_EQUAL(p.path_items.size(), 2);

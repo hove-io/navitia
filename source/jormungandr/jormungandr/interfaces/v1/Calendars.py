@@ -73,8 +73,9 @@ calendars = {
     "calendars": NonNullList(NonNullNested(calendar)),
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
-    "codes" : NonNullList(NonNullNested(code))
+    "codes": NonNullList(NonNullNested(code))
 }
+
 
 class Calendars(ResourceUri):
     def __init__(self):

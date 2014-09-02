@@ -102,7 +102,15 @@ int main(int argc, char * argv[])
     now = start = pt::microsec_clock::local_time();
 
     ed::EdReader reader(connection_string);
-    reader.fill(data, min_non_connected_graph_ratio);
+    try {
+        reader.fill(data, min_non_connected_graph_ratio);
+    }
+    catch (const navitia::exception& e) {
+        LOG4CPLUS_ERROR(logger, "error while reading the database "  << e.what());
+        LOG4CPLUS_ERROR(logger, "stack: "  << e.backtrace());
+        throw;
+    }
+
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
     data.complete();
 

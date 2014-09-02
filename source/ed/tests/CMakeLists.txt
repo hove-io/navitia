@@ -6,7 +6,7 @@ SET(SOURCE
 )
 
 add_executable(gtfs_parser_test gtfsparser_test.cpp)
-target_link_libraries(gtfs_parser_test ed connectors types utils ${BOOST_LIBS} log4cplus)
+target_link_libraries(gtfs_parser_test ed connectors data types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(gtfs_parser_test)
 
 add_executable(adapted_test adapted_test.cpp)

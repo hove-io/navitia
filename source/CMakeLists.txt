@@ -11,9 +11,9 @@ if(Boost_VERSION)
     set(Boost_FIND_QUIETLY TRUE)
 endif()
 
-SET(KRAKEN_VERSION_MAJOR 0)
-SET(KRAKEN_VERSION_MINOR 102)
-SET(KRAKEN_VERSION_PATCH 2)
+SET(KRAKEN_VERSION_MAJOR 1)
+SET(KRAKEN_VERSION_MINOR 0)
+SET(KRAKEN_VERSION_PATCH 0)
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
@@ -26,7 +26,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread -ftemplate-depth=512")
+    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread -ftemplate-depth=512 -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-documentation -Wno-shadow")
     SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
@@ -42,6 +42,9 @@ FIND_PACKAGE(Boost 1.47.0 COMPONENTS unit_test_framework thread regex
     serialization date_time filesystem system regex chrono iostreams
     program_options REQUIRED)
 
+#boost 1.53/1.54 bugs with local datetime...
+#see http://stackoverflow.com/questions/15234527/boost-1-53-local-date-time-compiler-error-with-std-c0x
+add_definitions(-DBOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS)
 
 
 #add current compilation dir to include path to handle config.h
@@ -89,19 +92,6 @@ CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 CHECK_INCLUDE_FILE_CXX("log4cplus/loggingmacros.h" HAVE_LOGGINGMACROS_H)
 
 configure_file("${CMAKE_SOURCE_DIR}/config.h.cmake" "${CMAKE_BINARY_DIR}/config.h")
-
-
-## TEST
-set(CONNECTOR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/connectors")
-add_test(connectors nosetests --with-xunit  --xunit-file=nosetest_jormungandr.xml "--where=${CONNECTOR_PATH}")
-set_tests_properties(connectors PROPERTIES ENVIRONMENT "PYTHONPATH=${CONNECTOR_PATH}")
-
-#ADD_TEST(jormungandr_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/jormungandr/)
-#ADD_TEST(tyr_pep8 pep8 --repeat --exclude=*_pb2.py ${CMAKE_SOURCE_DIR}/tyr/tyr)
-
-#ADD_TEST(sindri_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/sindri/sindri)
-#ADD_TEST(tyr_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/tyr/tyr)
-#ADD_TEST(connectors_pep8 pep8 --repeat --exclude=*_pb2.py --ignore=E711,E712 ${CMAKE_SOURCE_DIR}/connectors)
 
 #THIRD PARTY
 #build simpleamqpclient as static lib

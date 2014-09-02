@@ -40,15 +40,49 @@ from flask.ext.restful.types import boolean
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from jormungandr.authentification import authentification_required
+from jormungandr.utils import date_to_timestamp, ResourceUtc
+from datetime import datetime, timedelta
+
+f_datetime = "%Y%m%dT%H%M%S"
 
 
-class Journeys(Resource):
+class FindAndFormatJourneys():
+
+    def find_and_transform_datetimes(self, response):
+        if not 'journeys' in response or len(response['journeys']) == 0:
+            return response
+        for journey in response['journeys']:
+            if "arrival_date_time" in journey:
+                journey['arrival_date_time'] = self.format(journey['arrival_date_time'])
+            if "departure_date_time" in journey:
+                journey['departure_date_time'] = self.format(journey['departure_date_time'])
+            if "requested_date_time" in journey:
+                journey['requested_date_time'] = self.format(journey['requested_date_time'])
+            if not "sections" in journey:
+                continue
+            for section in journey['sections']:
+                if "end_date_time" in section:
+                    section['end_date_time'] = self.format(section['end_date_time'])
+                if "begin_date_time" in section:
+                    section['begin_date_time'] = self.format(section['begin_date_time'])
+                    if not "stop_date_times" in section:
+                        continue
+                    for st in section['stop_date_times']:
+                        if "arrival_date_time" in journey:
+                            st['arrival_date_time'] = self.format(st['arrival_date_time'])
+                        if "departure_date_time" in st:
+                            st['departure_date_time'] = self.format(st['departure_date_time'])
+        return response
+
+
+class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
 
     """ Compute journeys"""
     parsers = {}
     method_decorators = [authentification_required]
 
     def __init__(self, *args, **kwargs):
+        ResourceUtc.__init__(self)
         types = ["all", "rapid"]
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
@@ -90,15 +124,15 @@ class Journeys(Resource):
                                 description=
                                 "maximal duration of non public "\
                                 "transport in second")
-        parser_get.add_argument("walking_speed", type=float, default=1.68,
+        parser_get.add_argument("walking_speed", type=float, default=1.12,
                                 description=
                                 "Walking speed in meter/second")
-        parser_get.add_argument("bike_speed", type=float, default=8.8,
+        parser_get.add_argument("bike_speed", type=float, default=4.1,
                                 description="Bike speed in meter/second")
-        parser_get.add_argument("bss_speed", type=float, default=8.8,
+        parser_get.add_argument("bss_speed", type=float, default=4.1,
                                 description="Bike rental speed in "\
                                 "meter/second")
-        parser_get.add_argument("car_speed", type=float, default=16.8,
+        parser_get.add_argument("car_speed", type=float, default=11.11,
                                 description=
                                 "Car speed in meter/second")
         parser_get.add_argument("forbidden_uris[]", type=str, action="append",
@@ -110,7 +144,8 @@ class Journeys(Resource):
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
-
+        self.region = None
+    
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
 
@@ -118,27 +153,34 @@ class Journeys(Resource):
         args["min_nb_journeys"] = None
         args["max_nb_journeys"] = None
         args["show_codes"] = False
-
         if region is None:
             region = i_manager.key_of_id(args["origin"])
+        self.region = region
+        original_datetime = datetime.strptime(args['datetime'], f_datetime)
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
+        args['datetime'] = date_to_timestamp(new_datetime)
+        
         response = i_manager.dispatch(args, "journeys", instance_name=region)
         if response.journeys:
-            (before, after) = extremes(response, request)
+            before, after = extremes(response, request)
             if before and after:
                 response.prev = before
                 response.next = after
 
-        return protobuf_to_dict(response, use_enum_labels=True), 200
+        return self.find_and_transform_datetimes(protobuf_to_dict(response, use_enum_labels=True)), 200
 
 
-class Isochrone(Resource):
+
+class Isochrone(Resource, ResourceUtc, FindAndFormatJourneys):
 
     """ Compute isochrones """
     method_decorators = [authentification_required]
 
     def __init__(self):
+        ResourceUtc.__init__(self)
         self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser()
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("origin", type=str, required=True)
         parser_get.add_argument("datetime", type=str, required=True)
@@ -152,12 +194,13 @@ class Isochrone(Resource):
         parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
                                 description="maximal duration of non public \
                                 transport in second")
-        parser_get.add_argument("walking_speed", type=float, default=1.68)
-        parser_get.add_argument("bike_speed", type=float, default=8.8)
-        parser_get.add_argument("bss_speed", type=float, default=8.8)
-        parser_get.add_argument("car_speed", type=float, default=16.8)
+        parser_get.add_argument("walking_speed", type=float, default=1.12)
+        parser_get.add_argument("bike_speed", type=float, default=4.1)
+        parser_get.add_argument("bss_speed", type=float, default=4.1)
+        parser_get.add_argument("car_speed", type=float, default=11.11)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("wheelchair", type=boolean, default=False)
+        parser_get.add_argument("disruption_active", type=boolean, default=False)
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
 
@@ -165,10 +208,19 @@ class Isochrone(Resource):
         args = self.parsers["get"].parse_args()
         if region is None:
             region = i_manager.key_of_id(args["origin"])
-        response = i_manager.dispatch(args, "isochrone", instance_name=region)
+        self.region = region
+        original_datetime = datetime.strptime(args['datetime'], f_datetime)
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
+        args['datetime'] = date_to_timestamp(new_datetime)
+        #default value for compatibility with v1
+        args["min_nb_journeys"] = None
+        args["max_nb_journeys"] = None
+        args["show_codes"] = False
+        response = i_manager.dispatch(args, "isochrone", instance_name=self.region)
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:
-                response.prev = before
-                response.next = after
-        return protobuf_to_dict(response, use_enum_labels=True), 200
+                response.prev = self.format(before)
+                response.next = self.format(after)
+        return self.find_and_transform_datetimes(protobuf_to_dict(response, use_enum_labels=True)), 200

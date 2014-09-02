@@ -107,16 +107,17 @@ struct TripsFusioHandler : public GenericHandler {
     int ignored = 0;
     int ignored_vj = 0;
     void init(Data&);
-    ed::types::VehicleJourney* get_vj(Data& data, const csv_row& row, bool is_first_line);
-    ed::types::VehicleJourney* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    std::vector<ed::types::VehicleJourney*> get_split_vj(Data& data, const csv_row& row, bool is_first_line);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"route_id", "service_id", "trip_id", "physical_mode_id", "company_id"}; }
+    void finish(Data&);
 };
 
 struct StopTimeFusioHandler : public StopTimeGtfsHandler {
     StopTimeFusioHandler(GtfsData& gdata, CsvReader& reader) : StopTimeGtfsHandler(gdata, reader) {}
     int desc_c, itl_c, date_time_estimated_c;
     void init(Data&);
-    ed::types::StopTime* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
 };
 
 struct ContributorFusioHandler : public GenericHandler {
@@ -288,10 +289,6 @@ struct AdminStopAreaFusioHandler : public GenericHandler {
 struct FusioParser : public GenericGtfsParser {
     void parse_files(Data&);
     FusioParser(const std::string & path) : GenericGtfsParser(path) {}
-    /// Add default Commercial_mode
-    void fill_default_commercial_mode(Data & data);
-    /// Add default Physical_mode
-    void fill_default_physical_mode(Data & data);
 };
 }
 }

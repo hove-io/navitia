@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import calendar
 import logging
 
 from flask import Flask, request, url_for
@@ -49,6 +50,8 @@ from jormungandr.interfaces.parsers import option_value
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
 import datetime
 from functools import wraps
+from fields import DateTime
+from jormungandr.timezone import set_request_timezone
 from make_links import add_id_links, clean_links
 from errors import ManageError
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -60,6 +63,7 @@ from copy import copy
 from datetime import datetime
 from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
+from jormungandr.utils import date_to_timestamp, ResourceUtc
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -134,19 +138,6 @@ class GeoJson(fields.Raw):
         elif obj.type == response_pb2.TRANSFER:
             coords.append(obj.origin.stop_point.coord)
             coords.append(obj.destination.stop_point.coord)
-        elif obj.type == response_pb2.CROW_FLY:
-            for place in [obj.origin, obj.destination]:
-                type_ = place.embedded_type
-                if type_ == type_pb2.STOP_POINT:
-                    coords.append(place.stop_point.coord)
-                elif type_ == type_pb2.STOP_AREA:
-                    coords.append(place.stop_area.coord)
-                elif type_ == type_pb2.POI:
-                    coords.append(place.poi.coord)
-                elif type_ == type_pb2.ADDRESS:
-                    coords.append(place.address.coord)
-                elif type_ == type_pb2.ADMINISTRATIVE_REGION:
-                    coords.append(place.administrative_region.coord)
         else:
             return None
 
@@ -217,8 +208,8 @@ section = {
                         attribute="street_network.path_items"),
     "transfer_type": enum_type(),
     "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
-    "departure_date_time": fields.String(attribute="begin_date_time"),
-    "arrival_date_time": fields.String(attribute="end_date_time"),
+    "departure_date_time": DateTime(attribute="begin_date_time"),
+    "arrival_date_time": DateTime(attribute="end_date_time"),
 }
 
 cost = {
@@ -235,9 +226,9 @@ fare = {
 journey = {
     'duration': fields.Integer(),
     'nb_transfers': fields.Integer(),
-    'departure_date_time': fields.String(),
-    'arrival_date_time': fields.String(),
-    'requested_date_time': fields.String(),
+    'departure_date_time': DateTime(),
+    'arrival_date_time': DateTime(),
+    'requested_date_time': DateTime(),
     'sections': NonNullList(NonNullNested(section)),
     'from': PbField(place, attribute='origin'),
     'to': PbField(place, attribute='destination'),
@@ -255,6 +246,7 @@ ticket = {
     "cost": NonNullNested(cost),
     "links": TicketLinks(attribute="section_id")
 }
+
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
@@ -383,13 +375,12 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_journey['arrival_date_time'] \
                 and asap_journey['departure_date_time']:
-            second = timedelta(minutes=1)
             s_departure = asap_journey['departure_date_time']
             f_departure = datetime.strptime(s_departure, f_datetime)
             s_arrival = asap_journey['arrival_date_time']
             f_arrival = datetime.strptime(s_arrival, f_datetime)
-            datetime_after = f_departure + second
-            datetime_before = f_arrival - second
+            datetime_after = f_departure + timedelta(minutes=1)
+            datetime_before = f_arrival - timedelta(minutes=1)
 
         return (datetime_before, datetime_after)
 
@@ -410,11 +401,11 @@ class add_journey_pagination(object):
             return (None, None)
         if asap_min['departure_date_time'] and asap_max['arrival_date_time']:
             departure = asap_min['departure_date_time']
-            departure_date = datetime.strptime(departure, f_datetime).date()
+            departure_date = datetime.strptime(departure, f_datetime)
             midnight = datetime.strptime('0000', '%H%M').time()
             datetime_first = datetime.combine(departure_date, midnight)
             arrival = asap_max['arrival_date_time']
-            arrival_date = datetime.strptime(arrival, f_datetime).date()
+            arrival_date = datetime.strptime(arrival, f_datetime)
             almost_midnight = datetime.strptime('2359', '%H%M').time()
             datetime_last = datetime.combine(arrival_date, almost_midnight)
 
@@ -504,11 +495,12 @@ def compute_regions(args):
     return _region
 
 
-class Journeys(ResourceUri):
+class Journeys(ResourceUri, ResourceUtc):
 
     def __init__(self):
         # journeys must have a custom authentication process
         ResourceUri.__init__(self, authentication=False)
+        ResourceUtc.__init__(self)
         modes = ["walking", "car", "bike", "bss"]
         types = {
             "all": "All types",
@@ -551,7 +543,7 @@ class Journeys(ResourceUri):
         parser_get.add_argument("walking_speed", type=float, default=1.12)
         parser_get.add_argument("bike_speed", type=float, default=4.1)
         parser_get.add_argument("bss_speed", type=float, default=4.1,)
-        parser_get.add_argument("car_speed", type=float, default=16.8)
+        parser_get.add_argument("car_speed", type=float, default=11.11)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("min_nb_journeys", type=int)
@@ -602,6 +594,13 @@ class Journeys(ResourceUri):
         if 'last_section_mode' in args and args['last_section_mode']:
             args['destination_mode'] = args['last_section_mode']
 
+        # Technically, bss mode enable walking (if it is better than bss)
+        # so if the user ask for walking and bss, we only keep bss
+        if 'walking' in args['origin_mode'] and 'bss' in args['origin_mode']:
+            args['origin_mode'].remove('walking')
+        if 'walking' in args['destination_mode'] and 'bss' in args['destination_mode']:
+            args['destination_mode'].remove('walking')
+
         if region:
             self.region = i_manager.get_region(region)
             #we check that the user can use this api
@@ -631,11 +630,20 @@ class Journeys(ResourceUri):
         if not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
 
+        original_datetime = datetime.strptime(args['datetime'], f_datetime)
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
+        args['datetime'] = date_to_timestamp(new_datetime)
+
         api = None
         if args['destination']:
             api = 'journeys'
         else:
             api = 'isochrone'
+
+        #we store the region in the 'g' object, which is local to a request
+        set_request_timezone(self.region)
+
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
         return response
@@ -652,3 +660,4 @@ class Journeys(ResourceUri):
             del splitted_address[1]
             return ':'.join(splitted_address)
         return id
+

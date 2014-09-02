@@ -39,6 +39,7 @@ from qualifier import qualifier_one
 from datetime import datetime, timedelta
 import itertools
 from flask import current_app
+import time
 
 
 pb_type = {
@@ -52,6 +53,10 @@ pb_type = {
 
 
 f_date_time = "%Y%m%dT%H%M%S"
+
+
+def date_to_time_stamp(date):
+    return int(time.mktime(date.timetuple()))
 
 
 def are_equals(journey1, journey2):
@@ -541,17 +546,15 @@ class Script(object):
                     break
 
             new_datetime = None
+            one_minute = 60
             if request['clockwise']:
-                l_date_time = last_best.departure_date_time
-                l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                new_datetime = l_date_time_f + timedelta(minutes=1)
+                #since dates are now posix time stamp, we only have to add the additional seconds
+                new_datetime = last_best.departure_date_time + one_minute
             else:
-                l_date_time = last_best.arrival_date_time
-                l_date_time_f = datetime.strptime(l_date_time, f_date_time)
-                new_datetime = l_date_time_f + timedelta(minutes=-1)
+                new_datetime = last_best.arrival_date_time - one_minute
 
             next_request = self.change_request(pb_req, tmp_resp)
-            next_request.journeys.datetimes[0] = new_datetime.strftime(f_date_time)
+            next_request.journeys.datetimes[0] = new_datetime
             del next_request.journeys.datetimes[1:]
             # we tag the journeys as 'next' or 'prev' journey
             if len(resp.journeys):
@@ -633,7 +636,7 @@ class Script(object):
         if request["debug"] or not resp:
             return #in debug we want to keep all journeys
 
-        if not request['destination']:
+        if "destination" not in request or not request['destination']:
             return #for isochrone we don't want to filter
 
         if resp.HasField("error"):

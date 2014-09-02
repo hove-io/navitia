@@ -31,15 +31,19 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
-#include "time_tables/departure_boards.h"
 #include "ed/build_helper.h"
 #include "type/type.h"
+#include "departure_board_test_data.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
+int32_t time_to_int(int h, int m, int s) {
+    auto dur = navitia::time_duration(h, m, s);
+    return dur.total_seconds(); //time are always number of seconds from midnight
+}
 
 using namespace navitia::timetables;
 
@@ -82,84 +86,24 @@ BOOST_AUTO_TEST_CASE(test1) {
 }
 
 
-struct calendar_fixture {
-    ed::builder b;
-    boost::gregorian::date beg;
-    boost::gregorian::date end_of_year;
-    calendar_fixture() : b("20120614") {
-        //2 vj during the week
-        b.vj("network:R", "line:A", "1", "", true, "week")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
-        b.vj("network:R", "line:A", "101", "", true, "week_bis")("stop1", 11 * 3600, 11 * 3600 + 10 * 60)("stop2", 14 * 3600, 14 * 3600 + 10 * 60);
-        //NOTE: we give a first random validity pattern because the builder try to factorize them
 
-        //only one on the week end
-        b.vj("network:R", "line:A", "10101", "", true, "weekend")("stop1", 20 * 3600, 20 * 3600 + 10 * 60)("stop2", 21 * 3600, 21 * 3600 + 10 * 60);
+BOOST_FIXTURE_TEST_CASE(test_data_set, calendar_fixture) {
+    //simple test on the data set creation
 
-        // and one everytime
-        b.vj("network:R", "line:A", "1100101", "", true, "all")("stop1", 15 * 3600, 15 * 3600 + 10 * 60)("stop2", 16 * 3600, 16 * 3600 + 10 * 60);
+    //we check that each vj is associated with the right calendar
+    //NOTE: this is better checked in the UT for associated cal
 
-        // and wednesday that will not be matched to any cal
-        b.vj("network:R", "line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
-
-        b.data->build_uri();
-        beg = b.data->meta->production_date.begin();
-        end_of_year = beg + boost::gregorian::years(1) + boost::gregorian::days(1);
-
-        navitia::type::VehicleJourney* vj_week = b.data->pt_data->vehicle_journeys_map["week"];
-        vj_week->validity_pattern->add(beg, end_of_year, std::bitset<7>{"1111100"});
-        navitia::type::VehicleJourney* vj_week_bis = b.data->pt_data->vehicle_journeys_map["week_bis"];
-        vj_week_bis->validity_pattern->add(beg, end_of_year, std::bitset<7>{"1111100"});
-        navitia::type::VehicleJourney* vj_weekend = b.data->pt_data->vehicle_journeys_map["weekend"];
-        vj_weekend->validity_pattern->add(beg, end_of_year, std::bitset<7>{"0000011"});
-        navitia::type::VehicleJourney* vj_all = b.data->pt_data->vehicle_journeys_map["all"];
-        vj_all->validity_pattern->add(beg, end_of_year, std::bitset<7>{"1111111"});
-        navitia::type::VehicleJourney* vj_wednesday = b.data->pt_data->vehicle_journeys_map["wednesday"];
-        vj_wednesday->validity_pattern->add(beg, end_of_year, std::bitset<7>{"0010000"});
-
-        //we now add 2 similar calendars
-        auto week_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
-        week_cal->uri = "week_cal";
-        week_cal->active_periods.push_back({beg, end_of_year});
-        week_cal->week_pattern = std::bitset<7>{"1111100"};
-        b.data->pt_data->calendars.push_back(week_cal);
-
-        auto weekend_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
-        weekend_cal->uri = "weekend_cal";
-        weekend_cal->active_periods.push_back({beg, end_of_year});
-        weekend_cal->week_pattern = std::bitset<7>{"0000011"};
-        b.data->pt_data->calendars.push_back(weekend_cal);
-
-        auto not_associated_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
-        not_associated_cal->uri = "not_associated_cal";
-        not_associated_cal->active_periods.push_back({beg, end_of_year});
-        not_associated_cal->week_pattern = std::bitset<7>{"0010000"};
-        b.data->pt_data->calendars.push_back(not_associated_cal); //not associated to the line
-
-        //both calendars are associated to the line
-        b.lines["line:A"]->calendar_list.push_back(week_cal);
-        b.lines["line:A"]->calendar_list.push_back(weekend_cal);
-
-        b.data->build_uri();
-        b.data->pt_data->index();
-        b.data->build_raptor();
-        b.data->geo_ref->init();
-        b.data->complete();
-
-        //we chack that each vj is associated with the right calendar
-        //NOTE: this is better checked in the UT for associated cal
-        BOOST_REQUIRE_EQUAL(vj_week->associated_calendars.size(), 1);
-        BOOST_REQUIRE(vj_week_bis->associated_calendars["week_cal"]);
-        BOOST_REQUIRE_EQUAL(vj_week_bis->associated_calendars.size(), 1);
-        BOOST_REQUIRE(vj_week_bis->associated_calendars["week_cal"]);
-        BOOST_REQUIRE_EQUAL(vj_weekend->associated_calendars.size(), 1);
-        BOOST_REQUIRE(vj_weekend->associated_calendars["weekend_cal"]);
-        BOOST_REQUIRE_EQUAL(vj_all->associated_calendars.size(), 2);
-        BOOST_REQUIRE(vj_all->associated_calendars["week_cal"]);
-        BOOST_REQUIRE(vj_all->associated_calendars["weekend_cal"]);
-        BOOST_REQUIRE(vj_wednesday->associated_calendars.empty());
-    }
-};
-
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["week"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["week"]->associated_calendars["week_cal"]);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["week_bis"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["week_bis"]->associated_calendars["week_cal"]);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["weekend"]->associated_calendars.size(), 1);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["weekend"]->associated_calendars["weekend_cal"]);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["all"]->associated_calendars.size(), 2);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["all"]->associated_calendars["week_cal"]);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["all"]->associated_calendars["weekend_cal"]);
+    BOOST_REQUIRE(b.data->pt_data->meta_vj["wednesday"]->associated_calendars.empty());
+}
 /*
  * unknown calendar in request => error
  */
@@ -188,9 +132,12 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T151000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(15, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
+
     stop_date_time = stop_schedule.date_times(1);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T201000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(20, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     //the vj 'wednesday' is never matched
 }
 
@@ -199,7 +146,6 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
  * we thus will get the 2 'week' vj + the 'all' vj
  */
 BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
-
     boost::optional<const std::string> calendar_id{"week_cal"};
 
     pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, "20120615T080000", 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
@@ -209,11 +155,14 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 3);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T101000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(10, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     stop_date_time = stop_schedule.date_times(1);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T111000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(11, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     stop_date_time = stop_schedule.date_times(2);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T151000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(15, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     //the vj 'wednesday' is never matched
 }
 
@@ -221,7 +170,6 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
  * when asked with a calendar not associated with the line, we got an empty schedule
  */
 BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
-
     boost::optional<const std::string> calendar_id{"not_associated_cal"};
 
     pbnavitia::Response resp = departure_board("stop_point.uri=stop1", calendar_id, {}, "20120615T080000", 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
@@ -268,7 +216,8 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 3);
     auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.date_time(), "T101000");
+    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(10, 10, 00));
+    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
 
     auto properties = stop_date_time.properties();
     BOOST_REQUIRE_EQUAL(properties.exceptions_size(), 2);

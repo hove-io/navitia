@@ -36,8 +36,11 @@ www.navitia.io
 #include <boost/thread/condition_variable.hpp>
 #include <queue>
 #include "utils/csv.h"
-#include <utils/logger.h>
-#include <utils/functions.h>
+#include "utils/logger.h"
+#include "utils/functions.h"
+#include <boost/date_time/time_zone_base.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
+#include "tz_db_wrapper.h"
 
 /**
   * Read General Transit Feed Specifications Files
@@ -45,6 +48,34 @@ www.navitia.io
   * http://code.google.com/intl/fr/transit/spec/transit_feed_specification.html
   */
 namespace ed { namespace connectors {
+
+/**
+ * handle all tz specific stuff
+ *
+ * just used to separate those
+ */
+struct TzHandler {
+    TzHandler() : tz_db(ed::utils::fill_tz_db()) {}
+
+    boost::local_time::tz_database tz_db;
+    //the GTFS spec defines one tz by agency but put a constraint that all those tz must be the same
+    //we thus only put a default tz used if the stop area does not define one
+    std::pair<std::string, boost::local_time::time_zone_ptr> default_timezone; //associate the tz with it's name (like 'Europe/paris')
+    //we need to store the tz of the sp because it will be usefull is no parent stop area is found for the stop_point
+    //(and hence the sp is promoted to sa)
+    std::unordered_map<ed::types::StopPoint*, std::string> stop_point_tz;
+    std::pair<std::string, boost::local_time::time_zone_ptr> get_tz(const std::string&);
+
+    //since a calendar might need to be split over several period because of dst, we need to track the splited calendar (to split also all vj on this calendar)
+    std::multimap<std::string, ed::types::ValidityPattern*> vp_by_name;
+    std::multimap<std::string, ed::types::VehicleJourney*> vj_by_name;
+    std::map<ed::types::ValidityPattern*, int> offset_by_vp; //each validity pattern are on only one dst, thus we can store the utc_offset
+
+    //since 2 files are mandatory to build validity pattern
+    //we need to build first the list of validity pattern,
+    //then split them all by dst
+    std::map<std::string, ed::types::ValidityPattern> non_split_vp;
+};
 
 /**
  * Temporary structure used in the GTFS parser, mainly to keep a relation between ids and the pointers
@@ -57,14 +88,20 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
     std::unordered_map<std::string, ed::types::Route*> route_map;
-    std::unordered_map<std::string, ed::types::ValidityPattern*> vp_map;
-    std::unordered_map<std::string, ed::types::VehicleJourney*> vj_map;
     std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;
     std::unordered_map<std::string, ed::types::Network*> network_map;
+    ed::types::Network* default_network = nullptr;
     std::unordered_map<std::string, ed::types::Company*> company_map;
+    ed::types::Company* get_or_create_default_company(Data & data);
+    ed::types::Company* default_company = nullptr;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
+
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
+    std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
+
+    // timezone management
+    TzHandler tz;
 
     // used only by fusio2ed
     std::unordered_map<std::string, std::string> comment_map;
@@ -72,21 +109,52 @@ struct GtfsData {
     std::unordered_map<std::string, navitia::type::hasProperties> hasProperties_map;
     std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
     std::unordered_map<std::string, ed::types::Calendar*> calendars_map;
+    ed::types::CommercialMode* get_or_create_default_commercial_mode(Data & data);
+    ed::types::CommercialMode* default_commercial_mode = nullptr;
+    ed::types::PhysicalMode* get_or_create_default_physical_mode(Data & data);
+    ed::types::PhysicalMode* default_physical_mode = nullptr;
 
     boost::gregorian::date_period production_date;// Data validity period
+
+    ed::types::Network* get_or_create_default_network(ed::Data&);
 };
+
+//a bit of abstraction around tz time shift to be able to change from boost::date_time::timezone if we need to
+struct period_with_utc_shift {
+    period_with_utc_shift(boost::gregorian::date_period p, boost::posix_time::time_duration dur) :
+        period(p), utc_shift(dur.total_seconds() / 60)
+    {}
+    period_with_utc_shift(boost::gregorian::date_period p, int dur) :
+        period(p), utc_shift(dur)
+    {}
+    boost::gregorian::date_period period;
+    int utc_shift; //shift in minutes
+
+    //add info to handle the cornercase of the day of the DST (the time of the shift)
+};
+
+std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
+std::vector<period_with_utc_shift> split_over_dst(const boost::gregorian::date_period&, const boost::local_time::time_zone_ptr&);
+
+void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);
+
+
+// Africa/Abidjan is equivalent to utc since there is no dst and 0 offset from utc
+const std::string UTC_TIMEZONE = "Africa/Abidjan";
 
 inline bool has_col(int col_idx, const std::vector<std::string>& row) {
     return col_idx >= 0 && static_cast<size_t>(col_idx) < row.size();
 }
 
-inline bool is_active(int col_idx, const std::vector<std::string>& row){
+inline bool is_active(int col_idx, const std::vector<std::string>& row) {
     return (has_col(col_idx, row) && row[col_idx] == "1");
 }
 
-inline bool is_valid(int col_idx, const std::vector<std::string>& row){
+inline bool is_valid(int col_idx, const std::vector<std::string>& row) {
     return (has_col(col_idx, row) && (!row[col_idx].empty()));
 }
+
+std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string original_uri, int cpt_vj);
 
 
 /**
@@ -135,7 +203,7 @@ struct GenericHandler {
 
 struct AgencyGtfsHandler : public GenericHandler {
     AgencyGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, name_c;
+    int id_c, name_c, time_zone_c;
     void init(Data&);
     types::Network* handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"agency_name", "agency_url", "agency_timezone"}; }
@@ -161,7 +229,8 @@ struct StopsGtfsHandler : public GenericHandler {
     type_c,
     parent_c,
     wheelchair_c,
-    platform_c;
+    platform_c,
+    timezone_c;
 
     int ignored = 0;
     std::vector<types::StopPoint*> wheelchair_heritance;
@@ -215,7 +284,7 @@ struct CalendarGtfsHandler : public GenericHandler {
             thursday_c, friday_c,
             saturday_c, sunday_c,
             start_date_c, end_date_c;
-    size_t nblignes = 0;
+    size_t nb_lines = 0;
     void init(Data& data);
     void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
@@ -229,7 +298,6 @@ struct CalendarDatesGtfsHandler : public GenericHandler {
     CalendarDatesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, date_c, e_type_c;
     void init(Data&);
-    void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"service_id", "date", "exception_type"};
@@ -248,7 +316,7 @@ struct TripsGtfsHandler : public GenericHandler {
 
     void init(Data& data);
     void finish(Data& data);
-    ed::types::VehicleJourney* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"route_id", "service_id", "trip_id"};
     }
@@ -263,7 +331,7 @@ struct StopTimeGtfsHandler : public GenericHandler {
     size_t count = 0;
     void init(Data& data);
     void finish(Data& data);
-    ed::types::StopTime* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    std::vector<ed::types::StopTime*> handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"trip_id" , "arrival_time", "departure_time", "stop_id", "stop_sequence"};
     }
@@ -305,9 +373,6 @@ public:
 
     /// Ajout des objets par défaut
     void fill_default_modes(Data & data);
-
-    /// Ajout des companies
-    void fill_default_company(Data & data);
 
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string &beginning_date);

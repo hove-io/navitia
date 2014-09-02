@@ -31,11 +31,14 @@ www.navitia.io
 #include "routing_cli_utils.h"
 #include "type/response.pb.h"
 #include <boost/program_options.hpp>
-#include "raptor.h"
 #include "routing/raptor_api.h"
+#include "raptor.h"
+#include "georef/street_network.h"
+#include "tests/utils_test.h"
 
 namespace nr = navitia::routing;
 namespace nt = navitia::type;
+namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 namespace po = boost::program_options ;
 namespace pb = pbnavitia;
@@ -63,7 +66,7 @@ namespace navitia { namespace cli {
             nt::Type_e destination_type = raptor->data.get_type_of_id(target);
             nt::EntryPoint origin(origin_type, start);
             nt::EntryPoint destination(destination_type, target);
-            pb::Response resp = make_response(*raptor, origin, destination, {date},
+            pb::Response resp = make_response(*raptor, origin, destination, {ntest::to_posix_timestamp(date)},
                     clockwise, navitia::type::AccessibiliteParams(), forbidden,
                     sn_worker, false, true);
 

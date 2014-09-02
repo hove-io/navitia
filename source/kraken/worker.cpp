@@ -137,6 +137,7 @@ pbnavitia::Response Worker::metadatas() {
     metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
     metadatas->set_shape(d->meta->shape);
     metadatas->set_status("running");
+    metadatas->set_timezone(d->meta->timezone);
     for(const type::Contributor* contributor : d->pt_data->contributors){
         metadatas->add_contributors(contributor->uri);
     }
@@ -410,16 +411,16 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden.push_back(request.forbidden_uris(i));
 
-    std::vector<std::string> datetimes;
+    std::vector<uint32_t> datetimes;
     for(int i = 0; i < request.datetimes_size(); ++i)
         datetimes.push_back(request.datetimes(i));
 
-    /// Récupération des paramètres de rabattement au départ
+    /// params for departure fallback
     if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)
             || (origin.type == type::Type_e::Admin) || (origin.type == type::Type_e::POI) || (origin.type == type::Type_e::StopArea)){
         origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), data);
     }
-    /// Récupération des paramètres de rabattement à l'arrivée
+    /// params for arrival fallback
     if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
             || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI) || (destination.type == type::Type_e::StopArea)){
         destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), data, false);

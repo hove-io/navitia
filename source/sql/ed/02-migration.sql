@@ -204,6 +204,24 @@ DO $$
 $$;
 
 DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.vehicle_journey ADD
+                COLUMN utc_to_local_offset INT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column utc_to_local_offset already exists in navitia.vehicle_journey';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+	    ALTER TABLE navitia.vehicle_journey
+		DROP CONSTRAINT IF EXISTS vehicle_journey_utc_to_local_offset_fkey;
+    END;
+$$;
+
+DO $$
     DECLARE count_admin int;
 BEGIN
     count_admin := coalesce((select  count(*) from  pg_catalog.pg_tables where schemaname = 'navitia' and tablename='admin'), 0);
@@ -245,6 +263,27 @@ BEGIN
     END CASE;
 END
 $$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.stop_area ADD COLUMN timezone TEXT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column timezone already exists in navitia.stop_area';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.parameters ADD COLUMN timezone TEXT;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column timezone already exists in navitia.parameters';
+        END;
+    END;
+$$;
+
 DROP TABLE IF EXISTS navitia.admin CASCADE;
 DROP TABLE IF EXISTS navitia.rel_admin_admin CASCADE;
 DROP TABLE IF EXISTS navitia.poi CASCADE;

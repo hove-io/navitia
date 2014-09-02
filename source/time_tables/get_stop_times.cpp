@@ -41,8 +41,8 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
     std::vector<datetime_stop_time> result;
     auto test_add = true;
 
-    // Prochain horaire où l’on demandera le prochain départ : on s’en sert pour ne pas obtenir plusieurs fois le même stop_time
-    // Initialement, c’est l’heure demandée
+    // Next departure for the next stop: we use it not to have twice the same stop_time
+    // We init it with the wanted date time
     std::map<type::idx_t, DateTime> next_requested_datetime;
     for(auto jpp_idx : journey_pattern_points){
         next_requested_datetime[jpp_idx] = dt;
@@ -55,13 +55,18 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            auto st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, disruption_active, false, calendar_id, accessibilite_params.vehicle_properties);
+            std::pair<const type::StopTime*, uint32_t> st;
+            if (! calendar_id) {
+                st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, disruption_active, false, accessibilite_params.vehicle_properties);
+            } else {
+                st = routing::earliest_stop_time(jpp, DateTimeUtils::hour(next_requested_datetime[jpp_idx]), data, *calendar_id, accessibilite_params.vehicle_properties);
+            }
             if(st.first != nullptr) {
                 DateTime dt_temp = st.second;
                 if(dt_temp <= max_dt) {
                     result.push_back(std::make_pair(dt_temp, st.first));
                     test_add = true;
-                    // Le prochain horaire observé doit être au minimum une seconde après
+                    // The next stop time must be at least one second after
                     if(st.first->is_frequency()) {
                         DateTimeUtils::update(dt_temp, st.first->vehicle_journey->end_time+st.first->departure_time);
                     }

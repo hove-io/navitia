@@ -50,8 +50,8 @@ namespace DateTimeUtils{
     const navitia::DateTime inf = std::numeric_limits<uint32_t>::max();
     const navitia::DateTime min = 0;
 
-    inline navitia::DateTime set(int date, int hour) {
-        return date * SECONDS_PER_DAY + hour;
+    inline navitia::DateTime set(int date, int time_of_day) {
+        return date * SECONDS_PER_DAY + time_of_day;
     }
 
     inline uint32_t hour(navitia::DateTime datetime) {
@@ -117,6 +117,23 @@ inline boost::posix_time::time_duration strip_fractional_second(boost::posix_tim
 template <typename Time>
 inline std::string to_iso_string_no_fractional(Time t) {
     return boost::posix_time::to_iso_string(strip_fractional_second(t));
+}
+
+static const boost::posix_time::ptime posix_epoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
+
+inline uint64_t to_posix_timestamp(boost::posix_time::ptime ptime) {
+    return (ptime - posix_epoch).total_seconds();
+}
+
+inline uint64_t to_posix_timestamp(DateTime datetime, const type::Data &d) {
+    return to_posix_timestamp(to_posix_time(datetime, d));
+}
+
+boost::posix_time::ptime from_posix_timestamp(uint64_t val);
+
+// date are represented as time stamp to midnight
+inline int32_t to_int_date(boost::posix_time::ptime ptime) {
+    return (boost::posix_time::ptime(ptime.date()) - posix_epoch).total_seconds();//todo bound/overflow check ?
 }
 
 /**

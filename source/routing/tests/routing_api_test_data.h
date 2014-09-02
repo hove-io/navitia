@@ -31,6 +31,8 @@ www.navitia.io
 #pragma once
 #include "routing/raptor_api.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
+#include "type/pt_data.h"
 
 namespace ng = navitia::georef;
 
@@ -61,7 +63,7 @@ struct normal_speed_provider {
 template <typename speed_provider_trait>
 struct routing_api_data {
 
-    routing_api_data() {
+    routing_api_data(float distance_a_b = 200) : distance_ab(distance_a_b) {
         /*
 
            K  ------------------------------ J
@@ -220,7 +222,7 @@ struct routing_api_data {
         b.data->geo_ref->ways.push_back(way);
 
         // A->B
-        add_edges(0, *b.data->geo_ref, AA, BB, 200, navitia::type::Mode_e::Walking);
+        add_edges(0, *b.data->geo_ref, AA, BB, distance_ab, navitia::type::Mode_e::Walking);
         b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
         b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
 
@@ -328,7 +330,7 @@ struct routing_api_data {
         b.sa("stopA", A.lon(), A.lat());
         b.sa("stopB", B.lon(), B.lat());
         //we add a very fast bus (2 seconds) to be faster than walking and biking
-        b.vj("A")("stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)("stopA", 8*3600 + 1 * 60 + 2 ,8*3600 + 1*60 + 2);
+        b.vj("A")("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)("stop_point:stopA", 8*3600 + 1 * 60 + 2 ,8*3600 + 1*60 + 2);
         b.generate_dummy_basis();
         b.data->pt_data->index();
         b.data->build_raptor();
@@ -423,9 +425,10 @@ struct routing_api_data {
     ed::builder b = {"20120614"};
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;
-    std::vector<std::string> datetimes = {"20120614T080000"};
+    std::vector<uint32_t> datetimes = {navitia::test::to_posix_timestamp("20120614T080000")};
     std::vector<std::string> forbidden;
 
+    double distance_ab;
     double distance_ag;
 
     speed_provider_trait speed_trait;

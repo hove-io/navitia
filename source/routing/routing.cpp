@@ -74,4 +74,19 @@ std::string PathItem::print() const {
 }
 
 
-}}
+bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point){
+    if(point.type == type::Type_e::StopArea){
+        //if we have a stop area in the request, we only do a crowfly section if the used stop point belongs to this stop area
+        return point.uri == stop_point->stop_area->uri;
+    }else if(point.type == type::Type_e::Admin){
+        //if we have a admin in the request, we only do a crowfly section if the used stop point belongs to this admin
+        auto admin_it = find_if(begin(stop_point->stop_area->admin_list), end(stop_point->stop_area->admin_list),
+                [point](const navitia::georef::Admin* admin){return admin->uri == point.uri;});
+        return admin_it != end(stop_point->stop_area->admin_list);
+    }else{
+        //if the request is on any other type we don't want a crowfly section
+        return false;
+    }
+}
+
+}}//namespace

@@ -83,7 +83,14 @@ bool ValidityPattern::check(int day) const {
     return days[day];
 }
 
+int ValidityPattern::slide(boost::gregorian::date day) const {
+    return (day - beginning_date).days();
+}
 
+bool ValidityPattern::check(boost::gregorian::date day) const {
+    long duration = slide(day);
+    return check(duration);
+}
 
 bool CommercialMode::operator<(const CommercialMode& other) const {
     return this->name < other.name || (this->name == other.name && this < &other);

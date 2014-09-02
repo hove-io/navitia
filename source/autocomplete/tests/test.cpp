@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     //Recherche : "mai paris" -> "mai paris"
     // distance = 3 / word_weight = 0*5 = 0
     // Qualité = 100 - (3 + 0) = 97
-    auto res = ac.find_complete("mai paris", synonyms,word_weight, nbmax, [](int){return true;});
+    auto res = ac.find_complete("mai paris", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_REQUIRE_EQUAL(res.at(0).quality, 100);
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     //Recherche : "hotel de ville par" -> "mairie par"
     // distance = 3 / word_weight = 0*5 = 0
     // Qualité = 100 - (2 + 0) = 98
-    auto res1 = ac.find_complete("hotel de ville par", synonyms,word_weight, nbmax, [](int){return true;});
+    auto res1 = ac.find_complete("hotel de ville par", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
 
@@ -122,19 +122,19 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     // distance = 5 / word_weight = 0*5 = 0
     // Qualité = 100 - (5 + 0) = 95
 
-    auto res2 = ac.find_complete("c c ca 2",synonyms,word_weight, nbmax, [](int){return true;});
+    auto res2 = ac.find_complete("c c ca 2",synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res2.size(), 1);
     BOOST_REQUIRE_EQUAL(res2.at(0).quality, 100);
 
-    auto res3 = ac.find_complete("cc ca 2", synonyms,word_weight, nbmax,[](int){return true;});
+    auto res3 = ac.find_complete("cc ca 2", synonyms, nbmax,[](int){return true;});
     BOOST_REQUIRE_EQUAL(res3.size(), 1);
     BOOST_REQUIRE_EQUAL(res3.at(0).quality, 100);
 
-    auto res4 = ac.find_complete("rue rene", synonyms,word_weight, nbmax, [](int){return true;});
+    auto res4 = ac.find_complete("rue rene", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res4.size(), 1);
     BOOST_REQUIRE_EQUAL(res4.at(0).quality, 100);
 
-    auto res5 = ac.find_complete("rue rené", synonyms,word_weight, nbmax, [](int){return true;});
+    auto res5 = ac.find_complete("rue rené", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res5.size(), 1);
     BOOST_REQUIRE_EQUAL(res5.at(0).quality, 100);
 }
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
 
     ac.build();
 
-    auto res = ac.find_complete("rue jean", synonyms, word_weight, nbmax,[](int){return true;});
+    auto res = ac.find_complete("rue jean", synonyms, nbmax,[](int){return true;});
     std::vector<int> expected = {6,7,0,2};
     BOOST_REQUIRE_EQUAL(res.size(), 4);
     BOOST_REQUIRE_EQUAL(res.at(0).quality, 100);
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_add_string_with_Line){
 
     ac.build();
 
-    auto res = ac.find_complete("jean-jau", synonyms, word_weight, nbmax, [](int){return true;});
+    auto res = ac.find_complete("jean-jau", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 3);
     BOOST_REQUIRE_EQUAL(res.at(0).idx, 1);
     BOOST_REQUIRE_EQUAL(res.at(1).idx, 3);
@@ -563,16 +563,16 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
 
         ac.build();
 
-        auto res = ac.find_complete("rue jean", synonyms, word_weight, nbmax, [](int){return true;});
+        auto res = ac.find_complete("rue jean", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res.size(), 4);
         BOOST_REQUIRE_EQUAL(res.at(0).quality, 100);
 
-        auto res1 = ac.find_complete("r jean", synonyms, word_weight, nbmax, [](int){return true;});
+        auto res1 = ac.find_complete("r jean", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res1.size(), 4);
 
         BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
 
-        auto res2 = ac.find_complete("av jean", synonyms, word_weight, nbmax, [](int){return true;});
+        auto res2 = ac.find_complete("av jean", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res2.size(), 1);
         //rue jean zay
         // distance = 6 / word_weight = 1*5 = 5
@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         BOOST_REQUIRE_EQUAL(res2.at(0).quality, 100);
 
         word_weight = 10;
-        auto res3 = ac.find_complete("av jean", synonyms, word_weight, nbmax,[](int){return true;});
+        auto res3 = ac.find_complete("av jean", synonyms, nbmax,[](int){return true;});
         BOOST_REQUIRE_EQUAL(res3.size(), 1);
         //rue jean zay
         // distance = 6 / word_weight = 1*10 = 10
@@ -588,7 +588,7 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         BOOST_REQUIRE_EQUAL(res3.at(0).quality, 100);
 
         word_weight = 10;
-        auto res4 = ac.find_complete("chu gau", synonyms, word_weight, nbmax, [](int){return true;});
+        auto res4 = ac.find_complete("chu gau", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res4.size(), 1);
         //hopital paul gaultier
         // distance = 9 / word_weight = 1*10 = 10
@@ -653,7 +653,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
 
     ac.build();
 
-    auto res = ac.find_complete("gare", synonyms, word_weight, nbmax, [](int){return true;});
+    auto res = ac.find_complete("gare", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 8);
     BOOST_REQUIRE_EQUAL(res.at(0).quality, 100);
     BOOST_REQUIRE_EQUAL(res.at(0).idx, 1);
@@ -667,15 +667,15 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
     BOOST_REQUIRE_EQUAL(res.at(7).quality, 100);
 
 
-    auto res1 = ac.find_complete("gare tours", synonyms, word_weight, nbmax, [](int){return true;});
+    auto res1 = ac.find_complete("gare tours", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
 
-    auto res2 = ac.find_complete("gare tours tours", synonyms, word_weight, nbmax, [](int){return true;});
+    auto res2 = ac.find_complete("gare tours tours", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
 
-    auto res3 = ac.find_complete("les Sorinières", synonyms, word_weight, nbmax,[](int){return true;});
+    auto res3 = ac.find_complete("les Sorinières", synonyms, nbmax,[](int){return true;});
     BOOST_REQUIRE_EQUAL(res3.size(), 10);
     BOOST_REQUIRE_EQUAL(res3.at(0).quality, 100);    
 }

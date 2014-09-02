@@ -54,26 +54,21 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
 
 
 void PT_Data::sort(){
-#define SORT_AND_INDEX(type_name, collection_name) size_t collection_name##_size = collection_name.size();\
+
+#define SORT_AND_INDEX(type_name, collection_name)\
     std::sort(collection_name.begin(), collection_name.end(), Less());\
-    BOOST_ASSERT(collection_name.size() == collection_name##_size);\
-    std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());\
-    BOOST_ASSERT(collection_name.size() == collection_name##_size);
+    std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());
+
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
 
-    size_t stop_point_connections_size = stop_point_connections.size();
+#undef SORT_AND_INDEX
+
     std::sort(stop_point_connections.begin(), stop_point_connections.end());
-    BOOST_ASSERT(stop_point_connections.size() == stop_point_connections_size);
     std::for_each(stop_point_connections.begin(), stop_point_connections.end(), Indexer<idx_t>());
-    BOOST_ASSERT(stop_point_connections.size() == stop_point_connections_size);
 
     for(auto* vj: this->vehicle_journeys){
-        size_t stop_times_size = vj->stop_time_list.size();
         std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end(), Less());
-        BOOST_ASSERT(vj->stop_time_list.size() == stop_times_size);
     }
-    #define ASSERT_SIZE(type_name, collection_name) BOOST_ASSERT(collection_name.size() == collection_name##_size);
-    ITERATE_NAVITIA_PT_TYPES(ASSERT_SIZE)
 }
 
 
@@ -189,6 +184,9 @@ PT_Data::~PT_Data() {
 
     for(StopTime* st : stop_times) {
         delete st;
+    }
+    for (auto metavj: meta_vj) {
+        delete metavj.second;
     }
     for (auto cal: associated_calendars) {
         delete cal;

@@ -41,14 +41,15 @@ def get_nontransport_duration(journey):
     current_duration = 0
     for section in sections:
         if section.type == response_pb2.STREET_NETWORK \
-                or section.type == response_pb2.TRANSFER\
-                or section.type == response_pb2.WAITING:
+                or section.type == response_pb2.TRANSFER \
+                or section.type == response_pb2.WAITING \
+                or section.type == response_pb2.CROW_FLY:
             current_duration += section.duration
     return current_duration
 
 
 def has_fall_back_mode(journey, mode):
-    return any(s.type == response_pb2.STREET_NETWORK and
+    return any(s.type in [response_pb2.STREET_NETWORK, response_pb2.CROW_FLY] and
             s.street_network.mode == mode for s in journey.sections)
 
 
@@ -143,11 +144,11 @@ class and_functors:
 
 
 def get_arrival_datetime(journey):
-    return datetime.strptime(journey.arrival_date_time, "%Y%m%dT%H%M%S")
+    return datetime.utcfromtimestamp(float(journey.arrival_date_time))
 
 
 def get_departure_datetime(journey):
-    return datetime.strptime(journey.arrival_date_time, "%Y%m%dT%H%M%S")
+    return datetime.utcfromtimestamp(float(journey.arrival_date_time))
 
 
 def choose_standard(journeys, best_criteria):
@@ -210,6 +211,7 @@ def qualifier_one(journeys, request_type):
         transfers_crit,
         nonTC_crit]))
     assert standard is not None
+    standard.tags.append('standard')
 
     #constraints
     def journey_length_constraint(journey, max_evolution):

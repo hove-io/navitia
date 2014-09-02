@@ -35,16 +35,27 @@ www.navitia.io
 
 
 namespace navitia { namespace routing {
-///Cherche le premier stop_time partant apres dt sur la journey_pattern au journey_pattern point order
-///. Renvoie le stop time et la première heure de départ après dt
+/// Earliest stop time for a given datetime (dt)
+/// Look for the first stop_time leaving after dt on the journey_pattern for the journey_pattern point order
+/// Return the stop time and the next departure datetime
 std::pair<const type::StopTime*, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
               const DateTime dt,
               const type::Data &data, bool disruption_active, bool reconstructing_path,
-              boost::optional<const std::string> calendar_id = {},
               const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
-///Cherche le premier stop_time partant avant dt sur la journey_pattern au journey_pattern point order
-/// Renvoie la première heure d'arrivée avant dt
+
+/// Earliest stop time for a given calendar
+/// Look for the first stop_time for a calendar, leaving after the hour 'time' on the journey_pattern for the journey_pattern point order
+/// Return the stop time and the next departure datetime
+std::pair<const type::StopTime*, uint32_t>
+earliest_stop_time(const type::JourneyPatternPoint* jpp,
+              const uint32_t time,
+              const type::Data &data,
+              const std::string calendar_id,
+              const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
+
+/// Look for the last stop_time leaving after dt on the journey_pattern for the journey_pattern point order
+/// Return the stop time and the first arrival datetime
 std::pair<const type::StopTime*, uint32_t>
 tardiest_stop_time(const type::JourneyPatternPoint* jpp,
               const DateTime dt, const type::Data &data, bool disruption_active, bool reconstructing_path,
