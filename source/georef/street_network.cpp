@@ -239,7 +239,7 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius, const proxim
             if (distances[projection[target_e]] < max) {
                 best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
             }
-            if (best_dist < radius) {
+            if (best_dist <= radius) {
                 result.push_back(std::make_pair(element.first, best_dist));
             }
         }
