@@ -1,3 +1,41 @@
+navitia2 (1.0.2) unstable; urgency=low
+
+  * Jormungandr: take crow fly mode a a fall back mode in tags  <https://github.com/CanalTP/navitia/pull/524>
+  * timezone: Technical implementation of time zone in
+    <https://github.com/CanalTP/navitia/pull/493> , but some stuff still need
+    to be done, so it has been deactivated by <https://github.com/CanalTP/navitia/pull/512> 
+    and timezone hidden in json results by  <https://github.com/CanalTP/navitia/pull/523>
+  * Routing: add more tests on stay in  <https://github.com/CanalTP/navitia/pull/522>
+  * Georef: add test to djikstra limit  <https://github.com/CanalTP/navitia/pull/521>
+  * improvement of stay in connection  <https://github.com/CanalTP/navitia/pull/520>
+  * all: remove warnings  <https://github.com/CanalTP/navitia/pull/519>
+  * all: remove warnings  <https://github.com/CanalTP/navitia/pull/518>
+  * Cmake: test empty removed  <https://github.com/CanalTP/navitia/pull/517>
+  * Fix direct path  <https://github.com/CanalTP/navitia/pull/516>
+  * Only do crowfly if we leave the requested area  <https://github.com/CanalTP/navitia/pull/515>
+  * ed: support pqxx v3 and v4  <https://github.com/CanalTP/navitia/pull/514>
+  * Jormungandr: modification of sort order for journeys  <https://github.com/CanalTP/navitia/pull/513>
+  * Ed: deletion of a unneeded and malformed exception block in migration.sql  <https://github.com/CanalTP/navitia/pull/511>
+  * Jormungandr: set car speed to 40km/h, before it was 60km/h  <https://github.com/CanalTP/navitia/pull/510>
+  * Persist vj  <https://github.com/CanalTP/navitia/pull/509>
+  * update test on validity pattern  <https://github.com/CanalTP/navitia/pull/508>
+  * Jormun: sqlalchemy scripts corrections  <https://github.com/CanalTP/navitia/pull/507>
+  * Fix UTC conversion in GTFS  <https://github.com/CanalTP/navitia/pull/506>
+  * Doc: delete type from journeys  <https://github.com/CanalTP/navitia/pull/505>
+  * Add crowfly to nonpt  <https://github.com/CanalTP/navitia/pull/504>
+  * Fix calendar split  <https://github.com/CanalTP/navitia/pull/503>
+  * Fare: publish 'found' boolean on tickets
+    <https://github.com/CanalTP/navitia/pull/502> and some fare fixes <https://github.com/CanalTP/navitia/pull/494>
+  * Jormun: fix prev/next bug on V0  <https://github.com/CanalTP/navitia/pull/501>
+  * Default network  <https://github.com/CanalTP/navitia/pull/500>
+  * Ed: fix build of validityPattern in gtfsParser  <https://github.com/CanalTP/navitia/pull/499>
+  * Jormun v0 datetime pickup  <https://github.com/CanalTP/navitia/pull/498>
+  * No car direct path  <https://github.com/CanalTP/navitia/pull/497>
+  * Load fare while loading fusio if possible  <https://github.com/CanalTP/navitia/pull/496>
+  * Fusio2ed: fix a segfault when a line is not associated with a network  <https://github.com/CanalTP/navitia/pull/495>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 02 Sep 2014 17:09:29 +0100
+
 navitia2 (0.102.2) unstable; urgency=low
 
   * cherry pick of commits from <https://github.com/CanalTP/navitia/pull/497>
