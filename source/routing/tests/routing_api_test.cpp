@@ -51,23 +51,32 @@ namespace bt = boost::posix_time;
 void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
     if (! debug_info)
         return;
+    if (resp.journeys_size() == 0) {
+        std::cout << "no journeys" << std::endl;
+        return;
+    }
     pbnavitia::Journey journey = resp.journeys(0);
     std::cout << test_name << ": " << std::endl;
     for (int idx_section = 0; idx_section < journey.sections().size(); ++idx_section) {
         auto& section = journey.sections(idx_section);
-        std::cout << "section " << (int)(section.type()) << std::endl
-                     << " -- coordinates :" << std::endl;
-        for (int i = 0; i < section.street_network().coordinates_size(); ++i)
-            std::cout << "coord: " << section.street_network().coordinates(i).lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
-                      << ", " << section.street_network().coordinates(i).lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
-                      << std::endl;
-
-        std::cout << "dump item : " << std::endl;
-        for (int i = 0; i < section.street_network().path_items_size(); ++i)
-            std::cout << "- " << section.street_network().path_items(i).name()
-                      << " with " << section.street_network().path_items(i).length()
-                      << "m | " << section.street_network().path_items(i).duration() << "s"
-                      << std::endl;
+        std::cout << "section type=" << (int)(section.type())
+                  << " " << section.origin().name() << " -> " << section.destination().name()
+                  << std::endl;
+        if (section.street_network().coordinates_size()) {
+            std::cout << " -- coordinates: " << std::endl;
+            for (int i = 0; i < section.street_network().coordinates_size(); ++i)
+                std::cout << "coord: " << section.street_network().coordinates(i).lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
+                          << ", " << section.street_network().coordinates(i).lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
+                          << std::endl;
+        }
+        if (section.street_network().path_items_size()) {
+            std::cout << "street network pathitem: " << std::endl;
+            for (int i = 0; i < section.street_network().path_items_size(); ++i)
+                std::cout << "- " << section.street_network().path_items(i).name()
+                          << " with " << section.street_network().path_items(i).length()
+                          << "m | " << section.street_network().path_items(i).duration() << "s"
+                          << std::endl;
+        }
     }
 
 
@@ -285,7 +294,15 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     BOOST_CHECK_EQUAL(st4.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T173300"));
 }
 
-BOOST_AUTO_TEST_CASE(journey_stay_in_arrival_at_teleport) {
+BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
+    /*
+     * For this journey from 'start' to 'end', we begin with a service extension at the terminus of the first vj
+     *
+     * The results must be presented in 3 sections
+     * - one from 'start' to 'start' tagged as a stay in
+     * - one transfers
+     * - one from 'ht:4a' to 'end'
+     */
     std::vector<std::string> forbidden;
     ed::builder b("20120614");
     b.vj("9658", "1111111", "block1", true) ("ehv",  60300,60600)
@@ -293,10 +310,12 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_arrival_at_teleport) {
                                             ("bet",  61080,61080)
                                             ("btl",  61560,61560)
                                             ("vg",   61920,61920)
-                                            ("ht:4", 62340,62340);
+                                            ("start", 62340,62340);
     b.vj("4462", "1111111", "block1", true) ("ht:4a",62400,62400)
                                             ("hto",  62940,62940)
-                                            ("rs",   63180,63180);
+                                            ("end",   63180,63180);
+    //Note: the vj '4462' is a service extension of '9658' because
+    //they have the same block_id ('block1') and 4462 have been defined after 9658
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
@@ -306,13 +325,14 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_arrival_at_teleport) {
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
 
-    navitia::type::Type_e origin_type = b.data->get_type_of_id("bet");
-    navitia::type::Type_e destination_type = b.data->get_type_of_id("rs");
-    navitia::type::EntryPoint origin(origin_type, "ht:4");
-    navitia::type::EntryPoint destination(destination_type, "rs");
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("start");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("end");
+    navitia::type::EntryPoint origin(origin_type, "start");
+    navitia::type::EntryPoint destination(destination_type, "end");
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -323,8 +343,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_arrival_at_teleport) {
     pbnavitia::Section section = journey.sections(0);
 
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 1);
-    BOOST_CHECK_EQUAL(section.origin().uri(), "ht:4");
-    BOOST_CHECK_EQUAL(section.destination().uri(), "ht:4");
+    BOOST_CHECK_EQUAL(section.origin().uri(), "start");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "start");
     BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
 
     section = journey.sections(1);
@@ -337,10 +357,178 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_arrival_at_teleport) {
     auto st3 = section.stop_date_times(0);
     auto st4 = section.stop_date_times(2);
     BOOST_CHECK_EQUAL(st3.stop_point().uri(), "ht:4a");
-    BOOST_CHECK_EQUAL(st4.stop_point().uri(), "rs");
+    BOOST_CHECK_EQUAL(st4.stop_point().uri(), "end");
     BOOST_CHECK_EQUAL(st3.departure_date_time(), navitia::test::to_posix_timestamp("20120614T172000"));
     BOOST_CHECK_EQUAL(st4.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T173300"));
 }
+
+
+BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
+    /*
+     * For this journey from 'start' to 'end', we stop at the terminus and even if there is a service extension after we do not take it
+     *
+     * The results must be presented in only one section (and not tagged as 'stay_in')
+     */
+    std::vector<std::string> forbidden;
+    ed::builder b("20120614");
+    b.vj("9658", "1111111", "block1", true) ("ehv",  60300,60600)
+                                            ("ehb",60780,60780)
+                                            ("start",  61080,61080)
+                                            ("btl",  61560,61560)
+                                            ("vg",   61920,61920)
+                                            ("end",  62340,62340);
+    b.vj("4462", "1111111", "block1", true) ("ht:4a",62400,62400)
+                                            ("hto",  62940,62940)
+                                            ("rs",   63180,63180);
+    b.finish();
+    navitia::type::Data data;
+    b.generate_dummy_basis();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    nr::RAPTOR raptor(*b.data);
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("start");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("end");
+    navitia::type::EntryPoint origin(origin_type, "start");
+    navitia::type::EntryPoint destination(destination_type, "end");
+
+    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+
+    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    BOOST_REQUIRE_EQUAL(journey.nb_transfers(), 0);
+
+    pbnavitia::Section section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(section.origin().uri(), "start");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "end");
+    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
+    /*
+     * For this journey from 'start' to 'end', we stop just after a service extension
+     *
+     * The results must be presented in 3 sections
+     * - one from 'start' to 'ht:4' tagged as a stay in
+     * - one stay in transfer
+     * - one section from 'end' to 'end'
+     */
+    std::vector<std::string> forbidden;
+    ed::builder b("20120614");
+    b.vj("9658", "1111111", "block1", true) ("ehv",  60300,60600)
+                                            ("ehb",  60780,60780)
+                                            ("start",  61080,61080)
+                                            ("btl",  61560,61560)
+                                            ("vg",   61920,61920)
+                                            ("ht:4", 62340,62340);
+    b.vj("4462", "1111111", "block1", true) ("end",62400,62400)
+                                            ("hto",  62940,62940)
+                                            ("rs",   63180,63180);
+    b.finish();
+    navitia::type::Data data;
+    b.generate_dummy_basis();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    nr::RAPTOR raptor(*b.data);
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("start");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("end");
+    navitia::type::EntryPoint origin(origin_type, "start");
+    navitia::type::EntryPoint destination(destination_type, "end");
+
+    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+
+    dump_response(resp, "arrival_before", true);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+
+    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    BOOST_CHECK_EQUAL(journey.nb_transfers(), 0);
+
+    pbnavitia::Section section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(section.origin().uri(), "start");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "ht:4");
+    BOOST_CHECK(section.add_info_vehicle_journey().stay_in());
+
+    section = journey.sections(1);
+    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
+    BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+
+    section = journey.sections(2);
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 1);
+    BOOST_CHECK_EQUAL(section.origin().uri(), "end");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "end");
+    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+}
+
+
+BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
+    /*
+     * For this journey from 'start' to 'end', we stop at the terminus and even if there is a service extension after we do not take it
+     * the difference between the 'journey_arrival_before_a_stay_in' test is that the service extension start
+     * from the same point and at the same time
+     *
+     * The results must be presented in only one section (and not tagged as 'stay_in')
+     */
+    std::vector<std::string> forbidden;
+    ed::builder b("20120614");
+    b.vj("9658", "1111111", "block1", true) ("ehv",  60300,60600)
+                                            ("ehb",60780,60780)
+                                            ("start",  61080,61080)
+                                            ("btl",  61560,61560)
+                                            ("vg",   61920,61920)
+                                            ("end",  62340,62340); //same point and same time
+    b.vj("4462", "1111111", "block1", true) ("end",  62340,62340) //same point and same time
+                                            ("hto",  62940,62940)
+                                            ("rs",   63180,63180);
+    b.finish();
+    navitia::type::Data data;
+    b.generate_dummy_basis();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    nr::RAPTOR raptor(*b.data);
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("start");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("end");
+    navitia::type::EntryPoint origin(origin_type, "start");
+    navitia::type::EntryPoint destination(destination_type, "end");
+
+    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+
+    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    BOOST_REQUIRE_EQUAL(journey.nb_transfers(), 0);
+
+    pbnavitia::Section section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(section.origin().uri(), "start");
+    BOOST_CHECK_EQUAL(section.destination().uri(), "end");
+    BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+}
+
 
 BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     std::vector<std::string> forbidden;
