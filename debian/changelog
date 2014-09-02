@@ -1,4 +1,4 @@
-navitia2 (1.0.2) unstable; urgency=low
+navitia2 (1.0.0) unstable; urgency=low
 
   * Jormungandr: take crow fly mode a a fall back mode in tags  <https://github.com/CanalTP/navitia/pull/524>
   * timezone: Technical implementation of time zone in
