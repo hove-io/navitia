@@ -102,6 +102,13 @@ class TestJourneys(AbstractTestFixture):
 
         assert response['message'].startswith("The type argument must be in list")
 
+    def test_journeys_no_bss_and_walking(self):
+        query = journey_basic_query + "&first_section_mode=walking&first_section_mode=bss"
+        response = self.query_region(query, display=True)
+
+        is_valid_journey_response(response, self.tester, journey_basic_query)
+        #Note: we need to mock the kraken instances to check that only one call has been made and not 2
+        #(only one for bss because walking should not have been added since it dupplicate bss)
 
 @dataset([])
 class TestJourneysNoRegion(AbstractTestFixture):
