@@ -106,6 +106,11 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
             } else if (item.transportation == PathItem::TransportCaracteristic::BssPutBack) {
                 item.transportation = PathItem::TransportCaracteristic::BssTake;
             }
+            if (item.transportation == PathItem::TransportCaracteristic::CarPark) {
+                item.transportation = PathItem::TransportCaracteristic::CarLeaveParking;
+            } else if (item.transportation == PathItem::TransportCaracteristic::CarLeaveParking) {
+                item.transportation = PathItem::TransportCaracteristic::CarPark;
+            }
         }
 
         if (! result.path_items.empty()) {

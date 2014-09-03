@@ -873,6 +873,12 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     case georef::PathItem::TransportCaracteristic::BssPutBack:
         section->set_type(pbnavitia::BSS_PUT_BACK);
         break;
+    case georef::PathItem::TransportCaracteristic::CarPark:
+        section->set_type(pbnavitia::PARK);
+        break;
+    case georef::PathItem::TransportCaracteristic::CarLeaveParking:
+        section->set_type(pbnavitia::LEAVE_PARKING);
+        break;
     default:
         throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
     }

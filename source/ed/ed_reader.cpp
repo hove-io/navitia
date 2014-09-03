@@ -82,7 +82,11 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_vertex(data, work);
     this->fill_graph(data, work);
 //    this->clean_graph(data, work);
+
+    // we need the proximity_list to build bss and parking edges
+    data.geo_ref->build_proximity_list();
     this->fill_graph_bss(data, work);
+    this->fill_graph_parking(data, work);
 
     //Charger les synonymes
     this->fill_synonyms(data, work);
@@ -1112,7 +1116,6 @@ get_min_distance(navitia::type::Data& data, navitia::georef::edge_t walking_e, n
 }
 
 void EdReader::fill_graph_bss(navitia::type::Data& data, pqxx::work& work){
-    data.geo_ref->build_proximity_list();
     std::string request = "SELECT poi.id as id, ST_X(poi.coord::geometry) as lon,";
                 request += "ST_Y(poi.coord::geometry) as lat";
                 request += " FROM georef.poi poi, georef.poi_type poi_type";
@@ -1154,6 +1157,29 @@ void EdReader::fill_graph_bss(navitia::type::Data& data, pqxx::work& work){
         cpt_bike_sharing++;
     }
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_bike_sharing << " bike sharing stations added");
+}
+
+void EdReader::fill_graph_parking(navitia::type::Data& data, pqxx::work& work){
+    std::string request = "SELECT poi.id as id, ST_X(poi.coord::geometry) as lon,"
+        "ST_Y(poi.coord::geometry) as lat"
+        " FROM georef.poi poi, georef.poi_type poi_type"
+        " where poi.poi_type_id=poi_type.id"
+        " and (poi_type.uri = 'poi_type:parking' or poi_type.uri = 'poi_type:park_ride' or poi_type.uri = 'poi_type:Airesdestationnement')";
+
+    pqxx::result result = work.exec(request);
+    size_t cpt_parking = 0;
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        navitia::type::GeographicalCoord coord;
+        coord.set_lon(const_it["lon"].as<double>());
+        coord.set_lat(const_it["lat"].as<double>());
+
+        if (data.geo_ref->add_parking_edges(coord)) {
+            ++cpt_parking;
+        } else {
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "Impossible to find the nearest edge for the parking poi_id = " << const_it["id"].as<std::string>());
+        }
+    }
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_parking << " parkings added");
 }
 
 void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
