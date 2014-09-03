@@ -191,8 +191,9 @@ void fill_pb_object(const type::Route* r, const type::Data& data,
                     const navitia::type::StopPoint* destination = nullptr);
 
 void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
-                    pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey, int max_depth,
-                    const boost::posix_time::ptime& now,
+                    const std::vector<const type::StopTime*>& stop_times,
+                    pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey,
+                    int max_depth, const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period = null_time_period);
 
 void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
