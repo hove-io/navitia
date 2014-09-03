@@ -95,7 +95,7 @@ struct routing_api_data {
               |                      /                                                                   |
               |                  /                                                                       |
               |             /                                                                            |
-              B------------------------------------------------------------------------------------------- C
+        D --- B------------------------------------------------------------------------------------------- C
               |
               |
               |
@@ -106,7 +106,7 @@ struct routing_api_data {
                     *) The car way is: A->E->F->C->B
                     *) We can walk on A->B
                     *) A->B has public transport
-                    *) S->B can be use by walk, bike or car
+                    *) S->B and B->D can be use by walk, bike or car
                     *) A->R is a pedestrian street
 
                     Coordinates:
@@ -139,6 +139,7 @@ struct routing_api_data {
         boost::add_vertex(navitia::georef::Vertex(E),b.data->geo_ref->graph);
         boost::add_vertex(navitia::georef::Vertex(R),b.data->geo_ref->graph);
         boost::add_vertex(navitia::georef::Vertex(S),b.data->geo_ref->graph);
+        boost::add_vertex(navitia::georef::Vertex(D),b.data->geo_ref->graph);
 
         b.data->geo_ref->init();
 
@@ -221,6 +222,12 @@ struct routing_api_data {
         way->way_type = "rue";
         b.data->geo_ref->ways.push_back(way);
 
+        way = new navitia::georef::Way();
+        way->name = "rue bd"; // B->D
+        way->idx = 13;
+        way->way_type = "rue";
+        b.data->geo_ref->ways.push_back(way);
+
         // A->B
         add_edges(0, *b.data->geo_ref, AA, BB, distance_ab, navitia::type::Mode_e::Walking);
         b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
@@ -299,6 +306,13 @@ struct routing_api_data {
         b.data->geo_ref->ways[12]->edges.push_back(std::make_pair(BB, SS));
         b.data->geo_ref->ways[12]->edges.push_back(std::make_pair(SS, BB));
 
+        // B->D
+        add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::Walking);
+        add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::Bike);
+        add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::Car);
+        b.data->geo_ref->ways[13]->edges.emplace_back(BB, DD);
+        b.data->geo_ref->ways[13]->edges.emplace_back(DD, BB);
+
         //add bike sharing edges
         add_bike_sharing_edge(10, *b.data->geo_ref, BB, BB);
         b.data->geo_ref->ways[10]->edges.push_back(std::make_pair(BB, BB)); //on way BK
@@ -338,6 +352,12 @@ struct routing_api_data {
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
 
+        // add parkings
+        b.data->geo_ref->default_time_parking_park = navitia::seconds(1);
+        b.data->geo_ref->default_time_parking_leave = navitia::seconds(2);
+        b.data->geo_ref->add_parking_edges(D);
+        b.data->geo_ref->add_parking_edges(E);
+
         std::string origin_lon = boost::lexical_cast<std::string>(S.lon()),
                 origin_lat = boost::lexical_cast<std::string>(S.lat()),
                 origin_uri = "coord:"+origin_lon+":"+origin_lat;
@@ -360,7 +380,7 @@ struct routing_api_data {
         b.data->meta->shape = ss.str();
     }
 
-    navitia::time_duration to_duration(double dist, navitia::type::Mode_e mode) {
+    navitia::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
         return speed_trait.to_duration(dist, mode);
     }
 
@@ -408,6 +428,7 @@ struct routing_api_data {
     int EE = 9;
     int RR = 10;
     int SS = 11;
+    int DD = 12;
 
     navitia::type::GeographicalCoord A = {120, 80, false};
     navitia::type::GeographicalCoord G = {100, 80, false};
@@ -421,6 +442,7 @@ struct routing_api_data {
     navitia::type::GeographicalCoord E = {120, 50, false};
     navitia::type::GeographicalCoord R = {210, 80, false};
     navitia::type::GeographicalCoord S = {10, 10, false};
+    navitia::type::GeographicalCoord D = {0, 30, false};
 
     ed::builder b = {"20120614"};
     navitia::type::EntryPoint origin;
