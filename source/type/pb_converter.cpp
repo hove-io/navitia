@@ -1284,14 +1284,19 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
     }
 }
 
-void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& ,
-                    pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey, int ,
-                    const pt::ptime& , const pt::time_period& )
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data&, const std::vector<const type::StopTime*>& stop_times,
+                    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey, int,
+                    const pt::ptime&, const pt::time_period&)
 {
     if(vj == nullptr)
-        return ;
+        return;
     add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
-    add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
+    if(stop_times.empty()){
+        add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
+    }else{
+        bool time_estimated = stop_times.front()->date_time_estimated() || stop_times.back()->date_time_estimated();
+        add_info_vehicle_journey->set_has_date_time_estimated(time_estimated);
+    }
 }
 
 
