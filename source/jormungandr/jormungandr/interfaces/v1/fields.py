@@ -86,6 +86,11 @@ class DateTime(fields.Raw):
         return None  # for the moment I prefer not to display anything instead of something wrong
 
 
+# a time null value is represented by the max value (since 0 is a perfectly valid value)
+# WARNING! be careful to change that value if the time type change (from uint64 to uint32 for example)
+__date_time_null_value__ = 2**64 - 1
+
+
 class SplitDateTime(DateTime):
     """
     custom date format from 2 fields:
@@ -109,6 +114,9 @@ class SplitDateTime(DateTime):
 
         date = fields.get_value(self.date, obj)
         time = fields.get_value(self.time, obj)
+
+        if time == __date_time_null_value__:
+            return ""
 
         if not date:
             return self.format_time(time)

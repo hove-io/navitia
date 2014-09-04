@@ -1,3 +1,10 @@
+navitia2 (1.0.1) unstable; urgency=low
+
+  * cherry pick of commits from <https://github.com/CanalTP/navitia/pull/526>
+    for timetable null value handling
+
+ -- Antoine Desbordes <antoine.desbordes@canaltp.fr>  Thu, 4 Sep 2014 14:44:13 +0100
+
 navitia2 (1.0.0) unstable; urgency=low
 
   * Jormungandr: take crow fly mode a a fall back mode in tags  <https://github.com/CanalTP/navitia/pull/524>
