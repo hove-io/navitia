@@ -1089,6 +1089,9 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     boost::optional<const std::string> calendar_id,
                     const navitia::type::StopPoint* destination){
     if (stop_time == nullptr) {
+        //we need to represent a 'null' value (for not found datetime)
+        // before it was done with a empty string, but now it is the max value (since 0 is a valid value)
+        rs_date_time->set_time(std::numeric_limits<u_int64_t>::max());
         return;
     }
 
@@ -1098,6 +1101,7 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         //for calendar we don't want to have a date
         rs_date_time->set_date(to_int_date(to_posix_time(date_time, data)));
     }
+
     pbnavitia::Properties* hn = rs_date_time->mutable_properties();
     fill_pb_object(stop_time, data, hn, max_depth, now, action_period);
 
