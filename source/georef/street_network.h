@@ -250,7 +250,7 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
      * stop when we can't find any vertex such that distances[v] <= max_duration
      */
     template<typename G>
-    void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G& g) {
+    void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G&) {
         if (durations[u] > max_duration)
             throw DestinationFound();
     }
