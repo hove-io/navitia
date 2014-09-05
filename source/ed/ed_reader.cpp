@@ -174,14 +174,19 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 }
 
 void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
-    std::string request = "SELECT beginning_date, end_date, timezone FROM navitia.parameters";
+    std::string request = "SELECT beginning_date, end_date, timezone, shape FROM navitia.parameters";
     pqxx::result result = work.exec(request);
 
     if (result.empty()) {
+        throw navitia::exception("Cannot find entry in navitia.parameters, "
+        " it's likely that no data have been imported, we cannot create a nav file");
+    }
+    auto const_it = result.begin();
+    if (const_it["beginning_date"].is_null() || const_it["end_date"].is_null()) {
         throw navitia::exception("Cannot find beginning_date and end_date in navitia.parameters, "
         " it's likely that no gtfs data have been imported, we cannot create a nav file");
     }
-    auto const_it = result.begin();
+
     bg::date begin = bg::from_string(const_it["beginning_date"].as<std::string>());
     //we add a day because 'end' is not in the period (and we want it to be)
     bg::date end = bg::from_string(const_it["end_date"].as<std::string>()) + bg::days(1);
@@ -191,16 +196,8 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     if (const_it["timezone"].is_null()) {
         throw navitia::exception("no default timezone in navitia.parameters, cannot load dataset");
     }
-
     nav_data.meta->timezone = const_it["timezone"].as<std::string>();
-    request = "SELECT ST_AsText(ST_MakeEnvelope("
-              "(select min(ST_X(coord::geometry)) from georef.node),"
-              "(select min(ST_Y(coord::geometry)) from georef.node),"
-              "(select max(ST_X(coord::geometry)) from georef.node),"
-              "(select max(ST_Y(coord::geometry)) from georef.node),"
-              "4326)) as shape;";
-    result = work.exec(request);
-    const_it = result.begin();
+
     const_it["shape"].to(nav_data.meta->shape);
 }
 

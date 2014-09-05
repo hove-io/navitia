@@ -32,8 +32,10 @@ CREATE TABLE IF NOT EXISTS public.database_version (
 
 
 CREATE TABLE IF NOT EXISTS navitia.parameters (
-    beginning_date DATE NOT NULL,
-    end_date DATE NOT NULL
+    beginning_date DATE,
+    end_date DATE,
+    shape GEOGRAPHY(POLYGON, 4326),
+    shape_computed BOOLEAN DEFAULT TRUE
 );
 COMMENT ON COLUMN navitia.Parameters.beginning_date IS 'date de début de validité des données => ValidityPattern::beginning_date';
 
