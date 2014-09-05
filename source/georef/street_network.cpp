@@ -135,8 +135,8 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
     navitia::time_duration min_dist = bt::pos_infin;
     vertex_t target = std::numeric_limits<size_t>::max();
     for(vertex_t u = 0; u != num_vertices; ++u) {
-        if((departure_path_finder.distances[u] != bt::pos_infin)
-                && (arrival_path_finder.distances[u] != bt::pos_infin)
+        if((departure_path_finder.distances[u] <= origin.streetnetwork_params.max_duration)
+                && (arrival_path_finder.distances[u] != destination.streetnetwork_params.max_duration)
                 && ((departure_path_finder.distances[u] + arrival_path_finder.distances[u]) < min_dist)) {
             target = u;
 
@@ -200,11 +200,11 @@ void PathFinder::start_distance_dijkstra(navitia::time_duration radius) {
     computation_launch = true;
     // We start dijkstra from source and target nodes
     try {
-        dijkstra(starting_edge[source_e], distance_visitor(radius, distances, speed_factor));
+        dijkstra(starting_edge[source_e], distance_visitor(radius, distances));
     } catch(DestinationFound){}
 
     try {
-        dijkstra(starting_edge[target_e], distance_visitor(radius, distances, speed_factor));
+        dijkstra(starting_edge[target_e], distance_visitor(radius, distances));
     } catch(DestinationFound){}
 
 }
