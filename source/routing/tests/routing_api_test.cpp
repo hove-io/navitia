@@ -1093,8 +1093,8 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::BSS_RENT);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
     pathitem = section.street_network().path_items(0);
-    BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
-    BOOST_CHECK_EQUAL(pathitem.duration(), bike_sharing_pickup.total_seconds());
+    BOOST_CHECK(!pathitem.name().empty());// projection should works, but where is irrelevant
+    BOOST_CHECK_EQUAL(pathitem.duration(), b.data->geo_ref->default_time_bss_pickup.total_seconds());
     BOOST_CHECK_EQUAL(pathitem.length(), 0);
 
     //bike
@@ -1134,7 +1134,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::BSS_PUT_BACK);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 1);
     pathitem = section.street_network().path_items(0);
-    BOOST_CHECK_EQUAL(pathitem.duration(), bike_sharing_return.total_seconds());
+    BOOST_CHECK_EQUAL(pathitem.duration(), b.data->geo_ref->default_time_bss_putback.total_seconds());
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
     BOOST_CHECK_EQUAL(pathitem.length(), 0);
     const auto& last_vls_section = section.origin(); //the last place of the walking section must be the vls station

@@ -58,9 +58,6 @@ const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     }}
                                                     };
 
-const navitia::seconds default_time_bss_pickup(120);
-const navitia::seconds default_time_bss_putback(60);
-
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
     nt::GeographicalCoord coord;
@@ -234,6 +231,8 @@ struct POIType;
 struct GeoRef {
 
     // parameters
+    navitia::time_duration default_time_bss_pickup = seconds(120);
+    navitia::time_duration default_time_bss_putback = seconds(60);
     navitia::time_duration default_time_parking_leave = seconds(5 * 60);
     navitia::time_duration default_time_parking_park = seconds(5 * 60);
 
@@ -353,6 +352,9 @@ struct GeoRef {
     }
 
     void add_way(const Way& w);
+
+    // Return false if we didn't find any projection
+    bool add_bss_edges(const type::GeographicalCoord&);
 
     // Return false if we didn't find any projection
     bool add_parking_edges(const type::GeographicalCoord&);

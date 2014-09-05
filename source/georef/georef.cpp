@@ -694,6 +694,38 @@ get_min_distance(const GeoRef& geo_ref, const type::GeographicalCoord &coord, ed
         min_b_idx);
 }
 
+bool GeoRef::add_bss_edges(const type::GeographicalCoord& coord) {
+    using navitia::type::Mode_e;
+
+    edge_t nearest_biking_edge, nearest_walking_edge;
+    try {
+        //we need to find the nearest edge in the walking graph and the nearest edge in the biking graph
+        nearest_biking_edge = nearest_edge(coord, Mode_e::Bike, pl);
+        nearest_walking_edge = nearest_edge(coord, Mode_e::Walking, pl);
+    } catch(proximitylist::NotFound) {
+        return false;
+    }
+
+    //we add a new edge linking those 2 edges, with the walking distance between the 2 edges + the time to take of hang the bike back
+    auto min_dist = get_min_distance(*this, coord, nearest_walking_edge, nearest_biking_edge);
+    vertex_t walking_v = std::get<1>(min_dist);
+    vertex_t biking_v = std::get<2>(min_dist);
+    time_duration dur_between_edges = seconds(std::get<0>(min_dist) / default_speed[Mode_e::Walking]);
+
+    navitia::georef::Edge edge;
+    edge.way_idx = graph[nearest_walking_edge].way_idx; //arbitrarily we assume the way is the walking way
+
+    // time needed to take the bike + time to walk between the edges
+    edge.duration = dur_between_edges + default_time_bss_pickup;
+    add_edge(walking_v, biking_v, edge, graph);
+
+    // time needed to hang the bike back + time to walk between the edges
+    edge.duration = dur_between_edges + default_time_bss_putback;
+    add_edge(biking_v, walking_v, edge, graph);
+
+    return true;
+}
+
 bool GeoRef::add_parking_edges(const type::GeographicalCoord& coord) {
     using navitia::type::Mode_e;
 

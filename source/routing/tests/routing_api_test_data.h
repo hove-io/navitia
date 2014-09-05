@@ -313,12 +313,6 @@ struct routing_api_data {
         b.data->geo_ref->ways[13]->edges.emplace_back(BB, DD);
         b.data->geo_ref->ways[13]->edges.emplace_back(DD, BB);
 
-        //add bike sharing edges
-        add_bike_sharing_edge(10, *b.data->geo_ref, BB, BB);
-        b.data->geo_ref->ways[10]->edges.push_back(std::make_pair(BB, BB)); //on way BK
-        add_bike_sharing_edge(5, *b.data->geo_ref, GG, GG);
-        b.data->geo_ref->ways[5]->edges.push_back(std::make_pair(GG, GG)); //on way AG
-
         //and we add 2 bike sharing poi, to check the placemark
         navitia::georef::POIType* poi_type = new navitia::georef::POIType();
         poi_type->uri = "poi_type:bicycle_rental";
@@ -351,6 +345,12 @@ struct routing_api_data {
         b.data->build_uri();
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+
+        //add bike sharing edges
+        b.data->geo_ref->default_time_bss_pickup = navitia::seconds(30);
+        b.data->geo_ref->default_time_bss_putback = navitia::seconds(45);
+        b.data->geo_ref->add_bss_edges(B);
+        b.data->geo_ref->add_bss_edges(G);
 
         // add parkings
         b.data->geo_ref->default_time_parking_park = navitia::seconds(1);
@@ -397,20 +397,6 @@ struct routing_api_data {
     void add_edges(int edge_idx, navitia::georef::GeoRef& geo_ref, int idx_from, int idx_to,
                    const navitia::type::GeographicalCoord& a, const navitia::type::GeographicalCoord& b, navitia::type::Mode_e mode) {
         add_edges(edge_idx, geo_ref, idx_from, idx_to, a.distance_to(b), mode);
-    }
-
-    const navitia::time_duration bike_sharing_pickup = navitia::seconds(30);
-    const navitia::time_duration bike_sharing_return = navitia::seconds(45);
-
-    void add_bike_sharing_edge(int edge_idx, navitia::georef::GeoRef& geo_ref, int idx_from, int idx_to) {
-        boost::add_edge(idx_from + geo_ref.offsets[navitia::type::Mode_e::Walking],
-                        idx_to + geo_ref.offsets[navitia::type::Mode_e::Bike],
-                        navitia::georef::Edge(edge_idx, bike_sharing_pickup),
-                        geo_ref.graph);
-        boost::add_edge(idx_to + geo_ref.offsets[navitia::type::Mode_e::Bike],
-                        idx_from + geo_ref.offsets[navitia::type::Mode_e::Walking],
-                        navitia::georef::Edge(edge_idx, bike_sharing_return),
-                        geo_ref.graph);
     }
 
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return speed_trait.get_default_speed(); }
