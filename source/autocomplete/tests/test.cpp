@@ -53,7 +53,6 @@ using namespace navitia::autocomplete;
 using namespace navitia::georef;
 
 BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
-    int word_weight = 5;
     int nbmax = 10;
     std::vector<std::string> admins;
     std::string admin_uri = "";
@@ -462,7 +461,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
     autocomplete_map synonyms;
     std::vector<std::string> admins;
     std::string admin_uri = "";
-    int word_weight = 5;
     int nbmax = 10;
 
     Autocomplete<unsigned int> ac;
@@ -497,7 +495,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_add_string_with_Line){
     autocomplete_map synonyms;
     std::vector<std::string> admins;
     std::string admin_uri = "";
-    int word_weight = 5;
     int nbmax = 10;
 
     Autocomplete<unsigned int> ac;
@@ -521,7 +518,6 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         autocomplete_map synonyms;
         std::vector<std::string> admins;
         std::string admin_uri;
-        int word_weight = 5;
         int nbmax = 10;
 
         synonyms["de"]="";
@@ -579,7 +575,6 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         // Qualité = 100 - (6 + 5) = 89
         BOOST_REQUIRE_EQUAL(res2.at(0).quality, 100);
 
-        word_weight = 10;
         auto res3 = ac.find_complete("av jean", synonyms, nbmax,[](int){return true;});
         BOOST_REQUIRE_EQUAL(res3.size(), 1);
         //rue jean zay
@@ -587,7 +582,6 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         // Qualité = 100 - (6 + 10) = 84
         BOOST_REQUIRE_EQUAL(res3.at(0).quality, 100);
 
-        word_weight = 10;
         auto res4 = ac.find_complete("chu gau", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res4.size(), 1);
         //hopital paul gaultier
@@ -601,7 +595,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
     autocomplete_map synonyms;
     std::vector<std::string> admins;
     std::string admin_uri;
-    int word_weight = 5;
     int nbmax = 10;
 
     synonyms["de"]="";
