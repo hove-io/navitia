@@ -445,8 +445,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                         const auto tmp_st_dt = best_stop_time(jpp, previous_dt,
                                                accessibilite_params.vehicle_properties,
                                                visitor.clockwise(), disruption_active, data);
-
-                        if(tmp_st_dt.first != nullptr && (boarding == nullptr || tmp_st_dt.first != *it_st)) {
+                        if(tmp_st_dt.first != nullptr && (workingDt != tmp_st_dt.second)) {
                             boarding = jpp;
                             it_st = visitor.first_stoptime(tmp_st_dt.first);
                             workingDt = tmp_st_dt.second;
