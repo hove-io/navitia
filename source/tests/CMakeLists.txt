@@ -12,7 +12,10 @@ add_executable(basic_routing_test basic_routing_test.cpp)
 
 add_executable(departure_board_test departure_board_test.cpp)
 
+add_executable(empty_routing_test empty_routing_test.cpp)
+
 target_link_libraries(main_routing_test ${ALL_LIBS})
 target_link_libraries(main_ptref_test ${ALL_LIBS})
 target_link_libraries(basic_routing_test ${ALL_LIBS})
 target_link_libraries(departure_board_test ${ALL_LIBS})
+target_link_libraries(empty_routing_test ${ALL_LIBS})

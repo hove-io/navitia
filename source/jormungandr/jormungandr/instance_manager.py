@@ -46,24 +46,39 @@ from jormungandr.instance import Instance
 import traceback
 
 
+def instances_comparator(instance1, instance2):
+    """
+    compare the instances for journey computation
+
+    we want first the non free instances then the free ones
+    """
+    jormun_bdd_instance1 = models.Instance.get_by_name(instance1)
+    jormun_bdd_instance2 = models.Instance.get_by_name(instance2)
+    #TODO the is_free should be in the instances, no need to fetch the bdd for this
+    if not jormun_bdd_instance1:
+        raise RegionNotFound(custom_msg="technical problem, impossible "
+                                        "to find region {i} in jormungandr database".format(i=jormun_bdd_instance1))
+    if not jormun_bdd_instance2:
+        raise RegionNotFound(custom_msg="technical problem, impossible "
+                                        "to find region {i} in jormungandr database".format(i=jormun_bdd_instance2))
+
+    if jormun_bdd_instance1.is_free != jormun_bdd_instance2.is_free:
+        return jormun_bdd_instance1.is_free - jormun_bdd_instance2.is_free
+
+    # TODO choose the smallest region ?
+    # take the origin/destination coords into account and choose the region with the center nearest to those coords ?
+    return 1
+
+
 def choose_best_instance(instances):
     """
-    chose the best instance
-    we want first the non free instances then the free ones
+    get the best instance in term of the instances_comparator
     """
     best = None
     for i in instances:
-        jormun_bdd_instance = models.Instance.get_by_name(i)
-        #TODO the is_free should be in the instances, no need to fetch the bdd for this
-        if not jormun_bdd_instance:
-            raise RegionNotFound(custom_msg="technical problem, impossible "
-                                            "to find region {i} in jormungandr database".format(i=i))
-        if not best or not jormun_bdd_instance.is_free:
-            #TODO what to do if we have 2 free instances or 2 private instances ?
-            best = jormun_bdd_instance
-
-    return best.name
-
+        if not best or instances_comparator(i, best) > 0:
+            best = i
+    return best
 
 @singleton
 class InstanceManager(object):

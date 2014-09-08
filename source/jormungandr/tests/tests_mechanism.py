@@ -123,6 +123,7 @@ class AbstractTestFixture:
 
         i_manager = InstanceManager()
         i_manager.initialisation(start_ping=False)
+        cls.i_manager = i_manager
 
         #we block the stat manager not to send anything to rabbit mq
         def mock_publish(self, stat):
