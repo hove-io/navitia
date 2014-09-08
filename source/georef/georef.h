@@ -342,13 +342,10 @@ struct GeoRef {
 
     vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
-    edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
-    edge_t nearest_edge(const type::GeographicalCoord &coordinates, type::idx_t offset, const proximitylist::ProximityList<vertex_t>& prox) const;
+    edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t>& prox, type::idx_t offset = 0) const;
 
-    edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
-
-    edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode, const proximitylist::ProximityList<vertex_t>& prox) const {
-        return nearest_edge(coordinates, offsets[mode], prox);
+    edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode) const {
+        return nearest_edge(coordinates, pl, offsets[mode]);
     }
 
     void add_way(const Way& w);

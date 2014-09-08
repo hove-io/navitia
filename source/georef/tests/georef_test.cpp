@@ -181,9 +181,22 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
     c.set_xy(-10, 1);
     BOOST_CHECK(sn.nearest_edge(c) == b.get("b", "o"));
     c.set_xy(50, 10);
-    BOOST_CHECK_THROW(sn.nearest_edge(c), navitia::proximitylist::NotFound);
+    BOOST_CHECK_EQUAL(sn.nearest_edge(c), b.get("o", "c"));
 }
 
+BOOST_AUTO_TEST_CASE(real_nearest_edge){
+    GeoRef gr;
+    GraphBuilder b(gr);
+
+    /*        s
+       a---------------b
+              c-d
+    */
+    b("a", 0, -100)("b", 0, 100)("c", 10, 0)("d", 10, 10);
+    b("a", "b")("c", "d");
+    navitia::type::GeographicalCoord s(-10, 0, false);
+    BOOST_CHECK(gr.nearest_edge(s) == b.get("a", "b"));
+}
 
 /// Compute the path from the starting point to the the target geographical coord
 Path compute_path(PathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
