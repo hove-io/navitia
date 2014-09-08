@@ -1131,8 +1131,8 @@ void EdReader::fill_graph_bss(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::edge_t nearest_biking_edge, nearest_walking_edge;
         try {
             //we need to find the nearest edge in the walking graph and the nearest edge in the biking graph
-            nearest_biking_edge = data.geo_ref->nearest_edge(coord, navitia::type::Mode_e::Bike, data.geo_ref->pl);
-            nearest_walking_edge = data.geo_ref->nearest_edge(coord, navitia::type::Mode_e::Walking, data.geo_ref->pl);
+            nearest_biking_edge = data.geo_ref->nearest_edge(coord, navitia::type::Mode_e::Bike);
+            nearest_walking_edge = data.geo_ref->nearest_edge(coord, navitia::type::Mode_e::Walking);
         } catch(navitia::proximitylist::NotFound) {
              LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "Impossible to find the nearest edge for the bike sharing station poi_id = " << const_it["id"].as<std::string>());
             continue;

@@ -261,7 +261,7 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
     edge_t edge;
     found = true;
     try {
-        edge = sn.nearest_edge(coord, offset, prox);
+        edge = sn.nearest_edge(coord, prox, offset);
     } catch(proximitylist::NotFound) {
         found = false;
         vertices[Direction::Source] = std::numeric_limits<vertex_t>::max();
@@ -608,58 +608,33 @@ std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type:
     return {projections, one_proj_found};
 }
 
-edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
-    return this->nearest_edge(coordinates, this->pl);
-}
-
 vertex_t GeoRef::nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
     return prox.find_nearest(coordinates);
 }
 
-/// Get the nearest_edge with at least one vertex in the graph corresponding to the offset (walking, bike, ...)
-edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, type::idx_t offset, const proximitylist::ProximityList<vertex_t>& prox) const {
-    auto vertexes_within = prox.find_within(coordinates);
-    for (const auto pair_coord : vertexes_within) {
-        //we increment the index to get the vertex in the other graph
-        const auto new_vertex = pair_coord.first + offset;
-
-        try {
-            edge_t edge_in_graph = nearest_edge(coordinates, new_vertex);
-            return edge_in_graph;
-        } catch(proximitylist::NotFound) {}
-    }
-    throw proximitylist::NotFound();
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
+    return this->nearest_edge(coordinates, this->pl);
 }
 
+/// Get the nearest_edge with at least one vertex in the graph corresponding to the offset (walking, bike, ...)
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t>& prox, type::idx_t offset) const {
+    boost::optional<edge_t> res;
+    float min_dist = 0.;
+    for (const auto pair_coord : prox.find_within(coordinates)) {
+        //we increment the index to get the vertex in the other graph
+        const auto u = pair_coord.first + offset;
 
-
-edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const{
-
-    type::GeographicalCoord coord_u, coord_v;
-    coord_u = this->graph[u].coord;
-    float dist = std::numeric_limits<float>::max();
-    edge_t best;
-    bool found = false;
-    BOOST_FOREACH(edge_t e, boost::out_edges(u, this->graph)){
-        vertex_t v = boost::target(e, this->graph);
-        coord_v = this->graph[v].coord;
-        // Petite approximation de la projection : on ne suit pas le tracé de la voirie !
-        auto projected = coordinates.project(coord_u, coord_v);
-        if(projected.second < dist){
-            found = true;
-            dist = projected.second;
-            best = e;
+        BOOST_FOREACH (edge_t e, boost::out_edges(u, graph)) {
+            const auto v = target(e, graph);
+            float cur_dist = coordinates.project(graph[u].coord, graph[v].coord).second;
+            if (!res || cur_dist < min_dist) {
+                min_dist = cur_dist;
+                res = e;
+            }
         }
     }
-    if(!found)
-        throw proximitylist::NotFound();
-    else
-        return best;
-
-}
-edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
-    vertex_t u = nearest_vertex(coordinates, prox);
-    return nearest_edge(coordinates, u);
+    if (res) { return *res; }
+    throw proximitylist::NotFound();
 }
 
 GeoRef::~GeoRef() {
