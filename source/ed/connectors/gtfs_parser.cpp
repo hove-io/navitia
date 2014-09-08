@@ -37,6 +37,7 @@ www.navitia.io
 #include "utils/encoding_converter.h"
 #include "utils/csv.h"
 #include "utils/logger.h"
+#include <boost/range/algorithm/sort.hpp>
 
 namespace nm = ed::types;
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
@@ -886,6 +887,16 @@ void StopTimeGtfsHandler::init(Data&) {
 }
 
 void StopTimeGtfsHandler::finish(Data& data) {
+    LOG4CPLUS_TRACE(logger, "sorting stoptimes of vehicle_journeys");
+    for(auto& vj: data.vehicle_journeys){
+        boost::sort(vj->stop_time_list, [](const nm::StopTime* st1, const nm::StopTime* st2)->bool{
+                if(st1->order == st2->order){
+                    throw navitia::exception("two stoptime with the same order (" +
+                        std::to_string(st1->order) + ") for vj: " + st1->vehicle_journey->uri);
+                }
+                return st1->order < st2->order;
+            });
+    }
     LOG4CPLUS_TRACE(logger, "Nb stop times: " << data.stops.size());
 }
 
