@@ -201,7 +201,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
     }
 
 
-    assert(best_st.first->journey_pattern_point == jpp);
+    assert(best_st.first == nullptr || best_st.first->journey_pattern_point == jpp);
     return best_st;
 }
 
