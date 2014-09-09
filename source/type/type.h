@@ -588,16 +588,14 @@ struct Line : public Header, Nameable, HasMessages, Codes{
     std::string color;
     int sort = std::numeric_limits<int>::max();
 
-    CommercialMode* commercial_mode;
+    CommercialMode* commercial_mode = nullptr;
 
     std::vector<Company*> company_list;
-    Network* network;
+    Network* network = nullptr;
 
     std::vector<Route*> route_list;
     std::vector<PhysicalMode*> physical_mode_list;
     std::vector<Calendar*> calendar_list;
-
-    Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
@@ -627,10 +625,9 @@ struct Line : public Header, Nameable, HasMessages, Codes{
 
 struct Route : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Route;
-    Line* line;
+    Line* line = nullptr;
     std::vector<JourneyPattern*> journey_pattern_list;
 
-    Route() : line(nullptr) {}
     idx_t main_destination() const;
     type::OdtLevel_e get_odt_level() const;
 
@@ -645,16 +642,14 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 
 struct JourneyPattern : public Header, Nameable{
     const static Type_e type = Type_e::JourneyPattern;
-    bool is_frequence;
-    OdtLevel_e odt_level; // Computed at serialization
-    Route* route;
-    CommercialMode* commercial_mode;
-    PhysicalMode* physical_mode;
+    bool is_frequence = false;
+    OdtLevel_e odt_level= OdtLevel_e::none; // Computed at serialization
+    Route* route = nullptr;
+    CommercialMode* commercial_mode = nullptr;
+    PhysicalMode* physical_mode = nullptr;
 
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
-
-    JourneyPattern(): is_frequence(false), odt_level(OdtLevel_e::none), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & is_frequence & odt_level &  route & commercial_mode
