@@ -64,7 +64,7 @@ int main(int argc, char * argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE);
+        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE;
         return 0;
     }
 
@@ -79,7 +79,7 @@ int main(int argc, char * argv[])
     }
 
     if(vm.count("help") || !vm.count("input")) {
-        LOG4CPLUS_INFO(logger, desc);
+        std::cout << desc << std::endl;
         return 1;
     }
     po::notify(vm);
