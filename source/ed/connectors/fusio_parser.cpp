@@ -547,7 +547,8 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if(line->commercial_mode == nullptr){
         line->commercial_mode = gtfs_data.get_or_create_default_commercial_mode(data);
     }
-    if (is_valid(sort_c, row)) {
+    if (is_valid(sort_c, row) && row[sort_c] != "-1") {
+        //sort == -1 means no sort
         line->sort =  boost::lexical_cast<int>(row[sort_c]);
     }
 
