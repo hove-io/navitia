@@ -147,7 +147,7 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
             || (this->house_number_right.empty() && number % 2 == 0)
             || (this->house_number_left.empty() && number % 2 != 0)
             || number <= 0)
-        return barycentre(graph);
+        return projected_centroid(graph);
 
     if (number % 2 == 0) // Pair
         return get_geographical_coord(this->house_number_right, number);
@@ -155,8 +155,8 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
         return get_geographical_coord(this->house_number_left, number);
 }
 
-// Calcul du barycentre de la rue
-nt::GeographicalCoord Way::barycentre(const Graph& graph){
+// returns the centroid projected on the way
+nt::GeographicalCoord Way::projected_centroid(const Graph& graph){
     std::vector<nt::GeographicalCoord> line;
     nt::GeographicalCoord centroid;
 
@@ -171,10 +171,26 @@ nt::GeographicalCoord Way::barycentre(const Graph& graph){
     try{
         boost::geometry::centroid(line, centroid);
     }catch(...){
-      LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log") ,"Impossible de trouver le barycentre de la rue :  " + this->name);
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "Can't find the centroid of the way::  " << this->name);
     }
 
-    return centroid;
+    if (line.empty()) { return centroid; }
+
+    // project the centroid on the way
+    nt::GeographicalCoord projected_centroid = line.front();
+    float min_dist = centroid.distance_to(projected_centroid);
+    nt::GeographicalCoord last = line.front();
+    auto cur = line.begin();
+    for (++cur; cur != line.end(); last = *cur, ++cur) {
+        auto projection = centroid.project(last, *cur);
+        if (projection.second < min_dist) {
+            min_dist = projection.second;
+            projected_centroid = projection.first;
+        }
+    }
+
+    return projected_centroid;
 }
 
 /** Recherche du némuro le plus proche à des coordonnées

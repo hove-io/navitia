@@ -147,7 +147,7 @@ public:
     void add_house_number(const HouseNumber&);
     nt::GeographicalCoord nearest_coord(const int, const Graph&);
     int nearest_number(const nt::GeographicalCoord& );
-    nt::GeographicalCoord barycentre(const Graph& );
+    nt::GeographicalCoord projected_centroid(const Graph& );
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges;
     }
