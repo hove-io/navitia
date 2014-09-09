@@ -62,6 +62,60 @@ class TestOverlappingCoverage(AbstractTestFixture):
         models.Instance.get_by_name = self.real_method
 
     def test_journeys(self):
-        response = self.query("/v1/{q}".format(q=journey_basic_query), display=True)
+        """
+        journey query with 2 overlapping coverage.
+        main_routing_test is free
+        empty_routing_test is not free but without data (and with the same bounding shape than main_routing_test)
+
+        the empty region should be chosen first and after having returned no journey the real region should be called
+        ==> ie we must have a journey in the end
+        """
+        response = self.query("/v1/{q}".format(q=journey_basic_query), display=False)
 
         is_valid_journey_response(response, self.tester, journey_basic_query)
+
+    def test_journeys_on_empty(self):
+        """
+        explicit call to the empty region should not work
+        """
+        response, error_code = self.query_no_assert("/v1/coverage/empty_routing_test/{q}".format(q=journey_basic_query), display=False)
+
+        assert not 'journeys' in response or len(response['journeys']) == 0
+        assert error_code == 404
+        assert 'error' in response
+        #impossible to project the starting/ending point
+        assert response['error']['id'] == 'no_origin_nor_destionation'
+
+    def test_journeys_on_same_error(self):
+        """
+        if all region gives the same error we should get the error
+
+        there we ask for a journey in 1980, both region should return a date_out_of_bounds
+        """
+        journey_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
+                    to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
+                    datetime="19800614T080000")
+        response, error_code = self.query_no_assert("/v1/{q}".format(q=journey_query), display=False)
+
+        assert not 'journeys' in response or len(response['journeys']) == 0
+        assert error_code == 404
+        assert 'error' in response
+        assert response['error']['id'] == 'date_out_of_bounds'
+
+    def test_journeys_on_different_error(self):
+        """
+        if all region gives a different error we should get a default error
+
+        there we use the routing_test.test_not_existent_filtering to have a query in error
+        so the empty region will say that it cannot find a origin/destination
+        and the real region will filter all journeys
+        """
+        response, error_code = self.query_no_assert("v1/{query}&type=car".
+                                                    format(query=journey_basic_query), display=False)
+
+        assert not 'journeys' in response or len(response['journeys']) == 0
+        assert error_code == 200  # no solution is 200
+        assert 'error' in response
+        assert response['error']['id'] == 'no_solution'
+        assert response['error']['message'] == 'No journey found'

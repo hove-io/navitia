@@ -640,7 +640,7 @@ class Journeys(ResourceUri, ResourceUtc):
         args['original_datetime'] = args['datetime']
 
         #we want to store the different errors
-        errors = {}
+        responses = {}
         for r in possible_regions:
             self.region = r
 
@@ -658,16 +658,22 @@ class Journeys(ResourceUri, ResourceUtc):
                 logging.getLogger(__name__).info("impossible to find journeys for the region {},"
                                                  " we'll try the next possible region ".format(r))
 
-                errors[r] = response.error
+                if args['debug']:
+                    # In debug we store all errors
+                    if not hasattr(g, 'errors_by_region'):
+                        g.errors_by_region = {}
+                    g.errors_by_region[r] = response.error
+
+                responses[r] = response
                 continue
 
             return response
 
         # if no response have been found for all the possible regions, we have a problem
         # if all response had the same error we give it, else we give a generic 'no solution' error
-        first_error = errors.itervalues().next()
-        if all(e.id == first_error.id for e in errors.values()):
-            return first_error
+        first_response = responses.itervalues().next()
+        if all(r.error.id == first_response.error.id for r in responses.values()):
+            return first_response
 
         resp = response_pb2.Response()
         er = resp.error
