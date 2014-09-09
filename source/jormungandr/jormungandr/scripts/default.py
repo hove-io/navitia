@@ -107,20 +107,11 @@ class JourneySorter:
     Journey comparator for sort
 
     the comparison is different if the query is for clockwise search or not
-
-    NOTE: We ALWAYS want the best journeys to be first on the journey list
-    since end user wanting only 1 journey will take the first one
     """
     def __init__(self, clockwise):
         self.clockwise = clockwise
 
     def __call__(self, j1, j2):
-        #the best is detected because it is a rapid without tags
-        if j1.type == "rapid" and len(j1.tags) == 0:
-            return -1
-
-        if j2.type == "rapid" and len(j2.tags) == 0:
-            return 1
 
         if self.clockwise:
             #for clockwise query, we want to sort first on the arrival time
