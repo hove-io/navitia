@@ -107,11 +107,13 @@ class TestOverlappingCoverage(AbstractTestFixture):
         """
         if all region gives a different error we should get a default error
 
-        there we use the routing_test.test_not_existent_filtering to have a query in error
+        there we limit the walking duration no to find the destination
         so the empty region will say that it cannot find a origin/destination
-        and the real region will filter all journeys
+        and the real region will say that it cannot find a destination
+
+        we call the api with debug=true so we must get a 'debug' node with the error by regions
         """
-        response, error_code = self.query_no_assert("v1/{query}&type=car".
+        response, error_code = self.query_no_assert("v1/{query}&max_duration_to_pt=20&debug=true".
                                                     format(query=journey_basic_query), display=False)
 
         assert not 'journeys' in response or len(response['journeys']) == 0
@@ -119,3 +121,19 @@ class TestOverlappingCoverage(AbstractTestFixture):
         assert 'error' in response
         assert response['error']['id'] == 'no_solution'
         assert response['error']['message'] == 'No journey found'
+
+        assert 'debug' in response
+        assert 'errors_by_region' in response['debug']
+        assert response['debug']['errors_by_region']['empty_routing_test'] == 'no origin point nor destination point'
+        assert response['debug']['errors_by_region']['main_routing_test'] == 'no destination point'
+
+        # we also should have the region called in the debug node
+        # (and the empty one should be first since it has been called first)
+        assert 'regions_called' in response['debug']
+        assert response['debug']['regions_called'] == ['empty_routing_test', 'main_routing_test']
+
+    def test_journeys_no_debug(self):
+        """no debug in query, no debug in answer"""
+        response = self.query("/v1/{q}".format(q=journey_basic_query), display=False)
+
+        assert not 'debug' in response

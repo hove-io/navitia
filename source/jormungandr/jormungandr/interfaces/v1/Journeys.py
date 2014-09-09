@@ -262,6 +262,36 @@ def dt_represents(value):
         raise ValueError("Unable to parse datetime_represents")
 
 
+class add_debug_info(object):
+    """
+    display info stored in g for the debug
+
+    must be called after the transformation from protobuff to dict
+    """
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+
+            response = objects[0]
+
+            def get_debug():
+                if not 'debug' in response:
+                    response['debug'] = {}
+                return response['debug']
+
+            if hasattr(g, 'errors_by_region'):
+                get_debug()['errors_by_region'] = {}
+                for region, er in g.errors_by_region.iteritems():
+                    get_debug()['errors_by_region'][region] = er.message
+
+            if hasattr(g, 'regions_called'):
+                get_debug()['regions_called'] = g.regions_called
+
+            return objects
+        return wrapper
+
+
 class add_journey_href(object):
 
     def __call__(self, f):
@@ -566,6 +596,7 @@ class Journeys(ResourceUri, ResourceUtc):
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
 
+    @add_debug_info()
     @clean_links()
     @add_id_links()
     @add_fare_links()
@@ -646,6 +677,12 @@ class Journeys(ResourceUri, ResourceUtc):
 
             #we store the region in the 'g' object, which is local to a request
             set_request_timezone(self.region)
+
+            if args['debug']:
+                # In debug we store all queried region
+                if not hasattr(g, 'regions_called'):
+                    g.regions_called = []
+                g.regions_called.append(r)
 
             original_datetime = datetime.strptime(args['original_datetime'], f_datetime)
             new_datetime = self.convert_to_utc(original_datetime)
