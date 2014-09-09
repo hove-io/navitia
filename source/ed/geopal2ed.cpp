@@ -64,22 +64,22 @@ int main(int argc, char * argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE);
+        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE;
         return 0;
     }
 
     if(vm.count("config-file")){
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
-        if(!stream.is_open()){
+        if(!stream.is_open()) {
             throw navitia::exception("loading config file failed");
-        }else{
+        } else {
             po::store(po::parse_config_file(stream, desc), vm);
         }
     }
 
     if(vm.count("help") || !vm.count("input")) {
-        std::cout << desc <<  "\n";
+        std::cout << desc << std::endl;
         return 1;
     }
     po::notify(vm);
@@ -90,16 +90,17 @@ int main(int argc, char * argv[])
     ed::connectors::Projection origin("Lambert 2 étendu", std::to_string(coord_system), false);
     ed::connectors::GeopalParser geopal_parser(input, ed::connectors::ConvCoord(origin));
 
-    try{
-            geopal_parser.fill();
-        }catch(const ed::connectors::GeopalParserException& e){
-            LOG4CPLUS_FATAL(logger, "Erreur :"+ std::string(e.what()) + "  backtrace :" + e.backtrace());
-            return -1;
-        }
+    try {
+        geopal_parser.fill();
+    } catch(const ed::connectors::GeopalParserException& e) {
+        LOG4CPLUS_FATAL(logger, "Erreur :" << std::string(e.what()) << "  backtrace :" << e.backtrace());
+        return -1;
+    }
 
     ed::EdPersistor p(connection_string);
     p.persist(geopal_parser.data);
-    std::cout<<std::endl<<"temps :"<<to_simple_string(pt::microsec_clock::local_time() - start)<<std::endl;
+
+    LOG4CPLUS_INFO(logger, "time to load geopal: " << to_simple_string(pt::microsec_clock::local_time() - start));
 
     return 0;
 }

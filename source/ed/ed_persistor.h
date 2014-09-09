@@ -118,6 +118,8 @@ private:
     void insert_pois(const ed::Georef& data);
     void insert_poi_properties(const ed::Georef& data);
 
+    void compute_bounding_shape();
+
     std::string to_geographic_point(const navitia::type::GeographicalCoord& coord) const;
 
 };

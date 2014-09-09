@@ -84,9 +84,11 @@ class TestMultiCoverage:
         """Simple test, paris and lima are in the same region, should be easy"""
         self._mock_function(['france'], ['france'])
 
-        region = compute_regions(self.args)
+        regions = compute_regions(self.args)
 
-        assert region == self.regions['france'].name
+        assert len(regions) == 1
+
+        assert regions[0].name == self.regions['france'].name
 
     @raises(RegionNotFound)
     def test_multi_coverage_diff_region(self):
@@ -120,22 +122,35 @@ class TestMultiCoverage:
         """orig as 2 possible region and dest one"""
         self._mock_function(['france', 'peru'], ['peru'])
 
-        region = compute_regions(self.args)
+        regions = compute_regions(self.args)
 
-        assert region == self.regions['peru'].name
+        assert len(regions) == 1
+
+        assert regions[0].name == self.regions['peru'].name
 
     def test_multi_coverage_overlap_chose_non_free(self):
-        """orig as 2 possible region and destination 3, we want to chose the france because equador is free"""
+        """orig as 2 possible region and destination 3, we want to have france first because equador is free"""
         self._mock_function(['france', 'equador'], ['france', 'peru', 'equador'])
 
-        region = compute_regions(self.args)
+        regions = compute_regions(self.args)
 
-        assert region == self.regions['france'].name
+        assert len(regions) == 2
+        print "regions ==> {}".format(regions)
+
+        assert regions[0].name == self.regions['france'].name
+        assert regions[1].name == self.regions['equador'].name
 
     def test_multi_coverage_overlap_chose_non_free2(self):
-        """all regions and overlaping, we have to return one of the non free region (we don't know which one)"""
+        """
+        all regions are overlaping,
+        we have to have the non free first then the free (but we don't know which one)
+        """
         self._mock_function(['france', 'equador', 'peru', 'bolivia'], ['france', 'equador', 'peru', 'bolivia'])
 
-        region = compute_regions(self.args)
+        regions = compute_regions(self.args)
 
-        assert region in [self.regions['france'].name, self.regions['peru'].name]
+        assert len(regions) == 4
+        print "regions ==> {}".format(regions)
+
+        assert set([regions[0].name, regions[1].name]) == set([self.regions['france'].name, self.regions['peru'].name])
+        assert set([regions[2].name, regions[3].name]) == set([self.regions['equador'].name, self.regions['bolivia'].name])

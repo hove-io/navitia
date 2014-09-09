@@ -28,15 +28,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 import calendar
 import logging
-
-from flask import Flask, request, url_for
+from flask import Flask, request, url_for, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
-from jormungandr.instance_manager import choose_best_instance
+from jormungandr.instance_manager import instances_comparator
 from jormungandr import authentification
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode, \
@@ -44,7 +44,6 @@ from fields import stop_point, stop_area, line, physical_mode, \
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
     generic_message
-
 from jormungandr.interfaces.parsers import option_value
 #from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
@@ -263,6 +262,36 @@ def dt_represents(value):
         raise ValueError("Unable to parse datetime_represents")
 
 
+class add_debug_info(object):
+    """
+    display info stored in g for the debug
+
+    must be called after the transformation from protobuff to dict
+    """
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+
+            response = objects[0]
+
+            def get_debug():
+                if not 'debug' in response:
+                    response['debug'] = {}
+                return response['debug']
+
+            if hasattr(g, 'errors_by_region'):
+                get_debug()['errors_by_region'] = {}
+                for region, er in g.errors_by_region.iteritems():
+                    get_debug()['errors_by_region'][region] = er.message
+
+            if hasattr(g, 'regions_called'):
+                get_debug()['regions_called'] = g.regions_called
+
+            return objects
+        return wrapper
+
+
 class add_journey_href(object):
 
     def __call__(self, f):
@@ -460,7 +489,6 @@ def compute_regions(args):
     we fetch the different regions the user can use for 'origin' and 'destination'
     we do the intersection and sort the list
     """
-    _region = None
     possible_regions = set()
     from_regions = set()
     to_regions = set()
@@ -490,9 +518,9 @@ def compute_regions(args):
 
     sorted_regions = list(possible_regions)
 
-    _region = choose_best_instance(sorted_regions)
+    regions = sorted(sorted_regions, cmp=instances_comparator)
 
-    return _region
+    return regions
 
 
 class Journeys(ResourceUri, ResourceUtc):
@@ -568,6 +596,7 @@ class Journeys(ResourceUri, ResourceUtc):
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
 
+    @add_debug_info()
     @clean_links()
     @add_id_links()
     @add_fare_links()
@@ -617,10 +646,6 @@ class Journeys(ResourceUri, ResourceUtc):
             #shoudl be in my opinion if not args["origin"] and not args["destination"]:
             abort(400, message="from argument is required")
 
-        if not region:
-            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
-            self.region = compute_regions(args)
-
         #we transform the origin/destination url to add information
         if args['origin']:
             args['origin'] = self.transform_id(args['origin'])
@@ -630,10 +655,11 @@ class Journeys(ResourceUri, ResourceUtc):
         if not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
 
-        original_datetime = datetime.strptime(args['datetime'], f_datetime)
-        new_datetime = self.convert_to_utc(original_datetime)
-        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
-        args['datetime'] = date_to_timestamp(new_datetime)
+        if not region:
+            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
+            possible_regions = compute_regions(args)
+        else:
+            possible_regions = [region]
 
         api = None
         if args['destination']:
@@ -641,12 +667,57 @@ class Journeys(ResourceUri, ResourceUtc):
         else:
             api = 'isochrone'
 
-        #we store the region in the 'g' object, which is local to a request
-        set_request_timezone(self.region)
+        # we save the original datetime for debuging purpose
+        args['original_datetime'] = args['datetime']
 
+        #we want to store the different errors
+        responses = {}
+        for r in possible_regions:
+            self.region = r
 
-        response = i_manager.dispatch(args, api, instance_name=self.region)
-        return response
+            #we store the region in the 'g' object, which is local to a request
+            set_request_timezone(self.region)
+
+            if args['debug']:
+                # In debug we store all queried region
+                if not hasattr(g, 'regions_called'):
+                    g.regions_called = []
+                g.regions_called.append(r)
+
+            original_datetime = datetime.strptime(args['original_datetime'], f_datetime)
+            new_datetime = self.convert_to_utc(original_datetime)
+            args['datetime'] = date_to_timestamp(new_datetime)
+
+            response = i_manager.dispatch(args, api, instance_name=self.region)
+
+            if response.HasField('error') \
+                    and len(possible_regions) != 1:
+                logging.getLogger(__name__).info("impossible to find journeys for the region {},"
+                                                 " we'll try the next possible region ".format(r))
+
+                if args['debug']:
+                    # In debug we store all errors
+                    if not hasattr(g, 'errors_by_region'):
+                        g.errors_by_region = {}
+                    g.errors_by_region[r] = response.error
+
+                responses[r] = response
+                continue
+
+            return response
+
+        # if no response have been found for all the possible regions, we have a problem
+        # if all response had the same error we give it, else we give a generic 'no solution' error
+        first_response = responses.itervalues().next()
+        if all(r.error.id == first_response.error.id for r in responses.values()):
+            return first_response
+
+        resp = response_pb2.Response()
+        er = resp.error
+        er.id = response_pb2.Error.no_solution
+        er.message = "No journey found"
+
+        return resp
 
     def transform_id(self, id):
         splitted_coord = id.split(";")

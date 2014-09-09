@@ -146,6 +146,12 @@ and ad2.level > ad1.level
 $$
 LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION georef.update_bounding_shape() RETURNS VOID AS $$
+WITH upsert as (UPDATE navitia.parameters SET shape = (SELECT georef.compute_bounding_shape()) WHERE shape_computed RETURNING *)
+INSERT INTO navitia.parameters (shape) SELECT (SELECT georef.compute_bounding_shape()) WHERE NOT EXISTS (SELECT * FROM upsert);
+$$
+LANGUAGE SQL;
+
  -- Conversion des coordonnées vers wgs84
 CREATE OR REPLACE FUNCTION georef.coord2wgs84(lon real, lat real, coord_in int)
   RETURNS RECORD AS

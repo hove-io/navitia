@@ -76,6 +76,11 @@ void EdPersistor::persist(const ed::Georef& data){
     LOG4CPLUS_INFO(logger, "Begin: relation admin way");
     this->build_relation_way_admin(data);
     LOG4CPLUS_INFO(logger, "End: relation admin way");
+
+    LOG4CPLUS_INFO(logger, "Begin: compute bounding shape");
+    this->compute_bounding_shape();
+    LOG4CPLUS_INFO(logger, "End: compute bounding shape");
+
     LOG4CPLUS_INFO(logger, "Begin commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
@@ -255,6 +260,10 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
     this->lotus.finish_bulk_insert();
 }
 
+void EdPersistor::compute_bounding_shape() {
+    PQclear(this->lotus.exec("select georef.update_bounding_shape();", "", PGRES_TUPLES_OK));
+}
+
 void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
 
     this->lotus.start_transaction();
@@ -375,11 +384,24 @@ void EdPersistor::persist_fare(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "End: insert origin destinations");
 }
 
-void EdPersistor::insert_metadata(const navitia::type::MetaData& meta){
-    std::string request = "insert into navitia.parameters (beginning_date, end_date, timezone) "
-                          "VALUES ('" + bg::to_iso_extended_string(meta.production_date.begin()) +
-                          "', '" + bg::to_iso_extended_string(meta.production_date.last()) +
-                         "', '" + meta.timezone + "');";
+void EdPersistor::insert_metadata(const navitia::type::MetaData& meta) {
+    auto beg = bg::to_iso_extended_string(meta.production_date.begin());
+    auto last = bg::to_iso_extended_string(meta.production_date.last());
+    //metadata consist of only one line, we either have to update it or create it
+    std::string update_query = "update navitia.parameters set "
+          "beginning_date = '" + beg +
+          "', end_date = '" + last +
+          "', timezone = '" + meta.timezone + "'";
+    std::string insert_query = "insert into navitia.parameters (beginning_date, end_date, timezone) "
+            " select '" + beg +
+            "', '" + last +
+            "', '" + meta.timezone + "'";
+
+    std::string request = "WITH upsert AS "
+    "(" + update_query + " RETURNING *) "
+    + insert_query + " WHERE NOT EXISTS (SELECT * FROM upsert);";
+
+    std::cout << request << std::endl;
     PQclear(this->lotus.exec(request));
 }
 
@@ -404,11 +426,16 @@ void EdPersistor::clean_db(){
                 "navitia.physical_mode, navitia.contributor, "
                 "navitia.commercial_mode, "
                 "navitia.vehicle_properties, navitia.properties, "
-                "navitia.validity_pattern, navitia.network, navitia.parameters, "
+                "navitia.validity_pattern, navitia.network, "
                 "navitia.connection, navitia.calendar, navitia.period, "
                 "navitia.week_pattern, "
                 "navitia.meta_vj, navitia.rel_metavj_vj"
                 " CASCADE"));
+    //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
+    PQclear(this->lotus.exec("update navitia.parameters set"
+                             " beginning_date = null"
+                             ", end_date = null"
+                             ", timezone = '';"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
