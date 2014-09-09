@@ -60,6 +60,8 @@ struct OSMRelation;
 struct OSMCache;
 
 struct OSMNode {
+    static const uint USED_MORE_THAN_ONCE = 0,
+                      FIRST_OR_LAST = 1;
     uint64_t osm_id = std::numeric_limits<uint64_t>::max();
     // these attributes are mutable because this object would be use in a set, and
     // all object in a set are const, since these attributes are not used in the key we can modify them
@@ -67,7 +69,6 @@ struct OSMNode {
     // We use int32_t to save memory, these are coordinates *  factor
     mutable int32_t ilon = std::numeric_limits<int32_t>::max(),
                     ilat = std::numeric_limits<int32_t>::max();
-    mutable bool use_more_than_once = false;
     mutable const OSMRelation* admin = nullptr;
     static constexpr double factor = 1e6;
 
@@ -80,7 +81,7 @@ struct OSMNode {
     // Even if it's const, it modifies the variable used_more_than_once,
     // cause it's mutable, and doesn't affect the operator <
     void set_used_more_than_once() const {
-        this->use_more_than_once = true;
+        this->properties[USED_MORE_THAN_ONCE] = true;
     }
 
     bool is_defined() const {
@@ -89,7 +90,19 @@ struct OSMNode {
     }
 
     bool is_used_more_than_once() const {
-        return use_more_than_once;
+        return this->properties[USED_MORE_THAN_ONCE];
+    }
+
+    bool is_used() const {
+        return is_used_more_than_once() || is_first_or_last() || admin != nullptr;
+    }
+
+    bool is_first_or_last() const {
+        return this->properties[FIRST_OR_LAST];
+    }
+
+    void set_first_or_last() const {
+        this->properties[FIRST_OR_LAST] = true;
     }
 
     void set_coord(double lon, double lat) const{
@@ -111,6 +124,8 @@ struct OSMNode {
         return geog.str();
     }
     std::string to_geographic_point() const;
+private:
+    mutable std::bitset<2> properties = 0;
 };
 
 
@@ -276,6 +291,7 @@ struct OSMCache {
     void insert_relations();
     void build_way_map();
     void fusion_ways();
+    void flag_nodes();
 };
 
 struct ReadRelationsVisitor {

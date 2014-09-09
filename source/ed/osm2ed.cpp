@@ -238,7 +238,7 @@ void OSMCache::insert_nodes() {
     size_t n_inserted = 0;
     const size_t max_n_inserted = 200000;
     for(const auto& node : nodes){
-        if (!node.is_defined()) {
+        if (!node.is_defined() || !node.is_used()) {
             continue;
         }
         this->lotus.insert({std::to_string(node.osm_id), node.to_geographic_point()});
@@ -759,6 +759,23 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
     data.pois[std::to_string(osm_id)] = poi;
 }
 
+void OSMCache::flag_nodes() {
+    for (const auto& way : ways) {
+        for (const auto node: way.nodes) {
+            if(node->is_defined()) {
+                node->set_first_or_last();
+                break;
+            }
+        }
+        for (auto it=way.nodes.rbegin(); it!=way.nodes.rend(); ++it) {
+            if ((*it)->is_defined()) {
+                (*it)->set_first_or_last();
+                break;
+            }
+        }
+    }
+}
+
 }}
 
 int main(int argc, char** argv) {
@@ -804,6 +821,7 @@ int main(int argc, char** argv) {
     cache.match_nodes_admin();
     cache.build_way_map();
     cache.fusion_ways();
+    cache.flag_nodes();
     cache.insert_nodes();
     cache.insert_ways();
     cache.insert_edges();
