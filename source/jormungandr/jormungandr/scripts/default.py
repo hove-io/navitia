@@ -154,7 +154,7 @@ class Script(object):
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
                      "status", "load", "networks", "place_uri", "disruptions",
-                     "calendars"]
+                     "calendars", "nm_journeys"]
         self.functional_params = {}
 
     def __pagination(self, request, ressource_name, resp):
@@ -318,13 +318,31 @@ class Script(object):
         """Parse the request dict and create the protobuf version"""
         req = request_pb2.Request()
         req.requested_api = requested_type
-        req.journeys.origin = request["origin"]
+        if "origin" in request and request["origin"]:
+            if requested_type != type_pb2.NMPLANNER:
+                request["origin"] = [request["origin"]]
+                request["origin_access_duration"] = [0]
+            for i in range(0, len(request["origin"])):
+                location = req.journeys.origin.add()
+                location.place = request["origin"][i]
+                location.access_duration = request["origin_access_duration"][i]
         if "destination" in request and request["destination"]:
-            req.journeys.destination = request["destination"]
+            if requested_type != type_pb2.NMPLANNER:
+                request["destination"] = [request["destination"]]
+                request["destination_access_duration"] = [0]
+            for i in range(0, len(request["destination"])):
+                location = req.journeys.destination.add()
+                location.place = request["destination"][i]
+                location.access_duration = request["destination_access_duration"][i]
             self.destination_modes = request["destination_mode"]
         else:
             self.destination_modes = ["walking"]
-        req.journeys.datetimes.append(request["datetime"])
+
+        if "datetime" in request and request["datetime"]:
+            if isinstance(request["datetime"], str):
+                request["datetime"] = [request["datetime"]]
+            for dte in request["datetime"]:
+                req.journeys.datetimes.append(dte)
         req.journeys.clockwise = request["clockwise"]
         sn_params = req.journeys.streetnetwork_params
         if "max_duration_to_pt" in request:
@@ -351,6 +369,8 @@ class Script(object):
         req.journeys.wheelchair = request["wheelchair"]
         req.journeys.disruption_active = request["disruption_active"]
         req.journeys.show_codes = request["show_codes"]
+        if "details" in request:
+			req.journeys.details = request["details"]
 
         self.origin_modes = request["origin_mode"]
 
@@ -469,7 +489,7 @@ class Script(object):
     def get_journey(self, pb_req, instance, original_request):
         resp = self.call_kraken(pb_req, instance)
 
-        if not resp or (pb_req.requested_api != type_pb2.PLANNER and pb_req.requested_api != type_pb2.ISOCHRONE):
+        if not resp or (pb_req.requested_api != type_pb2.PLANNER and pb_req.requested_api != type_pb2.NMPLANNER and pb_req.requested_api != type_pb2.ISOCHRONE):
             return
 
         new_request, tag = self.check_missing_journey(resp.journeys, pb_req)
@@ -678,6 +698,9 @@ class Script(object):
 
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
+
+    def nm_journeys(self, request, instance):
+        return self.__on_journeys(type_pb2.NMPLANNER, request, instance)
 
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)

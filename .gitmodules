@@ -1,15 +1,15 @@
 [submodule "source/utils"]
 	path = source/utils
-	url = git@github.com:CanalTP/utils.git
+	url = https://github.com/CanalTP/utils
 [submodule "source/third_party/osmpbfreader"]
 	path = source/third_party/osmpbfreader
-	url = git@github.com:CanalTP/libosmpbfreader.git
+	url = https://github.com/CanalTP/libosmpbfreader
 [submodule "source/third_party/SimpleAmqpClient"]
 	path = source/third_party/SimpleAmqpClient
-	url = git@github.com:kinnou02/SimpleAmqpClient.git
+	url = https://github.com/kinnou02/SimpleAmqpClient
 [submodule "source/third_party/librabbitmq-c"]
 	path = source/third_party/librabbitmq-c
-	url = git@github.com:alanxz/rabbitmq-c.git
+	url = https://github.com/alanxz/rabbitmq-c
 [submodule "source/linenoise"]
 	path = source/linenoise
-	url = git@github.com:antirez/linenoise.git
+	url = https://github.com/antirez/linenoise
