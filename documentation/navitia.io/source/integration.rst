@@ -547,82 +547,88 @@ tags                array of string    List of tags on the journey. The tags add
 * Section object
 
 
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| Field                    | Type                                 | Description                                            |
-+==========================+======================================+========================================================+
-| type                     | *enum* string                        | Type of the section, it can be:                        |
-|                          |                                      |                                                        |
-|                          |                                      | * ``public_transport``: public transport section       |
-|                          |                                      |                                                        |
-|                          |                                      | * ``street_network``: street section                   |
-|                          |                                      |                                                        |
-|                          |                                      | * ``waiting``: waiting section between transport       |
-|                          |                                      |                                                        |
-|                          |                                      | * ``transfer``: transfert section                      |
-|                          |                                      |                                                        |
-|                          |                                      | * ``crow_fly``: teleportation section.                 |
-|                          |                                      |   Used when starting or arriving to                    |
-|                          |                                      |   a city or a stop area ("potato shaped" objects)      |
-|                          |                                      |   In order to make navitia idempotent.                 |
-|                          |                                      |   Be careful: no "path" nor "geojson" items            |
-|                          |                                      |   in this case:                                        |
-|                          |                                      |   .. image:: crow_fly.png                              |
-|                          |                                      |                                                        |
-|                          |                                      | * ``on_demand_transport``: on demand transport section |
-|                          |                                      |   (odt)                                                |
-|                          |                                      |                                                        |
-|                          |                                      | * ``bss_rent``: taking a bike from a bike sharing      |
-|                          |                                      |   system (bss)                                         |
-|                          |                                      |                                                        |
-|                          |                                      | * ``bss_put_back``: putting back a bike from a bike    |
-|                          |                                      |   sharing system (bss)                                 |
-|                          |                                      |                                                        |
-|                          |                                      | * ``boarding``: boarding on plane                      |
-|                          |                                      |                                                        |
-|                          |                                      | * ``landing``: landing off the plane                   |
-|                          |                                      |                                                        |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| id                       | string                               | Id of the section                                      |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| mode                     | *enum* string                        | Mode of the street network: ``Walking``, ``Bike``,     |
-|                          |                                      | ``Car``                                                |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| duration                 | int                                  | Duration of this section                               |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| from                     | place_                               | Origin place of this section                           |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| to                       | place_                               | Destination place of this section                      |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| links                    | Array of link_                       | Links related to this section                          |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| display_informations     | display_informations_                | Useful information to display                          |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| additionnal_informations | *enum* string                        | Other information. It can be:                          |
-|                          |                                      |                                                        |
-|                          |                                      | * ``regular``: no on demand transport (odt)            |
-|                          |                                      |                                                        |
-|                          |                                      | * ``has_date_time_estimated``: section with at least   |
-|                          |                                      |   one estimated date time                              |
-|                          |                                      |                                                        |
-|                          |                                      | * ``odt_with_stop_time``: odt with                     |
-|                          |                                      |   fix schedule                                         |
-|                          |                                      |                                                        |
-|                          |                                      | * ``odt_with_zone``: odt with zone                     |
-|                          |                                      |                                                        |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| geojson                  | `GeoJson <http://www.geojson.org>`_  |                                                        |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| path                     | Array of path_                       | The path of this section                               |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| transfer_type            | *enum* string                        | The type of this transfer it can be: ``WALKING``,      |
-|                          |                                      | ``GUARANTEED``, ``EXTENSION``                          |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| stop_date_times          | Array of stop_date_time_             | List of the stop times of this section                 |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| departure_date_time      | `date_time <date_time_object>`_      | Date and time of departure                             |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
-| arrival_date_time        | `date_time <date_time_object>`_      | Date and time of arrival                               |
-+--------------------------+--------------------------------------+--------------------------------------------------------+
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| Field                    | Type                                 | Description                                              |
++==========================+======================================+==========================================================+
+| type                     | *enum* string                        | Type of the section, it can be:                          |
+|                          |                                      |                                                          |
+|                          |                                      | * ``public_transport``: public transport section         |
+|                          |                                      |                                                          |
+|                          |                                      | * ``street_network``: street section                     |
+|                          |                                      |                                                          |
+|                          |                                      | * ``waiting``: waiting section between transport         |
+|                          |                                      |                                                          |
+|                          |                                      | * ``stay_in``: this "stay in the vehicle" section occurs |
+|                          |                                      |   when the traveller has to stay in the vehicle during   |
+|                          |                                      |   the bus is changing from operating a route to another  |
+|                          |                                      |   Here is an exemple for a journey from A to B:          |
+|                          |                                      |   .. image:: stay_in.png                                 |
+|                          |                                      |                                                          |
+|                          |                                      | * ``transfer``: transfert section                        |
+|                          |                                      |                                                          |
+|                          |                                      | * ``crow_fly``: teleportation section.                   |
+|                          |                                      |   Used when starting or arriving to a city or a stoparea |
+|                          |                                      |   ("potato shaped" objects)                              |
+|                          |                                      |   Useful to make navitia idempotent.                     |
+|                          |                                      |   Be careful: no "path" nor "geojson" items in this case |
+|                          |                                      |                                                          |
+|                          |                                      |   .. image:: crow_fly.png                                |
+|                          |                                      |                                                          |
+|                          |                                      | * ``on_demand_transport``: on demand transport section   |
+|                          |                                      |   (odt)                                                  |
+|                          |                                      |                                                          |
+|                          |                                      | * ``bss_rent``: taking a bike from a bike sharing        |
+|                          |                                      |   system (bss)                                           |
+|                          |                                      |                                                          |
+|                          |                                      | * ``bss_put_back``: putting back a bike from a bike      |
+|                          |                                      |   sharing system (bss)                                   |
+|                          |                                      |                                                          |
+|                          |                                      | * ``boarding``: boarding on plane                        |
+|                          |                                      |                                                          |
+|                          |                                      | * ``landing``: landing off the plane                     |
+|                          |                                      |                                                          |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| id                       | string                               | Id of the section                                        |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| mode                     | *enum* string                        | Mode of the street network: ``Walking``, ``Bike``,       |
+|                          |                                      | ``Car``                                                  |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| duration                 | int                                  | Duration of this section                                 |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| from                     | place_                               | Origin place of this section                             |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| to                       | place_                               | Destination place of this section                        |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| links                    | Array of link_                       | Links related to this section                            |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| display_informations     | display_informations_                | Useful information to display                            |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| additionnal_informations | *enum* string                        | Other information. It can be:                            |
+|                          |                                      |                                                          |
+|                          |                                      | * ``regular``: no on demand transport (odt)              |
+|                          |                                      |                                                          |
+|                          |                                      | * ``has_date_time_estimated``: section with at least     |
+|                          |                                      |   one estimated date time                                |
+|                          |                                      |                                                          |
+|                          |                                      | * ``odt_with_stop_time``: odt with                       |
+|                          |                                      |   fix schedule                                           |
+|                          |                                      |                                                          |
+|                          |                                      | * ``odt_with_zone``: odt with zone                       |
+|                          |                                      |                                                          |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| geojson                  | `GeoJson <http://www.geojson.org>`_  |                                                          |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| path                     | Array of path_                       | The path of this section                                 |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| transfer_type            | *enum* string                        | The type of this transfer it can be: ``WALKING``,        |
+|                          |                                      | ``GUARANTEED``, ``EXTENSION``                            |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| stop_date_times          | Array of stop_date_time_             | List of the stop times of this section                   |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| departure_date_time      | `date_time <date_time_object>`_      | Date and time of departure                               |
++--------------------------+--------------------------------------+----------------------------------------------------------+
+| arrival_date_time        | `date_time <date_time_object>`_      | Date and time of arrival                                 |
++--------------------------+--------------------------------------+----------------------------------------------------------+
 
 
 .. _path:
