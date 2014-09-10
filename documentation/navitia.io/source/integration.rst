@@ -552,26 +552,35 @@ tags                array of string    List of tags on the journey. The tags add
 +==========================+======================================+========================================================+
 | type                     | *enum* string                        | Type of the section, it can be:                        |
 |                          |                                      |                                                        |
-|                          |                                      | * ``PUBLIC_TRANSPORT``: public transport section       |
+|                          |                                      | * ``public_transport``: public transport section       |
 |                          |                                      |                                                        |
-|                          |                                      | * ``STREET_NETWORK``: street section                   |
+|                          |                                      | * ``street_network``: street section                   |
 |                          |                                      |                                                        |
-|                          |                                      | * ``WAITING``: waiting section between transport       |
+|                          |                                      | * ``waiting``: waiting section between transport       |
 |                          |                                      |                                                        |
-|                          |                                      | * ``TRANSFER``: transfert section                      |
+|                          |                                      | * ``transfer``: transfert section                      |
 |                          |                                      |                                                        |
-|                          |                                      | * ``ON_DEMAND_TRANSPORT``: on demand transport section |
+|                          |                                      | * ``crow_fly``: teleportation section.                 |
+|                          |                                      |   From a  "potato shaped" city                         |
+|                          |                                      |   To the departure station in it for example           |
+|                          |                                      |   Mostly use in "city to city" or                      |
+|                          |                                      |   "stop_area to stop_area" itinerary,                  |
+|                          |                                      |   in order to make navitia idempotent                  |
+|                          |                                      |   be careful: no "path" nor "geojson" items            |
+|                          |                                      |   in this case                                         |
+|                          |                                      |                                                        |
+|                          |                                      | * ``on_demand_transport``: on demand transport section |
 |                          |                                      |   (odt)                                                |
+|                          |                                      |                                                        |
+|                          |                                      | * ``bss_rent``: taking a bike from a bike sharing      |
+|                          |                                      |   system (bss)                                         |
+|                          |                                      |                                                        |
+|                          |                                      | * ``bss_put_back``: putting back a bike from a bike    |
+|                          |                                      |   sharing system (bss)                                 |
 |                          |                                      |                                                        |
 |                          |                                      | * ``boarding``: boarding on plane                      |
 |                          |                                      |                                                        |
 |                          |                                      | * ``landing``: landing off the plane                   |
-|                          |                                      |                                                        |
-|                          |                                      | * ``BSS_RENT``: taking a bike from a bike sharing      |
-|                          |                                      |   system (bss)                                         |
-|                          |                                      |                                                        |
-|                          |                                      | * ``BSS_PUT_BACK``: putting back a bike from a bike    |
-|                          |                                      |   sharing system (bss)                                 |
 |                          |                                      |                                                        |
 +--------------------------+--------------------------------------+--------------------------------------------------------+
 | id                       | string                               | Id of the section                                      |
