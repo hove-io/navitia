@@ -561,13 +561,12 @@ tags                array of string    List of tags on the journey. The tags add
 |                          |                                      | * ``transfer``: transfert section                      |
 |                          |                                      |                                                        |
 |                          |                                      | * ``crow_fly``: teleportation section.                 |
-|                          |                                      |   From a  "potato shaped" city                         |
-|                          |                                      |   To the departure station in it for example           |
-|                          |                                      |   Mostly use in "city to city" or                      |
-|                          |                                      |   "stop_area to stop_area" itinerary,                  |
-|                          |                                      |   in order to make navitia idempotent                  |
-|                          |                                      |   be careful: no "path" nor "geojson" items            |
-|                          |                                      |   in this case                                         |
+|                          |                                      |   Used when starting or arriving to                    |
+|                          |                                      |   a city or a stop area ("potato shaped" objects)      |
+|                          |                                      |   In order to make navitia idempotent.                 |
+|                          |                                      |   Be careful: no "path" nor "geojson" items            |
+|                          |                                      |   in this case:                                        |
+|                          |                                      |   .. image:: crow_fly.png                              |
 |                          |                                      |                                                        |
 |                          |                                      | * ``on_demand_transport``: on demand transport section |
 |                          |                                      |   (odt)                                                |
