@@ -174,7 +174,7 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 }
 
 void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
-    std::string request = "SELECT beginning_date, end_date, timezone, shape FROM navitia.parameters";
+    std::string request = "SELECT beginning_date, end_date, timezone, st_astext(shape) as bounding_shape FROM navitia.parameters";
     pqxx::result result = work.exec(request);
 
     if (result.empty()) {
@@ -198,7 +198,7 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     }
     nav_data.meta->timezone = const_it["timezone"].as<std::string>();
 
-    const_it["shape"].to(nav_data.meta->shape);
+    const_it["bounding_shape"].to(nav_data.meta->shape);
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
