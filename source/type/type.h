@@ -1071,6 +1071,20 @@ struct EntryPoint {
     EntryPoint(const Type_e type, const std::string & uri);
 
     EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
+    bool set_mode(const std::string& mode) {
+        if (mode == "walking") {
+            streetnetwork_params.mode = Mode_e::Walking;
+        } else if (mode == "bike") {
+            streetnetwork_params.mode = Mode_e::Bike;
+        } else if (mode == "bss") {
+            streetnetwork_params.mode = Mode_e::Bss;
+        } else if (mode == "car") {
+            streetnetwork_params.mode = Mode_e::Car;
+        } else {
+            return false;
+        }
+        return true;
+    }
 };
 } //namespace navitia::type
 
