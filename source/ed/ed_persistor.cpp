@@ -163,12 +163,12 @@ void EdPersistor::insert_house_numbers(const ed::Georef& data){
 
     for(const auto& itm : data.house_numbers) {
         std::string way_id("NULL");
-        if(itm.second->way != nullptr){
-            way_id = std::to_string(itm.second->way->id);
+        if(itm.second.way != nullptr){
+            way_id = std::to_string(itm.second.way->id);
         }
-        this->lotus.insert({this->to_geographic_point(itm.second->coord),
-                itm.second->number,
-                std::to_string(str_to_int(itm.second->number) % 2 == 0), way_id});
+        this->lotus.insert({this->to_geographic_point(itm.second.coord),
+                itm.second.number,
+                std::to_string(str_to_int(itm.second.number) % 2 == 0), way_id});
     }
     lotus.finish_bulk_insert();
 }
@@ -225,14 +225,14 @@ void EdPersistor::insert_pois(const Georef &data){
     {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible", "address_number", "address_name"});
     for(const auto& itm : data.pois) {
         std::string poi_type("NULL");
-        if(itm.second->poi_type != nullptr){
-            poi_type = std::to_string(itm.second->poi_type->id);
+        if(itm.second.poi_type != nullptr){
+            poi_type = std::to_string(itm.second.poi_type->id);
         }
-        this->lotus.insert({std::to_string(itm.second->id),
-                std::to_string(itm.second->weight),
-                this->to_geographic_point(itm.second->coord),
-                itm.second->name, "poi:" + itm.first, poi_type, std::to_string(itm.second->visible),
-                itm.second->address_number, itm.second->address_name});
+        this->lotus.insert({std::to_string(itm.second.id),
+                std::to_string(itm.second.weight),
+                this->to_geographic_point(itm.second.coord),
+                itm.second.name, "poi:" + itm.first, poi_type, std::to_string(itm.second.visible),
+                itm.second.address_number, itm.second.address_name});
     }
     lotus.finish_bulk_insert();
 }
@@ -240,8 +240,8 @@ void EdPersistor::insert_pois(const Georef &data){
 void EdPersistor::insert_poi_properties(const Georef &data){
     this->lotus.prepare_bulk_insert("georef.poi_properties", {"poi_id","key","value"});
     for(const auto& itm : data.pois){
-        for(auto property : itm.second->properties){
-            this->lotus.insert({std::to_string(itm.second->id),property.first, property.second});
+        for(auto property : itm.second.properties){
+            this->lotus.insert({std::to_string(itm.second.id),property.first, property.second});
         }
     }
     lotus.finish_bulk_insert();

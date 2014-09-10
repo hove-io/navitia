@@ -31,11 +31,14 @@ www.navitia.io
 #pragma once
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <bitset>
+#include <unordered_map>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 
 #include "type/type.h"
+#include "limits.h"
+
 
 namespace nt = navitia::type;
 using nt::idx_t;
@@ -385,27 +388,33 @@ struct HouseNumber{
 
 };
 
-struct PoiType{
-    size_t id;
-    std::string name;
-
-    PoiType(): id(0), name(""){}
+struct PoiType {
+    size_t id = 0;
+    std::string name = "";
+    
+    PoiType() {}
     PoiType(size_t id, const std::string& name): id(id), name(name){}
 };
 
 
-struct Poi{
-    size_t id;
-    std::string name;
-    int weight;
-    bool visible;
-    PoiType* poi_type;
+struct Poi {
+    size_t id = 0;
+    uint64_t osm_id = std::numeric_limits<uint64_t>::max();
+    std::string name = "";
+    int weight = 0;
+    bool visible = true;
+    PoiType* poi_type = nullptr;
     navitia::type::GeographicalCoord coord;
     std::map<std::string, std::string> properties;
-    std::string address_number;
-    std::string address_name;
-    Poi(): id(0), name(""), weight(0), visible(true), poi_type(nullptr), address_number(""), address_name(""){}
+    std::string address_number = "";
+    std::string address_name = "";
 
+    Poi() {}
+
+    bool init_osm(const uint64_t osm_id, const double lon, const double lat,
+            const std::map<std::string, std::string>& tags, const size_t potential_id,
+            const std::unordered_map<std::string, ed::types::PoiType*>& poi_types,
+            const std::vector<std::string>& properties_to_ignore);
 };
 
 /**

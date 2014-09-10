@@ -270,11 +270,11 @@ void GeopalParser::fill_house_numbers(){
                 if(it != this->data.fusion_ways.end()){
                     std::string hn_uri = row[x_c] + row[y_c] + row[numero_c];
                     auto hn = this->data.house_numbers.find(hn_uri);
-                    if (hn ==this-> data.house_numbers.end()){
-                        ed::types::HouseNumber* current_hn = new ed::types::HouseNumber;
-                        current_hn->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])));
-                        current_hn->number = row[numero_c];
-                        current_hn->way = it->second;
+                    if (hn == this-> data.house_numbers.end()){
+                        ed::types::HouseNumber current_hn;
+                        current_hn.coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])));
+                        current_hn.number = row[numero_c];
+                        current_hn.way = it->second;
                         this->data.house_numbers[hn_uri] = current_hn;
                     }
                 }
