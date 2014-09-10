@@ -317,6 +317,14 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             const auto str_arrival = navitia::to_posix_timestamp(departure + temp.duration.to_posix());
             pb_journey->set_departure_date_time(str_departure);
             pb_journey->set_arrival_date_time(str_arrival);
+            // We add coherence with the origin of the request
+            auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
+            origin_pb->Clear();
+            fill_pb_placemark(origin, d, origin_pb, 2);
+            //We add coherence with the destination object of the request
+            auto destination_pb =  pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
+            destination_pb->Clear();
+            fill_pb_placemark(destination, d, destination_pb, 2);
         }
     }
 
