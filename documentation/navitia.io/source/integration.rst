@@ -562,6 +562,7 @@ tags                array of string    List of tags on the journey. The tags add
 |                          |                                      |   when the traveller has to stay in the vehicle during   |
 |                          |                                      |   the bus is changing from operating a route to another  |
 |                          |                                      |   Here is an exemple for a journey from A to B:          |
+|                          |                                      |                                                          |
 |                          |                                      |   .. image:: stay_in.png                                 |
 |                          |                                      |                                                          |
 |                          |                                      | * ``transfer``: transfert section                        |
