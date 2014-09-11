@@ -296,6 +296,22 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
     }
 }
 
+void fill_pb_object(const timetables::Thermometer* thermometer,
+        const nt::Data& data, pbnavitia::GeoJson* geojson) {
+    double length = 0;
+    const nt::StopPoint* prev_sp = nullptr;
+    for(auto idx : thermometer->get_thermometer()) {
+        auto stop_point = data.pt_data->stop_points[idx];
+        if (prev_sp != nullptr) {
+            length += prev_sp->coord.distance_to(stop_point->coord);
+        }
+        auto coord = geojson->add_coordinates();
+        coord->set_lon(stop_point->coord.lon());
+        coord->set_lat(stop_point->coord.lat());
+        prev_sp = stop_point;
+    }
+    geojson->set_length(length);
+}
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
                     pbnavitia::Route* route, int max_depth,
@@ -306,20 +322,6 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 
     route->set_name(r->name);
     route->set_uri(r->uri);
-    if(depth > 0 && r->line != nullptr) {
-        fill_pb_object(r->line, data, route->mutable_line(), depth-1,
-                       now, action_period, show_codes);
-    }
-
-    if(depth > 2) {
-        auto thermometer = timetables::Thermometer();
-        thermometer.generate_thermometer(r);
-        for(auto idx : thermometer.get_thermometer()) {
-            auto stop_point = data.pt_data->stop_points[idx];
-            fill_pb_object(stop_point, data, route->add_stop_points(), depth-1, now, action_period, show_codes);
-        }
-    }
-
     for(const auto& message : r->get_applicable_messages(now, action_period)){
         fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
     }
@@ -327,6 +329,24 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     if(show_codes) {
         for(auto type_value : r->codes) {
             fill_codes(type_value.first, type_value.second, route->add_codes());
+        }
+    }
+    if (depth == 0) {
+        return;
+    }
+    if(r->line != nullptr) {
+        fill_pb_object(r->line, data, route->mutable_line(), depth-1,
+                       now, action_period, show_codes);
+    }
+
+    auto thermometer = timetables::Thermometer();
+    thermometer.generate_thermometer(r);
+    fill_pb_object(&thermometer, data, route->mutable_geojson());
+    if (depth>2) {
+        for(auto idx : thermometer.get_thermometer()) {
+            auto stop_point = data.pt_data->stop_points[idx];
+                fill_pb_object(stop_point, data, route->add_stop_points(), depth-1,
+                        now, action_period, show_codes);
         }
     }
 }

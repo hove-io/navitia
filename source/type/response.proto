@@ -243,7 +243,7 @@ message Table {
 message RouteSchedule {
     required Table table = 1;
     required PtDisplayInfo pt_display_informations = 2;
-//    required Route route = 2;
+    optional GeoJson geojson = 3;
 }
 
 message Passage {

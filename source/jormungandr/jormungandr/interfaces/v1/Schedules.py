@@ -35,7 +35,7 @@ from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, additional_informations_vj, UrisToLinks, error, \
-    enum_type, SplitDateTime
+    enum_type, SplitDateTime, GeoJson
 from ResourceUri import ResourceUri, complete_links
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -118,7 +118,6 @@ header = {
     "additional_informations": additional_informations_vj(),
     "links": UrisToLinks()
 }
-
 table_field = {
     "rows": fields.List(fields.Nested(row)),
     "headers": fields.List(fields.Nested(header))
@@ -127,7 +126,8 @@ table_field = {
 route_schedule_fields = {
     "table": PbField(table_field),
     "display_informations": PbField(display_informations_route,
-                                    attribute='pt_display_informations')
+                                    attribute='pt_display_informations'),
+    "geojson" : GeoJson()
 }
 
 route_schedules = {

@@ -34,6 +34,7 @@ import datetime
 import logging
 import pytz
 from jormungandr.timezone import get_timezone
+from navitiacommon import response_pb2, type_pb2
 
 
 class PbField(fields.Nested):
@@ -249,6 +250,67 @@ class get_key_value(fields.Raw):
         return res
 
 
+class GeoJson(fields.Raw):
+
+    def __init__(self, **kwargs):
+        super(GeoJson, self).__init__(**kwargs)
+
+    def output(self, key, obj):
+        coords = []
+        test_geojson = True
+        try:
+            test_geojson = obj.HasField("geojson")
+        except ValueError:
+            test_geojson = False
+        if test_geojson:
+            obj = obj.geojson
+            coords = obj.coordinates
+        try:
+            obj.HasField("type")
+        except ValueError:
+            return None
+
+        if obj.type == response_pb2.STREET_NETWORK:
+            try:
+                if obj.HasField("street_network"):
+                    coords = obj.street_network.coordinates
+                else:
+                    return None
+            except ValueError:
+                return None
+        elif obj.type == response_pb2.PUBLIC_TRANSPORT:
+            coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
+        elif obj.type == response_pb2.TRANSFER:
+            coords.append(obj.origin.stop_point.coord)
+            coords.append(obj.destination.stop_point.coord)
+        elif obj.type == response_pb2.CROW_FLY:
+            for place in [obj.origin, obj.destination]:
+                type_ = place.embedded_type
+                if type_ == type_pb2.STOP_POINT:
+                    coords.append(place.stop_point.coord)
+                elif type_ == type_pb2.STOP_AREA:
+                    coords.append(place.stop_area.coord)
+                elif type_ == type_pb2.POI:
+                    coords.append(place.poi.coord)
+                elif type_ == type_pb2.ADDRESS:
+                    coords.append(place.address.coord)
+                elif type_ == type_pb2.ADMINISTRATIVE_REGION:
+                    coords.append(place.administrative_region.coord)
+        else:
+            return None
+
+        response = {
+            "type": "LineString",
+            "coordinates": [],
+            "properties": [{
+                "length": 0 if not obj.HasField("length") else obj.length
+            }]
+        }
+        for coord in coords:
+            response["coordinates"].append([coord.lon, coord.lat])
+        return response
+
+
 
 code = {
     "type": fields.String(),
@@ -345,6 +407,7 @@ route["is_frequence"] = fields.String
 route["line"] = PbField(line)
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
 route["codes"] = NonNullList(NonNullNested(code))
+route["geojson"] = GeoJson(attribute="geojson")
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 
