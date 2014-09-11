@@ -151,6 +151,11 @@ message Line {
     repeated Code codes = 16;
 }
 
+message GeoJson {
+    required int32 length = 1;
+    repeated GeographicalCoord coordinates = 2;
+}
+
 message Route {
     optional string name = 3;
     optional string uri = 4;
@@ -160,6 +165,8 @@ message Route {
     repeated Message messages = 9;
     repeated Code codes = 10;
     repeated StopPoint stop_points = 1;
+    optional GeoJson geojson = 11;
+
 }
 
 message JourneyPattern {

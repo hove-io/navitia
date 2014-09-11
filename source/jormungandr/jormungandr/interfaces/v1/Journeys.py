@@ -28,8 +28,6 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-import calendar
 import logging
 from flask import Flask, request, url_for, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
@@ -43,7 +41,8 @@ from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
-    generic_message
+    generic_message, GeoJson
+
 from jormungandr.interfaces.parsers import option_value
 #from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
@@ -117,41 +116,6 @@ class TicketLinks(fields.Raw):
         return response
 
 
-class GeoJson(fields.Raw):
-
-    def __init__(self, **kwargs):
-        super(GeoJson, self).__init__(**kwargs)
-
-    def output(self, key, obj):
-        coords = []
-        if obj.type == response_pb2.STREET_NETWORK:
-            try:
-                if obj.HasField("street_network"):
-                    coords = obj.street_network.coordinates
-                else:
-                    return None
-            except ValueError:
-                return None
-        elif obj.type == response_pb2.PUBLIC_TRANSPORT:
-            coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
-        elif obj.type == response_pb2.TRANSFER:
-            coords.append(obj.origin.stop_point.coord)
-            coords.append(obj.destination.stop_point.coord)
-        else:
-            return None
-
-        response = {
-            "type": "LineString",
-            "coordinates": [],
-            "properties": [{
-                "length": 0 if not obj.HasField("length") else obj.length
-            }]
-        }
-        for coord in coords:
-            response["coordinates"].append([coord.lon, coord.lat])
-        return response
-
-
 class section_type(enum_type):
 
     def if_on_demand_stop_time(self, stop):
@@ -186,8 +150,6 @@ class section_place(PbField):
             return None
         else:
             return super(PbField, self).output(key, obj)
-
-
 section = {
     "type": section_type(),
     "id": fields.String(),
@@ -245,7 +207,6 @@ ticket = {
     "cost": NonNullNested(cost),
     "links": TicketLinks(attribute="section_id")
 }
-
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
@@ -489,6 +450,7 @@ def compute_regions(args):
     we fetch the different regions the user can use for 'origin' and 'destination'
     we do the intersection and sort the list
     """
+    _region = None
     possible_regions = set()
     from_regions = set()
     to_regions = set()
@@ -731,4 +693,3 @@ class Journeys(ResourceUri, ResourceUtc):
             del splitted_address[1]
             return ':'.join(splitted_address)
         return id
-
