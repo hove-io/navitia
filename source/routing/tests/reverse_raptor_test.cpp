@@ -100,6 +100,11 @@ BOOST_AUTO_TEST_CASE(change){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8200, 8250)("stop3", 8400, 8450);
     b.vj("B")("stop4", 9000, 9050)("stop2", 9500, 9550)("stop5", 10000,10050);
+    b.connection("stop1", "stop1", 120);
+    b.connection("stop2", "stop2", 120);
+    b.connection("stop3", "stop3", 120);
+    b.connection("stop4", "stop4", 120);
+    b.connection("stop5", "stop5", 120);
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -171,6 +176,9 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
     b.vj("B")("stop2", 10*60)("stop3", 20*60);
+    b.connection("stop1", "stop1", 120);
+    b.connection("stop2", "stop2", 120);
+    b.connection("stop3", "stop3", 120);
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -226,6 +234,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 59*60);
     b.vj("B")("stop4", 23*3600 + 10*60)("stop2", 10*60)("stop3", 20*60);
+    b.connection("stop1", "stop1", 120);
+    b.connection("stop2", "stop2", 120);
+    b.connection("stop3", "stop3", 120);
+    b.connection("stop4", "stop4", 120);
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -459,6 +471,10 @@ BOOST_AUTO_TEST_CASE(stay_in_and_one_earlier_with_connection) {
     b.vj("B", "1111111", "block1", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
     b.vj("C", "1111111", "", true)("stop1", 8*3600+10*60)("stop2", 8*3600+15*60);
     b.vj("D", "1111111", "", true)("stop2", 8*3600+20*60)("stop3", 8*3600+25*60);
+    b.connection("stop1", "stop1", 120);
+    b.connection("stop2", "stop2", 120);
+    b.connection("stop3", "stop3", 120);
+    b.connection("stop4", "stop4", 120);
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
