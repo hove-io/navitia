@@ -109,11 +109,11 @@ make_departure_destinations_map(
     return res;
 }
 
-static std::map<std::string, std::set<types::StopPoint*>>
+static std::map<std::string, std::vector<types::StopPoint*>>
 make_stop_area_stop_points_map(const std::vector<ed::types::StopPoint*>& stop_points) {
-    std::map<std::string, std::set<types::StopPoint*>> res;
+    std::map<std::string, std::vector<types::StopPoint*>> res;
     for (auto sp: stop_points) {
-        if (sp->stop_area) res[sp->stop_area->uri].insert(sp);
+        if (sp->stop_area) res[sp->stop_area->uri].push_back(sp);
     }
     return res;
 }
@@ -136,27 +136,28 @@ void Data::complete(){
     ::ed::normalize_uri(routes);
 
     // generates default connections inside each stop area
-    auto conns = make_departure_destinations_map(stop_point_connections);
+    auto connections = make_departure_destinations_map(stop_point_connections);
     const auto sa_sps = make_stop_area_stop_points_map(stop_points);
     const auto connections_size = stop_point_connections.size();
-    for(types::StopArea * sa : stop_areas) {
+    for(const types::StopArea * sa : stop_areas) {
         const auto& sps = find_or_default(sa->uri, sa_sps);
         for (const auto& sp1: sps) {
             for (const auto& sp2: sps) {
-                if (sp1->uri == sp2->uri) continue;
-
                 // if the connection exists, do nothing
-                if (find_or_default(sp1->uri, conns).count(sp2->uri) != 0) continue;
+                if (find_or_default(sp1->uri, connections).count(sp2->uri) != 0) continue;
 
+                const int conn_dur_itself = 0;
+                const int conn_dur_other = 120;
+                const int min_waiting_dur = 120;
                 stop_point_connections.push_back(new types::StopPointConnection());
                 auto new_conn = stop_point_connections.back();
                 new_conn->departure = sp1;
                 new_conn->destination = sp2;
                 new_conn->connection_kind = types::ConnectionType::StopArea;
-                new_conn->duration = 240;
-                new_conn->display_duration = new_conn->duration - 120;
+                new_conn->display_duration = sp1->uri == sp2->uri ? conn_dur_itself : conn_dur_other;
+                new_conn->duration = new_conn->display_duration + min_waiting_dur;
                 new_conn->uri = sp1->uri + "=>" + sp2->uri;
-                conns[new_conn->departure->uri].insert(new_conn->destination->uri);
+                connections[new_conn->departure->uri].insert(new_conn->destination->uri);
             }
         }
     }
