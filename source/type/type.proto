@@ -152,7 +152,7 @@ message Line {
 }
 
 message GeoJson {
-    required int32 length = 1;
+    required double length = 1;
     repeated GeographicalCoord coordinates = 2;
 }
 
