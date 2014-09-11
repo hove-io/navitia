@@ -447,7 +447,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         response = make_pathes(pathes, raptor.data, worker, origin, destination,
                                datetimes, clockwise, show_codes);
         if (response.response_type() == pbnavitia::NO_SOLUTION) {
-            fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point nor destination point",response.mutable_error());
+            fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point",response.mutable_error());
             response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         }
         return response;
@@ -512,7 +512,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 pbnavitia::Response
 make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
               const std::vector<type::EntryPoint> &destinations,
-              const std::string &datetimes_str, bool clockwise,
+              const uint32_t &datetimes_str,
+              bool clockwise,
               const type::AccessibiliteParams & accessibilite_params,
               std::vector<std::string> forbidden,
               georef::StreetNetwork & worker,

@@ -777,7 +777,7 @@ class Journeys(ResourceUri, ResourceUtc):
             #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
             self.region = compute_regions(args)
 
-        # On deroule les structures JSON en 4 tableaux
+        #store json data into 4 arrays
         args['origin'] = []
         args['origin_access_duration'] = []
         args['destination'] = []
@@ -792,7 +792,7 @@ class Journeys(ResourceUri, ResourceUtc):
                 stop_uri = self.transform_id(stop_uri)
                 args[loop[1]].append(stop_uri)
 
-        # Date par defaut
+        #default Date
         if not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
 

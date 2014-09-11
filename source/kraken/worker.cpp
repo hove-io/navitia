@@ -452,7 +452,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                 request.max_transfers(), request.show_codes());
 
         case pbnavitia::NMPLANNER:
-            return navitia::routing::make_nm_response(*planner, origins, destinations, datetimes[0],
+        return navitia::routing::make_nm_response(*planner, origins, destinations, datetimes[0],
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.allow_odt(), request.max_duration(),

@@ -63,15 +63,18 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   bool show_codes = false);
 
 pbnavitia::Response make_nm_response(RAPTOR &raptor,
-                                      const std::vector<type::EntryPoint> &origins,
-                                      const std::vector<type::EntryPoint> &destinations,
-                                      const std::string &datetimes_str, bool clockwise,
-                                      const type::AccessibiliteParams & accessibilite_params,
-                                      std::vector<std::string> forbidden,
-                                      georef::StreetNetwork & worker,
-                                      bool disruption_active,
-                                      bool allow_odt,
-                                      uint32_t max_duration, uint32_t max_transfers, bool show_codes);
+                                     const std::vector<type::EntryPoint> &origins,
+                                     const std::vector<type::EntryPoint> &destinations,
+                                     const uint32_t &datetimes,
+                                     bool clockwise,
+                                     const type::AccessibiliteParams & accessibilite_params,
+                                     std::vector<std::string> forbidden,
+                                     georef::StreetNetwork & worker,
+                                     bool disruption_active,
+                                     bool allow_odt,
+                                     uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
+                                     uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
+                                     bool show_codes = false);
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
