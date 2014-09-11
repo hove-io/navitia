@@ -90,6 +90,10 @@ int main(int argc, char * argv[])
     }
     po::notify(vm);
 
+    if (fare_dir.empty()) {
+        fare_dir = input;
+    }
+
     pt::ptime start;
     int read, complete, clean, sort, save, fare(0);
 
