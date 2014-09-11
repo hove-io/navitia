@@ -569,6 +569,7 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &t
 
 void PoiHouseNumberVisitor::finish() {
     persistor.insert_pois(data);
+    persistor.insert_poi_properties(data);
     insert_house_numbers();
 }
 /*
@@ -730,13 +731,6 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
         return;
     }
     ed::types::Poi poi;
-    if((it->first == "parking") && (tags.find("park_ride") != tags.end())){
-        std::string park_ride = tags.at("park_ride");
-        boost::to_lower(park_ride);
-        if(park_ride == "yes"){
-            it = data.poi_types.find("park_ride");
-        }
-    }
     poi.poi_type = it->second;
     if(tags.find("name") != tags.end()){
         poi.name = tags.at("name");

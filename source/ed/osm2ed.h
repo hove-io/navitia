@@ -371,11 +371,10 @@ struct PoiHouseNumberVisitor {
             {"bicycle_rental" , new ed::types::PoiType(5, "station vls")},
             {"bicycle_parking" , new ed::types::PoiType(6, "Parking vélo")},
             {"parking" , new ed::types::PoiType(7, "Parking")},
-            {"park_ride" , new ed::types::PoiType(8, "Parc-relais")},
-            {"police" , new ed::types::PoiType(9, "Police, Gendarmerie")},
-            {"townhall" , new ed::types::PoiType(10, "Mairie")},
-            {"garden" , new ed::types::PoiType(11, "Jardin")},
-            {"park" , new ed::types::PoiType(12, "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale")}
+            {"police" , new ed::types::PoiType(8, "Police, Gendarmerie")},
+            {"townhall" , new ed::types::PoiType(9, "Mairie")},
+            {"garden" , new ed::types::PoiType(10, "Jardin")},
+            {"park" , new ed::types::PoiType(11, "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale")}
         };
         properties_to_ignore.insert("name");
         properties_to_ignore.insert("amenity");
