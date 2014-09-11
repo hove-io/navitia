@@ -170,9 +170,7 @@ class Instance(db.Model):
         We don't check the api used here!
         this version doesn't use cache
         """
-        if self.is_free:
-            return True
-        elif user:
+        if user:
             return self.authorizations.filter_by(user=user).count() > 0
         else:
             return False
