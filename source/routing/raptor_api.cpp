@@ -210,7 +210,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                         pb_section->set_transfer_type(pbnavitia::stay_in);
                         //We "stay in" the precedent section, this one is only a transfer
                         int section_idx = pb_journey->sections_size() - 2;
-                        if(section_idx >= 0){
+                        if(section_idx >= 0 && pb_journey->sections(section_idx).type() == pbnavitia::PUBLIC_TRANSPORT){
                             auto* prec_section = pb_journey->mutable_sections(section_idx);
                             prec_section->mutable_add_info_vehicle_journey()->set_stay_in(true);
                         }
