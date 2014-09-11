@@ -308,21 +308,6 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
     distances[Direction::Target] = projected.distance_to(vertex2_coord);
 }
 
-std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCoord &coord){
-    std::vector<navitia::type::idx_t> to_return;
-    navitia::georef::Rect search_rect(coord);
-
-    std::vector<idx_t> result;
-    auto callback = [](idx_t id, void* vec)->bool{reinterpret_cast<std::vector<idx_t>*>(vec)->push_back(id); return true;};
-    this->rtree.Search(search_rect.min, search_rect.max, callback, &result);
-    for(idx_t admin_idx : result) {
-        if (boost::geometry::within(coord, admins[admin_idx]->boundary)){
-            to_return.push_back(admin_idx);
-        }
-    }
-    return to_return;
-}
-
 /**
  * there are 3 graphs:
  *  - one for the walk
@@ -433,15 +418,6 @@ void GeoRef::build_pois_map(){
    for(const POI* poi : pois){
        this->poi_map[poi->uri] = poi->idx;
    }
-}
-
-void GeoRef::build_rtree() {
-    typedef boost::geometry::model::box<type::GeographicalCoord> box;
-    for(const Admin* admin : this->admins){
-        auto envelope = boost::geometry::return_envelope<box>(admin->boundary);
-        Rect r(envelope.min_corner().lon(), envelope.min_corner().lat(), envelope.max_corner().lon(), envelope.max_corner().lat());
-        this->rtree.Insert(r.min, r.max, admin->idx);
-    }
 }
 
 /** Normalisation des codes externes des rues*/
