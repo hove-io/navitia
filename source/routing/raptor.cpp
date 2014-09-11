@@ -113,10 +113,6 @@ void RAPTOR::foot_path(const Visitor & v) {
             continue;
         }
         const type::StopPoint* stop_point = data.pt_data->journey_pattern_points[best_jpp]->stop_point;
-        DateTime best_arrival = working_labels[best_jpp].dt_pt;
-        // We mark all the journey pattern point of this stop point with its datetime + 2 minutes
-        const DateTime best_departure = v.combine(best_arrival, 120);
-        mark_all_jpp_of_sp(stop_point, best_departure, best_jpp, working_labels, v);
 
         // Now we apply all the connections
         const pair_int & index = (v.clockwise()) ? data.dataRaptor->footpath_index_forward[stop_point->idx] :
