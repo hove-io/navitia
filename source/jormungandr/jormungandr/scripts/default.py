@@ -339,7 +339,7 @@ class Script(object):
             self.destination_modes = ["walking"]
 
         if "datetime" in request and request["datetime"]:
-            if isinstance(request["datetime"], str):
+            if isinstance(request["datetime"], int):
                 request["datetime"] = [request["datetime"]]
             for dte in request["datetime"]:
                 req.journeys.datetimes.append(dte)
