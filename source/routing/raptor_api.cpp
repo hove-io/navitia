@@ -459,7 +459,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         response = make_pathes(pathes, raptor.data, worker, origin, destination,
                                datetimes, clockwise, show_codes);
         if (response.response_type() == pbnavitia::NO_SOLUTION) {
-            fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point nor destination point",response.mutable_error());
+            fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point",response.mutable_error());
             response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         }
         return response;
