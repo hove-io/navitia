@@ -84,7 +84,7 @@ class TestOverlappingCoverage(AbstractTestFixture):
         assert error_code == 404
         assert 'error' in response
         #impossible to project the starting/ending point
-        assert response['error']['id'] == 'no_origin_nor_destionation'
+        assert response['error']['id'] == 'no_origin_nor_destination'
 
     def test_journeys_on_same_error(self):
         """

@@ -308,7 +308,7 @@ message Error{
         bad_format = 5;
         no_origin = 6;
         no_destination = 7;
-        no_origin_nor_destionation = 8;
+        no_origin_nor_destination = 8;
         no_solution = 9;
         unknown_object = 10;
         service_unavailable = 11;
