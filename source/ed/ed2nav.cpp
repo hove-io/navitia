@@ -41,6 +41,7 @@ www.navitia.io
 #include "ed_reader.h"
 #include "type/data.h"
 #include "utils/init.h"
+#include "type/meta_data.h"
 
 
 namespace po = boost::program_options;
@@ -113,6 +114,7 @@ int main(int argc, char * argv[])
 
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
     data.complete();
+    data.meta->publication_date = pt::microsec_clock::local_time();
 
     LOG4CPLUS_INFO(logger, "line: " << data.pt_data->lines.size());
     LOG4CPLUS_INFO(logger, "route: " << data.pt_data->routes.size());
