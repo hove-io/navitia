@@ -48,7 +48,7 @@ www.navitia.io
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
-namespace ed { namespace connectors {
+namespace navitia { namespace cities {
 
 /*
  * Read relations
@@ -221,7 +221,8 @@ int main(int argc, char** argv) {
         ("version,v", "Affiche la version")
         ("help,h", "Affiche l'aide")
         ("input,i", po::value<std::string>(&input)->required(), "Fichier OSM à utiliser")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("connection-string", po::value<std::string>(&connection_string)->required(),
+         "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -240,12 +241,12 @@ int main(int argc, char** argv) {
     po::notify(vm);
 
 
-    ed::connectors::OSMCache cache(connection_string);
-    ed::connectors::ReadRelationsVisitor relations_visitor(cache);
+    navitia::cities::OSMCache cache(connection_string);
+    navitia::cities::ReadRelationsVisitor relations_visitor(cache);
     CanalTP::read_osm_pbf(input, relations_visitor);
-    ed::connectors::ReadWaysVisitor ways_visitor(cache);
+    navitia::cities::ReadWaysVisitor ways_visitor(cache);
     CanalTP::read_osm_pbf(input, ways_visitor);
-    ed::connectors::ReadNodesVisitor node_visitor(cache);
+    navitia::cities::ReadNodesVisitor node_visitor(cache);
     CanalTP::read_osm_pbf(input, node_visitor);
     cache.build_relations_geometries();
     cache.insert_relations();

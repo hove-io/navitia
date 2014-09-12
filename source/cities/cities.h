@@ -48,7 +48,7 @@ typedef bg::model::linestring<point> ls_type;
 
 
 
-namespace ed { namespace connectors {
+namespace navitia { namespace cities {
 
 struct OSMRelation;
 struct OSMCache;
