@@ -27,12 +27,26 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.aggregate_places import AggregatePlacesCommand
-from tyr.command.reload_at import ReloadAtCommand
-from tyr.command.at_reloader import AtReloader
-from tyr.command.reload_kraken import ReloadKrakenCommand
-from tyr.command.build_data import BuildDataCommand
-from tyr.command.load_data import LoadDataCommand
-import tyr.command.purge
-import tyr.command.cities
-import tyr.command.import_last_dataset
+from navitiacommon import models
+from tyr import tasks
+import logging
+from tyr import manager
+from tyr.helper import get_instance_logger
+
+@manager.command
+def import_last_dataset(instance_name, background=False, reload_kraken=False):
+    """
+    reimport the last dataset of a instance
+    By default the kraken is not reloaded, the '-r' switch can activate it
+    """
+    instance = models.Instance.query.filter_by(name=instance_name).first()
+
+    if not instance:
+        raise Exception("cannot find instance {}".format(instance_name))
+
+    files = [d.name for d in instance.last_datasets(1)]
+    logger = get_instance_logger(instance)
+    logger.info('we reimport the last dataset of %s, composed of: %s', instance.name, files)
+    tasks.import_data(files, instance, backup_file=False, async=background, reload=reload_kraken)
+
+

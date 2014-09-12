@@ -96,7 +96,7 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(files, instance, backup_file, async=True):
+def import_data(files, instance, backup_file, async=True, reload=True):
     """
     import the data contains in the list of 'files' in the 'instance'
 
@@ -104,6 +104,7 @@ def import_data(files, instance, backup_file, async=True):
     :param instance: instance to receive the data
     :param backup_file: If True the files are moved to a backup directory, else they are not moved
     :param async: If True all jobs are run in background, else the jobs are run in sequence the function will only return when all of them are finish
+    :param reload: If True kraken would be reload at the end of the treatment
 
     run the whole data import process:
 
@@ -164,7 +165,8 @@ def import_data(files, instance, backup_file, async=True):
         #We pass the job id to each tasks, but job need to be commited for
         #having an id
         actions.append(group(chain(*binarisation), aggregate))
-        actions.append(reload_data.si(instance_config, job.id))
+        if reload:
+            actions.append(reload_data.si(instance_config, job.id))
         actions.append(finish_job.si(job.id))
         if async:
             chain(*actions).delay()
