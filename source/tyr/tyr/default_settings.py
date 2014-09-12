@@ -14,6 +14,13 @@ CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 #http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
 SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun2'
 
+
+#URI for cities database
+# postgresql://<user>:<password>@<host>:<port>/<dbname>
+#http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
+CITIES_DATABASE_URI = 'postgresql://navitia:navitia@localhost/cities'
+
+
 #Path to the directory where the configuration file of each instance of ed are defined
 INSTANCES_DIR = '.'
 
