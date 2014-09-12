@@ -33,7 +33,7 @@ import logging
 from tyr import manager
 
 @manager.command
-def purge_instance(instance_name, background=False):
+def purge_instance(instance_name, nb_to_keep, background=False):
     """
     remove old backup directories for one instance for only keeping the data being actually loaded
     """
@@ -42,18 +42,18 @@ def purge_instance(instance_name, background=False):
     if not instance:
         raise Exception("cannot find instance {}".format(instance_name))
     if background:
-        tasks.purge_instance.delay(instance.id)
+        tasks.purge_instance.delay(instance.id, nb_to_keep)
     else:
-        tasks.purge_instance(instance.id)
+        tasks.purge_instance(instance.id, nb_to_keep)
 
 
 @manager.command
-def purge_instances(background=False):
+def purge_instances(nb_to_keep, background=False):
     """
     remove old backup directories of all instances for only keeping the data being actually loaded
     """
     for instance in models.Instance.query.all():
         if background:
-            tasks.purge_instance.delay(instance.id)
+            tasks.purge_instance.delay(instance.id, nb_to_keep)
         else:
-            tasks.purge_instance(instance.id)
+            tasks.purge_instance(instance.id, nb_to_keep)

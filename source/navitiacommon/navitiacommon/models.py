@@ -151,23 +151,26 @@ class Instance(db.Model):
         if jobs:
             self.jobs = jobs
 
-    def last_datasets(self):
+    def last_datasets(self, nb_dataset=1):
         """
-        return the last dataset of each family type loaded for this instance
+        return the n last dataset of each family type loaded for this instance
         """
-        q1 = db.session.query(func.max(Job.created_at).label('max_date'), DataSet.family_type)
-        q1 = q1.join(DataSet)
-        q1 = q1.group_by(DataSet.family_type)
-        q1 = q1.filter(Instance.id == self.id).subquery()
+        family_types = db.session.query(func.distinct(DataSet.family_type)) \
+            .filter(Instance.id == self.id) \
+            .all()
 
-        jobs2 = aliased(Job)
-        dataset2 = aliased(Job.data_sets)
-        q2 = db.session.query(dataset2)
-        q2 = q2.join(jobs2)
-        q2 = q2.join(q1, and_(q1.c.family_type == dataset2.family_type, q1.c.max_date == jobs2.created_at))
-        q2 = q2.filter(jobs2.instance_id == self.id)
+        result = []
+        for family_type in family_types:
+            data_sets = db.session.query(DataSet) \
+                .join(Job) \
+                .join(Instance) \
+                .filter(Instance.id == self.id, DataSet.family_type == family_type) \
+                .order_by(Job.created_at.desc()) \
+                .limit(nb_dataset) \
+                .all()
+            result += data_sets
+        return result
 
-        return q2.all()
 
     @classmethod
     def get_by_name(cls, name):
