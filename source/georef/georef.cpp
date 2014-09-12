@@ -39,6 +39,7 @@ www.navitia.io
 #include <boost/foreach.hpp>
 #include <array>
 #include <boost/math/constants/constants.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 
 using navitia::type::idx_t;
 
@@ -548,22 +549,24 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
    }
 }
 
+const std::vector<Admin*> &GeoRef::find_admins(const type::GeographicalCoord& coord) const {
+    try {
+        edge_t edge = this->nearest_edge(coord);
+        georef::Way *way = this->ways[this->graph[edge].way_idx];
+        return way->admin_list;
+    } catch (const proximitylist::NotFound&) {
+        static const std::vector<Admin*> empty;
+        return empty;
+    }
+}
+
 void GeoRef::build_admins_stop_points(std::vector<type::StopPoint*> & stop_points){
     auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_stop_points");
     int cpt_no_projected = 0;
     for(type::StopPoint* stop_point : stop_points) {
-        ProjectionData projection = this->projected_stop_points[stop_point->idx][type::Mode_e::Walking];
-        if(projection.found){
-            const edge_t edge = boost::edge(projection[ProjectionData::Direction::Source],
-                                         projection[ProjectionData::Direction::Target],
-                                         this->graph).first;
-            const georef::Way *way = this->ways[this->graph[edge].way_idx];
-            stop_point->admin_list.insert(stop_point->admin_list.end(),
-                                          way->admin_list.begin(),
-                                          way->admin_list.end());
-        }else{
-            cpt_no_projected++;
-        }
+        const auto &admins = find_admins(stop_point->coord);
+        boost::push_back(stop_point->admin_list, admins);
+        if (admins.empty()) ++cpt_no_projected;
     }
     LOG4CPLUS_DEBUG(log, cpt_no_projected<<"/"<<stop_points.size() << " stop_points are not associated with any admins");
 }
@@ -574,14 +577,9 @@ void GeoRef::build_admins_pois(){
     int cpt_no_initialized = 0;
     for(POI* poi : this->pois){
         if(poi->coord.is_initialized()){
-            try{
-                edge_t edge = this->nearest_edge(poi->coord);
-                georef::Way *way = this->ways[this->graph[edge].way_idx];
-                poi->admin_list.insert(poi->admin_list.end(),
-                                       way->admin_list.begin(), way->admin_list.end());
-            }catch(proximitylist::NotFound){
-                cpt_no_projected++;
-            }
+            const auto &admins = find_admins(poi->coord);
+            boost::push_back(poi->admin_list, admins);
+            if (admins.empty()) ++cpt_no_projected;
         }else{
             cpt_no_initialized++;
         }

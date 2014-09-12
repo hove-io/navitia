@@ -297,6 +297,7 @@ struct GeoRef {
     /**
      * Project each stop_point on the georef network
      */
+    const std::vector<Admin*> &find_admins(const type::GeographicalCoord&) const;
     void project_stop_points(const std::vector<type::StopPoint*> & stop_points);
     void build_admins_stop_points(std::vector<type::StopPoint*> & stop_points);
     void build_admins_pois();
