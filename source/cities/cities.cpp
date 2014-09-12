@@ -65,12 +65,12 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
             switch(ref.member_type) {
             case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
                 if (ref.role == "outer" || ref.role == "" || ref.role == "exclave") {
-                    cache.ways.insert(OSMWay(ref.member_id));
+                    cache.ways.insert(std::make_pair(ref.member_id, OSMWay()));
                 }
                 break;
             case OSMPBF::Relation_MemberType::Relation_MemberType_NODE:
                 if (ref.role == "admin_centre" || ref.role == "admin_center") {
-                    cache.nodes.insert(OSMNode(ref.member_id));
+                    cache.nodes.insert(std::make_pair(ref.member_id, OSMNode()));
                 }
                 break;
             case OSMPBF::Relation_MemberType::Relation_MemberType_RELATION:
@@ -86,8 +86,8 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
         if(tags.find("addr:postcode") != tags.end()){
             postal_code = tags.at("addr:postcode");
         }
-        cache.relations.insert(OSMRelation(osm_id, refs, insee, postal_code, name,
-                boost::lexical_cast<uint32_t>(tmp_admin_level->second)));
+        cache.relations.insert(std::make_pair(osm_id, OSMRelation(refs, insee, postal_code, name,
+                boost::lexical_cast<uint32_t>(tmp_admin_level->second))));
     }
 }
 
@@ -95,14 +95,14 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
  * We stores ways they are streets.
  * We store ids of needed nodes
  */
-void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &, const std::vector<uint64_t> & nodes_refs) {
-    auto it_way = cache.ways.find(OSMWay(osm_id));
+void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &, const std::vector<uint64_t>& nodes_refs) {
+    auto it_way = cache.ways.find(osm_id);
     if (it_way == cache.ways.end()) {
         return;
     }
     for (auto osm_id : nodes_refs) {
-        auto v = cache.nodes.insert(OSMNode(osm_id));
-        it_way->add_node(v.first);
+        auto v = cache.nodes.insert(std::make_pair(osm_id, OSMNode()));
+        it_way->second.add_node(v.first);
     }
 }
 
@@ -111,9 +111,9 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &, const
  */
 void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
         const CanalTP::Tags& ) {
-    auto node_it = cache.nodes.find(OSMNode(osm_id));
+    auto node_it = cache.nodes.find(osm_id);
     if (node_it != cache.nodes.end()) {
-        node_it->set_coord(lon, lat);
+        node_it->second.set_coord(lon, lat);
     }
 }
 
@@ -121,8 +121,8 @@ void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
  *  Builds geometries of relations
  */
 void OSMCache::build_relations_geometries() {
-    for (const auto& relation : relations) {
-        relation.build_geometry(*this);
+    for (auto& relation : relations) {
+        relation.second.build_geometry(*this);
     }
 }
 /*
@@ -135,16 +135,16 @@ void OSMCache::insert_relations() {
             "level", "coord", "boundary", "uri"});
     size_t nb_empty_polygons = 0 ;
     for (auto relation : relations) {
-        if(!relation.polygon.empty()){
+        if(!relation.second.polygon.empty()){
             std::stringstream polygon_stream;
-            polygon_stream <<  bg::wkt<mpolygon_type>(relation.polygon);
+            polygon_stream <<  bg::wkt<mpolygon_type>(relation.second.polygon);
             std::string polygon_str = polygon_stream.str();
-            const auto coord = "POINT(" + std::to_string(relation.centre.get<0>())
-                + " " + std::to_string(relation.centre.get<1>()) + ")";
-            lotus.insert({std::to_string(relation.osm_id), relation.name,
-                          relation.postal_code, relation.insee,
-                          std::to_string(relation.level), coord, polygon_str,
-                          "admin:"+std::to_string(relation.osm_id)});
+            const auto coord = "POINT(" + std::to_string(relation.second.centre.get<0>())
+                + " " + std::to_string(relation.second.centre.get<1>()) + ")";
+            lotus.insert({std::to_string(relation.first), relation.second.name,
+                          relation.second.postal_code, relation.second.insee,
+                          std::to_string(relation.second.level), coord, polygon_str,
+                          "admin:"+std::to_string(relation.first)});
         } else {
             ++nb_empty_polygons;
         }
@@ -163,34 +163,34 @@ std::string OSMNode::to_geographic_point() const{
 /*
  * We build the polygon of the admin and insert it in the rtree
  */
-void OSMRelation::build_geometry(OSMCache& cache) const {
+void OSMRelation::build_geometry(OSMCache& cache) {
     polygon_type tmp_polygon;
     for (CanalTP::Reference ref : references) {
         if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY) {
-            auto it = cache.ways.find(OSMWay(ref.member_id));
+            auto it = cache.ways.find(ref.member_id);
             if (it == cache.ways.end()) {
                 continue;
             }
             if(ref.role != "outer"  && ref.role != "enclave" && ref.role != "") {
                 continue;
             }
-            for (auto node : it->nodes) {
-                if (!node->is_defined()) {
+            for (auto node : it->second.nodes) {
+                if (!node->second.is_defined()) {
                     continue;
                 }
-                const auto p = point(float(node->lon()), float(node->lat()));
+                const auto p = point(float(node->second.lon()), float(node->second.lat()));
                 tmp_polygon.outer().push_back(p);
             }
         } else if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
-            auto node_it = cache.nodes.find(OSMNode(ref.member_id));
+            auto node_it = cache.nodes.find(ref.member_id);
             if (node_it == cache.nodes.end()) {
                 continue;
             }
-            if (!node_it->is_defined()) {
+            if (!node_it->second.is_defined()) {
                 continue;
             }
             if (ref.role == "admin_centre") {
-                centre = point(float(node_it->lon()), float(node_it->lat()));
+                set_centre(float(node_it->second.lon()), float(node_it->second.lat()));
             }
         }
     }

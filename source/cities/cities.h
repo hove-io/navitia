@@ -59,35 +59,17 @@ struct OSMRelation;
 struct OSMCache;
 
 struct OSMNode {
-    static const uint USED_MORE_THAN_ONCE = 0,
-                      FIRST_OR_LAST = 1;
-    uint64_t osm_id = std::numeric_limits<uint64_t>::max();
-    // these attributes are mutable because this object would be use in a set, and
-    // all object in a set are const, since these attributes are not used in the key we can modify them
-
     // We use int32_t to save memory, these are coordinates *  factor
-    mutable int32_t ilon = std::numeric_limits<int32_t>::max(),
-                    ilat = std::numeric_limits<int32_t>::max();
+    int32_t ilon = std::numeric_limits<int32_t>::max(),
+            ilat = std::numeric_limits<int32_t>::max();
     static constexpr double factor = 1e6;
-
-    OSMNode(uint64_t osm_id) : osm_id(osm_id) {}
-
-    bool operator<(const OSMNode& other) const {
-        return this->osm_id < other.osm_id;
-    }
-
-    // Even if it's const, it modifies the variable used_more_than_once,
-    // cause it's mutable, and doesn't affect the operator <
-    void set_used_more_than_once() const {
-        this->properties[USED_MORE_THAN_ONCE] = true;
-    }
 
     bool is_defined() const {
         return ilon != std::numeric_limits<int32_t>::max() &&
             ilat != std::numeric_limits<int32_t>::max();
     }
 
-    void set_coord(double lon, double lat) const{
+    void set_coord(double lon, double lat) {
         this->ilon = lon * factor;
         this->ilat = lat * factor;
     }
@@ -106,13 +88,10 @@ struct OSMNode {
         return geog.str();
     }
     std::string to_geographic_point() const;
-private:
-    mutable std::bitset<2> properties = 0;
 };
 
 
 struct OSMRelation {
-    const u_int64_t osm_id;
     CanalTP::References references;
     const std::string insee = "",
                       postal_code = "",
@@ -121,54 +100,36 @@ struct OSMRelation {
 
     // these attributes are mutable because this object would be use in a set, and
     // all object in a set are const, since these attributes are not used in the key we can modify them
-    mutable mpolygon_type polygon;
-    mutable point centre = point(0.0, 0.0);
+    mpolygon_type polygon;
+    point centre = point(0.0, 0.0);
 
-    OSMRelation(const u_int64_t osm_id, const std::vector<CanalTP::Reference>& refs,
+    OSMRelation(const std::vector<CanalTP::Reference>& refs,
                 const std::string& insee, const std::string postal_code,
                 const std::string& name, const uint32_t level) :
-        osm_id(osm_id), references(refs), insee(insee),
+        references(refs), insee(insee),
         postal_code(postal_code), name(name), level(level) {}
 
-    bool operator <(const OSMRelation& other) const{
-        return this->osm_id < other.osm_id;
+    void set_centre(float lon, float lat) {
+        centre = point(lon, lat);
     }
-
-    bool operator <(const u_int64_t other) const {
-        return osm_id < other;
-    }
-
-    void build_geometry(OSMCache& cache) const;
+    void build_geometry(OSMCache& cache);
 };
 
 struct OSMWay {
-    const u_int64_t osm_id;
-
-    // these attributes are mutable because this object would be use in a set, and
-    // all object in a set are const, since these attributes are not used in the key we can modify them
-
     /// Properties of a way : can we use it
-    mutable std::vector<std::set<OSMNode>::const_iterator> nodes;
-    mutable ls_type ls;
+    std::vector<std::unordered_map<uint64_t, OSMNode>::const_iterator> nodes;
+    ls_type ls;
 
-    OSMWay(const u_int64_t osm_id) : osm_id(osm_id) {}
-
-    void add_node(std::set<OSMNode>::const_iterator node) const {
+    void add_node(std::unordered_map<uint64_t, OSMNode>::const_iterator node) {
         nodes.push_back(node);
-        if (node->is_defined()) {
-            ls.push_back(point(node->lon(), node->lat()));
-        }
-    }
-
-    bool operator<(const OSMWay& other) const {
-        return this->osm_id < other.osm_id;
+        ls.push_back(point(node->second.lon(), node->second.lat()));
     }
 
     std::string coord_to_string() const {
         std::stringstream geog;
         geog << std::setprecision(10);
         for(auto node : nodes) {
-            geog << node->coord_to_string();
+            geog << node->second.coord_to_string();
         }
         return geog.str();
     }
@@ -180,9 +141,9 @@ typedef std::set<OSMRelation>::const_iterator admin_type;
 typedef std::pair<admin_type, double> admin_distance;
 
 struct OSMCache {
-    std::set<OSMRelation> relations;
-    std::set<OSMNode> nodes;
-    std::set<OSMWay> ways;
+    std::unordered_map<uint64_t, OSMRelation> relations;
+    std::unordered_map<uint64_t, OSMNode> nodes;
+    std::unordered_map<uint64_t, OSMWay> ways;
 
     Lotus lotus;
 
