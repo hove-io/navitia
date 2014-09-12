@@ -71,6 +71,18 @@ def type_of_data(filename):
         return 'synonym'
     return None
 
+def family_of_data(type):
+    """
+    return the family type of a data type
+    by example "geopal" and "osm" are in the "streetnework" family
+    """
+    mapping = {'osm': 'streetnetwork', 'geopal': 'streetnetwork', 'synonym': 'synonym',
+            'poi': 'poi', 'fusio': 'pt', 'gtfs': 'pt'}
+    if type in mapping:
+        return mapping[type]
+    else:
+        return None
+
 
 @celery.task()
 def finish_job(job_id):
@@ -118,6 +130,7 @@ def import_data(files, instance, backup_file, async=True):
 
         dataset = models.DataSet()
         dataset.type = type_of_data(_file)
+        dataset.family_type = family_of_data(dataset.type)
         if dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file,
