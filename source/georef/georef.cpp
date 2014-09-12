@@ -700,8 +700,8 @@ bool GeoRef::add_bss_edges(const type::GeographicalCoord& coord) {
     edge_t nearest_biking_edge, nearest_walking_edge;
     try {
         //we need to find the nearest edge in the walking graph and the nearest edge in the biking graph
-        nearest_biking_edge = nearest_edge(coord, Mode_e::Bike, pl);
-        nearest_walking_edge = nearest_edge(coord, Mode_e::Walking, pl);
+        nearest_biking_edge = nearest_edge(coord, Mode_e::Bike);
+        nearest_walking_edge = nearest_edge(coord, Mode_e::Walking);
     } catch(proximitylist::NotFound) {
         return false;
     }
@@ -732,8 +732,8 @@ bool GeoRef::add_parking_edges(const type::GeographicalCoord& coord) {
     edge_t nearest_car_edge, nearest_walking_edge;
     try {
         //we need to find the nearest edge in the walking and car graph
-        nearest_car_edge = nearest_edge(coord, Mode_e::Car, pl);
-        nearest_walking_edge = nearest_edge(coord, Mode_e::Walking, pl);
+        nearest_car_edge = nearest_edge(coord, Mode_e::Car);
+        nearest_walking_edge = nearest_edge(coord, Mode_e::Walking);
     } catch(navitia::proximitylist::NotFound) {
         return false;
     }
