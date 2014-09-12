@@ -118,15 +118,6 @@ make_stop_area_stop_points_map(const std::vector<ed::types::StopPoint*>& stop_po
     return res;
 }
 
-template<typename Map>
-static const typename Map::mapped_type&
-find_or_default(const typename Map::key_type& k, const Map& m) {
-    typedef typename Map::mapped_type mapped_type;
-    static const mapped_type default_value = mapped_type();
-    const auto search = m.find(k);
-    return search == m.end() ? default_value : search->second;
-}
-
 void Data::complete(){
     build_journey_patterns();
     build_journey_pattern_points();

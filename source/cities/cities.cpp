@@ -59,7 +59,6 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
     auto logger = log4cplus::Logger::getInstance("log");
     const auto tmp_admin_level = tags.find("admin_level");
 
-    std::string insee = "", postal_code = "", name = "";
     if(tmp_admin_level != tags.end() && tmp_admin_level->second == "8") {
         for (const CanalTP::Reference& ref : refs) {
             switch(ref.member_type) {
@@ -77,15 +76,9 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
                 continue;
             }
         }
-        if(tags.find("ref:INSEE") != tags.end()){
-            insee = tags.at("ref:INSEE");
-        }
-        if(tags.find("name") != tags.end()){
-            name = tags.at("name");
-        }
-        if(tags.find("addr:postcode") != tags.end()){
-            postal_code = tags.at("addr:postcode");
-        }
+        const std::string insee = find_or_default("ref:INSEE", tags);
+        const std::string name = find_or_default("name", tags);
+        const std::string postal_code = find_or_default("addr:postcode", tags);
         cache.relations.insert(std::make_pair(osm_id, OSMRelation(refs, insee, postal_code, name,
                 boost::lexical_cast<uint32_t>(tmp_admin_level->second))));
     }
