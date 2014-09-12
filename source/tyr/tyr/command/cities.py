@@ -40,4 +40,4 @@ def cities(osm_path, background=False):
     if background:
         tasks.cities.delay(osm_path)
     else:
-        tasks.cities(osm_path)
+        return tasks.cities(osm_path)

@@ -283,6 +283,7 @@ def cities(osm_path):
         logging.exception('')
     finally:
         logging.info('Import of cities finished')
+        return res
 
 
 @task_postrun.connect
