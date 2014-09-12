@@ -245,6 +245,12 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     if (source_mode == type::Mode_e::Bike && target_mode == type::Mode_e::Walking) {
         return PathItem::TransportCaracteristic::BssPutBack;
     }
+    if (source_mode == type::Mode_e::Walking && target_mode == type::Mode_e::Car) {
+        return PathItem::TransportCaracteristic::CarLeaveParking;
+    }
+    if (source_mode == type::Mode_e::Car && target_mode == type::Mode_e::Walking) {
+        return PathItem::TransportCaracteristic::CarPark;
+    }
 
     throw navitia::exception("unhandled path item caracteristic");
 }
@@ -612,15 +618,24 @@ std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type:
     bool one_proj_found = false;
     ProjectionByMode projections;
 
-    for (const auto& pair : offsets) {
-        type::idx_t offset = pair.second;
-        type::Mode_e transportation_mode = pair.first;
+    // for a given mode, in which layer the stop are projected
+    const flat_enum_map<nt::Mode_e, nt::Mode_e> mode_to_layer {{{
+        nt::Mode_e::Walking, // Walking -> Walking
+        nt::Mode_e::Bike, // Bike -> Bike
+        nt::Mode_e::Walking, // Car -> Walking
+        nt::Mode_e::Walking // Bss -> Walking
+    }}};
+
+    for (auto const &mode_layer: mode_to_layer) {
+        nt::Mode_e mode = mode_layer.first;
+        nt::idx_t offset = offsets[mode_layer.second];
 
         ProjectionData proj(stop_point->coord, *this, offset, this->pl);
-        projections[transportation_mode] = proj;
+        projections[mode] = proj;
         if(proj.found)
             one_proj_found = true;
     }
+
     return {projections, one_proj_found};
 }
 
@@ -651,6 +666,99 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
     }
     if (res) { return *res; }
     throw proximitylist::NotFound();
+}
+
+//get the minimum distance and the vertex to start from between 2 edges
+static std::tuple<float, vertex_t, vertex_t>
+get_min_distance(const GeoRef& geo_ref, const type::GeographicalCoord &coord, edge_t walking_e, edge_t biking_e) {
+    vertex_t source_a_idx = source(walking_e, geo_ref.graph);
+    Vertex source_a = geo_ref.graph[source_a_idx];
+
+    vertex_t target_a_idx = target(walking_e, geo_ref.graph);
+    Vertex target_a = geo_ref.graph[target_a_idx];
+
+    vertex_t source_b_idx = source(biking_e, geo_ref.graph);
+    Vertex source_b = geo_ref.graph[source_b_idx];
+
+    vertex_t target_b_idx = target(biking_e, geo_ref.graph);
+    Vertex target_b = geo_ref.graph[target_b_idx];
+
+    const vertex_t min_a_idx =
+        coord.distance_to(source_a.coord) < coord.distance_to(target_a.coord) ? source_a_idx : target_a_idx;
+    const vertex_t min_b_idx =
+        coord.distance_to(source_b.coord) < coord.distance_to(target_b.coord) ? source_b_idx : target_b_idx;
+
+    return std::make_tuple(
+        geo_ref.graph[min_a_idx].coord.distance_to(geo_ref.graph[min_b_idx].coord),
+        min_a_idx,
+        min_b_idx);
+}
+
+bool GeoRef::add_bss_edges(const type::GeographicalCoord& coord) {
+    using navitia::type::Mode_e;
+
+    edge_t nearest_biking_edge, nearest_walking_edge;
+    try {
+        //we need to find the nearest edge in the walking graph and the nearest edge in the biking graph
+        nearest_biking_edge = nearest_edge(coord, Mode_e::Bike);
+        nearest_walking_edge = nearest_edge(coord, Mode_e::Walking);
+    } catch(proximitylist::NotFound) {
+        return false;
+    }
+
+    //we add a new edge linking those 2 edges, with the walking distance between the 2 edges + the time to take of hang the bike back
+    auto min_dist = get_min_distance(*this, coord, nearest_walking_edge, nearest_biking_edge);
+    vertex_t walking_v = std::get<1>(min_dist);
+    vertex_t biking_v = std::get<2>(min_dist);
+    time_duration dur_between_edges = seconds(std::get<0>(min_dist) / default_speed[Mode_e::Walking]);
+
+    navitia::georef::Edge edge;
+    edge.way_idx = graph[nearest_walking_edge].way_idx; //arbitrarily we assume the way is the walking way
+
+    // time needed to take the bike + time to walk between the edges
+    edge.duration = dur_between_edges + default_time_bss_pickup;
+    add_edge(walking_v, biking_v, edge, graph);
+
+    // time needed to hang the bike back + time to walk between the edges
+    edge.duration = dur_between_edges + default_time_bss_putback;
+    add_edge(biking_v, walking_v, edge, graph);
+
+    return true;
+}
+
+bool GeoRef::add_parking_edges(const type::GeographicalCoord& coord) {
+    using navitia::type::Mode_e;
+
+    edge_t nearest_car_edge, nearest_walking_edge;
+    try {
+        //we need to find the nearest edge in the walking and car graph
+        nearest_car_edge = nearest_edge(coord, Mode_e::Car);
+        nearest_walking_edge = nearest_edge(coord, Mode_e::Walking);
+    } catch(navitia::proximitylist::NotFound) {
+        return false;
+    }
+
+    //we add a new edge linking those 2 edges, with the walking
+    //distance between the 2 edges + the time to park (resp. leave)
+    auto min_dist = get_min_distance(*this, coord, nearest_walking_edge, nearest_car_edge);
+    vertex_t walking_v = std::get<1>(min_dist);
+    vertex_t car_v = std::get<2>(min_dist);
+    time_duration dur_between_edges = seconds(std::get<0>(min_dist) / default_speed[Mode_e::Walking]);
+
+    Edge edge;
+
+    //arbitrarily we assume the way is the walking way
+    edge.way_idx = graph[nearest_walking_edge].way_idx;
+
+    // time to walk between the edges + time needed to leave the parking
+    edge.duration = dur_between_edges + default_time_parking_leave;
+    add_edge(walking_v, car_v, edge, graph);
+
+    // time needed to park the car + time to walk between the edges
+    edge.duration = dur_between_edges + default_time_parking_park;
+    add_edge(car_v, walking_v, edge, graph);
+
+    return true;
 }
 
 GeoRef::~GeoRef() {

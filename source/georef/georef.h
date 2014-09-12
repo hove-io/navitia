@@ -58,9 +58,6 @@ const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     }}
                                                     };
 
-const navitia::seconds default_time_bss_pickup(120);
-const navitia::seconds default_time_bss_putback(60);
-
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
     nt::GeographicalCoord coord;
@@ -171,7 +168,9 @@ struct PathItem {
         Bike,
         Car,
         BssTake, //when a bike is taken
-        BssPutBack //when a bike is put back
+        BssPutBack, //when a bike is put back
+        CarPark, //when a car is parked
+        CarLeaveParking //when leaving a parking
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
 
@@ -179,6 +178,8 @@ struct PathItem {
         switch (transportation) {
         case TransportCaracteristic::BssPutBack:
         case TransportCaracteristic::BssTake:
+        case TransportCaracteristic::CarPark:
+        case TransportCaracteristic::CarLeaveParking:
             return 0;
         case TransportCaracteristic::Walk:
             //milliseconds to reduce rounding
@@ -223,23 +224,25 @@ struct Rect{
     }
 };
 
-//Forward declarations
 struct POI;
 struct POIType;
-/** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
+
+/** All you need about the street network */
 struct GeoRef {
 
-    ///Liste des POIType et POI
+    // parameters
+    navitia::time_duration default_time_bss_pickup = seconds(120);
+    navitia::time_duration default_time_bss_putback = seconds(60);
+    navitia::time_duration default_time_parking_leave = seconds(5 * 60);
+    navitia::time_duration default_time_parking_park = seconds(5 * 60);
+
     std::vector<POIType*> poitypes;
     std::map<std::string, nt::idx_t> poitype_map;
     std::vector<POI*> pois;
     std::map<std::string, nt::idx_t> poi_map;
     proximitylist::ProximityList<type::idx_t> poi_proximity_list;
-    /// Liste des voiries
     std::vector<Way*> ways;
-
     std::map<std::string, nt::idx_t> way_map;
-    /// données administratives
     std::map<std::string, nt::idx_t> admin_map;
     std::vector<Admin*> admins;
 
@@ -350,8 +353,11 @@ struct GeoRef {
 
     void add_way(const Way& w);
 
-    ///Add the projected start and end to the path
-    void add_projections(Path& p, const ProjectionData& start, const ProjectionData& end) const;
+    // Return false if we didn't find any projection
+    bool add_bss_edges(const type::GeographicalCoord&);
+
+    // Return false if we didn't find any projection
+    bool add_parking_edges(const type::GeographicalCoord&);
 
     ///get the transportation mode of the vertex
     type::Mode_e get_mode(vertex_t vertex) const;
