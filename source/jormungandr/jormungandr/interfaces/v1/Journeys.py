@@ -793,9 +793,15 @@ class Journeys(ResourceUri, ResourceUtc):
                 args[loop[1]].append(stop_uri)
 
         #default Date
-        if not args['datetime']:
+        if not "datetime" in args or not args['datetime']:
             args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
 
+        # we save the original datetime for debuging purpose
+        args['original_datetime'] = args['datetime']
+        original_datetime = datetime.strptime(args['original_datetime'], f_datetime)
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['datetime'] = date_to_timestamp(new_datetime)
+            
         api = 'nm_journeys'
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
