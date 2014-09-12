@@ -41,6 +41,7 @@ import os
 import zipfile
 from tyr.helper import load_instance_config, get_instance_logger
 import shutil
+from tyr.launch_exec import launch_exec
 
 
 def type_of_data(filename):
@@ -266,6 +267,23 @@ def load_data(instance_id, data_path):
     files = glob.glob(data_path + "/*")
 
     import_data(files, instance, backup_file=False, async=False)
+
+
+@celery.task()
+def cities(osm_path):
+    """ launch cities """
+    try:
+        res = launch_exec("cities", ['-i', osm_path,
+                                      '--connection-string',
+                                      current_app.config['CITIES_DATABASE_URI']],
+                          logging)
+        if res != 0:
+            raise ValueError('cities failed')
+    except:
+        logging.exception('')
+    finally:
+        logging.info('Import of cities finished')
+        return res
 
 
 @task_postrun.connect

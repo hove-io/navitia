@@ -83,6 +83,7 @@ add_subdirectory(calendar)
 
 add_subdirectory(tests)
 add_subdirectory(scripts)
+add_subdirectory(cities)
 add_library(linenoise linenoise/linenoise.c)
 
 INCLUDE (CheckIncludeFiles)

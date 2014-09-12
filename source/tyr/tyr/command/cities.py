@@ -27,11 +27,17 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.aggregate_places import AggregatePlacesCommand
-from tyr.command.reload_at import ReloadAtCommand
-from tyr.command.at_reloader import AtReloader
-from tyr.command.reload_kraken import ReloadKrakenCommand
-from tyr.command.build_data import BuildDataCommand
-from tyr.command.load_data import LoadDataCommand
-import tyr.command.purge
-import tyr.command.cities
+from navitiacommon import models
+from tyr import tasks
+import logging
+from tyr import manager
+
+@manager.command
+def cities(osm_path, background=False):
+    """
+    Launch cities executable
+    """
+    if background:
+        tasks.cities.delay(osm_path)
+    else:
+        return tasks.cities(osm_path)
