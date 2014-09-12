@@ -39,7 +39,8 @@ from navitiacommon import models
 import logging
 import os
 import zipfile
-from tyr.helper import load_instance_config
+from tyr.helper import load_instance_config, get_instance_logger
+import shutil
 
 
 def type_of_data(filename):
@@ -70,6 +71,18 @@ def type_of_data(filename):
     if filename.endswith("synonyms.txt"):
         return 'synonym'
     return None
+
+def family_of_data(type):
+    """
+    return the family type of a data type
+    by example "geopal" and "osm" are in the "streetnework" family
+    """
+    mapping = {'osm': 'streetnetwork', 'geopal': 'streetnetwork', 'synonym': 'synonym',
+            'poi': 'poi', 'fusio': 'pt', 'gtfs': 'pt'}
+    if type in mapping:
+        return mapping[type]
+    else:
+        return None
 
 
 @celery.task()
@@ -118,6 +131,7 @@ def import_data(files, instance, backup_file, async=True):
 
         dataset = models.DataSet()
         dataset.type = type_of_data(_file)
+        dataset.family_type = family_of_data(dataset.type)
         if dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file,
@@ -166,16 +180,31 @@ def update_data():
         files = glob.glob(instance_config.source_directory + "/*")
         import_data(files, instance, backup_file=True)
 
+@celery.task()
+def purge_instance(instance_id, nb_to_keep):
+    instance = models.Instance.query.get(instance_id)
+    logger = get_instance_logger(instance)
+    logger.info('purge of backup directories for %s', instance.name)
+    instance_config = load_instance_config(instance.name)
+    backups = set(glob.glob('{}/*'.format(instance_config.backup_directory)))
+    logger.debug('backups are: %s', backups)
+    loaded = set(os.path.dirname(dataset.name) for dataset in instance.last_datasets(nb_to_keep))
+    logger.debug('loaded  data are: %s', loaded)
+    to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded]
+    logger.info('we remove: %s', to_remove)
+    for path in to_remove:
+        shutil.rmtree(path)
+
+
+
 
 @celery.task()
 def scan_instances():
-    for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] \
-            + '/*.ini'):
+    for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] + '/*.ini'):
         instance_name = os.path.basename(instance_file).replace('.ini', '')
         instance = models.Instance.query.filter_by(name=instance_name).first()
         if not instance:
-            current_app.logger.info('new instances detected: %s',
-                    instance_name)
+            current_app.logger.info('new instances detected: %s', instance_name)
             instance = models.Instance(name=instance_name)
             instance_config = load_instance_config(instance.name)
             instance.is_free = instance_config.is_free

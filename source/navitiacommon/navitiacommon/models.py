@@ -34,8 +34,9 @@ from flask_sqlalchemy import SQLAlchemy
 from navitiacommon.cache import get_cache
 from geoalchemy2.types import Geography
 from flask import current_app
-from sqlalchemy.orm import load_only, backref
+from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
+from sqlalchemy import func, and_
 
 db = SQLAlchemy()
 
@@ -150,6 +151,27 @@ class Instance(db.Model):
         if jobs:
             self.jobs = jobs
 
+    def last_datasets(self, nb_dataset=1):
+        """
+        return the n last dataset of each family type loaded for this instance
+        """
+        family_types = db.session.query(func.distinct(DataSet.family_type)) \
+            .filter(Instance.id == self.id) \
+            .all()
+
+        result = []
+        for family_type in family_types:
+            data_sets = db.session.query(DataSet) \
+                .join(Job) \
+                .join(Instance) \
+                .filter(Instance.id == self.id, DataSet.family_type == family_type) \
+                .order_by(Job.created_at.desc()) \
+                .limit(nb_dataset) \
+                .all()
+            result += data_sets
+        return result
+
+
     @classmethod
     def get_by_name(cls, name):
         cache_res = get_cache().get(cls.cache_prefix, name)
@@ -249,6 +271,7 @@ class Job(db.Model, TimestampMixin):
 class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.Text, nullable=False)
+    family_type = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
 
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'))

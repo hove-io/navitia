@@ -27,10 +27,33 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.aggregate_places import AggregatePlacesCommand
-from tyr.command.reload_at import ReloadAtCommand
-from tyr.command.at_reloader import AtReloader
-from tyr.command.reload_kraken import ReloadKrakenCommand
-from tyr.command.build_data import BuildDataCommand
-from tyr.command.load_data import LoadDataCommand
-import tyr.command.purge
+from navitiacommon import models
+from tyr import tasks
+import logging
+from tyr import manager
+
+@manager.command
+def purge_instance(instance_name, nb_to_keep, background=False):
+    """
+    remove old backup directories for one instance for only keeping the data being actually loaded
+    """
+    instance = models.Instance.query.filter_by(name=instance_name).first()
+
+    if not instance:
+        raise Exception("cannot find instance {}".format(instance_name))
+    if background:
+        tasks.purge_instance.delay(instance.id, nb_to_keep)
+    else:
+        tasks.purge_instance(instance.id, nb_to_keep)
+
+
+@manager.command
+def purge_instances(nb_to_keep, background=False):
+    """
+    remove old backup directories of all instances for only keeping the data being actually loaded
+    """
+    for instance in models.Instance.query.all():
+        if background:
+            tasks.purge_instance.delay(instance.id, nb_to_keep)
+        else:
+            tasks.purge_instance(instance.id, nb_to_keep)
