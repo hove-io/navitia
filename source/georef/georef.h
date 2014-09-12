@@ -294,13 +294,13 @@ struct GeoRef {
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
 
 
+    const std::vector<Admin*> &find_admins(const type::GeographicalCoord&) const;
+
     /**
      * Project each stop_point on the georef network
      */
-    const std::vector<Admin*> &find_admins(const type::GeographicalCoord&) const;
     void project_stop_points(const std::vector<type::StopPoint*> & stop_points);
-    void build_admins_stop_points(std::vector<type::StopPoint*> & stop_points);
-    void build_admins_pois();
+
     /** project the stop point on all transportation mode
       * return a pair with :
       * - the projected array

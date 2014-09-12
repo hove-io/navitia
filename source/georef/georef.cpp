@@ -39,7 +39,6 @@ www.navitia.io
 #include <boost/foreach.hpp>
 #include <array>
 #include <boost/math/constants/constants.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
 
 using navitia::type::idx_t;
 
@@ -558,34 +557,6 @@ const std::vector<Admin*> &GeoRef::find_admins(const type::GeographicalCoord& co
         static const std::vector<Admin*> empty;
         return empty;
     }
-}
-
-void GeoRef::build_admins_stop_points(std::vector<type::StopPoint*> & stop_points){
-    auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_stop_points");
-    int cpt_no_projected = 0;
-    for(type::StopPoint* stop_point : stop_points) {
-        const auto &admins = find_admins(stop_point->coord);
-        boost::push_back(stop_point->admin_list, admins);
-        if (admins.empty()) ++cpt_no_projected;
-    }
-    LOG4CPLUS_DEBUG(log, cpt_no_projected<<"/"<<stop_points.size() << " stop_points are not associated with any admins");
-}
-
-void GeoRef::build_admins_pois(){
-    auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_pois");
-    int cpt_no_projected = 0;
-    int cpt_no_initialized = 0;
-    for(POI* poi : this->pois){
-        if(poi->coord.is_initialized()){
-            const auto &admins = find_admins(poi->coord);
-            boost::push_back(poi->admin_list, admins);
-            if (admins.empty()) ++cpt_no_projected;
-        }else{
-            cpt_no_initialized++;
-        }
-    }
-    LOG4CPLUS_DEBUG(log, cpt_no_projected<<"/"<<this->pois.size() << " pois are not associated with any admins");
-    LOG4CPLUS_DEBUG(log, cpt_no_initialized<<"/"<<this->pois.size() << " pois with coordinates not initialized");
 }
 
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {

@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
@@ -55,11 +56,14 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
 
-Data::Data() : meta(std::make_unique<MetaData>()),
-        pt_data(std::make_unique<PT_Data>()),
-        geo_ref(std::make_unique<navitia::georef::GeoRef>()),
-        dataRaptor(std::make_unique<navitia::routing::dataRAPTOR>()),
-        fare(std::make_unique<navitia::fare::Fare>()){
+Data::Data() :
+    meta(std::make_unique<MetaData>()),
+    pt_data(std::make_unique<PT_Data>()),
+    geo_ref(std::make_unique<navitia::georef::GeoRef>()),
+    dataRaptor(std::make_unique<navitia::routing::dataRAPTOR>()),
+    fare(std::make_unique<navitia::fare::Fare>()),
+    find_admins([&](const GeographicalCoord &c){return geo_ref->find_admins(c);})
+{
     this->is_connected_to_rabbitmq = false;
     this->loaded = false;
 }
@@ -167,8 +171,38 @@ void Data::build_proximity_list(){
 }
 
 void  Data::build_administrative_regions(){
-    this->geo_ref->build_admins_stop_points(this->pt_data->stop_points);
-    this->geo_ref->build_admins_pois();
+    auto log = log4cplus::Logger::getInstance("ed::Data");
+
+    // set admins to stop points
+    int cpt_no_projected = 0;
+    for(type::StopPoint* stop_point : pt_data->stop_points) {
+        const auto &admins = find_admins(stop_point->coord);
+        boost::push_back(stop_point->admin_list, admins);
+        if (admins.empty()) ++cpt_no_projected;
+    }
+    if (cpt_no_projected)
+        LOG4CPLUS_WARN(log, cpt_no_projected << "/" << pt_data->stop_points.size()
+                       << " stop_points are not associated with any admins");
+
+    // set admins to poi
+    cpt_no_projected = 0;
+    int cpt_no_initialized = 0;
+    for (georef::POI* poi: geo_ref->pois) {
+        if (poi->coord.is_initialized()) {
+            const auto &admins = find_admins(poi->coord);
+            boost::push_back(poi->admin_list, admins);
+            if (admins.empty()) ++cpt_no_projected;
+        } else {
+            cpt_no_initialized++;
+        }
+    }
+    if (cpt_no_projected)
+        LOG4CPLUS_WARN(log, cpt_no_projected << "/" << geo_ref->pois.size()
+                        << " pois are not associated with any admins");
+    if (cpt_no_initialized)
+        LOG4CPLUS_WARN(log, cpt_no_initialized << "/" << geo_ref->pois.size()
+                        << " pois with coordinates not initialized");
+
     this->pt_data->build_admins_stop_areas();
 }
 
