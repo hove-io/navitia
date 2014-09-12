@@ -34,21 +34,16 @@ www.navitia.io
 #include "utils/lotus.h"
 #include "utils/logger.h"
 #include <unordered_map>
-#include <set>
 #include "ed/types.h"
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include <boost/geometry/multi/geometries/multi_point.hpp>
 #include <boost/geometry/geometries/linestring.hpp>
-#include "third_party/RTree/RTree.h"
 
 namespace bg = boost::geometry;
 typedef bg::model::point<float, 2, bg::cs::cartesian> point;
 typedef bg::model::polygon<point, false, false> polygon_type; // ccw, open polygon
 typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
-typedef bg::model::multi_point<point> mpoint_type;
 typedef bg::model::linestring<point> ls_type;
 
 
