@@ -363,18 +363,18 @@ struct PoiHouseNumberVisitor {
         persistor(persistor), cache(cache), data(data)  {
         data.poi_types =
          {
-            {"college" , new ed::types::PoiType(0,  "école")},
-            {"university" , new ed::types::PoiType(1, "université")},
-            {"theatre" , new ed::types::PoiType(2, "théâtre")},
+            {"amenity:college" , new ed::types::PoiType(0,  "école")},
+            {"amenity:university" , new ed::types::PoiType(1, "université")},
+            {"amenity:theatre" , new ed::types::PoiType(2, "théâtre")},
             {"hospital" , new ed::types::PoiType(3, "hôpital")},
-            {"post_office" , new ed::types::PoiType(4, "bureau de poste")},
-            {"bicycle_rental" , new ed::types::PoiType(5, "station vls")},
-            {"bicycle_parking" , new ed::types::PoiType(6, "Parking vélo")},
-            {"parking" , new ed::types::PoiType(7, "Parking")},
-            {"police" , new ed::types::PoiType(8, "Police, Gendarmerie")},
-            {"townhall" , new ed::types::PoiType(9, "Mairie")},
-            {"garden" , new ed::types::PoiType(10, "Jardin")},
-            {"park" , new ed::types::PoiType(11, "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale")}
+            {"amenity:post_office" , new ed::types::PoiType(4, "bureau de poste")},
+            {"amenity:bicycle_rental" , new ed::types::PoiType(5, "station vls")},
+            {"amenity:bicycle_parking" , new ed::types::PoiType(6, "Parking vélo")},
+            {"amenity:parking" , new ed::types::PoiType(7, "Parking")},
+            {"amenity:police" , new ed::types::PoiType(8, "Police, Gendarmerie")},
+            {"amenity:townhall" , new ed::types::PoiType(9, "Mairie")},
+            {"leisure:garden" , new ed::types::PoiType(10, "Jardin")},
+            {"leisure:park" , new ed::types::PoiType(11, "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale")}
         };
         properties_to_ignore.insert("name");
         properties_to_ignore.insert("amenity");

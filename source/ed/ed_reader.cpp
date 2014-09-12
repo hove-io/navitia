@@ -1089,7 +1089,7 @@ void EdReader::fill_graph_bss(navitia::type::Data& data, pqxx::work& work){
                 request += "ST_Y(poi.coord::geometry) as lat";
                 request += " FROM georef.poi poi, georef.poi_type poi_type";
                 request += " where poi.poi_type_id=poi_type.id";
-                request += " and poi_type.uri = 'poi_type:bicycle_rental'";
+                request += " and poi_type.uri = 'poi_type:amenity:bicycle_rental'";
 
     pqxx::result result = work.exec(request);
     size_t cpt_bike_sharing(0);

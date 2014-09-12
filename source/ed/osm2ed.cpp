@@ -725,7 +725,7 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
     if (poi_it != data.pois.end()){
         return;
     }
-    std::string value = tags.at(ref_tag);
+    std::string value = ref_tag + ":" + tags.at(ref_tag);
     auto it = data.poi_types.find(value);
     if (it == data.poi_types.end()) {
         return;
