@@ -410,6 +410,7 @@ route["codes"] = NonNullList(NonNullNested(code))
 route["geojson"] = GeoJson(attribute="geojson")
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
+route["direction"] = fields.String()
 
 network = deepcopy(generic_type)
 network["messages"] = NonNullList(NonNullNested(generic_message))

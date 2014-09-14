@@ -321,6 +321,15 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     route->set_name(r->name);
+
+    navitia::type::StopPoint* spt = data.pt_data->stop_points[r->main_destination()];
+    route->set_direction(spt->name);
+    for(auto admin : spt->admin_list) {
+        if (admin->level == 8){
+            route->set_direction(spt->name + " (" + admin->name + ")");
+        }
+    }
+
     route->set_uri(r->uri);
     for(const auto& message : r->get_applicable_messages(now, action_period)){
         fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);

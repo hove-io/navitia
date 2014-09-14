@@ -167,7 +167,7 @@ message Route {
     repeated Code codes = 10;
     repeated StopPoint stop_points = 1;
     optional GeoJson geojson = 11;
-
+    optional string direction = 12;
 }
 
 message JourneyPattern {
