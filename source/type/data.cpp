@@ -93,6 +93,7 @@ bool Data::load(const std::string & filename) {
 
 void Data::load_lz4(const std::string & filename) {
     std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
+    ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
     in.push(LZ4Decompressor(2048*500),8192*500, 8192*500);
     in.push(ifs);

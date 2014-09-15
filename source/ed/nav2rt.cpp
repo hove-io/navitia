@@ -97,7 +97,10 @@ int main(int argc, char * argv[])
 
     now = start = pt::microsec_clock::local_time();
     navitia::type::Data data;
-    data.load(input);
+    if(! data.load(input)){
+        LOG4CPLUS_ERROR(logger, "error while reading input file!");
+        return 1;
+    }
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 #define SIZE_EXT_CODE(type_name, collection_name)size_t collection_name##_size = data.pt_data.collection_name.size();\
