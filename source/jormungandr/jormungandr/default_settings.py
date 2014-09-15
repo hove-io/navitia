@@ -16,6 +16,9 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun'
 # disable authentication
 PUBLIC = True
 
+#message returned on authentication request
+HTTP_BASIC_AUTH_REALM = 'Navitia.io'
+
 REDIS_HOST = 'localhost'
 
 REDIS_PORT = 6379
