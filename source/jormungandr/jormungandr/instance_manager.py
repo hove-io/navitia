@@ -298,7 +298,7 @@ class InstanceManager(object):
                     "status": "dead",
                     "error" : {
                         "code": "dead_socket",
-                        "value": "The region %s is dead".format(key_region)
+                        "value": "The region {} is dead".format(key_region)
                     }
                 }
             resp_dict['region_id'] = key_region
