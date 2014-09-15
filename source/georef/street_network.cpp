@@ -561,7 +561,7 @@ int compute_directions(const navitia::georef::Path& path, const nt::Geographical
         const PathItem& previous_item = *(++(path.path_items.rbegin()));
         b_coord = previous_item.coordinates.back();
     }
-    if (a_coord == b_coord || b_coord == c_coord) {
+    if (a_coord == b_coord || b_coord == c_coord || a_coord == c_coord) {
         return 0;
     }
 
