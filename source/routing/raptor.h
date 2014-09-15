@@ -102,21 +102,38 @@ struct RAPTOR
             const std::vector<std::string>& forbidden_uris = {});
 
 
-    /** Calcul d'itinéraires dans le sens horaire à partir de plusieurs 
-     *  stop points de départs, vers plusieurs stoppoints d'arrivée,
-     *  à une heure donnée.
-     */
+    /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
+    * stop points de départs, vers plusieurs stoppoints d'arrivée,
+    * à une heure donnée.
+    */
     std::vector<Path>
-    compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration>> &departs,
-                const std::vector<std::pair<type::idx_t, navitia::time_duration>> &destinations,
-                const DateTime &departure_datetime, bool disruption_active, bool allow_odt,
-                const DateTime &bound=DateTimeUtils::inf,
-                const uint32_t max_transfers=std::numeric_limits<int>::max(),
-                const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
-                const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
+    compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
+                    const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
+                    const DateTime &departure_datetime,
+                    bool disruption_active, bool allow_odt,
+                    const DateTime &bound,
+                    const uint32_t max_transfers,
+                    const type::AccessibiliteParams & accessibilite_params,
+                    const std::vector<std::string> & forbidden_uri,
+                    bool clockwise);
 
 
-    
+	/** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
+	 * stop points de départs, vers plusieurs stoppoints d'arrivée,
+	 * à une heure donnée.
+	 */
+    std::vector<Path>
+    compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &departures,
+                            const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
+                            const DateTime &departure_datetime,
+                            bool disruption_active, bool allow_odt,
+                            const DateTime &bound,
+                            const uint32_t max_transfers,
+                            const type::AccessibiliteParams & accessibilite_params,
+                            const std::vector<std::string> & forbidden_uri,
+                            bool clockwise);
+
+
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
      *  vers tous les autres points.
      *  Renvoie toutes les arrivées vers tous les stop points.

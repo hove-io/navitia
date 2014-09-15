@@ -60,8 +60,8 @@ message StreetNetworkParams{
 
 
 message JourneysRequest {
-    required string origin                              = 1;
-    optional string destination                         = 2;
+    repeated LocationContext origin                     = 1;
+    repeated LocationContext destination                = 2;
     repeated uint64 datetimes                           = 3;
     required bool clockwise                             = 4;
     repeated string forbidden_uris                      = 5;
@@ -72,6 +72,7 @@ message JourneysRequest {
     required bool disruption_active                     = 10;
     optional bool show_codes                            = 11;
     optional bool allow_odt                             = 12;
+    optional bool details								= 13;
 }
 
 message PlacesNearbyRequest {
