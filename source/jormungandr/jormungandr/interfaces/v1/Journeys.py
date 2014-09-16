@@ -562,12 +562,12 @@ class Journeys(ResourceUri, ResourceUtc):
         # manage post protocol (n-m calculation)
         self.parsers["post"] = deepcopy(parser_get)
         parser_post = self.parsers["post"]
+        parser_post.add_argument("details", type=boolean, default=False, location="json") 
         for index, elem in enumerate(parser_post.args):
 			if elem.name in ["from", "to"]:
 				parser_post.args[index].type = list
 				parser_post.args[index].dest = elem.name
 			parser_post.args[index].location = "json"
-        parser_post.add_argument("details", type=boolean, default=False, location="json") 
 
     @add_debug_info()
     @clean_links()
@@ -734,6 +734,7 @@ class Journeys(ResourceUri, ResourceUtc):
             self.region = i_manager.get_region(region)
             #we check that the user can use this api
             authentification.authenticate(region, 'ALL', abort=True)
+            set_request_timezone(self.region)
 
         if not region:
             #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
