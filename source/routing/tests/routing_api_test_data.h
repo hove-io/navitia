@@ -315,7 +315,7 @@ struct routing_api_data {
 
         //and we add 2 bike sharing poi, to check the placemark
         navitia::georef::POIType* poi_type = new navitia::georef::POIType();
-        poi_type->uri = "poi_type:bicycle_rental";
+        poi_type->uri = "poi_type:amenity:bicycle_rental";
         poi_type->name = "bicycle rental station";
         poi_type->idx = 0;
         b.data->geo_ref->poitypes.push_back(poi_type);

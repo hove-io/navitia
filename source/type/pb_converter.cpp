@@ -807,7 +807,7 @@ const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& d
         const auto poi_idx = pair.first;
         const auto poi = data.geo_ref->pois[poi_idx];
         const auto poi_type = data.geo_ref->poitypes[poi->poitype_idx];
-        if (poi_type->uri == "poi_type:bicycle_rental") {
+        if (poi_type->uri == "poi_type:amenity:bicycle_rental") {
             vls = poi;
             break;
         }

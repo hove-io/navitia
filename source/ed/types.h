@@ -410,11 +410,6 @@ struct Poi {
     std::string address_name = "";
 
     Poi() {}
-
-    bool init_osm(const uint64_t osm_id, const double lon, const double lat,
-            const std::map<std::string, std::string>& tags, const size_t potential_id,
-            const std::unordered_map<std::string, ed::types::PoiType*>& poi_types,
-            const std::vector<std::string>& properties_to_ignore);
 };
 
 /**
