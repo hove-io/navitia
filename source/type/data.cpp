@@ -204,6 +204,11 @@ void  Data::build_administrative_regions(){
                         << " pois with coordinates not initialized");
 
     this->pt_data->build_admins_stop_areas();
+
+    for (const auto* sa: pt_data->stop_areas)
+        for (auto admin: sa->admin_list)
+            if (!admin->from_original_dataset)
+                admin->main_stop_areas.push_back(sa);
 }
 
 void Data::build_autocomplete(){
@@ -260,11 +265,16 @@ find_matching_calendar(const Data&, const std::string& name, const ValidityPatte
 void Data::complete(){
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
-    int sort, autocomplete;
+    int admin, sort, autocomplete;
 
     build_grid_validity_pattern();
     build_associated_calendar();
     build_odt();
+
+    start = pt::microsec_clock::local_time();
+    LOG4CPLUS_INFO(logger, "Building administrative regions");
+    build_administrative_regions();
+    admin = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
     pt_data->sort();
@@ -273,18 +283,13 @@ void Data::complete(){
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building proximity list");
     build_proximity_list();
-    LOG4CPLUS_INFO(logger, "Building administrative regions");
-    build_administrative_regions();
     LOG4CPLUS_INFO(logger, "Building uri maps");
     build_uri();
     LOG4CPLUS_INFO(logger, "Building autocomplete");
     build_autocomplete();
-
-    /* ça devrait etre fait avant, à vérifier
-    LOG4CPLUS_INFO(logger, "On va construire les correspondances");
-    {Timer t("Construction des correspondances");  data.pt_data.build_connections();}
-    */
     autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    LOG4CPLUS_INFO(logger, "\t Building admins: " << admin << "ms");
     LOG4CPLUS_INFO(logger, "\t Sorting data: " << sort << "ms");
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
 }

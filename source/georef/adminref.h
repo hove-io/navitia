@@ -51,6 +51,11 @@ namespace navitia {
               Level = 10 : Quartier
             */
             int level;
+
+            // Is the admin came from the original dataset (and not
+            // from another source)
+            bool from_original_dataset = true;
+
             std::string post_code;
             std::string insee;
             nt::GeographicalCoord coord;
@@ -61,7 +66,7 @@ namespace navitia {
             Admin():level(-1){}
             Admin(int lev):level(lev){}
             template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-                ar & idx & level & post_code & insee & name & uri & coord & admin_list & main_stop_areas;
+                ar & idx & level & from_original_dataset & post_code & insee & name & uri & coord & admin_list & main_stop_areas;
             }
         };
     }
