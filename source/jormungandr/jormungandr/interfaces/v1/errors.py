@@ -45,7 +45,7 @@ from flask import request
             |no_origin_nor_destination			|  404                  |
             |unknown_object						|  404                  |
             |                                   |                       |
-            |no_solution                        |  204                  |
+            |no_solution                        |  200                  |
             |                                   |                       |
             |bad_filter                         |  400                  |
             |unknown_api                        |  400                  |
