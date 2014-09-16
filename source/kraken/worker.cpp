@@ -402,12 +402,16 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     std::vector<type::EntryPoint> destinations;
     if(api != pbnavitia::ISOCHRONE) {
-        Type_e destination_type = data->get_type_of_id(request.destination());
-        destination = type::EntryPoint(destination_type, request.destination());
-        if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
-                || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
-                || destination.type == type::Type_e::POI) {
-            destination.coordinates = this->coord_of_entry_point(destination, data);
+        for (int i = 0; i < request.destination().size(); i++) {
+            Type_e destination_type = data->get_type_of_id(request.destination(i).place());
+            type::EntryPoint destination = type::EntryPoint(destination_type, request.destination(i).place(), request.destination(i).access_duration());
+
+            if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
+                    || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
+                    || destination.type == type::Type_e::POI) {
+                destination.coordinates = this->coord_of_entry_point(destination, data);
+            }
+            destinations.push_back(destination);
         }
     }
 
@@ -428,7 +432,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 		}
 	}
     /// params for arrival fallback
-    for(int i = 0; i < destinations.size(); i++) [
+    for(int i = 0; i < destinations.size(); i++) {
 		type::EntryPoint &destination = destinations[i];
 		if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
 				|| (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI) || (destination.type == type::Type_e::StopArea)){

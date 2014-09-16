@@ -320,25 +320,27 @@ class Script(object):
         req.requested_api = requested_type
         if "origin" in request and request["origin"]:
             if requested_type != type_pb2.NMPLANNER:
-                request["origin"] = [request["origin"]]
-                request["origin_access_duration"] = [0]
-            for i in range(0, len(request["origin"])):
+                origins = ([request["origin"]], [0])
+            else:
+                origins = (request["origin"], request["origin_access_duration"])
+            for i in range(0, len(origins[0])):
                 location = req.journeys.origin.add()
-                location.place = request["origin"][i]
-                location.access_duration = request["origin_access_duration"][i]
+                location.place = origins[0][i]
+                location.access_duration = origins[1][i]
         if "destination" in request and request["destination"]:
             if requested_type != type_pb2.NMPLANNER:
-                request["destination"] = [request["destination"]]
-                request["destination_access_duration"] = [0]
-            for i in range(0, len(request["destination"])):
+                destinations = ([request["destination"]], [0])
+            else:
+                destinations = (request["destination"], request["destination_access_duration"])
+            for i in range(0, len(destinations[0])):
                 location = req.journeys.destination.add()
-                location.place = request["destination"][i]
-                location.access_duration = request["destination_access_duration"][i]
+                location.place = destinations[0][i]
+                location.access_duration = destinations[1][i]
             self.destination_modes = request["destination_mode"]
         else:
             self.destination_modes = ["walking"]
         if "datetime" in request and request["datetime"]:
-            if isinstance(request["datetime"], str):
+            if isinstance(request["datetime"], int):
                 request["datetime"] = [request["datetime"]]
             for dte in request["datetime"]:
                 req.journeys.datetimes.append(dte)

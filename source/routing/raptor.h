@@ -107,15 +107,13 @@ struct RAPTOR
     * à une heure donnée.
     */
     std::vector<Path>
-    compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
-                    const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
-                    const DateTime &departure_datetime,
-                    bool disruption_active, bool allow_odt,
-                    const DateTime &bound,
-                    const uint32_t max_transfers,
-                    const type::AccessibiliteParams & accessibilite_params,
-                    const std::vector<std::string> & forbidden_uri,
-                    bool clockwise);
+    compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration>> &departs,
+                const std::vector<std::pair<type::idx_t, navitia::time_duration>> &destinations,
+                const DateTime &departure_datetime, bool disruption_active, bool allow_odt,
+                const DateTime &bound=DateTimeUtils::inf,
+                const uint32_t max_transfers=std::numeric_limits<int>::max(),
+                const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
+                const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
 
 
 	/** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
