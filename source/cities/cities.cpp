@@ -158,13 +158,16 @@ std::string OSMNode::to_geographic_point() const{
     return geog.str();
 }
 /*
- * We build the polygon of the admin and insert it in the rtree
+ * We build the polygon of the admin
+ * Ways are supposed to be order, but they're not always.
+ * Also we may have to reverse way before adding them into the polygon
  */
 void OSMRelation::build_polygon(OSMCache& cache) {
     auto is_outer_way = [](CanalTP::Reference r) { 
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
             && (r.role == "outer"  || r.role == "enclave" || r.role == "");
     };
+    // We pickup one way
     auto ref = std::find_if(std::begin(references), std::end(references), is_outer_way);
     if (ref == references.end()) {
         return;
@@ -183,7 +186,9 @@ void OSMRelation::build_polygon(OSMCache& cache) {
     }
     auto first_node = it_first_way->second.nodes.front()->first;
     auto next_node = it_first_way->second.nodes.back()->first;
+    // We try to find a closed ring
     while (first_node != next_node) {
+        // We look for a way that begin or end by the last node
         ref = std::find_if(std::begin(references), std::end(references),
                 [&](CanalTP::Reference& r) {
                     if (r.member_id == ref->member_id || !is_outer_way(r)) {
@@ -219,6 +224,7 @@ void OSMRelation::build_polygon(OSMCache& cache) {
     }
     const auto front = tmp_polygon.outer().front();
     const auto back = tmp_polygon.outer().back();
+    // This should not happen, but does some time
     if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
         tmp_polygon.outer().push_back(tmp_polygon.outer().front());
     }
