@@ -202,28 +202,6 @@ struct Path {
 
 class ProjectionData;
 
-/** Rectangle utilisé par RTree pour indexer spatialement les communes */
-struct Rect{
-    double min[2];
-    double max[2];
-    Rect() : min{0,0}, max{0,0} {}
-
-    Rect(const type::GeographicalCoord & coord) {
-        min[0] = coord.lon();
-        min[1] = coord.lat();
-        max[0] = coord.lon();
-        max[1] = coord.lat();
-    }
-
-    Rect(double a_minX, double a_minY, double a_maxX, double a_maxY){
-        min[0] = a_minX;
-        min[1] = a_minY;
-
-        max[0] = a_maxX;
-        max[1] = a_maxY;
-    }
-};
-
 struct POI;
 struct POIType;
 
@@ -245,8 +223,6 @@ struct GeoRef {
     std::map<std::string, nt::idx_t> way_map;
     std::map<std::string, nt::idx_t> admin_map;
     std::vector<Admin*> admins;
-
-    RTree<nt::idx_t, double, 2> rtree;
 
     /// Indexe sur les noms de voirie
     autocomplete::Autocomplete<unsigned int> fl_admin = autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::Admin);
@@ -299,9 +275,6 @@ struct GeoRef {
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-    /// Récupération de la liste des admins à partir des coordonnées
-    std::vector<navitia::type::idx_t> find_admins(const type::GeographicalCoord &);
-
     /** Construit l'indexe spatial */
     void build_proximity_list();
 
@@ -317,19 +290,17 @@ struct GeoRef {
     void build_poitypes_map();
     void build_pois_map();
 
-    /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
-    void build_rtree();
-
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
 
+
+    const std::vector<Admin*> &find_admins(const type::GeographicalCoord&) const;
 
     /**
      * Project each stop_point on the georef network
      */
     void project_stop_points(const std::vector<type::StopPoint*> & stop_points);
-    void build_admins_stop_points(std::vector<type::StopPoint*> & stop_points);
-    void build_admins_pois();
+
     /** project the stop point on all transportation mode
       * return a pair with :
       * - the projected array

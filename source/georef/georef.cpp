@@ -308,21 +308,6 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
     distances[Direction::Target] = projected.distance_to(vertex2_coord);
 }
 
-std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCoord &coord){
-    std::vector<navitia::type::idx_t> to_return;
-    navitia::georef::Rect search_rect(coord);
-
-    std::vector<idx_t> result;
-    auto callback = [](idx_t id, void* vec)->bool{reinterpret_cast<std::vector<idx_t>*>(vec)->push_back(id); return true;};
-    this->rtree.Search(search_rect.min, search_rect.max, callback, &result);
-    for(idx_t admin_idx : result) {
-        if (boost::geometry::within(coord, admins[admin_idx]->boundary)){
-            to_return.push_back(admin_idx);
-        }
-    }
-    return to_return;
-}
-
 /**
  * there are 3 graphs:
  *  - one for the walk
@@ -433,15 +418,6 @@ void GeoRef::build_pois_map(){
    for(const POI* poi : pois){
        this->poi_map[poi->uri] = poi->idx;
    }
-}
-
-void GeoRef::build_rtree() {
-    typedef boost::geometry::model::box<type::GeographicalCoord> box;
-    for(const Admin* admin : this->admins){
-        auto envelope = boost::geometry::return_envelope<box>(admin->boundary);
-        Rect r(envelope.min_corner().lon(), envelope.min_corner().lat(), envelope.max_corner().lon(), envelope.max_corner().lat());
-        this->rtree.Insert(r.min, r.max, admin->idx);
-    }
 }
 
 /** Normalisation des codes externes des rues*/
@@ -572,46 +548,15 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
    }
 }
 
-void GeoRef::build_admins_stop_points(std::vector<type::StopPoint*> & stop_points){
-    auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_stop_points");
-    int cpt_no_projected = 0;
-    for(type::StopPoint* stop_point : stop_points) {
-        ProjectionData projection = this->projected_stop_points[stop_point->idx][type::Mode_e::Walking];
-        if(projection.found){
-            const edge_t edge = boost::edge(projection[ProjectionData::Direction::Source],
-                                         projection[ProjectionData::Direction::Target],
-                                         this->graph).first;
-            const georef::Way *way = this->ways[this->graph[edge].way_idx];
-            stop_point->admin_list.insert(stop_point->admin_list.end(),
-                                          way->admin_list.begin(),
-                                          way->admin_list.end());
-        }else{
-            cpt_no_projected++;
-        }
+const std::vector<Admin*> &GeoRef::find_admins(const type::GeographicalCoord& coord) const {
+    try {
+        edge_t edge = this->nearest_edge(coord);
+        georef::Way *way = this->ways[this->graph[edge].way_idx];
+        return way->admin_list;
+    } catch (const proximitylist::NotFound&) {
+        static const std::vector<Admin*> empty;
+        return empty;
     }
-    LOG4CPLUS_DEBUG(log, cpt_no_projected<<"/"<<stop_points.size() << " stop_points are not associated with any admins");
-}
-
-void GeoRef::build_admins_pois(){
-    auto log = log4cplus::Logger::getInstance("kraken::type::GeoRef::fill_admins_pois");
-    int cpt_no_projected = 0;
-    int cpt_no_initialized = 0;
-    for(POI* poi : this->pois){
-        if(poi->coord.is_initialized()){
-            try{
-                edge_t edge = this->nearest_edge(poi->coord);
-                georef::Way *way = this->ways[this->graph[edge].way_idx];
-                poi->admin_list.insert(poi->admin_list.end(),
-                                       way->admin_list.begin(), way->admin_list.end());
-            }catch(proximitylist::NotFound){
-                cpt_no_projected++;
-            }
-        }else{
-            cpt_no_initialized++;
-        }
-    }
-    LOG4CPLUS_DEBUG(log, cpt_no_projected<<"/"<<this->pois.size() << " pois are not associated with any admins");
-    LOG4CPLUS_DEBUG(log, cpt_no_initialized<<"/"<<this->pois.size() << " pois with coordinates not initialized");
 }
 
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {

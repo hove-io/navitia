@@ -359,9 +359,6 @@ struct GeographicalCoord{
     bool is_initialized() const {
         return distance_to(GeographicalCoord()) > 1;
     }
-    bool is_default_coord()const{
-        return ((this->lat() == 0) || (this->lon() == 0));
-    }
 
     bool is_valid() const{
         return this->lon() >= -180 && this->lon() <= 180 &&

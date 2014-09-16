@@ -90,6 +90,9 @@ public:
     /// Fare data
     std::unique_ptr<navitia::fare::Fare> fare;
 
+    // functor to find admins
+    std::function<std::vector<georef::Admin*>(const GeographicalCoord&)> find_admins;
+
     /** Retourne la structure de données associée au type */
     /// TODO : attention aux perfs à faire la copie
     template<typename T> std::vector<T*> & get_data();
