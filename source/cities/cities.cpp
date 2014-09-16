@@ -63,15 +63,12 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tag
         return;
     }
     const auto tmp_admin_level = tags.find("admin_level");
-    size_t nb_ways = 0;
     if(tmp_admin_level != tags.end() && tmp_admin_level->second == "8") {
         for (const CanalTP::Reference& ref : refs) {
             switch(ref.member_type) {
             case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
-                if (ref.role == "outer" || ref.role == "" || ref.role == "exclave") {// || 
-                //ref.role == "inner" || ref.role == "enclave") {
+                if (ref.role == "outer" || ref.role == "" || ref.role == "exclave") {
                     cache.ways.insert(std::make_pair(ref.member_id, OSMWay()));
-                    ++ nb_ways;
                 }
                 break;
             case OSMPBF::Relation_MemberType::Relation_MemberType_NODE:
