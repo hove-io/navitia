@@ -33,26 +33,6 @@ www.navitia.io
 namespace navitia{namespace type {
 
 
-PT_Data& PT_Data::operator=(PT_Data&& other){
-#define COPY_FROM_OTHER(type_name, collection_name) collection_name = other.collection_name; collection_name##_map = other.collection_name##_map;
-    ITERATE_NAVITIA_PT_TYPES(COPY_FROM_OTHER)
-
-    stop_point_connections = other.stop_point_connections;
-    stop_times = other.stop_times;
-
-    // First letter
-    stop_area_autocomplete = other.stop_area_autocomplete;
-    stop_point_autocomplete = other.stop_point_autocomplete;
-    line_autocomplete = other.line_autocomplete;
-
-    // Proximity list
-    stop_area_proximity_list = other.stop_area_proximity_list;
-    stop_point_proximity_list = other.stop_point_proximity_list;
-
-    return *this;
-}
-
-
 void PT_Data::sort(){
 
 #define SORT_AND_INDEX(type_name, collection_name)\

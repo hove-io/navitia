@@ -118,6 +118,8 @@ struct FindAdminWithCities {
                 it["post_code"].to(admin->post_code);
                 admin->coord.set_lon(it["lon"].as<double>());
                 admin->coord.set_lat(it["lat"].as<double>());
+                admin->idx = georef.admins.size() - 1;
+                admin->from_original_dataset = false;
                 ++nb_admin_added;
             }
             res.push_back(admin);
