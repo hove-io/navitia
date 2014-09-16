@@ -34,7 +34,7 @@ www.navitia.io
 
 #ifndef NO_FORCE_MEMORY_RELEASE
 //by default we force the release of the memory after the reload of the data
-#include "google/malloc_extension.h"
+#include "gperftools/malloc_extension.h"
 #endif
 
 template<typename Data>
