@@ -117,10 +117,11 @@ void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>
     }
 }
 
-///Find out if the list of cities(admins) contains at least one city with level=8
-bool has_admin_level8(const std::vector<georef::Admin*>& admins){
+///Find out if the list of cities(admins) contains at least one city
+///with level=8 from the original dataset
+bool has_admin_level8_from_original_dataset(const std::vector<georef::Admin*>& admins){
     for(const navitia::georef::Admin* admin : admins){
-        if (admin->level == 8){
+        if (admin->level == 8 && admin->from_original_dataset) {
             return true;
         }
     }
@@ -136,16 +137,16 @@ void update_quality_for_missing_admin(std::vector<Autocomplete<nt::idx_t>::fl_qu
         bool apply_penalty = false;
         switch(ntype){
         case navitia::type::Type_e::StopArea:
-            apply_penalty = !has_admin_level8(d.pt_data->stop_areas[item.idx]->admin_list);
+            apply_penalty = !has_admin_level8_from_original_dataset(d.pt_data->stop_areas[item.idx]->admin_list);
             break;
         case navitia::type::Type_e::POI:
-            apply_penalty = !has_admin_level8(d.geo_ref->pois[item.idx]->admin_list);
+            apply_penalty = !has_admin_level8_from_original_dataset(d.geo_ref->pois[item.idx]->admin_list);
             break;
         case navitia::type::Type_e::Address:
-            apply_penalty = !has_admin_level8(d.geo_ref->ways[item.idx]->admin_list);
+            apply_penalty = !has_admin_level8_from_original_dataset(d.geo_ref->ways[item.idx]->admin_list);
             break;
         case navitia::type::Type_e::StopPoint:
-            apply_penalty = !has_admin_level8(d.pt_data->stop_points[item.idx]->admin_list);
+            apply_penalty = !has_admin_level8_from_original_dataset(d.pt_data->stop_points[item.idx]->admin_list);
             break;
         default:
             break;
