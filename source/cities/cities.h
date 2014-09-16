@@ -38,15 +38,11 @@ www.navitia.io
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/linestring.hpp>
 
 namespace bg = boost::geometry;
 typedef bg::model::point<float, 2, bg::cs::cartesian> point;
 typedef bg::model::polygon<point, false, false> polygon_type; // ccw, open polygon
 typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
-typedef bg::model::linestring<point> ls_type;
-
-
 
 namespace navitia { namespace cities {
 
@@ -108,16 +104,15 @@ struct OSMRelation {
         centre = point(lon, lat);
     }
     void build_geometry(OSMCache& cache);
+    void build_polygon(OSMCache& cache);
 };
 
 struct OSMWay {
     /// Properties of a way : can we use it
     std::vector<std::unordered_map<uint64_t, OSMNode>::const_iterator> nodes;
-    ls_type ls;
 
     void add_node(std::unordered_map<uint64_t, OSMNode>::const_iterator node) {
         nodes.push_back(node);
-        ls.push_back(point(node->second.lon(), node->second.lat()));
     }
 
     std::string coord_to_string() const {

@@ -57,14 +57,21 @@ namespace navitia { namespace cities {
  */
 void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tags &tags, const CanalTP::References &refs) {
     auto logger = log4cplus::Logger::getInstance("log");
+    const auto boundary = tags.find("boundary");
+    if (boundary == tags.end() || (boundary->second != "administrative" && 
+                boundary->second != "multipolygon")) {
+        return;
+    }
     const auto tmp_admin_level = tags.find("admin_level");
-
+    size_t nb_ways = 0;
     if(tmp_admin_level != tags.end() && tmp_admin_level->second == "8") {
         for (const CanalTP::Reference& ref : refs) {
             switch(ref.member_type) {
             case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
-                if (ref.role == "outer" || ref.role == "" || ref.role == "exclave") {
+                if (ref.role == "outer" || ref.role == "" || ref.role == "exclave") {// || 
+                //ref.role == "inner" || ref.role == "enclave") {
                     cache.ways.insert(std::make_pair(ref.member_id, OSMWay()));
+                    ++ nb_ways;
                 }
                 break;
             case OSMPBF::Relation_MemberType::Relation_MemberType_NODE:
@@ -156,25 +163,74 @@ std::string OSMNode::to_geographic_point() const{
 /*
  * We build the polygon of the admin and insert it in the rtree
  */
-void OSMRelation::build_geometry(OSMCache& cache) {
+void OSMRelation::build_polygon(OSMCache& cache) {
+    auto is_outer_way = [](CanalTP::Reference r) { 
+        return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
+            && (r.role == "outer"  || r.role == "enclave" || r.role == "");
+    };
+    auto ref = std::find_if(std::begin(references), std::end(references), is_outer_way);
+    if (ref == references.end()) {
+        return;
+    }
+    auto it_first_way = cache.ways.find(ref->member_id);
+    if (it_first_way == cache.ways.end() || it_first_way->second.nodes.empty()) {
+        return;
+    }
     polygon_type tmp_polygon;
+    for (auto node : it_first_way->second.nodes) {
+        if (!node->second.is_defined()) {
+            continue;
+        }
+        const auto p = point(float(node->second.lon()), float(node->second.lat()));
+        tmp_polygon.outer().push_back(p);
+    }
+    auto first_node = it_first_way->second.nodes.front()->first;
+    auto next_node = it_first_way->second.nodes.back()->first;
+    while (first_node != next_node) {
+        ref = std::find_if(std::begin(references), std::end(references),
+                [&](CanalTP::Reference& r) {
+                    if (r.member_id == ref->member_id || !is_outer_way(r)) {
+                        return false;
+                    }
+                    auto it = cache.ways.find(r.member_id);
+                    return it != cache.ways.end() &&
+                            !it->second.nodes.empty() &&
+                        (it->second.nodes.front()->first == next_node ||
+                         it->second.nodes.back()->first == next_node );
+                });
+        if (ref == references.end()) {
+            return;
+        }
+        auto next_way = cache.ways[ref->member_id];
+        if (next_way.nodes.front()->first != next_node) {
+            std::reverse(std::begin(next_way.nodes), std::end(next_way.nodes));
+        }
+        for (auto node : next_way.nodes) {
+            if (!node->second.is_defined()) {
+                continue;
+            }
+            const auto p = point(float(node->second.lon()), float(node->second.lat()));
+            tmp_polygon.outer().push_back(p);
+        }
+        next_node = next_way.nodes.back()->first;
+    }
+    if (tmp_polygon.outer().size() < 2) {
+        return;
+    }
+    if (centre.get<0>() == 0.0 || centre.get<1>() == 0.0) {
+        bg::centroid(tmp_polygon, centre);
+    }
+    const auto front = tmp_polygon.outer().front();
+    const auto back = tmp_polygon.outer().back();
+    if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
+        tmp_polygon.outer().push_back(tmp_polygon.outer().front());
+    }
+    polygon.push_back(tmp_polygon);
+}
+
+void OSMRelation::build_geometry(OSMCache& cache) {
     for (CanalTP::Reference ref : references) {
-        if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY) {
-            auto it = cache.ways.find(ref.member_id);
-            if (it == cache.ways.end()) {
-                continue;
-            }
-            if(ref.role != "outer"  && ref.role != "enclave" && ref.role != "") {
-                continue;
-            }
-            for (auto node : it->second.nodes) {
-                if (!node->second.is_defined()) {
-                    continue;
-                }
-                const auto p = point(float(node->second.lon()), float(node->second.lat()));
-                tmp_polygon.outer().push_back(p);
-            }
-        } else if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
+        if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
             auto node_it = cache.nodes.find(ref.member_id);
             if (node_it == cache.nodes.end()) {
                 continue;
@@ -184,23 +240,11 @@ void OSMRelation::build_geometry(OSMCache& cache) {
             }
             if (ref.role == "admin_centre") {
                 set_centre(float(node_it->second.lon()), float(node_it->second.lat()));
+                break;
             }
         }
     }
-    if (tmp_polygon.outer().size() < 2) {
-        return;
-    }
-    if (centre.get<0>() == 0.0 || centre.get<1>() == 0.0) {
-        bg::centroid(tmp_polygon, centre);
-    }
-    boost::geometry::model::box<point> envelope;
-    bg::envelope(tmp_polygon, envelope);
-    const auto front = tmp_polygon.outer().front();
-    const auto back = tmp_polygon.outer().back();
-    if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
-        tmp_polygon.outer().push_back(tmp_polygon.outer().front());
-    }
-    polygon.push_back(tmp_polygon);
+    build_polygon(cache);
 }
 }}
 
