@@ -118,6 +118,14 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
             // Here we have to change of vehicle journey, this happen with connection_stay_in
             auto prev_st = current_st;
             // If it was a connection_stay_in we want to take the the previous vj
+
+            if ((clockwise && ! current_st->vehicle_journey->prev_vj)
+                    || (!clockwise && ! current_st->vehicle_journey->next_vj)) {
+                LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "no service extention for vj "
+                                << current_st->vehicle_journey->uri << " impossible to find good boarding jpp (idx="
+                                << boarding_jpp_idx << ")");
+                throw navitia::recoverable_exception("impossible to rebuild the public transport path");
+            }
             if(clockwise) {
                 current_st = current_st->vehicle_journey->prev_vj->stop_time_list.back();
             } else {

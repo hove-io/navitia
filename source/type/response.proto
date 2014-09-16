@@ -315,6 +315,7 @@ message Error{
         unknown_object = 10;
         service_unavailable = 11;
         invalid_protobuf_request = 12;
+        internal_error = 13;
     }
     optional error_id id = 1;
     optional string message = 2;
