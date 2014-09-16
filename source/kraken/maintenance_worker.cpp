@@ -86,8 +86,11 @@ void MaintenanceWorker::listen_rabbitmq(){
             LOG4CPLUS_WARN(logger, "protobuf not valid!");
             continue;
         }
-        if(task.action() == pbnavitia::RELOAD){
-            load();
+        switch(task.action()){
+            case pbnavitia::RELOAD:
+                load(); break;
+            default:
+                LOG4CPLUS_TRACE(logger, "Message ignored");
         }
     }
 }

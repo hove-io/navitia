@@ -101,6 +101,11 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(minutes=1),
         'options': {'expires': 50}
     },
+    'heartbeat-kraken': {
+        'task': 'tyr.tasks.heartbeat',
+        'schedule': timedelta(minutes=30),
+        'options': {'expires': 50}
+    },
 }
 CELERY_TIMEZONE = 'UTC'
 

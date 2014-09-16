@@ -35,13 +35,14 @@ from tyr.aggregate_places import aggregate_places
 from flask import current_app
 import glob
 from tyr import celery
-from navitiacommon import models
+from navitiacommon import models, task_pb2
 import logging
 import os
 import zipfile
 from tyr.helper import load_instance_config, get_instance_logger
 import shutil
 from tyr.launch_exec import launch_exec
+import kombu
 
 
 def type_of_data(filename):
@@ -295,3 +296,22 @@ def close_session(*args, **kwargs):
     # context, this ensures tasks have a fresh session (e.g. session errors
     # won't propagate across tasks)
     models.db.session.remove()
+
+
+@celery.task()
+def heartbeat():
+    """
+    send a heartbeat to all kraken
+    """
+    logging.info('ping krakens!!')
+    with kombu.Connection(current_app.config['CELERY_BROKER_URL']) as connection:
+        instances = models.Instance.query.all()
+        task = task_pb2.Task()
+        task.action = task_pb2.HEARTBEAT
+
+        for instance in instances:
+            config = load_instance_config(instance.name)
+            exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
+            producer = connection.Producer(exchange=exchange)
+            producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
+
