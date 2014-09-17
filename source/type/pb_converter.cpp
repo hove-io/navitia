@@ -322,12 +322,11 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 
     route->set_name(r->name);
 
-    navitia::type::StopPoint* spt = data.pt_data->stop_points[r->main_destination()];
-    route->set_direction(spt->name);
-    for(auto admin : spt->admin_list) {
-        if (admin->level == 8){
-            route->set_direction(spt->name + " (" + admin->name + ")");
-        }
+    auto main_destination = r->main_destination();
+    if (main_destination != nt::invalid_idx) {
+        const navitia::type::StopPoint* sp = data.pt_data->stop_points[main_destination];
+
+        fill_pb_placemark(sp, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
     }
 
     route->set_uri(r->uri);

@@ -410,7 +410,6 @@ route["codes"] = NonNullList(NonNullNested(code))
 route["geojson"] = GeoJson(attribute="geojson")
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
-route["direction"] = fields.String()
 
 network = deepcopy(generic_type)
 network["messages"] = NonNullList(NonNullNested(generic_message))
@@ -467,6 +466,8 @@ place = {
     "quality": fields.Integer(),
     "id": fields.String(attribute='uri')
 }
+
+route["direction"] = PbField(place)
 
 pagination = {
     "total_result": fields.Integer(attribute="totalResult"),

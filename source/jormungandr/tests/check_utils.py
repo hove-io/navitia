@@ -506,11 +506,25 @@ def is_valid_route(route, depth_check=1):
     is_valid_bool(get_not_null(route, "is_frequence"))
 
     if depth_check > 1:
-        is_valid_line(get_not_null(route, "line"), depth_check-1)
+        is_valid_line(get_not_null(route, "line"), depth_check - 1)
+
+        direction = get_not_null(route, "direction")
+        is_valid_place(direction, depth_check - 1)
+        #the direction of the route must always be a stop point
+        assert get_not_null(direction, "embedded_type") == "stop_point"
+        is_valid_stop_point(get_not_null(direction, "stop_point"))
 
 
 def is_valid_line(route, depth_check=1):
-    pass  # TODO!
+    get_not_null(route, "name")
+    get_not_null(route, "id")
+    #TODO more checks
+
+
+def is_valid_place(place, depth_check=1):
+    get_not_null(place, "name")
+    get_not_null(place, "id")
+    #TODO more checks
 
 
 #default journey query used in various test
