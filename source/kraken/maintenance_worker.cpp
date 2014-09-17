@@ -30,8 +30,6 @@ www.navitia.io
 
 #include "maintenance_worker.h"
 
-#include "utils/configuration.h"
-
 #include <sys/stat.h>
 #include <signal.h>
 #include "type/task.pb.h"
@@ -45,8 +43,7 @@ namespace navitia {
 
 
 void MaintenanceWorker::load(){
-    Configuration * conf = Configuration::get();
-    std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
+    std::string database = conf.vm["GENERAL.database"].as<std::string>();
     LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
     if(this->data_manager.load(database)){
         auto data = data_manager.get_data();
@@ -96,20 +93,16 @@ void MaintenanceWorker::listen_rabbitmq(){
 }
 
 void MaintenanceWorker::init_rabbitmq(){
-    Configuration * conf = Configuration::get();
-    std::string instance_name = conf->get_as<std::string>("GENERAL", "instance_name", "");
-    std::string exchange_name = conf->get_as<std::string>("BROKER", "exchange", "navitia");
-    std::string host = conf->get_as<std::string>("BROKER", "host", "localhost");
-    int port = conf->get_as<int>("BROKER", "port", 5672);
-    std::string username = conf->get_as<std::string>("BROKER", "username", "guest");
-    std::string password = conf->get_as<std::string>("BROKER", "password", "guest");
-    std::string vhost = conf->get_as<std::string>("BROKER", "vhost", "/");
+    std::string instance_name = conf.vm["GENERAL.instance_name"].as<std::string>();
+    std::string exchange_name = conf.vm["BROKER.exchange"].as<std::string>();
+    std::string host = conf.vm["BROKER.host"].as<std::string>();
+    int port = conf.vm["BROKER.port"].as<int>();
+    std::string username = conf.vm["BROKER.username"].as<std::string>();
+    std::string password = conf.vm["BROKER.password"].as<std::string>();
+    std::string vhost = conf.vm["BROKER.vhost"].as<std::string>();
     //connection
-    LOG4CPLUS_DEBUG(logger,
-            boost::format("connection to rabbitmq: %s@%s:%s/%s")
-            % username % host % port % vhost);
-    this->channel = AmqpClient::Channel::Create(host, port, username,
-                                                password, vhost);
+    LOG4CPLUS_DEBUG(logger, boost::format("connection to rabbitmq: %s@%s:%s/%s") % username % host % port % vhost);
+    this->channel = AmqpClient::Channel::Create(host, port, username, password, vhost);
 
     this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
@@ -120,8 +113,8 @@ void MaintenanceWorker::init_rabbitmq(){
     LOG4CPLUS_DEBUG(logger, "connected to rabbitmq");
 }
 
-MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager) :
-        data_manager(data_manager),
+MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager, kraken::Configuration conf) :
+        data_manager(data_manager), conf(conf),
         logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))){}
 
 }
