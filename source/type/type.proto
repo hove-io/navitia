@@ -39,6 +39,7 @@ enum API {
     UNKNOWN_API = 16;
     disruptions = 17;
     calendars = 18;
+    NMPLANNER = 19;
 }
 
 enum VehicleJourneyType{
@@ -377,3 +378,7 @@ message ValidityPattern {
     optional string days = 2;
 }
 
+message LocationContext {
+	required string place = 1;
+	required int32 access_duration = 2;
+}

@@ -198,7 +198,6 @@ void RAPTOR::init(Solutions departs,
     }
 }
 
-
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
                     const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
@@ -249,6 +248,42 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     return result;
 }
 
+std::vector<Path>
+RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &departures,
+					    const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
+						const DateTime &departure_datetime,
+						bool disruption_active, bool allow_odt,
+						const DateTime &bound,
+						const uint32_t max_transfers,
+						const type::AccessibiliteParams & accessibilite_params,
+						const std::vector<std::string> & forbidden_uri,
+						bool clockwise) {
+	std::vector<Path> result;
+	set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri, disruption_active, allow_odt);
+	
+	auto n_calc_dep = clockwise ? departures : arrivals;
+	
+	std::vector<std::pair<type::idx_t, navitia::time_duration> > calc_dep;
+	for(auto item : n_calc_dep)
+		for (auto subitem : item.second)
+			calc_dep.push_back(subitem);
+			
+	auto calc_dep_solutions = get_solutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
+	clear(clockwise, bound);
+	init(calc_dep_solutions, {}, bound, clockwise); // no exit condition (should be improved)
+
+	boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
+
+	auto m_points = clockwise ? arrivals : departures;
+
+	for(auto item : m_points) {
+		auto calc_dest = item.second;
+		auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
+		result.insert(result.end(), tmp.begin(), tmp.end());
+	}
+
+	return result;
+}
 
 void
 RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
