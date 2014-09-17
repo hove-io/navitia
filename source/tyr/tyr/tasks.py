@@ -79,8 +79,13 @@ def family_of_data(type):
     return the family type of a data type
     by example "geopal" and "osm" are in the "streetnework" family
     """
-    mapping = {'osm': 'streetnetwork', 'geopal': 'streetnetwork', 'synonym': 'synonym',
-            'poi': 'poi', 'fusio': 'pt', 'gtfs': 'pt'}
+    mapping = {
+        'osm': 'streetnetwork', 'geopal': 'streetnetwork',
+        'synonym': 'synonym',
+        'poi': 'poi',
+        'fusio': 'pt', 'gtfs': 'pt',
+        'fare': 'fare'
+    }
     if type in mapping:
         return mapping[type]
     else:
