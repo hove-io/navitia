@@ -21,6 +21,7 @@ def upgrade():
     op.execute("update data_set set family_type='pt' where type = 'gtfs' or type = 'fusio'")
     op.execute("update data_set set family_type='poi' where type = 'poi'")
     op.execute("update data_set set family_type='synonym' where type = 'synonym'")
+    op.execute("update data_set set family_type='fare' where type = 'fare'")
     op.alter_column('data_set', 'family_type', nullable=False)
     ### end Alembic commands ###
 
