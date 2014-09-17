@@ -56,7 +56,7 @@ class Worker {
 
         // we keep a reference to data_manager in each thread
         DataManager<navitia::type::Data>& data_manager;
-        kraken::Configuration conf;
+        const kraken::Configuration conf;
         log4cplus::Logger logger;
         boost::posix_time::ptime last_load_at;
 

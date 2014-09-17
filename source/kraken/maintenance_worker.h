@@ -44,7 +44,7 @@ class MaintenanceWorker{
     private:
         DataManager<type::Data>& data_manager;
         log4cplus::Logger logger;
-        kraken::Configuration conf;
+        const kraken::Configuration conf;
 
         AmqpClient::Channel::ptr_t channel;
         //nom de la queue créer pour ce worker
