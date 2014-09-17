@@ -66,7 +66,6 @@ def make_connection_string(instance_config):
     connection_string += ' password=' + instance_config.pg_password
     return connection_string
 
-
 #TODO bind task
 @celery.task()
 def fusio2ed(instance_config, filename, job_id):
@@ -308,9 +307,10 @@ def ed2nav(instance_config, job_id):
     try:
         filename = instance_config.tmp_file
         connection_string = make_connection_string(instance_config)
-        res = launch_exec('ed2nav',
-                    ["-o", filename, "--connection-string", connection_string],
-                    logger)
+        argv = ["-o", filename, "--connection-string", connection_string]
+        if 'CITIES_DATABASE_URI' in current_app.config:
+            argv.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
+        res = launch_exec('ed2nav', argv, logger)
         if res != 0:
             raise ValueError('ed2nav failed')
     except:
