@@ -276,6 +276,7 @@ class ReleaseManager:
 
 
 if __name__ == '__main__':
+    print "Be sure git is in english, to do so you can set LC_ALL=en_US "
 
     if len(argv) < 2:
         print "mandatory argument: {major|minor|hotfix}"
