@@ -43,13 +43,14 @@ www.navitia.io
 
 int main(int argn, char** argv){
     navitia::init_app();
-    Configuration* conf = Configuration::get();
+    navitia::kraken::Configuration conf;
 
     std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );
-    conf->set_string("application", std::string(argv[0]).substr(posSlash+1));
+    std::string application = std::string(argv[0]).substr(posSlash+1);
+    std::string path;
     char buf[256];
     if(getcwd(buf, sizeof(buf))){
-        conf->set_string("path",std::string(buf) + "/");
+        path = std::string(buf) + "/";
     }else{
         perror("getcwd");
         return 1;
@@ -59,9 +60,9 @@ int main(int argn, char** argv){
         // The first argument is the path to the configuration file
         conf_file = argv[1];
     }else{
-        conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
+        conf_file = path + application + ".ini";
     }
-    conf->load_ini(conf_file);
+    conf.load(conf_file);
     init_logger(conf_file);
 
     DataManager<navitia::type::Data> data_manager;
@@ -72,7 +73,7 @@ int main(int argn, char** argv){
     // Prepare our context and sockets
     zmq::context_t context(1);
     zmq::socket_t clients(context, ZMQ_ROUTER);
-    std::string zmq_socket = conf->get_as<std::string>("GENERAL", "zmq_socket", "ipc:///tmp/default_navitia");
+    std::string zmq_socket = conf.zmq_socket_path();
     zmq::socket_t workers(context, ZMQ_DEALER);
     // Catch startup exceptions; without this, startup errors are on stdout
     try{
@@ -83,12 +84,12 @@ int main(int argn, char** argv){
         return 1;
     }
 
-    threads.create_thread(navitia::MaintenanceWorker(data_manager));
+    threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
 
-    int nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
+    int nb_threads = conf.nb_thread();
     // Launch pool of worker threads
     for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
-        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager)));
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));
     }
 
     // Connect work threads to client threads via a queue

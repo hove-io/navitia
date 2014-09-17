@@ -35,6 +35,7 @@ www.navitia.io
 #include "utils/logger.h"
 #include <zmq.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include "kraken/configuration.h"
 
 pbnavitia::Response make_internal_error(const navitia::recoverable_exception& e) {
     pbnavitia::Response response;
@@ -46,13 +47,13 @@ pbnavitia::Response make_internal_error(const navitia::recoverable_exception& e)
 }
 
 namespace pt = boost::posix_time;
-void doWork(zmq::context_t & context, DataManager<navitia::type::Data>& data_manager) {
+void doWork(zmq::context_t & context, DataManager<navitia::type::Data>& data_manager, navitia::kraken::Configuration conf) {
     auto logger = log4cplus::Logger::getInstance("worker");
     try{
         zmq::socket_t socket (context, ZMQ_REP);
         socket.connect ("inproc://workers");
         bool run = true;
-        navitia::Worker w(data_manager);
+        navitia::Worker w(data_manager, conf);
         while(run) {
             zmq::message_t request;
             try{

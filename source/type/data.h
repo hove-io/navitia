@@ -30,7 +30,6 @@ www.navitia.io
 
 #pragma once
 #include "utils/logger.h"
-#include "utils/configuration.h"
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/format.hpp>
