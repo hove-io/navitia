@@ -73,7 +73,7 @@ int main(int argn, char** argv){
     // Prepare our context and sockets
     zmq::context_t context(1);
     zmq::socket_t clients(context, ZMQ_ROUTER);
-    std::string zmq_socket = conf.vm["GENERAL.zmq_socket"].as<std::string>();
+    std::string zmq_socket = conf.zmq_socket_path();
     zmq::socket_t workers(context, ZMQ_DEALER);
     // Catch startup exceptions; without this, startup errors are on stdout
     try{
@@ -86,7 +86,7 @@ int main(int argn, char** argv){
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
 
-    int nb_threads = conf.vm["GENERAL.nb_threads"].as<int>();
+    int nb_threads = conf.nb_thread();
     // Launch pool of worker threads
     for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));

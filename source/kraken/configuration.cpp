@@ -29,7 +29,6 @@ www.navitia.io
 */
 
 #include "configuration.h"
-#include <boost/program_options.hpp>
 #include "utils/exception.h"
 #include <fstream>
 
@@ -70,4 +69,35 @@ void Configuration::load(const std::string& filename){
 
 }
 
+std::string Configuration::databases_path() const{
+    return this->vm["GENERAL.database"].as<std::string>();
+}
+std::string Configuration::zmq_socket_path() const{
+    return this->vm["GENERAL.zmq_socket"].as<std::string>();
+}
+std::string Configuration::instance_name() const{
+    return this->vm["GENERAL.instance_name"].as<std::string>();
+}
+int Configuration::nb_thread() const{
+    return this->vm["GENERAL.nb_threads"].as<int>();
+}
+
+std::string Configuration::broker_host() const{
+    return this->vm["BROKER.host"].as<std::string>();
+}
+int Configuration::broker_port() const{
+    return this->vm["BROKER.port"].as<int>();
+}
+std::string Configuration::broker_username() const{
+    return this->vm["BROKER.username"].as<std::string>();
+}
+std::string Configuration::broker_password() const{
+    return this->vm["BROKER.password"].as<std::string>();
+}
+std::string Configuration::broker_vhost() const{
+    return this->vm["BROKER.vhost"].as<std::string>();
+}
+std::string Configuration::broker_exchange() const{
+    return this->vm["BROKER.exchange"].as<std::string>();
+}
 }}//namespace

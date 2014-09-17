@@ -43,7 +43,7 @@ namespace navitia {
 
 
 void MaintenanceWorker::load(){
-    std::string database = conf.vm["GENERAL.database"].as<std::string>();
+    std::string database = conf.databases_path();
     LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
     if(this->data_manager.load(database)){
         auto data = data_manager.get_data();
@@ -93,13 +93,13 @@ void MaintenanceWorker::listen_rabbitmq(){
 }
 
 void MaintenanceWorker::init_rabbitmq(){
-    std::string instance_name = conf.vm["GENERAL.instance_name"].as<std::string>();
-    std::string exchange_name = conf.vm["BROKER.exchange"].as<std::string>();
-    std::string host = conf.vm["BROKER.host"].as<std::string>();
-    int port = conf.vm["BROKER.port"].as<int>();
-    std::string username = conf.vm["BROKER.username"].as<std::string>();
-    std::string password = conf.vm["BROKER.password"].as<std::string>();
-    std::string vhost = conf.vm["BROKER.vhost"].as<std::string>();
+    std::string instance_name = conf.instance_name();
+    std::string exchange_name = conf.broker_exchange();
+    std::string host = conf.broker_host();
+    int port = conf.broker_port();
+    std::string username = conf.broker_username();
+    std::string password = conf.broker_password();
+    std::string vhost = conf.broker_vhost();
     //connection
     LOG4CPLUS_DEBUG(logger, boost::format("connection to rabbitmq: %s@%s:%s/%s") % username % host % port % vhost);
     this->channel = AmqpClient::Channel::Create(host, port, username, password, vhost);

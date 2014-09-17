@@ -29,17 +29,26 @@ www.navitia.io
 */
 
 #pragma once
-#include <memory>
 #include <boost/program_options.hpp>
-
 
 namespace navitia { namespace kraken{
 
     class Configuration{
-        public:
             boost::program_options::variables_map vm;
-
+        public:
             void load(const std::string& file);
+
+            std::string databases_path() const;
+            std::string zmq_socket_path() const;
+            std::string instance_name() const;
+            int nb_thread() const;
+
+            std::string broker_host() const;
+            int broker_port() const;
+            std::string broker_username() const;
+            std::string broker_password() const;
+            std::string broker_vhost() const;
+            std::string broker_exchange() const;
     };
 
 }}//namespace
