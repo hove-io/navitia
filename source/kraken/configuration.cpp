@@ -63,6 +63,7 @@ void Configuration::load(const std::string& filename){
     if(!stream.is_open() || !stream.good()){
         throw navitia::exception("impossible to open: " + filename);
     }
+    //we allow unknown option for log4cplus
     auto tmp = po::parse_config_file(stream, desc, true);
     po::store(tmp, this->vm);
     po::notify(this->vm);
