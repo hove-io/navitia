@@ -275,18 +275,18 @@ def load_data(instance_id, data_path):
 @celery.task()
 def cities(osm_path):
     """ launch cities """
+    res = -1
     try:
         res = launch_exec("cities", ['-i', osm_path,
                                       '--connection-string',
                                       current_app.config['CITIES_DATABASE_URI']],
                           logging)
-        if res != 0:
-            raise ValueError('cities failed')
+        if res!=0:
+            logging.error('cities failed')
     except:
         logging.exception('')
-    finally:
-        logging.info('Import of cities finished')
-        return res
+    logging.info('Import of cities finished')
+    return res
 
 
 @task_postrun.connect
