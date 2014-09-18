@@ -37,6 +37,8 @@ www.navitia.io
 #include <boost/geometry.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/reverse.hpp>
 
 #include "ed/connectors/osm_tags_reader.h"
 #include "ed/connectors/osm2ed_utils.h"
@@ -172,7 +174,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
     };
 
     // We pickup one way
-    auto ref = std::find_if(std::begin(references), std::end(references), pickable_way);
+    auto ref = boost::find_if(references, pickable_way);
     if (ref == references.end()) {
         return;
     }
@@ -194,7 +196,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
     // We try to find a closed ring
     while (first_node != next_node) {
         // We look for a way that begin or end by the last node
-        ref = std::find_if(std::begin(references), std::end(references),
+        ref = boost::find_if(references,
                 [&](CanalTP::Reference& r) {
                     if (!pickable_way(r)) {
                         return false;
@@ -211,7 +213,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
         explored_ids.insert(ref->member_id);
         auto next_way = cache.ways[ref->member_id];
         if (next_way.nodes.front()->first != next_node) {
-            std::reverse(std::begin(next_way.nodes), std::end(next_way.nodes));
+            boost::reverse(next_way.nodes);
         }
         for (auto node : next_way.nodes) {
             if (!node->second.is_defined()) {
