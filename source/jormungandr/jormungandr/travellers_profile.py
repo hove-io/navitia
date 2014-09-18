@@ -50,14 +50,51 @@ class TravellerProfile(object):
         return self.bike_speed
 
 travellers_profile = {
-    'standard': TravellerProfile(walking_speed=1.39, bike_speed=4.17, max_duration_to_pt=12*60, first_and_last_section_mode=['walking', 'bike', 'bss']),
-    'slow_walker': TravellerProfile(walking_speed=0.83, bike_speed=2.78, max_duration_to_pt=20*60, first_and_last_section_mode=['walking', 'bike', 'bss']),
-    'fast_walker': TravellerProfile(walking_speed=1.67, bike_speed=5, max_duration_to_pt=20*60, first_and_last_section_mode=['walking', 'bike', 'bss']),
-    'stroller': TravellerProfile(walking_speed=1.11, max_duration_to_pt=15*60, first_and_last_section_mode=['walking']),
-    'wheelchair': TravellerProfile(walking_speed=0.83, max_duration_to_pt=20*60, first_and_last_section_mode=['walking'], wheelchair=True),
-    'luggage': TravellerProfile(walking_speed=1.11, max_duration_to_pt=15*60, first_and_last_section_mode=['walking']),
-    'heels': TravellerProfile(walking_speed=1.11, bike_speed=4.17, max_duration_to_pt=15*60, first_and_last_section_mode=['walking', 'bike', 'bss']),
-    'scooter': TravellerProfile(walking_speed=2.22, max_duration_to_pt=15*60, first_and_last_section_mode=['walking']),
-    'cyclist': TravellerProfile(walking_speed=1.39, bike_speed=4.17, max_duration_to_pt=12*60, first_and_last_section_mode=['walking', 'bike', 'bss']),
-    'motorist': TravellerProfile(walking_speed=1.11, car_speed=11.11, max_duration_to_pt=15*60, first_and_last_section_mode=['walking', 'car']),
+    'standard': TravellerProfile(walking_speed=1.39,
+                                 bike_speed=4.17,
+                                 max_duration_to_pt=12*60,
+                                 first_and_last_section_mode=['walking', 'bike', 'bss']),
+
+    'slow_walker': TravellerProfile(walking_speed=0.83,
+                                    bike_speed=2.78,
+                                    max_duration_to_pt=20*60,
+                                    first_and_last_section_mode=['walking', 'bike', 'bss']),
+
+    'fast_walker': TravellerProfile(walking_speed=1.67,
+                                    bike_speed=5,
+                                    max_duration_to_pt=20*60,
+                                    first_and_last_section_mode=['walking', 'bike', 'bss']),
+
+    'stroller': TravellerProfile(walking_speed=1.11,
+                                 max_duration_to_pt=15*60,
+                                 first_and_last_section_mode=['walking']),
+
+    'wheelchair': TravellerProfile(walking_speed=0.83,
+                                   max_duration_to_pt=20*60,
+                                   first_and_last_section_mode=['walking'],
+                                   wheelchair=True),
+
+    'luggage': TravellerProfile(walking_speed=1.11,
+                                max_duration_to_pt=15*60,
+                                first_and_last_section_mode=['walking']),
+
+    'heels': TravellerProfile(walking_speed=1.11,
+                              bike_speed=4.17,
+                              max_duration_to_pt=15*60,
+                              first_and_last_section_mode=['walking', 'bike', 'bss']),
+
+    'scooter': TravellerProfile(walking_speed=2.22,
+                                max_duration_to_pt=15*60,
+                                first_and_last_section_mode=['walking']),
+
+    'cyclist': TravellerProfile(walking_speed=1.39,
+                                bike_speed=4.17,
+                                max_duration_to_pt=12*60,
+                                first_and_last_section_mode=['walking', 'bike', 'bss']),
+
+    'motorist': TravellerProfile(walking_speed=1.11,
+                                 car_speed=11.11,
+                                 max_duration_to_pt=15*60,
+                                 first_section_mode=['walking', 'car'],
+                                 last_section_mode=['walking']),
 }
