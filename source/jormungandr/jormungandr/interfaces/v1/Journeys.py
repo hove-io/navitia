@@ -733,6 +733,7 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
+        override_params_from_traveller_type(args)
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:
             abort(400, message="from argument must contain at least one item")
