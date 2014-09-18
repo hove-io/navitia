@@ -63,7 +63,7 @@ from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
-from jormungandr.travellers_profile import travellers_profile
+from jormungandr.travelers_profile import travelers_profile
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -486,10 +486,10 @@ def compute_regions(args):
 
     return regions
 
-def override_params_from_traveller_type(args):
-    if not args['traveller_type']:
+def override_params_from_traveler_type(args):
+    if not args['traveler_type']:
         return
-    profile = travellers_profile[args['traveller_type']]
+    profile = travelers_profile[args['traveler_type']]
     args['walking_speed'] = profile.walking_speed
     args['bike_speed'] = profile.bike_speed
     args['bss_speed'] = profile.bss_speed
@@ -571,7 +571,7 @@ class Journeys(ResourceUri, ResourceUtc):
                                 type=option_value(modes), action="append")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        parser_get.add_argument("traveller_type", type=option_value(travellers_profile.keys()))
+        parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
 
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
@@ -597,7 +597,7 @@ class Journeys(ResourceUri, ResourceUtc):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
 
-        override_params_from_traveller_type(args)
+        override_params_from_traveler_type(args)
 
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
@@ -733,7 +733,7 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
-        override_params_from_traveller_type(args)
+        override_params_from_traveler_type(args)
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:
             abort(400, message="from argument must contain at least one item")
