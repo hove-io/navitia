@@ -53,17 +53,16 @@ travelers_profile = {
     'standard': TravelerProfile(walking_speed=1.39,
                                  bike_speed=4.17,
                                  max_duration_to_pt=12*60,
-                                 first_and_last_section_mode=['walking', 'bike', 'bss']),
+                                 first_and_last_section_mode=['walking', 'bss']),
 
     'slow_walker': TravelerProfile(walking_speed=0.83,
-                                    bike_speed=2.78,
                                     max_duration_to_pt=20*60,
-                                    first_and_last_section_mode=['walking', 'bike', 'bss']),
+                                    first_and_last_section_mode=['walking']),
 
     'fast_walker': TravelerProfile(walking_speed=1.67,
                                     bike_speed=5,
                                     max_duration_to_pt=20*60,
-                                    first_and_last_section_mode=['walking', 'bike', 'bss']),
+                                    first_and_last_section_mode=['walking', 'bss']),
 
     'stroller': TravelerProfile(walking_speed=1.11,
                                  max_duration_to_pt=15*60,
@@ -81,7 +80,7 @@ travelers_profile = {
     'heels': TravelerProfile(walking_speed=1.11,
                               bike_speed=4.17,
                               max_duration_to_pt=15*60,
-                              first_and_last_section_mode=['walking', 'bike', 'bss']),
+                              first_and_last_section_mode=['walking', 'bss']),
 
     'scooter': TravelerProfile(walking_speed=2.22,
                                 max_duration_to_pt=15*60,
@@ -90,7 +89,8 @@ travelers_profile = {
     'cyclist': TravelerProfile(walking_speed=1.39,
                                 bike_speed=4.17,
                                 max_duration_to_pt=12*60,
-                                first_and_last_section_mode=['walking', 'bike', 'bss']),
+                                first_section_mode=['walking', 'bike'],
+                                last_section_mode=['walking']),
 
     'motorist': TravelerProfile(walking_speed=1.11,
                                  car_speed=11.11,
