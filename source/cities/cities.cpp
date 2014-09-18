@@ -168,7 +168,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
             && (r.role == "outer"  || r.role == "enclave" || r.role == "");
     };
     auto pickable_way = [&](CanalTP::Reference r) {
-        return is_outer_way(r) && explored_idx.find(r.member_id) == explored_idx.end();
+        return is_outer_way(r) && explored_idx.count(r.member_id) == 0;
     };
 
     // We pickup one way
