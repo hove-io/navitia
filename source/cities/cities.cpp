@@ -162,17 +162,13 @@ std::string OSMNode::to_geographic_point() const{
  * Ways are supposed to be order, but they're not always.
  * Also we may have to reverse way before adding them into the polygon
  */
-void OSMRelation::build_polygon(OSMCache& cache, std::vector<u_int64_t> explored_idx) {
-    auto has_been_explored = [&explored_idx](CanalTP::Reference r) {
-        return std::find(std::begin(explored_idx), std::end(explored_idx), r.member_id) != explored_idx.end();
-    };
-
+void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_idx) {
     auto is_outer_way = [](CanalTP::Reference r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
             && (r.role == "outer"  || r.role == "enclave" || r.role == "");
     };
     auto pickable_way = [&](CanalTP::Reference r) {
-        return is_outer_way(r) && !has_been_explored(r);
+        return is_outer_way(r) && explored_idx.find(r.member_id) == explored_idx.end();
     };
 
     // We pickup one way
@@ -180,7 +176,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::vector<u_int64_t> explored
     if (ref == references.end()) {
         return;
     }
-    explored_idx.push_back(ref->member_id);
+    explored_idx.insert(ref->member_id);
     auto it_first_way = cache.ways.find(ref->member_id);
     if (it_first_way == cache.ways.end() || it_first_way->second.nodes.empty()) {
         return;
@@ -212,7 +208,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::vector<u_int64_t> explored
         if (ref == references.end()) {
             return;
         }
-        explored_idx.push_back(ref->member_id);
+        explored_idx.insert(ref->member_id);
         auto next_way = cache.ways[ref->member_id];
         if (next_way.nodes.front()->first != next_node) {
             std::reverse(std::begin(next_way.nodes), std::end(next_way.nodes));
