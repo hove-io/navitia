@@ -63,6 +63,7 @@ from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
+from jormungandr.travelers_profile import travelers_profile
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -485,6 +486,21 @@ def compute_regions(args):
 
     return regions
 
+def override_params_from_traveler_type(args):
+    if not args['traveler_type']:
+        return
+    profile = travelers_profile[args['traveler_type']]
+    args['walking_speed'] = profile.walking_speed
+    args['bike_speed'] = profile.bike_speed
+    args['bss_speed'] = profile.bss_speed
+    args['car_speed'] = profile.car_speed
+    args['max_duration_to_pt'] = profile.max_duration_to_pt
+
+    args['origin_mode'] = profile.first_section_mode
+    args['destination_mode'] = profile.last_section_mode
+
+    args['wheelchair'] = profile.wheelchair
+
 
 class Journeys(ResourceUri, ResourceUtc):
 
@@ -555,6 +571,7 @@ class Journeys(ResourceUri, ResourceUtc):
                                 type=option_value(modes), action="append")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
+        parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
 
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
@@ -562,12 +579,12 @@ class Journeys(ResourceUri, ResourceUtc):
         # manage post protocol (n-m calculation)
         self.parsers["post"] = deepcopy(parser_get)
         parser_post = self.parsers["post"]
-        parser_post.add_argument("details", type=boolean, default=False, location="json") 
+        parser_post.add_argument("details", type=boolean, default=False, location="json")
         for index, elem in enumerate(parser_post.args):
-			if elem.name in ["from", "to"]:
-				parser_post.args[index].type = list
-				parser_post.args[index].dest = elem.name
-			parser_post.args[index].location = "json"
+            if elem.name in ["from", "to"]:
+                parser_post.args[index].type = list
+                parser_post.args[index].dest = elem.name
+            parser_post.args[index].location = "json"
 
     @add_debug_info()
     @clean_links()
@@ -579,6 +596,9 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
+
+        override_params_from_traveler_type(args)
+
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
             args['destination_mode'] = 'bss'
@@ -713,6 +733,7 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
+        override_params_from_traveler_type(args)
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:
             abort(400, message="from argument must contain at least one item")
@@ -764,7 +785,7 @@ class Journeys(ResourceUri, ResourceUtc):
         original_datetime = datetime.strptime(args['original_datetime'], f_datetime)
         new_datetime = self.convert_to_utc(original_datetime)
         args['datetime'] = date_to_timestamp(new_datetime)
-            
+
         api = 'nm_journeys'
 
         response = i_manager.dispatch(args, api, instance_name=self.region)
