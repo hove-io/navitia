@@ -37,6 +37,8 @@ www.navitia.io
 #include <boost/geometry.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/reverse.hpp>
 
 #include "ed/connectors/osm_tags_reader.h"
 #include "ed/connectors/osm2ed_utils.h"
@@ -162,73 +164,82 @@ std::string OSMNode::to_geographic_point() const{
  * Ways are supposed to be order, but they're not always.
  * Also we may have to reverse way before adding them into the polygon
  */
-void OSMRelation::build_polygon(OSMCache& cache) {
-    auto is_outer_way = [](CanalTP::Reference r) { 
+void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids) {
+    auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
-            && (r.role == "outer"  || r.role == "enclave" || r.role == "");
+            && in(r.role, {"outer", "enclave", ""});
     };
-    // We pickup one way
-    auto ref = std::find_if(std::begin(references), std::end(references), is_outer_way);
-    if (ref == references.end()) {
-        return;
-    }
-    auto it_first_way = cache.ways.find(ref->member_id);
-    if (it_first_way == cache.ways.end() || it_first_way->second.nodes.empty()) {
-        return;
-    }
-    polygon_type tmp_polygon;
-    for (auto node : it_first_way->second.nodes) {
-        if (!node->second.is_defined()) {
-            continue;
-        }
-        const auto p = point(float(node->second.lon()), float(node->second.lat()));
-        tmp_polygon.outer().push_back(p);
-    }
-    auto first_node = it_first_way->second.nodes.front()->first;
-    auto next_node = it_first_way->second.nodes.back()->first;
-    // We try to find a closed ring
-    while (first_node != next_node) {
-        // We look for a way that begin or end by the last node
-        ref = std::find_if(std::begin(references), std::end(references),
-                [&](CanalTP::Reference& r) {
-                    if (r.member_id == ref->member_id || !is_outer_way(r)) {
-                        return false;
-                    }
-                    auto it = cache.ways.find(r.member_id);
-                    return it != cache.ways.end() &&
-                            !it->second.nodes.empty() &&
-                        (it->second.nodes.front()->first == next_node ||
-                         it->second.nodes.back()->first == next_node );
-                });
+    auto pickable_way = [&](const CanalTP::Reference& r) {
+        return is_outer_way(r) && explored_ids.count(r.member_id) == 0;
+    };
+    // We need to explore every node because a boundary can be made in several parts
+    while(explored_ids.size() != this->references.size()) {
+        // We pickup one way
+        auto ref = boost::find_if(references, pickable_way);
         if (ref == references.end()) {
-            return;
+            break;
         }
-        auto next_way = cache.ways[ref->member_id];
-        if (next_way.nodes.front()->first != next_node) {
-            std::reverse(std::begin(next_way.nodes), std::end(next_way.nodes));
+        auto it_first_way = cache.ways.find(ref->member_id);
+        if (it_first_way == cache.ways.end() || it_first_way->second.nodes.empty()) {
+            break;
         }
-        for (auto node : next_way.nodes) {
+        auto first_node = it_first_way->second.nodes.front()->first;
+        auto next_node = it_first_way->second.nodes.back()->first;
+        explored_ids.insert(ref->member_id);
+        polygon_type tmp_polygon;
+        for (auto node : it_first_way->second.nodes) {
             if (!node->second.is_defined()) {
                 continue;
             }
             const auto p = point(float(node->second.lon()), float(node->second.lat()));
             tmp_polygon.outer().push_back(p);
         }
-        next_node = next_way.nodes.back()->first;
+
+        // We try to find a closed ring
+        while (first_node != next_node) {
+            // We look for a way that begin or end by the last node
+            ref = boost::find_if(references,
+                    [&](CanalTP::Reference& r) {
+                        if (!pickable_way(r)) {
+                            return false;
+                        }
+                        auto it = cache.ways.find(r.member_id);
+                        return it != cache.ways.end() &&
+                                !it->second.nodes.empty() &&
+                            (it->second.nodes.front()->first == next_node ||
+                             it->second.nodes.back()->first == next_node );
+                    });
+            if (ref == references.end()) {
+                break;
+            }
+            explored_ids.insert(ref->member_id);
+            auto next_way = cache.ways[ref->member_id];
+            if (next_way.nodes.front()->first != next_node) {
+                boost::reverse(next_way.nodes);
+            }
+            for (auto node : next_way.nodes) {
+                if (!node->second.is_defined()) {
+                    continue;
+                }
+                const auto p = point(float(node->second.lon()), float(node->second.lat()));
+                tmp_polygon.outer().push_back(p);
+            }
+            next_node = next_way.nodes.back()->first;
+        }
+        if (tmp_polygon.outer().size() < 2 || ref == references.end()) {
+            break;
+        }
+        const auto front = tmp_polygon.outer().front();
+        const auto back = tmp_polygon.outer().back();
+        // This should not happen, but does some time
+        if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
+            tmp_polygon.outer().push_back(tmp_polygon.outer().front());
+        }
+        polygon.push_back(tmp_polygon);
     }
-    if (tmp_polygon.outer().size() < 2) {
-        return;
+    if ((centre.get<0>() == 0.0 || centre.get<1>() == 0.0) && !polygon.empty()) {
+        bg::centroid(polygon, centre);
     }
-    if (centre.get<0>() == 0.0 || centre.get<1>() == 0.0) {
-        bg::centroid(tmp_polygon, centre);
-    }
-    const auto front = tmp_polygon.outer().front();
-    const auto back = tmp_polygon.outer().back();
-    // This should not happen, but does some time
-    if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
-        tmp_polygon.outer().push_back(tmp_polygon.outer().front());
-    }
-    polygon.push_back(tmp_polygon);
 }
 
 void OSMRelation::build_geometry(OSMCache& cache) {
