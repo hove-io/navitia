@@ -33,6 +33,7 @@ www.navitia.io
 #include <sys/stat.h>
 #include <signal.h>
 #include "type/task.pb.h"
+#include <boost/algorithm/string/join.hpp>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -69,25 +70,38 @@ void MaintenanceWorker::operator()(){
     }
 }
 
+void MaintenanceWorker::handle_task(AmqpClient::Envelope::ptr_t envelope){
+    LOG4CPLUS_TRACE(logger, "task received");
+    pbnavitia::Task task;
+    bool result = task.ParseFromString(envelope->Message()->Body());
+    if(!result){
+        LOG4CPLUS_WARN(logger, "protobuf not valid!");
+        return;
+    }
+    switch(task.action()){
+        case pbnavitia::RELOAD:
+            load(); break;
+        default:
+            LOG4CPLUS_TRACE(logger, "task ignored");
+    }
+}
+
+void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
+    LOG4CPLUS_TRACE(logger, "realtime info received!");
+}
+
 void MaintenanceWorker::listen_rabbitmq(){
-    auto consumer_tag = this->channel->BasicConsume(this->queue_name);
+    std::string task_tag = this->channel->BasicConsume(this->queue_name_task);
+    std::string rt_tag = this->channel->BasicConsume(this->queue_name_rt);
 
     LOG4CPLUS_INFO(logger, "start event loop");
     data_manager.get_data()->is_connected_to_rabbitmq = true;
     while(true){
-        auto envelope = this->channel->BasicConsumeMessage(consumer_tag);
-        LOG4CPLUS_TRACE(logger, "Message received");
-        pbnavitia::Task task;
-        bool result = task.ParseFromString(envelope->Message()->Body());
-        if(!result){
-            LOG4CPLUS_WARN(logger, "protobuf not valid!");
-            continue;
-        }
-        switch(task.action()){
-            case pbnavitia::RELOAD:
-                load(); break;
-            default:
-                LOG4CPLUS_TRACE(logger, "Message ignored");
+        auto envelope = this->channel->BasicConsumeMessage(std::vector<std::string>({task_tag, rt_tag}));
+        if(envelope->ConsumerTag() == task_tag){
+            handle_task(envelope);
+        }else if(envelope->ConsumerTag() == rt_tag){
+            handle_rt(envelope);
         }
     }
 }
@@ -107,9 +121,16 @@ void MaintenanceWorker::init_rabbitmq(){
     this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
     //creation of a tempory queue for this kraken
-    this->queue_name = channel->DeclareQueue("", false, false, true, true);
+    this->queue_name_task = channel->DeclareQueue("", false, false, true, true);
     //binding the queue to the exchange for all task for this instance
-    channel->BindQueue(queue_name, exchange_name, instance_name+".task.*");
+    channel->BindQueue(queue_name_task, exchange_name, instance_name+".task.*");
+
+    this->queue_name_rt = channel->DeclareQueue("", false, false, true, true);
+    //binding the queue to the exchange for all task for this instance
+    LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
+    for(auto topic: conf.rt_topics()){
+        channel->BindQueue(queue_name_rt, exchange_name, topic);
+    }
     LOG4CPLUS_DEBUG(logger, "connected to rabbitmq");
 }
 
