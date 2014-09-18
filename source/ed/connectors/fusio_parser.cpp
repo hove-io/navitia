@@ -973,7 +973,7 @@ ed::types::CommercialMode* GtfsData::get_or_create_default_commercial_mode(Data 
 }
 
 ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & data) {
-    if (default_physical_mode == nullptr) {
+    if (! default_physical_mode ) {
         default_physical_mode = new ed::types::PhysicalMode();
         default_physical_mode->name = "mode physique par défaut";
         default_physical_mode->uri = "default_physical_mode";
