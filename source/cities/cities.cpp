@@ -162,13 +162,13 @@ std::string OSMNode::to_geographic_point() const{
  * Ways are supposed to be order, but they're not always.
  * Also we may have to reverse way before adding them into the polygon
  */
-void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_idx) {
-    auto is_outer_way = [](CanalTP::Reference r) {
+void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids) {
+    auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
             && (r.role == "outer"  || r.role == "enclave" || r.role == "");
     };
-    auto pickable_way = [&](CanalTP::Reference r) {
-        return is_outer_way(r) && explored_idx.count(r.member_id) == 0;
+    auto pickable_way = [&](const CanalTP::Reference& r) {
+        return is_outer_way(r) && explored_ids.count(r.member_id) == 0;
     };
 
     // We pickup one way
@@ -176,7 +176,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
     if (ref == references.end()) {
         return;
     }
-    explored_idx.insert(ref->member_id);
+    explored_ids.insert(ref->member_id);
     auto it_first_way = cache.ways.find(ref->member_id);
     if (it_first_way == cache.ways.end() || it_first_way->second.nodes.empty()) {
         return;
@@ -208,7 +208,7 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
         if (ref == references.end()) {
             return;
         }
-        explored_idx.insert(ref->member_id);
+        explored_ids.insert(ref->member_id);
         auto next_way = cache.ways[ref->member_id];
         if (next_way.nodes.front()->first != next_node) {
             std::reverse(std::begin(next_way.nodes), std::end(next_way.nodes));
@@ -235,8 +235,9 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
         tmp_polygon.outer().push_back(tmp_polygon.outer().front());
     }
     polygon.push_back(tmp_polygon);
-    if (explored_idx.size() != references.size()) {
-        build_polygon(cache, explored_idx);
+    // We end the algorithm when we've explored all nodes
+    if (explored_ids.size() != references.size()) {
+        build_polygon(cache, explored_ids);
     }
 }
 
