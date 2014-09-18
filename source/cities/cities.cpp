@@ -165,7 +165,7 @@ std::string OSMNode::to_geographic_point() const{
 void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids) {
     auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
-            && (r.role == "outer"  || r.role == "enclave" || r.role == "");
+            && in(r.role, {"outer", "enclave", ""});
     };
     auto pickable_way = [&](const CanalTP::Reference& r) {
         return is_outer_way(r) && explored_ids.count(r.member_id) == 0;
