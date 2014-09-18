@@ -104,7 +104,7 @@ struct OSMRelation {
         centre = point(lon, lat);
     }
     void build_geometry(OSMCache& cache);
-    void build_polygon(OSMCache& cache);
+    void build_polygon(OSMCache& cache, std::vector<u_int64_t> explored_idx = std::vector<u_int64_t>());
 };
 
 struct OSMWay {

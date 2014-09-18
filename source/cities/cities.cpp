@@ -162,16 +162,25 @@ std::string OSMNode::to_geographic_point() const{
  * Ways are supposed to be order, but they're not always.
  * Also we may have to reverse way before adding them into the polygon
  */
-void OSMRelation::build_polygon(OSMCache& cache) {
-    auto is_outer_way = [](CanalTP::Reference r) { 
+void OSMRelation::build_polygon(OSMCache& cache, std::vector<u_int64_t> explored_idx) {
+    auto has_been_explored = [&explored_idx](CanalTP::Reference r) {
+        return std::find(std::begin(explored_idx), std::end(explored_idx), r.member_id) != explored_idx.end();
+    };
+
+    auto is_outer_way = [](CanalTP::Reference r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
             && (r.role == "outer"  || r.role == "enclave" || r.role == "");
     };
+    auto pickable_way = [&](CanalTP::Reference r) {
+        return is_outer_way(r) && !has_been_explored(r);
+    };
+
     // We pickup one way
-    auto ref = std::find_if(std::begin(references), std::end(references), is_outer_way);
+    auto ref = std::find_if(std::begin(references), std::end(references), pickable_way);
     if (ref == references.end()) {
         return;
     }
+    explored_idx.push_back(ref->member_id);
     auto it_first_way = cache.ways.find(ref->member_id);
     if (it_first_way == cache.ways.end() || it_first_way->second.nodes.empty()) {
         return;
@@ -191,7 +200,7 @@ void OSMRelation::build_polygon(OSMCache& cache) {
         // We look for a way that begin or end by the last node
         ref = std::find_if(std::begin(references), std::end(references),
                 [&](CanalTP::Reference& r) {
-                    if (r.member_id == ref->member_id || !is_outer_way(r)) {
+                    if (!pickable_way(r)) {
                         return false;
                     }
                     auto it = cache.ways.find(r.member_id);
@@ -203,6 +212,7 @@ void OSMRelation::build_polygon(OSMCache& cache) {
         if (ref == references.end()) {
             return;
         }
+        explored_idx.push_back(ref->member_id);
         auto next_way = cache.ways[ref->member_id];
         if (next_way.nodes.front()->first != next_node) {
             std::reverse(std::begin(next_way.nodes), std::end(next_way.nodes));
@@ -229,6 +239,9 @@ void OSMRelation::build_polygon(OSMCache& cache) {
         tmp_polygon.outer().push_back(tmp_polygon.outer().front());
     }
     polygon.push_back(tmp_polygon);
+    if (explored_idx.size() != references.size()) {
+        build_polygon(cache, explored_idx);
+    }
 }
 
 void OSMRelation::build_geometry(OSMCache& cache) {
