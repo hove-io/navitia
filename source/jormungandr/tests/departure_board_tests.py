@@ -42,7 +42,7 @@ def check_departure_board(schedules, tester, only_time=False):
     is_valid_stop_point(get_not_null(schedule, "stop_point"), depth_check=2)
 
     route = get_not_null(schedule, "route")
-    is_valid_route(route)
+    is_valid_route(route, depth_check=2)
 
     datetimes = get_not_null(schedule, "date_times")
 

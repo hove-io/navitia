@@ -18,20 +18,6 @@ message PTReferential {
     repeated Route routes = 23;
 }
 
-message Place {
-    required string name = 1;
-    required string uri = 2;
-    optional NavitiaType embedded_type = 3;
-    optional StopArea stop_area = 4;
-    optional Poi poi = 5;
-    optional StopPoint stop_point = 6;
-    optional Address address = 7;
-    optional Line line = 9;
-    optional AdministrativeRegion administrative_region = 10;
-    optional int32 distance = 11;
-    optional int32 quality = 12;
-}
-
 message PathItem {
     optional string name = 1;
     optional double length = 2;

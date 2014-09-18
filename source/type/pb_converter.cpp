@@ -321,6 +321,14 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     route->set_name(r->name);
+
+    auto main_destination = r->main_destination();
+    if (main_destination != nt::invalid_idx) {
+        const navitia::type::StopPoint* sp = data.pt_data->stop_points[main_destination];
+
+        fill_pb_placemark(sp, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
+    }
+
     route->set_uri(r->uri);
     for(const auto& message : r->get_applicable_messages(now, action_period)){
         fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);

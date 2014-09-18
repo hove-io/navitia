@@ -467,6 +467,8 @@ place = {
     "id": fields.String(attribute='uri')
 }
 
+route["direction"] = PbField(place)
+
 pagination = {
     "total_result": fields.Integer(attribute="totalResult"),
     "start_page": fields.Integer(attribute="startPage"),
