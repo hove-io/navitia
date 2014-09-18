@@ -177,11 +177,11 @@ void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_id
         // We pickup one way
         auto ref = boost::find_if(references, pickable_way);
         if (ref == references.end()) {
-            return;
+            break;
         }
         auto it_first_way = cache.ways.find(ref->member_id);
         if (it_first_way == cache.ways.end() || it_first_way->second.nodes.empty()) {
-            return;
+            break;
         }
         auto first_node = it_first_way->second.nodes.front()->first;
         auto next_node = it_first_way->second.nodes.back()->first;
