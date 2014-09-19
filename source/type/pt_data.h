@@ -120,8 +120,6 @@ struct PT_Data : boost::noncopyable{
         return find(attribute, std::string(str));
     }
 
-    PT_Data& operator=(PT_Data&& other);
-
     /** Définis les idx des différents objets */
     void index();
 

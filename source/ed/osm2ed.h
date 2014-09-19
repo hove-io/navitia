@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -34,23 +34,78 @@ www.navitia.io
 #include "utils/lotus.h"
 #include "utils/logger.h"
 #include <unordered_map>
+#include <set>
 #include "ed/types.h"
 #include "ed_persistor.h"
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/multi/geometries/multi_polygon.hpp>
+#include <boost/geometry/multi/geometries/multi_point.hpp>
+#include <boost/geometry/geometries/linestring.hpp>
+#include "third_party/RTree/RTree.h"
+
+namespace bg = boost::geometry;
+typedef bg::model::point<float, 2, bg::cs::cartesian> point;
+typedef bg::model::polygon<point, false, false> polygon_type; // ccw, open polygon
+typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
+typedef bg::model::multi_point<point> mpoint_type;
+typedef bg::model::linestring<point> ls_type;
+
+
 
 namespace ed { namespace connectors {
 
+struct OSMRelation;
+struct OSMCache;
 
-struct Node {
-private:
-    // On utilise des int32 pour économiser de la mémoire. C’est les coordonnées * 1e6
-    int32_t ilon;
-    int32_t ilat;
+struct OSMNode {
+    static const uint USED_MORE_THAN_ONCE = 0,
+                      FIRST_OR_LAST = 1;
+    uint64_t osm_id = std::numeric_limits<uint64_t>::max();
+    // these attributes are mutable because this object would be use in a set, and
+    // all object in a set are const, since these attributes are not used in the key we can modify them
+
+    // We use int32_t to save memory, these are coordinates *  factor
+    mutable int32_t ilon = std::numeric_limits<int32_t>::max(),
+                    ilat = std::numeric_limits<int32_t>::max();
+    mutable const OSMRelation* admin = nullptr;
     static constexpr double factor = 1e6;
-public:
-    uint32_t uses;
-    int32_t idx;
 
-    void set_coord(double lon, double lat){
+    OSMNode(uint64_t osm_id) : osm_id(osm_id) {}
+
+    bool operator<(const OSMNode& other) const {
+        return this->osm_id < other.osm_id;
+    }
+
+    // Even if it's const, it modifies the variable used_more_than_once,
+    // cause it's mutable, and doesn't affect the operator <
+    void set_used_more_than_once() const {
+        this->properties[USED_MORE_THAN_ONCE] = true;
+    }
+
+    bool is_defined() const {
+        return ilon != std::numeric_limits<int32_t>::max() &&
+            ilat != std::numeric_limits<int32_t>::max();
+    }
+
+    bool is_used_more_than_once() const {
+        return this->properties[USED_MORE_THAN_ONCE];
+    }
+
+    bool is_used() const {
+        return is_used_more_than_once() || is_first_or_last() || admin != nullptr;
+    }
+
+    bool is_first_or_last() const {
+        return this->properties[FIRST_OR_LAST];
+    }
+
+    void set_first_or_last() const {
+        this->properties[FIRST_OR_LAST] = true;
+    }
+
+    void set_coord(double lon, double lat) const{
         this->ilon = lon * factor;
         this->ilat = lat * factor;
     }
@@ -63,20 +118,50 @@ public:
         return double(this->ilat) / factor;
     }
 
-    Node() : uses(0), idx(-1) {}
-
-    /// Incrémente le nombre d'utilisations, on lui passe l'index qu'il devra avoit
-    /// Retourne vrai si c'est un nouveau nœud (càd utilisé au moins 2 fois et n'avait pas encore d'idx)
-    /// Ca permet d'éviter d'utiliser deux fois le même nœud
-    bool increment_use(int idx){
-        uses++;
-        if(this->idx == -1 && uses > 1){
-            this->idx = idx;
-            return true;
-        } else {
-            return false;
-        }
+    std::string coord_to_string() const {
+        std::stringstream geog;
+        geog << std::setprecision(10) << lon() << " " << lat();
+        return geog.str();
     }
+    std::string to_geographic_point() const;
+private:
+    mutable std::bitset<2> properties = 0;
+};
+
+
+struct OSMRelation {
+    const u_int64_t osm_id;
+    CanalTP::References references;
+    const std::string insee = "",
+                      postal_code = "",
+                      name = "";
+    const uint32_t level = std::numeric_limits<uint32_t>::max();
+
+    // these attributes are mutable because this object would be use in a set, and
+    // all object in a set are const, since these attributes are not used in the key we can modify them
+    mutable mpolygon_type polygon;
+    mutable point centre = point(0.0, 0.0);
+
+    OSMRelation(const u_int64_t osm_id, const std::vector<CanalTP::Reference>& refs,
+                const std::string& insee, const std::string postal_code,
+                const std::string& name, const uint32_t level) :
+        osm_id(osm_id), references(refs), insee(insee),
+        postal_code(postal_code), name(name), level(level) {}
+
+    bool operator <(const OSMRelation& other) const{
+        return this->osm_id < other.osm_id;
+    }
+
+    bool operator <(const u_int64_t other) const {
+        return osm_id < other;
+    }
+
+    void set_centre(float lon, float lat) const {
+        centre = point(lon, lat);
+    }
+
+    void build_geometry(OSMCache& cache) const;
+    void build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids = std::set<u_int64_t>()) const;
 };
 
 struct OSMWay {
@@ -87,92 +172,238 @@ struct OSMWay {
     const static uint8_t FOOT_FWD = 4;
     const static uint8_t FOOT_BWD = 5;
 
-    /// Propriétés du way : est-ce qu'on peut "circuler" dessus
-    std::bitset<8> properties;
+    const u_int64_t osm_id;
 
-    /// Nodes qui composent le way
-    std::vector<uint64_t> refs;
+    // these attributes are mutable because this object would be use in a set, and
+    // all object in a set are const, since these attributes are not used in the key we can modify them
+
+    /// Properties of a way : can we use it
+    mutable std::bitset<8> properties;
+    mutable std::string name = "";
+    mutable std::vector<std::set<OSMNode>::const_iterator> nodes;
+    mutable ls_type ls;
+    mutable const OSMWay* way_ref = nullptr;
+
+    OSMWay(const u_int64_t osm_id) : osm_id(osm_id) {}
+    OSMWay(const u_int64_t osm_id, const std::bitset<8>& properties,
+            const std::string& name) :
+        osm_id(osm_id), properties(properties), name(name) {}
+
+    void add_node(std::set<OSMNode>::const_iterator node) const {
+        nodes.push_back(node);
+        if (node->is_defined()) {
+            ls.push_back(point(node->lon(), node->lat()));
+        }
+    }
+
+    bool operator<(const OSMWay& other) const {
+        return this->osm_id < other.osm_id;
+    }
+
+    void set_properties(const std::bitset<8>& properties) const {
+        this->properties = properties;
+    }
+
+    void set_name(const std::string& name) const {
+        this->name = name;
+    }
+
+    std::string coord_to_string() const {
+        std::stringstream geog;
+        geog << std::setprecision(10);
+        for(auto node : nodes) {
+            geog << node->coord_to_string();
+        }
+        return geog.str();
+    }
+
+    double distance(const double lon, const double lat) const {
+        point p(lon, lat);
+        return distance(p);
+    }
+
+    double distance(point p) const {
+        if (ls.empty()) {
+            return std::numeric_limits<double>::max();
+        }
+        return bg::distance(p, ls);
+    }
+
+    std::set<const OSMRelation*> admins() const {
+        std::set<const OSMRelation*> result;
+        for(auto node : nodes) {
+            if (node->admin != nullptr) {
+                result.insert(node->admin);
+            }
+        }
+        return result;
+    }
 };
 
-struct OSMAdminRef{
-    std::string level;
-    std::string insee;
-    std::string name;
-    std::string postcode;
-    navitia::type::GeographicalCoord coord;
-    CanalTP::References refs;
+struct OSMHouseNumber {
+    const size_t number;
+    const double lon, lat;
+    const OSMWay* way = nullptr;
+    OSMHouseNumber(const size_t number, const double lon, const double lat,
+            const OSMWay* way) : number(number), lon(lon), lat(lat), way(way) {
+    }
 };
 
-/** Structure appelée par parseur OSM PBF */
-struct Visitor{
-    ed::EdPersistor persistor;
-    log4cplus::Logger logger;
-    std::unordered_map<uint64_t,CanalTP::References> references;
-    std::unordered_map<uint64_t, Node> nodes;
-    std::unordered_map<uint64_t, ed::types::HouseNumber> housenumbers;
-    std::unordered_map<uint64_t, OSMAdminRef> OSMAdminRefs;
+struct AssociateStreetRelation {
+    const uint64_t osm_id;
+    const uint64_t way_id = std::numeric_limits<uint64_t>::max();
+    const std::string streetname = "";
 
-    std::unordered_map<uint64_t, ed::types::Poi> pois;
-    std::unordered_map<std::string, ed::types::PoiType> poi_types;
-    std::vector<std::string> properties_to_ignore;
+    AssociateStreetRelation(const uint64_t osm_id, const uint64_t way_id,
+                            const std::string& streetname) :
+        osm_id(osm_id), way_id(way_id), streetname(streetname) {}
 
-    int total_ways;
-    int total_house_number;
+    AssociateStreetRelation(const uint64_t osm_id) : osm_id(osm_id) {}
 
-    int node_idx;
 
-    std::unordered_map<uint64_t, OSMWay> ways;
-    //Pour charger les données administratives
-    //navitia::georef::Levels levellist;
+    bool operator<(const AssociateStreetRelation& other) const {
+        return this->osm_id < other.osm_id;
+    }
+};
 
-    Visitor(const std::string & conn_str) : persistor(conn_str),
-        logger(log4cplus::Logger::getInstance("log")),
-        total_ways(0), total_house_number(0), node_idx(0){}
 
-    void node_callback(uint64_t osmid, double lon, double lat, const CanalTP::Tags & tags);
-    void way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std::vector<uint64_t> &refs);
-    void relation_callback(uint64_t osmid, const CanalTP::Tags & tags, const CanalTP::References & refs);
+typedef std::set<OSMWay>::const_iterator it_way;
+typedef std::map<const OSMRelation*, std::vector<it_way>> rel_ways;
+typedef std::set<OSMRelation>::const_iterator admin_type;
+typedef std::pair<admin_type, double> admin_distance;
 
-    void add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags);
+struct OSMCache {
+    std::set<OSMRelation> relations;
+    std::set<OSMNode> nodes;
+    std::set<OSMWay> ways;
+    std::set<AssociateStreetRelation> associated_streets;
+    std::unordered_map<std::string, rel_ways> way_admin_map;
+    RTree<const OSMRelation*, double, 2> admin_tree;
+    RTree<it_way, double, 2> way_tree;
+    double max_search_distance = 0;
+    size_t NB_PROJ = 0;
 
-    /// Once all the ways and nodes are read, we count how many times a node is used to detect intersections
-    void count_nodes_uses();
+    Lotus lotus;
 
-    /// Calcule la source et cible des edges
+    OSMCache(const std::string& connection_string) : lotus(connection_string) {}
+
+    void build_relations_geometries();
+    const OSMRelation* match_coord_admin(const double lon, const double lat);
+    void match_nodes_admin();
+    void insert_nodes();
+    void insert_ways();
     void insert_edges();
-
-    /// Chargement des adresses
-    void insert_house_numbers();
-
-    /// récupération des coordonnées du noued "admin_centre"
-    navitia::type::GeographicalCoord admin_centre_coord(const CanalTP::References & refs);
-
-    /// à partir des références d'une relation, reconstruit la liste des identifiants OSM ordonnés
-    std::vector<uint64_t> nodes_of_relation(const CanalTP::References & refs) const;
-
-    /// gestion des limites des communes : création des polygons
-    std::string geometry_of_admin(const CanalTP::References & refs) const;
-
-    /// construction des informations administratives
-    void insert_admin();
-
-
-    /// construit les relation d'inclusions entre les objets géographique
-    void build_relation();
- 
-    void fill_PoiTypes();
-    void fill_properties_to_ignore();
-    void fill_pois(const uint64_t osmid, const CanalTP::Tags & tags);
-    void insert_poitypes();
-    void insert_pois();
-    void insert_properties();
-    void set_coord_admin();
-    /// Ajoute le nœud à la base que s’il le mérite :
-    /// 1/ être une intersaction
-    /// 2/ ne pas avoir déjà été inséré
-    void insert_if_needed(uint64_t ref);
-    bool is_property_to_ignore(const std::string& tag);
+    void insert_relations();
+    void build_way_map();
+    void fusion_ways();
+    void flag_nodes();
 };
 
+struct ReadRelationsVisitor {
+    OSMCache& cache;
+    ReadRelationsVisitor(OSMCache& cache) : cache(cache) {}
+
+    void node_callback(uint64_t , double , double , const CanalTP::Tags& ) {}
+    void relation_callback(uint64_t osm_id, const CanalTP::Tags & tags, const CanalTP::References & refs);
+    void way_callback(uint64_t , const CanalTP::Tags& , const std::vector<uint64_t>&) {}
+};
+struct ReadWaysVisitor {
+    // Read references and set if a node is used by a way
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    OSMCache& cache;
+
+    ReadWaysVisitor(OSMCache& cache) : cache(cache) {}
+
+    void node_callback(uint64_t , double , double , const CanalTP::Tags& ) {}
+    void relation_callback(uint64_t , const CanalTP::Tags& , const CanalTP::References& ) {}
+    void way_callback(uint64_t osm_id, const CanalTP::Tags& tags, const std::vector<uint64_t>& nodes);
+};
+
+
+struct ReadNodesVisitor {
+    // Read references and set if a node is used by a way
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    OSMCache& cache;
+
+    ReadNodesVisitor(OSMCache& cache) : cache(cache) {}
+
+    void node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tag);
+    void relation_callback(uint64_t , const CanalTP::Tags& , const CanalTP::References& ) {}
+    void way_callback(uint64_t , const CanalTP::Tags& , const std::vector<uint64_t>&) {}
+};
+
+struct Rect{
+    double min[2];
+    double max[2];
+    Rect() : min{0,0}, max{0,0} {}
+
+    Rect(double lon, double lat) {
+        min[0] = lon;
+        min[1] = lat;
+        max[0] = lon;
+        max[1] = lat;
+    }
+
+    Rect(double a_minX, double a_minY, double a_maxX, double a_maxY){
+        min[0] = a_minX;
+        min[1] = a_minY;
+
+        max[0] = a_maxX;
+        max[1] = a_maxY;
+    }
+};
+
+struct PoiHouseNumberVisitor {
+    const size_t max_inserts_without_bulk = 20000;
+    ed::EdPersistor& persistor;
+    /*const*/ OSMCache& cache;
+    ed::Georef& data;
+    std::vector<OSMHouseNumber> house_numbers;
+    std::set<std::string> properties_to_ignore;
+    size_t n_inserted_pois = 0;
+    size_t n_inserted_house_numbers = 0;
+
+    PoiHouseNumberVisitor(EdPersistor& persistor, /*const*/ OSMCache& cache,
+            Georef& data) :
+        persistor(persistor), cache(cache), data(data)  {
+        data.poi_types =
+         {
+            {"amenity:college" , new ed::types::PoiType(0,  "école")},
+            {"amenity:university" , new ed::types::PoiType(1, "université")},
+            {"amenity:theatre" , new ed::types::PoiType(2, "théâtre")},
+            {"hospital" , new ed::types::PoiType(3, "hôpital")},
+            {"amenity:post_office" , new ed::types::PoiType(4, "bureau de poste")},
+            {"amenity:bicycle_rental" , new ed::types::PoiType(5, "station vls")},
+            {"amenity:bicycle_parking" , new ed::types::PoiType(6, "Parking vélo")},
+            {"amenity:parking" , new ed::types::PoiType(7, "Parking")},
+            {"amenity:police" , new ed::types::PoiType(8, "Police, Gendarmerie")},
+            {"amenity:townhall" , new ed::types::PoiType(9, "Mairie")},
+            {"leisure:garden" , new ed::types::PoiType(10, "Jardin")},
+            {"leisure:park" , new ed::types::PoiType(11, "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale")}
+        };
+        properties_to_ignore.insert("name");
+        properties_to_ignore.insert("amenity");
+        properties_to_ignore.insert("leisure");
+        properties_to_ignore.insert("addr:housenumber");
+        properties_to_ignore.insert("addr:street");
+        properties_to_ignore.insert("addr:city");
+        properties_to_ignore.insert("addr:postcode");
+        properties_to_ignore.insert("addr:country");
+
+        persistor.insert_poi_types(data);
+    }
+
+    void node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tags);
+    void relation_callback(uint64_t , const CanalTP::Tags &, const CanalTP::References &) {}
+    void way_callback(uint64_t osm_id, const CanalTP::Tags &tags, const std::vector<uint64_t> & refs);
+    const OSMWay* find_way_without_name(const double lon, const double lat);
+    const OSMWay* find_way(const CanalTP::Tags& tags, const double lon, const double lat);
+    void fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat);
+    void fill_housenumber(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat);
+    void insert_house_numbers();
+    void finish();
+
+
+};
 }}
 

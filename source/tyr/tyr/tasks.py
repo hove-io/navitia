@@ -35,11 +35,14 @@ from tyr.aggregate_places import aggregate_places
 from flask import current_app
 import glob
 from tyr import celery
-from navitiacommon import models
+from navitiacommon import models, task_pb2
 import logging
 import os
 import zipfile
-from tyr.helper import load_instance_config
+from tyr.helper import load_instance_config, get_instance_logger
+import shutil
+from tyr.launch_exec import launch_exec
+import kombu
 
 
 def type_of_data(filename):
@@ -71,6 +74,23 @@ def type_of_data(filename):
         return 'synonym'
     return None
 
+def family_of_data(type):
+    """
+    return the family type of a data type
+    by example "geopal" and "osm" are in the "streetnework" family
+    """
+    mapping = {
+        'osm': 'streetnetwork', 'geopal': 'streetnetwork',
+        'synonym': 'synonym',
+        'poi': 'poi',
+        'fusio': 'pt', 'gtfs': 'pt',
+        'fare': 'fare'
+    }
+    if type in mapping:
+        return mapping[type]
+    else:
+        return None
+
 
 @celery.task()
 def finish_job(job_id):
@@ -82,7 +102,7 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(files, instance, backup_file, async=True):
+def import_data(files, instance, backup_file, async=True, reload=True):
     """
     import the data contains in the list of 'files' in the 'instance'
 
@@ -90,6 +110,7 @@ def import_data(files, instance, backup_file, async=True):
     :param instance: instance to receive the data
     :param backup_file: If True the files are moved to a backup directory, else they are not moved
     :param async: If True all jobs are run in background, else the jobs are run in sequence the function will only return when all of them are finish
+    :param reload: If True kraken would be reload at the end of the treatment
 
     run the whole data import process:
 
@@ -118,6 +139,7 @@ def import_data(files, instance, backup_file, async=True):
 
         dataset = models.DataSet()
         dataset.type = type_of_data(_file)
+        dataset.family_type = family_of_data(dataset.type)
         if dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file,
@@ -149,7 +171,8 @@ def import_data(files, instance, backup_file, async=True):
         #We pass the job id to each tasks, but job need to be commited for
         #having an id
         actions.append(group(chain(*binarisation), aggregate))
-        actions.append(reload_data.si(instance_config, job.id))
+        if reload:
+            actions.append(reload_data.si(instance_config, job.id))
         actions.append(finish_job.si(job.id))
         if async:
             chain(*actions).delay()
@@ -166,16 +189,31 @@ def update_data():
         files = glob.glob(instance_config.source_directory + "/*")
         import_data(files, instance, backup_file=True)
 
+@celery.task()
+def purge_instance(instance_id, nb_to_keep):
+    instance = models.Instance.query.get(instance_id)
+    logger = get_instance_logger(instance)
+    logger.info('purge of backup directories for %s', instance.name)
+    instance_config = load_instance_config(instance.name)
+    backups = set(glob.glob('{}/*'.format(instance_config.backup_directory)))
+    logger.debug('backups are: %s', backups)
+    loaded = set(os.path.dirname(dataset.name) for dataset in instance.last_datasets(nb_to_keep))
+    logger.debug('loaded  data are: %s', loaded)
+    to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded]
+    logger.info('we remove: %s', to_remove)
+    for path in to_remove:
+        shutil.rmtree(path)
+
+
+
 
 @celery.task()
 def scan_instances():
-    for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] \
-            + '/*.ini'):
+    for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] + '/*.ini'):
         instance_name = os.path.basename(instance_file).replace('.ini', '')
         instance = models.Instance.query.filter_by(name=instance_name).first()
         if not instance:
-            current_app.logger.info('new instances detected: %s',
-                    instance_name)
+            current_app.logger.info('new instances detected: %s', instance_name)
             instance = models.Instance(name=instance_name)
             instance_config = load_instance_config(instance.name)
             instance.is_free = instance_config.is_free
@@ -239,6 +277,23 @@ def load_data(instance_id, data_path):
     import_data(files, instance, backup_file=False, async=False)
 
 
+@celery.task()
+def cities(osm_path):
+    """ launch cities """
+    res = -1
+    try:
+        res = launch_exec("cities", ['-i', osm_path,
+                                      '--connection-string',
+                                      current_app.config['CITIES_DATABASE_URI']],
+                          logging)
+        if res!=0:
+            logging.error('cities failed')
+    except:
+        logging.exception('')
+    logging.info('Import of cities finished')
+    return res
+
+
 @task_postrun.connect
 def close_session(*args, **kwargs):
     # Flask SQLAlchemy will automatically create new sessions for you from
@@ -246,3 +301,22 @@ def close_session(*args, **kwargs):
     # context, this ensures tasks have a fresh session (e.g. session errors
     # won't propagate across tasks)
     models.db.session.remove()
+
+
+@celery.task()
+def heartbeat():
+    """
+    send a heartbeat to all kraken
+    """
+    logging.info('ping krakens!!')
+    with kombu.Connection(current_app.config['CELERY_BROKER_URL']) as connection:
+        instances = models.Instance.query.all()
+        task = task_pb2.Task()
+        task.action = task_pb2.HEARTBEAT
+
+        for instance in instances:
+            config = load_instance_config(instance.name)
+            exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
+            producer = connection.Producer(exchange=exchange)
+            producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
+

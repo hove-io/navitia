@@ -21,3 +21,4 @@ redis==2.9.1
 six==1.6.1
 wsgiref==0.1.2
 kombu==3.0.8
+python-dateutil==1.5

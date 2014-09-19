@@ -94,28 +94,28 @@ void PoiParser::fill_poi(){
             if(itm == this->data.pois.end()){
                 const auto& poi_type = this->data.poi_types.find(row[type_id_c]);
                 if(poi_type != this->data.poi_types.end()){
-                    ed::types::Poi* poi = new ed::types::Poi;
-                    poi->id = this->data.pois.size() + 1;
-                    poi->name = row[name_c];
+                    ed::types::Poi poi;
+                    poi.id = this->data.pois.size() + 1;
+                    poi.name = row[name_c];
                     try{
-                        poi->visible = boost::lexical_cast<bool>(row[visible_c]);
+                        poi.visible = boost::lexical_cast<bool>(row[visible_c]);
                     }catch(boost::bad_lexical_cast ) {
                         LOG4CPLUS_WARN(logger, "Impossible to parse the visible for " + row[id_c] + " " + row[name_c]);
-                        poi->visible = true;
+                        poi.visible = true;
                     }
                     try{
-                        poi->weight = boost::lexical_cast<int>(row[weight_c]);
+                        poi.weight = boost::lexical_cast<int>(row[weight_c]);
                     }catch(boost::bad_lexical_cast ) {
                         LOG4CPLUS_WARN(logger, "Impossible to parse the weight for " + row[id_c] + " " + row[name_c]);
-                        poi->weight = 0;
+                        poi.weight = 0;
                     }
-                    poi->poi_type = poi_type->second;
-                    poi->coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[lon_c]), str_to_double(row[lat_c])));
+                    poi.poi_type = poi_type->second;
+                    poi.coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[lon_c]), str_to_double(row[lat_c])));
                     if (reader.is_valid(address_number_c, row)){
-                        poi->address_number = row[address_number_c];
+                        poi.address_number = row[address_number_c];
                     }
                     if (reader.is_valid(address_name_c, row)){
-                        poi->address_name = row[address_name_c];
+                        poi.address_name = row[address_name_c];
                     }
                     this->data.pois[row[id_c]] = poi;
                 }
@@ -144,7 +144,7 @@ void PoiParser::fill_poi_properties(){
             && reader.is_valid(value_c, row)){
             const auto itm = this->data.pois.find(row[id_c]);
             if(itm != this->data.pois.end()){
-                itm->second->properties[row[key_c]] = row[value_c];
+                itm->second.properties[row[key_c]] = row[value_c];
             }else{
                 LOG4CPLUS_WARN(logger, "Poi "<<row[id_c]<<" not found");
             }

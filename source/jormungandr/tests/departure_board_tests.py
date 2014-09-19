@@ -42,12 +42,11 @@ def check_departure_board(schedules, tester, only_time=False):
     is_valid_stop_point(get_not_null(schedule, "stop_point"), depth_check=2)
 
     route = get_not_null(schedule, "route")
-    is_valid_route(route)
+    is_valid_route(route, depth_check=2)
 
     datetimes = get_not_null(schedule, "date_times")
 
     assert len(datetimes) != 0, "we have to have date_times"
-    #TODO, make that works before merging the time zone
     for dt_wrapper in datetimes:
         dt = dt_wrapper["date_time"]
         if only_time:

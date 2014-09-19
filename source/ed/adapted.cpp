@@ -135,6 +135,7 @@ std::string make_adapted_uri(const nt::VehicleJourney* vj, nt::PT_Data&){
 //duplique un VJ et tout ce qui lui est lié pour construire un VJ adapté
 nt::VehicleJourney* create_adapted_vj(
         nt::VehicleJourney* current_vj, nt::VehicleJourney* theorical_vj,
+        std::vector<nt::StopTime*> impacted_st,
         nt::PT_Data& data){
     //on duplique le VJ
     nt::VehicleJourney* vj_adapted = new nt::VehicleJourney(*current_vj);
@@ -162,37 +163,36 @@ nt::VehicleJourney* create_adapted_vj(
     nt::JourneyPattern* jp = new nt::JourneyPattern(*vj_adapted->journey_pattern);
     data.journey_patterns.push_back(jp);
     vj_adapted->journey_pattern = jp;
-    auto it = std::find(jp->vehicle_journey_list.begin(), jp->vehicle_journey_list.end(), current_vj);
-    if(it != jp->vehicle_journey_list.end()){
-        jp->vehicle_journey_list.erase(it);
-    }
+    jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(vj_adapted);
     jp->uri = vj_adapted->journey_pattern->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_patterns.size());
     //@TODO changer l'uri
 
     //on duplique les journey pattern point
     jp->journey_pattern_point_list = std::vector<nt::JourneyPatternPoint*>();
-    for(auto jpp : current_vj->journey_pattern->journey_pattern_point_list){
+    //On duplique les StopTime
+    vj_adapted->stop_time_list = std::vector<nt::StopTime*>();
+    for(auto jpp : current_vj->journey_pattern->journey_pattern_point_list) {
+        auto it = std::find_if(impacted_st.begin(), impacted_st.end(),
+                               [&](const nt::StopTime* st) {return st->journey_pattern_point == jpp;});
+        if (it != impacted_st.end()) {
+            continue;
+        }
         auto new_jpp = new nt::JourneyPatternPoint(*jpp);
+        new_jpp->order = jp->journey_pattern_point_list.size();
         data.journey_pattern_points.push_back(new_jpp);
         jp->journey_pattern_point_list.push_back(new_jpp);
         new_jpp->journey_pattern = jp;
         //@TODO changer l'uri
         new_jpp->uri = jpp->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_pattern_points.size());
-    }
-
-    //On duplique les StopTime
-    vj_adapted->stop_time_list = std::vector<nt::StopTime*>();
-    for(unsigned int i=0; i<current_vj->stop_time_list.size(); ++i){
-        auto* stop = current_vj->stop_time_list[i];
+        auto* stop = current_vj->stop_time_list[jpp->order];
         nt::StopTime* new_stop = new nt::StopTime(*stop);
         new_stop->vehicle_journey = vj_adapted;
-        new_stop->journey_pattern_point = jp->journey_pattern_point_list[i];
+        new_stop->journey_pattern_point = new_jpp;
 
         vj_adapted->stop_time_list.push_back(new_stop);
         data.stop_times.push_back(new_stop);
     }
-
     return vj_adapted;
 }
 
@@ -263,28 +263,7 @@ std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey,
             vj_adapted = prec_vjs[current_vj];
         }else{
             //si on à jamais utilisé ce vj, on construit un nouveau vj adapté
-            vj_adapted = create_adapted_vj(current_vj, vehicle_journey, data);
-        }
-
-        for(auto* stoptmp : impacted_stop){
-            auto it = std::find_if(vj_adapted->stop_time_list.begin(), vj_adapted->stop_time_list.end(),
-                    [&stoptmp](const nt::StopTime* s1){
-                        return (s1->arrival_time == stoptmp->arrival_time && s1->departure_time == stoptmp->departure_time
-                        && s1->journey_pattern_point->stop_point == stoptmp->journey_pattern_point->stop_point);
-                    });
-            if(it != vj_adapted->stop_time_list.end()){
-                //on ajoute le pointeur du stop à supprimer
-                stop_to_delete.push_back(*it);
-                //on recherche puis supprime le jpp associé au stop
-                auto& jpp_list = vj_adapted->journey_pattern->journey_pattern_point_list;
-                auto jpp_it = std::find(jpp_list.begin(), jpp_list.end(), (*it)->journey_pattern_point);
-                if(jpp_it != jpp_list.end()){
-                    jpp_list.erase(jpp_it);
-                }
-                //on supprime le stop de la liste;
-                //à partir d'ici l'itérateur it n'est plus valide!!!
-                vj_adapted->stop_time_list.erase(it);
-            }
+            vj_adapted = create_adapted_vj(current_vj, vehicle_journey, impacted_stop, data);
         }
         vj_adapted->adapted_validity_pattern->add(current_period.begin().date());
         current_vj->adapted_validity_pattern->remove(current_period.begin().date());
@@ -355,15 +334,9 @@ void AtAdaptedLoader::apply_update_on_vj(nt::VehicleJourney* vehicle_journey,
         const std::set<nt::AtPerturbation>& perturbations,
         nt::PT_Data& data){
     for(nt::AtPerturbation pert : perturbations){
-        if(vehicle_journey->stop_time_list.size() > 0){
+        if(!vehicle_journey->stop_time_list.empty()){
             auto tmp = duplicate_vj(vehicle_journey, pert, data);
             stop_to_delete.insert(stop_to_delete.end(), tmp.begin(), tmp.end());
-        }
-    }
-    //une fois tous les messages traités pour un vj, on renumérote les horaires des vj adapté
-    for(nt::VehicleJourney* vj : vehicle_journey->adapted_vehicle_journey_list){
-        for(unsigned int i=0; i < vj->stop_time_list.size(); i++){
-            vj->stop_time_list[i]->journey_pattern_point->order = i;
         }
     }
 }
@@ -515,7 +488,6 @@ void AtAdaptedLoader::apply(
     init_map(data);
     unsigned int vj_count = data.vehicle_journeys.size();
     dispatch_perturbations(perturbations, data);
-
     std::cout << "update_vj_map: " << update_vj_map.size() << std::endl;
     std::cout << "duplicate_vj_map: " << duplicate_vj_map.size() << std::endl;
 

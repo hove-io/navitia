@@ -31,6 +31,15 @@ Priority: optional
 Description: Navitia-Ed
 
 
+Package: navitia-cities
+Architecture: amd64
+Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
+Depends: alembic, ${shlibs:Depends}, ${misc:Depends}
+Section: devel
+Priority: optional
+Description: Navitia-cities
+
+
 Package: navitia-common
 Build-Depends:
     dh-python

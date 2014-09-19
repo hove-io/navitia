@@ -110,6 +110,88 @@ class TestJourneys(AbstractTestFixture):
         #Note: we need to mock the kraken instances to check that only one call has been made and not 2
         #(only one for bss because walking should not have been added since it dupplicate bss)
 
+    """
+    test on date format
+    """
+    def test_journeys_no_date(self):
+        """
+        giving no date, we should have a response
+        BUT, since without date we take the current date, it will not be in the production period,
+        so we have a 'not un production period error'
+        """
+
+        query = "journeys?from={from_coord}&to={to_coord}"\
+            .format(from_coord=s_coord, to_coord=r_coord)
+
+        response, status_code = self.query_no_assert("v1/coverage/main_routing_test/" + query)
+
+        assert status_code != 200, "the response should not be valid"
+
+        assert response['error']['id'] == "date_out_of_bounds"
+        assert response['error']['message'] == "date is not in data production period"
+
+    def test_journeys_date_no_second(self):
+        """giving no second in the date we should not be a problem"""
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T0800")
+
+        response = self.query_region(query)
+        is_valid_journey_response(response, self.tester, journey_basic_query)
+
+        #and the second should be 0 initialized
+        journeys = get_not_null(response, "journeys")
+        assert journeys[0]["requested_date_time"] == "20120614T080000"
+
+    def test_journeys_date_no_minute_no_second(self):
+        """giving no minutes and no second in the date we should not be a problem"""
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T08")
+
+        response = self.query_region(query)
+        is_valid_journey_response(response, self.tester, journey_basic_query)
+
+        #and the second should be 0 initialized
+        journeys = get_not_null(response, "journeys")
+        assert journeys[0]["requested_date_time"] == "20120614T080000"
+
+    def test_journeys_date_too_long(self):
+        """giving an invalid date (too long) should be a problem"""
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T0812345")
+
+        response, status_code = self.query_no_assert("v1/coverage/main_routing_test/" + query)
+
+        assert not 'journeys' in response
+        assert 'message' in response
+        assert response['message'] == "Unable to parse datetime, unknown string format"
+
+    def test_journeys_date_invalid(self):
+        """giving the date with mmsshh (56 45 12) should be a problem"""
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="20120614T564512")
+
+        response, status_code = self.query_no_assert("v1/coverage/main_routing_test/" + query)
+
+        assert not 'journeys' in response
+        assert 'message' in response
+        assert response['message'] == "Unable to parse datetime, hour must be in 0..23"
+
+    def test_journeys_date_valid_not_zeropadded(self):
+        """giving the date with non zero padded month should be a problem"""
+
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={d}"\
+            .format(from_coord=s_coord, to_coord=r_coord, d="2012614T081025")
+
+        response, status_code = self.query_no_assert("v1/coverage/main_routing_test/" + query)
+
+        assert not 'journeys' in response
+        assert 'message' in response
+        assert response['message'] == "Unable to parse datetime, year is out of range"
+
 @dataset([])
 class TestJourneysNoRegion(AbstractTestFixture):
     """

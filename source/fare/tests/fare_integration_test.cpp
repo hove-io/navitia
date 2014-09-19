@@ -51,6 +51,11 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     ed::builder b("20120614");
     b.vj("RATP", "A", "11111111", "", true, "")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
     b.vj("RATP", "B", "11111111", "", true, "")("stop4", 8000, 8050)("stop2", 8300, 8350)("stop5", 8400, 8450);
+    b.connection("stop1", "stop1", 120);
+    b.connection("stop2", "stop2", 120);
+    b.connection("stop3", "stop3", 120);
+    b.connection("stop4", "stop4", 120);
+    b.connection("stop5", "stop5", 120);
     b.generate_dummy_basis();
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -133,6 +138,11 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     ed::builder b("20120614");
     b.vj("RATP", "A", "11111111", "", true, "")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
     b.vj("RATP", "B", "11111111", "", true, "")("stop4", 8000, 8050)("stop2", 8300, 8350)("stop5", 8400, 8450);
+    b.connection("stop1", "stop1", 120);
+    b.connection("stop2", "stop2", 120);
+    b.connection("stop3", "stop3", 120);
+    b.connection("stop4", "stop4", 120);
+    b.connection("stop5", "stop5", 120);
     b.generate_dummy_basis();
     b.data->pt_data->index();
     b.data->build_raptor();

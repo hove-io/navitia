@@ -18,20 +18,6 @@ message PTReferential {
     repeated Route routes = 23;
 }
 
-message Place {
-    required string name = 1;
-    required string uri = 2;
-    optional NavitiaType embedded_type = 3;
-    optional StopArea stop_area = 4;
-    optional Poi poi = 5;
-    optional StopPoint stop_point = 6;
-    optional Address address = 7;
-    optional Line line = 9;
-    optional AdministrativeRegion administrative_region = 10;
-    optional int32 distance = 11;
-    optional int32 quality = 12;
-}
-
 message PathItem {
     optional string name = 1;
     optional double length = 2;
@@ -64,6 +50,8 @@ enum SectionType {
     BSS_RENT = 8;
     BSS_PUT_BACK = 9;
     CROW_FLY = 10;
+    PARK = 11;
+    LEAVE_PARKING = 12;
 }
 
 enum TransferType {
@@ -243,7 +231,7 @@ message Table {
 message RouteSchedule {
     required Table table = 1;
     required PtDisplayInfo pt_display_informations = 2;
-//    required Route route = 2;
+    optional GeoJson geojson = 3;
 }
 
 message Passage {
@@ -308,11 +296,12 @@ message Error{
         bad_format = 5;
         no_origin = 6;
         no_destination = 7;
-        no_origin_nor_destionation = 8;
+        no_origin_nor_destination = 8;
         no_solution = 9;
         unknown_object = 10;
         service_unavailable = 11;
         invalid_protobuf_request = 12;
+        internal_error = 13;
     }
     optional error_id id = 1;
     optional string message = 2;

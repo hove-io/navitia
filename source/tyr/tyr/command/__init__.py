@@ -33,3 +33,6 @@ from tyr.command.at_reloader import AtReloader
 from tyr.command.reload_kraken import ReloadKrakenCommand
 from tyr.command.build_data import BuildDataCommand
 from tyr.command.load_data import LoadDataCommand
+import tyr.command.purge
+import tyr.command.cities
+import tyr.command.import_last_dataset

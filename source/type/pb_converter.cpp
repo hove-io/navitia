@@ -296,6 +296,22 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
     }
 }
 
+void fill_pb_object(const timetables::Thermometer* thermometer,
+        const nt::Data& data, pbnavitia::GeoJson* geojson) {
+    double length = 0;
+    const nt::StopPoint* prev_sp = nullptr;
+    for(auto idx : thermometer->get_thermometer()) {
+        auto stop_point = data.pt_data->stop_points[idx];
+        if (prev_sp != nullptr) {
+            length += prev_sp->coord.distance_to(stop_point->coord);
+        }
+        auto coord = geojson->add_coordinates();
+        coord->set_lon(stop_point->coord.lon());
+        coord->set_lat(stop_point->coord.lat());
+        prev_sp = stop_point;
+    }
+    geojson->set_length(length);
+}
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
                     pbnavitia::Route* route, int max_depth,
@@ -305,21 +321,15 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
 
     route->set_name(r->name);
+
+    auto main_destination = r->main_destination();
+    if (main_destination != nt::invalid_idx) {
+        const navitia::type::StopPoint* sp = data.pt_data->stop_points[main_destination];
+
+        fill_pb_placemark(sp, data, route->mutable_direction(), max_depth - 1, now, action_period, show_codes);
+    }
+
     route->set_uri(r->uri);
-    if(depth > 0 && r->line != nullptr) {
-        fill_pb_object(r->line, data, route->mutable_line(), depth-1,
-                       now, action_period, show_codes);
-    }
-
-    if(depth > 2) {
-        auto thermometer = timetables::Thermometer();
-        thermometer.generate_thermometer(r);
-        for(auto idx : thermometer.get_thermometer()) {
-            auto stop_point = data.pt_data->stop_points[idx];
-            fill_pb_object(stop_point, data, route->add_stop_points(), depth-1, now, action_period, show_codes);
-        }
-    }
-
     for(const auto& message : r->get_applicable_messages(now, action_period)){
         fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
     }
@@ -327,6 +337,24 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
     if(show_codes) {
         for(auto type_value : r->codes) {
             fill_codes(type_value.first, type_value.second, route->add_codes());
+        }
+    }
+    if (depth == 0) {
+        return;
+    }
+    if(r->line != nullptr) {
+        fill_pb_object(r->line, data, route->mutable_line(), depth-1,
+                       now, action_period, show_codes);
+    }
+
+    auto thermometer = timetables::Thermometer();
+    thermometer.generate_thermometer(r);
+    fill_pb_object(&thermometer, data, route->mutable_geojson());
+    if (depth>2) {
+        for(auto idx : thermometer.get_thermometer()) {
+            auto stop_point = data.pt_data->stop_points[idx];
+                fill_pb_object(stop_point, data, route->add_stop_points(), depth-1,
+                        now, action_period, show_codes);
         }
     }
 }
@@ -787,7 +815,7 @@ const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& d
         const auto poi_idx = pair.first;
         const auto poi = data.geo_ref->pois[poi_idx];
         const auto poi_type = data.geo_ref->poitypes[poi->poitype_idx];
-        if (poi_type->uri == "poi_type:bicycle_rental") {
+        if (poi_type->uri == "poi_type:amenity:bicycle_rental") {
             vls = poi;
             break;
         }
@@ -852,6 +880,12 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
         break;
     case georef::PathItem::TransportCaracteristic::BssPutBack:
         section->set_type(pbnavitia::BSS_PUT_BACK);
+        break;
+    case georef::PathItem::TransportCaracteristic::CarPark:
+        section->set_type(pbnavitia::PARK);
+        break;
+    case georef::PathItem::TransportCaracteristic::CarLeaveParking:
+        section->set_type(pbnavitia::LEAVE_PARKING);
         break;
     default:
         throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
@@ -1288,14 +1322,19 @@ void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,
     }
 }
 
-void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& ,
-                    pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey, int ,
-                    const pt::ptime& , const pt::time_period& )
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data&, const std::vector<const type::StopTime*>& stop_times,
+                    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey, int,
+                    const pt::ptime&, const pt::time_period&)
 {
     if(vj == nullptr)
-        return ;
+        return;
     add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
-    add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
+    if(stop_times.empty()){
+        add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
+    }else{
+        bool time_estimated = stop_times.front()->date_time_estimated() || stop_times.back()->date_time_estimated();
+        add_info_vehicle_journey->set_has_date_time_estimated(time_estimated);
+    }
 }
 
 

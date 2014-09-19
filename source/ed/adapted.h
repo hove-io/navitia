@@ -49,7 +49,7 @@ std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey, con
 
 std::string make_adapted_uri(const nt::VehicleJourney* vj, const nt::PT_Data& data);
 
-nt::VehicleJourney* create_adapted_vj(nt::VehicleJourney* current_vj, nt::VehicleJourney* theorical_vj,  nt::PT_Data& data);
+nt::VehicleJourney* create_adapted_vj(nt::VehicleJourney* current_vj, nt::VehicleJourney* theorical_vj, std::vector<navitia::type::StopTime *> impacted_st,  nt::PT_Data& data);
 std::pair<bool, nt::VehicleJourney*> find_reference_vj(types::VehicleJourney* vehicle_journey, int day_index);
 
 boost::posix_time::time_period build_stop_period(const nt::StopTime& stop, const boost::gregorian::date& date);

@@ -61,6 +61,19 @@ struct EdPersistor{
     void clean_synonym();
     void persist_synonym(const std::map<std::string, std::string>& data);
 
+    /// Données Georef
+    void insert_admins(const ed::Georef& data);
+    void insert_ways(const ed::Georef& data);
+    void insert_nodes(const ed::Georef& data);
+    void insert_house_numbers(const ed::Georef& data);
+    void insert_edges(const ed::Georef& data);
+    void build_relation_way_admin(const ed::Georef& data);
+
+    /// Données POI
+    void insert_poi_types(const ed::Georef& data);
+    void insert_pois(const ed::Georef& data);
+    void insert_poi_properties(const ed::Georef& data);
+
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
     void insert_sa_sp_properties(const ed::Data& data);
@@ -105,18 +118,7 @@ private:
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
 
-    /// Données Georef
-    void insert_admins(const ed::Georef& data);
-    void insert_ways(const ed::Georef& data);
-    void insert_nodes(const ed::Georef& data);
-    void insert_house_numbers(const ed::Georef& data);
-    void insert_edges(const ed::Georef& data);
-    void build_relation_way_admin(const ed::Georef& data);
-
-    /// Données POI
-    void insert_poi_types(const ed::Georef& data);
-    void insert_pois(const ed::Georef& data);
-    void insert_poi_properties(const ed::Georef& data);
+    void compute_bounding_shape();
 
     std::string to_geographic_point(const navitia::type::GeographicalCoord& coord) const;
 

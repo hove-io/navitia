@@ -35,10 +35,11 @@ from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, additional_informations_vj, UrisToLinks, error, \
-    enum_type, SplitDateTime
+    enum_type, SplitDateTime, GeoJson
 from ResourceUri import ResourceUri, complete_links
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
+from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
 from flask.ext.restful.types import natural, boolean
 
@@ -53,7 +54,7 @@ class Schedules(ResourceUri):
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("filter", type=str)
-        parser_get.add_argument("from_datetime", type=str,
+        parser_get.add_argument("from_datetime", type=date_time_format,
                                 description="The datetime from which you want\
                                 the schedules")
         parser_get.add_argument("duration", type=int, default=3600 * 24,
@@ -93,8 +94,11 @@ class Schedules(ResourceUri):
             self.collection = 'schedules'
             args["filter"] = self.get_filter(uri.split("/"))
             self.region = i_manager.get_region(region, lon, lat)
+        #@TODO: Change to timestamp
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
+        else:
+            args["from_datetime"] = args["from_datetime"].strftime("%Y%m%dT%H%M%S")
         timezone.set_request_timezone(self.region)
 
         return i_manager.dispatch(args, self.endpoint,
@@ -118,7 +122,6 @@ header = {
     "additional_informations": additional_informations_vj(),
     "links": UrisToLinks()
 }
-
 table_field = {
     "rows": fields.List(fields.Nested(row)),
     "headers": fields.List(fields.Nested(header))
@@ -127,7 +130,8 @@ table_field = {
 route_schedule_fields = {
     "table": PbField(table_field),
     "display_informations": PbField(display_informations_route,
-                                    attribute='pt_display_informations')
+                                    attribute='pt_display_informations'),
+    "geojson" : GeoJson()
 }
 
 route_schedules = {

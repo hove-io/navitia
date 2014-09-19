@@ -37,20 +37,103 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <pqxx/pqxx>
 #include "utils/exception.h"
 #include "ed_reader.h"
 #include "type/data.h"
 #include "utils/init.h"
+#include "utils/functions.h"
+#include "type/meta_data.h"
 
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
+namespace georef = navitia::georef;
+
+// A functor that first asks to GeoRef the admins of coord, and, if
+// GeoRef found nothing, asks to the cities database.
+struct FindAdminWithCities {
+    typedef std::unordered_map<std::string, navitia::georef::Admin*> AdminMap;
+    typedef std::vector<georef::Admin*> result_type;
+
+    std::shared_ptr<pqxx::connection> conn;
+    georef::GeoRef& georef;
+    AdminMap& admin_by_insee_code;
+    size_t nb_call = 0;
+    size_t nb_uninitialized = 0;
+    size_t nb_georef = 0;
+    size_t nb_admin_added = 0;
+    std::map<size_t, size_t> cities_stats;// number of response for size of the result
+
+    FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr, AdminMap& m):
+        conn(std::make_shared<pqxx::connection>(connection_string)),
+        georef(gr),
+        admin_by_insee_code(m)
+        {}
+
+    ~FindAdminWithCities() {
+        if (nb_call == 0) return;
+
+        auto log = log4cplus::Logger::getInstance("ed2nav::FindAdminWithCities");
+        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_call << " calls");
+        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_uninitialized
+                       << " calls with uninitialized or zeroed coord");
+        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_georef << " GeoRef responses");
+        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_admin_added << " admins added using cities");
+        for (const auto& elt: cities_stats) {
+            LOG4CPLUS_INFO(log, "FindAdminWithCities: "
+                           << elt.second << " cities responses with "
+                           << elt.first << " admins.");
+        }
+    }
+
+    result_type operator()(const navitia::type::GeographicalCoord& c) {
+        ++nb_call;
+
+        if (!c.is_initialized()) {++nb_uninitialized; return {};}
+
+        const auto &georef_res = georef.find_admins(c);
+        if (!georef_res.empty()) {++nb_georef; return georef_res;}
+
+        std::stringstream request;
+        request << "SELECT uri, name, insee, level, post_code, "
+                << "ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat "
+                << "FROM administrative_regions "
+                << "WHERE ST_DWithin(ST_GeographyFromText('POINT("
+                << std::setprecision(16) << c.lon() << " " << c.lat() << ")'), boundary, 0)";
+        pqxx::work work(*conn);
+        pqxx::result result = work.exec(request);
+        result_type res;
+        for (auto it = result.begin(); it != result.end(); ++it) {
+            navitia::georef::Admin*& admin =
+                admin_by_insee_code[it["insee"].as<std::string>()];
+            if (!admin) {
+                georef.admins.push_back(new navitia::georef::Admin());
+                admin = georef.admins.back();
+                admin->comment = "from cities";
+                it["uri"].to(admin->uri);
+                it["name"].to(admin->name);
+                it["insee"].to(admin->insee);
+                it["level"].to(admin->level);
+                it["post_code"].to(admin->post_code);
+                admin->coord.set_lon(it["lon"].as<double>());
+                admin->coord.set_lat(it["lat"].as<double>());
+                admin->idx = georef.admins.size() - 1;
+                admin->from_original_dataset = false;
+                ++nb_admin_added;
+            }
+            res.push_back(admin);
+        }
+        ++cities_stats[res.size()];
+        return res;
+    }
+};
 
 int main(int argc, char * argv[])
 {
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
-    std::string output, connection_string, region_name;
+    std::string output, connection_string, region_name, cities_connection_string;
     double min_non_connected_graph_ratio;
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -65,7 +148,9 @@ int main(int argc, char * argv[])
          po::value<double>(&min_non_connected_graph_ratio)->default_value(0.1),
          "min ratio for the size of non connected graph")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
-         "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia");
+         "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia")
+        ("cities-connection-string", po::value<std::string>(&cities_connection_string)->default_value(""),
+         "cities database connection parameters: host=localhost user=navitia dbname=cities password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -102,6 +187,12 @@ int main(int argc, char * argv[])
     now = start = pt::microsec_clock::local_time();
 
     ed::EdReader reader(connection_string);
+
+    if (!cities_connection_string.empty()) {
+        data.find_admins = FindAdminWithCities(
+            cities_connection_string, *data.geo_ref, reader.admin_by_insee_code);
+    }
+
     try {
         reader.fill(data, min_non_connected_graph_ratio);
     }
@@ -113,6 +204,7 @@ int main(int argc, char * argv[])
 
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
     data.complete();
+    data.meta->publication_date = pt::microsec_clock::local_time();
 
     LOG4CPLUS_INFO(logger, "line: " << data.pt_data->lines.size());
     LOG4CPLUS_INFO(logger, "route: " << data.pt_data->routes.size());

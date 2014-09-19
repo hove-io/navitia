@@ -70,7 +70,7 @@ inline map_by_mode<map_by_mode<bool>> create_from_allowedlist(map_by_mode<std::v
 const auto allowed_transportation_mode = create_from_allowedlist({{{
                                                                 {type::Mode_e::Walking}, //for walking, only walking is allowed
                                                                 {type::Mode_e::Bike}, //for biking, only bike
-                                                                {type::Mode_e::Car}, //for car, only car is allowed (for the moment, to handle parking we could allow walking)
+                                                                {type::Mode_e::Car, type::Mode_e::Walking}, //for car, only car and walking is allowed
                                                                 {type::Mode_e::Walking, type::Mode_e::Bike} //for vls, walking and bike is allowed
                                                           }}});
 
@@ -242,20 +242,16 @@ struct target_visitor : public boost::dijkstra_visitor<> {
 struct distance_visitor : public boost::dijkstra_visitor<> {
     navitia::time_duration max_duration;
     const std::vector<navitia::time_duration>& durations;
-    SpeedDistanceCombiner comb;
 
-    distance_visitor(navitia::time_duration max_dur, const std::vector<navitia::time_duration> & dur, float speed_factor) :
-        max_duration(max_dur), durations(dur), comb(speed_factor){}
+    distance_visitor(time_duration max_dur, const std::vector<time_duration>& dur):
+        max_duration(max_dur), durations(dur) {}
 
     /*
-     * we don't want the dijskstra to update the distance over the limit,
-     * so we have to check it before the finish_vertex call_back
+     * stop when we can't find any vertex such that distances[v] <= max_duration
      */
-    template <typename graph_type>
-    void examine_edge(edge_t e, const graph_type& g) {
-        assert (durations[boost::source(e, g)] != bt::pos_infin);
-
-        if (comb(durations[boost::source(e, g)], g[e].duration) > max_duration)
+    template<typename G>
+    void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G&) {
+        if (durations[u] > max_duration)
             throw DestinationFound();
     }
 };

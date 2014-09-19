@@ -153,13 +153,13 @@ struct Georef{
     std::unordered_map<std::string, types::Node* > nodes;
     std::unordered_map<std::string, types::Edge* > edges;
     std::unordered_map<std::string, types::Way* > ways;
-    std::unordered_map<std::string, types::HouseNumber* > house_numbers;
+    std::unordered_map<std::string, types::HouseNumber> house_numbers;
     std::unordered_map<std::string, types::Admin *> admins;
                       // Old uri way, New uri way
     std::unordered_map<std::string, types::Way*> fusion_ways;
 
     std::unordered_map<std::string, types::PoiType *> poi_types;
-    std::unordered_map<std::string, types::Poi *> pois;
+    std::unordered_map<std::string, types::Poi> pois;
     ~Georef();
 };
 

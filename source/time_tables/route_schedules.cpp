@@ -171,7 +171,7 @@ route_schedule(const std::string& filter,
             pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
             pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = header->mutable_add_info_vehicle_journey();
             fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
-            fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
+            fill_pb_object(vj, d, {}, add_info_vehicle_journey, 0, now, action_period);
         }
 
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
@@ -192,6 +192,7 @@ route_schedule(const std::string& filter,
                 }
             }
         }
+        fill_pb_object(&thermometer, d, schedule->mutable_geojson());
     }
     auto pagination = handler.pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);

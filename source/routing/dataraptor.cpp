@@ -102,6 +102,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
         for(unsigned int i=0; i < journey_pattern->journey_pattern_point_list.size(); ++i) {
             std::vector<type::StopTime*> vec_st;
             for(const type::VehicleJourney* vj : journey_pattern->vehicle_journey_list) {
+                assert(vj->stop_time_list[i]->journey_pattern_point == journey_pattern->journey_pattern_point_list[i]);
                 vec_st.push_back(vj->stop_time_list[i]);
             }
             std::sort(vec_st.begin(), vec_st.end(),

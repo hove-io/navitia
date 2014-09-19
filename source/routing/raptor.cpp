@@ -113,10 +113,6 @@ void RAPTOR::foot_path(const Visitor & v) {
             continue;
         }
         const type::StopPoint* stop_point = data.pt_data->journey_pattern_points[best_jpp]->stop_point;
-        DateTime best_arrival = working_labels[best_jpp].dt_pt;
-        // We mark all the journey pattern point of this stop point with its datetime + 2 minutes
-        const DateTime best_departure = v.combine(best_arrival, 120);
-        mark_all_jpp_of_sp(stop_point, best_departure, best_jpp, working_labels, v);
 
         // Now we apply all the connections
         const pair_int & index = (v.clockwise()) ? data.dataRaptor->footpath_index_forward[stop_point->idx] :
@@ -202,7 +198,6 @@ void RAPTOR::init(Solutions departs,
     }
 }
 
-
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
                     const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
@@ -253,6 +248,42 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     return result;
 }
 
+std::vector<Path>
+RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &departures,
+					    const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
+						const DateTime &departure_datetime,
+						bool disruption_active, bool allow_odt,
+						const DateTime &bound,
+						const uint32_t max_transfers,
+						const type::AccessibiliteParams & accessibilite_params,
+						const std::vector<std::string> & forbidden_uri,
+						bool clockwise) {
+	std::vector<Path> result;
+	set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri, disruption_active, allow_odt);
+	
+	auto n_calc_dep = clockwise ? departures : arrivals;
+	
+	std::vector<std::pair<type::idx_t, navitia::time_duration> > calc_dep;
+	for(auto item : n_calc_dep)
+		for (auto subitem : item.second)
+			calc_dep.push_back(subitem);
+			
+	auto calc_dep_solutions = get_solutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
+	clear(clockwise, bound);
+	init(calc_dep_solutions, {}, bound, clockwise); // no exit condition (should be improved)
+
+	boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
+
+	auto m_points = clockwise ? arrivals : departures;
+
+	for(auto item : m_points) {
+		auto calc_dest = item.second;
+		auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
+		result.insert(result.end(), tmp.begin(), tmp.end());
+	}
+
+	return result;
+}
 
 void
 RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures_,
@@ -446,7 +477,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                                accessibilite_params.vehicle_properties,
                                                visitor.clockwise(), disruption_active, data);
 
-                        if(tmp_st_dt.first != nullptr && (boarding == nullptr || tmp_st_dt.first != *it_st)) {
+                        if(tmp_st_dt.first != nullptr && (boarding == nullptr || tmp_st_dt.first != *it_st || tmp_st_dt.second != workingDt)) {
                             boarding = jpp;
                             it_st = visitor.first_stoptime(tmp_st_dt.first);
                             workingDt = tmp_st_dt.second;

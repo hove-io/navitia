@@ -28,24 +28,22 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import calendar
 import logging
-
-from flask import Flask, request, url_for
+from flask import Flask, request, url_for, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
-from jormungandr.instance_manager import choose_best_instance
+from jormungandr.instance_manager import instances_comparator
 from jormungandr import authentification
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
-    generic_message
+    generic_message, GeoJson
 
-from jormungandr.interfaces.parsers import option_value
+from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
 import datetime
@@ -64,10 +62,10 @@ from datetime import datetime
 from collections import defaultdict
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
+from copy import deepcopy
+from jormungandr.travelers_profile import travelers_profile
 
 f_datetime = "%Y%m%dT%H%M%S"
-
-
 class SectionLinks(fields.Raw):
 
     def output(self, key, obj):
@@ -118,41 +116,6 @@ class TicketLinks(fields.Raw):
         return response
 
 
-class GeoJson(fields.Raw):
-
-    def __init__(self, **kwargs):
-        super(GeoJson, self).__init__(**kwargs)
-
-    def output(self, key, obj):
-        coords = []
-        if obj.type == response_pb2.STREET_NETWORK:
-            try:
-                if obj.HasField("street_network"):
-                    coords = obj.street_network.coordinates
-                else:
-                    return None
-            except ValueError:
-                return None
-        elif obj.type == response_pb2.PUBLIC_TRANSPORT:
-            coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
-        elif obj.type == response_pb2.TRANSFER:
-            coords.append(obj.origin.stop_point.coord)
-            coords.append(obj.destination.stop_point.coord)
-        else:
-            return None
-
-        response = {
-            "type": "LineString",
-            "coordinates": [],
-            "properties": [{
-                "length": 0 if not obj.HasField("length") else obj.length
-            }]
-        }
-        for coord in coords:
-            response["coordinates"].append([coord.lon, coord.lat])
-        return response
-
-
 class section_type(enum_type):
 
     def if_on_demand_stop_time(self, stop):
@@ -187,8 +150,6 @@ class section_place(PbField):
             return None
         else:
             return super(PbField, self).output(key, obj)
-
-
 section = {
     "type": section_type(),
     "id": fields.String(),
@@ -246,7 +207,6 @@ ticket = {
     "cost": NonNullNested(cost),
     "links": TicketLinks(attribute="section_id")
 }
-
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
@@ -261,6 +221,37 @@ def dt_represents(value):
         return True
     else:
         raise ValueError("Unable to parse datetime_represents")
+
+
+
+class add_debug_info(object):
+    """
+    display info stored in g for the debug
+
+    must be called after the transformation from protobuff to dict
+    """
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+
+            response = objects[0]
+
+            def get_debug():
+                if not 'debug' in response:
+                    response['debug'] = {}
+                return response['debug']
+
+            if hasattr(g, 'errors_by_region'):
+                get_debug()['errors_by_region'] = {}
+                for region, er in g.errors_by_region.iteritems():
+                    get_debug()['errors_by_region'][region] = er.message
+
+            if hasattr(g, 'regions_called'):
+                get_debug()['regions_called'] = g.regions_called
+
+            return objects
+        return wrapper
 
 
 class add_journey_href(object):
@@ -490,9 +481,24 @@ def compute_regions(args):
 
     sorted_regions = list(possible_regions)
 
-    _region = choose_best_instance(sorted_regions)
+    regions = sorted(sorted_regions, cmp=instances_comparator)
 
-    return _region
+    return regions
+
+def override_params_from_traveler_type(args):
+    if not args['traveler_type']:
+        return
+    profile = travelers_profile[args['traveler_type']]
+    args['walking_speed'] = profile.walking_speed
+    args['bike_speed'] = profile.bike_speed
+    args['bss_speed'] = profile.bss_speed
+    args['car_speed'] = profile.car_speed
+    args['max_duration_to_pt'] = profile.max_duration_to_pt
+
+    args['origin_mode'] = profile.first_section_mode
+    args['destination_mode'] = profile.last_section_mode
+
+    args['wheelchair'] = profile.wheelchair
 
 
 class Journeys(ResourceUri, ResourceUtc):
@@ -524,7 +530,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get = self.parsers["get"]
         parser_get.add_argument("from", type=str, dest="origin")
         parser_get.add_argument("to", type=str, dest="destination")
-        parser_get.add_argument("datetime", type=str)
+        parser_get.add_argument("datetime", type=date_time_format)
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents, default=True)
         parser_get.add_argument("max_nb_transfers", type=int, default=10,
@@ -564,10 +570,22 @@ class Journeys(ResourceUri, ResourceUtc):
                                 type=option_value(modes), action="append")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
+        parser_get.add_argument("traveler_type", type=option_value(travelers_profile.keys()))
 
         self.method_decorators.append(complete_links(self))
         self.method_decorators.append(update_journeys_status(self))
 
+        # manage post protocol (n-m calculation)
+        self.parsers["post"] = deepcopy(parser_get)
+        parser_post = self.parsers["post"]
+        parser_post.add_argument("details", type=boolean, default=False, location="json")
+        for index, elem in enumerate(parser_post.args):
+            if elem.name in ["from", "to"]:
+                parser_post.args[index].type = list
+                parser_post.args[index].dest = elem.name
+            parser_post.args[index].location = "json"
+
+    @add_debug_info()
     @clean_links()
     @add_id_links()
     @add_fare_links()
@@ -577,6 +595,9 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
+
+        override_params_from_traveler_type(args)
+
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
             args['destination_mode'] = 'bss'
@@ -617,10 +638,6 @@ class Journeys(ResourceUri, ResourceUtc):
             #shoudl be in my opinion if not args["origin"] and not args["destination"]:
             abort(400, message="from argument is required")
 
-        if not region:
-            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
-            self.region = compute_regions(args)
-
         #we transform the origin/destination url to add information
         if args['origin']:
             args['origin'] = self.transform_id(args['origin'])
@@ -628,12 +645,14 @@ class Journeys(ResourceUri, ResourceUtc):
             args['destination'] = self.transform_id(args['destination'])
 
         if not args['datetime']:
-            args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
+            args['datetime'] = datetime.now()
+            args['datetime'] = args['datetime'].replace(hour=13, minute=37)
 
-        original_datetime = datetime.strptime(args['datetime'], f_datetime)
-        new_datetime = self.convert_to_utc(original_datetime)
-        args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
-        args['datetime'] = date_to_timestamp(new_datetime)
+        if not region:
+            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
+            possible_regions = compute_regions(args)
+        else:
+            possible_regions = [region]
 
         api = None
         if args['destination']:
@@ -641,12 +660,57 @@ class Journeys(ResourceUri, ResourceUtc):
         else:
             api = 'isochrone'
 
-        #we store the region in the 'g' object, which is local to a request
-        set_request_timezone(self.region)
+        # we save the original datetime for debuging purpose
+        args['original_datetime'] = args['datetime']
 
+        #we want to store the different errors
+        responses = {}
+        for r in possible_regions:
+            self.region = r
 
-        response = i_manager.dispatch(args, api, instance_name=self.region)
-        return response
+            #we store the region in the 'g' object, which is local to a request
+            set_request_timezone(self.region)
+
+            if args['debug']:
+                # In debug we store all queried region
+                if not hasattr(g, 'regions_called'):
+                    g.regions_called = []
+                g.regions_called.append(r)
+
+            original_datetime = args['original_datetime']
+            new_datetime = self.convert_to_utc(original_datetime)
+            args['datetime'] = date_to_timestamp(new_datetime)
+
+            response = i_manager.dispatch(args, api, instance_name=self.region)
+
+            if response.HasField('error') \
+                    and len(possible_regions) != 1:
+                logging.getLogger(__name__).info("impossible to find journeys for the region {},"
+                                                 " we'll try the next possible region ".format(r))
+
+                if args['debug']:
+                    # In debug we store all errors
+                    if not hasattr(g, 'errors_by_region'):
+                        g.errors_by_region = {}
+                    g.errors_by_region[r] = response.error
+
+                responses[r] = response
+                continue
+
+            return response
+
+        # if no response have been found for all the possible regions, we have a problem
+        # if all response had the same error we give it, else we give a generic 'no solution' error
+        first_response = responses.itervalues().next()
+        if all(r.error.id == first_response.error.id for r in responses.values()):
+            return first_response
+
+        resp = response_pb2.Response()
+        er = resp.error
+        er.id = response_pb2.Error.no_solution
+        er.message = "No journey found"
+
+        return resp
 
     def transform_id(self, id):
         splitted_coord = id.split(";")
@@ -661,3 +725,69 @@ class Journeys(ResourceUri, ResourceUtc):
             return ':'.join(splitted_address)
         return id
 
+    @clean_links()
+    @add_id_links()
+    @add_journey_pagination()
+    @add_journey_href()
+    @marshal_with(journeys)
+    @ManageError()
+    def post(self, region=None, lon=None, lat=None, uri=None):
+        args = self.parsers['post'].parse_args()
+        override_params_from_traveler_type(args)
+        #check that we have at least one departure and one arrival
+        if len(args['from']) == 0:
+            abort(400, message="from argument must contain at least one item")
+        if len(args['to']) == 0:
+            abort(400, message="to argument must contain at least one item")
+
+        # TODO : Changer le protobuff pour que ce soit propre
+        if args['destination_mode'] == 'vls':
+            args['destination_mode'] = 'bss'
+        if args['origin_mode'] == 'vls':
+            args['origin_mode'] = 'bss'
+
+        #count override min_nb_journey or max_nb_journey
+        if 'count' in args and args['count']:
+            args['min_nb_journeys'] = args['count']
+            args['max_nb_journeys'] = args['count']
+
+        if region:
+            self.region = i_manager.get_region(region)
+            #we check that the user can use this api
+            authentification.authenticate(region, 'ALL', abort=True)
+            set_request_timezone(self.region)
+
+        if not region:
+            #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
+            self.region = compute_regions(args)
+
+        #store json data into 4 arrays
+        args['origin'] = []
+        args['origin_access_duration'] = []
+        args['destination'] = []
+        args['destination_access_duration'] = []
+        for loop in [('from','origin',True),('to','destination',False)]:
+            for location in args[loop[0]]:
+                if "access_duration" in location:
+                    args[loop[1]+'_access_duration'].append(location["access_duration"])
+                else:
+                    args[loop[1]+'_access_duration'].append(0)
+                stop_uri = location["uri"]
+                stop_uri = self.transform_id(stop_uri)
+                args[loop[1]].append(stop_uri)
+
+        #default Date
+        if not "datetime" in args or not args['datetime']:
+            args['datetime'] = datetime.now()
+            args['datetime'] = args['datetime'].replace(hour=13, minute=37)
+
+        # we save the original datetime for debuging purpose
+        args['original_datetime'] = args['datetime']
+        original_datetime = args['original_datetime']
+        new_datetime = self.convert_to_utc(original_datetime)
+        args['datetime'] = date_to_timestamp(new_datetime)
+
+        api = 'nm_journeys'
+
+        response = i_manager.dispatch(args, api, instance_name=self.region)
+        return response

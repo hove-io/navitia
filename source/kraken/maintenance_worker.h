@@ -33,6 +33,7 @@ www.navitia.io
 #include <SimpleAmqpClient/SimpleAmqpClient.h>
 #include "type/data.h"
 #include "kraken/data_manager.h"
+#include "kraken/configuration.h"
 
 #include <memory>
 
@@ -43,6 +44,7 @@ class MaintenanceWorker{
     private:
         DataManager<type::Data>& data_manager;
         log4cplus::Logger logger;
+        const kraken::Configuration conf;
 
         AmqpClient::Channel::ptr_t channel;
         //nom de la queue créer pour ce worker
@@ -52,7 +54,7 @@ class MaintenanceWorker{
         void listen_rabbitmq();
 
     public:
-        MaintenanceWorker(DataManager<type::Data>& data_manager);
+        MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf);
 
         bool load_and_switch();
 

@@ -49,6 +49,9 @@ namespace navitia{
         class results;
         class Ticket;
     }
+    namespace timetables {
+        struct Thermometer;
+    }
 }
 namespace pt = boost::posix_time;
 
@@ -191,8 +194,9 @@ void fill_pb_object(const type::Route* r, const type::Data& data,
                     const navitia::type::StopPoint* destination = nullptr);
 
 void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
-                    pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey, int max_depth,
-                    const boost::posix_time::ptime& now,
+                    const std::vector<const type::StopTime*>& stop_times,
+                    pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey,
+                    int max_depth, const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period = null_time_period);
 
 void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
@@ -217,6 +221,8 @@ void fill_pb_object(const std::string comment, const type::Data& data,
 void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data,
                     pbnavitia::Properties* properties, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
+void fill_pb_object(const timetables::Thermometer* thermometer,
+        const navitia::type::Data& data, pbnavitia::GeoJson* geojson);
 
 pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode);
 }//namespace navitia

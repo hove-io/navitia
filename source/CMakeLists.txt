@@ -12,8 +12,8 @@ if(Boost_VERSION)
 endif()
 
 SET(KRAKEN_VERSION_MAJOR 1)
-SET(KRAKEN_VERSION_MINOR 0)
-SET(KRAKEN_VERSION_PATCH 1)
+SET(KRAKEN_VERSION_MINOR 1)
+SET(KRAKEN_VERSION_PATCH 0)
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
@@ -83,6 +83,7 @@ add_subdirectory(calendar)
 
 add_subdirectory(tests)
 add_subdirectory(scripts)
+add_subdirectory(cities)
 add_library(linenoise linenoise/linenoise.c)
 
 INCLUDE (CheckIncludeFiles)

@@ -72,6 +72,7 @@ int main(int argc, char * argv[])
     }
 
     init_logger();
+    auto logger = log4cplus::Logger::getInstance("nav2rt");
     if(vm.count("config-file")){
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
@@ -92,16 +93,19 @@ int main(int argc, char * argv[])
     pt::ptime start, end, now;
     int read, load, load_pert, apply_adapted, save;
 
-    std::cout << "chargement du nav" << std::endl;
+    LOG4CPLUS_INFO(logger, "loading of data.nav.lz4");
 
     now = start = pt::microsec_clock::local_time();
     navitia::type::Data data;
-    data.load(input);
+    if(! data.load(input)){
+        LOG4CPLUS_ERROR(logger, "error while reading input file!");
+        return 1;
+    }
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 #define SIZE_EXT_CODE(type_name, collection_name)size_t collection_name##_size = data.pt_data.collection_name.size();\
 SIZE_EXT_CODE(CLEAR_EXT_CODE)
-    std::cout << "chargement des messages" << std::endl;
+    LOG4CPLUS_INFO(logger, "loading messages");
 
     ed::connectors::RealtimeLoaderConfig config(connection_string, shift_days);
     try{
@@ -113,11 +117,11 @@ SIZE_EXT_CODE(CLEAR_EXT_CODE)
         std::cout << ex.what() << std::endl;
         return 1;
     }
-    std::cout << data.pt_data->message_holder.messages.size() << " messages chargés" << std::endl;
-    std::cout << "application des messages sur data" << std::endl;
+    LOG4CPLUS_INFO(logger, data.pt_data->message_holder.messages.size() << " loaded messages");
+    LOG4CPLUS_INFO(logger, "application of messages on data");
     ed::connectors::apply_messages(data);
 
-    std::cout << "chargement des perturbation AT" << std::endl;
+    LOG4CPLUS_INFO(logger, "loading of disruptions");
     std::vector<navitia::type::AtPerturbation> perturbations;
     try{
         start = pt::microsec_clock::local_time();
@@ -127,7 +131,7 @@ SIZE_EXT_CODE(CLEAR_EXT_CODE)
         std::cout << ex.what() << std::endl;
         return 1;
     }
-    std::cout << perturbations.size() << " perturbations chargées" << std::endl;
+    LOG4CPLUS_INFO(logger, perturbations.size() << " disruptions loaded");
 
     start = pt::microsec_clock::local_time();
     ed::AtAdaptedLoader adapter;
@@ -141,30 +145,29 @@ ITERATE_NAVITIA_PT_TYPES(COMP_SIZE1)
 #define COMP_SIZE2(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
 ITERATE_NAVITIA_PT_TYPES(COMP_SIZE2)
 
-    std::cout << "Construction de first letter" << std::endl;
+    LOG4CPLUS_INFO(logger, "building of autocomplete");
     data.build_autocomplete();
 
 #define COMP_SIZE(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
 ITERATE_NAVITIA_PT_TYPES(COMP_SIZE)
 
-    std::cout << "Debut sauvegarde ..." << std::endl;
+    LOG4CPLUS_INFO(logger, "saving...");
 
     start = pt::microsec_clock::local_time();
     try {
         data.save(output);
     } catch(const navitia::exception &e) {
-        std::cout << "Impossible de sauvegarder" << std::endl;
-        std::cout << e.what() << std::endl;
+        LOG4CPLUS_ERROR(logger, "Impossible to save: " << e.what());
         return 1;
     }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    std::cout << "temps de traitement" << std::endl;
-    std::cout << "\t lecture du nav " << read << "ms" << std::endl;
-    std::cout << "\t chargement des messages " << load << "ms" << std::endl;
-    std::cout << "\t chargement des perturbations " << load_pert << "ms" << std::endl;
-    std::cout << "\t application des perturbations " << apply_adapted << "ms" << std::endl;
-    std::cout << "\t enregistrement des données " << save << "ms" << std::endl;
+    LOG4CPLUS_INFO(logger, "timing: ");
+    LOG4CPLUS_INFO(logger, "\t loading of data.nav.lz4: " << read << "ms");
+    LOG4CPLUS_INFO(logger, "\t loading of messages: " << load << "ms");
+    LOG4CPLUS_INFO(logger, "\t loading of disruptions: " << load_pert << "ms");
+    LOG4CPLUS_INFO(logger, "\t application of disruptions: " << apply_adapted << "ms");
+    LOG4CPLUS_INFO(logger, "\t saving: " << save << "ms");
 
     return 0;
 }

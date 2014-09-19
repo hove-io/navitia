@@ -137,7 +137,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
             const DateTime tmp_dt = f_departure_time(DateTimeUtils::hour(first_st.second), first_st.first);
             DateTimeUtils::update(first_st.second, DateTimeUtils::hour(tmp_dt));
         }
-
+        assert(first_st.first->journey_pattern_point == jpp);
         return first_st;
     }
     return {nullptr, 0};
@@ -201,6 +201,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
     }
 
 
+    assert(best_st.first == nullptr || best_st.first->journey_pattern_point == jpp);
     return best_st;
 }
 
@@ -243,6 +244,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
             const DateTime tmp_dt = f_arrival_time(DateTimeUtils::hour(working_dt), first_st);
             DateTimeUtils::update(working_dt, DateTimeUtils::hour(tmp_dt), false);
         }
+        assert(first_st->journey_pattern_point == jpp);
         return std::make_pair(first_st, working_dt);
     }
 

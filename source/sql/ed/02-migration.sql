@@ -284,6 +284,33 @@ DO $$
     END;
 $$;
 
+-- function defined here because it is used in the migration
+CREATE OR REPLACE FUNCTION georef.compute_bounding_shape() RETURNS GEOMETRY AS $$
+SELECT ST_ConvexHull(ST_Collect(ARRAY(select coord::geometry from georef.node)))
+$$
+LANGUAGE SQL;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.parameters ADD COLUMN shape GEOGRAPHY(POLYGON, 4326);
+            ALTER TABLE navitia.parameters ADD COLUMN shape_computed BOOLEAN DEFAULT TRUE;
+            -- update table if the columns have been added
+            UPDATE navitia.parameters SET shape = (SELECT georef.compute_bounding_shape());
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column shape already exists in navitia.parameters';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        -- remove constraint on null null because street network load might update the parameters too
+        ALTER TABLE navitia.parameters ALTER COLUMN beginning_date DROP NOT NULL;
+        ALTER TABLE navitia.parameters ALTER COLUMN end_date DROP NOT NULL;
+    END;
+$$;
+
 DROP TABLE IF EXISTS navitia.admin CASCADE;
 DROP TABLE IF EXISTS navitia.rel_admin_admin CASCADE;
 DROP TABLE IF EXISTS navitia.poi CASCADE;

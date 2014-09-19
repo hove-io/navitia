@@ -43,6 +43,7 @@ namespace routing{
 #include "type/request.pb.h"
 #include "kraken/data_manager.h"
 #include "utils/logger.h"
+#include "kraken/configuration.h"
 
 #include <memory>
 
@@ -55,12 +56,12 @@ class Worker {
 
         // we keep a reference to data_manager in each thread
         DataManager<navitia::type::Data>& data_manager;
-
+        const kraken::Configuration conf;
         log4cplus::Logger logger;
         boost::posix_time::ptime last_load_at;
 
     public:
-        Worker(DataManager<navitia::type::Data>& data_manager);
+        Worker(DataManager<navitia::type::Data>& data_manager, kraken::Configuration conf);
         //we override de destructor this way we can forward declare Raptor
         //see: https://stackoverflow.com/questions/6012157/is-stdunique-ptrt-required-to-know-the-full-definition-of-t
         ~Worker();

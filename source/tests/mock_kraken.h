@@ -37,6 +37,7 @@ www.navitia.io
 #include <zmq.hpp>
 #include "utils/zmq_compat.h"
 #include <boost/thread.hpp>
+#include "kraken/configuration.h"
 
 /**
  * Pratically the same behavior as a real kraken, but with already loaded data
@@ -56,8 +57,9 @@ struct mock_kraken {
         zmq::socket_t workers(context, ZMQ_DEALER);
         workers.bind("inproc://workers");
 
+        navitia::kraken::Configuration conf;
         // Launch only one thread for the tests
-        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager)));
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));
 
         // Connect work threads to client threads via a queue
         do {

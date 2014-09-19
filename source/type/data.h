@@ -30,7 +30,6 @@ www.navitia.io
 
 #pragma once
 #include "utils/logger.h"
-#include "utils/configuration.h"
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/format.hpp>
@@ -71,7 +70,7 @@ struct wrong_version : public navitia::exception {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 24; //< Data version number. *INCREMENT* every time serialized data are modified
+    static const unsigned int data_version = 25; //< Data version number. *INCREMENT* every time serialized data are modified
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
 
@@ -89,6 +88,9 @@ public:
 
     /// Fare data
     std::unique_ptr<navitia::fare::Fare> fare;
+
+    // functor to find admins
+    std::function<std::vector<georef::Admin*>(const GeographicalCoord&)> find_admins;
 
     /** Retourne la structure de données associée au type */
     /// TODO : attention aux perfs à faire la copie

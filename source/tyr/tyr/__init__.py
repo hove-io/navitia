@@ -34,11 +34,13 @@ import flask_restful
 from tyr.helper import configure_logger, make_celery
 from redis import Redis
 from celery.signals import setup_logging
+from flask_script import Manager
 
 app = Flask(__name__)
 app.config.from_object('tyr.default_settings')
 app.config.from_envvar('TYR_CONFIG_FILE')
 configure_logger(app)
+manager = Manager(app)
 
 #we don't want celery to mess with our logging configuration
 @setup_logging.connect

@@ -28,28 +28,29 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#pragma once
-#include "type/type.h"
+#include "utils/init.h"
+#include "routing/tests/routing_api_test_data.h"
+#include "mock_kraken.h"
 
-namespace nt = navitia::type;
+int main() {
+    navitia::init_app();
 
-namespace navitia {
-    namespace georef {
-        // la liste des pois à charger
-        struct Pois{
-            std::string poi_key;
-            std::string vls;
-                    // Key,          Value
-            std::map<std::string, std::string> PoiList;
-            Pois():poi_key("amenity"), vls("bicycle_rental"){
-                PoiList["college"] = "école";
-                PoiList["university"] = "université";
-                PoiList["theatre"] = "théâtre";
-                PoiList["hospital"] = "hôpital";
-                PoiList["post_office"] = "bureau de poste";
-                PoiList["bicycle_rental"] = "VLS";
-            }
-        };
+    //for some tests we want an empty region but with a bounding box
+    ed::builder b = {"20120614"};
+
+    routing_api_data<normal_speed_provider> routing_data;
+
+    //we give a very large bounding box (it must overlap with the shape of main_routing_test)
+    std::stringstream ss;
+    ss << "POLYGON((" << routing_data.S.lon() - 1e-3 << " " << routing_data.S.lat() - 1e-3
+              << ", " << routing_data.S.lon() - 1e-3 << " " << routing_data.R.lat() + 1e-3
+              << ", " << routing_data.R.lon() + 1e-3 << " " << routing_data.R.lat() + 1e-3
+              << ", " << routing_data.R.lon() + 1e-3 << " " << routing_data.S.lat() - 1e-3
+              << ", " << routing_data.S.lon() - 1e-3 << " " << routing_data.S.lat() - 1e-3 << "))";
+    b.data->meta->shape = ss.str();
+
+    mock_kraken kraken(b, "empty_routing_test");
+
+
+    return 0;
 }
-}
-

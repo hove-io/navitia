@@ -359,9 +359,6 @@ struct GeographicalCoord{
     bool is_initialized() const {
         return distance_to(GeographicalCoord()) > 1;
     }
-    bool is_default_coord()const{
-        return ((this->lat() == 0) || (this->lon() == 0));
-    }
 
     bool is_valid() const{
         return this->lon() >= -180 && this->lon() <= 180 &&
@@ -588,16 +585,14 @@ struct Line : public Header, Nameable, HasMessages, Codes{
     std::string color;
     int sort = std::numeric_limits<int>::max();
 
-    CommercialMode* commercial_mode;
+    CommercialMode* commercial_mode = nullptr;
 
     std::vector<Company*> company_list;
-    Network* network;
+    Network* network = nullptr;
 
     std::vector<Route*> route_list;
     std::vector<PhysicalMode*> physical_mode_list;
     std::vector<Calendar*> calendar_list;
-
-    Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
@@ -627,10 +622,9 @@ struct Line : public Header, Nameable, HasMessages, Codes{
 
 struct Route : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Route;
-    Line* line;
+    Line* line = nullptr;
     std::vector<JourneyPattern*> journey_pattern_list;
 
-    Route() : line(nullptr) {}
     idx_t main_destination() const;
     type::OdtLevel_e get_odt_level() const;
 
@@ -645,16 +639,14 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 
 struct JourneyPattern : public Header, Nameable{
     const static Type_e type = Type_e::JourneyPattern;
-    bool is_frequence;
-    OdtLevel_e odt_level; // Computed at serialization
-    Route* route;
-    CommercialMode* commercial_mode;
-    PhysicalMode* physical_mode;
+    bool is_frequence = false;
+    OdtLevel_e odt_level= OdtLevel_e::none; // Computed at serialization
+    Route* route = nullptr;
+    CommercialMode* commercial_mode = nullptr;
+    PhysicalMode* physical_mode = nullptr;
 
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
-
-    JourneyPattern(): is_frequence(false), odt_level(OdtLevel_e::none), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & is_frequence & odt_level &  route & commercial_mode
@@ -1069,13 +1061,29 @@ struct EntryPoint {
     Type_e type;//< Le type de l'objet
     std::string uri; //< Le code externe de l'objet
     int house_number;
+    int access_duration;
     GeographicalCoord coordinates;  // < coordonnées du point d'entrée
     StreetNetworkParams streetnetwork_params;        // < paramètres de rabatement du point d'entrée
 
     /// Construit le type à partir d'une chaîne
     EntryPoint(const Type_e type, const std::string & uri);
+    EntryPoint(const Type_e type, const std::string & uri, int access_duration);
 
-    EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
+    EntryPoint() : type(Type_e::Unknown), house_number(-1), access_duration(0) {}
+    bool set_mode(const std::string& mode) {
+        if (mode == "walking") {
+            streetnetwork_params.mode = Mode_e::Walking;
+        } else if (mode == "bike") {
+            streetnetwork_params.mode = Mode_e::Bike;
+        } else if (mode == "bss") {
+            streetnetwork_params.mode = Mode_e::Bss;
+        } else if (mode == "car") {
+            streetnetwork_params.mode = Mode_e::Car;
+        } else {
+            return false;
+        }
+        return true;
+    }
 };
 } //namespace navitia::type
 

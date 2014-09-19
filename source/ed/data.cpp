@@ -98,80 +98,62 @@ void Data::build_block_id() {
     }
 }
 
+static std::map<std::string, std::set<std::string>>
+make_departure_destinations_map(
+    const std::vector<types::StopPointConnection*>& stop_point_connections)
+{
+    std::map<std::string, std::set<std::string>> res;
+    for (auto conn: stop_point_connections) {
+        res[conn->departure->uri].insert(conn->destination->uri);
+    }
+    return res;
+}
+
+static std::map<std::string, std::vector<types::StopPoint*>>
+make_stop_area_stop_points_map(const std::vector<ed::types::StopPoint*>& stop_points) {
+    std::map<std::string, std::vector<types::StopPoint*>> res;
+    for (auto sp: stop_points) {
+        if (sp->stop_area) res[sp->stop_area->uri].push_back(sp);
+    }
+    return res;
+}
+
 void Data::complete(){
     build_journey_patterns();
     build_journey_pattern_points();
     build_block_id();
     finalize_frequency();
-    //We build the external_codes of the journey_pattern
     ::ed::normalize_uri(journey_patterns);
     ::ed::normalize_uri(routes);
 
-    //Add stop_point_connections between stoppoints of the same stop_area.
-    std::multimap<std::string, std::string> conns;
-    for(auto conn : stop_point_connections) {
-        conns.insert(std::make_pair(conn->departure->uri, conn->destination->uri));
-    }
+    // generates default connections inside each stop area
+    auto connections = make_departure_destinations_map(stop_point_connections);
+    const auto sa_sps = make_stop_area_stop_points_map(stop_points);
+    const auto connections_size = stop_point_connections.size();
+    for(const types::StopArea * sa : stop_areas) {
+        const auto& sps = find_or_default(sa->uri, sa_sps);
+        for (const auto& sp1: sps) {
+            for (const auto& sp2: sps) {
+                // if the connection exists, do nothing
+                if (find_or_default(sp1->uri, connections).count(sp2->uri) != 0) continue;
 
-    std::multimap<std::string, types::StopPoint*> sa_sps;
-
-    for(auto sp : stop_points) {
-        if(sp->stop_area)
-            sa_sps.insert(std::make_pair(sp->stop_area->uri, sp));
-    }
-    int connections_size = stop_point_connections.size();
-
-    for(types::StopArea * sa : stop_areas) {
-        auto ret = sa_sps.equal_range(sa->uri);
-        for(auto sp1 = ret.first; sp1!= ret.second; ++sp1){
-            for(auto sp2 = sp1; sp2!=ret.second; ++sp2) {
-                if(sp1->second->uri != sp2->second->uri) {
-                    bool found = false;
-                    auto ret2 = conns.equal_range(sp1->second->uri);
-                    for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
-                        if(itc->second == sp2->second->uri) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if(!found) {
-                        types::StopPointConnection * connection = new types::StopPointConnection();
-                        connection->departure = sp1->second;
-                        connection->destination  = sp2->second;
-                        connection->connection_kind = types::ConnectionType::StopArea;
-                        connection->duration = 240;
-                        connection->display_duration = connection->duration - 120;
-                        connection->uri = sp1->second->uri +"=>"+sp2->second->uri;
-                        stop_point_connections.push_back(connection);
-                        conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
-                    }
-
-                    found = false;
-                    ret2 = conns.equal_range(sp2->second->uri);
-                    for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
-                        if(itc->second == sp1->second->uri) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if(!found) {
-                        types::StopPointConnection * connection = new types::StopPointConnection();
-                        connection->departure = sp2->second;
-                        connection->destination  = sp1->second;
-                        connection->connection_kind = types::ConnectionType::StopArea;
-                        connection->duration = 240;
-                        connection->display_duration = connection->duration - 120;
-                        connection->uri = sp2->second->uri +"=>"+sp1->second->uri;
-                        stop_point_connections.push_back(connection);
-                        conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
-                    }
-                }
+                const int conn_dur_itself = 0;
+                const int conn_dur_other = 120;
+                const int min_waiting_dur = 120;
+                stop_point_connections.push_back(new types::StopPointConnection());
+                auto new_conn = stop_point_connections.back();
+                new_conn->departure = sp1;
+                new_conn->destination = sp2;
+                new_conn->connection_kind = types::ConnectionType::StopArea;
+                new_conn->display_duration = sp1->uri == sp2->uri ? conn_dur_itself : conn_dur_other;
+                new_conn->duration = new_conn->display_duration + min_waiting_dur;
+                new_conn->uri = sp1->uri + "=>" + sp2->uri;
+                connections[new_conn->departure->uri].insert(new_conn->destination->uri);
             }
         }
     }
-    std::cout << "We have added " << stop_point_connections.size() - connections_size << " connections" << std::endl;
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                   stop_point_connections.size() - connections_size << " connections added");
 }
 
 
@@ -543,13 +525,9 @@ Georef::~Georef(){
          delete itm.second;
     for(auto itm : this->ways)
          delete itm.second;
-    for(auto itm : this->house_numbers)
-         delete itm.second;
     for(auto itm : this->admins)
          delete itm.second;
     for(auto itm : this->poi_types)
-         delete itm.second;
-    for(auto itm : this->pois)
          delete itm.second;
 }
 

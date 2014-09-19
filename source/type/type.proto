@@ -39,6 +39,7 @@ enum API {
     UNKNOWN_API = 16;
     disruptions = 17;
     calendars = 18;
+    NMPLANNER = 19;
 }
 
 enum VehicleJourneyType{
@@ -151,6 +152,11 @@ message Line {
     repeated Code codes = 16;
 }
 
+message GeoJson {
+    required double length = 1;
+    repeated GeographicalCoord coordinates = 2;
+}
+
 message Route {
     optional string name = 3;
     optional string uri = 4;
@@ -160,6 +166,8 @@ message Route {
     repeated Message messages = 9;
     repeated Code codes = 10;
     repeated StopPoint stop_points = 1;
+    optional GeoJson geojson = 11;
+    optional Place direction = 12;
 }
 
 message JourneyPattern {
@@ -370,3 +378,21 @@ message ValidityPattern {
     optional string days = 2;
 }
 
+message LocationContext {
+	required string place = 1;
+	required int32 access_duration = 2;
+}
+
+message Place {
+    required string name = 1;
+    required string uri = 2;
+    optional NavitiaType embedded_type = 3;
+    optional StopArea stop_area = 4;
+    optional Poi poi = 5;
+    optional StopPoint stop_point = 6;
+    optional Address address = 7;
+    optional Line line = 9;
+    optional AdministrativeRegion administrative_region = 10;
+    optional int32 distance = 11;
+    optional int32 quality = 12;
+}

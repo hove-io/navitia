@@ -58,9 +58,6 @@ const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     }}
                                                     };
 
-const navitia::seconds default_time_bss_pickup(120);
-const navitia::seconds default_time_bss_putback(60);
-
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
     nt::GeographicalCoord coord;
@@ -147,7 +144,7 @@ public:
     void add_house_number(const HouseNumber&);
     nt::GeographicalCoord nearest_coord(const int, const Graph&);
     int nearest_number(const nt::GeographicalCoord& );
-    nt::GeographicalCoord barycentre(const Graph& );
+    nt::GeographicalCoord projected_centroid(const Graph& );
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges;
     }
@@ -171,7 +168,9 @@ struct PathItem {
         Bike,
         Car,
         BssTake, //when a bike is taken
-        BssPutBack //when a bike is put back
+        BssPutBack, //when a bike is put back
+        CarPark, //when a car is parked
+        CarLeaveParking //when leaving a parking
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
 
@@ -179,6 +178,8 @@ struct PathItem {
         switch (transportation) {
         case TransportCaracteristic::BssPutBack:
         case TransportCaracteristic::BssTake:
+        case TransportCaracteristic::CarPark:
+        case TransportCaracteristic::CarLeaveParking:
             return 0;
         case TransportCaracteristic::Walk:
             //milliseconds to reduce rounding
@@ -201,49 +202,27 @@ struct Path {
 
 class ProjectionData;
 
-/** Rectangle utilisé par RTree pour indexer spatialement les communes */
-struct Rect{
-    double min[2];
-    double max[2];
-    Rect() : min{0,0}, max{0,0} {}
-
-    Rect(const type::GeographicalCoord & coord) {
-        min[0] = coord.lon();
-        min[1] = coord.lat();
-        max[0] = coord.lon();
-        max[1] = coord.lat();
-    }
-
-    Rect(double a_minX, double a_minY, double a_maxX, double a_maxY){
-        min[0] = a_minX;
-        min[1] = a_minY;
-
-        max[0] = a_maxX;
-        max[1] = a_maxY;
-    }
-};
-
-//Forward declarations
 struct POI;
 struct POIType;
-/** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
+
+/** All you need about the street network */
 struct GeoRef {
 
-    ///Liste des POIType et POI
+    // parameters
+    navitia::time_duration default_time_bss_pickup = seconds(120);
+    navitia::time_duration default_time_bss_putback = seconds(60);
+    navitia::time_duration default_time_parking_leave = seconds(5 * 60);
+    navitia::time_duration default_time_parking_park = seconds(5 * 60);
+
     std::vector<POIType*> poitypes;
     std::map<std::string, nt::idx_t> poitype_map;
     std::vector<POI*> pois;
     std::map<std::string, nt::idx_t> poi_map;
     proximitylist::ProximityList<type::idx_t> poi_proximity_list;
-    /// Liste des voiries
     std::vector<Way*> ways;
-
     std::map<std::string, nt::idx_t> way_map;
-    /// données administratives
     std::map<std::string, nt::idx_t> admin_map;
     std::vector<Admin*> admins;
-
-    RTree<nt::idx_t, double, 2> rtree;
 
     /// Indexe sur les noms de voirie
     autocomplete::Autocomplete<unsigned int> fl_admin = autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::Admin);
@@ -296,9 +275,6 @@ struct GeoRef {
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-    /// Récupération de la liste des admins à partir des coordonnées
-    std::vector<navitia::type::idx_t> find_admins(const type::GeographicalCoord &);
-
     /** Construit l'indexe spatial */
     void build_proximity_list();
 
@@ -314,19 +290,17 @@ struct GeoRef {
     void build_poitypes_map();
     void build_pois_map();
 
-    /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
-    void build_rtree();
-
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
 
+
+    const std::vector<Admin*> &find_admins(const type::GeographicalCoord&) const;
 
     /**
      * Project each stop_point on the georef network
      */
     void project_stop_points(const std::vector<type::StopPoint*> & stop_points);
-    void build_admins_stop_points(std::vector<type::StopPoint*> & stop_points);
-    void build_admins_pois();
+
     /** project the stop point on all transportation mode
       * return a pair with :
       * - the projected array
@@ -342,19 +316,19 @@ struct GeoRef {
 
     vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
-    edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
-    edge_t nearest_edge(const type::GeographicalCoord &coordinates, type::idx_t offset, const proximitylist::ProximityList<vertex_t>& prox) const;
+    edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t>& prox, type::idx_t offset = 0) const;
 
-    edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
-
-    edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode, const proximitylist::ProximityList<vertex_t>& prox) const {
-        return nearest_edge(coordinates, offsets[mode], prox);
+    edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode) const {
+        return nearest_edge(coordinates, pl, offsets[mode]);
     }
 
     void add_way(const Way& w);
 
-    ///Add the projected start and end to the path
-    void add_projections(Path& p, const ProjectionData& start, const ProjectionData& end) const;
+    // Return false if we didn't find any projection
+    bool add_bss_edges(const type::GeographicalCoord&);
+
+    // Return false if we didn't find any projection
+    bool add_parking_edges(const type::GeographicalCoord&);
 
     ///get the transportation mode of the vertex
     type::Mode_e get_mode(vertex_t vertex) const;

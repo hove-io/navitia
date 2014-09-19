@@ -30,27 +30,28 @@ www.navitia.io
 
 #include "osm_tags_reader.h"
 #include <iostream>
+#include <algorithm>
 
 namespace ed { namespace connectors{
 
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
-    const int unknown = -1;
-    const int foot_forbiden = 0;
-    const int foot_allowed = 1;
+    constexpr int unknown = -1;
+    constexpr int foot_forbiden = 0;
+    constexpr int foot_allowed = 1;
 
-    const int car_forbiden = 0;
-    const int car_residential = 1;
-    const int car_tertiary = 2;
-    const int car_secondary = 3;
-    const int car_primary = 4;
-    const int car_trunk = 5;
-    const int car_motorway = 6;
+    constexpr int car_forbiden = 0;
+    constexpr int car_residential = 1;
+    constexpr int car_tertiary = 2;
+    constexpr int car_secondary = 3;
+    constexpr int car_primary = 4;
+    constexpr int car_trunk = 5;
+    constexpr int car_motorway = 6;
 
-    const int bike_forbiden = 0;
-    const int bike_allowed = 2;
-    const int bike_lane = 3;
-    const int bike_busway = 4;
-    const int bike_track = 5;
+    constexpr int bike_forbiden = 0;
+    constexpr int bike_allowed = 2;
+    constexpr int bike_lane = 3;
+    constexpr int bike_busway = 4;
+    constexpr int bike_track = 5;
 
 
     int car_direct = unknown;
@@ -61,6 +62,8 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
 
     for(std::pair<std::string, std::string> pair : tags){
         std::string key = pair.first, val = pair.second;
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+        std::transform(val.begin(), val.end(), val.begin(), ::tolower);
 
         if(key == "highway") {
             if(val == "footway" || val == "pedestrian") {
@@ -104,7 +107,9 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
         }
 
         else if(key == "pedestrian" || key == "foot") {
-            if(val == "yes" || val == "designated" || val == "permissive" || val == "lane")
+            if(val == "yes" || val == "designated" || val == "permissive"
+                    || val == "lane" || val == "official" || val == "allowed"
+                    || val == "destination")
                 foot = foot_allowed;
             else if(val == "no" || val == "private")
                 foot = foot_forbiden;
@@ -132,9 +137,10 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
             else
                 bike_direct = bike_lane;
         }
-
         else if(key == "bicycle") {
-            if(val == "yes" || val == "permissive" || val == "destination" || val == "designated" || val == "private" || val == "true")
+            if(val == "yes" || val == "permissive" || val == "destination" || val == "designated"
+                    || val == "private" || val == "true" || val == "allowed"
+                    || val == "official" || val == "destination")
                 bike_direct = bike_allowed;
             else if(val == "no" || val == "dismount" || val == "VTT")
                 bike_direct = bike_forbiden;

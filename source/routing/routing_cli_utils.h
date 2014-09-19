@@ -41,7 +41,7 @@ namespace navitia { namespace cli {
 
     struct compute_options {
         po::options_description desc;
-        std::string start, target, date;
+        std::string start, target, date, first_section_mode, last_section_mode;
         po::variables_map vm;
         std::unique_ptr<nr::RAPTOR> raptor;
         nt::Data data;
@@ -52,6 +52,8 @@ namespace navitia { namespace cli {
             ("target,t", po::value<std::string>(&target), "uri of point to end")
             ("date,d", po::value<std::string>(&date), "yyyymmddThhmmss")
             ("counterclockwise,c", "Counter-clockwise search")
+            ("firstsectionmode,f", po::value<std::string>(&first_section_mode), "can be walking, bike, car, bss")
+            ("lastsectionmonde,l", po::value<std::string>(&last_section_mode), "can be walking, bike, car, bss")
             ("protobuf,p", "Full-output");
         }
         bool compute();
