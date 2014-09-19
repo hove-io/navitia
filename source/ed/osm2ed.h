@@ -156,7 +156,12 @@ struct OSMRelation {
         return osm_id < other;
     }
 
+    void set_centre(float lon, float lat) const {
+        centre = point(lon, lat);
+    }
+
     void build_geometry(OSMCache& cache) const;
+    void build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids = std::set<u_int64_t>()) const;
 };
 
 struct OSMWay {
