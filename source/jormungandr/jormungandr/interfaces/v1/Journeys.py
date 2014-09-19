@@ -43,7 +43,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
     display_informations_vj, additional_informations_vj, error,\
     generic_message, GeoJson
 
-from jormungandr.interfaces.parsers import option_value
+from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, complete_links, update_journeys_status
 import datetime
@@ -64,22 +64,8 @@ from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
 from jormungandr.travelers_profile import travelers_profile
-from dateutil import parser
 
 f_datetime = "%Y%m%dT%H%M%S"
-
-
-def parse_input_date(date):
-    """
-    datetime parse date seems broken, '155' with format '%H%M%S' is not
-    rejected but parsed as 1h, 5mn, 5s...
-
-    so use use for the input date parse dateutil even if the 'guess'
-    mechanism seems a bit dangerous
-    """
-    return parser.parse(date, dayfirst=False, yearfirst=True)
-
-
 class SectionLinks(fields.Raw):
 
     def output(self, key, obj):
@@ -236,15 +222,6 @@ def dt_represents(value):
     else:
         raise ValueError("Unable to parse datetime_represents")
 
-
-def date_time_format(value):
-    """
-    we want to valid the date format
-    """
-    try:
-        return parse_input_date(value)
-    except ValueError as e:
-        raise ValueError("Unable to parse datetime, {}".format(e.message))
 
 
 class add_debug_info(object):

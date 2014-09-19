@@ -39,6 +39,7 @@ from fields import stop_point, route, pagination, PbField, stop_date_time, \
 from ResourceUri import ResourceUri, complete_links
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
+from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
 from flask.ext.restful.types import natural, boolean
 
@@ -53,7 +54,7 @@ class Schedules(ResourceUri):
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("filter", type=str)
-        parser_get.add_argument("from_datetime", type=str,
+        parser_get.add_argument("from_datetime", type=date_time_format,
                                 description="The datetime from which you want\
                                 the schedules")
         parser_get.add_argument("duration", type=int, default=3600 * 24,
@@ -93,8 +94,11 @@ class Schedules(ResourceUri):
             self.collection = 'schedules'
             args["filter"] = self.get_filter(uri.split("/"))
             self.region = i_manager.get_region(region, lon, lat)
+        #@TODO: Change to timestamp
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
+        else:
+            args["from_datetime"] = args["from_datetime"].strftime("%Y%m%dT%H%M%S")
         timezone.set_request_timezone(self.region)
 
         return i_manager.dispatch(args, self.endpoint,
