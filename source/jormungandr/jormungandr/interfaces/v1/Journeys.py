@@ -64,8 +64,20 @@ from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
 from jormungandr.travelers_profile import travelers_profile
+from dateutil import parser
 
 f_datetime = "%Y%m%dT%H%M%S"
+
+
+def parse_input_date(date):
+    """
+    datetime parse date seems broken, '155' with format '%H%M%S' is not
+    rejected but parsed as 1h, 5mn, 5s...
+
+    so use use for the input date parse dateutil even if the 'guess'
+    mechanism seems a bit dangerous
+    """
+    return parser.parse(date, dayfirst=False, yearfirst=True)
 
 
 class SectionLinks(fields.Raw):
@@ -223,6 +235,16 @@ def dt_represents(value):
         return True
     else:
         raise ValueError("Unable to parse datetime_represents")
+
+
+def date_time_format(value):
+    """
+    we want to valid the date format
+    """
+    try:
+        return parse_input_date(value)
+    except ValueError as e:
+        raise ValueError("Unable to parse datetime, {}".format(e.message))
 
 
 class add_debug_info(object):
@@ -531,7 +553,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get = self.parsers["get"]
         parser_get.add_argument("from", type=str, dest="origin")
         parser_get.add_argument("to", type=str, dest="destination")
-        parser_get.add_argument("datetime", type=str)
+        parser_get.add_argument("datetime", type=date_time_format)
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents, default=True)
         parser_get.add_argument("max_nb_transfers", type=int, default=10,
@@ -646,7 +668,8 @@ class Journeys(ResourceUri, ResourceUtc):
             args['destination'] = self.transform_id(args['destination'])
 
         if not args['datetime']:
-            args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
+            args['datetime'] = datetime.now()
+            args['datetime'] = args['datetime'].replace(hour=13, minute=37)
 
         if not region:
             #TODO how to handle lon/lat ? don't we have to override args['origin'] ?
@@ -677,7 +700,7 @@ class Journeys(ResourceUri, ResourceUtc):
                     g.regions_called = []
                 g.regions_called.append(r)
 
-            original_datetime = datetime.strptime(args['original_datetime'], f_datetime)
+            original_datetime = args['original_datetime']
             new_datetime = self.convert_to_utc(original_datetime)
             args['datetime'] = date_to_timestamp(new_datetime)
 
@@ -778,11 +801,12 @@ class Journeys(ResourceUri, ResourceUtc):
 
         #default Date
         if not "datetime" in args or not args['datetime']:
-            args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
+            args['datetime'] = datetime.now()
+            args['datetime'] = args['datetime'].replace(hour=13, minute=37)
 
         # we save the original datetime for debuging purpose
         args['original_datetime'] = args['datetime']
-        original_datetime = datetime.strptime(args['original_datetime'], f_datetime)
+        original_datetime = args['original_datetime']
         new_datetime = self.convert_to_utc(original_datetime)
         args['datetime'] = date_to_timestamp(new_datetime)
 
