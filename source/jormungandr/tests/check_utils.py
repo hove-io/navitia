@@ -527,8 +527,9 @@ def is_valid_place(place, depth_check=1):
     #TODO more checks
 
 
+s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
+r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
+
 #default journey query used in various test
 journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
-    .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
-            to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
-            datetime="20120614T080000")
+    .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000")

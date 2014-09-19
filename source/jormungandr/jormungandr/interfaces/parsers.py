@@ -26,6 +26,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from dateutil import parser
+
 
 def depth_argument(value, name):
     if value < 3:
@@ -52,3 +54,24 @@ def option_value(values):
             raise ValueError(error)
         return value
     return to_return
+
+
+def parse_input_date(date):
+    """
+    datetime parse date seems broken, '155' with format '%H%M%S' is not
+    rejected but parsed as 1h, 5mn, 5s...
+
+    so use use for the input date parse dateutil even if the 'guess'
+    mechanism seems a bit dangerous
+    """
+    return parser.parse(date, dayfirst=False, yearfirst=True)
+
+
+def date_time_format(value):
+    """
+    we want to valid the date format
+    """
+    try:
+        return parse_input_date(value)
+    except ValueError as e:
+        raise ValueError("Unable to parse datetime, {}".format(e.message))
