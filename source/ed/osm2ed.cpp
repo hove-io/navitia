@@ -37,6 +37,8 @@ www.navitia.io
 #include <boost/geometry.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/reverse.hpp>
 
 #include "ed/connectors/osm_tags_reader.h"
 #include "ed/connectors/osm2ed_utils.h"
@@ -446,29 +448,94 @@ void OSMCache::fusion_ways() {
     }
 }
 
+
 /*
- * We build the polygon of the admin and insert it in the rtree
+ * We build the polygon of the admin
+ * Ways are supposed to be order, but they're not always.
+ * Also we may have to reverse way before adding them into the polygon
  */
-void OSMRelation::build_geometry(OSMCache& cache) const {
-    polygon_type tmp_polygon;
-    for (CanalTP::Reference ref : references) {
-        if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY) {
-            auto it = cache.ways.find(OSMWay(ref.member_id));
-            if (it == cache.ways.end()) {
+void OSMRelation::build_polygon(OSMCache& cache, std::set<u_int64_t> explored_ids) const{
+    auto is_outer_way = [](const CanalTP::Reference& r) {
+        return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
+            && in(r.role, {"outer", "enclave", ""});
+    };
+    auto pickable_way = [&](const CanalTP::Reference& r) {
+        return is_outer_way(r) && explored_ids.count(r.member_id) == 0;
+    };
+    // We need to explore every node because a boundary can be made in several parts
+    while(explored_ids.size() != this->references.size()) {
+        // We pickup one way
+        auto ref = boost::find_if(references, pickable_way);
+        if (ref == references.end()) {
+            break;
+        }
+        auto it_first_way = cache.ways.find(ref->member_id);
+        if (it_first_way == cache.ways.end() || it_first_way->nodes.empty()) {
+            break;
+        }
+        auto first_node = it_first_way->nodes.front();
+        auto next_node = it_first_way->nodes.back();
+        explored_ids.insert(ref->member_id);
+        polygon_type tmp_polygon;
+        for (auto node : it_first_way->nodes) {
+            if (!node->is_defined()) {
                 continue;
             }
-            if(ref.role != "outer"  && ref.role != "enclave" && ref.role != "") {
-                continue;
+            const auto p = point(float(node->lon()), float(node->lat()));
+            tmp_polygon.outer().push_back(p);
+        }
+
+        // We try to find a closed ring
+        while (first_node != next_node) {
+            // We look for a way that begin or end by the last node
+            ref = boost::find_if(references,
+                    [&](const CanalTP::Reference& r) {
+                        if (!pickable_way(r)) {
+                            return false;
+                        }
+                        auto it = cache.ways.find(r.member_id);
+                        return it != cache.ways.end() &&
+                                !it->nodes.empty() &&
+                            (it->nodes.front() == next_node ||
+                             it->nodes.back() == next_node );
+                    });
+            if (ref == references.end()) {
+                break;
             }
-            for (auto node : it->nodes) {
+            explored_ids.insert(ref->member_id);
+            auto next_way = cache.ways.find(ref->member_id);
+            if (next_way->nodes.front() != next_node) {
+                boost::reverse(next_way->nodes);
+            }
+            for (auto node : next_way->nodes) {
                 if (!node->is_defined()) {
                     continue;
                 }
                 const auto p = point(float(node->lon()), float(node->lat()));
                 tmp_polygon.outer().push_back(p);
             }
-        } else if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
-            auto node_it = cache.nodes.find(OSMNode(ref.member_id));
+            next_node = next_way->nodes.back();
+        }
+        if (tmp_polygon.outer().size() < 2 || ref == references.end()) {
+            break;
+        }
+        const auto front = tmp_polygon.outer().front();
+        const auto back = tmp_polygon.outer().back();
+        // This should not happen, but does some time
+        if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
+            tmp_polygon.outer().push_back(tmp_polygon.outer().front());
+        }
+        polygon.push_back(tmp_polygon);
+    }
+    if ((centre.get<0>() == 0.0 || centre.get<1>() == 0.0) && !polygon.empty()) {
+        bg::centroid(polygon, centre);
+    }
+}
+
+void OSMRelation::build_geometry(OSMCache& cache) const {
+    for (CanalTP::Reference ref : references) {
+        if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
+            auto node_it = cache.nodes.find(ref.member_id);
             if (node_it == cache.nodes.end()) {
                 continue;
             }
@@ -476,31 +543,13 @@ void OSMRelation::build_geometry(OSMCache& cache) const {
                 continue;
             }
             if (ref.role == "admin_centre") {
-                centre = point(float(node_it->lon()), float(node_it->lat()));
+                set_centre(float(node_it->lon()), float(node_it->lat()));
+                break;
             }
         }
     }
-    if (tmp_polygon.outer().size() < 2) {
-        return;
-    }
-    if (centre.get<0>() == 0.0 || centre.get<1>() == 0.0) {
-        bg::centroid(tmp_polygon, centre);
-    }
-    boost::geometry::model::box<point> envelope;
-    bg::envelope(tmp_polygon, envelope);
-    Rect r(envelope.min_corner().get<0>(), envelope.min_corner().get<1>(),
-            envelope.max_corner().get<0>(), envelope.max_corner().get<1>());
-    cache.admin_tree.Insert(r.min, r.max, this);
-    cache.max_search_distance = std::max(cache.max_search_distance, bg::distance(centre, envelope.min_corner()));
-
-    const auto front = tmp_polygon.outer().front();
-    const auto back = tmp_polygon.outer().back();
-    if (front.get<0>() != back.get<0>() || front.get<1>() != back.get<1>()) {
-        tmp_polygon.outer().push_back(tmp_polygon.outer().front());
-    }
-    polygon.push_back(tmp_polygon);
+    build_polygon(cache);
 }
-
 /*
  * We read another time nodes to insert housenumbers and poi
  */
