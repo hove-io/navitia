@@ -40,7 +40,7 @@ from datetime import datetime, timedelta
 import logging
 from jormungandr import app
 from jormungandr.instance import Instance
-from jormungandr.authentification import get_user
+from jormungandr.authentication import get_user
 from jormungandr import utils
 
 import time

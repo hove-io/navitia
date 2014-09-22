@@ -39,7 +39,7 @@ from flask.ext.restful import reqparse
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
-from jormungandr.authentification import authentification_required
+from jormungandr.authentication import authentication_required
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from datetime import datetime, timedelta
 
@@ -79,7 +79,7 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
 
     """ Compute journeys"""
     parsers = {}
-    method_decorators = [authentification_required]
+    method_decorators = [authentication_required]
 
     def __init__(self, *args, **kwargs):
         ResourceUtc.__init__(self)
@@ -175,7 +175,7 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
 class Isochrone(Resource, ResourceUtc, FindAndFormatJourneys):
 
     """ Compute isochrones """
-    method_decorators = [authentification_required]
+    method_decorators = [authentication_required]
 
     def __init__(self):
         ResourceUtc.__init__(self)

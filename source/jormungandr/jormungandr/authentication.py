@@ -40,7 +40,7 @@ import base64
 from navitiacommon.models import User, Instance, db
 
 
-def authentification_required(func):
+def authentication_required(func):
     """
     decorateur chargé de l'authentification des requetes
     fonctionne pour chaque API prenant un paramétre la région

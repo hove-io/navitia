@@ -38,14 +38,14 @@ from flask.ext.restful import reqparse
 from jormungandr.interfaces.parsers import depth_argument
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
-from jormungandr.authentification import authentification_required
+from jormungandr.authentication import authentication_required
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
 
 
 class Ptref(Resource):
     parsers = {}
-    method_decorators = [authentification_required]
+    method_decorators = [authentication_required]
 
     def __init__(self):
         super(Ptref, self).__init__()
