@@ -1,5 +1,5 @@
 find_package(Protobuf REQUIRED)
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto response.proto request.proto task.proto realtime.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto response.proto request.proto task.proto realtime.proto ${CMAKE_SOURCE_DIR}/chaos-proto/chaos.proto ${CMAKE_SOURCE_DIR}/chaos-proto/gtfs-realtime.proto)
 
 
 add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)

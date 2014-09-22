@@ -33,6 +33,8 @@ www.navitia.io
 #include <sys/stat.h>
 #include <signal.h>
 #include "type/task.pb.h"
+#include "type/chaos.pb.h"
+#include "type/gtfs-realtime.pb.h"
 #include <boost/algorithm/string/join.hpp>
 
 namespace nt = navitia::type;
@@ -62,8 +64,7 @@ void MaintenanceWorker::operator()(){
             this->init_rabbitmq();
             this->listen_rabbitmq();
         }catch(const std::runtime_error& ex){
-            LOG4CPLUS_ERROR(logger, std::string("connection to rabbitmq fail: ")
-                    + ex.what());
+            LOG4CPLUS_ERROR(logger, std::string("connection to rabbitmq fail: ") << ex.what());
             data_manager.get_data()->is_connected_to_rabbitmq = false;
             sleep(10);
         }
@@ -88,6 +89,18 @@ void MaintenanceWorker::handle_task(AmqpClient::Envelope::ptr_t envelope){
 
 void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
     LOG4CPLUS_TRACE(logger, "realtime info received!");
+    transit_realtime::FeedMessage feed_message;
+    if(! feed_message.ParseFromString(envelope->Message()->Body())){
+        LOG4CPLUS_WARN(logger, "protobuf not valid!");
+        return;
+    }
+    for(const auto& entity: feed_message.entity()){
+        if(entity.HasExtension(chaos::disruption)){
+            LOG4CPLUS_WARN(logger, "has_extension");
+        }else{
+            LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
+        }
+    }
 }
 
 void MaintenanceWorker::listen_rabbitmq(){
