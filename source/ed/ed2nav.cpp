@@ -100,7 +100,7 @@ struct FindAdminWithCities {
                 << "ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat "
                 << "FROM administrative_regions "
                 << "WHERE ST_DWithin(ST_GeographyFromText('POINT("
-                << std::setprecision(16) << c.lon() << " " << c.lat() << ")'), boundary, 0)";
+                << std::setprecision(16) << c.lon() << " " << c.lat() << ")'), boundary, 0.001)";
         pqxx::work work(*conn);
         pqxx::result result = work.exec(request);
         result_type res;

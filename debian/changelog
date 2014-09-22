@@ -1,3 +1,9 @@
+navitia2 (1.1.2) unstable; urgency=low
+
+  * Cities: add tolerance for ST_DWITHIN for postgis 1.5 
+
+ -- Antoine Desbordes <antoine.desbordes@canaltp.fr>  Mon, 22 Sep 2014 13:44:13 +0100
+
 navitia2 (1.1.1) unstable; urgency=low
 
   * Cities: change cmake conf to embbed alembic 
