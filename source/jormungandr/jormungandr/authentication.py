@@ -62,7 +62,7 @@ def authentication_required(func):
 
         if not region:
             #we could not find any regions, we abort
-            abort_request()
+            abort_request(user=get_user(token=get_token()))
 
         if not region or authenticate(region, 'ALL', abort=True):
             return func(*args, **kwargs)
@@ -110,53 +110,33 @@ def authenticate(region, api, abort=False):
 
     if not token:
         if abort:
-            abort_request()
+            #Since we don't have a token, we can't have a user
+            abort_request(user=None)
         else:
             return False
 
-    user = get_user()
+    user = get_user(token=get_token())
     if user:
-        if user.has_access(region, api):
+        if user.has_access(region, api, abort=False, user=user):
             return True
         else:
             if abort:
-                abort_request()
+                abort_request(user=user)
             else:
                 return False
     else:
         if abort:
-           abort_request()
+           abort_request(user=user)
         else:
             return False
 
-def abort_request():
-    """
-    abort a request with the proper http status in case of authentification issues
-    """
-    if get_user():
-        flask_restful.abort(403)
-    else:
-        flask_restful.abort(401)
-
-def has_access(instance, abort=False):
-    if 'PUBLIC' in current_app.config \
-            and current_app.config['PUBLIC']:
-        #if jormungandr is on public mode we skip the authentification process
-        return True
-    res = instance.is_accessible_by(get_user())
-    if abort and not res:
-        abort_request()
-    else:
-        return res
-
-def get_user(abort_if_no_token=True):
+def get_user(abort_if_no_token=True, token=None):
     """
     return the current authenticated User or None
     """
     if hasattr(g, 'user'):
         return g.user
     else:
-        token = get_token()
         if not token:
             #a token is mandatory for non public jormungandr
             if not current_app.config.get('PUBLIC', False):
@@ -173,3 +153,23 @@ def get_user(abort_if_no_token=True):
         logging.debug('user %s', g.user)
 
         return g.user
+
+def has_access(instance, abort=False, user=None):
+    if 'PUBLIC' in current_app.config \
+            and current_app.config['PUBLIC']:
+        #if jormungandr is on public mode we skip the authentification process
+        return True
+    res = instance.is_accessible_by(user)
+    if abort and not res:
+        abort_request(user=user)
+    else:
+        return res
+
+def abort_request(user=None):
+    """
+    abort a request with the proper http status in case of authentification issues
+    """
+    if user:
+        flask_restful.abort(403)
+    else:
+        flask_restful.abort(401)

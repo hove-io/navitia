@@ -98,11 +98,12 @@ class Uri(ResourceUri):
                                                       type_)
                 if res:
                     id = res.uri
+                    user = authentication.get_user(token=authentication.get_token())
                     for instance in res.instances:
-                        if authentication.has_access(instance, abort=False):
+                        if authentication.has_access(instance, abort=False, user=user):
                             region = instance.name
                     if not region:
-                        authentication.abort_request()
+                        authentication.abort_request(user=user)
                 else:
                     abort(404, message="Unable to find an object for the uri %s"
                           % args["external_code"])
