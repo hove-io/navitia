@@ -49,6 +49,7 @@ namespace navitia { namespace kraken{
             std::string broker_password() const;
             std::string broker_vhost() const;
             std::string broker_exchange() const;
+            std::vector<std::string> rt_topics() const;
     };
 
 }}//namespace

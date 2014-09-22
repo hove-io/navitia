@@ -48,10 +48,14 @@ class MaintenanceWorker{
 
         AmqpClient::Channel::ptr_t channel;
         //nom de la queue créer pour ce worker
-        std::string queue_name;
+        std::string queue_name_task;
+        std::string queue_name_rt;
 
         void init_rabbitmq();
         void listen_rabbitmq();
+
+        void handle_task(AmqpClient::Envelope::ptr_t envelope);
+        void handle_rt(AmqpClient::Envelope::ptr_t envelope);
 
     public:
         MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf);
