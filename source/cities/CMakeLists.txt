@@ -7,4 +7,9 @@ target_link_libraries(cities transportation_data_import connectors types pq pqxx
 INSTALL_TARGETS(/usr/bin/ cities)
 
 INSTALL_FILES(/usr/share/navitia/cities/alembic FILES alembic.ini alembic/env.py)
-INSTALL_FILES(/usr/share/navitia/cities/alembic/versions FILES alembic/versions/15e13307464d_create_table.py)
+
+FILE(GLOB
+    alembic_cities
+    alembic/versions/*.py
+    )
+INSTALL_FILES(/usr/share/navitia/cities/alembic/versions FILES ${alembic_cities})
