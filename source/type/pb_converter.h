@@ -36,18 +36,18 @@ www.navitia.io
 //forward declare
 namespace navitia{
     namespace routing{
-        class PathItem;
+        struct PathItem;
     }
     namespace georef{
-        class PathItem;
-        class Way;
-        class POI;
-        class Path;
-        class POIType;
+        struct PathItem;
+        struct Way;
+        struct POI;
+        struct Path;
+        struct POIType;
     }
     namespace fare{
-        class results;
-        class Ticket;
+        struct results;
+        struct Ticket;
     }
     namespace timetables {
         struct Thermometer;

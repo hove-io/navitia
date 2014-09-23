@@ -302,7 +302,8 @@ struct HasMessages{
 struct GeographicalCoord{
     GeographicalCoord() : _lon(0), _lat(0) {}
     GeographicalCoord(double lon, double lat) : _lon(lon), _lat(lat) {}
-    GeographicalCoord(const GeographicalCoord& coord) : _lon(coord.lon()), _lat(coord.lat()){}
+    GeographicalCoord(const GeographicalCoord& coord) = default;
+    GeographicalCoord& operator=(const GeographicalCoord& coord) = default;
     GeographicalCoord(double x, double y, bool) {set_xy(x, y);}
 
     double lon() const { return _lon;}
@@ -314,12 +315,12 @@ struct GeographicalCoord{
 
     constexpr static double coord_epsilon = 1e-15;
     /// Ordre des coordonnées utilisé par ProximityList
-    bool operator<(GeographicalCoord other) const {
+    bool operator<(const GeographicalCoord &other) const {
         if ( fabs(lon() - other.lon()) > coord_epsilon )
             return lon() < other.lon();
         return lat() < other.lat();
     }
-    bool operator != (GeographicalCoord other) const {
+    bool operator != (const GeographicalCoord &other) const {
         return fabs(lon() - other.lon()) > coord_epsilon
                 || fabs(lat() - other.lat()) > coord_epsilon ;
     }

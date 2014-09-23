@@ -52,6 +52,7 @@ struct Cost {
     Cost(int v): value(v) {}
     Cost(): undefined(true) {}
     Cost(const Cost& c) = default;
+    Cost& operator=(const Cost& c) = default;
 
     Cost operator+ (Cost c) const {
         return c+= *this;
