@@ -122,22 +122,10 @@ public:
     void clean();
 
     /**
-          * Transforme les les pointeurs en données
-          */
-    void transform(navitia::type::PT_Data& data);
-
-    /**
-          * Gère les relations
-          */
-    void build_relations(navitia::type::PT_Data & data);
-
-    /**
      * Finalise les start_time et end_time des stop_times en frequence
      */
     void finalize_frequency();
 
-    /// Construit le contour de la région à partir des stops points
-    std::string compute_bounding_box(navitia::type::PT_Data &data);
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;
         ITERATE_NAVITIA_PT_TYPES(DELETE_ALL_ELEMENTS)
