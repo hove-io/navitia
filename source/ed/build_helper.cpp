@@ -80,6 +80,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     vj->meta_vj = mvj;
 
     vj->idx = b.data->pt_data->vehicle_journeys.size();
+    vj->name = "vehicle_journey " + std::to_string(vj->idx);
     b.data->pt_data->vehicle_journeys.push_back(vj);
 
     auto it = b.lines.find(line_name);
@@ -101,6 +102,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         navitia::type::JourneyPattern* jp = new navitia::type::JourneyPattern();
         jp->idx = b.data->pt_data->journey_patterns.size();
         jp->uri = route->uri + ":0";
+        jp->name = route->uri + " 0";
         b.data->pt_data->journey_patterns.push_back(jp);
         route->journey_pattern_list.push_back(jp);
         jp->route = route;
@@ -210,6 +212,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
         jpp->stop_point = sp;
         sp->journey_pattern_point_list.push_back(jpp);
         jpp->journey_pattern = vj->journey_pattern;
+        jpp->uri = "stop:" + sp->uri + "::jp:" + vj->journey_pattern->uri;
         b.data->pt_data->journey_pattern_points.push_back(jpp);
     }
     //on construit un nouveau journey pattern point à chaque fois

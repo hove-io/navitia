@@ -516,15 +516,59 @@ def is_valid_route(route, depth_check=1):
 
 
 def is_valid_line(route, depth_check=1):
+    if depth_check < 0:
+        return
     get_not_null(route, "name")
     get_not_null(route, "id")
     #TODO more checks
 
 
 def is_valid_place(place, depth_check=1):
+    if depth_check < 0:
+        return
     get_not_null(place, "name")
     get_not_null(place, "id")
     #TODO more checks
+
+
+def is_valid_vehicle_journey(vj, depth_check=1):
+    if depth_check < 0:
+        return
+    get_not_null(vj, "id")
+    get_not_null(vj, "name")
+
+    if depth_check > 0:
+        is_valid_journey_pattern(get_not_null(vj, 'journey_pattern'), depth_check=depth_check-1)
+
+        stoptimes = get_not_null(vj, 'stop_times')
+
+        for st in stoptimes:
+            get_valid_time(get_not_null(st, 'arrival_time'))
+            get_valid_time(get_not_null(st, 'departure_time'))
+
+            if depth_check > 1:
+                #with depth > 1 (we are already in the stoptime nested object), we don't want jpp
+                is_valid_journey_pattern_point(get_not_null(st, 'journey_pattern_point'), depth_check - 2)
+            else:
+                assert 'journey_pattern_point' not in st
+    else:
+        #with depth = 0, we don't want the stop times
+        assert 'stop_times' not in vj
+
+
+def is_valid_journey_pattern(jp, depth_check=1):
+    if depth_check < 0:
+        return
+    get_not_null(jp, "id")
+    get_not_null(jp, "name")
+
+
+def is_valid_journey_pattern_point(jpp, depth_check=1):
+    get_not_null(jpp, "id")
+    if depth_check > 0:
+        is_valid_stop_point(get_not_null(jpp, 'stop_point'))
+    else:
+        assert 'stop_point' not in jpp
 
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
