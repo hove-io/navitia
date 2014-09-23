@@ -200,7 +200,7 @@ struct Path {
     std::deque<PathItem> path_items = {}; //< Liste des voies parcourues
 };
 
-class ProjectionData;
+struct ProjectionData;
 
 struct POI;
 struct POIType;

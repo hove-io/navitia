@@ -52,9 +52,9 @@ using nt::hasProperties;
 using nt::hasVehicleProperties;
 
 
-#define FORWARD_CLASS_DECLARE(type_name, collection_name) class type_name;
+#define FORWARD_CLASS_DECLARE(type_name, collection_name) struct type_name;
 ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
-class StopTime;
+struct StopTime;
 
 using nt::ConnectionType;
 using nt::VehicleJourneyType;

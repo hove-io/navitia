@@ -34,7 +34,7 @@ www.navitia.io
 #include "routing/raptor_utils.h"
 #include <vector>
 namespace navitia { namespace routing {
-    class RAPTOR;
+    struct RAPTOR;
      ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
     Path makePathreverse(unsigned int destination_idx, unsigned int countb,
             const type::AccessibiliteParams & accessibilite_params,

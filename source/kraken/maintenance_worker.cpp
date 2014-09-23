@@ -148,7 +148,8 @@ void MaintenanceWorker::init_rabbitmq(){
 }
 
 MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager, kraken::Configuration conf) :
-        data_manager(data_manager), conf(conf),
-        logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))){}
+        data_manager(data_manager),
+        logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
+        conf(conf){}
 
 }

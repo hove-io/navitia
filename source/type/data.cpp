@@ -502,8 +502,10 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
         case Type_e::POI:
             result = geo_ref->pois[source_idx]->get(target, *geo_ref);
+            break;
         case Type_e::POIType:
             result = geo_ref->poitypes[source_idx]->get(target, *geo_ref);
+            break;
         default: break;
     }
     return result;
