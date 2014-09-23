@@ -31,7 +31,7 @@
 
 from flask import url_for, redirect
 from flask.ext.restful import fields, marshal_with, reqparse, abort
-from jormungandr import i_manager, authentification
+from jormungandr import i_manager, authentication
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode, \
     commercial_mode, company, network, pagination,\
@@ -98,18 +98,19 @@ class Uri(ResourceUri):
                                                       type_)
                 if res:
                     id = res.uri
+                    user = authentication.get_user(token=authentication.get_token())
                     for instance in res.instances:
-                        if authentification.has_access(instance, abort=False):
+                        if authentication.has_access(instance, abort=False, user=user):
                             region = instance.name
                     if not region:
-                        authentification.abort_request()
+                        authentication.abort_request(user=user)
                 else:
                     abort(404, message="Unable to find an object for the uri %s"
                           % args["external_code"])
             else:
                 abort(503, message="Not implemented yet")
         else:
-            authentification.authenticate(region, 'ALL', abort=True)
+            authentication.authenticate(region, 'ALL', abort=True)
         self.region = i_manager.get_region(region, lon, lat)
 
         #we store the region in the 'g' object, which is local to a request

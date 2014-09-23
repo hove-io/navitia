@@ -37,7 +37,7 @@ from functools import wraps
 from collections import OrderedDict, deque
 from flask import url_for
 from flask.ext.restful.utils import unpack
-from jormungandr.authentification import authentification_required
+from jormungandr.authentication import authentication_required
 import navitiacommon.type_pb2 as type_pb2
 
 
@@ -54,7 +54,7 @@ class ResourceUri(StatedResource):
         if authentication:
             #some rare API (eg journey) must handle the authenfication by themself, thus deactivate it
             #by default ALWAYS use authentication=True
-            self.method_decorators.append(authentification_required)
+            self.method_decorators.append(authentication_required)
 
     def get_filter(self, items):
         filter_list = []

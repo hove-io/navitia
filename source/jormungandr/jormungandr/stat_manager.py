@@ -40,7 +40,7 @@ from datetime import datetime, timedelta
 import logging
 from jormungandr import app
 from jormungandr.instance import Instance
-from jormungandr.authentification import get_user
+from jormungandr.authentication import get_user, get_token
 from jormungandr import utils
 
 import time
@@ -132,7 +132,7 @@ class StatManager(object):
         stat_request.request_date = int(time.mktime(dt.timetuple()))
         # Note: for stat we don't want to abort if no token has been
         # given (it's up to the authentication process)
-        user = get_user(abort_if_no_token=False)
+        user = get_user(token=get_token(), abort_if_no_token=False)
         if user is not None:
             stat_request.user_id = user.id
             stat_request.user_name = user.login

@@ -37,11 +37,11 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from jormungandr.interfaces.parsers import depth_argument
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.authentification import authentification_required
+from jormungandr.authentication import authentication_required
 
 
 class TimeTables(Resource):
-    method_decorators = [authentification_required]
+    method_decorators = [authentication_required]
 
     def __init__(self):
         self.parsers = {}
