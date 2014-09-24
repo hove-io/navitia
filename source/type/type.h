@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "type/time_duration.h"
 #include "datetime.h"
+#include "geographical_coord.h"
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
 #include "utils/functions.h"
@@ -46,12 +47,6 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/geometry/geometries/register/linestring.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-
-namespace mpl = boost::mpl;
 namespace navitia { namespace georef {
  struct Admin;
  struct GeoRef;
@@ -301,89 +296,6 @@ struct HasMessages{
             const boost::posix_time::time_period& action_period) const;
 
 };
-
-/** Coordonnées géographiques en WGS84
- */
-struct GeographicalCoord{
-    GeographicalCoord() : _lon(0), _lat(0) {}
-    GeographicalCoord(double lon, double lat) : _lon(lon), _lat(lat) {}
-    GeographicalCoord(const GeographicalCoord& coord) = default;
-    GeographicalCoord& operator=(const GeographicalCoord& coord) = default;
-    GeographicalCoord(double x, double y, bool) {set_xy(x, y);}
-
-    double lon() const { return _lon;}
-    double lat() const { return _lat;}
-
-    void set_lon(double lon) { this->_lon = lon;}
-    void set_lat(double lat) { this->_lat = lat;}
-    void set_xy(double x, double y){this->set_lon(x*N_M_TO_DEG); this->set_lat(y*N_M_TO_DEG);}
-
-    constexpr static double coord_epsilon = 1e-15;
-    /// Ordre des coordonnées utilisé par ProximityList
-    bool operator<(const GeographicalCoord &other) const {
-        if ( fabs(lon() - other.lon()) > coord_epsilon )
-            return lon() < other.lon();
-        return lat() < other.lat();
-    }
-    bool operator != (const GeographicalCoord &other) const {
-        return fabs(lon() - other.lon()) > coord_epsilon
-                || fabs(lat() - other.lat()) > coord_epsilon ;
-    }
-
-    constexpr static double N_DEG_TO_RAD = 0.01745329238;
-    constexpr static double N_M_TO_DEG = 1.0/111319.9;
-    /** Calcule la distance Grand Arc entre deux nœuds
-      *
-      * On utilise la formule de Haversine
-      * http://en.wikipedia.org/wiki/Law_of_haversines
-      *
-      * Si c'est des coordonnées non degrés, alors on utilise la distance euclidienne
-      */
-    double distance_to(const GeographicalCoord & other) const;
-
-
-    /** Projette un point sur un segment
-
-       Retourne les coordonnées projetées et la distance au segment
-       Si le point projeté tombe en dehors du segment, alors ça tombe sur le nœud le plus proche
-       htCommercialtp://paulbourke.net/geometry/pointline/
-       */
-    std::pair<type::GeographicalCoord, float> project(GeographicalCoord segment_start, GeographicalCoord segment_end) const;
-
-    /** Calcule la distance au carré grand arc entre deux points de manière approchée
-
-        Cela sert essentiellement lorsqu'il faut faire plein de comparaisons de distances à un point (par exemple pour proximity list)
-    */
-    double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
-        static const double EARTH_RADIUS_IN_METERS_SQUARE = 40612548751652.183023;
-        double latitudeArc = (this->lat() - other.lat()) * N_DEG_TO_RAD;
-        double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;
-        double tmp = coslat * longitudeArc;
-        return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
-    }
-
-    bool is_initialized() const {
-        return distance_to(GeographicalCoord()) > 1;
-    }
-
-    bool is_valid() const{
-        return this->lon() >= -180 && this->lon() <= 180 &&
-               this->lat() >= -90 && this->lat() <= 90;
-    }
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & _lon & _lat;
-    }
-
-private:
-    double _lon;
-    double _lat;
-};
-
-std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
-
-/** Deux points sont considérés comme étant égaux s'ils sont à moins de 0.1m */
-bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 
 enum class ConnectionType {
@@ -1092,8 +1004,3 @@ struct enum_size_trait<type::Mode_e> {
     }
 };
 } //namespace navitia
-
-
-// Adaptateurs permettant d'utiliser boost::geometry avec les geographical coord
-BOOST_GEOMETRY_REGISTER_POINT_2D_GET_SET(navitia::type::GeographicalCoord, double, boost::geometry::cs::cartesian, lon, lat, set_lon, set_lat)
-BOOST_GEOMETRY_REGISTER_LINESTRING(std::vector<navitia::type::GeographicalCoord>)

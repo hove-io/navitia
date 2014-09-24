@@ -29,15 +29,16 @@ www.navitia.io
 */
 
 #include "gtfs_parser.h"
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include <fstream>
-#include <iostream>
-#include <set>
 #include "utils/encoding_converter.h"
 #include "utils/csv.h"
 #include "utils/logger.h"
+#include <boost/geometry.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/range/algorithm/sort.hpp>
+#include <boost/tokenizer.hpp>
+#include <fstream>
+#include <iostream>
+#include <set>
 
 namespace nm = ed::types;
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;

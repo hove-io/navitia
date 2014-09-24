@@ -35,10 +35,11 @@ www.navitia.io
 #include "utils/csv.h"
 #include "utils/configuration.h"
 
-#include <unordered_map>
 #include <boost/foreach.hpp>
-#include <array>
+#include <boost/geometry.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <array>
+#include <unordered_map>
 
 using navitia::type::idx_t;
 

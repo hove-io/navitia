@@ -37,12 +37,9 @@ www.navitia.io
 #include <set>
 #include "ed/types.h"
 #include "ed_persistor.h"
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_point.hpp>
-#include <boost/geometry/geometries/linestring.hpp>
 #include "third_party/RTree/RTree.h"
 
 namespace bg = boost::geometry;

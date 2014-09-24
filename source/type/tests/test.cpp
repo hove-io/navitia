@@ -36,6 +36,8 @@ www.navitia.io
 #include "type/message.h"
 #include "type/data.h"
 
+#include <boost/geometry.hpp>
+
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
