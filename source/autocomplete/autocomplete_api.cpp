@@ -106,17 +106,6 @@ int penalty_by_type(type::Type_e ntype, bool is_address_type) {
     }
 }
 
-
-///Mettre à jour la qualité sur le poids de POI
-void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
-        const navitia::type::Data &d){
-    for(auto &item : ac_result){
-        int poi_weight = 0;
-        poi_weight = item.quality + d.geo_ref->pois[item.idx]->weight * 2;
-        item.quality = std::min(poi_weight, 100);
-    }
-}
-
 ///Find out if the list of cities(admins) contains at least one city
 ///with level=8 from the original dataset
 bool has_admin_level8_from_original_dataset(const std::vector<georef::Admin*>& admins){
@@ -127,7 +116,6 @@ bool has_admin_level8_from_original_dataset(const std::vector<georef::Admin*>& a
     }
     return false;
 }
-
 
 ///Ajouter une pénalité aux objects sans admin par au moin d.geo_ref->word_weight
 void update_quality_for_missing_admin(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
@@ -164,12 +152,6 @@ void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
     for(auto &item : ac_result) {
         item.quality -= penalty;
     }
-
-    //Mettre à jour la qualité sur le poids de POI
-    //Cette méthode n'est pas utilisé en absence du poids sur poi-type.
-//    if (ntype ==navitia::type::Type_e::POI){
-//        update_quality_by_poi_type(ac_result, d);
-//    }
 
     //Ajouter une pénalité aux objects sans admin par au moin d.geo_ref->word_weight
     update_quality_for_missing_admin(ac_result, d, ntype);
@@ -254,7 +236,6 @@ pbnavitia::Response autocomplete(const std::string &q,
         fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent", pb_response.mutable_error());
         return pb_response;
     }
-    std::cout << "Passe par la méthode autocomplete_api.autocomplete" <<  "\n";
     int nbmax_temp = nbmax;
     nbmax = std::max(100, nbmax);
     bool addType = d.pt_data->stop_area_autocomplete.is_address_type(q, d.geo_ref->synonyms);
@@ -424,6 +405,25 @@ void create_pt_object_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>&
     }
 }
 
+int get_pt_object_order(int n){
+    switch(n){
+    case pbnavitia::NETWORK:
+        return 1;
+        break;
+     case pbnavitia::COMMERCIAL_MODE:
+        return 2;
+        break;
+    case pbnavitia::LINE:
+       return 3;
+       break;
+    case pbnavitia::ROUTE:
+       return 4;
+       break;
+    default:
+       return 5;
+       break;
+    }
+}
 
 pbnavitia::Response pt_object(const std::string &q,
                                  const std::vector<nt::Type_e> &filter,
@@ -434,7 +434,9 @@ pbnavitia::Response pt_object(const std::string &q,
                                  const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;
-    std::cout << "Passe par la méthode autocomplete_api.pt_object" <<  "\n";
+    int nbmax_temp = nbmax;
+    nbmax = std::max(100, nbmax);
+
     if (q.length() == 0) {
         fill_pb_error(pbnavitia::Error::bad_filter, "Ptobject : value of q absent", pb_response.mutable_error());
         return pb_response;
@@ -445,30 +447,80 @@ pbnavitia::Response pt_object(const std::string &q,
         std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
         switch(type){
         case nt::Type_e::Network:
-            std::cout << "Passe par case nt::Type_e::Network" <<  "\n";
-            result = d.pt_data->network_autocomplete.find_complete(q,
-                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            if (search_type==0) {
+                result = d.pt_data->network_autocomplete.find_complete(q,
+                         d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            } else {
+                result = d.pt_data->network_autocomplete.find_partial_with_pattern(q,
+                         d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax,
+                         [](type::idx_t){return true;});
+            }
+
             break;
         case nt::Type_e::CommercialMode:
-            std::cout << "Passe par case nt::Type_e::CommercialMode" <<  "\n";
-            result = d.pt_data->mode_autocomplete.find_complete(q,
-                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            if (search_type==0) {
+                result = d.pt_data->mode_autocomplete.find_complete(q,
+                            d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            } else {
+                result = d.pt_data->mode_autocomplete.find_partial_with_pattern(q,
+                            d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax,
+                            [](type::idx_t){return true;});
+            }
             break;
         case nt::Type_e::Line:
-            std::cout << "Passe par case nt::Type_e::Line" <<  "\n";
-            result = d.pt_data->line_autocomplete.find_complete(q,
-                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            if (search_type==0) {
+                result = d.pt_data->line_autocomplete.find_complete(q,
+                            d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            } else {
+                result = d.pt_data->line_autocomplete.find_partial_with_pattern(q,
+                            d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax, [](type::idx_t){return true;});
+            }
             break;
         case nt::Type_e::Route:
-            std::cout << "Passe par case nt::Type_e::Route" <<  "\n";
-            result = d.pt_data->route_autocomplete.find_complete(q,
-                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            if (search_type==0) {
+                result = d.pt_data->route_autocomplete.find_complete(q,
+                            d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            } else {
+                result = d.pt_data->route_autocomplete.find_partial_with_pattern(q,
+                            d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax, [](type::idx_t){return true;});
+            }
             break;
         default: break;
         }
 
         create_pt_object_pb(result, type, depth, d, pb_response);
     }
+
+    //Sort result by pt_object type : Network, Mode, Line, Route
+    auto compare_attributs = [](pbnavitia::Ptobject a, pbnavitia::Ptobject b)->bool {
+        if (a.embedded_type() != b.embedded_type()){
+            const auto a_order = get_pt_object_order(a.embedded_type());
+            const auto b_order = get_pt_object_order(b.embedded_type());
+            return  a_order< b_order;
+        } else if(a.quality() == b.quality()) {
+            return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
+        }
+        else {
+            return a.quality() > b.quality();
+        }
+    };
+
+    nbmax = nbmax_temp;
+    auto mutable_pt_objects = pb_response.mutable_pt_objects();
+    int result_size = std::min(nbmax, mutable_pt_objects->size());
+    std::partial_sort(mutable_pt_objects->begin(),mutable_pt_objects->begin() + result_size,
+                      mutable_pt_objects->end(),compare_attributs);
+
+    while (mutable_pt_objects->size() > nbmax){
+        mutable_pt_objects->RemoveLast();
+    }
+
+    //Pagination
+    auto pagination = pb_response.mutable_pagination();
+    pagination->set_totalresult(result_size);
+    pagination->set_startpage(0);
+    pagination->set_itemsperpage(nbmax);
+    pagination->set_itemsonpage(result_size);
 
     return pb_response;
 }

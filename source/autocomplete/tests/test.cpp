@@ -843,3 +843,62 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     BOOST_REQUIRE_EQUAL(resp.places(8).uri(), "rue DU TREGOR");
     BOOST_REQUIRE_EQUAL(resp.places(9).uri(), "rue VIS");
 }
+
+/*
+1. We have 1 Network ,1 mode, 2 lines and 4 routes
+3. Call with "quimer" and count = 10
+4. In the result the administrative_region is the first one
+5. All the stop_areas with same quality are sorted by name (case insensitive).
+6. The addresses have different quality values due to diferent number of words.
+7. There 10 elements in the result.
+8. We don't have penalty on "admin weight" and "stoparea weight".
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("201409011T1739");
+    b.generate_dummy_basis();
+
+    //Create a new line and affect it to mode "Tram"
+    navitia::type::Line* line = new navitia::type::Line();
+    line->idx = b.data->pt_data->lines.size();
+    line-> uri = "line 1";
+    line-> name = "line 1";
+    line->commercial_mode = b.data->pt_data->commercial_modes[0];
+    b.data->pt_data->lines.push_back(line);
+
+    //Add two routes in the line
+    navitia::type::Route* route = new navitia::type::Route();
+    route->idx = b.data->pt_data->routes.size();
+    route->name = line->name;
+    route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
+    b.data->pt_data->routes.push_back(route);
+    line->route_list.push_back(route);
+    route->line = line;
+
+    route = new navitia::type::Route();
+    route->idx = b.data->pt_data->routes.size();
+    route->name = line->name;
+    route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
+    b.data->pt_data->routes.push_back(route);
+    line->route_list.push_back(route);
+    route->line = line;
+
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::Network);
+    type_filter.push_back(navitia::type::Type_e::CommercialMode);
+    type_filter.push_back(navitia::type::Type_e::Line);
+    pbnavitia::Response resp = navitia::autocomplete::pt_object("Tram", type_filter , 1, 10, admins, 0, *(b.data));
+    //Here we want only Mode, line StopArea
+    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::LINE);
+
+    type_filter.push_back(navitia::type::Type_e::Route);
+    resp = navitia::autocomplete::pt_object("line", type_filter , 1, 10, admins, 0, *(b.data));
+    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::LINE);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::ROUTE);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(2).embedded_type(), pbnavitia::ROUTE);
+}

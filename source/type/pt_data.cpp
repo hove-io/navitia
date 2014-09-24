@@ -56,7 +56,6 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->stop_area_autocomplete.clear();
     for(const StopArea* sa : this->stop_areas){
         // A ne pas ajouter dans le disctionnaire si pas ne nom
-        //if ((!sa->name.empty()) && (sa->admin_list.size() > 0)){
         if ((!sa->name.empty()) && (sa->visible)) {
             std::string key="";
             for( navitia::georef::Admin* admin : sa->admin_list){
@@ -83,7 +82,9 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->line_autocomplete.clear();
     for(const Line* line : this->lines){
         if (!line->name.empty()){
-            this->line_autocomplete.add_string(line->name, line->idx, georef.synonyms);
+            std::string key="";
+            if (line->commercial_mode) {key = line->commercial_mode->name;}
+            this->line_autocomplete.add_string(key + " " + line->name, line->idx, georef.synonyms);
         }
     }
     this->line_autocomplete.build();
