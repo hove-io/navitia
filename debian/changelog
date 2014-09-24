@@ -1,3 +1,10 @@
+navitia2 (1.0.2) unstable; urgency=low
+
+  * cherry pick of commits from <https://github.com/CanalTP/navitia/pull/567>
+    for handling default physical mode
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 24 Sep 2014 16:11:13 +0100
+
 navitia2 (1.0.1) unstable; urgency=low
 
   * cherry pick of commits from <https://github.com/CanalTP/navitia/pull/526>
