@@ -433,7 +433,7 @@ struct routing_api_data {
     ed::builder b = {"20120614"};
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;
-    std::vector<uint32_t> datetimes = {navitia::test::to_posix_timestamp("20120614T080000")};
+    std::vector<uint64_t> datetimes = {navitia::test::to_posix_timestamp("20120614T080000")};
     std::vector<std::string> forbidden;
 
     double distance_ab;

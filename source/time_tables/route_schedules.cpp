@@ -125,11 +125,11 @@ get_vehicle_journey(const std::vector<std::vector<datetime_stop_time> >& stop_ti
 pbnavitia::Response
 route_schedule(const std::string& filter,
                const std::vector<std::string>& forbidden_uris,
-               const std::string &str_dt,
+               const pt::ptime datetime,
                uint32_t duration, uint32_t interface_version,
                const uint32_t max_depth, int count, int start_page,
                type::Data &d, bool disruption_active, const bool show_codes) {
-    RequestHandle handler("ROUTE_SCHEDULE", filter, forbidden_uris, str_dt, duration, d, {});
+    RequestHandle handler("ROUTE_SCHEDULE", filter, forbidden_uris, datetime, duration, d, {});
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;

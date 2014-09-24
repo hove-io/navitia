@@ -79,6 +79,6 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
  */
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                    const std::vector<std::string>& forbidden_uris,
-                                   const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data, bool disruption_active);
+                                   const pt::ptime str_dt, uint32_t duration, uint32_t depth, type::Data & data, bool disruption_active);
 
 }}

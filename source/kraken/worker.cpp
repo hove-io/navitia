@@ -199,17 +199,19 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     for(int i = 0; i < request.forbidden_uri_size(); ++i)
         forbidden_uri.push_back(request.forbidden_uri(i));
     this->init_worker_data(data);
+
+    bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     try {
         switch(api) {
         case pbnavitia::NEXT_DEPARTURES:
             return timetables::next_departures(request.departure_filter(),
-                    forbidden_uri, request.from_datetime(),
+                    forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(), *data, false, request.count(),
                     request.start_page(), request.show_codes());
         case pbnavitia::NEXT_ARRIVALS:
             return timetables::next_arrivals(request.arrival_filter(),
-                    forbidden_uri, request.from_datetime(),
+                    forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
                     *data, false, request.count(), request.start_page(), request.show_codes());
@@ -217,19 +219,19 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
             return timetables::stops_schedule(request.departure_filter(),
                                               request.arrival_filter(),
                                               forbidden_uri,
-                    request.from_datetime(), request.duration(), request.depth(),
+                    from_datetime, request.duration(), request.depth(),
                     *data, false);
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar()) :
                                              boost::optional<const std::string>(),
-                    forbidden_uri, request.from_datetime(),
+                    forbidden_uri, from_datetime,
                     request.duration(),
                     request.depth(), max_date_times, request.interface_version(),
                     request.count(), request.start_page(), *data, false, request.show_codes());
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
-                    forbidden_uri, request.from_datetime(),
+                    forbidden_uri, from_datetime,
                     request.duration(), request.interface_version(), request.depth(),
                     request.count(), request.start_page(), *data, false, request.show_codes());
         default:
@@ -417,7 +419,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden.push_back(request.forbidden_uris(i));
 
-    std::vector<uint32_t> datetimes;
+    std::vector<uint64_t> datetimes;
     for(int i = 0; i < request.datetimes_size(); ++i)
         datetimes.push_back(request.datetimes(i));
 

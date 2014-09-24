@@ -410,7 +410,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
 
 
 std::vector<bt::ptime>
-parse_datetimes(RAPTOR &raptor,const std::vector<uint32_t>& timestamps,
+parse_datetimes(RAPTOR &raptor,const std::vector<uint64_t>& timestamps,
                 pbnavitia::Response &response, bool clockwise) {
     std::vector<bt::ptime> datetimes;
 
@@ -434,12 +434,12 @@ parse_datetimes(RAPTOR &raptor,const std::vector<uint32_t>& timestamps,
 }
 
 pbnavitia::Response
-make_response(RAPTOR &raptor, const type::EntryPoint &origin,
-              const type::EntryPoint &destination,
-              const std::vector<uint32_t> &datetimes_str, bool clockwise,
-              const type::AccessibiliteParams & accessibilite_params,
+make_response(RAPTOR &raptor, const type::EntryPoint& origin,
+              const type::EntryPoint& destination,
+              const std::vector<uint64_t>& timestamps, bool clockwise,
+              const type::AccessibiliteParams& accessibilite_params,
               std::vector<std::string> forbidden,
-              georef::StreetNetwork & worker,
+              georef::StreetNetwork& worker,
               bool disruption_active,
               bool allow_odt,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
@@ -448,7 +448,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     std::vector<Path> pathes;
 
     std::vector<bt::ptime> datetimes;
-    datetimes = parse_datetimes(raptor, datetimes_str, response, clockwise);
+    datetimes = parse_datetimes(raptor, timestamps, response, clockwise);
     if(response.has_error() || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
@@ -523,7 +523,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 pbnavitia::Response
 make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
               const std::vector<type::EntryPoint> &destinations,
-              const uint32_t &datetimes_str, bool clockwise,
+              const uint64_t &datetimes_str, bool clockwise,
               const type::AccessibiliteParams & accessibilite_params,
               std::vector<std::string> forbidden,
               georef::StreetNetwork & worker,
@@ -607,7 +607,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
-                                   const uint32_t datetime_timestamp,bool clockwise,
+                                   const uint64_t datetime_timestamp,bool clockwise,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,

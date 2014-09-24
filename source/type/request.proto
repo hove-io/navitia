@@ -33,7 +33,7 @@ message PlacesRequest {
 message NextStopTimeRequest {
     required string departure_filter    = 1;
     required string arrival_filter      = 2;
-    required string from_datetime       = 3;
+    required uint64 from_datetime       = 3;
     required int32 duration             = 4;
     required int32 depth                = 5;
     required int32 nb_stoptimes         = 7;

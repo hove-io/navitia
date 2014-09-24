@@ -766,7 +766,7 @@ class Journeys(ResourceUri, ResourceUtc):
         args['origin_access_duration'] = []
         args['destination'] = []
         args['destination_access_duration'] = []
-        for loop in [('from','origin',True),('to','destination',False)]:
+        for loop in [('from', 'origin', True), ('to', 'destination', False)]:
             for location in args[loop[0]]:
                 if "access_duration" in location:
                     args[loop[1]+'_access_duration'].append(location["access_duration"])
