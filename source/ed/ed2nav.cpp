@@ -71,6 +71,8 @@ struct FindAdminWithCities {
         admin_by_insee_code(m)
         {}
 
+    FindAdminWithCities(const FindAdminWithCities&) = default;
+    FindAdminWithCities& operator=(const FindAdminWithCities&) = default;
     ~FindAdminWithCities() {
         if (nb_call == 0) return;
 

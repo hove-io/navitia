@@ -37,7 +37,12 @@ www.navitia.io
 namespace navitia { namespace proximitylist {
 
 using type::GeographicalCoord;
-struct NotFound : public std::exception{};
+struct NotFound : public std::exception{
+    NotFound() = default;
+    NotFound(const NotFound&) = default;
+    NotFound& operator=(const NotFound&) = default;
+    virtual ~NotFound() noexcept;
+};
 
 /** Définit un indexe spatial qui permet de retrouver les n éléments les plus proches
  *

@@ -51,32 +51,32 @@ namespace navitia {
 
 nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     switch(pb_type){
-    case pbnavitia::ADDRESS: return nt::Type_e::Address; break;
-    case pbnavitia::STOP_AREA: return nt::Type_e::StopArea; break;
-    case pbnavitia::STOP_POINT: return nt::Type_e::StopPoint; break;
-    case pbnavitia::LINE: return nt::Type_e::Line; break;
-    case pbnavitia::ROUTE: return nt::Type_e::Route; break;
-    case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::JourneyPattern; break;
-    case pbnavitia::NETWORK: return nt::Type_e::Network; break;
-    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::CommercialMode; break;
-    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::PhysicalMode; break;
-    case pbnavitia::CONNECTION: return nt::Type_e::Connection; break;
-    case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::JourneyPatternPoint; break;
-    case pbnavitia::COMPANY: return nt::Type_e::Company; break;
-    case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney; break;
-    case pbnavitia::POI: return nt::Type_e::POI; break;
-    case pbnavitia::POITYPE: return nt::Type_e::POIType; break;
-    case pbnavitia::ADMINISTRATIVE_REGION: return nt::Type_e::Admin; break;
-    case pbnavitia::CALENDAR: return nt::Type_e::Calendar; break;
+    case pbnavitia::ADDRESS: return nt::Type_e::Address;
+    case pbnavitia::STOP_AREA: return nt::Type_e::StopArea;
+    case pbnavitia::STOP_POINT: return nt::Type_e::StopPoint;
+    case pbnavitia::LINE: return nt::Type_e::Line;
+    case pbnavitia::ROUTE: return nt::Type_e::Route;
+    case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::JourneyPattern;
+    case pbnavitia::NETWORK: return nt::Type_e::Network;
+    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::CommercialMode;
+    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::PhysicalMode;
+    case pbnavitia::CONNECTION: return nt::Type_e::Connection;
+    case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::JourneyPatternPoint;
+    case pbnavitia::COMPANY: return nt::Type_e::Company;
+    case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney;
+    case pbnavitia::POI: return nt::Type_e::POI;
+    case pbnavitia::POITYPE: return nt::Type_e::POIType;
+    case pbnavitia::ADMINISTRATIVE_REGION: return nt::Type_e::Admin;
+    case pbnavitia::CALENDAR: return nt::Type_e::Calendar;
     default: return nt::Type_e::Unknown;
     }
 }
 
 nt::OdtLevel_e get_odt_level(pbnavitia::OdtLevel pb_odt_level) {
     switch(pb_odt_level){
-        case pbnavitia::OdtLevel::mixt: return nt::OdtLevel_e::mixt; break;
-        case pbnavitia::OdtLevel::zonal: return nt::OdtLevel_e::zonal; break;
-        case pbnavitia::OdtLevel::all: return nt::OdtLevel_e::all; break;
+        case pbnavitia::OdtLevel::mixt: return nt::OdtLevel_e::mixt;
+        case pbnavitia::OdtLevel::zonal: return nt::OdtLevel_e::zonal;
+        case pbnavitia::OdtLevel::all: return nt::OdtLevel_e::all;
         default: return nt::OdtLevel_e::none;
     }
 }
@@ -494,24 +494,24 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         return result;
     }
     switch(request.requested_api()){
-        case pbnavitia::STATUS: return status(); break;
-        case pbnavitia::places: return autocomplete(request.places()); break;
-        case pbnavitia::pt_objects: return pt_object(request.pt_objects()); break;
-        case pbnavitia::place_uri: return place_uri(request.place_uri()); break;
+        case pbnavitia::STATUS: return status();
+        case pbnavitia::places: return autocomplete(request.places());
+        case pbnavitia::pt_objects: return pt_object(request.pt_objects());
+        case pbnavitia::place_uri: return place_uri(request.place_uri());
         case pbnavitia::ROUTE_SCHEDULES:
         case pbnavitia::NEXT_DEPARTURES:
         case pbnavitia::NEXT_ARRIVALS:
         case pbnavitia::STOPS_SCHEDULES:
         case pbnavitia::DEPARTURE_BOARDS:
-            return next_stop_times(request.next_stop_times(), request.requested_api()); break;
+            return next_stop_times(request.next_stop_times(), request.requested_api());
         case pbnavitia::ISOCHRONE:
         case pbnavitia::NMPLANNER:
-        case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
-        case pbnavitia::places_nearby: return proximity_list(request.places_nearby()); break;
-        case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
-        case pbnavitia::METADATAS : return metadatas(); break;
-        case pbnavitia::disruptions : return disruptions(request.disruptions()); break;
-        case pbnavitia::calendars : return calendars(request.calendars()); break;
+        case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api());
+        case pbnavitia::places_nearby: return proximity_list(request.places_nearby());
+        case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref());
+        case pbnavitia::METADATAS : return metadatas();
+        case pbnavitia::disruptions : return disruptions(request.disruptions());
+        case pbnavitia::calendars : return calendars(request.calendars());
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", result.mutable_error());

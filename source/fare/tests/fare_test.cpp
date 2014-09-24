@@ -49,8 +49,6 @@ using namespace navitia::fare;
 namespace qi = boost::spirit::qi;
 namespace ph = boost::phoenix;
 
-struct invalid_condition : public std::exception {};
-
 void print_res(const results& res) {
     std::cout << "found : " << !res.not_found << std::endl;
 
@@ -70,7 +68,7 @@ boost::posix_time::time_duration parse_time(const std::string & time_str){
     std::string::const_iterator begin = time_str.begin();
     std::string::const_iterator end = time_str.end();
     if(!qi::phrase_parse(begin, end, time_r, boost::spirit::ascii::space, time) || begin != end) {
-        throw invalid_condition();
+        throw std::invalid_argument("parse_time");
     }
     return boost::posix_time::seconds(time);
 }
@@ -149,7 +147,7 @@ const navitia::routing::Path string_to_path(const std::vector<std::string>& keys
     return p;
 }
 
-Fare load_fare_from_ed(ed::Data ed_data) {
+Fare load_fare_from_ed(const ed::Data& ed_data) {
     Fare fare;
     //for od and price, easy
     fare.od_tickets = ed_data.od_tickets;

@@ -451,16 +451,7 @@ struct ExceptionDate {
     }
 };
 
-inline std::string to_string(ExceptionDate::ExceptionType t) {
-    switch (t) {
-    case ExceptionDate::ExceptionType::add:
-        return "Add";
-    case ExceptionDate::ExceptionType::sub:
-        return "Sub";
-    default:
-        throw navitia::exception("unhandled exception type");
-    }
-}
+std::string to_string(ExceptionDate::ExceptionType t);
 
 inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
     if (str == "Add") {

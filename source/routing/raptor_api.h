@@ -36,17 +36,17 @@ www.navitia.io
 
 namespace navitia{
     namespace type{
-        class EntryPoint;
-        class AccessibiliteParams;
+        struct EntryPoint;
+        struct AccessibiliteParams;
     }
     namespace georef{
-        class StreetNetwork;
+        struct StreetNetwork;
     }
 }
 
 namespace navitia { namespace routing {
 
-class RAPTOR;
+struct RAPTOR;
 
 pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &origin,

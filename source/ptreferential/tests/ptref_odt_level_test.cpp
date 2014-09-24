@@ -42,7 +42,7 @@ www.navitia.io
 #include "type/pt_data.h"
 
 namespace navitia{namespace ptref {
-template<typename T> std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d);
+template<typename T> std::vector<type::idx_t> get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
 }}
 
 using namespace navitia::ptref;
@@ -56,7 +56,7 @@ class Params{
 public:
     navitia::type::Data data;
     std::vector<std::string> forbidden;
-    std::vector<idx_t> final_idx;
+    std::vector<navitia::type::idx_t> final_idx;
     navitia::type::Network* current_ntw;
     navitia::type::Line* current_ln;
     navitia::type::Route* current_rt;

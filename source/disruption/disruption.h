@@ -69,7 +69,7 @@ private:
                       const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time());
     void sort_disruptions(const type::Data &d);
 public:
-    Disruption():logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){};
+    Disruption():logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
 
     void disruptions_list(const std::string& filter,
                     const std::vector<std::string>& forbidden_uris,

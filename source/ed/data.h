@@ -58,7 +58,7 @@ bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * v
       * Les relations entre objets TC sont gèrés par des pointeurs
       *
       */
-class Data{
+class Data: boost::noncopyable {
 public:
 #define ED_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
     ITERATE_NAVITIA_PT_TYPES(ED_COLLECTIONS)

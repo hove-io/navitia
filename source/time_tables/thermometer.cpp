@@ -207,13 +207,11 @@ vector_idx Thermometer::generate_possibilities(const std::vector<vector_idx> &jo
         return {journey_patterns[0].back(), journey_patterns[1].back()};
     } else if(count1 < count2) {
         return {journey_patterns[1].back(), journey_patterns[0].back()};
+    } else if(journey_patterns[0].size() < journey_patterns[1].size()) {
+        return {journey_patterns[0].back(), journey_patterns[1].back()};
     } else {
-        if(journey_patterns[0].size() < journey_patterns[1].size())
-            return {journey_patterns[0].back(), journey_patterns[1].back()};
-        else
-            return {journey_patterns[1].back(), journey_patterns[0].back()};
+        return {journey_patterns[1].back(), journey_patterns[0].back()};
     }
-    return {journey_patterns[0].back(), journey_patterns[1].back()};
 }
 
 std::vector<uint32_t> Thermometer::untail(std::vector<vector_idx> &journey_patterns, type::idx_t spidx, std::vector<vector_size> &pre_computed_lb) {

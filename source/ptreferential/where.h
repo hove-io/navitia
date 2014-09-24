@@ -86,7 +86,6 @@ template<class T>
 struct WhereWrapper {
     boost::shared_ptr< BaseWhere<T> > ptr;
 
-    WhereWrapper(const WhereWrapper & ww) : ptr(ww.ptr){}
     WhereWrapper(BaseWhere<T> * w) : ptr(w) {}
 
     bool operator()(const T & object) const {return (*ptr)(object);}

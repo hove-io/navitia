@@ -37,7 +37,7 @@ namespace navitia {
 
 // Forward declare
 namespace type {
-struct Data;
+class Data;
 enum class Type_e;
 struct GeographicalCoord;
 typedef uint32_t idx_t;

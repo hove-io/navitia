@@ -33,7 +33,7 @@ www.navitia.io
 //forward declare
 namespace navitia{
 namespace routing{
-    class RAPTOR;
+    struct RAPTOR;
 }
 }
 

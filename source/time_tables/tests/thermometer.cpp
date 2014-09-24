@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(t10) {
     for(auto journey_pattern : vec_tmp) {
         try {
             t.match_journey_pattern(journey_pattern);
-        } catch(Thermometer::cant_match cm) {
+        } catch(const Thermometer::cant_match&) {
             error = true;
         }
     }

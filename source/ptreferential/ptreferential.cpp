@@ -52,6 +52,11 @@ www.navitia.io
 namespace navitia{ namespace ptref{
 using namespace navitia::type;
 
+const char* ptref_error::what() const noexcept {
+    return this->more.c_str();
+}
+parsing_error::~parsing_error() noexcept {}
+
 namespace qi = boost::spirit::qi;
 
 /// Fonction qui va lire une chaîne de caractère et remplir un vector de Filter

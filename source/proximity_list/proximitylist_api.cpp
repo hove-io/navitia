@@ -84,6 +84,7 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
             place->set_uri(data.geo_ref->ways[idx]->uri + ":" + boost::lexical_cast<std::string>(data.geo_ref->ways[idx]->nearest_number(coord)));
             place->set_distance(coord.distance_to(coord_item));
             place->set_embedded_type(pbnavitia::ADDRESS);
+            break;
         default:
             break;
         }

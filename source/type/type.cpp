@@ -572,6 +572,17 @@ std::vector<idx_t> StopPointConnection::get(Type_e type, const PT_Data & ) const
 }
 bool StopPointConnection::operator<(const StopPointConnection& other) const { return this < &other; }
 
+std::string to_string(ExceptionDate::ExceptionType t) {
+    switch (t) {
+    case ExceptionDate::ExceptionType::add:
+        return "Add";
+    case ExceptionDate::ExceptionType::sub:
+        return "Sub";
+    default:
+        throw navitia::exception("unhandled exception type");
+    }
+}
+
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_duration) : type(type), uri(uri), access_duration(access_duration) {
    // Gestion des adresses
    if (type == Type_e::Address){

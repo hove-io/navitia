@@ -174,24 +174,7 @@ struct PathItem {
     };
     TransportCaracteristic transportation = TransportCaracteristic::Walk;
 
-    double get_length() const {
-        switch (transportation) {
-        case TransportCaracteristic::BssPutBack:
-        case TransportCaracteristic::BssTake:
-        case TransportCaracteristic::CarPark:
-        case TransportCaracteristic::CarLeaveParking:
-            return 0;
-        case TransportCaracteristic::Walk:
-            //milliseconds to reduce rounding
-            return duration.total_milliseconds() * (default_speed[type::Mode_e::Walking]) / 1000;
-        case TransportCaracteristic::Bike:
-            return duration.total_milliseconds() * (default_speed[type::Mode_e::Bike]) / 1000;
-        case TransportCaracteristic::Car:
-            return duration.total_milliseconds() * (default_speed[type::Mode_e::Car]) / 1000;
-        default:
-            throw navitia::exception("unhandled transportation case");
-        }
-    }
+    double get_length() const;
 };
 
 /** Itinéraire complet */

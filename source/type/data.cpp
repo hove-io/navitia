@@ -56,6 +56,8 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
 
+wrong_version::~wrong_version() noexcept {}
+
 Data::Data() :
     meta(std::make_unique<MetaData>()),
     pt_data(std::make_unique<PT_Data>()),
