@@ -161,6 +161,13 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
             vector_of_admins(request), request.search_type(), *data);
 }
 
+pbnavitia::Response Worker::pt_object(const pbnavitia::PtobjectRequest & request) {
+    const auto data = data_manager.get_data();
+    return navitia::autocomplete::pt_object(request.q(),
+            vector_of_pb_types(request), request.depth(), request.count(),
+            vector_of_admins(request), request.search_type(), *data);
+}
+
 pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &request){
     const auto data = data_manager.get_data();
     std::vector<std::string> forbidden_uris;
@@ -489,6 +496,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     switch(request.requested_api()){
         case pbnavitia::STATUS: return status(); break;
         case pbnavitia::places: return autocomplete(request.places()); break;
+        case pbnavitia::pt_objects: return pt_object(request.pt_objects()); break;
         case pbnavitia::place_uri: return place_uri(request.place_uri()); break;
         case pbnavitia::ROUTE_SCHEDULES:
         case pbnavitia::NEXT_DEPARTURES:

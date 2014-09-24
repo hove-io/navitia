@@ -38,7 +38,7 @@ namespace navitia { namespace autocomplete {
  * se charge de remplir l'objet protocolbuffer autocomplete passé en paramètre
  *
  */
-void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
+void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
                const nt::Type_e type, uint32_t depth, const nt::Data& data,
                pbnavitia::Response & pb_response){
     for(auto result_item : result){
@@ -254,6 +254,7 @@ pbnavitia::Response autocomplete(const std::string &q,
         fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent", pb_response.mutable_error());
         return pb_response;
     }
+    std::cout << "Passe par la méthode autocomplete_api.autocomplete" <<  "\n";
     int nbmax_temp = nbmax;
     nbmax = std::max(100, nbmax);
     bool addType = d.pt_data->stop_area_autocomplete.is_address_type(q, d.geo_ref->synonyms);
@@ -328,7 +329,7 @@ pbnavitia::Response autocomplete(const std::string &q,
         //Mettre à jour les qualités en implémentant une ou plusieurs règles.
         update_quality(result, type, addType, d);
 
-        create_pb(result, type, depth, d, pb_response);
+        create_place_pb(result, type, depth, d, pb_response);
     }
 
     auto compare = [](pbnavitia::Place a, pbnavitia::Place b){
@@ -375,6 +376,100 @@ pbnavitia::Response autocomplete(const std::string &q,
     pagination->set_startpage(0);
     pagination->set_itemsperpage(nbmax);
     pagination->set_itemsonpage(result_size);
+    return pb_response;
+}
+
+
+void create_pt_object_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
+               const nt::Type_e type, uint32_t depth, const nt::Data& data,
+               pbnavitia::Response & pb_response){
+    for(auto result_item : result){
+        pbnavitia::Ptobject* ptobject = pb_response.add_pt_objects();
+        switch(type){
+        case nt::Type_e::Network:
+            fill_pb_object(data.pt_data->networks[result_item.idx], data,
+                    ptobject->mutable_network(), depth);
+            ptobject->set_name(data.pt_data->networks[result_item.idx]->name);
+            ptobject->set_uri(data.pt_data->networks[result_item.idx]->uri);
+            ptobject->set_quality(result_item.quality);
+            ptobject->set_embedded_type(pbnavitia::NETWORK);
+            break;
+        case nt::Type_e::CommercialMode:
+            fill_pb_object(data.pt_data->commercial_modes[result_item.idx], data,
+                    ptobject->mutable_mode(), depth);
+            ptobject->set_name(data.pt_data->commercial_modes[result_item.idx]->name);
+            ptobject->set_uri(data.pt_data->commercial_modes[result_item.idx]->uri);
+            ptobject->set_quality(result_item.quality);
+            ptobject->set_embedded_type(pbnavitia::COMMERCIAL_MODE);
+            break;
+        case nt::Type_e::Line:
+            fill_pb_object(data.pt_data->lines[result_item.idx], data,
+                    ptobject->mutable_line(), depth);
+            ptobject->set_name(data.pt_data->lines[result_item.idx]->name);
+            ptobject->set_uri(data.pt_data->lines[result_item.idx]->uri);
+            ptobject->set_quality(result_item.quality);
+            ptobject->set_embedded_type(pbnavitia::LINE);
+            break;
+        case nt::Type_e::Route:
+            fill_pb_object(data.pt_data->routes[result_item.idx], data,
+                    ptobject->mutable_route(), depth);
+            ptobject->set_name(data.pt_data->routes[result_item.idx]->name);
+            ptobject->set_uri(data.pt_data->routes[result_item.idx]->uri);
+            ptobject->set_quality(result_item.quality);
+            ptobject->set_embedded_type(pbnavitia::ROUTE);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+
+pbnavitia::Response pt_object(const std::string &q,
+                                 const std::vector<nt::Type_e> &filter,
+                                 uint32_t depth,
+                                 int nbmax,
+                                 const std::vector<std::string> &admins,
+                                 int search_type,
+                                 const navitia::type::Data &d) {
+
+    pbnavitia::Response pb_response;
+    std::cout << "Passe par la méthode autocomplete_api.pt_object" <<  "\n";
+    if (q.length() == 0) {
+        fill_pb_error(pbnavitia::Error::bad_filter, "Ptobject : value of q absent", pb_response.mutable_error());
+        return pb_response;
+    }
+
+    ///Récupérer max(100, count) éléments pour chaque type d'ObjectTC
+    for(nt::Type_e type : filter) {
+        std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
+        switch(type){
+        case nt::Type_e::Network:
+            std::cout << "Passe par case nt::Type_e::Network" <<  "\n";
+            result = d.pt_data->network_autocomplete.find_complete(q,
+                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            break;
+        case nt::Type_e::CommercialMode:
+            std::cout << "Passe par case nt::Type_e::CommercialMode" <<  "\n";
+            result = d.pt_data->mode_autocomplete.find_complete(q,
+                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            break;
+        case nt::Type_e::Line:
+            std::cout << "Passe par case nt::Type_e::Line" <<  "\n";
+            result = d.pt_data->line_autocomplete.find_complete(q,
+                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            break;
+        case nt::Type_e::Route:
+            std::cout << "Passe par case nt::Type_e::Route" <<  "\n";
+            result = d.pt_data->route_autocomplete.find_complete(q,
+                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            break;
+        default: break;
+        }
+
+        create_pt_object_pb(result, type, depth, d, pb_response);
+    }
+
     return pb_response;
 }
 

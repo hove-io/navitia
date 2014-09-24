@@ -87,6 +87,30 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
         }
     }
     this->line_autocomplete.build();
+
+    this->network_autocomplete.clear();
+    for(const Network* network : this->networks){
+        if (!network->name.empty()){
+            this->network_autocomplete.add_string(network->name, network->idx, georef.synonyms);
+        }
+    }
+    this->network_autocomplete.build();
+
+    this->mode_autocomplete.clear();
+    for(const CommercialMode* mode : this->commercial_modes){
+        if (!mode->name.empty()){
+            this->mode_autocomplete.add_string(mode->name, mode->idx, georef.synonyms);
+        }
+    }
+    this->mode_autocomplete.build();
+
+    this->route_autocomplete.clear();
+    for(const Route* route : this->routes){
+        if (!route->name.empty()){
+            this->route_autocomplete.add_string(route->name, route->idx, georef.synonyms);
+        }
+    }
+    this->route_autocomplete.build();
 }
 
 void PT_Data::compute_score_autocomplete(navitia::georef::GeoRef& georef){

@@ -366,4 +366,7 @@ message Response{
 
     //Fare
     repeated Ticket tickets = 51;
+    
+    //Ptobject
+    repeated Ptobject pt_objects = 52;
 }

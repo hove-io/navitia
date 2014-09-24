@@ -28,4 +28,4 @@
 # www.navitia.io
 
 __all__ = ['Index', 'Uri', 'Coverage', 'Journeys', 'Places', 'ResourceUri',
-           'Schedules', 'Disruptions', 'Calendars']
+           'Schedules', 'Disruptions', 'Calendars', 'Ptobjects']
