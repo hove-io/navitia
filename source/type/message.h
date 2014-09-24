@@ -139,8 +139,6 @@ struct MessageHolder{
         ar & messages;
     }
 
-    MessageHolder& operator=(const navitia::type::MessageHolder&&);
-
 };
 
 }}//namespace
