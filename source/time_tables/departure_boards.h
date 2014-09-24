@@ -42,7 +42,7 @@ typedef std::vector<datetime_stop_time> vector_dt_st;
 pbnavitia::Response departure_board(const std::string &filter,
                                     boost::optional<const std::string> calendar_id,
                                     const std::vector<std::string>& forbidden_uris,
-                                    const std::string &date,
+                                    const boost::posix_time::ptime datetime,
                                     uint32_t duration,
                                     uint32_t depth, int32_t max_date_times,
                                     int interface_version,
