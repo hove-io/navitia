@@ -334,6 +334,10 @@ class GeoJson(fields.Raw):
         return response
 
 
+validity_pattern = {
+    'beginning_date': fields.String(),
+    'days': fields.String(),
+}
 
 code = {
     "type": fields.String(),
@@ -415,12 +419,18 @@ stop_time = {
     "departure_time": SplitDateTime(date=None, time='departure_time'),
     "journey_pattern_point": NonNullProtobufNested(journey_pattern_point)
 }
-vehicle_journey = deepcopy(generic_type)
-vehicle_journey["messages"] = NonNullList(NonNullNested(generic_message))
-vehicle_journey["journey_pattern"] = PbField(journey_pattern)
-vehicle_journey["stop_times"] = NonNullList(NonNullNested(stop_time))
-vehicle_journey["comment"] = fields.String()
-vehicle_journey["codes"] = NonNullList(NonNullNested(code))
+
+vehicle_journey = {
+    "id": fields.String(attribute="uri"),
+    "name": fields.String(),
+    "messages": NonNullList(NonNullNested(generic_message)),
+    "journey_pattern": PbField(journey_pattern),
+    "stop_times": NonNullList(NonNullNested(stop_time)),
+    "comment": fields.String(),
+    "codes": NonNullList(NonNullNested(code)),
+    "validity_pattern": NonNullProtobufNested(validity_pattern),
+}
+
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
 line["code"] = fields.String()

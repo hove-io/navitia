@@ -497,15 +497,17 @@ def is_valid_stop_point(stop_point, depth_check=1):
     is_valid_lat(stop_point["coord"]["lat"])
     is_valid_lon(stop_point["coord"]["lon"])
 
-    if depth_check > 1:
+    if depth_check > 0:
         is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
+    else:
+        assert "stop_area" not in stop_point
 
 
 def is_valid_route(route, depth_check=1):
     get_not_null(route, "name")
     is_valid_bool(get_not_null(route, "is_frequence"))
 
-    if depth_check > 1:
+    if depth_check > 0:
         is_valid_line(get_not_null(route, "line"), depth_check - 1)
 
         direction = get_not_null(route, "direction")
@@ -513,6 +515,9 @@ def is_valid_route(route, depth_check=1):
         #the direction of the route must always be a stop point
         assert get_not_null(direction, "embedded_type") == "stop_point"
         is_valid_stop_point(get_not_null(direction, "stop_point"))
+    else:
+        assert 'line' not in route
+        assert 'direction' not in route
 
 
 def is_valid_line(route, depth_check=1):
@@ -531,6 +536,14 @@ def is_valid_place(place, depth_check=1):
     #TODO more checks
 
 
+def is_valid_validity_pattern(validity_pattern, depth_check=1):
+    beginning_date = get_not_null(validity_pattern, "beginning_date")
+    assert is_valid_date(beginning_date)
+
+    days = get_not_null(validity_pattern, "days")
+    assert is_valid_days(days)
+
+
 def is_valid_vehicle_journey(vj, depth_check=1):
     if depth_check < 0:
         return
@@ -539,6 +552,7 @@ def is_valid_vehicle_journey(vj, depth_check=1):
 
     if depth_check > 0:
         is_valid_journey_pattern(get_not_null(vj, 'journey_pattern'), depth_check=depth_check-1)
+        is_valid_validity_pattern(get_not_null(vj, 'validity_pattern'), depth_check=depth_check-1)
 
         stoptimes = get_not_null(vj, 'stop_times')
 
@@ -552,8 +566,10 @@ def is_valid_vehicle_journey(vj, depth_check=1):
             else:
                 assert 'journey_pattern_point' not in st
     else:
-        #with depth = 0, we don't want the stop times
+        #with depth = 0, we don't want the stop times, the jp, vp, ...
         assert 'stop_times' not in vj
+        assert 'journey_pattern' not in vj
+        assert 'validity_pattern' not in vj
 
 
 def is_valid_journey_pattern(jp, depth_check=1):
@@ -566,7 +582,7 @@ def is_valid_journey_pattern(jp, depth_check=1):
 def is_valid_journey_pattern_point(jpp, depth_check=1):
     get_not_null(jpp, "id")
     if depth_check > 0:
-        is_valid_stop_point(get_not_null(jpp, 'stop_point'))
+        is_valid_stop_point(get_not_null(jpp, 'stop_point'), depth_check=depth_check - 1)
     else:
         assert 'stop_point' not in jpp
 
