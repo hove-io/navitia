@@ -36,6 +36,7 @@ www.navitia.io
 #include <atomic>
 #include "type/type.h"
 #include "utils/serialization_unique_ptr.h"
+#include "utils/serialization_atomic.h"
 #include "utils/exception.h"
 
 //forward declare
@@ -130,11 +131,6 @@ public:
     Data();
     ~Data();
 
-    /**
-     * serialization function.
-     *
-     * Called by boost and not directly
-     */
     template<class Archive> void serialize(Archive & ar, const unsigned int version) {
         this->version = version;
         if(this->version != data_version){
@@ -142,8 +138,7 @@ public:
             auto msg = boost::format("Warning data version don't match with the data version of kraken %u (current version: %d)") % version % v;
             throw wrong_version(msg.str());
         }
-
-        ar & pt_data & geo_ref & meta & fare;
+        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq;
     }
 
     /** Charge les données et effectue les initialisations nécessaires */
@@ -175,16 +170,17 @@ public:
 
     /** Retourne le type de l'id donné */
     Type_e get_type_of_id(const std::string & id) const;
-private:
+
     /** Charge les données binaires compressées en LZ4
       *
       * La compression LZ4 est extrèmement rapide mais moyennement performante
       * Le but est que la lecture du fichier compression soit aussi rapide que sans compression
       */
-    void load_lz4(const std::string & filename);
+    void load(std::istream& ifs);
 
     /** Sauvegarde les données en binaire compressé avec LZ4*/
-    void save_lz4(const std::string & filename);
+    void save(std::ostream& ifs);
+private:
     /** Get similar validitypattern **/
     ValidityPattern* get_similar_validity_pattern(ValidityPattern* vp) const;
 };

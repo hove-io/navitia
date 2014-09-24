@@ -40,12 +40,6 @@ namespace bg = boost::gregorian;
 
 namespace navitia { namespace type {
 
-MessageHolder& MessageHolder::operator=(const navitia::type::MessageHolder&& other){
-    this->messages = std::move(other.messages);
-    return *this;
-}
-
-
 bool Message::is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period) const{
     if(now.is_not_a_date_time() && action_period.is_null()){
         return false;
