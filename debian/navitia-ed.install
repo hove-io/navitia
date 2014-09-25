@@ -6,5 +6,5 @@ usr/bin/fare2ed usr/bin
 usr/bin/geopal2ed usr/bin
 usr/bin/poi2ed usr/bin
 usr/bin/synonym2ed usr/bin
-usr/share/ed/* usr/share/ed
+usr/share/navitia/ed/* usr/share/navitia/ed
 usr/bin/nav2rt usr/bin
