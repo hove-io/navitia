@@ -56,7 +56,8 @@ pt_object_type = {
     'network': type_pb2.NETWORK,
     'mode': type_pb2.COMMERCIAL_MODE,
     'line': type_pb2.LINE,
-    'route': type_pb2.ROUTE
+    'route': type_pb2.ROUTE,
+    'stop_area': type_pb2.STOP_AREA
 }
 
 

@@ -58,8 +58,7 @@ class Ptobjects(ResourceUri):
                                          description="The data to search")
         self.parsers["get"].add_argument("type[]", type=str, action="append",
                                          default=["network", "mode",
-                                                  "line",
-                                                  "route"],
+                                                  "line","route", "stop_area"],
                                          description="The type of data to\
                                          search")
         self.parsers["get"].add_argument("count", type=int, default=10,

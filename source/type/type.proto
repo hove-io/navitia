@@ -406,6 +406,7 @@ message Ptobject {
     optional CommercialMode mode = 5;
     optional Line line = 6;
     optional Route route = 7;
-    optional int32 distance = 8;
-    optional int32 quality = 9;
+    optional StopArea stop_area = 8;
+    optional int32 distance = 9;
+    optional int32 quality = 10;
 }

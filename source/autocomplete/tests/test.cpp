@@ -845,13 +845,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
 }
 
 /*
-1. We have 1 Network ,1 mode, 2 lines and 4 routes
-3. Call with "quimer" and count = 10
-4. In the result the administrative_region is the first one
-5. All the stop_areas with same quality are sorted by name (case insensitive).
-6. The addresses have different quality values due to diferent number of words.
-7. There 10 elements in the result.
-8. We don't have penalty on "admin weight" and "stoparea weight".
+1. We have 1 Network (name="base_network"), 2 mode (name="Tram" et name="Metro")
+2. 1 line for mode "Tram" and and 2 routes
 */
 BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     std::vector<std::string> admins;
@@ -889,16 +884,107 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     type_filter.push_back(navitia::type::Type_e::Network);
     type_filter.push_back(navitia::type::Type_e::CommercialMode);
     type_filter.push_back(navitia::type::Type_e::Line);
-    pbnavitia::Response resp = navitia::autocomplete::pt_object("Tram", type_filter , 1, 10, admins, 0, *(b.data));
-    //Here we want only Mode, line StopArea
+    type_filter.push_back(navitia::type::Type_e::Route);
+    pbnavitia::Response resp = navitia::autocomplete::pt_object("base", type_filter , 1, 10, admins, 0, *(b.data));
+    //The result contains only network
+    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::NETWORK);
+
+    // Call with "Tram" and &type[]=network&type[]=mode&type[]=line
+    resp = navitia::autocomplete::pt_object("Tram", type_filter , 1, 10, admins, 0, *(b.data));
+    //In the result the first line is Mode and the second is line
     BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 2);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::LINE);
 
-    type_filter.push_back(navitia::type::Type_e::Route);
+    // Call with "line" and &type[]=network&type[]=mode&type[]=line&type[]=route
     resp = navitia::autocomplete::pt_object("line", type_filter , 1, 10, admins, 0, *(b.data));
+    //In the result the first line is line and the others are the routes
     BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 3);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::LINE);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::ROUTE);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(2).embedded_type(), pbnavitia::ROUTE);
+}
+
+/*
+1. We have 1 Network (name="base_network"), 2 mode (name="Tram" et name="Metro")
+2. 1 line for mode Metro and and 2 routes
+3. 4 stop_areas
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("201409011T1739");
+    b.generate_dummy_basis();
+
+    //Create a new line and affect it to mode "Metro"
+    navitia::type::Line* line = new navitia::type::Line();
+    line->idx = b.data->pt_data->lines.size();
+    line-> uri = "line 1";
+    line-> name = "Chatelet - Vincennes";
+    line->commercial_mode = b.data->pt_data->commercial_modes[1];
+    b.data->pt_data->lines.push_back(line);
+
+    //Add two routes in the line
+    navitia::type::Route* route = new navitia::type::Route();
+    route->idx = b.data->pt_data->routes.size();
+    route->name = line->name;
+    route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
+    b.data->pt_data->routes.push_back(route);
+    line->route_list.push_back(route);
+    route->line = line;
+
+    route = new navitia::type::Route();
+    route->idx = b.data->pt_data->routes.size();
+    route->name = line->name;
+    route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
+    b.data->pt_data->routes.push_back(route);
+    line->route_list.push_back(route);
+    route->line = line;
+
+    b.sa("base", 0, 0);
+    b.sa("chatelet", 0, 0);
+    b.sa("Chateau", 0, 0);
+    b.sa("Mettray", 0, 0);
+    Admin* ad = new Admin;
+    ad->name = "paris";
+    ad->uri = "paris";
+    ad->level = 8;
+    ad->post_code = "75000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::Network);
+    type_filter.push_back(navitia::type::Type_e::CommercialMode);
+    type_filter.push_back(navitia::type::Type_e::Line);
+    type_filter.push_back(navitia::type::Type_e::Route);
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    //Call with q=base
+    pbnavitia::Response resp = navitia::autocomplete::pt_object("base", type_filter , 1, 10, admins, 0, *(b.data));
+    //The result contains network and stop_area
+    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::NETWORK);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::STOP_AREA);
+
+    //Call with q=met
+    resp = navitia::autocomplete::pt_object("met", type_filter , 1, 10, admins, 0, *(b.data));
+    //The result contains mode, stop_area, line
+    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(2).embedded_type(), pbnavitia::LINE);
+
+    //Call with q=chat
+    resp = navitia::autocomplete::pt_object("chat", type_filter , 1, 10, admins, 0, *(b.data));
+    //The result contains 2 stop_areas, one line and 2 routes
+    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 5);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(2).embedded_type(), pbnavitia::LINE);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(3).embedded_type(), pbnavitia::ROUTE);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects(4).embedded_type(), pbnavitia::ROUTE);
+
 }

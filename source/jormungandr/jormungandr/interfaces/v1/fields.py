@@ -509,6 +509,7 @@ pt_object = {
     "mode": PbField(commercial_mode),
     "line": PbField(line),
     "route": PbField(route),
+    "stop_area": PbField(stop_area),
     "embedded_type": enum_type(),
     "name": fields.String(),
     "quality": fields.Integer(),

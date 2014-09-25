@@ -372,7 +372,7 @@ void create_pt_object_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>&
                     ptobject->mutable_network(), depth);
             ptobject->set_name(data.pt_data->networks[result_item.idx]->name);
             ptobject->set_uri(data.pt_data->networks[result_item.idx]->uri);
-            ptobject->set_quality(result_item.quality);
+            ptobject->set_quality(100);
             ptobject->set_embedded_type(pbnavitia::NETWORK);
             break;
         case nt::Type_e::CommercialMode:
@@ -380,7 +380,7 @@ void create_pt_object_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>&
                     ptobject->mutable_mode(), depth);
             ptobject->set_name(data.pt_data->commercial_modes[result_item.idx]->name);
             ptobject->set_uri(data.pt_data->commercial_modes[result_item.idx]->uri);
-            ptobject->set_quality(result_item.quality);
+            ptobject->set_quality(100);
             ptobject->set_embedded_type(pbnavitia::COMMERCIAL_MODE);
             break;
         case nt::Type_e::Line:
@@ -388,7 +388,7 @@ void create_pt_object_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>&
                     ptobject->mutable_line(), depth);
             ptobject->set_name(data.pt_data->lines[result_item.idx]->name);
             ptobject->set_uri(data.pt_data->lines[result_item.idx]->uri);
-            ptobject->set_quality(result_item.quality);
+            ptobject->set_quality(100);
             ptobject->set_embedded_type(pbnavitia::LINE);
             break;
         case nt::Type_e::Route:
@@ -396,8 +396,16 @@ void create_pt_object_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>&
                     ptobject->mutable_route(), depth);
             ptobject->set_name(data.pt_data->routes[result_item.idx]->name);
             ptobject->set_uri(data.pt_data->routes[result_item.idx]->uri);
-            ptobject->set_quality(result_item.quality);
+            ptobject->set_quality(100);
             ptobject->set_embedded_type(pbnavitia::ROUTE);
+            break;
+        case nt::Type_e::StopArea:
+            fill_pb_object(data.pt_data->stop_areas[result_item.idx], data,
+                    ptobject->mutable_stop_area(), depth);
+            ptobject->set_name(data.pt_data->stop_areas[result_item.idx]->name);
+            ptobject->set_uri(data.pt_data->stop_areas[result_item.idx]->uri);
+            ptobject->set_quality(100);
+            ptobject->set_embedded_type(pbnavitia::STOP_AREA);
             break;
         default:
             break;
@@ -410,17 +418,20 @@ int get_pt_object_order(int n){
     case pbnavitia::NETWORK:
         return 1;
         break;
-     case pbnavitia::COMMERCIAL_MODE:
+    case pbnavitia::COMMERCIAL_MODE:
         return 2;
         break;
+    case pbnavitia::STOP_AREA:
+        return 3;
+        break;
     case pbnavitia::LINE:
-       return 3;
-       break;
-    case pbnavitia::ROUTE:
        return 4;
        break;
-    default:
+    case pbnavitia::ROUTE:
        return 5;
+       break;
+    default:
+       return 6;
        break;
     }
 }
@@ -485,6 +496,14 @@ pbnavitia::Response pt_object(const std::string &q,
                             d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax, [](type::idx_t){return true;});
             }
             break;
+        case nt::Type_e::StopArea:
+            if (search_type==0) {
+                result = d.pt_data->stop_area_autocomplete.find_complete(q,
+                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+            } else {
+                result = d.pt_data->stop_area_autocomplete.find_partial_with_pattern(q,
+                        d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax, [](type::idx_t){return true;});
+            }
         default: break;
         }
 
@@ -497,12 +516,10 @@ pbnavitia::Response pt_object(const std::string &q,
             const auto a_order = get_pt_object_order(a.embedded_type());
             const auto b_order = get_pt_object_order(b.embedded_type());
             return  a_order< b_order;
-        } else if(a.quality() == b.quality()) {
+        } else {
             return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
         }
-        else {
-            return a.quality() > b.quality();
-        }
+
     };
 
     nbmax = nbmax_temp;
