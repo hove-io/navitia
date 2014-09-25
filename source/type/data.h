@@ -66,7 +66,7 @@ struct wrong_version : public navitia::exception {
   * Il est conseillé de toujours utiliser le format compressé (la compression a un surcout quasiment nul et
   * peut même (sur des disques lents) accélerer le chargement).
   */
-class Data{
+class Data : boost::noncopyable{
 public:
 
     static const unsigned int data_version = 25; //< Data version number. *INCREMENT* every time serialized data are modified
@@ -126,7 +126,6 @@ public:
 
     Data();
     ~Data();
-    Data(const Data& other);
 
     /**
      * serialization function.

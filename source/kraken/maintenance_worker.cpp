@@ -97,8 +97,6 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
     for(const auto& entity: feed_message.entity()){
         if(entity.HasExtension(chaos::disruption)){
             LOG4CPLUS_WARN(logger, "has_extension");
-            data_manager.apply_disruptions(std::vector<std::string>());
-            LOG4CPLUS_DEBUG(logger, "end");
         }else{
             LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
         }
