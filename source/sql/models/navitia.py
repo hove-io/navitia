@@ -7,10 +7,6 @@ from sqlalchemy.dialects.postgresql import *
 from geoalchemy2 import Geography
 from models import metadata
 
-alembic_version = Table('alembic_version', metadata,*[
-    Column('version_num', VARCHAR(length=32), primary_key=False, nullable=False),],
-    schema='navitia')
-
 object_type = Table('object_type', metadata,*[
     Column('id', INTEGER(), primary_key=True, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),],
