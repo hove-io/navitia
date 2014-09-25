@@ -68,19 +68,6 @@ Data::Data() :
     this->loaded = false;
 }
 
-Data::Data(const Data& other):
-    meta(std::make_unique<MetaData>(*other.meta)),
-    pt_data(std::make_unique<PT_Data>(*other.pt_data)),
-    geo_ref(std::make_unique<navitia::georef::GeoRef>(*other.geo_ref)),
-    dataRaptor(std::make_unique<navitia::routing::dataRAPTOR>(*other.dataRaptor)),
-    fare(std::make_unique<navitia::fare::Fare>(*other.fare)),
-    find_admins(other.find_admins)
-{
-    this->is_connected_to_rabbitmq = other.is_connected_to_rabbitmq.load();
-    this->loaded = other.loaded.load();
-    this->last_load_at = other.last_load_at;
-}
-
 Data::~Data(){}
 
 bool Data::load(const std::string & filename) {

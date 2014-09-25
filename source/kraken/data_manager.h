@@ -46,14 +46,6 @@ public:
 
     inline std::shared_ptr<Data> get_data() const{return current_data;}
 
-    void release_memory(){
-#ifndef NO_FORCE_MEMORY_RELEASE
-        //we might want to force the system to release the memory after the swap
-        //to reduce the memory foot print
-        MallocExtension::instance()->ReleaseFreeMemory();
-#endif
-    }
-
     bool load(const std::string& database){
         bool success;
         {
@@ -64,17 +56,12 @@ public:
                 std::swap(current_data, data);
             }
         }
-        release_memory();
-        return success;
-    }
 
-    template<typename Disruption>
-    void apply_disruptions(const Disruption& /*disruptions*/){
-        {
-            auto data = std::make_shared<Data>(*current_data);
-            //call the required method here
-            std::swap(current_data, data);
-        }
-        release_memory();
+#ifndef NO_FORCE_MEMORY_RELEASE
+        //we might want to force the system to release the memory after the swap
+        //to reduce the memory foot print
+        MallocExtension::instance()->ReleaseFreeMemory();
+#endif
+        return success;
     }
 };
