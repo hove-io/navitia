@@ -92,33 +92,6 @@ std::string EdPersistor::to_geographic_point(const navitia::type::GeographicalCo
     return geog.str();
 }
 
-void EdPersistor::build_ways(){
-    /// Add a name for the admins with an empty name
-    PQclear(this->lotus.exec("SELECT georef.add_way_name();", "", PGRES_TUPLES_OK));
-    /// Fusion ways by name and admin
-    PQclear(this->lotus.exec("SELECT georef.fusion_ways_by_admin_name();", "", PGRES_TUPLES_OK));
-    /// Moving admin and way relations, so that the pair (admin, way) is unique
-    PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// Update way_id in table edge
-    PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
-    /// Add ways not in fusion table
-    PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Add ways where admin is nil
-    PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Update data in table 'rel_way_admin' by 'tmp_rel_way_admin'
-    PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// Remove duplicate data in table of ways
-    PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
-    /// Update way_id in housenumber table
-    PQclear(this->lotus.exec("SELECT georef.update_house_number();", "", PGRES_TUPLES_OK));
-    /// Update ways name
-    PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
-    /// Update of admin cordinates  : Calcul of barycentre
-    PQclear(this->lotus.exec("SELECT georef.update_admin_coord();", "", PGRES_TUPLES_OK));
-    /// Relation between admins
-    PQclear(this->lotus.exec("SELECT georef.match_admin_to_admin();", "", PGRES_TUPLES_OK));
-}
-
 void EdPersistor::insert_admins(const ed::Georef& data){
     this->lotus.prepare_bulk_insert("georef.admin",
             {"id", "name", "post_code", "insee", "level", "coord", "uri"});
