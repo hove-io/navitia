@@ -172,10 +172,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     schema='realtime'
     )
-    op.create_table('alembic_version',
-    sa.Column('version_num', sa.VARCHAR(length=32), nullable=False),
-    schema='navitia'
-    )
     op.create_table('contributor',
     sa.Column('id', sa.BIGINT(), nullable=False),
     sa.Column('uri', sa.TEXT(), nullable=False),
