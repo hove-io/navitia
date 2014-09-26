@@ -83,7 +83,9 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const Line* line : this->lines){
         if (!line->name.empty()){
             std::string key="";
-            if (line->commercial_mode) {key = line->commercial_mode->name;}
+            if (line->network){key = line->network->name;}
+            if (line->commercial_mode) {key += " " + line->commercial_mode->name;}
+            key += " " + line->code;
             this->line_autocomplete.add_string(key + " " + line->name, line->idx, georef.synonyms);
         }
     }
@@ -108,7 +110,13 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->route_autocomplete.clear();
     for(const Route* route : this->routes){
         if (!route->name.empty()){
-            this->route_autocomplete.add_string(route->name, route->idx, georef.synonyms);
+            std::string key="";
+            if (route->line){
+                if (route->line->network){key = route->line->network->name;}
+                if (route->line->commercial_mode) {key += " " + route->line->commercial_mode->name;}
+                key += " " + route->line->code;
+            }
+            this->route_autocomplete.add_string(key + " " + route->name, route->idx, georef.synonyms);
         }
     }
     this->route_autocomplete.build();

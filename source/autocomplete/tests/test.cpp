@@ -893,7 +893,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     // Call with "Tram" and &type[]=network&type[]=mode&type[]=line
     resp = navitia::autocomplete::pt_object("Tram", type_filter , 1, 10, admins, 0, *(b.data));
     //In the result the first line is Mode and the second is line
-    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 4);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::LINE);
 
@@ -972,7 +972,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     //Call with q=met
     resp = navitia::autocomplete::pt_object("met", type_filter , 1, 10, admins, 0, *(b.data));
     //The result contains mode, stop_area, line
-    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 5);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::STOP_AREA);
     BOOST_REQUIRE_EQUAL(resp.pt_objects(2).embedded_type(), pbnavitia::LINE);
