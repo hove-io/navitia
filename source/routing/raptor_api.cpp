@@ -106,7 +106,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
                                           path.items.front().departures.front()+bt::minutes(1));
-            fill_crowfly_section(origin, destination_tmp, path.items.front().departures.front(),
+            fill_crowfly_section(origin, destination_tmp, origin.streetnetwork_params.mode, path.items.front().departures.front(),
                                  d, enhanced_response, pb_journey, now, action_period);
 
         } else {
@@ -246,7 +246,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
                                           path.items.back().departures.back()+bt::minutes(1));
-            fill_crowfly_section(origin_tmp, destination,path.items.back().departures.back(),
+            fill_crowfly_section(origin_tmp, destination, destination.streetnetwork_params.mode,
+                                 path.items.back().departures.back(),
                                  d, enhanced_response, pb_journey, now, action_period);
 
         } else {
