@@ -54,7 +54,6 @@ struct EdPersistor{
     void persist(const ed::Georef& data);
     /// Poi
     void persist_pois(const ed::Georef& data);
-    void build_ways();
     void clean_georef();
     void clean_poi();
     /// Synonyms
