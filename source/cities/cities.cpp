@@ -269,22 +269,23 @@ int main(int argc, char** argv) {
     std::string input, connection_string;
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("version,v", "Affiche la version")
-        ("help,h", "Affiche l'aide")
-        ("input,i", po::value<std::string>(&input)->required(), "Fichier OSM à utiliser")
+        ("version,v", "Show version")
+        ("help,h", "Show this message")
+        ("input,i", po::value<std::string>(&input)->required(), "Input OSM File")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
-         "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+         "Database connection parameters: host=localhost user=navitia dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE);
+        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
         return 0;
     }
 
     if(vm.count("help")) {
-        LOG4CPLUS_INFO(logger, desc);
+        std::cout << "This program import all cities of an OSM file into a database" << std::endl;
+        std::cout << desc << std::endl;
         return 1;
     }
 

@@ -53,18 +53,21 @@ int main(int argc, char * argv[])
     uint32_t coord_system;
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help,h", "Affiche l'aide")
-        ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("coord-system,c", po::value<uint32_t>(&coord_system)->default_value(27572), "Système de coordonnée: 27572 pour lambert 2 Etendu")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("help,h", "Show this message")
+        ("input,i", po::value<std::string>(&input), "Input directory")
+        ("version,v", "Show version")
+        ("config-file", po::value<std::string>(), "Path to config file")
+        ("coord-system,c", po::value<uint32_t>(&coord_system)->default_value(27572),
+             "Coordinate system: 27572 for \" lambert 2 Etendu\"")
+        ("connection-string", po::value<std::string>(&connection_string)->required(),
+             "Database connection parameters: host=localhost user=navitia "
+             "dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE;
+        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
         return 0;
     }
 
@@ -79,6 +82,7 @@ int main(int argc, char * argv[])
     }
 
     if(vm.count("help") || !vm.count("input")) {
+        std::cout << "Reads and inserts geopal2ed file into a ed database" << std::endl;
         std::cout << desc << std::endl;
         return 1;
     }

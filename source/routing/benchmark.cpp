@@ -67,21 +67,29 @@ int main(int argc, char** argv){
     int iterations, start, target, date, hour;
 
     desc.add_options()
-            ("help", "Affiche l'aide")
-            ("interations,i", po::value<int>(&iterations)->default_value(100), "Number of iterations (10 calcuations par iteration)")
-            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"), "Path to data.nav.lz4")
-            ("start,s", po::value<int>(&start)->default_value(-1), "Start pour du debug")
-            ("target,t", po::value<int>(&target)->default_value(-1), "Target pour du debug")
-            ("date,d", po::value<int>(&date)->default_value(-1), "Date for the debug")
-            ("hour,h", po::value<int>(&hour)->default_value(-1), "Hour for the debug")
+            ("help", "Show this message")
+            ("interations,i", po::value<int>(&iterations)->default_value(100),
+                     "Number of iterations (10 calcuations par iteration)")
+            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"),
+                     "Path to data.nav.lz4")
+            ("start,s", po::value<int>(&start)->default_value(-1),
+                    "Start of a particular journey")
+            ("target,t", po::value<int>(&target)->default_value(-1),
+                    "Target of a particular journey")
+            ("date,d", po::value<int>(&date)->default_value(-1),
+                    "Begginning date of a particular journey")
+            ("hour,h", po::value<int>(&hour)->default_value(-1),
+                    "Begginning hour of a particular journey")
             ("verbose,v", "Verbose debugging output")
-            ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"), "Output file");
+            ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"),
+                     "Output file");
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
     bool verbose = vm.count("verbose");
 
     if (vm.count("help")) {
+        std::cout << "This is used to benchmark journey computation" << std::endl;
         std::cout << desc << std::endl;
         return 1;
     }

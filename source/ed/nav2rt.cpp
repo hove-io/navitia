@@ -54,13 +54,16 @@ int main(int argc, char * argv[])
     uint32_t shift_days;
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help,h", "Affiche l'aide")
-        ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("output,o", po::value<std::string>(&output)->default_value("rtdata.nav.lz4"), "Fichier de sortie")
-        ("input,i", po::value<std::string>(&input)->default_value("data.nav.lz4"), "Fichier d'entrée")
-        ("shift-days,d", po::value<uint32_t>(&shift_days)->default_value(2), "Elargissement de la période de publication")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("help,h", "Show this message")
+        ("version,v", "Show version")
+        ("config-file", po::value<std::string>(), "Path to config file")
+        ("output,o", po::value<std::string>(&output)->default_value("rtdata.nav.lz4"), "Output file")
+        ("input,i", po::value<std::string>(&input)->default_value("data.nav.lz4"), "Input file")
+        ("shift-days,d", po::value<uint32_t>(&shift_days)->default_value(2),
+            "Enlarge publication period by a number of days")
+        ("connection-string", po::value<std::string>(&connection_string)->required(),
+             "Database connection parameters: host=localhost user=navitia"
+             " dbname=navitia password=navitia");
 
 
     po::variables_map vm;
@@ -84,6 +87,8 @@ int main(int argc, char * argv[])
     }
 
     if(vm.count("help")) {
+        std::cout << "Read a navitia binary file and a realtime database and write "
+                     "a new file with realtime informations" << std::endl;
         std::cout << desc <<  "\n";
         return 1;
     }

@@ -54,18 +54,21 @@ int main(int argc, char * argv[])
     uint32_t coord_system;
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help,h", "Affiche l'aide")
-        ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("coord-system,c", po::value<uint32_t>(&coord_system)->default_value(4326), "Système de coordonnée: 4326 pour WGS84")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("help,h", "Show this message")
+        ("input,i", po::value<std::string>(&input), "Input file")
+        ("version,v", "Show version")
+        ("config-file", po::value<std::string>(), "Configuration file")
+        ("coord-system,c", po::value<uint32_t>(&coord_system)->default_value(4326),
+             "Coordinate system: 4326 pour WGS84 (4326 is default value)")
+        ("connection-string", po::value<std::string>(&connection_string)->required(),
+             "Database connection parameters: host=localhost user=navitia"
+             " dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE);
+        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
         return 0;
     }
 
@@ -80,7 +83,8 @@ int main(int argc, char * argv[])
     }
 
     if(vm.count("help") || !vm.count("input")) {
-        std::cout << desc <<  "\n";
+        std::cout << "Reads poi files and inserts into an ed database" << std::endl;
+        std::cout << desc <<  std::endl;
         return 1;
     }
     po::notify(vm);
