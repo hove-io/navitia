@@ -657,9 +657,11 @@ class Script(object):
         #filter on journey type (the qualifier)
         to_delete = []
         if request["type"] != "" and request["type"] != "all":
+            #quick fix, if we want the rapid, we filter also the 'best' which is a rapid
+            filter_type = [request["type"]] if request["type"] != "rapid" else ["rapid", "best"]
             #the best journey can only be filtered at the end. so we might want to filter anything but this journey
             if request["type"] != "best" or final_filter:
-                to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
+                to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type not in filter_type])
         else:
             #by default, we filter non tagged journeys
             tag_to_delete = ["", "possible_cheap"]
