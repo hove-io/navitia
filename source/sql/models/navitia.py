@@ -332,18 +332,6 @@ rel_calendar_line = Table('rel_calendar_line', metadata,*[
     schema='navitia')
 
 
-administrative_regions = Table('administrative_regions', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u'nextval(\'"navitia".administrative_regions_id_seq\'::regclass)')),
-    Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('post_code', TEXT(), primary_key=False),
-    Column('insee', TEXT(), primary_key=False),
-    Column('level', INTEGER(), primary_key=False),
-    Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
-    Column('boundary', Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False),],
-    schema='navitia')
-
-
 line = Table('line', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('network_id', BIGINT(), primary_key=False, nullable=False),

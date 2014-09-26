@@ -118,18 +118,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('ticket_key'),
     schema='navitia'
     )
-    op.create_table('administrative_regions',
-    sa.Column('id', sa.BIGINT(), nullable=False),
-    sa.Column('name', sa.TEXT(), nullable=False),
-    sa.Column('uri', sa.TEXT(), nullable=False),
-    sa.Column('post_code', sa.TEXT(), nullable=True),
-    sa.Column('insee', sa.TEXT(), nullable=True),
-    sa.Column('level', sa.INTEGER(), nullable=True),
-    sa.Column('coord', ga.Geography(geometry_type='POINT', srid=4326, spatial_index=False), nullable=True),
-    sa.Column('boundary', ga.Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    schema='navitia'
-    )
     op.create_table('week_pattern',
     sa.Column('id', sa.BIGINT(), nullable=False),
     sa.Column('monday', sa.BOOLEAN(), nullable=False),
