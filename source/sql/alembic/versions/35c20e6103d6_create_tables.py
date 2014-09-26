@@ -185,12 +185,13 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     schema='navitia'
     )
+    fare_od_mode = postgresql.ENUM(u'Zone', u'StopArea', u'Mode', name='fare_od_mode')
     op.create_table('origin_destination',
     sa.Column('id', sa.BIGINT(), nullable=False),
     sa.Column('origin_id', sa.TEXT(), nullable=False),
-    sa.Column('origin_mode', postgresql.ENUM(u'Zone', u'StopArea', u'Mode', name='fare_od_mode'), nullable=False),
+    sa.Column('origin_mode', fare_od_mode, nullable=False),
     sa.Column('destination_id', sa.TEXT(), nullable=False),
-    sa.Column('destination_mode', postgresql.ENUM(u'Zone', u'StopArea', u'Mode', name='fare_od_mode'), nullable=False),
+    sa.Column('destination_mode', fare_od_mode, nullable=False),
     sa.PrimaryKeyConstraint('id'),
     schema='navitia'
     )
