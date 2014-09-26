@@ -43,7 +43,7 @@ def upgrade():
     sa.Column('end_date', sa.DATE(), nullable=True),
     sa.Column('timezone', sa.TEXT(), nullable=True),
     sa.Column('shape', ga.Geography(geometry_type='POLYGON', srid=4326, spatial_index=False), nullable=True),
-    sa.Column('shape_computed', sa.BOOLEAN(), nullable=True),
+    sa.Column('shape_computed', sa.BOOLEAN(), nullable=True, server_default="TRUE"),
     schema='navitia'
     )
     op.create_table('meta_vj',
