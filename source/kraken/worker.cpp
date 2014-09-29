@@ -163,7 +163,7 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
 
 pbnavitia::Response Worker::pt_object(const pbnavitia::PtobjectRequest & request) {
     const auto data = data_manager.get_data();
-    return navitia::autocomplete::pt_object(request.q(),
+    return navitia::autocomplete::autocomplete(request.q(),
             vector_of_pb_types(request), request.depth(), request.count(),
             vector_of_admins(request), request.search_type(), *data);
 }
