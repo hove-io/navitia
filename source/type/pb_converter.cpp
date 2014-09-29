@@ -952,6 +952,7 @@ void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
 }
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
+                          type::Mode_e mode,
                           boost::posix_time::ptime time, const type::Data& data, EnhancedResponse& response,
                           pbnavitia::Journey* pb_journey, const pt::ptime& now,
                           const pt::time_period& action_period) {
@@ -964,6 +965,24 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     section->set_length(0);
     section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
+
+    //we want to store the transportation mode used
+    switch (mode) {
+    case type::Mode_e::Walking:
+        section->mutable_street_network()->set_mode(pbnavitia::Walking);
+        break;
+    case type::Mode_e::Bike:
+        section->mutable_street_network()->set_mode(pbnavitia::Bike);
+        break;
+    case type::Mode_e::Car:
+        section->mutable_street_network()->set_mode(pbnavitia::Car);
+        break;
+    case type::Mode_e::Bss:
+        section->mutable_street_network()->set_mode(pbnavitia::Bss);
+        break;
+    default:
+        throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
+    }
 }
 
 void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,

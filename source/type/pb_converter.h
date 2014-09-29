@@ -146,7 +146,7 @@ void fill_pb_placemark(const type::EntryPoint& origin, const type::Data &data, p
         const bool show_codes = false);
 
 
-void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination, boost::posix_time::ptime time,
+void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination, type::Mode_e mode, boost::posix_time::ptime time,
                           const type::Data& data, EnhancedResponse &response,  pbnavitia::Journey* pb_journey,
                           const pt::ptime& now, const pt::time_period& action_period);
 
