@@ -42,7 +42,7 @@ from copy import deepcopy
 
 
 pt_objects = {
-    "pt_objects": NonNullList(NonNullNested(pt_object)),
+    "pt_object": NonNullList(NonNullNested(pt_object), attribute='places'),
     "error": PbField(error, attribute='error'),
 }
 

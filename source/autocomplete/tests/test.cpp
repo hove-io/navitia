@@ -716,9 +716,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 100);
-    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 98);
-    BOOST_REQUIRE_EQUAL(resp.places(7).quality(), 98);
-    BOOST_REQUIRE_EQUAL(resp.places(8).quality(), 98);
+    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 100);
+    BOOST_REQUIRE_EQUAL(resp.places(7).quality(), 100);
+    BOOST_REQUIRE_EQUAL(resp.places(8).quality(), 100);
     BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_REQUIRE_EQUAL(resp.places(1).uri(), "Becharles");
     BOOST_REQUIRE_EQUAL(resp.places(7).uri(), "MPT kerfeunteun");
@@ -774,7 +774,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
     BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
     BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 100);
-    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 98);
+    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 100);
     BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_REQUIRE_EQUAL(resp.places(4).uri(), "Gare SNCF");
 }
@@ -835,7 +835,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 100);
-    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 98);
+    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 100);
 
     BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_REQUIRE_EQUAL(resp.places(1).uri(), "Becharles");
@@ -885,25 +885,27 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     type_filter.push_back(navitia::type::Type_e::CommercialMode);
     type_filter.push_back(navitia::type::Type_e::Line);
     type_filter.push_back(navitia::type::Type_e::Route);
-    pbnavitia::Response resp = navitia::autocomplete::pt_object("base", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("base", type_filter , 1, 10, admins, 0, *(b.data));
     //The result contains only network
-    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 1);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::NETWORK);
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type(), pbnavitia::NETWORK);
 
     // Call with "Tram" and &type[]=network&type[]=mode&type[]=line
-    resp = navitia::autocomplete::pt_object("Tram", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = navitia::autocomplete::autocomplete("Tram", type_filter , 1, 10, admins, 0, *(b.data));
     //In the result the first line is Mode and the second is line
-    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 4);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::LINE);
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 4);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
+    BOOST_REQUIRE_EQUAL(resp.places(1).embedded_type(), pbnavitia::LINE);
+    BOOST_REQUIRE_EQUAL(resp.places(2).embedded_type(), pbnavitia::ROUTE);
+    BOOST_REQUIRE_EQUAL(resp.places(3).embedded_type(), pbnavitia::ROUTE);
 
     // Call with "line" and &type[]=network&type[]=mode&type[]=line&type[]=route
-    resp = navitia::autocomplete::pt_object("line", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = navitia::autocomplete::autocomplete("line", type_filter , 1, 10, admins, 0, *(b.data));
     //In the result the first line is line and the others are the routes
-    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 3);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::LINE);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::ROUTE);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(2).embedded_type(), pbnavitia::ROUTE);
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type(), pbnavitia::LINE);
+    BOOST_REQUIRE_EQUAL(resp.places(1).embedded_type(), pbnavitia::ROUTE);
+    BOOST_REQUIRE_EQUAL(resp.places(2).embedded_type(), pbnavitia::ROUTE);
 }
 
 /*
@@ -963,28 +965,30 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     type_filter.push_back(navitia::type::Type_e::Route);
     type_filter.push_back(navitia::type::Type_e::StopArea);
     //Call with q=base
-    pbnavitia::Response resp = navitia::autocomplete::pt_object("base", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("base", type_filter , 1, 10, admins, 0, *(b.data));
     //The result contains network and stop_area
-    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 2);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::NETWORK);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type(), pbnavitia::NETWORK);
+    BOOST_REQUIRE_EQUAL(resp.places(1).embedded_type(), pbnavitia::STOP_AREA);
 
     //Call with q=met
-    resp = navitia::autocomplete::pt_object("met", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = navitia::autocomplete::autocomplete("met", type_filter , 1, 10, admins, 0, *(b.data));
     //The result contains mode, stop_area, line
-    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 5);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::STOP_AREA);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(2).embedded_type(), pbnavitia::LINE);
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
+    BOOST_REQUIRE_EQUAL(resp.places(1).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.places(2).embedded_type(), pbnavitia::LINE);
+    BOOST_REQUIRE_EQUAL(resp.places(3).embedded_type(), pbnavitia::ROUTE);
+    BOOST_REQUIRE_EQUAL(resp.places(4).embedded_type(), pbnavitia::ROUTE);
 
     //Call with q=chat
-    resp = navitia::autocomplete::pt_object("chat", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = navitia::autocomplete::autocomplete("chat", type_filter , 1, 10, admins, 0, *(b.data));
     //The result contains 2 stop_areas, one line and 2 routes
-    BOOST_REQUIRE_EQUAL(resp.pt_objects_size(), 5);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(0).embedded_type(), pbnavitia::STOP_AREA);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(1).embedded_type(), pbnavitia::STOP_AREA);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(2).embedded_type(), pbnavitia::LINE);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(3).embedded_type(), pbnavitia::ROUTE);
-    BOOST_REQUIRE_EQUAL(resp.pt_objects(4).embedded_type(), pbnavitia::ROUTE);
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
+    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.places(1).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_REQUIRE_EQUAL(resp.places(2).embedded_type(), pbnavitia::LINE);
+    BOOST_REQUIRE_EQUAL(resp.places(3).embedded_type(), pbnavitia::ROUTE);
+    BOOST_REQUIRE_EQUAL(resp.places(4).embedded_type(), pbnavitia::ROUTE);
 
 }

@@ -38,6 +38,22 @@ namespace navitia { namespace autocomplete {
  * se charge de remplir l'objet protocolbuffer autocomplete passé en paramètre
  *
  */
+template <typename T, typename PbNestedObj>
+void fill_pb_pt_object(T* nav_object, pbnavitia::Place* place,
+                       PbNestedObj* pb_nested_object,const nt::Data& data,
+                       pbnavitia::NavitiaType pb_type, u_int32_t depth, std::string key = "") {
+    fill_pb_object(nav_object, data, pb_nested_object, depth);
+    if (!key.empty()) {
+        place->set_name(key + " (" + nav_object->name + ")");
+    }
+    else {
+        place->set_name(nav_object->name);
+    }
+    place->set_uri(nav_object->uri);
+    place->set_quality(100);
+    place->set_embedded_type(pb_type);
+}
+
 void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
                const nt::Type_e type, uint32_t depth, const nt::Data& data,
                pbnavitia::Response & pb_response){
@@ -64,45 +80,39 @@ void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& res
             fill_pb_placemark(data.geo_ref->pois[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
             break;
-        case nt::Type_e::Line:
-            fill_pb_object(data.pt_data->lines[result_item.idx], data,
-                    place->mutable_line(), depth);
-            place->set_name(data.pt_data->lines[result_item.idx]->name);
-            place->set_uri(data.pt_data->lines[result_item.idx]->uri);
-            place->set_quality(result_item.quality);
-            place->set_embedded_type(pbnavitia::LINE);
+        case nt::Type_e::Network:
+            fill_pb_pt_object(data.pt_data->networks[result_item.idx],
+                    place, place->mutable_network(), data, pbnavitia::NETWORK, depth);
+            break;
+        case nt::Type_e::CommercialMode:            
+            fill_pb_pt_object(data.pt_data->commercial_modes[result_item.idx],
+                    place, place->mutable_mode(), data, pbnavitia::COMMERCIAL_MODE, depth);
+            break;
+        case nt::Type_e::Line: {
+            //LineName = NetworkName + ModeName + LineCode + (LineName)
+            std::string key = "";
+            const auto* line = data.pt_data->lines[result_item.idx];
+            if (line->network) {key += " " + line->network->name;}
+            if (line->commercial_mode) {key += " " + line->commercial_mode->name;}
+            key += " " + line->code;
+            fill_pb_pt_object(line,place, place->mutable_line(), data, pbnavitia::LINE, depth, key);
+        }
+            break;
+        case nt::Type_e::Route:{
+            //RouteName = NetworkName + ModeName + LineCode + (RouteName)
+            std::string key = "";
+            const auto* route = data.pt_data->routes[result_item.idx];
+            if (route->line) {
+                if (route->line->network) {key += " " + route->line->network->name;}
+                if (route->line->commercial_mode) {key += " " + route->line->commercial_mode->name;}
+                key += " " + route->line->code;
+            }
+            fill_pb_pt_object(route, place, place->mutable_route(), data, pbnavitia::ROUTE, depth, key);
+        }
+            break;
         default:
             break;
         }
-    }
-}
-
-int penalty_by_type(type::Type_e ntype, bool is_address_type) {
-    // Ordre de tri :
-    // Add, SA, POI, SP, Admin : si présence de addressType dans le recherche
-    // Admin, SA, POI, Add, SP : si non
-    if(is_address_type) {
-        const std::map<type::Type_e, uint32_t> penalty_map =
-        {
-            {nt::Type_e::Admin, 8},
-            {nt::Type_e::StopArea, 2},
-            {nt::Type_e::POI, 4},
-            {nt::Type_e::Address, 0},
-            {nt::Type_e::StopPoint, 6},
-        };
-        auto result = penalty_map.find(ntype);
-        return result == penalty_map.end() ? 0 : result->second;
-    } else {
-        const std::map<type::Type_e, uint32_t> penalty_map =
-        {
-            {nt::Type_e::Admin, 0},
-            {nt::Type_e::StopArea, 2},
-            {nt::Type_e::POI, 6},
-            {nt::Type_e::Address, 8},
-            {nt::Type_e::StopPoint, 4},
-        };
-        auto result = penalty_map.find(ntype);
-        return result == penalty_map.end() ? 0 : result->second;
     }
 }
 
@@ -117,7 +127,8 @@ bool has_admin_level8_from_original_dataset(const std::vector<georef::Admin*>& a
     return false;
 }
 
-///Ajouter une pénalité aux objects sans admin par au moin d.geo_ref->word_weight
+///For each object without admin apply a penalty of word_weight * 8
+///here word_weight is configurable(default value 5)
 void update_quality_for_missing_admin(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
         const navitia::type::Data &d, navitia::type::Type_e ntype){
     const int penalty = d.geo_ref->word_weight * 8;
@@ -144,36 +155,35 @@ void update_quality_for_missing_admin(std::vector<Autocomplete<nt::idx_t>::fl_qu
     }
 }
 
-void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype,
-                    bool Is_address_type,
-                    const navitia::type::Data &d){
-    //Mettre à jour la qualité sur la pénalité par type d'adresse
-    const int penalty = penalty_by_type(ntype, Is_address_type);
-    for(auto &item : ac_result) {
-        item.quality -= penalty;
-    }
-
-    //Ajouter une pénalité aux objects sans admin par au moin d.geo_ref->word_weight
-    update_quality_for_missing_admin(ac_result, d, ntype);
-}
-
-int get_embedded_type_order(int n){
-    switch(n){
-    case pbnavitia::ADMINISTRATIVE_REGION:
+int get_embedded_type_order(pbnavitia::NavitiaType type){
+    switch(type){
+    case pbnavitia::NETWORK:
         return 1;
         break;
-     case pbnavitia::STOP_AREA:
+    case pbnavitia::COMMERCIAL_MODE:
         return 2;
         break;
+    case pbnavitia::ADMINISTRATIVE_REGION:
+        return 3;
+        break;
+    case pbnavitia::STOP_AREA:
+        return 4;
+        break;
     case pbnavitia::POI:
-       return 3;
-       break;
+        return 5;
+        break;
     case pbnavitia::ADDRESS:
-       return 4;
-       break;
+        return 6;
+        break;
+    case pbnavitia::LINE:
+        return 7;
+        break;
+    case pbnavitia::ROUTE:
+        return 8;
+        break;
     default:
-       return 5;
-       break;
+        return 9;
+        break;
     }
 }
 
@@ -232,16 +242,17 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;
-    if (q.length() == 0) {
+    if (q.empty()) {
         fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent", pb_response.mutable_error());
         return pb_response;
     }
     int nbmax_temp = nbmax;
-    nbmax = std::max(100, nbmax);
-    bool addType = d.pt_data->stop_area_autocomplete.is_address_type(q, d.geo_ref->synonyms);
+    //For each object type we seach in the dictionnary and keep (nbmax x 5) objects in the result.
+    nbmax = nbmax * 3;
+    //bool addType = d.pt_data->stop_area_autocomplete.is_address_type(q, d.geo_ref->synonyms);
     std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);
 
-    ///Récupérer max(100, count) éléments pour chaque type d'ObjectTC
+    ///Find max(100, count) éléments for each pt_object
     for(nt::Type_e type : filter) {
         std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
         switch(type){
@@ -288,175 +299,11 @@ pbnavitia::Response autocomplete(const std::string &q,
                         d.geo_ref->synonyms,
                         nbmax, valid_admin_ptr(d.geo_ref->pois, admin_ptr));
             } else {
-                result = d.geo_ref->fl_poi.find_partial_with_pattern(q, /*d.geo_ref->alias,*/
+                result = d.geo_ref->fl_poi.find_partial_with_pattern(q,
                         d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax,
                         valid_admin_ptr(d.geo_ref->pois, admin_ptr));
             }
             break;
-        case nt::Type_e::Line:
-            if (search_type==0) {
-                result = d.pt_data->line_autocomplete.find_complete(q,
-                        d.geo_ref->synonyms,
-                        nbmax, [](type::idx_t){return true;});
-            } else {
-                result = d.pt_data->line_autocomplete.find_complete(q, /*d.geo_ref->alias,*/
-                        d.geo_ref->synonyms,
-                        nbmax, [](type::idx_t){return true;});
-            }
-            break;
-        default: break;
-        }
-
-        //Mettre à jour les qualités en implémentant une ou plusieurs règles.
-        update_quality(result, type, addType, d);
-
-        create_place_pb(result, type, depth, d, pb_response);
-    }
-
-    auto compare = [](pbnavitia::Place a, pbnavitia::Place b){
-        //return a.quality() > b.quality();
-        if (a.quality() == b.quality()){
-            return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
-        }
-        else {
-            return a.quality() > b.quality();
-        }
-    };
-
-    //Trier le résultat partiallement jusqu'au nbmax(10 par défaut) eléments et supprimer le reste.
-    nbmax = nbmax_temp;
-    auto mutable_places = pb_response.mutable_places();
-    int result_size = std::min(nbmax, mutable_places->size());
-    std::partial_sort(mutable_places->begin(),mutable_places->begin() + result_size,
-                      mutable_places->end(),compare);
-
-    while (mutable_places->size() > nbmax){
-        mutable_places->RemoveLast();
-    }
-
-    auto compare_attributs = [](pbnavitia::Place a, pbnavitia::Place b)->bool {
-        if (a.embedded_type() != b.embedded_type()){
-            const auto a_order = get_embedded_type_order(a.embedded_type());
-            const auto b_order = get_embedded_type_order(b.embedded_type());
-            return  a_order< b_order;
-        } else if(a.quality() == b.quality()) {
-            return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
-        }
-        else {
-            return a.quality() > b.quality();
-        }
-    };
-
-    //Retrier le résultat final
-    result_size = std::min(nbmax, mutable_places->size());
-    std::partial_sort(mutable_places->begin(), mutable_places->begin() + result_size,
-                      mutable_places->end(), compare_attributs);
-
-    auto pagination = pb_response.mutable_pagination();
-    pagination->set_totalresult(result_size);
-    pagination->set_startpage(0);
-    pagination->set_itemsperpage(nbmax);
-    pagination->set_itemsonpage(result_size);
-    return pb_response;
-}
-
-
-void create_pt_object_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
-               const nt::Type_e type, uint32_t depth, const nt::Data& data,
-               pbnavitia::Response & pb_response){
-    for(auto result_item : result){
-        pbnavitia::Ptobject* ptobject = pb_response.add_pt_objects();
-        switch(type){
-        case nt::Type_e::Network:
-            fill_pb_object(data.pt_data->networks[result_item.idx], data,
-                    ptobject->mutable_network(), depth);
-            ptobject->set_name(data.pt_data->networks[result_item.idx]->name);
-            ptobject->set_uri(data.pt_data->networks[result_item.idx]->uri);
-            ptobject->set_quality(100);
-            ptobject->set_embedded_type(pbnavitia::NETWORK);
-            break;
-        case nt::Type_e::CommercialMode:
-            fill_pb_object(data.pt_data->commercial_modes[result_item.idx], data,
-                    ptobject->mutable_mode(), depth);
-            ptobject->set_name(data.pt_data->commercial_modes[result_item.idx]->name);
-            ptobject->set_uri(data.pt_data->commercial_modes[result_item.idx]->uri);
-            ptobject->set_quality(100);
-            ptobject->set_embedded_type(pbnavitia::COMMERCIAL_MODE);
-            break;
-        case nt::Type_e::Line:
-            fill_pb_object(data.pt_data->lines[result_item.idx], data,
-                    ptobject->mutable_line(), depth);
-            ptobject->set_name(data.pt_data->lines[result_item.idx]->name);
-            ptobject->set_uri(data.pt_data->lines[result_item.idx]->uri);
-            ptobject->set_quality(100);
-            ptobject->set_embedded_type(pbnavitia::LINE);
-            break;
-        case nt::Type_e::Route:
-            fill_pb_object(data.pt_data->routes[result_item.idx], data,
-                    ptobject->mutable_route(), depth);
-            ptobject->set_name(data.pt_data->routes[result_item.idx]->name);
-            ptobject->set_uri(data.pt_data->routes[result_item.idx]->uri);
-            ptobject->set_quality(100);
-            ptobject->set_embedded_type(pbnavitia::ROUTE);
-            break;
-        case nt::Type_e::StopArea:
-            fill_pb_object(data.pt_data->stop_areas[result_item.idx], data,
-                    ptobject->mutable_stop_area(), depth);
-            ptobject->set_name(data.pt_data->stop_areas[result_item.idx]->name);
-            ptobject->set_uri(data.pt_data->stop_areas[result_item.idx]->uri);
-            ptobject->set_quality(100);
-            ptobject->set_embedded_type(pbnavitia::STOP_AREA);
-            break;
-        default:
-            break;
-        }
-    }
-}
-
-int get_pt_object_order(int n){
-    switch(n){
-    case pbnavitia::NETWORK:
-        return 1;
-        break;
-    case pbnavitia::COMMERCIAL_MODE:
-        return 2;
-        break;
-    case pbnavitia::STOP_AREA:
-        return 3;
-        break;
-    case pbnavitia::LINE:
-       return 4;
-       break;
-    case pbnavitia::ROUTE:
-       return 5;
-       break;
-    default:
-       return 6;
-       break;
-    }
-}
-
-pbnavitia::Response pt_object(const std::string &q,
-                                 const std::vector<nt::Type_e> &filter,
-                                 uint32_t depth,
-                                 int nbmax,
-                                 const std::vector<std::string> &admins,
-                                 int search_type,
-                                 const navitia::type::Data &d) {
-
-    pbnavitia::Response pb_response;
-    int nbmax_temp = nbmax;
-    nbmax = std::max(100, nbmax);
-
-    if (q.length() == 0) {
-        fill_pb_error(pbnavitia::Error::bad_filter, "Ptobject : value of q absent", pb_response.mutable_error());
-        return pb_response;
-    }
-
-    ///Récupérer max(100, count) éléments pour chaque type d'ObjectTC
-    for(nt::Type_e type : filter) {
-        std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
-        switch(type){
         case nt::Type_e::Network:
             if (search_type==0) {
                 result = d.pt_data->network_autocomplete.find_complete(q,
@@ -466,7 +313,6 @@ pbnavitia::Response pt_object(const std::string &q,
                          d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax,
                          [](type::idx_t){return true;});
             }
-
             break;
         case nt::Type_e::CommercialMode:
             if (search_type==0) {
@@ -481,55 +327,56 @@ pbnavitia::Response pt_object(const std::string &q,
         case nt::Type_e::Line:
             if (search_type==0) {
                 result = d.pt_data->line_autocomplete.find_complete(q,
-                            d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
+                        d.geo_ref->synonyms,
+                        nbmax, [](type::idx_t){return true;});
             } else {
-                result = d.pt_data->line_autocomplete.find_partial_with_pattern(q,
-                            d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax, [](type::idx_t){return true;});
+                result = d.pt_data->line_autocomplete.find_complete(q,
+                        d.geo_ref->synonyms,
+                        nbmax, [](type::idx_t){return true;});
             }
-            break;
+            break;            
         case nt::Type_e::Route:
             if (search_type==0) {
                 result = d.pt_data->route_autocomplete.find_complete(q,
                             d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
             } else {
                 result = d.pt_data->route_autocomplete.find_partial_with_pattern(q,
-                            d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax, [](type::idx_t){return true;});
+                            d.geo_ref->synonyms, d.geo_ref->word_weight,
+                            nbmax, [](type::idx_t){return true;});
             }
             break;
-        case nt::Type_e::StopArea:
-            if (search_type==0) {
-                result = d.pt_data->stop_area_autocomplete.find_complete(q,
-                        d.geo_ref->synonyms, nbmax, [](type::idx_t){return true;});
-            } else {
-                result = d.pt_data->stop_area_autocomplete.find_partial_with_pattern(q,
-                        d.geo_ref->synonyms, d.geo_ref->word_weight, nbmax, [](type::idx_t){return true;});
-            }
         default: break;
         }
 
-        create_pt_object_pb(result, type, depth, d, pb_response);
+        //Update quality of objects without Admin.
+        update_quality_for_missing_admin(result, d, type);
+
+        create_place_pb(result, type, depth, d, pb_response);
     }
 
-    //Sort result by pt_object type : Network, Mode, Line, Route
-    auto compare_attributs = [](pbnavitia::Ptobject a, pbnavitia::Ptobject b)->bool {
+    //Sort the list of objects (sort by object type and quality)
+    //delete unwanted objects at the end of the list
+    auto compare_attributs = [](pbnavitia::Place a, pbnavitia::Place b)->bool {
         if (a.embedded_type() != b.embedded_type()){
-            const auto a_order = get_pt_object_order(a.embedded_type());
-            const auto b_order = get_pt_object_order(b.embedded_type());
-            return  a_order< b_order;
-        } else {
+            const auto a_order = get_embedded_type_order(a.embedded_type());
+            const auto b_order = get_embedded_type_order(b.embedded_type());
+            return  a_order < b_order;
+        } else if(a.quality() == b.quality()) {
             return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
         }
-
+        else {
+            return a.quality() > b.quality();
+        }
     };
 
     nbmax = nbmax_temp;
-    auto mutable_pt_objects = pb_response.mutable_pt_objects();
-    int result_size = std::min(nbmax, mutable_pt_objects->size());
-    std::partial_sort(mutable_pt_objects->begin(),mutable_pt_objects->begin() + result_size,
-                      mutable_pt_objects->end(),compare_attributs);
+    auto mutable_places = pb_response.mutable_places();
+    int result_size = std::min(nbmax, mutable_places->size());
+    std::partial_sort(mutable_places->begin(), mutable_places->begin() + result_size,
+                      mutable_places->end(), compare_attributs);
 
-    while (mutable_pt_objects->size() > nbmax){
-        mutable_pt_objects->RemoveLast();
+    while (mutable_places->size() > nbmax){
+        mutable_places->RemoveLast();
     }
 
     //Pagination
@@ -538,7 +385,6 @@ pbnavitia::Response pt_object(const std::string &q,
     pagination->set_startpage(0);
     pagination->set_itemsperpage(nbmax);
     pagination->set_itemsonpage(result_size);
-
     return pb_response;
 }
 
