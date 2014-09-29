@@ -393,9 +393,12 @@ message Place {
     optional StopPoint stop_point = 6;
     optional Address address = 7;
     optional Line line = 9;
-    optional AdministrativeRegion administrative_region = 10;
-    optional int32 distance = 11;
-    optional int32 quality = 12;
+    optional Network network = 10;
+    optional CommercialMode mode = 11;
+    optional Route route = 12;
+    optional AdministrativeRegion administrative_region = 13;
+    optional int32 distance = 14;
+    optional int32 quality = 15;
 }
 
 message Ptobject {
