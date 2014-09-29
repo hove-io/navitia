@@ -51,6 +51,119 @@ www.navitia.io
 
 namespace navitia { namespace type {
 
+namespace new_disruption {
+
+enum class Effect {
+  NO_SERVICE,
+  REDUCED_SERVICE,
+  SIGNIFICANT_DELAYS,
+  DETOUR,
+  ADDITIONAL_SERVICE,
+  MODIFIED_SERVICE,
+  OTHER_EFFECT,
+  UNKNOWN_EFFECT,
+  STOP_MOVED
+};
+
+
+struct Cause {
+    std::string id;
+    std::string wording;
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+};
+
+struct Severity {
+    std::string id;
+    std::string wording;
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+    std::string color;
+
+    int priority;
+
+    Effect effect;
+};
+
+struct PtObject {
+    Type_e object_type;
+    std::string object_uri;
+};
+
+struct Disruption;
+
+struct Impact {
+    std::string id;
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+
+    // the application period define when the impact happen
+    std::vector<boost::gregorian::date_period> application_periods;
+
+    Severity severity;
+
+    std::vector<PtObject> informed_entities;
+
+    std::vector<Message> messages;
+
+    //link to the parent disruption
+    Disruption* disruption;
+};
+
+
+struct Tag {
+    std::string id;
+    std::string name;
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+};
+
+struct Message {
+    std::string text;
+
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+};
+
+
+struct Disruption {
+    std::string id;
+
+    // it's the title of the disruption as shown in the backoffice
+    std::string reference;
+
+    // the publication period specify when an information can be displayed to
+    // the customer, if a request is made before or after this period the
+    // disruption must not be shown
+    boost::gregorian::date_period publication_period;
+
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+
+    Cause cause;
+
+    //impacts are shared_ptr because there are weak_ptr pointing to them in the impacted objects
+    std::vector<std::shared_ptr<Impact>> impacts;
+
+    // the place where the disruption happen, the impacts can be in anothers places
+    std::vector<PtObject> localization;
+
+    //additional informations on the disruption
+    std::vector<Tag> tags;
+
+    std::string note;
+};
+
+struct MessageHolder { //=> to be renamed as Disruptions
+    std::vector<std::unique_ptr<Disruption>> disruptions;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & disruptions;
+    }
+};
+}
+
 enum Jours {
     Lun = 0x01,
     Mar = 0x02,

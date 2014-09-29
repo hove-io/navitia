@@ -62,6 +62,9 @@ typedef uint32_t idx_t;
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 struct Message;
+namespace new_disruption {
+struct Impact;
+}
 
 #define ITERATE_NAVITIA_PT_TYPES(FUN)\
     FUN(ValidityPattern, validity_patterns)\
@@ -286,6 +289,8 @@ struct HasMessages{
     //on utilise des smart pointer boost car ils sont sérializable
     //si les weak_ptr était géré, c'est eux qu'ils faudrait utiliser
     std::vector<boost::shared_ptr<Message>> messages;
+
+    std::vector<std::weak_ptr<new_disruption::Impact>> impacts;
 
     std::vector<boost::shared_ptr<Message>> get_applicable_messages(
             const boost::posix_time::ptime& current_time,
