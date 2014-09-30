@@ -504,6 +504,18 @@ place = {
     "id": fields.String(attribute='uri')
 }
 
+pt_object = {
+    "network": PbField(network),
+    "mode": PbField(commercial_mode),
+    "line": PbField(line),
+    "route": PbField(route),
+    "stop_area": PbField(stop_area),
+    "embedded_type": enum_type(),
+    "name": fields.String(),
+    "quality": fields.Integer(),
+    "id": fields.String(attribute='uri')
+}
+
 route["direction"] = PbField(place)
 
 pagination = {

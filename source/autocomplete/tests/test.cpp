@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     // Qualité = 100 - (3 + 0) = 97
     auto res = ac.find_complete("mai paris", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_REQUIRE_EQUAL(res.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res.at(0).quality, 100);
 
     //Dans le dictionnaire : "hotel de ville paris" -> "mairie paris"
     //Recherche : "hotel de ville par" -> "mairie par"
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
     // Qualité = 100 - (2 + 0) = 98
     auto res1 = ac.find_complete("hotel de ville par", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res1.at(0).quality, 100);
 
     //Dans le dictionnaire : "Centre Commercial Caluire 2" -> "centre commercial Caluire 2"
     //Recherche : "c c ca 2" -> "centre commercial Ca"
@@ -123,19 +123,19 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test){
 
     auto res2 = ac.find_complete("c c ca 2",synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res2.size(), 1);
-    BOOST_REQUIRE_EQUAL(res2.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res2.at(0).quality, 100);
 
     auto res3 = ac.find_complete("cc ca 2", synonyms, nbmax,[](int){return true;});
     BOOST_REQUIRE_EQUAL(res3.size(), 1);
-    BOOST_REQUIRE_EQUAL(res3.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res3.at(0).quality, 100);
 
     auto res4 = ac.find_complete("rue rene", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res4.size(), 1);
-    BOOST_REQUIRE_EQUAL(res4.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res4.at(0).quality, 100);
 
     auto res5 = ac.find_complete("rue rené", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res5.size(), 1);
-    BOOST_REQUIRE_EQUAL(res5.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res5.at(0).quality, 100);
 }
 
 BOOST_AUTO_TEST_CASE(regex_tests){
@@ -479,14 +479,14 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
     auto res = ac.find_complete("rue jean", synonyms, nbmax,[](int){return true;});
     std::vector<int> expected = {6,7,0,2};
     BOOST_REQUIRE_EQUAL(res.size(), 4);
-    BOOST_REQUIRE_EQUAL(res.at(0).quality, 100);
-    BOOST_REQUIRE_EQUAL(res.at(1).quality, 100);
-    BOOST_REQUIRE_EQUAL(res.at(2).quality, 100);
-    BOOST_REQUIRE_EQUAL(res.at(3).quality, 100);
-    BOOST_REQUIRE_EQUAL(res.at(0).idx, 2);
-    BOOST_REQUIRE_EQUAL(res.at(1).idx, 7);
-    BOOST_REQUIRE_EQUAL(res.at(2).idx, 0);
-    BOOST_REQUIRE_EQUAL(res.at(3).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res.at(1).quality, 100);
+    BOOST_CHECK_EQUAL(res.at(2).quality, 100);
+    BOOST_CHECK_EQUAL(res.at(3).quality, 100);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 2);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 7);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 0);
+    BOOST_CHECK_EQUAL(res.at(3).idx, 6);
 }
 
 ///Test pour verifier que - entres les deux mots est ignoré.
@@ -508,9 +508,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_add_string_with_Line){
 
     auto res = ac.find_complete("jean-jau", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 3);
-    BOOST_REQUIRE_EQUAL(res.at(0).idx, 1);
-    BOOST_REQUIRE_EQUAL(res.at(1).idx, 3);
-    BOOST_REQUIRE_EQUAL(res.at(2).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 1);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 3);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 6);
 }
 
 BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
@@ -561,33 +561,33 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
 
         auto res = ac.find_complete("rue jean", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res.size(), 4);
-        BOOST_REQUIRE_EQUAL(res.at(0).quality, 100);
+        BOOST_CHECK_EQUAL(res.at(0).quality, 100);
 
         auto res1 = ac.find_complete("r jean", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res1.size(), 4);
 
-        BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
+        BOOST_CHECK_EQUAL(res1.at(0).quality, 100);
 
         auto res2 = ac.find_complete("av jean", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res2.size(), 1);
         //rue jean zay
         // distance = 6 / word_weight = 1*5 = 5
         // Qualité = 100 - (6 + 5) = 89
-        BOOST_REQUIRE_EQUAL(res2.at(0).quality, 100);
+        BOOST_CHECK_EQUAL(res2.at(0).quality, 100);
 
         auto res3 = ac.find_complete("av jean", synonyms, nbmax,[](int){return true;});
         BOOST_REQUIRE_EQUAL(res3.size(), 1);
         //rue jean zay
         // distance = 6 / word_weight = 1*10 = 10
         // Qualité = 100 - (6 + 10) = 84
-        BOOST_REQUIRE_EQUAL(res3.at(0).quality, 100);
+        BOOST_CHECK_EQUAL(res3.at(0).quality, 100);
 
         auto res4 = ac.find_complete("chu gau", synonyms, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res4.size(), 1);
         //hopital paul gaultier
         // distance = 9 / word_weight = 1*10 = 10
         // Qualité = 100 - (9 + 10) = 81
-        BOOST_REQUIRE_EQUAL(res4.at(0).quality, 100);
+        BOOST_CHECK_EQUAL(res4.at(0).quality, 100);
     }
 
 BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
@@ -648,29 +648,29 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
 
     auto res = ac.find_complete("gare", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 8);
-    BOOST_REQUIRE_EQUAL(res.at(0).quality, 100);
-    BOOST_REQUIRE_EQUAL(res.at(0).idx, 1);
-    BOOST_REQUIRE_EQUAL(res.at(1).idx, 5);
-    BOOST_REQUIRE_EQUAL(res.at(2).idx, 2);
-    BOOST_REQUIRE_EQUAL(res.at(3).idx, 4);
-    BOOST_REQUIRE_EQUAL(res.at(4).idx, 6);
-    BOOST_REQUIRE_EQUAL(res.at(5).idx, 0);
-    BOOST_REQUIRE_EQUAL(res.at(6).idx, 3);
-    BOOST_REQUIRE_EQUAL(res.at(7).idx, 7);
-    BOOST_REQUIRE_EQUAL(res.at(7).quality, 100);
+    BOOST_CHECK_EQUAL(res.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 1);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 5);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 2);
+    BOOST_CHECK_EQUAL(res.at(3).idx, 4);
+    BOOST_CHECK_EQUAL(res.at(4).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(5).idx, 0);
+    BOOST_CHECK_EQUAL(res.at(6).idx, 3);
+    BOOST_CHECK_EQUAL(res.at(7).idx, 7);
+    BOOST_CHECK_EQUAL(res.at(7).quality, 100);
 
 
     auto res1 = ac.find_complete("gare tours", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res1.at(0).quality, 100);
 
     auto res2 = ac.find_complete("gare tours tours", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-    BOOST_REQUIRE_EQUAL(res1.at(0).quality, 100);
+    BOOST_CHECK_EQUAL(res1.at(0).quality, 100);
 
     auto res3 = ac.find_complete("les Sorinières", synonyms, nbmax,[](int){return true;});
     BOOST_REQUIRE_EQUAL(res3.size(), 10);
-    BOOST_REQUIRE_EQUAL(res3.at(0).quality, 100);    
+    BOOST_CHECK_EQUAL(res3.at(0).quality, 100);
 }
 
 /*
@@ -714,23 +714,23 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     pbnavitia::Response resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, 10, admins, 0, *(b.data));
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
-    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 100);
-    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 98);
-    BOOST_REQUIRE_EQUAL(resp.places(7).quality(), 98);
-    BOOST_REQUIRE_EQUAL(resp.places(8).quality(), 98);
-    BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_REQUIRE_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_REQUIRE_EQUAL(resp.places(7).uri(), "MPT kerfeunteun");
-    BOOST_REQUIRE_EQUAL(resp.places(8).uri(), "Napoleon III");
-    BOOST_REQUIRE_EQUAL(resp.places(9).uri(), "Resistance");
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(7).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(8).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
+    BOOST_CHECK_EQUAL(resp.places(7).uri(), "MPT kerfeunteun");
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Napoleon III");
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Resistance");
 
     resp = navitia::autocomplete::autocomplete("qui", type_filter , 1, 10, admins, 0, *(b.data));
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
-    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_REQUIRE_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_REQUIRE_EQUAL(resp.places(9).uri(), "Resistance");
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Resistance");
 }
 
 /*
@@ -772,11 +772,11 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
     pbnavitia::Response resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, 5, admins, 0, *(b.data));
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
-    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 100);
-    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 98);
-    BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_REQUIRE_EQUAL(resp.places(4).uri(), "Gare SNCF");
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(4).uri(), "Gare SNCF");
 }
 
 /*
@@ -833,13 +833,158 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, 10, admins, 0, *(b.data));
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
-    BOOST_REQUIRE_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 100);
-    BOOST_REQUIRE_EQUAL(resp.places(1).quality(), 98);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
 
-    BOOST_REQUIRE_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_REQUIRE_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_REQUIRE_EQUAL(resp.places(7).uri(), "quai NEUF");
-    BOOST_REQUIRE_EQUAL(resp.places(8).uri(), "rue DU TREGOR");
-    BOOST_REQUIRE_EQUAL(resp.places(9).uri(), "rue VIS");
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
+    BOOST_CHECK_EQUAL(resp.places(7).uri(), "quai NEUF");
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "rue DU TREGOR");
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "rue VIS");
+}
+
+/*
+1. We have 1 Network (name="base_network"), 2 mode (name="Tram" et name="Metro")
+2. 1 line for mode "Tram" and and 2 routes
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("201409011T1739");
+    b.generate_dummy_basis();
+
+    //Create a new line and affect it to mode "Tram"
+    navitia::type::Line* line = new navitia::type::Line();
+    line->idx = b.data->pt_data->lines.size();
+    line->uri = "line 1";
+    line->name = "line 1";
+    line->commercial_mode = b.data->pt_data->commercial_modes[0];
+    b.data->pt_data->lines.push_back(line);
+
+    //Add two routes in the line
+    navitia::type::Route* route = new navitia::type::Route();
+    route->idx = b.data->pt_data->routes.size();
+    route->name = line->name;
+    route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
+    b.data->pt_data->routes.push_back(route);
+    line->route_list.push_back(route);
+    route->line = line;
+
+    route = new navitia::type::Route();
+    route->idx = b.data->pt_data->routes.size();
+    route->name = line->name;
+    route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
+    b.data->pt_data->routes.push_back(route);
+    line->route_list.push_back(route);
+    route->line = line;
+
+    b.build_autocomplete();
+
+    type_filter = {navitia::type::Type_e::Network, navitia::type::Type_e::CommercialMode,
+                  navitia::type::Type_e::Line, navitia::type::Type_e::Route};
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("base", type_filter , 1, 10, admins, 0, *(b.data));
+    //The result contains only network
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::NETWORK);
+
+    // Call with "Tram" and &type[]=network&type[]=mode&type[]=line&type[]=route
+    resp = navitia::autocomplete::autocomplete("Tram", type_filter , 1, 10, admins, 0, *(b.data));
+    //In the result the first line is Mode and the second is line
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 4);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
+    BOOST_CHECK_EQUAL(resp.places(1).embedded_type(), pbnavitia::LINE);
+    BOOST_CHECK_EQUAL(resp.places(2).embedded_type(), pbnavitia::ROUTE);
+    BOOST_CHECK_EQUAL(resp.places(3).embedded_type(), pbnavitia::ROUTE);
+
+    // Call with "line" and &type[]=network&type[]=mode&type[]=line&type[]=route
+    resp = navitia::autocomplete::autocomplete("line", type_filter , 1, 10, admins, 0, *(b.data));
+    //In the result the first line is line and the others are the routes
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::LINE);
+    BOOST_CHECK_EQUAL(resp.places(1).embedded_type(), pbnavitia::ROUTE);
+    BOOST_CHECK_EQUAL(resp.places(2).embedded_type(), pbnavitia::ROUTE);
+}
+
+/*
+1. We have 1 Network (name="base_network"), 2 mode (name="Tram" et name="Metro")
+2. 1 line for mode Metro and and 2 routes
+3. 4 stop_areas
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("201409011T1739");
+    b.generate_dummy_basis();
+
+    //Create a new line and affect it to mode "Metro"
+    navitia::type::Line* line = new navitia::type::Line();
+    line->idx = b.data->pt_data->lines.size();
+    line-> uri = "line 1";
+    line-> name = "Chatelet - Vincennes";
+    line->commercial_mode = b.data->pt_data->commercial_modes[1];
+    b.data->pt_data->lines.push_back(line);
+
+    //Add two routes in the line
+    navitia::type::Route* route = new navitia::type::Route();
+    route->idx = b.data->pt_data->routes.size();
+    route->name = line->name;
+    route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
+    b.data->pt_data->routes.push_back(route);
+    line->route_list.push_back(route);
+    route->line = line;
+
+    route = new navitia::type::Route();
+    route->idx = b.data->pt_data->routes.size();
+    route->name = line->name;
+    route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
+    b.data->pt_data->routes.push_back(route);
+    line->route_list.push_back(route);
+    route->line = line;
+
+    b.sa("base", 0, 0);
+    b.sa("chatelet", 0, 0);
+    b.sa("Chateau", 0, 0);
+    b.sa("Mettray", 0, 0);
+    Admin* ad = new Admin;
+    ad->name = "paris";
+    ad->uri = "paris";
+    ad->level = 8;
+    ad->post_code = "75000";
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+
+    b.build_autocomplete();
+
+    type_filter = {navitia::type::Type_e::Network, navitia::type::Type_e::CommercialMode,
+                  navitia::type::Type_e::Line, navitia::type::Type_e::Route,
+                  navitia::type::Type_e::StopArea};
+    //Call with q=base
+    pbnavitia::Response resp = navitia::autocomplete::autocomplete("base", type_filter , 1, 10, admins, 0, *(b.data));
+    //The result contains network and stop_area
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 2);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::NETWORK);
+    BOOST_CHECK_EQUAL(resp.places(1).embedded_type(), pbnavitia::STOP_AREA);
+
+    //Call with q=met
+    resp = navitia::autocomplete::autocomplete("met", type_filter , 1, 10, admins, 0, *(b.data));
+    //The result contains mode, stop_area, line
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
+    BOOST_CHECK_EQUAL(resp.places(1).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_CHECK_EQUAL(resp.places(2).embedded_type(), pbnavitia::LINE);
+    BOOST_CHECK_EQUAL(resp.places(3).embedded_type(), pbnavitia::ROUTE);
+    BOOST_CHECK_EQUAL(resp.places(4).embedded_type(), pbnavitia::ROUTE);
+
+    //Call with q=chat
+    resp = navitia::autocomplete::autocomplete("chat", type_filter , 1, 10, admins, 0, *(b.data));
+    //The result contains 2 stop_areas, one line and 2 routes
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_CHECK_EQUAL(resp.places(1).embedded_type(), pbnavitia::STOP_AREA);
+    BOOST_CHECK_EQUAL(resp.places(2).embedded_type(), pbnavitia::LINE);
+    BOOST_CHECK_EQUAL(resp.places(3).embedded_type(), pbnavitia::ROUTE);
+    BOOST_CHECK_EQUAL(resp.places(4).embedded_type(), pbnavitia::ROUTE);
+
 }

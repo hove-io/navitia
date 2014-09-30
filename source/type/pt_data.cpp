@@ -56,7 +56,6 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->stop_area_autocomplete.clear();
     for(const StopArea* sa : this->stop_areas){
         // A ne pas ajouter dans le disctionnaire si pas ne nom
-        //if ((!sa->name.empty()) && (sa->admin_list.size() > 0)){
         if ((!sa->name.empty()) && (sa->visible)) {
             std::string key="";
             for( navitia::georef::Admin* admin : sa->admin_list){
@@ -83,20 +82,55 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->line_autocomplete.clear();
     for(const Line* line : this->lines){
         if (!line->name.empty()){
-            this->line_autocomplete.add_string(line->name, line->idx, georef.synonyms);
+            std::string key="";
+            if (line->network){key = line->network->name;}
+            if (line->commercial_mode) {key += " " + line->commercial_mode->name;}
+            key += " " + line->code;
+            this->line_autocomplete.add_string(key + " " + line->name, line->idx, georef.synonyms);
         }
     }
     this->line_autocomplete.build();
+
+    this->network_autocomplete.clear();
+    for(const Network* network : this->networks){
+        if (!network->name.empty()){
+            this->network_autocomplete.add_string(network->name, network->idx, georef.synonyms);
+        }
+    }
+    this->network_autocomplete.build();
+
+    this->mode_autocomplete.clear();
+    for(const CommercialMode* mode : this->commercial_modes){
+        if (!mode->name.empty()){
+            this->mode_autocomplete.add_string(mode->name, mode->idx, georef.synonyms);
+        }
+    }
+    this->mode_autocomplete.build();
+
+    this->route_autocomplete.clear();
+    for(const Route* route : this->routes){
+        if (!route->name.empty()){
+            std::string key="";
+            if (route->line){
+                if (route->line->network){key = route->line->network->name;}
+                if (route->line->commercial_mode) {key += " " + route->line->commercial_mode->name;}
+                key += " " + route->line->code;
+            }
+            this->route_autocomplete.add_string(key + " " + route->name, route->idx, georef.synonyms);
+        }
+    }
+    this->route_autocomplete.build();
 }
 
 void PT_Data::compute_score_autocomplete(navitia::georef::GeoRef& georef){
 
-    //Commencer par calculer le score des admin
+    //Compute admin score using stop_point count in each admin
     georef.fl_admin.compute_score((*this), georef, type::Type_e::Admin);
-    //Affecter le score de chaque admin à ses ObjectTC
+    //use the score of each admin for it's objects like "POI", "way" and "stop_point"
     georef.fl_way.compute_score((*this), georef, type::Type_e::Way);
     georef.fl_poi.compute_score((*this), georef, type::Type_e::POI);
     this->stop_point_autocomplete.compute_score((*this), georef, type::Type_e::StopPoint);
+    //Compute stop_area score using it's stop_point count
     this->stop_area_autocomplete.compute_score((*this), georef, type::Type_e::StopArea);
 }
 

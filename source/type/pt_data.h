@@ -61,6 +61,9 @@ struct PT_Data : boost::noncopyable{
     autocomplete::Autocomplete<idx_t> stop_area_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopArea);
     autocomplete::Autocomplete<idx_t> stop_point_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopPoint);
     autocomplete::Autocomplete<idx_t> line_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::Line);
+    autocomplete::Autocomplete<idx_t> network_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::Network);
+    autocomplete::Autocomplete<idx_t> mode_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::CommercialMode);
+    autocomplete::Autocomplete<idx_t> route_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::Route);
 
     // Proximity list
     proximitylist::ProximityList<idx_t> stop_area_proximity_list;
@@ -80,6 +83,7 @@ struct PT_Data : boost::noncopyable{
                 & stop_times
                 // the first letters for autocomplete
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
+                & network_autocomplete & mode_autocomplete & route_autocomplete
                 // the proximity lists
                 & stop_area_proximity_list & stop_point_proximity_list
                 // custom types

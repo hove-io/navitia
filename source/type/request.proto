@@ -111,4 +111,16 @@ message Request {
     optional PlaceUriRequest place_uri              = 7;
     optional DisruptionsRequest disruptions         = 8;
     optional CalendarsRequest calendars             = 9;
+    optional PtobjectRequest pt_objects             = 10;
 }
+
+
+message PtobjectRequest {
+    required string q           = 1;
+    repeated NavitiaType types  = 2;
+    required int32 depth        = 3;
+    required int32 count        = 4;
+    repeated string admin_uris  = 5;
+    optional int32 search_type  = 6;
+}
+
