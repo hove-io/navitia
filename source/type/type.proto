@@ -168,7 +168,7 @@ message Route {
     repeated Code codes = 10;
     repeated StopPoint stop_points = 1;
     optional GeoJson geojson = 11;
-    optional Place direction = 12;
+    optional PtObject direction = 12;
 }
 
 message JourneyPattern {
@@ -384,7 +384,7 @@ message LocationContext {
 	required int32 access_duration = 2;
 }
 
-message Place {
+message PtObject {
     required string name = 1;
     required string uri = 2;
     optional NavitiaType embedded_type = 3;
@@ -400,17 +400,3 @@ message Place {
     optional int32 distance = 14;
     optional int32 quality = 15;
 }
-
-message Ptobject {
-    required string name = 1;
-    required string uri = 2;
-    optional NavitiaType embedded_type = 3;
-    optional Network network = 4;
-    optional CommercialMode mode = 5;
-    optional Line line = 6;
-    optional Route route = 7;
-    optional StopArea stop_area = 8;
-    optional int32 distance = 9;
-    optional int32 quality = 10;
-}
-

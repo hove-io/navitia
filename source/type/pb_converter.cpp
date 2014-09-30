@@ -616,7 +616,7 @@ void fill_codes(const std::string& type, const std::string& value, pbnavitia::Co
 
 
 void fill_pb_placemark(const type::StopPoint* stop_point,
-                       const type::Data &data, pbnavitia::Place* place,
+                       const type::Data &data, pbnavitia::PtObject* place,
                        int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period, const bool show_codes){
     if(stop_point == nullptr)
@@ -636,7 +636,7 @@ void fill_pb_placemark(const type::StopPoint* stop_point,
 }
 
 void fill_pb_placemark(const type::StopArea* stop_area,
-                       const type::Data &data, pbnavitia::Place* place,
+                       const type::Data &data, pbnavitia::PtObject* place,
                        int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period,
                        const bool show_codes) {
@@ -657,7 +657,7 @@ void fill_pb_placemark(const type::StopArea* stop_area,
 }
 
 void fill_pb_placemark(const navitia::georef::Admin* admin,
-                       const type::Data &data, pbnavitia::Place* place,
+                       const type::Data &data, pbnavitia::PtObject* place,
                        int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period){
     if(admin == nullptr)
@@ -703,7 +703,7 @@ void fill_pb_placemark(const navitia::georef::Admin* admin,
 }
 
 void fill_pb_placemark(const navitia::georef::POI* poi,
-                       const type::Data &data, pbnavitia::Place* place,
+                       const type::Data &data, pbnavitia::PtObject* place,
                        int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period) {
     if(poi == nullptr)
@@ -723,7 +723,7 @@ void fill_pb_placemark(const navitia::georef::POI* poi,
 }
 
 void fill_pb_placemark(const navitia::georef::Way* way,
-                       const type::Data &data, pbnavitia::Place* place,
+                       const type::Data &data, pbnavitia::PtObject* place,
                        int house_number,
                        type::GeographicalCoord& coord,
                        int max_depth, const pt::ptime& now,
@@ -845,7 +845,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     section->set_end_date_time(navitia::to_posix_timestamp(departure + bt::seconds(total_duration)));
 
     //add the destination as a placemark
-    pbnavitia::Place* dest_place = section->mutable_destination();
+    pbnavitia::PtObject* dest_place = section->mutable_destination();
 
     bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
@@ -901,7 +901,7 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
     section->set_id(response.register_section());
     section->set_type(pbnavitia::STREET_NETWORK);
 
-    pbnavitia::Place* orig_place = section->mutable_origin();
+    pbnavitia::PtObject* orig_place = section->mutable_origin();
     // we want to have a specific place mark for vls or for the departure if we started from a poi
     if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
         const auto vls_station = get_nearest_bss_station(data, first_item.coordinates.front());
@@ -926,7 +926,7 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
 }
 
 void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
-                       pbnavitia::Place* place, int max_depth, const pt::ptime& now,
+                       pbnavitia::PtObject* place, int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period, const bool show_codes) {
     if (point.type == type::Type_e::StopPoint) {
         const auto it = data.pt_data->stop_points_map.find(point.uri);
