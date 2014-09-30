@@ -96,7 +96,11 @@ def get_token():
         return request.headers['Authorization']
 
 
-def authenticate(region, api, abort=False):
+def __has_access(instance, user, api):
+    return instance.is_accessible_by(user)
+
+
+def authenticate(region, api, abort=False, user=None):
     """
     Check the Authorization of the current user for this region and this API.
     If abort is True, the request is aborted with the appropriate HTTP code.

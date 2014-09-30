@@ -450,10 +450,10 @@ def coords(is_collection):
 
 
 def Redirect(*args, **kwargs):
-    id = kwargs["id"]
+    id_ = kwargs["id"]
     collection = kwargs["collection"]
-    region = i_manager.key_of_id(id)
+    region = i_manager.get_region(object_id=id_)
     if not region:
         region = "{region.id}"
-    url = url_for("v1.uri", region=region, collection=collection, id=id)
+    url = url_for("v1.uri", region=region, collection=collection, id=id_)
     return redirect(url, 303)

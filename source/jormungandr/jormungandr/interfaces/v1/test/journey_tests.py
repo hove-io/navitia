@@ -59,9 +59,9 @@ class TestMultiCoverage:
 
     def _mock_function(self, paris_region, lima_region):
         """
-        small helper, mock i_manager.key_of_id
+        small helper, mock i_manager.get_region
         """
-        def mock_key_by_id(object_id, only_one=True):
+        def mock_get_region(object_id, only_one=True):
             if object_id == 'paris':
                 if not paris_region:
                     raise RegionNotFound('paris')
@@ -71,7 +71,7 @@ class TestMultiCoverage:
                     raise RegionNotFound('lima')
                 return [self.regions[r] for r in lima_region]
 
-        i_manager.key_of_id = mock_key_by_id
+        i_manager.get_region = mock_get_region
 
         #we also need to mock the ptmodel cache
         class weNeedMock:

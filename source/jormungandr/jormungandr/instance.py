@@ -33,7 +33,7 @@ from contextlib import contextmanager
 import Queue
 from threading import Lock
 import zmq
-from navitiacommon import response_pb2
+from navitiacommon import response_pb2, request_pb2
 import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
@@ -99,3 +99,9 @@ class Instance(object):
                 if not quiet:
                     logging.error("La requete : " + request.SerializeToString() + " a echoue " + self.socket_path)
                 raise DeadSocketException(self.name, self.socket_path)
+
+    def has_id(self, id_):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.place_uri
+        req.place_uri.uri = request["uri"]
+        return self.send_and_receive(req).HasField('places')

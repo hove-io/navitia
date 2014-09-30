@@ -154,7 +154,7 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
         args["max_nb_journeys"] = None
         args["show_codes"] = False
         if region is None:
-            region = i_manager.key_of_id(args["origin"])
+            region = i_manager.get_region(object_id=args["origin"])
         self.region = region
         original_datetime = datetime.strptime(args['datetime'], f_datetime)
         new_datetime = self.convert_to_utc(original_datetime)
@@ -207,7 +207,7 @@ class Isochrone(Resource, ResourceUtc, FindAndFormatJourneys):
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
         if region is None:
-            region = i_manager.key_of_id(args["origin"])
+            region = i_manager.get_region(object_id=args["origin"])
         self.region = region
         original_datetime = datetime.strptime(args['datetime'], f_datetime)
         new_datetime = self.convert_to_utc(original_datetime)

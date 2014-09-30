@@ -456,11 +456,11 @@ def compute_regions(args):
     from_regions = set()
     to_regions = set()
     if args['origin']:
-        from_regions = set(i_manager.key_of_id(args['origin'], only_one=False))
-        #Note: if the key_of_id does not find any region, it raises a RegionNotFoundException
+        from_regions = set(i_manager.get_regions(object_id=args['origin']))
+        #Note: if get_regions does not find any region, it raises a RegionNotFoundException
 
     if args['destination']:
-        to_regions = set(i_manager.key_of_id(args['destination'], only_one=False))
+        to_regions = set(i_manager.get_regions(object_id=args['destination']))
 
     if not from_regions:
         #we didn't get any origin, the region is in the destination's list
@@ -610,8 +610,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         if region:
             self.region = i_manager.get_region(region)
-            #we check that the user can use this api
-            authentication.authenticate(region, 'ALL', abort=True)
             if uri:
                 objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
@@ -742,8 +740,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         if region:
             self.region = i_manager.get_region(region)
-            #we check that the user can use this api
-            authentication.authenticate(region, 'ALL', abort=True)
             set_request_timezone(self.region)
 
         if not region:

@@ -65,7 +65,8 @@ class Uri:
     def region(self):
         if not self.region_ and self.lon and self.lat:
             # On va chercher la region associee
-            self.region_ = i_manager.key_of_coord(self.lon, self.lat)
+            self.region_ = i_manager.get_region(lon=self.lon, lat=self.lat,
+                    api='ALL')
             if not self.region_:
                 error = "No region is covering these coordinates"
                 raise InvalidUriException(error)

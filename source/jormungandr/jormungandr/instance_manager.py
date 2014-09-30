@@ -153,7 +153,7 @@ class InstanceManager(object):
         req.requested_api = type_pb2.METADATAS
         for key, instance in self.instances.iteritems():
             try:
-                resp = instance.send_and_receive(req, timeout=1000, quiet=True)
+                resp = instance.send_and_receive(req, timeout=1000)
             except DeadSocketException:
                 instance.geom = None
                 continue
@@ -178,6 +178,10 @@ class InstanceManager(object):
     def stop(self):
         if not self.thread_event.is_set():
             self.thread_event.set()
+   
+    def filter_authorized_instances(self, instances, api):
+        user = authentication.get_user()
+        return [i.name for i in instances if authentication.has_access(i, abort=False, user=user, api=api)]
 
     def key_of_id(self, object_id, only_one=True):
         """ Retrieves the key of the region of a given id
