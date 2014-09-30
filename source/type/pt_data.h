@@ -78,7 +78,7 @@ struct PT_Data : boost::noncopyable{
     proximitylist::ProximityList<idx_t> stop_point_proximity_list;
 
     //Message
-    MessageHolder message_holder;
+    new_disruption::DisruptionHolder disruption_holder;
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
@@ -98,7 +98,7 @@ struct PT_Data : boost::noncopyable{
                 // custom types
                 & stop_point_connections
                 //messages
-                & message_holder
+                & disruption_holder
                 //the meta vjs
                 & meta_vj;
     }

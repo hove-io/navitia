@@ -39,15 +39,15 @@ www.navitia.io
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 
 #include <atomic>
 #include <map>
 #include <vector>
 #include <string>
+#include "utils/serialization_unique_ptr.h"
+#include "utils/serialization_unique_ptr_container.h"
 
 #include "type/type.h"
-
 
 namespace navitia { namespace type {
 
@@ -71,6 +71,11 @@ struct Cause {
     std::string wording;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & wording & created_at & updated_at;
+    }
 };
 
 struct Severity {
@@ -83,11 +88,21 @@ struct Severity {
     int priority;
 
     Effect effect;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & wording & created_at & updated_at & color & priority & effect;
+    }
 };
 
 struct PtObject {
     Type_e object_type;
     std::string object_uri;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & object_type & object_uri;
+    }
 };
 
 struct Disruption;
@@ -97,6 +112,11 @@ struct Message {
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & text & created_at & updated_at;
+    }
 };
 
 struct Impact {
@@ -117,17 +137,24 @@ struct Impact {
     //Note: it is a raw pointer because an Impact is owned by it's disruption
     //(even if the impact is stored as a share_ptr in the disruption to allow for weak_ptr towards it)
     Disruption* disruption;
-};
 
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & created_at & updated_at & application_periods & severity & informed_entities & messages & disruption;
+    }
+};
 
 struct Tag {
     std::string uri;
     std::string name;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & name & created_at & updated_at;
+    }
 };
-
-
 
 struct Disruption {
     std::string uri;
@@ -138,7 +165,7 @@ struct Disruption {
     // the publication period specify when an information can be displayed to
     // the customer, if a request is made before or after this period the
     // disruption must not be shown
-    boost::posix_time::time_period publication_period;
+    //boost::posix_time::time_period publication_period;
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -155,9 +182,14 @@ struct Disruption {
     std::vector<std::shared_ptr<Tag>> tags;
 
     std::string note;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & reference & created_at & updated_at & cause & impacts & localization & tags & note;
+    }
 };
 
-struct MessageHolder { //=> to be renamed as Disruptions
+struct DisruptionHolder { //=> to be renamed as Disruptions
     std::vector<std::unique_ptr<Disruption>> disruptions;
 
     // causes, severities and tags are a pool (weak_ptr because the owner ship
@@ -168,7 +200,7 @@ struct MessageHolder { //=> to be renamed as Disruptions
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions & causes & severities;
+        ar & disruptions & causes & severities & tags;
     }
 };
 }
@@ -239,10 +271,10 @@ struct Message: public AtPerturbation{
             boost::posix_time::seconds(0)),
         message_status(MessageStatus::information){}
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int){
-        ar & uri & object_type & object_uri & publication_period
+    template<class Archive> void serialize(Archive &, const unsigned int){
+  /*      ar & uri & object_type & object_uri & publication_period
             & application_period & application_daily_start_hour
-            & application_daily_end_hour & active_days & localized_messages & message_status;
+            & application_daily_end_hour & active_days & localized_messages & message_status;*/
     }
 
     bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_time)const;
@@ -257,8 +289,8 @@ struct MessageHolder{
 
     MessageHolder(){}
 
-    template<class Archive> void serialize(Archive& ar, const unsigned int){
-        ar & messages;
+    template<class Archive> void serialize(Archive&, const unsigned int){
+        //ar & messages;
     }
 
 };

@@ -36,11 +36,13 @@ www.navitia.io
 #include "type/data.h"
 #include "type/pt_data.h"
 
+//using nt = navitia::type;
+
 namespace ed{ namespace connectors{
 
 namespace pt = boost::posix_time;
 
-std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
+navitia::type::new_disruption::DisruptionHolder load_disruptions(
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time){
     //pour le moment on vire les timezone et on considére que c'est de l'heure local
@@ -69,11 +71,46 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des messages");
         result = work.prepared("messages")(st_current_time)(st_shift_days).exec();
-    }catch(const pqxx::pqxx_exception &e){
+    } catch(const pqxx::pqxx_exception& e) {
         throw navitia::exception(e.base().what());
-
     }
 
+    nt::new_disruption::DisruptionHolder disruptions;
+    std::shared_ptr<nt::new_disruption::Disruption> disruption;
+    std::string current_uri = "";
+/*
+    for (auto cursor = result.begin(); cursor != result.end(); ++cursor) {
+
+        if (cursor["uri"].as<std::string>() != current_uri) {
+            if (disruption) {//if it's a new message, we add it
+                disruptions[disruption->uri] = disruption;
+            }
+            disruption = std::make_shared<nt::new_disruption::Disruption>();
+            cursor["uri"].to(current_uri);
+            disruption->uri = current_uri;
+            cursor["object_uri"].to(disruption->object_uri);
+        }
+        message->object_type = static_cast<navitia::type::Type_e>(cursor["object_type_id"].as<int>());
+
+        message->message_status = static_cast<navitia::type::MessageStatus>(cursor["message_status_id"].as<int>());
+
+        message->application_daily_start_hour = pt::duration_from_string(cursor["start_application_daily_hour"].as<std::string>());
+
+        message->application_daily_end_hour = pt::duration_from_string(cursor["end_application_daily_hour"].as<std::string>());
+
+        pt::ptime start = pt::time_from_string(cursor["start_application_date"].as<std::string>());
+
+        pt::ptime end = pt::time_from_string(cursor["end_application_date"].as<std::string>());
+        message->application_period = pt::time_period(start, end);
+
+        start = pt::time_from_string(cursor["start_publication_date"].as<std::string>());
+
+        end = pt::time_from_string(cursor["end_publication_date"].as<std::string>());
+        message->publication_period = pt::time_period(start, end);
+
+        message->active_days = std::bitset<8>(cursor["active_days"].as<std::string>());
+    }*/
+    /*
     std::map<std::string, boost::shared_ptr<navitia::type::Message>> messages;
     boost::shared_ptr<navitia::type::Message> message;
     std::string current_uri = "";
@@ -127,9 +164,12 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
     }
 
     return messages;
+    */
+    return disruptions;
 }
 
 void apply_messages(navitia::type::Data& data){
+    /*
     for(const auto message_pair : data.pt_data->message_holder.messages){
         if(message_pair.second->object_type ==  navitia::type::Type_e::StopArea){
             auto it = data.pt_data->stop_areas_map.find(message_pair.second->object_uri);
@@ -174,6 +214,7 @@ void apply_messages(navitia::type::Data& data){
             }
         }
     }
+    */
 }
 
 std::vector<navitia::type::AtPerturbation> load_at_perturbations(
@@ -201,10 +242,8 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des perturbations at");
         result = work.prepared("messages")(st_current_time)(st_shift_days).exec();
-
-    }catch(const pqxx::pqxx_exception &e){
+    } catch(const pqxx::pqxx_exception &e) {
         throw navitia::exception(e.base().what());
-
     }
 
     std::vector<navitia::type::AtPerturbation> perturbations;

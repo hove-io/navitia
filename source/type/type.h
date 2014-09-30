@@ -42,6 +42,7 @@ www.navitia.io
 
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
