@@ -53,17 +53,19 @@ int main(int argc, char * argv[])
     std::string input, connection_string;
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help,h", "Affiche l'aide")
+        ("help,h", "Show this message")
         ("input,i", po::value<std::string>(&input), "Synonyms file name")
-        ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("version,v", "Show version")
+        ("config-file", po::value<std::string>(), "Path to config file")
+        ("connection-string", po::value<std::string>(&connection_string)->required(),
+             "Database connection parameters: host=localhost user=navitia"
+             " dbname=navitia password=navitia");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE);
+        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
         return 0;
     }
 
@@ -78,7 +80,8 @@ int main(int argc, char * argv[])
     }
 
     if(vm.count("help") || !vm.count("input")) {
-        std::cout << desc <<  "\n";
+        std::cout << "Reads and inserts a synonym file into an ed database" << std::endl;
+        std::cout << desc <<  std::endl;
         return 1;
     }
     po::notify(vm);

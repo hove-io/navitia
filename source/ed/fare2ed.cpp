@@ -56,17 +56,18 @@ int main(int argc, char * argv[])
     std::string connection_string, fare_dir;
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help,h", "Affiche l'aide")
-        ("version,v", "Affiche la version")
-        ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
-        ("fare,f", po::value<std::string>(&fare_dir)->required(), "Repertoire des fichiers fare");
+        ("help,h", "Show this message")
+        ("version,v", "Show version")
+        ("config-file", po::value<std::string>(), "Path to configuration file")
+        ("connection-string", po::value<std::string>(&connection_string)->required(),
+         "Connection paramters to database: host=localhost user=navitia dbname=navitia password=navitia")
+        ("fare,f", po::value<std::string>(&fare_dir)->required(), "Directory of fare files");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        LOG4CPLUS_INFO(logger, argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE);
+        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
         return 0;
     }
 
@@ -81,7 +82,8 @@ int main(int argc, char * argv[])
     }
 
     if(vm.count("help")) {
-        std::cout << desc <<  "\n";
+        std::cout << "Reads and inserts in ed database fare files" << std::endl;
+        std::cout << desc <<  std::endl;
         return 1;
     }
     po::notify(vm);

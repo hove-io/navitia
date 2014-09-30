@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
     po::notify(compute_opt.vm);
 
     if (compute_opt.vm.count("help")) {
+        std::cout << "Run a single journey" << std::endl;
         std::cout << desc << std::endl;
         return 1;
     }
