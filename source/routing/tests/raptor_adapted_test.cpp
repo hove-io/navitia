@@ -143,7 +143,7 @@ public:
         perturbation.application_period = message->application_period;
         perturbation.active_days = message->active_days;
         perturbations.push_back(perturbation);
-    };
+    }
 
     Params():b("20140113") {
         /*

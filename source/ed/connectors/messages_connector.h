@@ -34,7 +34,7 @@ www.navitia.io
 #include "type/message.h"
 
 namespace navitia{namespace type{
-    struct Data;
+    class Data;
 }}
 
 namespace ed{ namespace connectors{

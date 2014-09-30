@@ -58,6 +58,9 @@ namespace navitia { namespace type {
 
 struct wrong_version : public navitia::exception {
     wrong_version(const std::string& msg): navitia::exception(msg){}
+    wrong_version(const wrong_version&) = default;
+    wrong_version& operator=(const wrong_version&) = default;
+    virtual ~wrong_version() noexcept;
 };
 
 /** Contient toutes les données théoriques du référentiel transport en communs

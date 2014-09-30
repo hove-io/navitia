@@ -35,7 +35,8 @@ add_custom_command (TARGET pb_lib
     response.proto request.proto
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
-add_library(types type.cpp message.cpp datetime.cpp)
+add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp)
+target_link_libraries(types utils)
 
 SET(DATA_SRC
     data.cpp
@@ -64,7 +65,7 @@ target_link_libraries(type_test types data utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(type_test)
 
 add_executable(datetime_test tests/datetime.cpp)
-target_link_libraries(datetime_test ${BOOST_LIBS} log4cplus)
+target_link_libraries(datetime_test ${BOOST_LIBS} types log4cplus)
 ADD_BOOST_TEST(datetime_test)
 
 

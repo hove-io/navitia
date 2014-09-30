@@ -108,8 +108,6 @@ int main(int argc, char * argv[])
     }
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-#define SIZE_EXT_CODE(type_name, collection_name)size_t collection_name##_size = data.pt_data.collection_name.size();\
-SIZE_EXT_CODE(CLEAR_EXT_CODE)
     LOG4CPLUS_INFO(logger, "loading messages");
 
     ed::connectors::RealtimeLoaderConfig config(connection_string, shift_days);
@@ -143,18 +141,11 @@ SIZE_EXT_CODE(CLEAR_EXT_CODE)
     adapter.apply(perturbations, *data.pt_data);
     //aprés avoir modifié les graphs; on retrie
     data.pt_data->sort();
-#define COMP_SIZE1(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
-ITERATE_NAVITIA_PT_TYPES(COMP_SIZE1)
     apply_adapted = (pt::microsec_clock::local_time() - start).total_milliseconds();
     data.build_proximity_list();
-#define COMP_SIZE2(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
-ITERATE_NAVITIA_PT_TYPES(COMP_SIZE2)
 
     LOG4CPLUS_INFO(logger, "building of autocomplete");
     data.build_autocomplete();
-
-#define COMP_SIZE(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
-ITERATE_NAVITIA_PT_TYPES(COMP_SIZE)
 
     LOG4CPLUS_INFO(logger, "saving...");
 

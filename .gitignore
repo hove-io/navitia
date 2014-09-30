@@ -18,6 +18,7 @@ DEBIAN/
 build_package/
 *.log
 *.orig
+*~
 source/scripts/settings_jormungandr.sh
 dev_settings.sh
 dev_settings.py

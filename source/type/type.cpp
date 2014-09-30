@@ -219,61 +219,6 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
         return !days[day-1] && !days[day] && !days[day+1];
 }
 
-double GeographicalCoord::distance_to(const GeographicalCoord &other) const{
-    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
-    double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;
-    double latitudeArc  = (this->lat() - other.lat()) * N_DEG_TO_RAD;
-    double latitudeH = sin(latitudeArc * 0.5);
-    latitudeH *= latitudeH;
-    double lontitudeH = sin(longitudeArc * 0.5);
-    lontitudeH *= lontitudeH;
-    double tmp = cos(this->lat()*N_DEG_TO_RAD) * cos(other.lat()*N_DEG_TO_RAD);
-    return EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
-}
-
-bool operator==(const GeographicalCoord & a, const GeographicalCoord & b){
-    return a.distance_to(b) < 0.1; // soit 0.1m
-}
-
-std::pair<GeographicalCoord, float> GeographicalCoord::project(GeographicalCoord segment_start, GeographicalCoord segment_end) const{
-    std::pair<GeographicalCoord, float> result;
-
-    double dlon = segment_end._lon - segment_start._lon;
-    double dlat = segment_end._lat - segment_start._lat;
-    double length_sqr = dlon * dlon + dlat * dlat;
-    double u;
-
-    // On gère le cas où le segment est particulièrement court, et donc ça peut poser des problèmes (à cause de la division par length²)
-    if(length_sqr < 1e-11){ // moins de un mètre, on projette sur une extrémité
-        if(this->distance_to(segment_start) < this->distance_to(segment_end))
-            u = 0;
-        else
-            u = 1;
-    } else {
-        u = ((this->_lon - segment_start._lon)*dlon + (this->_lat - segment_start._lat)*dlat )/
-                length_sqr;
-    }
-
-    // Les deux cas où le projeté tombe en dehors
-    if(u < 0)
-        result = std::make_pair(segment_start, this->distance_to(segment_start));
-    else if(u > 1)
-        result = std::make_pair(segment_end, this->distance_to(segment_end));
-    else {
-        result.first._lon = segment_start._lon + u * (segment_end._lon - segment_start._lon);
-        result.first._lat = segment_start._lat + u * (segment_end._lat - segment_start._lat);
-        result.second = this->distance_to(result.first);
-    }
-
-    return result;
-}
-
-
-std::ostream & operator<<(std::ostream & os, const GeographicalCoord & coord){
-    os << coord.lon() << ";" << coord.lat();
-    return os;
-}
-
 static_data * static_data::instance = 0;
 static_data * static_data::get() {
     if (instance == 0) {
@@ -571,6 +516,17 @@ std::vector<idx_t> StopPointConnection::get(Type_e type, const PT_Data & ) const
     return result;
 }
 bool StopPointConnection::operator<(const StopPointConnection& other) const { return this < &other; }
+
+std::string to_string(ExceptionDate::ExceptionType t) {
+    switch (t) {
+    case ExceptionDate::ExceptionType::add:
+        return "Add";
+    case ExceptionDate::ExceptionType::sub:
+        return "Sub";
+    default:
+        throw navitia::exception("unhandled exception type");
+    }
+}
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_duration) : type(type), uri(uri), access_duration(access_duration) {
    // Gestion des adresses

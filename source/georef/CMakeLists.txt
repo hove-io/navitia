@@ -9,6 +9,6 @@ SET(GEOREF_SRC
 
 add_library(georef ${GEOREF_SRC})
 
-target_link_libraries(georef types utils)
+target_link_libraries(georef types proximitylist utils)
 
 add_subdirectory(tests)

@@ -39,7 +39,7 @@ www.navitia.io
 
 namespace ed{ namespace connectors{
 struct GeopalParserException: public navitia::exception{
-    GeopalParserException(const std::string& message): navitia::exception(message){};
+    GeopalParserException(const std::string& message): navitia::exception(message){}
 };
 
 class GeopalParser{

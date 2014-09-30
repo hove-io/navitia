@@ -159,31 +159,22 @@ int get_embedded_type_order(pbnavitia::NavitiaType type){
     switch(type){
     case pbnavitia::NETWORK:
         return 1;
-        break;
     case pbnavitia::COMMERCIAL_MODE:
         return 2;
-        break;
     case pbnavitia::ADMINISTRATIVE_REGION:
         return 3;
-        break;
     case pbnavitia::STOP_AREA:
         return 4;
-        break;
     case pbnavitia::POI:
         return 5;
-        break;
     case pbnavitia::ADDRESS:
         return 6;
-        break;
     case pbnavitia::LINE:
         return 7;
-        break;
     case pbnavitia::ROUTE:
         return 8;
-        break;
     default:
         return 9;
-        break;
     }
 }
 

@@ -36,7 +36,7 @@ www.navitia.io
 namespace ed{ namespace connectors{
 
 struct PoiParserException: public navitia::exception{
-    PoiParserException(const std::string& message): navitia::exception(message){};
+    PoiParserException(const std::string& message): navitia::exception(message){}
 };
 
 

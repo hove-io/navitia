@@ -36,7 +36,7 @@ www.navitia.io
 namespace navitia {
 
 namespace type {
-    struct Data;
+    class Data;
     enum class Type_e;
 }
 

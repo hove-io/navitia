@@ -31,6 +31,7 @@ www.navitia.io
 #include "street_network.h"
 #include "type/data.h"
 #include "georef.h"
+#include <boost/math/constants/constants.hpp>
 #include <chrono>
 
 namespace navitia { namespace georef {
