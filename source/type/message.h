@@ -67,14 +67,14 @@ enum class Effect {
 
 
 struct Cause {
-    std::string id;
+    std::string uri;
     std::string wording;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 };
 
 struct Severity {
-    std::string id;
+    std::string uri;
     std::string wording;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -93,26 +93,28 @@ struct PtObject {
 struct Disruption;
 
 struct Impact {
-    std::string id;
+    std::string uri;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
     // the application period define when the impact happen
     std::vector<boost::gregorian::date_period> application_periods;
 
-    Severity severity;
+    std::shared_ptr<Severity> severity;
 
     std::vector<PtObject> informed_entities;
 
     std::vector<Message> messages;
 
     //link to the parent disruption
+    //Note: it is a raw pointer because an Impact is owned by it's disruption
+    //(even if the impact is stored as a share_ptr in the disruption to allow for weak_ptr towards it)
     Disruption* disruption;
 };
 
 
 struct Tag {
-    std::string id;
+    std::string uri;
     std::string name;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -127,7 +129,7 @@ struct Message {
 
 
 struct Disruption {
-    std::string id;
+    std::string uri;
 
     // it's the title of the disruption as shown in the backoffice
     std::string reference;
@@ -140,7 +142,7 @@ struct Disruption {
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
-    Cause cause;
+    std::shared_ptr<Cause> cause;
 
     //impacts are shared_ptr because there are weak_ptr pointing to them in the impacted objects
     std::vector<std::shared_ptr<Impact>> impacts;
@@ -157,9 +159,14 @@ struct Disruption {
 struct MessageHolder { //=> to be renamed as Disruptions
     std::vector<std::unique_ptr<Disruption>> disruptions;
 
+    // causes and severities are a pool (weak_ptr because the owner ship
+    // is in the linked disruption or impact)
+    std::map<std::string, std::weak_ptr<Cause>> causes; //to be wrapped
+    std::map<std::string, std::weak_ptr<Severity>> severities; //to be wrapped too
+
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions;
+        ar & disruptions & causes & severities;
     }
 };
 }
