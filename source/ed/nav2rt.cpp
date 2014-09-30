@@ -114,14 +114,13 @@ int main(int argc, char * argv[])
     ed::connectors::RealtimeLoaderConfig config(connection_string, shift_days);
     try{
         start = pt::microsec_clock::local_time();
-        data.pt_data->message_holder.messages = ed::connectors::load_messages(
-                config, now);
+        data.pt_data->disruption_holder = ed::connectors::load_disruptions(config, now);
         load = (pt::microsec_clock::local_time() - start).total_milliseconds();
     }catch(const navitia::exception& ex){
         std::cout << ex.what() << std::endl;
         return 1;
     }
-    LOG4CPLUS_INFO(logger, data.pt_data->message_holder.messages.size() << " loaded messages");
+    LOG4CPLUS_INFO(logger, data.pt_data->disruption_holder.disruptions.size() << " loaded messages");
     LOG4CPLUS_INFO(logger, "application of messages on data");
     ed::connectors::apply_messages(data);
 

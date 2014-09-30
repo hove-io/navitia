@@ -46,7 +46,7 @@ struct RealtimeLoaderConfig{
     RealtimeLoaderConfig(const std::string& connectionstring, const uint32_t shiftdays) : connection_string(connectionstring), shift_days(shiftdays){}
 };
 
-std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
+navitia::type::new_disruption::DisruptionHolder load_disruptions(
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time);
 
