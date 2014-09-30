@@ -287,6 +287,7 @@ journey_pattern_point = Table('journey_pattern_point', metadata,*[
     Column('order', INTEGER(), primary_key=False, nullable=False),
     Column('comment', TEXT(), primary_key=False),
     Column('stop_point_id', BIGINT(), primary_key=False, nullable=False),
+    Column('shape_from_prev', Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), primary_key=False),
     ForeignKeyConstraint(['stop_point_id'], [u'navitia.stop_point.id'], name=u'journey_pattern_point_stop_point_id_fkey'),
     ForeignKeyConstraint(['journey_pattern_id'], [u'navitia.journey_pattern.id'], name=u'journey_pattern_point_journey_pattern_id_fkey'),],
     schema='navitia')
