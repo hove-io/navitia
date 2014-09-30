@@ -246,7 +246,7 @@ def reload_kraken(instance_id):
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
-    chain(reload_data.si(instance_config, job.id)).delay()
+    chain(reload_data.si(instance_config, job.id), finish_job.si(job.id)).delay()
     logging.info("Task reload kraken for instance {} queued".format(instance.name))
 
 
