@@ -92,13 +92,20 @@ struct PtObject {
 
 struct Disruption;
 
+struct Message {
+    std::string text;
+
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+};
+
 struct Impact {
     std::string uri;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
     // the application period define when the impact happen
-    std::vector<boost::gregorian::date_period> application_periods;
+    std::vector<boost::posix_time::time_period> application_periods;
 
     std::shared_ptr<Severity> severity;
 
@@ -120,12 +127,6 @@ struct Tag {
     boost::posix_time::ptime updated_at;
 };
 
-struct Message {
-    std::string text;
-
-    boost::posix_time::ptime created_at;
-    boost::posix_time::ptime updated_at;
-};
 
 
 struct Disruption {
@@ -137,7 +138,7 @@ struct Disruption {
     // the publication period specify when an information can be displayed to
     // the customer, if a request is made before or after this period the
     // disruption must not be shown
-    boost::gregorian::date_period publication_period;
+    boost::posix_time::time_period publication_period;
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -151,7 +152,7 @@ struct Disruption {
     std::vector<PtObject> localization;
 
     //additional informations on the disruption
-    std::vector<Tag> tags;
+    std::vector<std::shared_ptr<Tag>> tags;
 
     std::string note;
 };
@@ -159,10 +160,11 @@ struct Disruption {
 struct MessageHolder { //=> to be renamed as Disruptions
     std::vector<std::unique_ptr<Disruption>> disruptions;
 
-    // causes and severities are a pool (weak_ptr because the owner ship
+    // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
     std::map<std::string, std::weak_ptr<Cause>> causes; //to be wrapped
     std::map<std::string, std::weak_ptr<Severity>> severities; //to be wrapped too
+    std::map<std::string, std::weak_ptr<Tag>> tags; //to be wrapped too
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
