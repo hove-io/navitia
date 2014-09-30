@@ -378,7 +378,7 @@ pbnavitia::Response autocomplete(const std::string &q,
                       mutable_places->end(), compare_attributs);
 
     while (mutable_places->size() > nbmax){
-        mutable_places->DeleteSubrange(nbmax, mutable_places->size() - nbmax);
+        mutable_places->RemoveLast();
     }
 
     //Pagination
