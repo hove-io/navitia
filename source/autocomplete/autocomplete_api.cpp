@@ -247,7 +247,9 @@ pbnavitia::Response autocomplete(const std::string &q,
         return pb_response;
     }
     int nbmax_temp = nbmax;
-    //For each object type we seach in the dictionnary and keep (nbmax x 5) objects in the result.
+    //For each object type we seach in the dictionnary and keep (nbmax x 3) objects in the result.
+    //It's always better to get more objects from the disctionnary and apply some rules to delete
+    //unwanted objects.
     nbmax = nbmax * 3;
     //bool addType = d.pt_data->stop_area_autocomplete.is_address_type(q, d.geo_ref->synonyms);
     std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);

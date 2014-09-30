@@ -50,16 +50,5 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const std::vector <std::string> &admins,
                                  int search_type,
                                  const type::Data &d);
-
-
-/** Trouve tous les objets définis par filter dont le nom contient q */
-pbnavitia::Response pt_object(const std::string &q,
-                                 const std::vector<navitia::type::Type_e> &filter,
-                                 uint32_t depth,
-                                 int nbmax,
-                                 const std::vector <std::string> &admins,
-                                 int search_type,
-                                 const type::Data &d);
-
 }
 }

@@ -37,7 +37,7 @@ from fields import NonNullList, NonNullNested, PbField, error, pt_object
 from ResourceUri import ResourceUri
 from make_links import add_id_links
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument
+from jormungandr.interfaces.parsers import depth_argument, option_value
 from copy import deepcopy
 
 
@@ -45,6 +45,8 @@ pt_objects = {
     "pt_object": NonNullList(NonNullNested(pt_object), attribute='places'),
     "error": PbField(error, attribute='error'),
 }
+
+pt_object_type_values = ["network", "mode", "line","route", "stop_area"]
 
 
 class Ptobjects(ResourceUri):
@@ -56,9 +58,8 @@ class Ptobjects(ResourceUri):
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=str, action="append",
-                                         default=["network", "mode",
-                                                  "line","route", "stop_area"],
+        self.parsers["get"].add_argument("type[]", type=option_value(pt_object_type_values),
+                                         action="append",default=pt_object_type_values,
                                          description="The type of data to\
                                          search")
         self.parsers["get"].add_argument("count", type=int, default=10,
