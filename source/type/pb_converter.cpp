@@ -65,9 +65,10 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
     }
 }
 
-void fill_pb_object(const navitia::georef::Admin* adm, const nt::Data&,
+void fill_pb_object(const georef::Admin* adm, const nt::Data&,
                     pbnavitia::AdministrativeRegion* admin, int,
-                    const pt::ptime&, const pt::time_period& ){
+                    const pt::ptime&, const pt::time_period&,
+                    const bool){
     if(adm == nullptr)
         return ;
     admin->set_name(adm->name);
@@ -613,49 +614,6 @@ void fill_codes(const std::string& type, const std::string& value, pbnavitia::Co
     code->set_type(type);
     code->set_value(value);
 }
-
-
-void fill_pb_placemark(const type::StopPoint* stop_point,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period, const bool show_codes){
-    if(stop_point == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(stop_point, data, place->mutable_stop_point(), depth,
-                   now, action_period, show_codes);
-    place->set_name(stop_point->name);
-
-    for(auto admin : place->stop_point().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-    place->set_uri(stop_point->uri);
-    place->set_embedded_type(pbnavitia::STOP_POINT);
-}
-
-void fill_pb_placemark(const type::StopArea* stop_area,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period,
-                       const bool show_codes) {
-    if(stop_area == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(stop_area, data, place->mutable_stop_area(), depth,
-                   now, action_period, show_codes);
-    place->set_name(stop_area->name);
-    for(auto admin : place->stop_area().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-
-    place->set_uri(stop_area->uri);
-    place->set_embedded_type(pbnavitia::STOP_AREA);
-}
-
 void fill_pb_placemark(const navitia::georef::Admin* admin,
                        const type::Data &data, pbnavitia::PtObject* place,
                        int max_depth, const pt::ptime& now,
@@ -700,110 +658,6 @@ void fill_pb_placemark(const navitia::georef::Admin* admin,
 
     place->set_uri(admin->uri);
     place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
-}
-
-void fill_pb_placemark(const navitia::georef::POI* poi,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(poi == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(poi, data, place->mutable_poi(), depth,
-                   now, action_period);
-    place->set_name(poi->name);
-    for(auto admin : place->poi().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-
-    place->set_uri(poi->uri);
-    place->set_embedded_type(pbnavitia::POI);
-}
-
-void fill_pb_placemark(const type::Network* network,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(network == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(network, data, place->mutable_network(), depth,
-                   now, action_period);
-    place->set_name(network->name);
-    place->set_uri(network->uri);
-    place->set_embedded_type(pbnavitia::NETWORK);
-}
-
-void fill_pb_placemark(const type::Company* company,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(company == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(company, data, place->mutable_company(), depth,
-                   now, action_period);
-    place->set_name(company->name);
-    place->set_uri(company->uri);
-    place->set_embedded_type(pbnavitia::COMPANY);
-}
-
-void fill_pb_placemark(const type::Line* line,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(line == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(line, data, place->mutable_line(), depth,
-                   now, action_period);
-    place->set_name(line->name);
-    place->set_uri(line->uri);
-    place->set_embedded_type(pbnavitia::LINE);
-}
-
-void fill_pb_placemark(const type::Route* route,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(route == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(route, data, place->mutable_route(), depth,
-                   now, action_period);
-    place->set_name(route->name);
-    place->set_uri(route->uri);
-    place->set_embedded_type(pbnavitia::ROUTE);
-}
-
-void fill_pb_placemark(const type::VehicleJourney* vehicle_journey,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(vehicle_journey == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(vehicle_journey, data, place->mutable_vehicle_journey(), depth,
-                   now, action_period);
-    place->set_name(vehicle_journey->name);
-    place->set_uri(vehicle_journey->uri);
-    place->set_embedded_type(pbnavitia::VEHICLE_JOURNEY);
-}
-
-void fill_pb_placemark(const type::Calendar* calendar,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(calendar == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(calendar, data, place->mutable_calendar(), depth,
-                   now, action_period);
-    place->set_name(calendar->name);
-    place->set_uri(calendar->uri);
-    place->set_embedded_type(pbnavitia::CALENDAR);
 }
 
 void fill_pb_placemark(const navitia::georef::Way* way,
@@ -1167,7 +1021,8 @@ void fill_pb_object(const georef::POIType* geo_poi_type, const type::Data &,
 
 void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
                     pbnavitia::Poi* poi, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
+                    const pt::ptime& now, const pt::time_period& action_period,
+                    const bool){
     if(geopoi == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
