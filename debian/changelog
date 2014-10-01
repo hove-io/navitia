@@ -1,3 +1,9 @@
+navitia2 (1.1.3) unstable; urgency=medium
+
+  * hotfix for "memleak" on stop_schedules
+
+ -- Alexandre JACQUIN <alexandre.jacquin@canaltp.fr>  Wed, 01 Oct 2014 14:42:29 +0200
+
 navitia2 (1.1.2) unstable; urgency=low
 
   * Cities: add tolerance for ST_DWITHIN for postgis 1.5 
