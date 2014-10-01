@@ -116,45 +116,6 @@ void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& res
     }
 }
 
-///Find out if the list of cities(admins) contains at least one city
-///with level=8 from the original dataset
-bool has_admin_level8_from_original_dataset(const std::vector<georef::Admin*>& admins){
-    for(const navitia::georef::Admin* admin : admins){
-        if (admin->level == 8 && admin->from_original_dataset) {
-            return true;
-        }
-    }
-    return false;
-}
-
-///For each object without admin apply a penalty of word_weight * 8
-///here word_weight is configurable(default value 5)
-void update_quality_for_missing_admin(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
-        const navitia::type::Data &d, navitia::type::Type_e ntype){
-    const int penalty = d.geo_ref->word_weight * 8;
-    for (auto &item : ac_result){
-        bool apply_penalty = false;
-        switch(ntype){
-        case navitia::type::Type_e::StopArea:
-            apply_penalty = !has_admin_level8_from_original_dataset(d.pt_data->stop_areas[item.idx]->admin_list);
-            break;
-        case navitia::type::Type_e::POI:
-            apply_penalty = !has_admin_level8_from_original_dataset(d.geo_ref->pois[item.idx]->admin_list);
-            break;
-        case navitia::type::Type_e::Address:
-            apply_penalty = !has_admin_level8_from_original_dataset(d.geo_ref->ways[item.idx]->admin_list);
-            break;
-        case navitia::type::Type_e::StopPoint:
-            apply_penalty = !has_admin_level8_from_original_dataset(d.pt_data->stop_points[item.idx]->admin_list);
-            break;
-        default:
-            break;
-        }
-        if(apply_penalty)
-            item.quality -= penalty;
-    }
-}
-
 int get_embedded_type_order(pbnavitia::NavitiaType type){
     switch(type){
     case pbnavitia::NETWORK:
@@ -323,9 +284,9 @@ pbnavitia::Response autocomplete(const std::string &q,
                         d.geo_ref->synonyms,
                         nbmax, [](type::idx_t){return true;});
             } else {
-                result = d.pt_data->line_autocomplete.find_complete(q,
-                        d.geo_ref->synonyms,
-                        nbmax, [](type::idx_t){return true;});
+                result = d.pt_data->line_autocomplete.find_partial_with_pattern(q,
+                                            d.geo_ref->synonyms, d.geo_ref->word_weight,
+                                            nbmax, [](type::idx_t){return true;});
             }
             break;            
         case nt::Type_e::Route:
@@ -339,10 +300,7 @@ pbnavitia::Response autocomplete(const std::string &q,
             }
             break;
         default: break;
-        }
-
-        //Update quality of objects without Admin.
-        update_quality_for_missing_admin(result, d, type);
+        }        
 
         create_place_pb(result, type, depth, d, pb_response);
     }

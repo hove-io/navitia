@@ -73,6 +73,7 @@ struct Autocomplete
         T idx;
         int nb_found;
         int word_len;
+        int score;
         int quality;
         navitia::type::GeographicalCoord coord;
         int house_number;
@@ -325,14 +326,6 @@ struct Autocomplete
         wordCount = vec.size();
         wordLength = words_length(vec);
 
-        //Récupérer le Max score parmi les élément trouvé
-        int max_score = 0;
-        for (auto ir : index_result){
-            if (keep_element(ir)){
-                max_score = word_quality_list.at(ir).score > max_score ? word_quality_list.at(ir).score : max_score;
-            }
-        }
-
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
 
@@ -341,7 +334,8 @@ struct Autocomplete
                 quality.idx = i;
                 quality.nb_found = wordCount;
                 quality.word_len = wordLength;
-                quality.quality = 100 - (max_score - word_quality_list.at(quality.idx).score)/10;
+                quality.score = word_quality_list.at(quality.idx).score;
+                quality.quality = 100;
                 vec_quality.push_back(quality);
             }
         }
@@ -403,6 +397,7 @@ struct Autocomplete
                     quality.idx = pair.first;
                     quality.nb_found = pair.second.nb_found;
                     quality.word_len = wordLength;
+                    quality.score = word_quality_list.at(quality.idx).score;
                     quality.quality = calc_quality_pattern(quality, word_weight, max_score, pattern_count);
                     vec_quality.push_back(quality);
                 }

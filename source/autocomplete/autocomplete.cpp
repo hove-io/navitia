@@ -66,9 +66,11 @@ void compute_score_stop_point(type::PT_Data &pt_data, georef::GeoRef &georef) {
     }
 }
 
-void compute_score_stop_area(type::PT_Data & pt_data){
+void compute_score_stop_area(type::PT_Data & pt_data, georef::GeoRef &georef){
+    //The scocre of each admin(level 8) is attributed to all its stop_areas also
     //Find the stop-point count in all stop_areas and keep the highest;
     size_t max_score = 0;
+    size_t admin_score = 0;
     for (navitia::type::StopArea* sa : pt_data.stop_areas){
         max_score = std::max(max_score, sa->stop_point_list.size());
     }
@@ -76,7 +78,13 @@ void compute_score_stop_area(type::PT_Data & pt_data){
     //Ajust the score of each stop_area from 0 to 100 using maximum score (max_score)
     if (max_score > 0){
         for (auto & it : pt_data.stop_area_autocomplete.word_quality_list){
-            it.second.score = (pt_data.stop_areas[it.first]->stop_point_list.size() * 100)/max_score;
+            for (navitia::georef::Admin* admin : pt_data.stop_areas[it.first]->admin_list){
+                if(admin->level == 8){
+                    admin_score = georef.fl_admin.word_quality_list.at(admin->idx).score;
+                }
+            }
+
+            it.second.score = admin_score + (pt_data.stop_areas[it.first]->stop_point_list.size() * 100)/max_score;
         }
     }
 }
@@ -96,7 +104,7 @@ void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
         max_score = ((it->second).score > max_score)?(it->second).score:max_score;
     }
 
-    //Ajust the score of each admin using max_score.
+    //Ajust the score of each admin using max_score (0 to 100).
     for (auto it = georef.fl_admin.word_quality_list.begin(); it != georef.fl_admin.word_quality_list.end(); ++it){
         (it->second).score = max_score == 0 ? 0 : ((it->second).score * 100)/max_score;
     }
@@ -107,7 +115,7 @@ void Autocomplete<type::idx_t>::compute_score(type::PT_Data &pt_data, georef::Ge
                    const type::Type_e type) {
     switch(type){
         case type::Type_e::StopArea:
-            compute_score_stop_area(pt_data);
+            compute_score_stop_area(pt_data, georef);
             break;
         case type::Type_e::StopPoint:
             compute_score_stop_point(pt_data, georef);
