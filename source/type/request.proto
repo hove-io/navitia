@@ -89,6 +89,22 @@ message PlaceUriRequest {
     required string uri = 1;
 }
 
+message PlaceCodeRequest {
+    enum Type {
+        StopArea = 1;
+        Network = 2;
+        Company = 3;
+        Line = 4;
+        Route = 5;
+        VehicleJourney = 6;
+        StopPoint = 7;
+        Calendar = 8;
+    }
+    required Type type= 1;
+    required string type_code = 2;
+    required string code = 3;
+}
+
 message PTRefRequest {
     required NavitiaType requested_type = 1;
     required string filter              = 2;
@@ -112,6 +128,7 @@ message Request {
     optional DisruptionsRequest disruptions         = 8;
     optional CalendarsRequest calendars             = 9;
     optional PtobjectRequest pt_objects             = 10;
+	    optional PlaceCodeRequest place_code        = 11;
 }
 
 

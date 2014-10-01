@@ -41,6 +41,7 @@ enum API {
     calendars = 18;
     NMPLANNER = 19;
     pt_objects = 20;
+    place_code = 21;
 }
 
 enum VehicleJourneyType{
@@ -380,8 +381,8 @@ message ValidityPattern {
 }
 
 message LocationContext {
-	required string place = 1;
-	required int32 access_duration = 2;
+    required string place = 1;
+    required int32 access_duration = 2;
 }
 
 message PtObject {
@@ -399,4 +400,7 @@ message PtObject {
     optional AdministrativeRegion administrative_region = 13;
     optional int32 distance = 14;
     optional int32 quality = 15;
+    optional Company company = 16;
+    optional VehicleJourney vehicle_journey = 17;
+    optional Calendar calendar = 18;
 }

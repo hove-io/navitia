@@ -140,6 +140,30 @@ void fill_pb_placemark(const navitia::georef::POI* poi, const type::Data &data, 
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
+void fill_pb_placemark(const type::Network* network, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(const type::Company* company, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(const type::Line* line, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(const type::Route* route, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(const type::VehicleJourney* vehicle_journey, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(const type::Calendar* calendar, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
 void fill_pb_placemark(const type::EntryPoint& origin, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period,

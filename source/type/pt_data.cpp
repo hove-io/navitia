@@ -171,6 +171,30 @@ void PT_Data::build_admins_stop_areas(){
 void PT_Data::build_uri() {
 #define NORMALIZE_EXT_CODE(type_name, collection_name) for(auto element : collection_name) collection_name##_map[element->uri] = element;
     ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
+    for (auto stop_area: stop_areas)
+        for (auto type_code: stop_area->codes)
+            ext_codes_map[pbnavitia::PlaceCodeRequest::StopArea][type_code.first][type_code.second] = stop_area->uri;
+    for (auto network: networks)
+        for (auto type_code: network->codes)
+            ext_codes_map[pbnavitia::PlaceCodeRequest::Network][type_code.first][type_code.second] = network->uri;
+    for (auto company: companies)
+        for (auto type_code: company->codes)
+            ext_codes_map[pbnavitia::PlaceCodeRequest::Company][type_code.first][type_code.second] = company->uri;
+    for (auto line: lines)
+        for (auto type_code: line->codes)
+            ext_codes_map[pbnavitia::PlaceCodeRequest::Line][type_code.first][type_code.second] = line->uri;
+    for (auto route: routes)
+        for (auto type_code: route->codes)
+            ext_codes_map[pbnavitia::PlaceCodeRequest::Route][type_code.first][type_code.second] = route->uri;
+    for (auto vehicle_journey: vehicle_journeys)
+        for (auto type_code: vehicle_journey->codes)
+            ext_codes_map[pbnavitia::PlaceCodeRequest::VehicleJourney][type_code.first][type_code.second] = vehicle_journey->uri;
+    for (auto stop_point: stop_points)
+        for (auto type_code: stop_point->codes)
+            ext_codes_map[pbnavitia::PlaceCodeRequest::StopPoint][type_code.first][type_code.second] = stop_point->uri;
+    for (auto calendar: calendars)
+        for (auto type_code: calendar->codes)
+            ext_codes_map[pbnavitia::PlaceCodeRequest::Calendar][type_code.first][type_code.second] = calendar->uri;
 }
 
 /** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1

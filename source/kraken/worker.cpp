@@ -390,6 +390,90 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     return pb_response;
 }
 
+pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &request) {
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+    pbnavitia::Response pb_response;
+
+    auto ext_codes_map = data->pt_data->ext_codes_map[request.type()];
+    auto codes_map = ext_codes_map.find(request.type_code());
+    if (codes_map == ext_codes_map.end()) {
+        fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        return pb_response;
+    }
+    auto uri_it = codes_map->second.find(request.code());
+    if (uri_it == codes_map->second.end()) {
+        fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        return pb_response;
+    }
+    if (request.type() == pbnavitia::PlaceCodeRequest::StopArea) {
+        auto it = data->pt_data->stop_areas_map.find(uri_it->second);
+        if (it==data->pt_data->stop_areas_map.end()) {
+             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        } else {
+             fill_pb_placemark(it->second, *data, pb_response.add_places());
+        }
+    }
+    else if (request.type()== pbnavitia::PlaceCodeRequest::Network) {
+        auto it = data->pt_data->networks_map.find(uri_it->second);
+        if (it==data->pt_data->networks_map.end()) {
+             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        } else {
+             fill_pb_placemark(it->second, *data, pb_response.add_places());
+        }
+    }
+    else if (request.type()== pbnavitia::PlaceCodeRequest::Company) {
+        auto it = data->pt_data->companies_map.find(uri_it->second);
+        if (it==data->pt_data->companies_map.end()) {
+             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        } else {
+             fill_pb_placemark(it->second, *data, pb_response.add_places());
+        }
+    }
+    else if (request.type()== pbnavitia::PlaceCodeRequest::Line) {
+        auto it = data->pt_data->lines_map.find(uri_it->second);
+        if (it==data->pt_data->lines_map.end()) {
+             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        } else {
+             fill_pb_placemark(it->second, *data, pb_response.add_places());
+        }
+    }
+    else if (request.type()== pbnavitia::PlaceCodeRequest::Route) {
+        auto it = data->pt_data->routes_map.find(uri_it->second);
+        if (it==data->pt_data->routes_map.end()) {
+             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        } else {
+             fill_pb_placemark(it->second, *data, pb_response.add_places());
+        }
+    }
+    else if (request.type()== pbnavitia::PlaceCodeRequest::VehicleJourney) {
+        auto it = data->pt_data->vehicle_journeys_map.find(uri_it->second);
+        if (it==data->pt_data->vehicle_journeys_map.end()) {
+             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        } else {
+             fill_pb_placemark(it->second, *data, pb_response.add_places());
+        }
+    }
+    else if (request.type()== pbnavitia::PlaceCodeRequest::StopPoint) {
+        auto it = data->pt_data->stop_points_map.find(uri_it->second);
+        if (it==data->pt_data->stop_points_map.end()) {
+             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        } else {
+             fill_pb_placemark(it->second, *data, pb_response.add_places());
+        }
+    }
+    else if (request.type()== pbnavitia::PlaceCodeRequest::Calendar) {
+        auto it = data->pt_data->calendars_map.find(uri_it->second);
+        if (it==data->pt_data->calendars_map.end()) {
+             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+        } else {
+             fill_pb_placemark(it->second, *data, pb_response.add_places());
+        }
+    }
+
+    return pb_response;
+}
+
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
@@ -512,6 +596,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::METADATAS : return metadatas();
         case pbnavitia::disruptions : return disruptions(request.disruptions());
         case pbnavitia::calendars : return calendars(request.calendars());
+        case pbnavitia::place_code : return place_code(request.place_code()); break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", result.mutable_error());

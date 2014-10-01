@@ -32,22 +32,27 @@ www.navitia.io
 #include "type.h"
 #include "georef/georef.h"
 #include "type/message.h"
+#include "type/request.pb.h"
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
+#include "utils/flat_enum_map.h"
 
 #include <boost/serialization/map.hpp>
 
-namespace navitia { namespace type {
-
-// Maps pour external code
-// À refléchir si un hash_map ne serait pas mieux ; pas forcément en lecture car hasher une chaîne c'est plus long que comparer
-// En attendant on utilise std::map car on sait le sérialiser...
-typedef std::map<std::string, idx_t> ExtCodeMap;
+namespace navitia { 
+template <>
+struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
+    static constexpr typename get_enum_type<pbnavitia::PlaceCodeRequest::Type>::type size() {
+        return 8;
+    }
+};
+    namespace type {
 
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
-
+    
+    flat_enum_map<pbnavitia::PlaceCodeRequest::Type, std::unordered_map<std::string, std::map<std::string, std::string>>> ext_codes_map;
     std::vector<StopTime*> stop_times;
     std::vector<StopPointConnection*> stop_point_connections;
 
@@ -131,4 +136,5 @@ struct PT_Data : boost::noncopyable{
 
 };
 
-}}
+}
+}
