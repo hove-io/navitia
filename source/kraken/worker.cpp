@@ -569,7 +569,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::METADATAS : return metadatas();
         case pbnavitia::disruptions : return disruptions(request.disruptions());
         case pbnavitia::calendars : return calendars(request.calendars());
-        case pbnavitia::place_code : return place_code(request.place_code()); break;
+        case pbnavitia::place_code : return place_code(request.place_code());
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", result.mutable_error());
