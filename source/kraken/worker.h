@@ -85,7 +85,7 @@ class Worker {
         pbnavitia::Response disruptions(const pbnavitia::DisruptionsRequest &request);
         pbnavitia::Response calendars(const pbnavitia::CalendarsRequest &request);
         pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request);        
-		pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
+        pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
 };
 
 }
