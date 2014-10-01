@@ -43,7 +43,7 @@ namespace navitia {
 template <>
 struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
     static constexpr typename get_enum_type<pbnavitia::PlaceCodeRequest::Type>::type size() {
-        return 7;
+        return 8;
     }
 };
 namespace type {
