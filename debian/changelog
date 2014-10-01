@@ -1,3 +1,9 @@
+navitia2 (1.0.3) unstable; urgency=medium
+
+  * hotfix for "memleak" on stop_schedules
+
+ -- Alexandre JACQUIN <alexandre.jacquin@canaltp.fr>  Wed, 01 Oct 2014 14:13:38 +0200
+
 navitia2 (1.0.2) unstable; urgency=low
 
   * cherry pick of commits from <https://github.com/CanalTP/navitia/pull/567>
