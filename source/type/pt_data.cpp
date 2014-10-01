@@ -168,33 +168,24 @@ void PT_Data::build_admins_stop_areas(){
     }
 }
 
+template<typename T>
+void fill_ext_code_map(navitia::type::ext_codes_map_type& ext_codes_map, const T& range, const pbnavitia::PlaceCodeRequest::Type& type) {
+    for (auto atom: range)
+        for (auto type_code: atom->codes)
+            ext_codes_map[type][type_code.first][type_code.second] = atom->uri;
+}
+
 void PT_Data::build_uri() {
 #define NORMALIZE_EXT_CODE(type_name, collection_name) for(auto element : collection_name) collection_name##_map[element->uri] = element;
     ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
-    for (auto stop_area: stop_areas)
-        for (auto type_code: stop_area->codes)
-            ext_codes_map[pbnavitia::PlaceCodeRequest::StopArea][type_code.first][type_code.second] = stop_area->uri;
-    for (auto network: networks)
-        for (auto type_code: network->codes)
-            ext_codes_map[pbnavitia::PlaceCodeRequest::Network][type_code.first][type_code.second] = network->uri;
-    for (auto company: companies)
-        for (auto type_code: company->codes)
-            ext_codes_map[pbnavitia::PlaceCodeRequest::Company][type_code.first][type_code.second] = company->uri;
-    for (auto line: lines)
-        for (auto type_code: line->codes)
-            ext_codes_map[pbnavitia::PlaceCodeRequest::Line][type_code.first][type_code.second] = line->uri;
-    for (auto route: routes)
-        for (auto type_code: route->codes)
-            ext_codes_map[pbnavitia::PlaceCodeRequest::Route][type_code.first][type_code.second] = route->uri;
-    for (auto vehicle_journey: vehicle_journeys)
-        for (auto type_code: vehicle_journey->codes)
-            ext_codes_map[pbnavitia::PlaceCodeRequest::VehicleJourney][type_code.first][type_code.second] = vehicle_journey->uri;
-    for (auto stop_point: stop_points)
-        for (auto type_code: stop_point->codes)
-            ext_codes_map[pbnavitia::PlaceCodeRequest::StopPoint][type_code.first][type_code.second] = stop_point->uri;
-    for (auto calendar: calendars)
-        for (auto type_code: calendar->codes)
-            ext_codes_map[pbnavitia::PlaceCodeRequest::Calendar][type_code.first][type_code.second] = calendar->uri;
+    fill_ext_code_map(ext_codes_map, stop_areas, pbnavitia::PlaceCodeRequest::StopArea);
+    fill_ext_code_map(ext_codes_map, networks, pbnavitia::PlaceCodeRequest::Network);
+    fill_ext_code_map(ext_codes_map, companies, pbnavitia::PlaceCodeRequest::Company);
+    fill_ext_code_map(ext_codes_map, lines, pbnavitia::PlaceCodeRequest::Line);
+    fill_ext_code_map(ext_codes_map, routes, pbnavitia::PlaceCodeRequest::Route);
+    fill_ext_code_map(ext_codes_map, vehicle_journeys, pbnavitia::PlaceCodeRequest::VehicleJourney);
+    fill_ext_code_map(ext_codes_map, stop_points, pbnavitia::PlaceCodeRequest::StopPoint);
+    fill_ext_code_map(ext_codes_map, calendars, pbnavitia::PlaceCodeRequest::Calendar);
 }
 
 /** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1

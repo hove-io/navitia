@@ -48,11 +48,14 @@ struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
 };
 namespace type {
 
+typedef std::map<std::string, std::string> code_value_map_type;
+typedef std::unordered_map<std::string, code_value_map_type> type_code_codes_map_type;
+typedef flat_enum_map<pbnavitia::PlaceCodeRequest::Type, type_code_codes_map_type> ext_codes_map_type;
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
-    
-    flat_enum_map<pbnavitia::PlaceCodeRequest::Type, std::unordered_map<std::string, std::map<std::string, std::string>>> ext_codes_map;
+
+    ext_codes_map_type ext_codes_map;
     std::vector<StopTime*> stop_times;
     std::vector<StopPointConnection*> stop_point_connections;
 
