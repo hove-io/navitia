@@ -91,14 +91,14 @@ message PlaceUriRequest {
 
 message PlaceCodeRequest {
     enum Type {
-        StopArea = 1;
-        Network = 2;
-        Company = 3;
-        Line = 4;
-        Route = 5;
-        VehicleJourney = 6;
-        StopPoint = 7;
-        Calendar = 8;
+        StopArea = 0;
+        Network = 1;
+        Company = 2;
+        Line = 3;
+        Route = 4;
+        VehicleJourney = 5;
+        StopPoint = 6;
+        Calendar = 7;
     }
     required Type type= 1;
     required string type_code = 2;
