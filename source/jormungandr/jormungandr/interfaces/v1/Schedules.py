@@ -64,7 +64,7 @@ class Schedules(ResourceUri):
                                 description="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("max_date_times", type=natural,
+        parser_get.add_argument("max_date_times", type=natural, default=10000,
                                 description="Maximum number of schedule per\
                                 stop_point/route")
         parser_get.add_argument("forbidden_id[]", type=unicode,
