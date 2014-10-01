@@ -390,85 +390,58 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     return pb_response;
 }
 
+template<typename T>
+void fill_or_error(const std::string& uri, const T& map, pbnavitia::Response& pb_response,
+        const type::Data& data) {
+    auto it = map.find(uri);
+    if (it == map.end()) {
+        fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
+    } else {
+        fill_pb_placemark(it->second, data, pb_response.add_places());
+    }
+}
+
 pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &request) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
     pbnavitia::Response pb_response;
 
-    auto ext_codes_map = data->pt_data->ext_codes_map[request.type()];
-    auto codes_map = ext_codes_map.find(request.type_code());
+    const auto& ext_codes_map = data->pt_data->ext_codes_map[request.type()];
+    const auto codes_map = ext_codes_map.find(request.type_code());
     if (codes_map == ext_codes_map.end()) {
         fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
         return pb_response;
     }
-    auto uri_it = codes_map->second.find(request.code());
+    const auto uri_it = codes_map->second.find(request.code());
     if (uri_it == codes_map->second.end()) {
         fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
         return pb_response;
     }
-    if (request.type() == pbnavitia::PlaceCodeRequest::StopArea) {
-        auto it = data->pt_data->stop_areas_map.find(uri_it->second);
-        if (it==data->pt_data->stop_areas_map.end()) {
-             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        } else {
-             fill_pb_placemark(it->second, *data, pb_response.add_places());
-        }
-    }
-    else if (request.type()== pbnavitia::PlaceCodeRequest::Network) {
-        auto it = data->pt_data->networks_map.find(uri_it->second);
-        if (it==data->pt_data->networks_map.end()) {
-             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        } else {
-             fill_pb_placemark(it->second, *data, pb_response.add_places());
-        }
-    }
-    else if (request.type()== pbnavitia::PlaceCodeRequest::Company) {
-        auto it = data->pt_data->companies_map.find(uri_it->second);
-        if (it==data->pt_data->companies_map.end()) {
-             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        } else {
-             fill_pb_placemark(it->second, *data, pb_response.add_places());
-        }
-    }
-    else if (request.type()== pbnavitia::PlaceCodeRequest::Line) {
-        auto it = data->pt_data->lines_map.find(uri_it->second);
-        if (it==data->pt_data->lines_map.end()) {
-             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        } else {
-             fill_pb_placemark(it->second, *data, pb_response.add_places());
-        }
-    }
-    else if (request.type()== pbnavitia::PlaceCodeRequest::Route) {
-        auto it = data->pt_data->routes_map.find(uri_it->second);
-        if (it==data->pt_data->routes_map.end()) {
-             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        } else {
-             fill_pb_placemark(it->second, *data, pb_response.add_places());
-        }
-    }
-    else if (request.type()== pbnavitia::PlaceCodeRequest::VehicleJourney) {
-        auto it = data->pt_data->vehicle_journeys_map.find(uri_it->second);
-        if (it==data->pt_data->vehicle_journeys_map.end()) {
-             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        } else {
-             fill_pb_placemark(it->second, *data, pb_response.add_places());
-        }
-    }
-    else if (request.type()== pbnavitia::PlaceCodeRequest::StopPoint) {
-        auto it = data->pt_data->stop_points_map.find(uri_it->second);
-        if (it==data->pt_data->stop_points_map.end()) {
-             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        } else {
-             fill_pb_placemark(it->second, *data, pb_response.add_places());
-        }
-    }
-    else if (request.type()== pbnavitia::PlaceCodeRequest::Calendar) {
-        auto it = data->pt_data->calendars_map.find(uri_it->second);
-        if (it==data->pt_data->calendars_map.end()) {
-             fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object", pb_response.mutable_error());
-        } else {
-             fill_pb_placemark(it->second, *data, pb_response.add_places());
-        }
+    switch(request.type()) {
+        case pbnavitia::PlaceCodeRequest::StopArea:
+            fill_or_error(uri_it->second, data->pt_data->stop_areas_map, pb_response, *data);
+            break;
+        case pbnavitia::PlaceCodeRequest::Network:
+            fill_or_error(uri_it->second, data->pt_data->networks_map, pb_response, *data);
+            break;
+        case pbnavitia::PlaceCodeRequest::Company:
+            fill_or_error(uri_it->second, data->pt_data->companies_map, pb_response, *data);
+            break;
+        case pbnavitia::PlaceCodeRequest::Line:
+            fill_or_error(uri_it->second, data->pt_data->lines_map, pb_response, *data);
+            break;
+        case pbnavitia::PlaceCodeRequest::Route:
+            fill_or_error(uri_it->second, data->pt_data->routes_map, pb_response, *data);
+            break;
+        case pbnavitia::PlaceCodeRequest::VehicleJourney:
+            fill_or_error(uri_it->second, data->pt_data->vehicle_journeys_map, pb_response, *data);
+            break;
+        case pbnavitia::PlaceCodeRequest::StopPoint:
+            fill_or_error(uri_it->second, data->pt_data->stop_points_map, pb_response, *data);
+            break;
+        case pbnavitia::PlaceCodeRequest::Calendar:
+            fill_or_error(uri_it->second, data->pt_data->calendars_map, pb_response, *data);
+            break;
     }
 
     return pb_response;
