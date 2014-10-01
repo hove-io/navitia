@@ -36,7 +36,7 @@ add_custom_command (TARGET pb_lib
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp)
-target_link_libraries(types utils)
+target_link_libraries(types utils pb_lib)
 
 SET(DATA_SRC
     data.cpp
@@ -45,6 +45,7 @@ SET(DATA_SRC
 )
 
 add_library(data ${DATA_SRC})
+target_link_libraries(data types)
 
 SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
