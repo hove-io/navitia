@@ -363,22 +363,22 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     }
     auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
     if(it_sa != data->pt_data->stop_areas_map.end()) {
-        pbnavitia::Place* place = pb_response.add_places();
+        pbnavitia::PtObject* place = pb_response.add_places();
         fill_pb_placemark(it_sa->second, *data, place, 1);
     } else {
         auto it_sp = data->pt_data->stop_points_map.find(request.uri());
         if(it_sp != data->pt_data->stop_points_map.end()) {
-            pbnavitia::Place* place = pb_response.add_places();
+            pbnavitia::PtObject* place = pb_response.add_places();
             fill_pb_placemark(it_sp->second, *data, place, 1);
         } else {
             auto it_poi = data->geo_ref->poi_map.find(request.uri());
             if(it_poi != data->geo_ref->poi_map.end()) {
-                pbnavitia::Place* place = pb_response.add_places();
+                pbnavitia::PtObject* place = pb_response.add_places();
                 fill_pb_placemark(data->geo_ref->pois[it_poi->second], *data,place, 1);
             } else {
                 auto it_admin = data->geo_ref->admin_map.find(request.uri());
                 if(it_admin != data->geo_ref->admin_map.end()) {
-                    pbnavitia::Place* place = pb_response.add_places();
+                    pbnavitia::PtObject* place = pb_response.add_places();
                     fill_pb_placemark(data->geo_ref->admins[it_admin->second],*data, place, 1);
 
                 }else{

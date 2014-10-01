@@ -39,7 +39,7 @@ namespace navitia { namespace autocomplete {
  *
  */
 template <typename T, typename PbNestedObj>
-void fill_pb_pt_object(T* nav_object, pbnavitia::Place* place,
+void fill_pb_pt_object(T* nav_object, pbnavitia::PtObject* place,
                        PbNestedObj* pb_nested_object,const nt::Data& data,
                        pbnavitia::NavitiaType pb_type, u_int32_t depth, std::string key = "") {
     fill_pb_object(nav_object, data, pb_nested_object, depth);
@@ -58,7 +58,7 @@ void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& res
                const nt::Type_e type, uint32_t depth, const nt::Data& data,
                pbnavitia::Response & pb_response){
     for(auto result_item : result){
-        pbnavitia::Place* place = pb_response.add_places();
+        pbnavitia::PtObject* place = pb_response.add_places();
         switch(type){
         case nt::Type_e::StopArea:
             fill_pb_placemark(data.pt_data->stop_areas[result_item.idx], data, place, depth);
@@ -349,7 +349,7 @@ pbnavitia::Response autocomplete(const std::string &q,
 
     //Sort the list of objects (sort by object type and quality)
     //delete unwanted objects at the end of the list
-    auto compare_attributs = [](pbnavitia::Place a, pbnavitia::Place b)->bool {
+    auto compare_attributs = [](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
         if (a.embedded_type() != b.embedded_type()){
             const auto a_order = get_embedded_type_order(a.embedded_type());
             const auto b_order = get_embedded_type_order(b.embedded_type());

@@ -112,8 +112,8 @@ message Fare {
 
 message Section {
     optional SectionType type = 1;
-    optional Place origin = 2;
-    optional Place destination = 3;
+    optional PtObject origin = 2;
+    optional PtObject destination = 3;
 
 // Si c'est du TC
     optional PtDisplayInfo pt_display_informations = 4;
@@ -145,8 +145,8 @@ message Journey {
     optional uint64 arrival_date_time = 4;
     optional uint64 requested_date_time = 5;
     repeated Section sections = 6;
-    optional Place origin = 7;
-    optional Place destination = 8;
+    optional PtObject origin = 7;
+    optional PtObject destination = 8;
     optional string type = 9;
     optional Fare fare = 10;
     repeated string tags = 11;
@@ -319,11 +319,11 @@ message Response{
     optional string info = 3;
 
     optional Status status = 4;
-    //Places
+    //PtObjects
     repeated string ignored_words = 11;
     repeated string bad_words = 12;
-    repeated Place places = 13;
-    repeated Place places_nearby = 14;
+    repeated PtObject places = 13;
+    repeated PtObject places_nearby = 14;
 
     //Ptref
     repeated ValidityPattern validity_patterns = 15;
@@ -368,5 +368,5 @@ message Response{
     repeated Ticket tickets = 51;
 
     //Ptobject
-    repeated Ptobject pt_objects = 52;
+    repeated PtObject pt_objects = 52;
 }
