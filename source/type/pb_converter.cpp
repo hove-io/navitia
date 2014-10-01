@@ -65,9 +65,10 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
     }
 }
 
-void fill_pb_object(const navitia::georef::Admin* adm, const nt::Data&,
+void fill_pb_object(const georef::Admin* adm, const nt::Data&,
                     pbnavitia::AdministrativeRegion* admin, int,
-                    const pt::ptime&, const pt::time_period& ){
+                    const pt::ptime&, const pt::time_period&,
+                    const bool){
     if(adm == nullptr)
         return ;
     admin->set_name(adm->name);
@@ -613,49 +614,6 @@ void fill_codes(const std::string& type, const std::string& value, pbnavitia::Co
     code->set_type(type);
     code->set_value(value);
 }
-
-
-void fill_pb_placemark(const type::StopPoint* stop_point,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period, const bool show_codes){
-    if(stop_point == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(stop_point, data, place->mutable_stop_point(), depth,
-                   now, action_period, show_codes);
-    place->set_name(stop_point->name);
-
-    for(auto admin : place->stop_point().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-    place->set_uri(stop_point->uri);
-    place->set_embedded_type(pbnavitia::STOP_POINT);
-}
-
-void fill_pb_placemark(const type::StopArea* stop_area,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period,
-                       const bool show_codes) {
-    if(stop_area == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(stop_area, data, place->mutable_stop_area(), depth,
-                   now, action_period, show_codes);
-    place->set_name(stop_area->name);
-    for(auto admin : place->stop_area().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-
-    place->set_uri(stop_area->uri);
-    place->set_embedded_type(pbnavitia::STOP_AREA);
-}
-
 void fill_pb_placemark(const navitia::georef::Admin* admin,
                        const type::Data &data, pbnavitia::PtObject* place,
                        int max_depth, const pt::ptime& now,
@@ -700,26 +658,6 @@ void fill_pb_placemark(const navitia::georef::Admin* admin,
 
     place->set_uri(admin->uri);
     place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
-}
-
-void fill_pb_placemark(const navitia::georef::POI* poi,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(poi == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(poi, data, place->mutable_poi(), depth,
-                   now, action_period);
-    place->set_name(poi->name);
-    for(auto admin : place->poi().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-
-    place->set_uri(poi->uri);
-    place->set_embedded_type(pbnavitia::POI);
 }
 
 void fill_pb_placemark(const navitia::georef::Way* way,
@@ -1083,7 +1021,8 @@ void fill_pb_object(const georef::POIType* geo_poi_type, const type::Data &,
 
 void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
                     pbnavitia::Poi* poi, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
+                    const pt::ptime& now, const pt::time_period& action_period,
+                    const bool){
     if(geopoi == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
