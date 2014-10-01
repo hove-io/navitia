@@ -128,7 +128,7 @@ message Section {
     optional TransferType transfer_type = 13;
 
 // Dans tous les cas
-    optional string polyline = 14;
+    repeated GeographicalCoord shape = 24;
     optional int32 duration = 15;
 
     optional uint64 begin_date_time = 16;

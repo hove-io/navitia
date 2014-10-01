@@ -302,7 +302,7 @@ class GeoJson(fields.Raw):
             except ValueError:
                 return None
         elif obj.type == response_pb2.PUBLIC_TRANSPORT:
-            coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
+            coords = obj.shape
         elif obj.type == response_pb2.TRANSFER:
             coords.append(obj.origin.stop_point.coord)
             coords.append(obj.destination.stop_point.coord)
