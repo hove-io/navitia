@@ -43,10 +43,10 @@ namespace navitia {
 template <>
 struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
     static constexpr typename get_enum_type<pbnavitia::PlaceCodeRequest::Type>::type size() {
-        return 8;
+        return 7;
     }
 };
-    namespace type {
+namespace type {
 
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::map<std::string, type_name *> collection_name##_map;
