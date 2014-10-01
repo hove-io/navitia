@@ -35,10 +35,20 @@ namespace ed { namespace connectors {
 
 
 /// Exception levée si on utilise une clef inconnue
-struct invalid_key : navitia::exception{invalid_key(const std::string& s): navitia::exception(s) {}};
+struct invalid_key: navitia::exception {
+    invalid_key(const std::string& s): navitia::exception(s) {}
+    invalid_key(const invalid_key&) = default;
+    invalid_key& operator=(const invalid_key&) = default;
+    virtual ~invalid_key() noexcept;
+};
 
 /// Exception levée si on n'arrive pas à parser une condition
-struct invalid_condition : navitia::exception {invalid_condition(const std::string& s): navitia::exception(s) {}};
+struct invalid_condition: navitia::exception {
+    invalid_condition(const std::string& s): navitia::exception(s) {}
+    invalid_condition(const invalid_condition&) = default;
+    invalid_condition& operator=(const invalid_condition&) = default;
+    ~invalid_condition() noexcept;
+};
 
 navitia::fare::Condition parse_condition(const std::string & condition_str);
 

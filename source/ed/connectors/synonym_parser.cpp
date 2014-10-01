@@ -37,6 +37,8 @@ www.navitia.io
 
 namespace ed{ namespace connectors{
 
+SynonymParserException::~SynonymParserException() noexcept {}
+
 SynonymParser::SynonymParser(const std::string & filename): filename(filename){
         logger = log4cplus::Logger::getInstance("log");
 }

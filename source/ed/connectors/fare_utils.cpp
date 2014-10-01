@@ -56,9 +56,11 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace ed { namespace connectors {
 
+invalid_key::~invalid_key() noexcept {}
+invalid_condition::~invalid_condition() noexcept {}
+
 namespace qi = ::boost::spirit::qi;
 namespace ph = ::boost::phoenix;
-
 
  navitia::fare::Condition parse_condition(const std::string & condition_str) {
     std::string str = boost::algorithm::to_lower_copy(condition_str);
