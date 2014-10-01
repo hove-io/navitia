@@ -338,7 +338,10 @@ struct routing_api_data {
         b.sa("stopA", A.lon(), A.lat());
         b.sa("stopB", B.lon(), B.lat());
         //we add a very fast bus (2 seconds) to be faster than walking and biking
-        b.vj("A")("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)("stop_point:stopA", 8*3600 + 1 * 60 + 2 ,8*3600 + 1*60 + 2);
+        b.vj("A")
+            ("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)
+            ("stop_point:stopA", 8*3600 + 1 * 60 + 2 ,8*3600 + 1*60 + 2)
+            .st_shape({B, I, A});
         b.generate_dummy_basis();
         b.data->pt_data->index();
         b.data->build_raptor();

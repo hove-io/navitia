@@ -65,6 +65,8 @@ struct VJ {
     /// Transforme les horaires en horaire entre start_time et end_time, toutes les headways secs
     VJ & frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs);
 
+    // set the shape to the last stop point
+    VJ& st_shape(const navitia::type::LineString& shape);
 };
 
 struct SA {
@@ -100,8 +102,19 @@ struct builder{
     }
 
     /// Crée un vehicle journey
-    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="", std::string meta_vj="");
-    VJ vj(const std::string &network_name, const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="", std::string meta_vj="");
+    VJ vj(const std::string& line_name,
+          const std::string& validity_pattern = "11111111",
+          const std::string& block_id="",
+          const bool wheelchair_boarding = true,
+          const std::string& uri="",
+          const std::string& meta_vj="");
+    VJ vj(const std::string& network_name,
+          const std::string& line_name,
+          const std::string& validity_pattern = "11111111",
+          const std::string& block_id="",
+          const bool wheelchair_boarding = true,
+          const std::string& uri="",
+          const std::string& meta_vj="");
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0, const bool is_adapted = true);
