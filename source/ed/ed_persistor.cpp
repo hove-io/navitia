@@ -31,6 +31,8 @@ www.navitia.io
 #include "ed_persistor.h"
 #include "ed/connectors/fare_utils.h"
 
+#include <boost/geometry/io/wkt/write.hpp>
+
 namespace bg = boost::gregorian;
 
 namespace ed{
@@ -779,7 +781,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
 void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points){
     this->lotus.prepare_bulk_insert("navitia.journey_pattern_point",
             {"id", "uri", "name", "comment", "\"order\"",
-            "stop_point_id", "journey_pattern_id"});
+             "stop_point_id", "journey_pattern_id", "shape_from_prev"});
 
     for(types::JourneyPatternPoint* jpp : journey_pattern_points){
         std::vector<std::string> values;
@@ -800,6 +802,14 @@ void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyP
         }else{
             values.push_back(lotus.null_value);
         }
+
+        std::stringstream shape;
+        if (jpp->shape_from_prev.empty())
+            shape << "NULL";
+        else
+            shape << std::setprecision(16) << boost::geometry::wkt(jpp->shape_from_prev);
+        values.push_back(shape.str());
+
         this->lotus.insert(values);
     }
 

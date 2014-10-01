@@ -32,6 +32,7 @@ www.navitia.io
 #include "ed/connectors/fare_utils.h"
 #include "type/meta_data.h"
 #include <boost/foreach.hpp>
+#include <boost/geometry/io/wkt/read.hpp>
 
 namespace ed{
 
@@ -496,7 +497,8 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, \"order\","
-        "stop_point_id, journey_pattern_id FROM navitia.journey_pattern_point";
+        "stop_point_id, journey_pattern_id, ST_AsText(shape_from_prev) as shape "
+        "FROM navitia.journey_pattern_point";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -511,6 +513,9 @@ void EdReader::fill_journey_pattern_points(nt::Data& data, pqxx::work& work){
         jpp->stop_point = stop_point_map[const_it["stop_point_id"].as<idx_t>()];
 
         jpp->idx = data.pt_data->journey_pattern_points.size();
+
+        boost::geometry::read_wkt(const_it["shape"].as<std::string>("LINESTRING()"),
+                                  jpp->shape_from_prev);
 
         data.pt_data->journey_pattern_points.push_back(jpp);
         this->journey_pattern_point_map[const_it["id"].as<idx_t>()] = jpp;
