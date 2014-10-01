@@ -128,8 +128,7 @@ void OSMCache::build_relations_geometries() {
  * Insert relations into the database
  */
 void OSMCache::insert_relations() {
-    PQclear(this->lotus.exec(
-                "TRUNCATE  administrative_regions CASCADE;"));
+    this->lotus.exec("TRUNCATE  administrative_regions CASCADE;");
     lotus.prepare_bulk_insert("administrative_regions", {"id", "name", "post_code", "insee",
             "level", "coord", "boundary", "uri"});
     size_t nb_empty_polygons = 0 ;

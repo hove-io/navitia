@@ -234,7 +234,7 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
 }
 
 void EdPersistor::compute_bounding_shape() {
-    PQclear(this->lotus.exec("select georef.update_bounding_shape();", "", PGRES_TUPLES_OK));
+    this->lotus.exec("select georef.update_bounding_shape();", "", PGRES_TUPLES_OK);
 }
 
 void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
@@ -342,9 +342,9 @@ void EdPersistor::persist_synonym(const std::map<std::string, std::string>& data
 
 void EdPersistor::persist_fare(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: truncate fare tables");
-    PQclear(this->lotus.exec(
-                "TRUNCATE navitia.origin_destination, navitia.transition, "
-                "navitia.ticket, navitia.dated_ticket, navitia.od_ticket CASCADE"));
+    this->lotus.exec(
+        "TRUNCATE navitia.origin_destination, navitia.transition, "
+        "navitia.ticket, navitia.dated_ticket, navitia.od_ticket CASCADE");
     LOG4CPLUS_INFO(logger, "End: truncate fare tables");
     LOG4CPLUS_INFO(logger, "Begin: insert prices");
     this->insert_prices(data);
@@ -375,40 +375,39 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta) {
     + insert_query + " WHERE NOT EXISTS (SELECT * FROM upsert);";
 
     std::cout << request << std::endl;
-    PQclear(this->lotus.exec(request));
+    this->lotus.exec(request);
 }
 
 void EdPersistor::clean_georef(){
-    PQclear(this->lotus.exec(
-                "TRUNCATE georef.node, georef.house_number, georef.admin, "
-                "georef.way CASCADE;"));
+    this->lotus.exec(
+        "TRUNCATE georef.node, georef.house_number, georef.admin, "
+        "georef.way CASCADE;");
 }
 
 void EdPersistor::clean_poi(){
-    PQclear(this->lotus.exec(
-                "TRUNCATE  georef.poi_type, georef.poi CASCADE;"));
+    this->lotus.exec("TRUNCATE  georef.poi_type, georef.poi CASCADE;");
 }
 
 void EdPersistor::clean_synonym(){
-    PQclear(this->lotus.exec("TRUNCATE georef.synonym"));
+    this->lotus.exec("TRUNCATE georef.synonym");
 }
 
 void EdPersistor::clean_db(){
-    PQclear(this->lotus.exec(
-                "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
-                "navitia.physical_mode, navitia.contributor, "
-                "navitia.commercial_mode, "
-                "navitia.vehicle_properties, navitia.properties, "
-                "navitia.validity_pattern, navitia.network, "
-                "navitia.connection, navitia.calendar, navitia.period, "
-                "navitia.week_pattern, "
-                "navitia.meta_vj, navitia.rel_metavj_vj"
-                " CASCADE"));
+    this->lotus.exec(
+        "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
+        "navitia.physical_mode, navitia.contributor, "
+        "navitia.commercial_mode, "
+        "navitia.vehicle_properties, navitia.properties, "
+        "navitia.validity_pattern, navitia.network, "
+        "navitia.connection, navitia.calendar, navitia.period, "
+        "navitia.week_pattern, "
+        "navitia.meta_vj, navitia.rel_metavj_vj"
+        " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
-    PQclear(this->lotus.exec("update navitia.parameters set"
-                             " beginning_date = null"
-                             ", end_date = null"
-                             ", timezone = '';"));
+    this->lotus.exec("update navitia.parameters set"
+                     " beginning_date = null"
+                     ", end_date = null"
+                     ", timezone = '';");
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -908,7 +907,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             query += boost::lexical_cast<std::string>(vj->idx);
             query += ";";
             LOG4CPLUS_TRACE(logger, "query : " << query);
-            PQclear(this->lotus.exec(query, "", PGRES_COMMAND_OK));
+            this->lotus.exec(query, "", PGRES_COMMAND_OK);
         }
     }
 }
