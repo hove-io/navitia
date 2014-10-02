@@ -52,6 +52,7 @@ void fill_pb_pt_object(T* nav_object, pbnavitia::PtObject* place,
     place->set_uri(nav_object->uri);
     place->set_quality(100);
     place->set_embedded_type(pb_type);
+
 }
 
 void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
@@ -63,22 +64,27 @@ void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& res
         case nt::Type_e::StopArea:
             fill_pb_placemark(data.pt_data->stop_areas[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
+            place->set_score(result_item.score);
             break;
         case nt::Type_e::Admin:
             fill_pb_placemark(data.geo_ref->admins[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
+            place->set_score(result_item.score);
             break;
         case nt::Type_e::StopPoint:
             fill_pb_placemark(data.pt_data->stop_points[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
+            place->set_score(result_item.score);
             break;
         case nt::Type_e::Address:
             fill_pb_placemark(data.geo_ref->ways[result_item.idx], data, place, result_item.house_number, result_item.coord, depth);
             place->set_quality(result_item.quality);
+            place->set_score(result_item.score);
             break;
         case nt::Type_e::POI:
             fill_pb_placemark(data.geo_ref->pois[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
+            place->set_score(result_item.score);
             break;
         case nt::Type_e::Network:
             fill_pb_pt_object(data.pt_data->networks[result_item.idx],
@@ -185,6 +191,16 @@ std::vector<const georef::Admin*> admin_uris_to_admin_ptr(const std::vector<std:
 }
 
 
+//Penalty = (word count difference * 10)
+//quality = quality (100) - penalty
+void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
+                    const int query_word_count) {
+    for (auto &item: ac_result) {
+        item.quality -= (item.nb_found - query_word_count) * 10;
+    }
+}
+
+
 pbnavitia::Response autocomplete(const std::string &q,
                                  const std::vector<nt::Type_e> &filter,
                                  uint32_t depth,
@@ -199,12 +215,15 @@ pbnavitia::Response autocomplete(const std::string &q,
         return pb_response;
     }
     int nbmax_temp = nbmax;
-    //For each object type we seach in the dictionnary and keep (nbmax x 3) objects in the result.
+    //For each object type we search in the dictionnary and keep (nbmax x 3) objects in the result.
     //It's always better to get more objects from the disctionnary and apply some rules to delete
     //unwanted objects.
     nbmax = nbmax * 3;
     //bool addType = d.pt_data->stop_area_autocomplete.is_address_type(q, d.geo_ref->synonyms);
     std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);
+
+    //Compute number of words in the query:
+    std::set<std::string> query_word_vec = d.geo_ref->fl_admin.tokenize(q,d.geo_ref->synonyms);
 
     ///Find max(100, count) éléments for each pt_object
     for(nt::Type_e type : filter) {
@@ -288,7 +307,7 @@ pbnavitia::Response autocomplete(const std::string &q,
                                             d.geo_ref->synonyms, d.geo_ref->word_weight,
                                             nbmax, [](type::idx_t){return true;});
             }
-            break;            
+            break;
         case nt::Type_e::Route:
             if (search_type==0) {
                 result = d.pt_data->route_autocomplete.find_complete(q,
@@ -300,10 +319,38 @@ pbnavitia::Response autocomplete(const std::string &q,
             }
             break;
         default: break;
-        }        
+        }
+
+        //Compute quality based on difference of word count in the result and the query
+        if (search_type == 0) {
+            update_quality(result, query_word_vec.size());
+        }
 
         create_place_pb(result, type, depth, d, pb_response);
     }
+
+    //If n-gram is used to get de result we base on quality computed
+    //in the dictionnary to delete unwanted objects and re-sort the final result
+    auto compare_by_quality = [](pbnavitia::PtObject a, pbnavitia::PtObject b){
+        if (a.quality() == b.quality()){
+            return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
+        }
+        else {
+            return a.quality() > b.quality();
+        }
+    };
+
+    if (search_type != 0) {
+        nbmax = nbmax_temp;
+        auto mutable_places = pb_response.mutable_places();
+        int result_size = std::min(nbmax, mutable_places->size());
+        std::partial_sort(mutable_places->begin(),mutable_places->begin() + result_size,
+                          mutable_places->end(),compare_by_quality);
+        while (mutable_places->size() > nbmax){
+            mutable_places->RemoveLast();
+        }
+    }
+
 
     //Sort the list of objects (sort by object type and quality)
     //delete unwanted objects at the end of the list
@@ -312,11 +359,16 @@ pbnavitia::Response autocomplete(const std::string &q,
             const auto a_order = get_embedded_type_order(a.embedded_type());
             const auto b_order = get_embedded_type_order(b.embedded_type());
             return  a_order < b_order;
-        } else if(a.quality() == b.quality()) {
-            return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
+        } else if(a.score() == b.score()) {
+            if (a.quality() == b.quality()){
+                return boost::algorithm::lexicographical_compare(a.name(), b.name(), boost::is_iless());
+            } else {
+                return a.quality() > b.quality();
+            }
+
         }
         else {
-            return a.quality() > b.quality();
+            return a.score() > b.score();
         }
     };
 
