@@ -250,7 +250,6 @@ struct small_cal_fixture {
         //we add a calendar that match the vj
         auto cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
         cal->uri = "cal";
-//        cal->active_periods.push_back({beg, end_of_year});
         cal->week_pattern = std::bitset<7>{"1111111"};
 
         b.data->pt_data->calendars.push_back(cal);

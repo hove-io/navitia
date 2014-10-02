@@ -148,7 +148,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
 // earliest stop time for calendar is different than for a datetime
 // we have to consider only the first theoric vj of all meta vj for the given jpp
 // for all those vj, we select the one associated to the calendar,
-// and we loop through all stop times for the stop point
+// and we loop through all stop times for the jpp 
 std::vector<std::pair<uint32_t, const type::StopTime*>>
 get_all_stop_times(const type::JourneyPatternPoint* jpp,
                    const std::string calendar_id,
