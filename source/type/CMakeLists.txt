@@ -93,7 +93,7 @@ target_link_libraries(main_destination_test ed data types routing fare georef au
 ADD_BOOST_TEST(main_destination_test)
 
 add_executable(associated_calendar_test tests/associated_calendar_test.cpp)
-target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus)
+target_link_libraries(associated_calendar_test ed data types pb_lib routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(associated_calendar_test)
 
 add_executable(type_test tests/test.cpp)
