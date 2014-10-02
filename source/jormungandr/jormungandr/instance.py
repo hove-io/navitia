@@ -33,12 +33,21 @@ from contextlib import contextmanager
 import Queue
 from threading import Lock
 import zmq
-from navitiacommon import response_pb2, request_pb2
+from navitiacommon import response_pb2, request_pb2, type_pb2
 import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-
+type_to_pttype = {
+      "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
+      "network" : request_pb2.PlaceCodeRequest.Network,
+      "company" : request_pb2.PlaceCodeRequest.Company,
+      "line" : request_pb2.PlaceCodeRequest.Line,
+      "route" : request_pb2.PlaceCodeRequest.Route,
+      "vehicle_journey" : request_pb2.PlaceCodeRequest.VehicleJourney,
+      "stop_point" : request_pb2.PlaceCodeRequest.StopPoint,
+      "calendar" : request_pb2.PlaceCodeRequest.Calendar
+}
 
 class Instance(object):
 
@@ -57,12 +66,12 @@ class Instance(object):
     def scenario(self):
         if not self._scenario:
             instance_db = models.Instance.get_by_name(self.name)
-            logger = logging.getLogger(__name__)
             if instance_db:
                 logger.info('loading of scenario {} for instance {}', instance_db.scenario, self.name)
                 module = import_module("jormungandr.scenarios.{}".format(instance_db.scenario))
                 self._scenario = module.Scenario()
             else:
+                logger = logging.getLogger(__name__)
                 logger.warn('instance %s not found in db, we use the default script', self.name)
                 module = import_module("jormungandr.scenarios.default")
                 self._scenario = module.Scenario()
@@ -103,5 +112,19 @@ class Instance(object):
     def has_id(self, id_):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
-        req.place_uri.uri = request["uri"]
-        return self.send_and_receive(req).HasField('places')
+        req.place_uri.uri = id_
+        response = self.send_and_receive(req)
+        return len(response.places) > 0
+
+
+    def has_external_code(self, type_, id_):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.place_code
+        if type_ not in type_to_pttype:
+            raise ValueError("Can't call pt_code API with type: {}".format(type_))
+        req.place_code.type = type_to_pttype[type_]
+        req.place_code.type_code = "external_code"
+        req.place_code.code = id_
+        response = self.send_and_receive(req)
+        print response
+        return len(response.places) > 0
