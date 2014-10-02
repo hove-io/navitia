@@ -118,6 +118,18 @@ class InstanceManager(object):
             instance = Instance(self.context, conf.get('instance', 'key'))
             instance.socket_path = conf.get('instance', 'socket')
 
+            if conf.has_option('instance', 'script'):
+                module = import_module(conf.get('instance', 'script'))
+                instance.script = module.Script()
+            else:
+                module = import_module("jormungandr.scripts.default")
+                instance.script = module.Script()
+
+            # we give all functional parameters to the script
+            if conf.has_section('functional'):
+                functional_params = dict(conf.items('functional'))
+                instance.script.functional_params = functional_params
+
             self.instances[conf.get('instance', 'key')] = instance
 
         #we fetch the krakens metadata first
@@ -139,7 +151,12 @@ class InstanceManager(object):
             instance = self.instances[instance_name]
             if hasattr(instance.scenario, api) and callable(getattr(instance.scenario, api)):
                 api_func = getattr(instance.scenario, api)
-                return api_func(arguments, instance)
+                resp = api_func(arguments, instance)
+                if resp.HasField("publication_date") and\
+                  instance.publication_date != resp.publication_date:
+                    cache.delete_memoized(self.all_keys_of_id)
+                    instance.publication_date = resp.publication_date
+                return resp
             else:
                 raise ApiNotFound(api)
         else:
