@@ -338,10 +338,12 @@ void Data::build_journey_pattern_points(){
     LOG4CPLUS_TRACE(logger, "Construct journey_pattern points");
     std::map<std::string, ed::types::JourneyPatternPoint*> journey_pattern_point_map;
 
-    int stop_seq;
+    size_t nb_stop_time = 0;
+    size_t nb_incoherent_shapes = 0;
     for(types::VehicleJourney * vj : this->vehicle_journeys){
-        stop_seq = 0;
+        int stop_seq = 0;
         for(types::StopTime * stop_time : vj->stop_time_list){
+            ++nb_stop_time;
             std::string journey_pattern_point_extcode = vj->journey_pattern->uri + ":" + stop_time->tmp_stop_point->uri+":"+boost::lexical_cast<std::string>(stop_seq);
             auto journey_pattern_point_it = journey_pattern_point_map.find(journey_pattern_point_extcode);
             types::JourneyPatternPoint * journey_pattern_point;
@@ -353,9 +355,25 @@ void Data::build_journey_pattern_points(){
                 journey_pattern_point_map[journey_pattern_point_extcode] = journey_pattern_point;
                 journey_pattern_point->order = stop_seq;
                 journey_pattern_point->uri = journey_pattern_point_extcode;
+                journey_pattern_point->shape_from_prev = stop_time->shape_from_prev;
                 this->journey_pattern_points.push_back(journey_pattern_point);
             } else {
                 journey_pattern_point = journey_pattern_point_it->second;
+                if (journey_pattern_point->shape_from_prev != stop_time->shape_from_prev) {
+                    if (journey_pattern_point->shape_from_prev.size() <= 2
+                        && stop_time->shape_from_prev.size() > 2) {
+                        // jpp shape is just stop_point->stop_point, so we update it
+                        journey_pattern_point->shape_from_prev = stop_time->shape_from_prev;
+                    } else if (journey_pattern_point->shape_from_prev.size() > 2
+                               && stop_time->shape_from_prev.size() > 2) {
+                        ++nb_incoherent_shapes;
+                        if (stop_time->shape_from_prev.size()
+                            > journey_pattern_point->shape_from_prev.size()) {
+                            // more points, maybe better
+                            journey_pattern_point->shape_from_prev = stop_time->shape_from_prev;
+                        }
+                    }
+                }
             }
             ++stop_seq;
             stop_time->journey_pattern_point = journey_pattern_point;
@@ -374,7 +392,9 @@ void Data::build_journey_pattern_points(){
             }
         }
     }
-    LOG4CPLUS_TRACE(logger, "Number of journey_pattern points : "+ boost::lexical_cast<std::string>(this->journey_pattern_points.size()));
+    LOG4CPLUS_INFO(logger, "Number of journey_pattern points : "
+                   << this->journey_pattern_points.size() << " for " << nb_stop_time
+                   << " stop times, " << nb_incoherent_shapes << " incoherent shapes.");
 }
 
 // Check if two vehicle_journey's belong to the same journey_pattern

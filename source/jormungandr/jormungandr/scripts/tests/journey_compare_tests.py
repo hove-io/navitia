@@ -257,7 +257,7 @@ def journeys_equality_test_almost_same_journeys():
     """
     journey1 = create_dummy_journey()
     modified_section = journey1.sections[4]
-    modified_section.polyline = "blablableu"
+    modified_section.duration = 1337
 
     journey2 = create_dummy_journey()
     modified_section = journey2.sections[0]

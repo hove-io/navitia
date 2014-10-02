@@ -34,6 +34,7 @@ from navitiacommon import request_pb2, response_pb2
 from datetime import datetime
 import logging
 import re
+from shapely.geometry import shape
 
 """
 Some small functions to check the service responses
@@ -433,6 +434,10 @@ def is_valid_journey(journey, tester, query):
         assert (section_departure - last_arrival).seconds <= 1  # there cannot be more than one second between the 2
 
         last_arrival = get_valid_datetime(s['arrival_date_time'])
+
+        # test if geojson is valid
+        g = s.get('geojson')
+        g is None or shape(g)
 
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
 

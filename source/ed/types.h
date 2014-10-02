@@ -231,6 +231,7 @@ struct JourneyPatternPoint : public Header, Nameable{
     int fare_section;
     JourneyPattern* journey_pattern;
     StopPoint* stop_point;
+    nt::LineString shape_from_prev;
 
     JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern(NULL), stop_point(NULL){}
 
@@ -292,6 +293,7 @@ struct StopTime : public Nameable {
     bool is_frequency;
     bool wheelchair_boarding;
     bool date_time_estimated;
+    nt::LineString shape_from_prev;
 
     uint16_t local_traffic_zone;
 

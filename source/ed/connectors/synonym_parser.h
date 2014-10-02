@@ -36,6 +36,9 @@ www.navitia.io
 namespace ed{ namespace connectors{
 struct SynonymParserException: public navitia::exception{
     SynonymParserException(const std::string& message): navitia::exception(message){}
+    SynonymParserException(const SynonymParserException&) = default;
+    SynonymParserException& operator=(const SynonymParserException&) = default;
+    virtual ~SynonymParserException() noexcept;
 };
 
 class SynonymParser{

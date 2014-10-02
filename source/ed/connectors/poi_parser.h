@@ -37,6 +37,9 @@ namespace ed{ namespace connectors{
 
 struct PoiParserException: public navitia::exception{
     PoiParserException(const std::string& message): navitia::exception(message){}
+    PoiParserException(const PoiParserException&) = default;
+    PoiParserException& operator=(const PoiParserException&) = default;
+    virtual ~PoiParserException() noexcept;
 };
 
 
