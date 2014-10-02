@@ -93,7 +93,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
 
 std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points, const uint32_t begining_time,
                                                const uint32_t max_time,
-                                               const size_t max_departures, const type::Data& data,
+                                               const type::Data& data,
                                                const std::string calendar_id,
                                                const type::AccessibiliteParams & accessibilite_params) {
     std::vector<datetime_stop_time> result;

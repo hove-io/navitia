@@ -246,7 +246,7 @@ departure_board(const std::string& request,
                                           max_date_times, data, disruption_active);
             } else {
                 tmp = get_stop_times({jpp->idx}, DateTimeUtils::hour(handler.date_time),
-                                     DateTimeUtils::hour(handler.max_datetime), max_date_times, data, *calendar_id);
+                                     DateTimeUtils::hour(handler.max_datetime), data, *calendar_id);
             }
             if (! tmp.empty()) {
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
@@ -266,7 +266,10 @@ departure_board(const std::string& request,
                     return ! is_before_start1;
                 }
                 return dst1.first < dst2.first;
-            });
+                });
+            if (stop_times.size() > max_date_times) {
+                stop_times.resize(max_date_times);
+            }
         }
         auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
         map_route_stop_point.insert(to_insert);
