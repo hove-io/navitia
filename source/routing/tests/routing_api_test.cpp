@@ -755,6 +755,13 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     BOOST_CHECK_EQUAL(section.street_network().path_items(1).duration(), 200);
     BOOST_CHECK_EQUAL(section.street_network().path_items(2).name(), "rue ar");
     BOOST_CHECK_EQUAL(section.street_network().path_items(2).duration(), 90);
+
+    // check that the shape is used, i.e. there is not only 2 points
+    // from the stop times.
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.shape().size(), 3);
 }
 
 //biking
