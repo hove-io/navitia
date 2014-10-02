@@ -38,6 +38,7 @@ from jormungandr.exceptions import RegionNotFound
 import datetime
 import base64
 from navitiacommon.models import User, Instance, db
+from jormungandr import cache
 
 
 def authentication_required(func):
@@ -55,7 +56,7 @@ def authentication_required(func):
         elif 'lon' in kwargs and 'lat' in kwargs:
             try:
                 from jormungandr import i_manager  # quick fix to avoid circular dependencies
-                region = i_manager.key_of_coord(lon=kwargs['lon'],
+                region = i_manager.get_region(lon=kwargs['lon'],
                                                 lat=kwargs['lat'])
             except RegionNotFound:
                 pass
@@ -63,8 +64,8 @@ def authentication_required(func):
         if not region:
             #we could not find any regions, we abort
             abort_request(user=get_user(token=get_token()))
-
-        if not region or authenticate(region, 'ALL', abort=True):
+        user = get_user(token=get_token())
+        if has_access(region, 'ALL', abort=True, user=user):
             return func(*args, **kwargs)
 
     return wrapper
@@ -95,12 +96,8 @@ def get_token():
     else:
         return request.headers['Authorization']
 
-
-def __has_access(instance, user, api):
-    return instance.is_accessible_by(user)
-
-
-def authenticate(region, api, abort=False, user=None):
+@cache.memoize()
+def has_access(region, api, abort=False, user=None):
     """
     Check the Authorization of the current user for this region and this API.
     If abort is True, the request is aborted with the appropriate HTTP code.
@@ -109,19 +106,10 @@ def authenticate(region, api, abort=False, user=None):
             and current_app.config['PUBLIC']:
         #if jormungandr is on public mode we skip the authentification process
         return True
-
-    token = get_token()
-
-    if not token:
-        if abort:
-            #Since we don't have a token, we can't have a user
-            abort_request(user=None)
-        else:
-            return False
-
-    user = get_user(token=get_token())
+    if not user:
+        user = get_user(token=get_token())
     if user:
-        if has_access(region, api, abort=False, user=user):
+        if user.has_access(region, api):
             return True
         else:
             if abort:
@@ -157,17 +145,6 @@ def get_user(abort_if_no_token=True, token=None):
         logging.debug('user %s', g.user)
 
         return g.user
-
-def has_access(instance, api, abort=False, user=None):
-    if 'PUBLIC' in current_app.config \
-            and current_app.config['PUBLIC']:
-        #if jormungandr is on public mode we skip the authentification process
-        return True
-    res = user.has_access(instance, api)
-    if abort and not res:
-        abort_request(user=user)
-    else:
-        return res
 
 def abort_request(user=None):
     """
