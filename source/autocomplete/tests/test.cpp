@@ -483,10 +483,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
     BOOST_CHECK_EQUAL(res.at(1).quality, 100);
     BOOST_CHECK_EQUAL(res.at(2).quality, 100);
     BOOST_CHECK_EQUAL(res.at(3).quality, 100);
-    BOOST_CHECK_EQUAL(res.at(0).idx, 2);
-    BOOST_CHECK_EQUAL(res.at(1).idx, 7);
-    BOOST_CHECK_EQUAL(res.at(2).idx, 0);
-    BOOST_CHECK_EQUAL(res.at(3).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 7);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 2);
+    BOOST_CHECK_EQUAL(res.at(3).idx, 0);
 }
 
 ///Test pour verifier que - entres les deux mots est ignoré.
@@ -649,14 +649,14 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
     auto res = ac.find_complete("gare", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 8);
     BOOST_CHECK_EQUAL(res.at(0).quality, 100);
-    BOOST_CHECK_EQUAL(res.at(0).idx, 1);
-    BOOST_CHECK_EQUAL(res.at(1).idx, 5);
-    BOOST_CHECK_EQUAL(res.at(2).idx, 2);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 7);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 5);
     BOOST_CHECK_EQUAL(res.at(3).idx, 4);
-    BOOST_CHECK_EQUAL(res.at(4).idx, 6);
-    BOOST_CHECK_EQUAL(res.at(5).idx, 0);
-    BOOST_CHECK_EQUAL(res.at(6).idx, 3);
-    BOOST_CHECK_EQUAL(res.at(7).idx, 7);
+    BOOST_CHECK_EQUAL(res.at(4).idx, 0);
+    BOOST_CHECK_EQUAL(res.at(5).idx, 1);
+    BOOST_CHECK_EQUAL(res.at(6).idx, 2);
+    BOOST_CHECK_EQUAL(res.at(7).idx, 3);
     BOOST_CHECK_EQUAL(res.at(7).quality, 100);
 
 
@@ -715,22 +715,22 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_CHECK_EQUAL(resp.places(0).quality(), 100);
-    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
-    BOOST_CHECK_EQUAL(resp.places(7).quality(), 100);
-    BOOST_CHECK_EQUAL(resp.places(8).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(7).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(8).quality(), 80);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_CHECK_EQUAL(resp.places(7).uri(), "MPT kerfeunteun");
-    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Napoleon III");
-    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Resistance");
+    BOOST_CHECK_EQUAL(resp.places(7).uri(), "Zebre");
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Luther King");
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
 
     resp = navitia::autocomplete::autocomplete("qui", type_filter , 1, 10, admins, 0, *(b.data));
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Resistance");
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
 }
 
 /*
@@ -773,10 +773,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_CHECK_EQUAL(resp.places(0).quality(), 100);
-    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 90);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_CHECK_EQUAL(resp.places(4).uri(), "Gare SNCF");
+    BOOST_CHECK_EQUAL(resp.places(4).uri(), "IUT");
 }
 
 /*
@@ -834,14 +834,14 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_CHECK_EQUAL(resp.places(0).quality(), 100);
-    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 90);
 
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
     BOOST_CHECK_EQUAL(resp.places(7).uri(), "quai NEUF");
-    BOOST_CHECK_EQUAL(resp.places(8).uri(), "rue DU TREGOR");
-    BOOST_CHECK_EQUAL(resp.places(9).uri(), "rue VIS");
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "rue VIS");
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "rue DU TREGOR");
 }
 
 /*
