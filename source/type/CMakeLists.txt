@@ -1,5 +1,40 @@
-find_package(Protobuf REQUIRED)
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto response.proto request.proto task.proto realtime.proto ${CMAKE_SOURCE_DIR}/chaos-proto/chaos.proto ${CMAKE_SOURCE_DIR}/chaos-proto/gtfs-realtime.proto)
+SET(PROTO_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/type.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/response.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/request.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/task.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/realtime.proto
+    ${CMAKE_SOURCE_DIR}/chaos-proto/chaos.proto
+    ${CMAKE_SOURCE_DIR}/chaos-proto/gtfs-realtime.proto
+)
+
+SET(PROTO_HDRS
+    ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/gtfs-realtime.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/realtime.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/request.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/response.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/task.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/type.pb.h
+)
+
+SET(PROTO_SRCS ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/gtfs-realtime.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/realtime.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/request.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/response.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/task.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/type.pb.cc
+)
+
+add_custom_command(OUTPUT ${PROTO_HDRS} ${PROTO_SRCS}
+    COMMAND protoc ARGS ${PROTO_FILES} -I ${CMAKE_CURRENT_SOURCE_DIR} -I ${CMAKE_SOURCE_DIR}/chaos-proto
+    --cpp_out=${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM
+    DEPENDS ${PROTO_FILES})
+
+add_custom_target(protobuf DEPENDS ${PROTO_HDRS} ${PROTO_SRCS})
+set_source_files_properties(${PROTO_HDRS} ${PROTO_SRCS} PROPERTIES GENERATED TRUE)
 
 
 add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
@@ -13,7 +48,7 @@ add_custom_command (TARGET pb_lib
 add_custom_command (TARGET pb_lib
     PRE_BUILD
     COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/stat_persistor/stat_persistor" type.proto
-    task.proto realtime.proto stat.proto 
+    task.proto realtime.proto stat.proto
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
 add_custom_command (TARGET pb_lib
@@ -37,6 +72,7 @@ add_custom_command (TARGET pb_lib
 
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp)
 target_link_libraries(types utils pb_lib)
+add_dependencies(types protobuf)
 
 SET(DATA_SRC
     data.cpp
@@ -62,7 +98,7 @@ ADD_BOOST_TEST(associated_calendar_test)
 
 add_executable(type_test tests/test.cpp)
 target_link_libraries(type_test types data utils ${BOOST_LIBS} log4cplus)
-
+add_dependencies(type_test protobuf)
 ADD_BOOST_TEST(type_test)
 
 add_executable(datetime_test tests/datetime.cpp)
@@ -72,4 +108,5 @@ ADD_BOOST_TEST(datetime_test)
 
 add_executable(accessible_test tests/accessible.cpp)
 target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
+add_dependencies(accessible_test protobuf)
 ADD_BOOST_TEST(accessible_test)
