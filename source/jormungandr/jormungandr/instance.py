@@ -61,6 +61,7 @@ class Instance(object):
         self.context = context
         self.name = name
         self.timezone = None  # timezone will be fetched from the kraken
+        self.publication_date = -1
 
     @property
     def scenario(self):
