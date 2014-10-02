@@ -96,7 +96,7 @@ def get_token():
     else:
         return request.headers['Authorization']
 
-@cache.memoize()
+@cache.memoize(300)
 def has_access(region, api, abort=False, user=None):
     """
     Check the Authorization of the current user for this region and this API.
