@@ -1084,6 +1084,7 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
 GenericGtfsParser::GenericGtfsParser(const std::string & path) : path(path){
     logger = log4cplus::Logger::getInstance("log");
 }
+GenericGtfsParser::~GenericGtfsParser() {}
 
 void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
 

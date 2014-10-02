@@ -85,6 +85,7 @@ struct TransfersFusioHandler : public TransfersGtfsHandler {
     TransfersFusioHandler(GtfsData& gdata, CsvReader& reader) : TransfersGtfsHandler(gdata, reader) {}
     int real_time_c,
     property_id_c;
+    virtual ~TransfersFusioHandler() {}
     void init(Data&);
     virtual void fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const;
 };
