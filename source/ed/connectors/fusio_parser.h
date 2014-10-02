@@ -90,6 +90,17 @@ struct TransfersFusioHandler : public TransfersGtfsHandler {
     virtual void fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const;
 };
 
+struct GeometriesFusioHandler: public GenericHandler {
+    GeometriesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int geometry_id_c = -1, geometry_wkt_c = -1;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void finish(Data& data);
+    const std::vector<std::string> required_headers() const {
+        return {"geometry_id", "geometry_wkt"};
+    }
+};
+
 struct TripsFusioHandler : public GenericHandler {
     TripsFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int route_id_c,
@@ -103,7 +114,8 @@ struct TripsFusioHandler : public GenericHandler {
         company_id_c,
         odt_condition_id_c,
         physical_mode_c,
-        ext_code_c;
+        ext_code_c,
+        geometry_id_c;
 
     int ignored = 0;
     int ignored_vj = 0;
