@@ -278,7 +278,9 @@ class Script(object):
                 req.pt_objects.admin_uris.append(admin_uri)
 
         resp = instance.send_and_receive(req)
-        if len(resp.pt_objects) == 0 and request['search_type'] == 0:
+        #The result contains places but not pt_objects,
+        #object place is transformed to pt_object afterwards.
+        if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
             return self.pt_objects(request, instance)
         self.__pagination(request, "pt_objects", resp)
