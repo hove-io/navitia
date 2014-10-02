@@ -319,6 +319,7 @@ message Response{
     optional string info = 3;
 
     optional Status status = 4;
+    required int32 publication_date = 5;
     //PtObjects
     repeated string ignored_words = 11;
     repeated string bad_words = 12;

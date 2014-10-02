@@ -547,9 +547,11 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response result ;
     if (! data_manager.get_data()->loaded){
+        result.set_publication_date(-1);
         fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data", result.mutable_error());
         return result;
     }
+    result.set_publication_date(data_manager.get_data()->meta->publication_date);
     switch(request.requested_api()){
         case pbnavitia::STATUS: return status();
         case pbnavitia::places: return autocomplete(request.places());
