@@ -1,6 +1,6 @@
 SET(ALL_LIBS workers ed disruption_api calendar_api zmq time_tables types autocomplete proximitylist
     ptreferential time_tables data routing fare georef utils SimpleAmqpClient
-    rabbitmq-static log4cplus tcmalloc ${Boost_LIBRARIES})
+    rabbitmq-static log4cplus tcmalloc ${Boost_LIBRARIES} protobuf)
 
 # every tests will produce an executable used in jormungandr integration tests
 

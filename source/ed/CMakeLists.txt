@@ -17,7 +17,7 @@ FIND_LIBRARY(OSMPBF osmpbf)
 
 add_executable(osm2ed osm2ed.cpp)
 target_link_libraries(osm2ed transportation_data_import ed connectors types pq pqxx ${OSMPBF} pb_lib utils
-    ${BOOST_LIBS} log4cplus z)
+    ${BOOST_LIBS} log4cplus z protobuf)
 
 add_subdirectory(tests)
 
@@ -34,15 +34,15 @@ add_executable(fare2ed fare2ed.cpp)
 target_link_libraries(fare2ed transportation_data_import connectors)
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
-target_link_libraries(ed2nav types connectors pq pqxx data georef routing fare
-    utils autocomplete ${BOOST_LIBS} log4cplus)
+target_link_libraries(ed2nav types connectors pq pqxx data georef routing fare pb_lib
+    utils autocomplete ${BOOST_LIBS} log4cplus protobuf)
 
 
 add_subdirectory(connectors)
 
 add_executable(nav2rt nav2rt.cpp)
-target_link_libraries(nav2rt ed types connectors pq pqxx data fare georef routing
-    utils autocomplete ${BOOST_LIBS} log4cplus)
+target_link_libraries(nav2rt ed types connectors pq pqxx data fare georef routing pb_lib
+    utils autocomplete ${BOOST_LIBS} log4cplus protobuf)
 add_executable(geopal2ed geopal2ed.cpp)
 
 target_link_libraries(geopal2ed transportation_data_import connectors)
