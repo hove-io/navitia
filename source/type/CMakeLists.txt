@@ -33,7 +33,7 @@ add_custom_command(OUTPUT ${PROTO_HDRS} ${PROTO_SRCS}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM
     DEPENDS ${PROTO_FILES})
 
-add_custom_target(protobuf DEPENDS ${PROTO_HDRS} ${PROTO_SRCS})
+add_custom_target(protobuf_files DEPENDS ${PROTO_HDRS} ${PROTO_SRCS})
 set_source_files_properties(${PROTO_HDRS} ${PROTO_SRCS} PROPERTIES GENERATED TRUE)
 
 
@@ -72,7 +72,7 @@ add_custom_command (TARGET pb_lib
 
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp)
 target_link_libraries(types utils pb_lib)
-add_dependencies(types protobuf)
+add_dependencies(types protobuf_files)
 
 SET(DATA_SRC
     data.cpp
@@ -86,19 +86,19 @@ target_link_libraries(data types)
 SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
-    ${Boost_DATE_TIME_LIBRARY}  ${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY})
+    ${Boost_DATE_TIME_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY})
 
 add_executable(main_destination_test tests/main_destination_test.cpp)
-target_link_libraries(main_destination_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus)
+target_link_libraries(main_destination_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(main_destination_test)
 
 add_executable(associated_calendar_test tests/associated_calendar_test.cpp)
-target_link_libraries(associated_calendar_test ed data types pb_lib routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus)
+target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(associated_calendar_test)
 
 add_executable(type_test tests/test.cpp)
 target_link_libraries(type_test types data utils ${BOOST_LIBS} log4cplus)
-add_dependencies(type_test protobuf)
+add_dependencies(type_test protobuf_files)
 ADD_BOOST_TEST(type_test)
 
 add_executable(datetime_test tests/datetime.cpp)
@@ -108,5 +108,5 @@ ADD_BOOST_TEST(datetime_test)
 
 add_executable(accessible_test tests/accessible.cpp)
 target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
-add_dependencies(accessible_test protobuf)
+add_dependencies(accessible_test protobuf_files)
 ADD_BOOST_TEST(accessible_test)
