@@ -239,14 +239,35 @@ departure_board(const std::string& request,
                 response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
                 continue;
             }
-            auto tmp = get_stop_times({jpp->idx}, handler.date_time,
-                                      handler.max_datetime,
-                                      max_date_times, data, disruption_active, calendar_id);
+            std::vector<datetime_stop_time> tmp;
+            if (! calendar_id) {
+                tmp = get_stop_times({jpp->idx}, handler.date_time,
+                                          handler.max_datetime,
+                                          max_date_times, data, disruption_active);
+            } else {
+                tmp = get_stop_times({jpp->idx}, DateTimeUtils::hour(handler.date_time),
+                                     DateTimeUtils::hour(handler.max_datetime), max_date_times, data, *calendar_id);
+            }
             if (! tmp.empty()) {
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             }
         }
-        std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
+        if ( ! calendar_id) {
+            std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
+        } else {
+            // for calendar we want to sort the result a quite a strange way
+            // we want the first stop time to start from handler.date_time
+            std::sort(stop_times.begin(), stop_times.end(),
+                      [&handler](datetime_stop_time dst1, datetime_stop_time dst2) {
+                auto is_before_start1 = (DateTimeUtils::hour(dst1.first) < DateTimeUtils::hour(handler.date_time));
+                auto is_before_start2 = (DateTimeUtils::hour(dst2.first) < DateTimeUtils::hour(handler.date_time));
+                if (is_before_start1 != is_before_start2) {
+                    //if one is before and one is after, we want the one after first
+                    return ! is_before_start1;
+                }
+                return dst1.first < dst2.first;
+            });
+        }
         auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
         map_route_stop_point.insert(to_insert);
     }
