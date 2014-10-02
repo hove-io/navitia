@@ -78,7 +78,7 @@ struct Autocomplete
         navitia::type::GeographicalCoord coord;
         int house_number;
 
-        fl_quality() :idx(0), nb_found(0), word_len(0), quality(0), house_number(-1) {}
+        fl_quality() :idx(0), nb_found(0), word_len(0), score(0), quality(0), house_number(-1) {}
         bool operator<(const fl_quality & other) const{
             return this->quality > other.quality;
         }
@@ -172,6 +172,8 @@ struct Autocomplete
         }
     }
 
+    // Example of 2-gram : bateau :> ba, at, te, ea, au
+    // Example of 3-gram : bateau :> bat, ate, tea, eau
     std::vector<std::string> make_vec_pattern(const std::set<std::string> &vec_words, size_t n_gram) const{
         std::vector<std::string> pattern;
         auto vec = vec_words.begin();
@@ -298,13 +300,29 @@ struct Autocomplete
         }
     };
 
-    std::vector<fl_quality> sort_and_truncate(std::vector<fl_quality> input, size_t nbmax) const {
+    std::vector<fl_quality> sort_and_truncate_by_score(std::vector<fl_quality> input, size_t nbmax) const {
         typename std::vector<fl_quality>::iterator middle_iterator;
         if(nbmax < input.size())
             middle_iterator = input.begin() + nbmax;
         else
             middle_iterator = input.end();
+        std::partial_sort(input.begin(), middle_iterator, input.end(),
+                          [&](fl_quality a, fl_quality b){return (a.score > b.score);});
         std::partial_sort(input.begin(), middle_iterator, input.end());
+
+        if (input.size() > nbmax){input.resize(nbmax);}
+        return input;
+    }
+
+    std::vector<fl_quality> sort_and_truncate_by_quality(std::vector<fl_quality> input, size_t nbmax) const {
+        typename std::vector<fl_quality>::iterator middle_iterator;
+        if(nbmax < input.size())
+            middle_iterator = input.begin() + nbmax;
+        else
+            middle_iterator = input.end();
+        std::partial_sort(input.begin(), middle_iterator, input.end(),
+                          [&](fl_quality a, fl_quality b){return (a.quality > b.quality);});
+        //std::partial_sort(input.begin(), middle_iterator, input.end());
 
         if (input.size() > nbmax){input.resize(nbmax);}
         return input;
@@ -317,13 +335,11 @@ struct Autocomplete
                                           std::function<bool(T)> keep_element)
                                           const{
         auto vec = tokenize(str, synonyms);
-        int wordCount = 0;
         int wordLength = 0;
         fl_quality quality;
         std::vector<T> index_result;
         //Vector des ObjetTC index trouvés
         index_result = find(vec);
-        wordCount = vec.size();
         wordLength = words_length(vec);
 
         // Créer un vector de réponse:
@@ -332,14 +348,14 @@ struct Autocomplete
         for(auto i : index_result){
             if(keep_element(i)) {
                 quality.idx = i;
-                quality.nb_found = wordCount;
+                quality.nb_found = word_quality_list.at(quality.idx).word_count;
                 quality.word_len = wordLength;
                 quality.score = word_quality_list.at(quality.idx).score;
                 quality.quality = 100;
                 vec_quality.push_back(quality);
             }
         }
-        return sort_and_truncate(vec_quality, nbmax);
+        return sort_and_truncate_by_score(vec_quality, nbmax);
     }
 
 
@@ -377,11 +393,11 @@ struct Autocomplete
             for (++vec; vec != vec_pattern.end(); ++vec){
                 index_result = match(*vec, pattern_dictionnary);
 
-                //incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
+                //For each match of n-gram pattern word 1 is added to "nb_found"
                 add_word_quality(fl_result,index_result);
             }
 
-            //Récupérer le Max score parmi les élément trouvé
+            //Compute de highest score of objects found
             int max_score = 0;
             for (auto ir : index_result){
                 if (keep_element(ir)){
@@ -389,10 +405,8 @@ struct Autocomplete
                 }
             }
 
-            //remplir le tableau temp_result avec le résultat de qualité.
-            //A ne pas remonter l'objectTC si le  faute de frappe est > 2
+            //Here we keep object with match of patternized words >= 75%
             for(auto pair : fl_result){
-                //if (keep_element(pair.first) && (pair.second.nb_found > pattern_count - 3)){
                 if (keep_element(pair.first) && (((pattern_count - pair.second.nb_found) * 100) / pattern_count <= 25)){
                     quality.idx = pair.first;
                     quality.nb_found = pair.second.nb_found;
@@ -403,7 +417,7 @@ struct Autocomplete
                 }
             }
         }
-        return sort_and_truncate(vec_quality, nbmax);
+        return sort_and_truncate_by_quality(vec_quality, nbmax);
     }
 
 
