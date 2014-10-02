@@ -89,8 +89,18 @@ void compute_score_stop_area(type::PT_Data & pt_data, georef::GeoRef &georef){
     }
 }
 
+/*
+ Use natural logarithm to compute admin score as explained below.
+ City       stop_point_count    log(n+2)*10
+ Paris      3065                80
+ Lyon       1000                69
+ Versailles 418                 60
+ St Denis   248                 55
+ Melun      64                  42
+ Pouzioux   1                   11
+ Pampa      0                   7
+*/
 void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
-    int max_score = 0;
     //For each stop_point increase the score of it's admin(level 8) by 1.
     for (navitia::type::StopPoint* sp : pt_data.stop_points){
         for (navitia::georef::Admin * admin : sp->admin_list){
@@ -99,14 +109,10 @@ void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
             }
         }
     }
-    //Calculate max_score of all admins
-    for (auto it = georef.fl_admin.word_quality_list.begin(); it != georef.fl_admin.word_quality_list.end(); ++it){
-        max_score = ((it->second).score > max_score)?(it->second).score:max_score;
-    }
 
-    //Ajust the score of each admin using max_score (0 to 100).
+    //Ajust the score of each admin using natural logarithm as : log(n+2)*10
     for (auto it = georef.fl_admin.word_quality_list.begin(); it != georef.fl_admin.word_quality_list.end(); ++it){
-        (it->second).score = max_score == 0 ? 0 : ((it->second).score * 100)/max_score;
+        (it->second).score = log((it->second).score + 2) * 10;
     }
 }
 
