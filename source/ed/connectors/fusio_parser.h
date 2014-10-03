@@ -74,7 +74,8 @@ struct RouteFusioHandler : public GenericHandler {
         line_id_c,
         comment_id_c,
         commercial_mode_id_c,
-        contributor_id_c;
+        contributor_id_c,
+        geometry_id_c;
     int ignored;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
@@ -144,17 +145,18 @@ struct ContributorFusioHandler : public GenericHandler {
 struct LineFusioHandler : public GenericHandler{
     LineFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c,
-    name_c,
-    external_code_c,
-    code_c,
-    forward_name_c,
-    backward_name_c,
-    color_c,
-    sort_c,
-    network_c,
-    comment_c,
-    commercial_mode_c,
-    contributor_c;
+        name_c,
+        external_code_c,
+        code_c,
+        forward_name_c,
+        backward_name_c,
+        color_c,
+        sort_c,
+        network_c,
+        comment_c,
+        commercial_mode_c,
+        contributor_c,
+        geometry_id_c;
     void init(Data &);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"line_id", "line_name", "commercial_mode_id"}; }

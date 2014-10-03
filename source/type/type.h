@@ -502,12 +502,13 @@ struct Line : public Header, Nameable, HasMessages, Codes{
     std::vector<Route*> route_list;
     std::vector<PhysicalMode*> physical_mode_list;
     std::vector<Calendar*> calendar_list;
+    MultiLineString shape;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & messages & calendar_list & codes;
+                & messages & calendar_list & codes & shape;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -532,13 +533,14 @@ struct Line : public Header, Nameable, HasMessages, Codes{
 struct Route : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Route;
     Line* line = nullptr;
+    MultiLineString shape;
     std::vector<JourneyPattern*> journey_pattern_list;
 
     idx_t main_destination() const;
     type::OdtLevel_e get_odt_level() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & journey_pattern_list & messages & codes;
+        ar & idx & name & uri & line & journey_pattern_list & messages & codes & shape;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;

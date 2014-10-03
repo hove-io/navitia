@@ -31,7 +31,7 @@ www.navitia.io
 #include "ed_persistor.h"
 #include "ed/connectors/fare_utils.h"
 
-#include <boost/geometry/io/wkt/write.hpp>
+#include <boost/geometry.hpp>
 
 namespace bg = boost::gregorian;
 
@@ -611,7 +611,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     this->lotus.prepare_bulk_insert("navitia.line",
             {"id", "uri", "external_code", "name", "comment", "color", "code",
-            "commercial_mode_id", "network_id", "sort"});
+             "commercial_mode_id", "network_id", "sort", "shape"});
 
     for(types::Line* line : lines){
         std::vector<std::string> values;
@@ -635,7 +635,16 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
                     "have any network");
             continue;
         }
+
         values.push_back(std::to_string(line->sort));
+
+        std::stringstream shape;
+        if (line->shape.empty())
+            shape << "NULL";
+        else
+            shape << std::setprecision(16) << boost::geometry::wkt(line->shape);
+        values.push_back(shape.str());
+
         this->lotus.insert(values);
     }
 
@@ -669,7 +678,7 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "external_code", "name", "comment", "line_id"});
+            {"id", "uri", "external_code", "name", "comment", "line_id", "shape"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
@@ -683,6 +692,14 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
         }else{
             values.push_back(lotus.null_value);
         }
+
+        std::stringstream shape;
+        if (route->shape.empty())
+            shape << "NULL";
+        else
+            shape << std::setprecision(16) << boost::geometry::wkt(route->shape);
+        values.push_back(shape.str());
+
         this->lotus.insert(values);
     }
 

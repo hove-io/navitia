@@ -164,6 +164,7 @@ struct Line : public Header, Nameable {
     CommercialMode* commercial_mode;
     Network* network;
     Company* company;
+    nt::MultiLineString shape;
 
     Line(): color(""), commercial_mode(NULL), network(NULL), company(NULL){}
 
@@ -174,6 +175,7 @@ struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
     std::string external_code;
     Line * line;
+    nt::MultiLineString shape;
 
     bool operator<(const Route& other) const;
 };
