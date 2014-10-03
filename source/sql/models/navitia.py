@@ -107,6 +107,7 @@ route = Table('route', metadata,*[
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('external_code', TEXT(), primary_key=False, nullable=False),
+    Column('shape', Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), primary_key=False),
     ForeignKeyConstraint(['line_id'], [u'navitia.line.id'], name=u'route_line_id_fkey'),],
     schema='navitia')
 
@@ -344,6 +345,7 @@ line = Table('line', metadata,*[
     Column('code', TEXT(), primary_key=False),
     Column('color', TEXT(), primary_key=False),
     Column('sort', INTEGER(), primary_key=False, nullable=False, default=text(u'2147483647')),
+    Column('shape', Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), primary_key=False),
     ForeignKeyConstraint(['commercial_mode_id'], [u'navitia.commercial_mode.id'], name=u'line_commercial_mode_id_fkey'),
     ForeignKeyConstraint(['network_id'], [u'navitia.network.id'], name=u'line_network_id_fkey'),],
     schema='navitia')
