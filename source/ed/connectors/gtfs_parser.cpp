@@ -964,7 +964,12 @@ create_shape(const nt::GeographicalCoord& from,
             res.push_back(*it);
     }
     res.push_back(to);
-    return res;
+
+    // simplification at about 1m precision
+    nt::LineString simplified;
+    boost::geometry::simplify(res, simplified, 0.00001);
+
+    return simplified;
 }
 
 void StopTimeGtfsHandler::finish(Data& data) {
