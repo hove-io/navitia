@@ -30,6 +30,8 @@ www.navitia.io
 
 #include "fusio_parser.h"
 
+#include <boost/geometry.hpp>
+
 namespace ed { namespace connectors {
 
 void AgencyFusioHandler::init(Data& data) {
@@ -272,6 +274,28 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
     }
 }
 
+void GeometriesFusioHandler::init(Data&) {
+    LOG4CPLUS_INFO(logger, "Reading geometries");
+    geometry_id_c = csv.get_pos_col("geometry_id");
+    geometry_wkt_c = csv.get_pos_col("geometry_wkt");
+}
+void GeometriesFusioHandler::handle_line(Data&, const csv_row& row, bool) {
+    try {
+        nt::MultiLineString multiline;
+        boost::geometry::read_wkt(row.at(geometry_wkt_c), multiline);
+        gtfs_data.shapes[row.at(geometry_id_c)] = multiline;
+    } catch (const boost::geometry::read_wkt_exception&) {
+        nt::LineString line;
+        boost::geometry::read_wkt(row.at(geometry_wkt_c), line);
+        gtfs_data.shapes[row.at(geometry_id_c)].push_back(line);
+    } catch (const std::exception& e) {
+        LOG4CPLUS_INFO(logger, "Geometry cannot be read: " << e.what());
+    }
+}
+void GeometriesFusioHandler::finish(Data&) {
+    LOG4CPLUS_INFO(logger, "Nb shapes: " << gtfs_data.shapes.size());
+}
+
 void TripsFusioHandler::init(Data& d) {
     d.vehicle_journeys.reserve(350000);
 
@@ -287,6 +311,7 @@ void TripsFusioHandler::init(Data& d) {
     odt_condition_id_c = csv.get_pos_col("odt_condition_id");
     physical_mode_c = csv.get_pos_col("physical_mode_id");
     ext_code_c = csv.get_pos_col("external_code");
+    geometry_id_c = csv.get_pos_col("geometry_id");
 }
 
 std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& data, const csv_row& row, bool){
@@ -316,6 +341,18 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     std::vector<ed::types::VehicleJourney*> res;
 
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
+
+    // get shape if possible
+    if (has_col(geometry_id_c, row)) {
+        const auto it_shape = gtfs_data.shapes.find(row.at(geometry_id_c));
+        if (it_shape != gtfs_data.shapes.end() && !it_shape->second.empty()) {
+            if (it_shape->second.size() > 1) {
+                LOG4CPLUS_WARN(logger, "shape of trip " << row[trip_c]
+                               << " is a multi line, taking only the first line.");
+            }
+            gtfs_data.meta_vj_shapes[row[trip_c]] = it_shape->second.front();
+        }
+    }
 
     const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
@@ -984,6 +1021,7 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & da
 }
 
 void FusioParser::parse_files(Data& data) {
+    parse<GeometriesFusioHandler>(data, "geometries.txt");
     parse<AgencyFusioHandler>(data, "agency.txt", true);
     parse<ContributorFusioHandler>(data, "contributors.txt");
     parse<CompanyFusioHandler>(data, "company.txt");

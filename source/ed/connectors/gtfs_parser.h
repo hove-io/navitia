@@ -273,6 +273,7 @@ struct TransfersGtfsHandler : public GenericHandler {
     time_c;
 
     size_t nblines = 0;
+    virtual ~TransfersGtfsHandler() {}
     void init(Data&);
     void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
@@ -384,6 +385,7 @@ public:
 
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
     GenericGtfsParser(const std::string & path);
+    virtual ~GenericGtfsParser();
 
     /// Remplit la structure passée en paramètre
     void fill(ed::Data& data, const std::string beginning_date = "");

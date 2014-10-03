@@ -964,7 +964,12 @@ create_shape(const nt::GeographicalCoord& from,
             res.push_back(*it);
     }
     res.push_back(to);
-    return res;
+
+    // simplification at about 1m precision
+    nt::LineString simplified;
+    boost::geometry::simplify(res, simplified, 0.00001);
+
+    return simplified;
 }
 
 void StopTimeGtfsHandler::finish(Data& data) {
@@ -1084,6 +1089,7 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
 GenericGtfsParser::GenericGtfsParser(const std::string & path) : path(path){
     logger = log4cplus::Logger::getInstance("log");
 }
+GenericGtfsParser::~GenericGtfsParser() {}
 
 void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
 
