@@ -114,11 +114,10 @@ void fill_codes(const std::string& type, const std::string& value, pbnavitia::Co
 
 void fill_pb_placemark(const navitia::georef::Way* way, const type::Data &data, pbnavitia::PtObject* place, int house_number, type::GeographicalCoord& coord, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes = false);
 
-void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
+
 
 void fill_pb_placemark(const type::EntryPoint& origin, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
@@ -229,7 +228,7 @@ void fill_pb_object(const timetables::Thermometer* thermometer,
         const navitia::type::Data& data, pbnavitia::GeoJson* geojson);
 
 template<typename T>
-void fill_pb_placemark(const T value, const type::Data &data, pbnavitia::PtObject* pt_object, int max_depth = 0,
+void fill_pb_placemark(const T* value, const type::Data &data, pbnavitia::PtObject* pt_object, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes=false) {
@@ -242,6 +241,14 @@ void fill_pb_placemark(const T value, const type::Data &data, pbnavitia::PtObjec
     pt_object->set_uri(value->uri);
     pt_object->set_embedded_type(get_embedded_type(value));
 }
+
+
+template<>
+void fill_pb_placemark(const navitia::georef::Admin* value, const type::Data &data, pbnavitia::PtObject* pt_object,
+        int max_depth,
+        const boost::posix_time::ptime& now,
+        const boost::posix_time::time_period& action_period,
+        const bool show_codes);
 
 pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode);
 }//namespace navitia
