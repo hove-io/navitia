@@ -1,3 +1,9 @@
+navitia2 (1.0.4) unstable; urgency=medium
+
+  * hotfix for isochrone 
+
+ -- Antoine Desbordes <antoine.desbordes@canaltp.fr>  Mon, 6 Oct 2014 18:44:13 +0100
+
 navitia2 (1.0.3) unstable; urgency=medium
 
   * hotfix for "memleak" on stop_schedules
