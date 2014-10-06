@@ -400,11 +400,8 @@ message PtObject {
     optional AdministrativeRegion administrative_region = 13;
     optional int32 distance = 14;
     optional int32 quality = 15;
-<<<<<<< HEAD
     optional Company company = 16;
     optional VehicleJourney vehicle_journey = 17;
     optional Calendar calendar = 18;
-=======
-    optional int32 score = 16;	
->>>>>>> autocomplete: score added
+    optional int32 score = 19;	
 }
