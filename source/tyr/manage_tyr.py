@@ -33,15 +33,12 @@
 from tyr import app, db, manager
 import sys
 from flask_migrate import Migrate, MigrateCommand
-from tyr.command import AggregatePlacesCommand, ReloadAtCommand, AtReloader,\
+from tyr.command import ReloadAtCommand, AtReloader,\
     ReloadKrakenCommand, BuildDataCommand, LoadDataCommand
 
 
 migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
-#A command used in development environment to run aggregate places without
-#having to run tyr
-manager.add_command('aggregate_places', AggregatePlacesCommand())
 manager.add_command('reload_at', ReloadAtCommand())
 manager.add_command('at_reloader', AtReloader())
 manager.add_command('reload_kraken', ReloadKrakenCommand())
