@@ -36,25 +36,38 @@ from jormungandr import app
 import logging
 
 
-class FakeUser:
+authorizations = {1: { "main_routing_test": {'ALL' : True},
+    "departure_board_test" : {'ALL' : False}}}
+class FakeUser(Object):
+    """
+    We create a user independent from a database
+    """
     def __init__(self, id):
+        """
+        We just need a fake user, we don't really care about its identity
+        """
         self.id = id
         self.login = str(id)
-        self.map_authorizations = {1: { "main_routing_test": True,
-                               "departure_board_test" : False}}
 
     @classmethod
     def get_from_token(cls, token):
+        """
+        Create an empty user
+        """
         return FakeUser(token)
 
     def has_access(self, instance_name, api_name):
-        return self.map_authorizations[self.id][instance_name]
+        """
+        This is made to avoid using of database
+        """
+        return authorizations[self.id][api_name][instance_name]
 
 @contextmanager
 def user_set(app, user_name):
     """
     add user
     """
+
     def handler(sender, **kwargs):
         g.user = FakeUser.get_from_token(user_name)
     with appcontext_pushed.connected_to(handler, app):
@@ -67,7 +80,7 @@ class TestAuthentication(AbstractTestFixture):
         app.config['PUBLIC'] = False
         self.app = app.test_client()
 
-    def test_premier(self):
+    def test_status_code(self):
         requests_status_codes = [
         ('/v1/coverage/main_routing_test', 200),
         ('/v1/coverage/departure_board_test', 403),
