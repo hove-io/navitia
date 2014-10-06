@@ -154,7 +154,7 @@ class InstanceManager(object):
                 resp = api_func(arguments, instance)
                 if resp.HasField("publication_date") and\
                   instance.publication_date != resp.publication_date:
-                    cache.delete_memoized(self.all_keys_of_id)
+                    cache.delete_memoized(self._all_keys_of_id)
                     instance.publication_date = resp.publication_date
                 return resp
             else:
@@ -195,14 +195,21 @@ class InstanceManager(object):
     def stop(self):
         if not self.thread_event.is_set():
             self.thread_event.set()
-   
-    def filter_authorized_instances(self, instances, api):
+
+
+    def _filter_authorized_instances(self, instances, api):
         user = authentication.get_user(token=authentication.get_token())
-        return [i for i in instances if authentication.has_access(i, abort=False, user=user, api=api)]
+        if not instances:
+            return instances
+        valid_regions = [i for i in instances if authentication.has_access(i,
+            abort=False, user=user, api=api)]
+        if not valid_regions:
+            authentication.abort_request(user)
+        return valid_regions
 
 
     @cache.memoize()
-    def all_keys_of_id(self, object_id):
+    def _all_keys_of_id(self, object_id):
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:
                 lon, lat = object_id.split(";")
@@ -213,14 +220,14 @@ class InstanceManager(object):
                 flat = float(lat)
             except:
                 raise RegionNotFound(object_id=object_id)
-            return self.all_keys_of_coord(flon, flat)
+            return self._all_keys_of_coord(flon, flat)
         instances = [i.name for i in self.instances.itervalues() if i.has_id(object_id)]
         if not instances:
             raise RegionNotFound(object_id=object_id)
         return instances
 
 
-    def all_keys_of_coord(self, lon, lat):
+    def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
         instances = []
         # a valid instance is an instance containing the coord and accessible by the user
@@ -247,13 +254,13 @@ class InstanceManager(object):
         if region_str and self.region_exists(region_str):
             available_regions = [region_str]
         elif lon and lat:
-            available_regions = self.all_keys_of_coord(lon, lat)
+            available_regions = self._all_keys_of_coord(lon, lat)
         elif object_id:
-            available_regions = self.all_keys_of_id(object_id)
+            available_regions = self._all_keys_of_id(object_id)
         else:
             available_regions = self.instances.keys()
 
-        valid_regions = self.filter_authorized_instances(available_regions, api)
+        valid_regions = self._filter_authorized_instances(available_regions, api)
         if valid_regions:
             return choose_best_instance(valid_regions) if only_one else valid_regions
         elif available_regions:

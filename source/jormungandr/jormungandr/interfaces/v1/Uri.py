@@ -103,7 +103,8 @@ class Uri(ResourceUri):
             else:
                 abort(503, message="Not implemented yet")
         else:
-            authentication.has_access(region, 'ALL', abort=True, user=authentication.get_user())
+            user = authentication.get_user(token=authentication.get_token())
+            authentication.has_access(region, 'ALL', abort=True, user=user)
         self.region = i_manager.get_region(region, lon, lat)
 
         #we store the region in the 'g' object, which is local to a request

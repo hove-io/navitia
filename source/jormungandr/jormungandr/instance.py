@@ -110,15 +110,19 @@ class Instance(object):
                     logging.error("La requete : " + request.SerializeToString() + " a echoue " + self.socket_path)
                 raise DeadSocketException(self.name, self.socket_path)
 
-    def has_id(self, id_):
+
+    def get_id(self, id_):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = id_
-        response = self.send_and_receive(req)
-        return len(response.places) > 0
+        return self.send_and_receive(req)
+    
+
+    def has_id(self, id_):
+        return len(self.get_id(id_).places) > 0
 
 
-    def has_external_code(self, type_, id_):
+    def get_external_codes(self, type_, id_):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_code
         if type_ not in type_to_pttype:
@@ -126,6 +130,8 @@ class Instance(object):
         req.place_code.type = type_to_pttype[type_]
         req.place_code.type_code = "external_code"
         req.place_code.code = id_
-        response = self.send_and_receive(req)
-        print response
-        return len(response.places) > 0
+        return self.send_and_receive(req)
+
+
+    def has_external_code(self, type_, id_):
+        return len(self.get_external_codes(self, type_, id_).places) > 0
