@@ -38,7 +38,7 @@ import logging
 
 authorizations = {1: { "main_routing_test": {'ALL' : True},
     "departure_board_test" : {'ALL' : False}}}
-class FakeUser(Object):
+class FakeUser:
     """
     We create a user independent from a database
     """
@@ -60,7 +60,7 @@ class FakeUser(Object):
         """
         This is made to avoid using of database
         """
-        return authorizations[self.id][api_name][instance_name]
+        return authorizations[self.id][instance_name][api_name]
 
 @contextmanager
 def user_set(app, user_name):
