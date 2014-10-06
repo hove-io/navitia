@@ -77,94 +77,43 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
 
     nt::new_disruption::DisruptionHolder disruptions;
     std::shared_ptr<nt::new_disruption::Disruption> disruption;
+    std::shared_ptr<nt::new_disruption::Impact> impact;
+    nt::new_disruption::Message message;
+    nt::new_disruption::PtObject pt_object;
+    int object_type;
     std::string current_uri = "";
-/*
+
     for (auto cursor = result.begin(); cursor != result.end(); ++cursor) {
 
         if (cursor["uri"].as<std::string>() != current_uri) {
-            if (disruption) {//if it's a new message, we add it
-                disruptions[disruption->uri] = disruption;
-            }
             disruption = std::make_shared<nt::new_disruption::Disruption>();
             cursor["uri"].to(current_uri);
             disruption->uri = current_uri;
-            cursor["object_uri"].to(disruption->object_uri);
+
+            impact = std::shared_ptr<nt::new_disruption::Impact>();
+            cursor["uri"].to(impact->uri);
+            pt::ptime start = pt::time_from_string(cursor["start_application_date"].as<std::string>());
+            pt::ptime end = pt::time_from_string(cursor["end_application_date"].as<std::string>());
+            impact->application_periods.push_back(pt::time_period(start, end));
+            disruption->impacts.push_back(impact);
         }
-        message->object_type = static_cast<navitia::type::Type_e>(cursor["object_type_id"].as<int>());
+        message = nt::new_disruption::Message();
+        cursor["body"].to(message.text);
+        impact->messages.push_back(message);
+        pt_object = nt::new_disruption::PtObject();
+        cursor["object_uri"].to(pt_object.object_uri);
+        cursor["object_type_id"].to(object_type);
+        pt_object.object_type = static_cast<navitia::type::Type_e>(
+        cursor["object_type_id"].as<int>());
+        impact->informed_entities.push_back(pt_object);
 
-        message->message_status = static_cast<navitia::type::MessageStatus>(cursor["message_status_id"].as<int>());
+    }    
+    // Tag
+    // Severity
+    //cause
+    // Note
+    //localization
 
-        message->application_daily_start_hour = pt::duration_from_string(cursor["start_application_daily_hour"].as<std::string>());
-
-        message->application_daily_end_hour = pt::duration_from_string(cursor["end_application_daily_hour"].as<std::string>());
-
-        pt::ptime start = pt::time_from_string(cursor["start_application_date"].as<std::string>());
-
-        pt::ptime end = pt::time_from_string(cursor["end_application_date"].as<std::string>());
-        message->application_period = pt::time_period(start, end);
-
-        start = pt::time_from_string(cursor["start_publication_date"].as<std::string>());
-
-        end = pt::time_from_string(cursor["end_publication_date"].as<std::string>());
-        message->publication_period = pt::time_period(start, end);
-
-        message->active_days = std::bitset<8>(cursor["active_days"].as<std::string>());
-    }*/
-    /*
-    std::map<std::string, boost::shared_ptr<navitia::type::Message>> messages;
-    boost::shared_ptr<navitia::type::Message> message;
-    std::string current_uri = "";
-
-    for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
-        if(cursor["uri"].as<std::string>() != current_uri){//on traite un nouveau message
-            if(message){//si on a un message précédent, on le rajoute au map de résultat
-                messages[message->uri] = message;
-            }
-            cursor["uri"].to(current_uri);
-            //on construit le message
-            message = boost::make_shared<navitia::type::Message>();
-            message->uri = current_uri;
-            cursor["object_uri"].to(message->object_uri);
-
-            message->object_type = static_cast<navitia::type::Type_e>(
-                    cursor["object_type_id"].as<int>());
-
-            message->message_status = static_cast<navitia::type::MessageStatus>(
-                    cursor["message_status_id"].as<int>());
-
-            message->application_daily_start_hour = pt::duration_from_string(
-                    cursor["start_application_daily_hour"].as<std::string>());
-
-            message->application_daily_end_hour = pt::duration_from_string(
-                    cursor["end_application_daily_hour"].as<std::string>());
-
-            pt::ptime start = pt::time_from_string(
-                    cursor["start_application_date"].as<std::string>());
-
-            pt::ptime end = pt::time_from_string(
-                    cursor["end_application_date"].as<std::string>());
-            message->application_period = pt::time_period(start, end);
-
-            start = pt::time_from_string(
-                    cursor["start_publication_date"].as<std::string>());
-
-            end = pt::time_from_string(
-                    cursor["end_publication_date"].as<std::string>());
-            message->publication_period = pt::time_period(start, end);
-
-            message->active_days = std::bitset<8>(
-                    cursor["active_days"].as<std::string>());
-        }
-        std::string language = cursor["language"].as<std::string>();
-        cursor["body"].to(message->localized_messages[language].body);
-        cursor["title"].to(message->localized_messages[language].title);
-    }
-    if(message){//on ajoute le dernier message traité
-        messages[message->uri] = message;
-    }
-
-    return messages;
-    */
     return disruptions;
 }
 
