@@ -96,7 +96,7 @@ class InstanceManager(object):
         if ini_files is None and instances_dir is None:
             raise ValueError("ini_files or instance_dir has to be set")
         if ini_files:
-            self.ini_files = app.config['INI_FILES']
+            self.ini_files = ini_files
         else:
             self.ini_files = glob.glob(instances_dir + '/*.ini')
         self.start_ping = start_ping
