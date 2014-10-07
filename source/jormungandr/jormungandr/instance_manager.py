@@ -40,7 +40,7 @@ from jormungandr.singleton import singleton
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
-from jormungandr import app, authentication, cache
+from jormungandr import authentication, cache
 from jormungandr.instance import Instance
 import traceback
 
@@ -90,10 +90,21 @@ class InstanceManager(object):
     couverte par un identifiant
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, ini_files=None, instances_dir=None, start_ping=False):
+        # if a .ini file is defined in the settings we take it
+        # else we load all .ini file found in the INSTANCES_DIR
+        if ini_files is None and instances_dir is None:
+            raise ValueError("ini_files or instance_dir has to be set")
+        if ini_files:
+            self.ini_files = app.config['INI_FILES']
+        else:
+            self.ini_files = glob.glob(instances_dir + '/*.ini')
+        self.start_ping = start_ping
 
-    def initialisation(self, start_ping=True):
+    def __repr__(self):
+        return "<instance singleton"
+
+    def initialisation(self):
         """ Charge la configuration à partir d'un fichier ini indiquant
             les chemins des fichiers contenant :
             - géométries de la région sur laquelle s'applique le moteur
@@ -104,14 +115,7 @@ class InstanceManager(object):
         self.context = zmq.Context()
         self.default_socket = None
 
-        # if a .ini file is defined in the settings we take it
-        # else we load all .ini file found in the INSTANCES_DIR
-        if 'INI_FILES' in app.config:
-            ini_files = app.config['INI_FILES']
-        else:
-            ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
-
-        for file_name in ini_files:
+        for file_name in self.ini_files:
             logging.info("Initialisation, reading file : " + file_name)
             conf = ConfigParser.ConfigParser()
             conf.read(file_name)
@@ -140,7 +144,7 @@ class InstanceManager(object):
         self.thread = Thread(target=self.thread_ping)
         #daemon thread does'nt block the exit of a process
         self.thread.daemon = True
-        if start_ping:
+        if self.start_ping:
             self.thread.start()
 
     def dispatch(self, arguments, api, instance_obj=None, instance_name=None,

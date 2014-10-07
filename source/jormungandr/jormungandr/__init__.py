@@ -41,6 +41,7 @@ from jormungandr.helper import ReverseProxied
 
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')
+app.bob = 'bob'
 if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
 
@@ -61,8 +62,10 @@ db.init_app(app)
 cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
 
 from jormungandr.instance_manager import InstanceManager
-i_manager = InstanceManager()
-i_manager.initialisation(start_ping=app.config['START_MONITORING_THREAD'])
+ini_files = None if 'INI_FILE' not in app.config else app.config['INI_FILE']
+instances_dir = None if 'INSTANCES_DIR' not in app.config else app.config['INSTANCES_DIR']
+i_manager = InstanceManager(ini_files, instances_dir, start_ping=app.config['START_MONITORING_THREAD'])
+i_manager.initialisation()
 
 from jormungandr.stat_manager import StatManager
 stat_manager = StatManager()

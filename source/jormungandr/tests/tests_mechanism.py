@@ -35,8 +35,7 @@ from check_utils import *
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
         + '/integration_tests_settings.py'
-from jormungandr import app
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import app, i_manager
 from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
 import jormungandr.scenarios.default
@@ -122,10 +121,8 @@ class AbstractTestFixture:
                      .format(cls.__name__))
         cls.launch_all_krakens()
         cls.create_dummy_ini()
-
-        i_manager = InstanceManager()
-        i_manager.initialisation(start_ping=False)
-        cls.i_manager = i_manager
+        i_manager.ini_files = app.config['INI_FILES']
+        i_manager.initialisation()
 
         #we block the stat manager not to send anything to rabbit mq
         def mock_publish(self, stat):
