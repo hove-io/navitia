@@ -1834,17 +1834,17 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
 /**
  * Test get_all_stop_times for one calendar
  *
- * 3 vj, 2 valid for our calendar, 1 invalid
+ * 3 vj going from sp1 to somewhere, 2 valid for our calendar, 1 invalid
  *
- * ==========     ===== =====
- * stop point     sp1   sp2
- * === ========== ===== =====
+ * ==========     =====
+ * stop point     sp1  
+ * === ========== =====
  * vj1 departure  8000
- * === ========== ===== =====
+ * === ========== =====
  * vj2 departure  8100
- * === ========== ===== =====
+ * === ========== =====
  * vj3 departure  9000
- * === ========== ===== =====
+ * === ========== =====
  *
  */
 BOOST_AUTO_TEST_CASE(test_calendar) {
@@ -1853,9 +1853,9 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
     DateTime vj2_departure = 8100;
     DateTime vj3_departure = 9000;
     std::string spa1 = "stop1";
-    b.vj("A", "1010", "", true, "vj1")(spa1, vj1_departure, vj1_departure);
-    b.vj("A", "1010", "", true, "vj2")(spa1, vj2_departure, vj2_departure);
-    b.vj("A", "1111", "", true, "vj3")(spa1, vj3_departure, vj3_departure);
+    b.vj("A", "1010", "", true, "vj1")(spa1, vj1_departure, vj1_departure)("useless_stop", 1000, 1000);
+    b.vj("A", "1010", "", true, "vj2")(spa1, vj2_departure, vj2_departure)("useless_stop", 1000, 1000);
+    b.vj("A", "1111", "", true, "vj3")(spa1, vj3_departure, vj3_departure)("useless_stop", 1000, 1000);
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
     cal->uri="cal1";
@@ -1939,7 +1939,7 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
 /**
  * Test get_all_stop_times for one calendar
  *
- * 2 vj valid for our calendar
+ * 2 vj going from sp1 to somewhere, valid for our calendar
  * vj1 is a frequency vj
  * vj2 is a 'normal' vj
  *
@@ -1958,8 +1958,12 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
     DateTime vj1_departure = 8000;
     DateTime vj2_departure = 8001;
     size_t headway_sec = 100;
-    b.vj("A", "1010", "", true, "vj1")(spa1, vj1_departure, vj1_departure).frequency(vj1_departure, 9000, headway_sec);
-    b.vj("A", "1010", "", true, "vj2")(spa1, vj2_departure, vj2_departure);
+    b.vj("A", "1010", "", true, "vj1")
+        (spa1, vj1_departure, vj1_departure)
+        ("useless_stop", 1000, 1000).frequency(vj1_departure, 9000, headway_sec);
+    b.vj("A", "1010", "", true, "vj2")
+        (spa1, vj2_departure, vj2_departure)
+        ("useless_stop", 1000, 1000);
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
     cal->uri="cal1";

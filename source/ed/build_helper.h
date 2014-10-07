@@ -63,7 +63,7 @@ struct VJ {
             uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(), bool drop_off_allowed = true, bool pick_up_allowed = true);
 
     /// Transforme les horaires en horaire entre start_time et end_time, toutes les headways secs
-    VJ & frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs);
+    void frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs);
 
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);

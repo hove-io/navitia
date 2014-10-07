@@ -33,10 +33,13 @@ www.navitia.io
 #include "type/pb_converter.h"
 namespace navitia { namespace timetables {
 
-std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const DateTime &dt,
-                                               const DateTime &max_dt,
-                                               const size_t max_departures, const type::Data & data, bool disruption_active,
-                                               const type::AccessibiliteParams & accessibilite_params) {
+std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points, 
+                                               const DateTime& dt,
+                                               const DateTime& max_dt,
+                                               const size_t max_departures,
+                                               const type::Data& data, 
+                                               bool disruption_active,
+                                               const type::AccessibiliteParams& accessibilite_params) {
     std::vector<datetime_stop_time> result;
     auto test_add = true;
 
@@ -54,12 +57,12 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            std::pair<const type::StopTime*, uint32_t> st = routing::earliest_stop_time(jpp,
-                                                                                        next_requested_datetime[jpp_idx],
-                                                                                        data,
-                                                                                        disruption_active,
-                                                                                        false,
-                                                                                        accessibilite_params.vehicle_properties);
+            auto st = routing::earliest_stop_time(jpp,
+                                                  next_requested_datetime[jpp_idx],
+                                                  data,
+                                                  disruption_active,
+                                                  false,
+                                                  accessibilite_params.vehicle_properties);
 
             if(st.first != nullptr) {
                 DateTime dt_temp = st.second;
@@ -71,16 +74,9 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
                         DateTimeUtils::update(dt_temp, st.first->vehicle_journey->end_time+st.first->departure_time);
                     }
                     next_requested_datetime[jpp_idx] = dt_temp + 1;
-                    
-                    
-                    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "jpp " << jpp_idx << " datetime " << next_requested_datetime[jpp_idx]
-                                    << " str: " << str(next_requested_datetime[jpp_idx])
-                                    );
                 }
             }
         }
-        
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "we continue, we got " << result.size() << " / " << max_departures);
      }
     std::sort(result.begin(), result.end(),[](datetime_stop_time dst1, datetime_stop_time dst2) {return dst1.first < dst2.first;});
     if (result.size() > max_departures) {
@@ -91,11 +87,12 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
 }
 
 
-std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points, const uint32_t begining_time,
+std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points,
+                                               const uint32_t begining_time,
                                                const uint32_t max_time,
                                                const type::Data& data,
                                                const std::string calendar_id,
-                                               const type::AccessibiliteParams & accessibilite_params) {
+                                               const type::AccessibiliteParams& accessibilite_params) {
     std::vector<datetime_stop_time> result;
 
     for(auto jpp_idx : journey_pattern_points) {
@@ -103,7 +100,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
         if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
             continue;
         }
-        std::vector<datetime_stop_time> st = routing::get_all_stop_times(jpp, calendar_id, accessibilite_params.vehicle_properties);
+        auto st = routing::get_all_stop_times(jpp, calendar_id, accessibilite_params.vehicle_properties);
 
         //afterward we filter the datetime not in [dt, max_dt]
         //the difficult part comes from the fact that for calendar dt are max_dt are not really datetime,

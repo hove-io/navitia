@@ -48,20 +48,22 @@ typedef std::pair<DateTime, const type::StopTime*> datetime_stop_time;
  * @return: a list of pair <datetime, departure st.idx>. The list is sorted on the datetimes.
  */
 std::vector<datetime_stop_time>
-get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const DateTime &dt,
-               const DateTime &max_dt,
+get_stop_times(const std::vector<type::idx_t>& journey_pattern_points,
+               const DateTime& dt,
+               const DateTime& max_dt,
                const size_t max_departures,
                const type::Data& data,
                bool disruption_active,
-               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams());
+               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams());
 
 
 std::vector<datetime_stop_time>
-get_stop_times(const std::vector<type::idx_t>& journey_pattern_points, const uint32_t begining_time,
+get_stop_times(const std::vector<type::idx_t>& journey_pattern_points,
+               const uint32_t begining_time,
                const uint32_t max_time,
                const type::Data& data,
                const std::string calendar_id,
-               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams());
+               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams());
 
 
 

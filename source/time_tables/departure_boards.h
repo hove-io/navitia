@@ -44,7 +44,7 @@ pbnavitia::Response departure_board(const std::string &filter,
                                     const std::vector<std::string>& forbidden_uris,
                                     const boost::posix_time::ptime datetime,
                                     uint32_t duration,
-                                    uint32_t depth, int32_t max_date_times,
+                                    uint32_t depth, uint32_t max_date_times,
                                     int interface_version,
                                     int count, int start_page, const type::Data &data, bool disruption_active,
                                     bool show_codes=false);
