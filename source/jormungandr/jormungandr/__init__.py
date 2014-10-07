@@ -62,9 +62,11 @@ db.init_app(app)
 cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
 
 from jormungandr.instance_manager import InstanceManager
-ini_files = None if 'INI_FILE' not in app.config else app.config['INI_FILE']
-instances_dir = None if 'INSTANCES_DIR' not in app.config else app.config['INSTANCES_DIR']
-i_manager = InstanceManager(ini_files, instances_dir, start_ping=app.config['START_MONITORING_THREAD'])
+
+
+i_manager = InstanceManager(ini_files=app.config.get('INI_FILE', None),
+                    instances_dir=app.config.get('INSTANCES_DIR', None),
+                    start_ping=app.config.get('START_MONITORING_THREAD', True))
 i_manager.initialisation()
 
 from jormungandr.stat_manager import StatManager
