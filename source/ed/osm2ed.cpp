@@ -381,9 +381,9 @@ void OSMCache::insert_rel_way_admins() {
     lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
     size_t n_inserted = 0 ;
     const size_t max_n_inserted = 20000;
-    for (auto map_ways : this->way_admin_map) {
-        for (auto admin_ways : map_ways.second) {
-            for (auto way : admin_ways.second) {
+    for (const auto& map_ways : this->way_admin_map) {
+        for (const auto& admin_ways : map_ways.second) {
+            for (const auto& way : admin_ways.second) {
                 if (!way->is_used()) {
                     continue;
                 }
