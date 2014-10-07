@@ -39,7 +39,8 @@ import glob
 from jormungandr.singleton import singleton
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
+from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
+    DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache
 from jormungandr.instance import Instance
 import traceback
@@ -223,7 +224,7 @@ class InstanceManager(object):
                 flon = float(lon)
                 flat = float(lat)
             except:
-                raise RegionNotFound(object_id=object_id)
+                raise InvalidArguments(object_id)
             return self._all_keys_of_coord(flon, flat)
         instances = [i.name for i in self.instances.itervalues() if i.has_id(object_id)]
         if not instances:
