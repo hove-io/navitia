@@ -16,8 +16,8 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.add_column('journey_pattern_point', sa.Column('shape_from_prev', ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), nullable=True))
+    op.add_column('journey_pattern_point', sa.Column('shape_from_prev', ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), nullable=True), schema='navitia')
 
 
 def downgrade():
-    op.drop_column('journey_pattern_point', 'shape_from_prev')
+    op.drop_column('journey_pattern_point', 'shape_from_prev', schema='navitia')
