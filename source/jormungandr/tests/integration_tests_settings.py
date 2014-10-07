@@ -30,4 +30,9 @@ LOGGER = {
     }
 }
 
+CACHE_CONFIGURATION = {
+    'CACHE_TYPE': 'null'
+}
+
+
 
