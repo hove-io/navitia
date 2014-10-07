@@ -907,5 +907,7 @@ int main(int argc, char** argv) {
     ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data);
     CanalTP::read_osm_pbf(input, poi_visitor);
     poi_visitor.finish();
+    LOG4CPLUS_INFO(logger, "compute bounding shape");
+    persistor.compute_bounding_shape();
     return 0;
 }
