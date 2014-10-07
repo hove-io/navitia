@@ -188,6 +188,11 @@ void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
 void OSMCache::build_relations_geometries() {
     for (const auto& relation : relations) {
         relation.build_geometry(*this);
+        boost::geometry::model::box<point> box;
+        boost::geometry::envelope(relation.polygon, box);
+        Rect r(box.min_corner().get<0>(), box.min_corner().get<1>(),
+                box.max_corner().get<0>(), box.max_corner().get<1>());
+        admin_tree.Insert(r.min, r.max, &relation);
     }
 }
 
@@ -264,7 +269,7 @@ void OSMCache::insert_ways(){
     size_t n_inserted = 0;
     const size_t max_n_inserted = 50000;
     for (const auto& way : ways) {
-        if (way.way_ref != nullptr && &way != way.way_ref) {
+        if (!way.is_used()) {
             continue;
         }
         std::vector<std::string> values;
@@ -367,9 +372,36 @@ void OSMCache::insert_relations() {
     }
     lotus.finish_bulk_insert();
     auto logger = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_INFO(logger, "Ignored " << std::to_string(nb_empty_polygons) << " admins because their polygons were empty");
+    LOG4CPLUS_INFO(logger, "Ignored " << std::to_string(nb_empty_polygons) 
+            << " admins because their polygons were empty");
 }
 
+
+void OSMCache::insert_rel_way_admins() {
+    lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
+    size_t n_inserted = 0 ;
+    const size_t max_n_inserted = 20000;
+    for (auto map_ways : this->way_admin_map) {
+        for (auto admin_ways : map_ways.second) {
+            for (auto way : admin_ways.second) {
+                if (!way->is_used()) {
+                    continue;
+                }
+                lotus.insert({std::to_string(admin_ways.first->osm_id),
+                        std::to_string(way->osm_id)});
+                ++n_inserted;
+                if (n_inserted == max_n_inserted) {
+                    lotus.finish_bulk_insert();
+                    lotus.prepare_bulk_insert("georef.rel_way_admin",
+                            {"admin_id", "way_id"});
+                    n_inserted = 0;
+                }
+            }
+        }
+    }
+    lotus.finish_bulk_insert();
+    auto logger = log4cplus::Logger::getInstance("log");
+}
 
 std::string OSMNode::to_geographic_point() const{
     std::stringstream geog;
@@ -392,7 +424,7 @@ void OSMCache::build_way_map() {
             if (!node->admin) {
                 continue;
             }
-            way_admin_map[way_it->name][node->admin].push_back(way_it);
+            way_admin_map[way_it->name][node->admin].insert(way_it);
             if (!node->is_defined()) {
                 continue;
             }
@@ -598,7 +630,7 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &t
         }
     } else {
         boost::geometry::model::box<point> envelope;
-        point centre;
+        point centre(0,0);
         bg::envelope(tmp_polygon, envelope);
         bg::centroid(tmp_polygon, centre);
         this->fill_housenumber(osm_id, tags, centre.get<0>(), centre.get<1>());
@@ -698,7 +730,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
             return nullptr;
         }
         auto ways_it = std::find_if(it_ways->second.begin(), it_ways->second.end(),
-                [&](const std::pair<const OSMRelation*, std::vector<it_way>> r) {
+                [&](const std::pair<const OSMRelation*, std::set<it_way>> r) {
                     return r.first->postal_code == it_postcode->second;
                 }
         );
@@ -715,7 +747,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
     if (admin) {
         auto it_admin = it_ways->second.find(admin);
         if (it_admin != it_ways->second.end()) {
-            return &*it_admin->second.front();
+            return &**it_admin->second.begin();
         }
     }
 
@@ -869,6 +901,7 @@ int main(int argc, char** argv) {
     cache.insert_ways();
     cache.insert_edges();
     cache.insert_relations();
+    cache.insert_rel_way_admins();
 
     ed::Georef data;
     ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data);
