@@ -102,9 +102,6 @@ class InstanceManager(object):
             self.ini_files = glob.glob(instances_dir + '/*.ini')
         self.start_ping = start_ping
 
-    def __repr__(self):
-        return "<instance singleton"
-
     def initialisation(self):
         """ Charge la configuration à partir d'un fichier ini indiquant
             les chemins des fichiers contenant :
