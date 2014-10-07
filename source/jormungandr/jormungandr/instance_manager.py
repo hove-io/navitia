@@ -234,6 +234,7 @@ class InstanceManager(object):
         for key, instance in self.instances.iteritems():
             if instance.geom and instance.geom.contains(p):
                 instances.append(instance.name)
+        return instances
 
     def region_exists(self, region_str):
         if region_str in self.instances.keys():
