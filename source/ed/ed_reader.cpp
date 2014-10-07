@@ -32,7 +32,7 @@ www.navitia.io
 #include "ed/connectors/fare_utils.h"
 #include "type/meta_data.h"
 #include <boost/foreach.hpp>
-#include <boost/geometry/io/wkt/read.hpp>
+#include <boost/geometry.hpp>
 
 namespace ed{
 
@@ -423,7 +423,8 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, code, color, "
-        "network_id, commercial_mode_id, sort, external_code FROM navitia.line";
+        "network_id, commercial_mode_id, sort, external_code, ST_AsText(shape) AS shape "
+        "FROM navitia.line";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -442,14 +443,17 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         line->commercial_mode = commercial_mode_map[const_it["commercial_mode_id"].as<idx_t>()];
         line->commercial_mode->line_list.push_back(line);
 
+        boost::geometry::read_wkt(const_it["shape"].as<std::string>("MULTILINESTRING()"),
+                                  line->shape);
+
         data.pt_data->lines.push_back(line);
         this->line_map[const_it["id"].as<idx_t>()] = line;
     }
 }
 
 void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, line_id, external_code "
-        "FROM navitia.route";
+    std::string request = "SELECT id, name, uri, comment, line_id, external_code, "
+        "ST_AsText(shape) AS shape FROM navitia.route";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -458,6 +462,8 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
         const_it["name"].to(route->name);
         const_it["comment"].to(route->comment);
         const_it["external_code"].to(route->codes["external_code"]);
+        boost::geometry::read_wkt(const_it["shape"].as<std::string>("MULTILINESTRING()"),
+                                  route->shape);
 
         route->line = line_map[const_it["line_id"].as<idx_t>()];
         route->line->route_list.push_back(route);

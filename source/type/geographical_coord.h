@@ -36,6 +36,7 @@ www.navitia.io
 #include <boost/geometry/geometries/register/linestring.hpp>
 #include <boost/geometry/geometries/linestring.hpp>
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
+#include <boost/geometry/multi/geometries/register/multi_linestring.hpp>
 
 namespace navitia { namespace type {
 
@@ -124,10 +125,11 @@ bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 // Used to modelize the shapes of the different objects
 typedef std::vector<GeographicalCoord> LineString;
-typedef boost::geometry::model::multi_linestring<LineString> MultiLineString;
+typedef std::vector<LineString> MultiLineString;
 
 }}// namespace navitia::type
 
 // Registering GeographicalCoord as a boost::geometry::point
 BOOST_GEOMETRY_REGISTER_POINT_2D_GET_SET(navitia::type::GeographicalCoord, double, boost::geometry::cs::cartesian, lon, lat, set_lon, set_lat)
-BOOST_GEOMETRY_REGISTER_LINESTRING(std::vector<navitia::type::GeographicalCoord>)
+BOOST_GEOMETRY_REGISTER_LINESTRING(navitia::type::LineString)
+BOOST_GEOMETRY_REGISTER_MULTI_LINESTRING(navitia::type::MultiLineString)
