@@ -483,10 +483,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
     BOOST_CHECK_EQUAL(res.at(1).quality, 100);
     BOOST_CHECK_EQUAL(res.at(2).quality, 100);
     BOOST_CHECK_EQUAL(res.at(3).quality, 100);
-    BOOST_CHECK_EQUAL(res.at(0).idx, 7);
-    BOOST_CHECK_EQUAL(res.at(1).idx, 6);
-    BOOST_CHECK_EQUAL(res.at(2).idx, 2);
-    BOOST_CHECK_EQUAL(res.at(3).idx, 0);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 2);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 7);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 0);
+    BOOST_CHECK_EQUAL(res.at(3).idx, 6);
 }
 
 ///Test pour verifier que - entres les deux mots est ignoré.
@@ -649,14 +649,14 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
     auto res = ac.find_complete("gare", synonyms, nbmax, [](int){return true;});
     BOOST_REQUIRE_EQUAL(res.size(), 8);
     BOOST_CHECK_EQUAL(res.at(0).quality, 100);
-    BOOST_CHECK_EQUAL(res.at(0).idx, 7);
-    BOOST_CHECK_EQUAL(res.at(1).idx, 6);
-    BOOST_CHECK_EQUAL(res.at(2).idx, 5);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 1);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 5);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 2);
     BOOST_CHECK_EQUAL(res.at(3).idx, 4);
-    BOOST_CHECK_EQUAL(res.at(4).idx, 0);
-    BOOST_CHECK_EQUAL(res.at(5).idx, 1);
-    BOOST_CHECK_EQUAL(res.at(6).idx, 2);
-    BOOST_CHECK_EQUAL(res.at(7).idx, 3);
+    BOOST_CHECK_EQUAL(res.at(4).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(5).idx, 0);
+    BOOST_CHECK_EQUAL(res.at(6).idx, 3);
+    BOOST_CHECK_EQUAL(res.at(7).idx, 7);
     BOOST_CHECK_EQUAL(res.at(7).quality, 100);
 
 
