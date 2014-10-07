@@ -68,19 +68,44 @@ def is_response_empty(response):
     assert len(response['links']) == 0
     assert 'places' not in response
 
+def is_valid_autocomplete(response, depth):
+    links = get_not_null(response, 'links')
+    places = get_not_null(response, 'places')
+
+    for link in links:
+        assert 'href' in link
+        assert 'rel' in link
+        assert 'templated' in link
+
+    for place in places:
+        if place['embedded_type'] == 'stop_area':
+            is_valid_stop_area(get_not_null(place, "stop_area"), depth-1)
+
+
 @dataset(["main_autocomplete_test"])
 class TestAutocomplete(AbstractTestFixture):
     """
     Test the autocomplete responses
     """
-
-    def test_autocomplete_basic_test(self):
-
+    def test_autocomplete_without_test(self):
+        """
+        Test of empty result
+        """
         response = self.query_region("places?q=bob marley", display=False)
         is_response_empty(response)
 
+    def test_autocomplete_with_one_stop_area_test(self):
+        """
+        Test with one object in the result
+        """
         response = self.query_region("places?q=Gare", display=False)
+        is_valid_autocomplete(response, 2)
         valid_autocomplete_with_one_stop_area(response)
 
+    def test_autocomplete_with_multi_objects_test(self):
+        """
+        Test with 10 objects of different types in the result
+        """
         response = self.query_region("places?q=quimper", display=False)
+        is_valid_autocomplete(response, 2)
         valid_autocomplete_with_multi_object(response)
