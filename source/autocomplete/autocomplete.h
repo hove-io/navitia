@@ -307,7 +307,7 @@ struct Autocomplete
         else
             middle_iterator = input.end();
         std::partial_sort(input.begin(), middle_iterator, input.end(),
-                          [&](fl_quality a, fl_quality b){return (a.score > b.score);});
+                          [](fl_quality a, fl_quality b){return a.score > b.score;});
 
         if (input.size() > nbmax){input.resize(nbmax);}
         return input;
@@ -320,7 +320,7 @@ struct Autocomplete
         else
             middle_iterator = input.end();
         std::partial_sort(input.begin(), middle_iterator, input.end(),
-                          [&](fl_quality a, fl_quality b){return (a.quality > b.quality);});
+                          [](fl_quality a, fl_quality b){return a.quality > b.quality;});
 
         if (input.size() > nbmax){input.resize(nbmax);}
         return input;

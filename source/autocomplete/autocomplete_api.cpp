@@ -52,7 +52,6 @@ void fill_pb_pt_object(T* nav_object, pbnavitia::PtObject* place,
     place->set_uri(nav_object->uri);
     place->set_quality(100);
     place->set_embedded_type(pb_type);
-
 }
 
 void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
