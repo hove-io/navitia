@@ -143,16 +143,17 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
     return {nullptr, 0};
 }
 
-std::pair<const type::StopTime*, uint32_t>
-earliest_stop_time(const type::JourneyPatternPoint* jpp,
-                   const uint32_t time, const type::Data &/*data*/,
+// get all stop times for a given jpp and a given calendar
+//
+// earliest stop time for calendar is different than for a datetime
+// we have to consider only the first theoric vj of all meta vj for the given jpp
+// for all those vj, we select the one associated to the calendar,
+// and we loop through all stop times for the jpp 
+std::vector<std::pair<uint32_t, const type::StopTime*>>
+get_all_stop_times(const type::JourneyPatternPoint* jpp,
                    const std::string calendar_id,
                    const type::VehicleProperties& vehicle_properties) {
-    // earliest stop time for calendar is different than for a datetime
-    // we have to consider only the first theoric vj of all meta vj for the given jpp
-    // for all those vj, we select the one associated to the calendar,
-    // and we loop through all stop times for the stop point,
-    // and we select the earliest one
+
     std::set<const type::MetaVehicleJourney*> meta_vjs;
     for (auto vj: jpp->journey_pattern->vehicle_journey_list) {
         if (! vj->meta_vj) {
@@ -170,39 +171,31 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
         vjs.push_back(meta_vj->theoric_vj.front());
     }
     if (vjs.empty()) {
-        return {nullptr, 0};
+        return {};
     }
 
-    std::pair<const type::StopTime*, uint32_t> best_st = {nullptr, 0};
+    std::vector<std::pair<DateTime, const type::StopTime*>> res;
     for (const auto vj: vjs) {
         //loop through stop times for stop jpp->stop_point
         auto st = *(vj->stop_time_list.begin() + jpp->order);
-        if (! st->valid_hour(time, true)) {
-            continue; //the stop must be after the given hour
-        }
         if (! st->vehicle_journey->accessible(vehicle_properties)) {
             continue; //the stop time must be accessible
         }
-        uint32_t departure_time = st->is_frequency() ?
-                    //if it is a frequency, we got the hour of the next departure after the wanted hour
-                    DateTimeUtils::hour(f_departure_time(time, st)) :
-                    //else we only got the departure of the stop time
-                    st->departure_time;
+        if (st->is_frequency()) {
+            //if it is a frequency, we got to expand the timetable
+            for (auto time = vj->start_time; time <= vj->end_time; time += vj->headway_secs) {
+                //we need to convert this to local there since we do not have a precise date (just a period)
+                res.push_back({time + vj->utc_to_local_offset, st});
+            }
 
-        //we need to convert this to local there since we do not have a precise date (just a period)
-        departure_time += vj->utc_to_local_offset;
+        } else {
+            //same utc tranformation
+            res.push_back({st->departure_time + vj->utc_to_local_offset, st});
+        }
 
-        if (departure_time < time) {
-            continue;
-        }
-        if (best_st.first == nullptr || departure_time < best_st.second) {
-            best_st = {st, departure_time};
-        }
     }
 
-
-    assert(best_st.first == nullptr || best_st.first->journey_pattern_point == jpp);
-    return best_st;
+    return res;
 }
 
 

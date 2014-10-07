@@ -33,11 +33,13 @@ www.navitia.io
 #include "type/pb_converter.h"
 namespace navitia { namespace timetables {
 
-std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const DateTime &dt,
-                                               const DateTime &max_dt,
-                                               const size_t max_departures, const type::Data & data, bool disruption_active,
-                                               boost::optional<const std::string> calendar_id,
-                                               const type::AccessibiliteParams & accessibilite_params) {
+std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points, 
+                                               const DateTime& dt,
+                                               const DateTime& max_dt,
+                                               const size_t max_departures,
+                                               const type::Data& data, 
+                                               bool disruption_active,
+                                               const type::AccessibiliteParams& accessibilite_params) {
     std::vector<datetime_stop_time> result;
     auto test_add = true;
 
@@ -55,12 +57,13 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            std::pair<const type::StopTime*, uint32_t> st;
-            if (! calendar_id) {
-                st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, disruption_active, false, accessibilite_params.vehicle_properties);
-            } else {
-                st = routing::earliest_stop_time(jpp, DateTimeUtils::hour(next_requested_datetime[jpp_idx]), data, *calendar_id, accessibilite_params.vehicle_properties);
-            }
+            auto st = routing::earliest_stop_time(jpp,
+                                                  next_requested_datetime[jpp_idx],
+                                                  data,
+                                                  disruption_active,
+                                                  false,
+                                                  accessibilite_params.vehicle_properties);
+
             if(st.first != nullptr) {
                 DateTime dt_temp = st.second;
                 if(dt_temp <= max_dt) {
@@ -78,6 +81,44 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
     std::sort(result.begin(), result.end(),[](datetime_stop_time dst1, datetime_stop_time dst2) {return dst1.first < dst2.first;});
     if (result.size() > max_departures) {
         result.resize(max_departures);
+    }
+
+    return result;
+}
+
+
+std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points,
+                                               const uint32_t begining_time,
+                                               const uint32_t max_time,
+                                               const type::Data& data,
+                                               const std::string calendar_id,
+                                               const type::AccessibiliteParams& accessibilite_params) {
+    std::vector<datetime_stop_time> result;
+
+    for(auto jpp_idx : journey_pattern_points) {
+        const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx];
+        if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
+            continue;
+        }
+        auto st = routing::get_all_stop_times(jpp, calendar_id, accessibilite_params.vehicle_properties);
+
+        //afterward we filter the datetime not in [dt, max_dt]
+        //the difficult part comes from the fact that for calendar dt are max_dt are not really datetime,
+        //there are time but max_dt can be the day after like [today 4:00, tomorow 3:00]
+        for (auto& res: st) {
+            auto time = DateTimeUtils::hour(res.first);
+            if (max_time > begining_time) {
+                // we keep the st in [dt, max_dt]
+                if (time >= begining_time && time <= max_time) {
+                    result.push_back(res);
+                }
+            } else {
+                // we filter the st in ]max_dt, dt[
+                if (time >= begining_time || time <= max_time) {
+                    result.push_back(res);
+                }
+            }
+        }
     }
 
     return result;

@@ -35,7 +35,12 @@ namespace pt = boost::posix_time;
 
 namespace ed {
 
-VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs) {
+/*
+ * Make the vj a frequency VJ
+ * Note: it does note return a VJ& because it's clearer that way that all 
+ * the vj stop times need to be filled before calling the method
+ */
+void VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs) {
     vj->start_time = start_time;
 
     size_t nb_trips = std::ceil((end_time - start_time)/headway_secs);
@@ -52,7 +57,6 @@ VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
             st->departure_time -= begin;
         }
     }
-    return *this;
 }
 
 nt::MetaVehicleJourney* get_or_create_metavj(builder& b, const std::string name) {

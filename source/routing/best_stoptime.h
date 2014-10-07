@@ -44,15 +44,11 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
               const type::Data &data, bool disruption_active, bool reconstructing_path,
               const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
 
-/// Earliest stop time for a given calendar
-/// Look for the first stop_time for a calendar, leaving after the hour 'time' on the journey_pattern for the journey_pattern point order
-/// Return the stop time and the next departure datetime
-std::pair<const type::StopTime*, uint32_t>
-earliest_stop_time(const type::JourneyPatternPoint* jpp,
-              const uint32_t time,
-              const type::Data &data,
-              const std::string calendar_id,
-              const type::VehicleProperties & vehicle_properties = type::VehicleProperties());
+/// Return a list of all {time in the day, stoptime} leaving the jpp for the given calendar
+std::vector<std::pair<uint32_t, const type::StopTime*>>
+get_all_stop_times(const type::JourneyPatternPoint* jpp,
+                   const std::string calendar_id,
+                   const type::VehicleProperties& vehicle_properties = type::VehicleProperties());
 
 /// Look for the last stop_time leaving after dt on the journey_pattern for the journey_pattern point order
 /// Return the stop time and the first arrival datetime
