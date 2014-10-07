@@ -112,6 +112,9 @@ class Instance(object):
 
 
     def get_id(self, id_):
+        """
+        Get the pt_object that have the given id
+        """
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = id_
@@ -119,10 +122,16 @@ class Instance(object):
     
 
     def has_id(self, id_):
+        """
+        Does this instance has this id
+        """
         return len(self.get_id(id_).places) > 0
 
 
     def get_external_codes(self, type_, id_):
+        """
+        Get all pt_object with the given id
+        """
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_code
         if type_ not in type_to_pttype:
@@ -134,4 +143,7 @@ class Instance(object):
 
 
     def has_external_code(self, type_, id_):
+        """
+        Does this instance has the given id
+        """
         return len(self.get_external_codes(self, type_, id_).places) > 0
