@@ -22,3 +22,4 @@ six==1.6.1
 wsgiref==0.1.2
 kombu==3.0.8
 python-dateutil==1.5
+Flask-Cache==0.13.1
