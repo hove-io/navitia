@@ -269,10 +269,7 @@ class InstanceManager(object):
         if valid_regions:
             return choose_best_instance(valid_regions) if only_one else valid_regions
         elif available_regions:
-            msg = object_id if object_id else "coord {};{}".format(lon, lat)
-            raise RegionNotFound(custom_msg="{msg} are covered, "
-                                        "but not in regions available for user"
-                                 .format(msg=msg))
+            authentication.abort_request(user=authentication.get_user())
         raise RegionNotFound(region=region_str, lon=lon, lat=lat,
                              object_id=object_id)
 
