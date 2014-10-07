@@ -77,6 +77,7 @@ def user_set(app, user_name):
 class TestAuthentication(AbstractTestFixture):
 
     def setUp(self):
+        self.old_public_val = app.config['PUBLIC']
         app.config['PUBLIC'] = False
         self.app = app.test_client()
 
@@ -93,3 +94,5 @@ class TestAuthentication(AbstractTestFixture):
             for request, status_code in requests_status_codes:
                 assert(self.app.get(request).status_code == status_code)
 
+    def tearDown(self):
+        app.config['PUBLIC'] = self.old_public_val 
