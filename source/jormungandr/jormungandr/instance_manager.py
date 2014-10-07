@@ -202,9 +202,9 @@ class InstanceManager(object):
 
 
     def _filter_authorized_instances(self, instances, api):
-        user = authentication.get_user(token=authentication.get_token())
         if not instances:
-            return instances
+            return None
+        user = authentication.get_user(token=authentication.get_token())
         valid_regions = [i for i in instances if authentication.has_access(i,
             abort=False, user=user, api=api)]
         if not valid_regions:
