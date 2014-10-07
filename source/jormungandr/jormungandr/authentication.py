@@ -32,13 +32,13 @@ import logging
 
 from flask_restful import reqparse, abort
 import flask_restful
-from flask import current_app, request, g
+from flask import request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 import datetime
 import base64
 from navitiacommon.models import User, Instance, db
-from jormungandr import cache
+from jormungandr import cache, app as current_app
 
 
 def authentication_required(func):
@@ -96,7 +96,7 @@ def get_token():
         return request.headers['Authorization']
 
 
-@cache.memoize(300)
+@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
 def has_access(region, api, abort, user):
     """
     Check the Authorization of the current user for this region and this API.
@@ -116,7 +116,7 @@ def has_access(region, api, abort, user):
             return False
 
 
-@cache.memoize(300)
+@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
 def cache_get_user(token):
     """
     We allow this method to be cached even if it depends on the current time

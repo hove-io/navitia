@@ -41,7 +41,7 @@ import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
     DeadSocketException, InvalidArguments
-from jormungandr import authentication, cache
+from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
 import traceback
 
@@ -210,7 +210,7 @@ class InstanceManager(object):
         return valid_regions
 
 
-    @cache.memoize()
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS',None))
     def _all_keys_of_id(self, object_id):
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:
