@@ -37,8 +37,9 @@ import flask_restful
 
 #we always want pretty json
 flask_restful.representations.json.settings = {'indent': 4}
+api.app.url_map.strict_slashes = False
 
-api.add_resource(resources.Instance, '/v0/instances/')
+api.add_resource(resources.Instance, '/v0/instances/', '/v0/instances/<int:id>/', '/v0/instances/<string:name>/')
 api.add_resource(resources.Api, '/v0/api/')
 
 api.add_resource(resources.User, '/v0/users/',

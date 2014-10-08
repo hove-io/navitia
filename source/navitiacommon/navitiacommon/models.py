@@ -134,6 +134,8 @@ class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     is_free = db.Column(db.Boolean, default=False, nullable=False)
+    #the scenario used by jormungandr, by default we use the default scenario (clever isn't it?)
+    scenario = db.Column(db.Text, nullable=False, default='default')
 
     cache_prefix = "Instance"
 

@@ -53,7 +53,7 @@ class FieldDate(fields.Raw):
 
 key_fields = {'id': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
-instance_fields = {'id': fields.Raw, 'name': fields.Raw, "is_free": fields.Raw}
+instance_fields = {'id': fields.Raw, 'name': fields.Raw, "is_free": fields.Raw, 'scenario': fields.Raw}
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
 user_fields = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw}
@@ -112,6 +112,29 @@ class Instance(flask_restful.Resource):
             return models.Instance.query.filter_by(**args).all()
         else:
             return models.Instance.query.all()
+
+    def put(self, id=None, name=None):
+        if id:
+            instance = models.Instance.query.get_or_404(id)
+        elif name:
+            instance = models.Instance.query.filter_by(name=name).first_or_404()
+        else:
+            return ({'error': 'instance is required'}, 400)
+
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('scenario', type=str, required=True,
+                case_sensitive=False, help='the name of the scenario used by jormungandr', choices=['default'],
+                location=('json', 'values'))
+        args = parser.parse_args()
+        try:
+            instance.scenario = args['scenario']
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+        return marshal(instance, instance_fields)
+
 
 
 class User(flask_restful.Resource):
