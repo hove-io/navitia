@@ -77,7 +77,7 @@ void compute_score_stop_area(type::PT_Data & pt_data, const georef::GeoRef &geor
     //The scocre of each admin(level 8) is attributed to all its stop_areas also
     //Find the stop-point count in all stop_areas and keep the highest;
     size_t max_score = 0;
-    //size_t admin_score = 0;
+
     for (navitia::type::StopArea* sa : pt_data.stop_areas){
         max_score = std::max(max_score, sa->stop_point_list.size());
     }
