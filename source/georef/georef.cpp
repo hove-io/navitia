@@ -35,10 +35,11 @@ www.navitia.io
 #include "utils/csv.h"
 #include "utils/configuration.h"
 
-#include <unordered_map>
 #include <boost/foreach.hpp>
-#include <array>
+#include <boost/geometry.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <array>
+#include <unordered_map>
 
 using navitia::type::idx_t;
 
@@ -253,6 +254,25 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     }
 
     throw navitia::exception("unhandled path item caracteristic");
+}
+
+double PathItem::get_length() const {
+    switch (transportation) {
+    case TransportCaracteristic::BssPutBack:
+    case TransportCaracteristic::BssTake:
+    case TransportCaracteristic::CarPark:
+    case TransportCaracteristic::CarLeaveParking:
+        return 0;
+    case TransportCaracteristic::Walk:
+        //milliseconds to reduce rounding
+        return duration.total_milliseconds() * (default_speed[type::Mode_e::Walking]) / 1000;
+    case TransportCaracteristic::Bike:
+        return duration.total_milliseconds() * (default_speed[type::Mode_e::Bike]) / 1000;
+    case TransportCaracteristic::Car:
+        return duration.total_milliseconds() * (default_speed[type::Mode_e::Car]) / 1000;
+    default:
+        throw navitia::exception("unhandled transportation case");
+    }
 }
 
 void GeoRef::add_way(const Way& w){
@@ -725,7 +745,7 @@ GeoRef::~GeoRef() {
 
 std::vector<type::idx_t> POI::get(type::Type_e type, const GeoRef &) const {
     switch(type) {
-    case type::Type_e::POIType : return {poitype_idx}; break;
+    case type::Type_e::POIType : return {poitype_idx};
     default : return {};
     }
 }

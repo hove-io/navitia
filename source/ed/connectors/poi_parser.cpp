@@ -35,6 +35,9 @@ www.navitia.io
 
 
 namespace ed{ namespace connectors{
+
+PoiParserException::~PoiParserException() noexcept {}
+
 PoiParser::PoiParser(const std::string & path, const ed::connectors::ConvCoord& conv_coord): path(path), conv_coord(conv_coord){
         logger = log4cplus::Logger::getInstance("log");
 }

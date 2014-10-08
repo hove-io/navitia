@@ -29,15 +29,16 @@ www.navitia.io
 */
 
 #include "gtfs_parser.h"
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include <fstream>
-#include <iostream>
-#include <set>
 #include "utils/encoding_converter.h"
 #include "utils/csv.h"
 #include "utils/logger.h"
+#include <boost/geometry.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/range/algorithm/sort.hpp>
+#include <boost/tokenizer.hpp>
+#include <fstream>
+#include <iostream>
+#include <set>
 
 namespace nm = ed::types;
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
@@ -771,13 +772,47 @@ void CalendarDatesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
         LOG4CPLUS_WARN(logger, "Exception pour le service " << row[id_c] << " inconnue : " << row[e_type_c]);
 }
 
+void ShapesGtfsHandler::init(Data&) {
+    shape_id_c = csv.get_pos_col("shape_id");
+    shape_pt_lat_c = csv.get_pos_col("shape_pt_lat");
+    shape_pt_lon_c = csv.get_pos_col("shape_pt_lon");
+    shape_pt_sequence_c = csv.get_pos_col("shape_pt_sequence");
+}
+
+void ShapesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
+    try {
+        const navitia::type::GeographicalCoord coord(
+            boost::lexical_cast<double>(row.at(shape_pt_lon_c)),
+            boost::lexical_cast<double>(row.at(shape_pt_lat_c)));
+        const int seq = boost::lexical_cast<int>(row.at(shape_pt_sequence_c));
+        shapes[row.at(shape_id_c)][seq] = coord;
+    } catch (std::exception &e) {
+        LOG4CPLUS_WARN(logger, "Exception in shapes.txt: " << e.what());
+    }
+}
+
+void ShapesGtfsHandler::finish(Data&) {
+    LOG4CPLUS_INFO(logger, "Nb shapes: " << shapes.size());
+    for (const auto& shape: shapes) {
+        navitia::type::LineString line;
+        for (const auto& coord: shape.second) {
+            line.push_back(coord.second);
+        }
+        gtfs_data.shapes[shape.first].push_back(line);
+    }
+}
+
 void TripsGtfsHandler::init(Data& data) {
     data.vehicle_journeys.reserve(350000);
 
-    id_c = csv.get_pos_col("route_id"), service_c = csv.get_pos_col("service_id"),
-            trip_c = csv.get_pos_col("trip_id"), headsign_c = csv.get_pos_col("trip_headsign"),
-            block_id_c = csv.get_pos_col("block_id"), wheelchair_c = csv.get_pos_col("wheelchair_accessible"),
-            bikes_c = csv.get_pos_col("bikes_allowed");
+    id_c = csv.get_pos_col("route_id");
+    service_c = csv.get_pos_col("service_id");
+    trip_c = csv.get_pos_col("trip_id");
+    headsign_c = csv.get_pos_col("trip_headsign");
+    block_id_c = csv.get_pos_col("block_id");
+    wheelchair_c = csv.get_pos_col("wheelchair_accessible");
+    bikes_c = csv.get_pos_col("bikes_allowed");
+    shape_id_c = csv.get_pos_col("shape_id");
 }
 
 void TripsGtfsHandler::finish(Data& data) {
@@ -815,6 +850,18 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
 
+    // get shape if possible
+    if (has_col(shape_id_c, row)) {
+        const auto it_shape = gtfs_data.shapes.find(row.at(shape_id_c));
+        if (it_shape != gtfs_data.shapes.end() && !it_shape->second.empty()) {
+            if (it_shape->second.size() > 1) {
+                LOG4CPLUS_WARN(logger, "shape of trip " << row[trip_c]
+                               << " is a multi line, taking only the first line.");
+            }
+            gtfs_data.meta_vj_shapes[row[trip_c]] = it_shape->second.front();
+        }
+    }
+
     const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
     auto second_elt = vp_it;
@@ -848,8 +895,6 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
             vj->block_id = row[block_id_c];
         else
             vj->block_id = "";
-        //                    if(has_col(wheelchair_c, row))
-        //                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
         if(has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
             vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
         if(has_col(bikes_c, row) && row[bikes_c] == "1")
@@ -877,6 +922,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 }
 
 void StopTimeGtfsHandler::init(Data&) {
+    LOG4CPLUS_INFO(logger, "reading stop times");
     id_c = csv.get_pos_col("trip_id"),
             arrival_c = csv.get_pos_col("arrival_time"),
             departure_c = csv.get_pos_col("departure_time"),
@@ -886,9 +932,51 @@ void StopTimeGtfsHandler::init(Data&) {
             drop_off_c = csv.get_pos_col("drop_off_type");
 }
 
+static nt::LineString::const_iterator
+get_nearest(const nt::GeographicalCoord& coord, const nt::LineString& line) {
+    if (line.empty()) return line.end();
+    auto nearest = line.begin();
+    double nearest_dist = nearest->distance_to(coord);
+    for (auto it = nearest + 1; it != line.end(); ++it) {
+        double cur_dist = it->distance_to(coord);
+        if (cur_dist < nearest_dist) {
+            nearest = it;
+            nearest_dist = cur_dist;
+        }
+    }
+    return nearest;
+}
+
+static nt::LineString
+create_shape(const nt::GeographicalCoord& from,
+             const nt::GeographicalCoord& to,
+             const nt::LineString& shape)
+{
+    nt::LineString res;
+    const auto nearest_from = get_nearest(from, shape);
+    const auto nearest_to = get_nearest(to, shape);
+    res.push_back(from);
+    if (nearest_from < nearest_to) {
+        for (auto it = nearest_from + 1; it < nearest_to; ++it)
+            res.push_back(*it);
+    } else if (nearest_from > nearest_to) {
+        for (auto it = nearest_from - 1; it > nearest_to; --it)
+            res.push_back(*it);
+    }
+    res.push_back(to);
+
+    // simplification at about 1m precision
+    nt::LineString simplified;
+    boost::geometry::simplify(res, simplified, 0.00001);
+
+    return simplified;
+}
+
 void StopTimeGtfsHandler::finish(Data& data) {
-    LOG4CPLUS_TRACE(logger, "sorting stoptimes of vehicle_journeys");
-    for(auto& vj: data.vehicle_journeys){
+    LOG4CPLUS_INFO(logger, "sorting stoptimes of vehicle_journeys and creating shapes");
+    for (auto *const vj: data.vehicle_journeys) {
+        if (vj->stop_time_list.empty()) continue;
+
         boost::sort(vj->stop_time_list, [](const nm::StopTime* st1, const nm::StopTime* st2)->bool{
                 if(st1->order == st2->order){
                     throw navitia::exception("two stoptime with the same order (" +
@@ -896,8 +984,21 @@ void StopTimeGtfsHandler::finish(Data& data) {
                 }
                 return st1->order < st2->order;
             });
+
+        // create the shape_from_prev of the stop times
+        const auto end = vj->stop_time_list.end();
+        auto it = vj->stop_time_list.begin();
+        nt::GeographicalCoord from = (*it)->tmp_stop_point->coord;
+        (*it)->shape_from_prev.clear();
+        const nt::LineString& vj_shape =
+            find_or_default(vj->meta_vj_name, gtfs_data.meta_vj_shapes);
+        for (++it; it != end; ++it) {
+            const nt::GeographicalCoord &to = (*it)->tmp_stop_point->coord;
+            (*it)->shape_from_prev = create_shape(from, to, vj_shape);
+            from = to;
+        }
     }
-    LOG4CPLUS_TRACE(logger, "Nb stop times: " << data.stops.size());
+    LOG4CPLUS_INFO(logger, "Nb stop times: " << data.stops.size());
 }
 
 int to_utc(const std::string& local_time, int utc_offset) {
@@ -988,6 +1089,7 @@ void FrequenciesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
 GenericGtfsParser::GenericGtfsParser(const std::string & path) : path(path){
     logger = log4cplus::Logger::getInstance("log");
 }
+GenericGtfsParser::~GenericGtfsParser() {}
 
 void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
 
@@ -1233,6 +1335,7 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
 void GtfsParser::parse_files(Data& data) {
     fill_default_modes(data);
 
+    parse<ShapesGtfsHandler>(data, "shapes.txt");
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<DefaultContributorHandler>(data);
     parse<StopsGtfsHandler>(data, "stops.txt", true);

@@ -32,22 +32,30 @@ www.navitia.io
 #include "type.h"
 #include "georef/georef.h"
 #include "type/message.h"
+#include "type/request.pb.h"
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
+#include "utils/flat_enum_map.h"
 
 #include <boost/serialization/map.hpp>
 
-namespace navitia { namespace type {
+namespace navitia { 
+template <>
+struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
+    static constexpr typename get_enum_type<pbnavitia::PlaceCodeRequest::Type>::type size() {
+        return 8;
+    }
+};
+namespace type {
 
-// Maps pour external code
-// À refléchir si un hash_map ne serait pas mieux ; pas forcément en lecture car hasher une chaîne c'est plus long que comparer
-// En attendant on utilise std::map car on sait le sérialiser...
-typedef std::map<std::string, idx_t> ExtCodeMap;
-
+typedef std::map<std::string, std::string> code_value_map_type;
+typedef std::unordered_map<std::string, code_value_map_type> type_code_codes_map_type;
+typedef flat_enum_map<pbnavitia::PlaceCodeRequest::Type, type_code_codes_map_type> ext_codes_map_type;
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
 
+    ext_codes_map_type ext_codes_map;
     std::vector<StopTime*> stop_times;
     std::vector<StopPointConnection*> stop_point_connections;
 
@@ -61,6 +69,9 @@ struct PT_Data : boost::noncopyable{
     autocomplete::Autocomplete<idx_t> stop_area_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopArea);
     autocomplete::Autocomplete<idx_t> stop_point_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::StopPoint);
     autocomplete::Autocomplete<idx_t> line_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::Line);
+    autocomplete::Autocomplete<idx_t> network_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::Network);
+    autocomplete::Autocomplete<idx_t> mode_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::CommercialMode);
+    autocomplete::Autocomplete<idx_t> route_autocomplete = autocomplete::Autocomplete<idx_t>(navitia::type::Type_e::Route);
 
     // Proximity list
     proximitylist::ProximityList<idx_t> stop_area_proximity_list;
@@ -80,6 +91,7 @@ struct PT_Data : boost::noncopyable{
                 & stop_times
                 // the first letters for autocomplete
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
+                & network_autocomplete & mode_autocomplete & route_autocomplete
                 // the proximity lists
                 & stop_area_proximity_list & stop_point_proximity_list
                 // custom types
@@ -127,4 +139,5 @@ struct PT_Data : boost::noncopyable{
 
 };
 
-}}
+}
+}

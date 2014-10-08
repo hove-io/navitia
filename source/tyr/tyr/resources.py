@@ -93,6 +93,7 @@ class Job(flask_restful.Resource):
     def get(self, instance_name=None):
         query = models.Job.query
         if instance_name:
+            query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
 

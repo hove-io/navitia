@@ -325,4 +325,35 @@ DROP FUNCTION IF EXISTS georef.match_stop_point_to_admin();
 DROP FUNCTION IF EXISTS georef.update_admin_coord();
 DROP FUNCTION IF EXISTS georef.match_admin_to_admin();
 DROP TABLE IF EXISTS navitia.journey_pattern_point_connection CASCADE;
+
+DROP TABLE IF EXISTS georef.fusion_ways;
+DROP TABLE IF EXISTS georef.tmp_rel_way_admin;
 DROP FUNCTION IF EXISTS georef.update_boundary(bigint);
+
+-- uri indexes are now useless
+DROP INDEX IF EXISTS navitia.commercial_mode_uri_idx;
+DROP INDEX IF EXISTS navitia.company_uri_idx;
+DROP INDEX IF EXISTS navitia.journey_pattern_uri_idx;
+DROP INDEX IF EXISTS navitia.journey_pattern_point_uri_idx;
+DROP INDEX IF EXISTS navitia.line_uri_idx;
+DROP INDEX IF EXISTS navitia.network_uri_idx;
+DROP INDEX IF EXISTS navitia.physical_mode_uri_idx;
+DROP INDEX IF EXISTS navitia.route_uri_idx;
+DROP INDEX IF EXISTS navitia.stop_area_uri_idx;
+DROP INDEX IF EXISTS navitia.stop_point_uri_idx;
+DROP INDEX IF EXISTS navitia.vehicle_journey_uri_idx;
+
+DROP INDEX IF EXISTS georef.admin_boundary_idx;
+DROP INDEX IF EXISTS georef.admin_uri_idx;
+DROP INDEX IF EXISTS georef.edge_source_node_id;
+DROP INDEX IF EXISTS georef.edge_target_node_id;
+DROP INDEX IF EXISTS georef.edge_the_geom_idx;
+DROP INDEX IF EXISTS georef.edge_way_id_idx;
+DROP INDEX IF EXISTS georef.node_id;
+DROP INDEX IF EXISTS georef.poi_uri_idx;
+DROP INDEX IF EXISTS georef.poi_type_uri_idx;
+DROP INDEX IF EXISTS georef.rel_amin_way_id;
+DROP INDEX IF EXISTS georef.way_uri_idx;
+
+DROP INDEX IF EXISTS realtime.message_uri_idx;
+

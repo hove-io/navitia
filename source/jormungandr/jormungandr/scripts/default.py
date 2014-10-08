@@ -52,6 +52,16 @@ pb_type = {
 }
 
 
+pt_object_type = {
+    'network': type_pb2.NETWORK,
+    'mode': type_pb2.COMMERCIAL_MODE,
+    'line': type_pb2.LINE,
+    'route': type_pb2.ROUTE,
+    'stop_area': type_pb2.STOP_AREA
+}
+
+
+
 f_date_time = "%Y%m%dT%H%M%S"
 
 
@@ -154,7 +164,7 @@ class Script(object):
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
                      "status", "load", "networks", "place_uri", "disruptions",
-                     "calendars", "nm_journeys"]
+                     "calendars", "nm_journeys", "pt_objects"]
         self.functional_params = {}
 
     def __pagination(self, request, ressource_name, resp):
@@ -252,6 +262,31 @@ class Script(object):
 
         return resp
 
+    def pt_objects(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.pt_objects
+        req.pt_objects.q = request['q']
+        req.pt_objects.depth = request['depth']
+        req.pt_objects.count = request['count']
+        req.pt_objects.search_type = request['search_type']
+        if request["type[]"]:
+            for type in request["type[]"]:
+                req.pt_objects.types.append(pt_object_type[type])
+
+        if request["admin_uri[]"]:
+            for admin_uri in request["admin_uri[]"]:
+                req.pt_objects.admin_uris.append(admin_uri)
+
+        resp = instance.send_and_receive(req)
+        #The result contains places but not pt_objects,
+        #object place is transformed to pt_object afterwards.
+        if len(resp.places) == 0 and request['search_type'] == 0:
+            request["search_type"] = 1
+            return self.pt_objects(request, instance)
+        self.__pagination(request, "pt_objects", resp)
+
+        return resp
+	
     def place_uri(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
@@ -657,9 +692,11 @@ class Script(object):
         #filter on journey type (the qualifier)
         to_delete = []
         if request["type"] != "" and request["type"] != "all":
+            #quick fix, if we want the rapid, we filter also the 'best' which is a rapid
+            filter_type = [request["type"]] if request["type"] != "rapid" else ["rapid", "best"]
             #the best journey can only be filtered at the end. so we might want to filter anything but this journey
             if request["type"] != "best" or final_filter:
-                to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type != request["type"]])
+                to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type not in filter_type])
         else:
             #by default, we filter non tagged journeys
             tag_to_delete = ["", "possible_cheap"]

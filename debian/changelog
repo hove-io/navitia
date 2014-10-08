@@ -1,8 +1,37 @@
+navitia2 (1.2.0) unstable; urgency=low
+
+  * osm2ed: compute the bounding shape of the instance at the end  <https://github.com/CanalTP/navitia/pull/617>
+  * Osm2ed: relation with way and admin were not inserted in database...  <https://github.com/CanalTP/navitia/pull/616>
+  * ed: from geometry in routes.txt and lines.txt to navitia::type  <https://github.com/CanalTP/navitia/pull/615>
+  * Places fix score and quality with autocomplete integration test  <https://github.com/CanalTP/navitia/pull/614>
+  * Ed: migration to alembic  <https://github.com/CanalTP/navitia/pull/586>  <https://github.com/CanalTP/navitia/pull/613> <https://github.com/CanalTP/navitia/pull/608>
+  * pb_converter: fix fill_pb_placemark of admin  <https://github.com/CanalTP/navitia/pull/612>
+  * Jormungandr: add test on isochrones  <https://github.com/CanalTP/navitia/pull/609>
+  * Utils: add pq dependency  <https://github.com/CanalTP/navitia/pull/606>
+  * ed: use geometries.txt in fusio to export shapes  <https://github.com/CanalTP/navitia/pull/604>
+  * all: add dependancy to protobuf  <https://github.com/CanalTP/navitia/pull/603>
+  * TimeTable: refactoring of timetable for calendar  <https://github.com/CanalTP/navitia/pull/601>
+  * cmake: add dependancy on protobuf for accessible_test  <https://github.com/CanalTP/navitia/pull/600>
+  * Kraken: new api ptobject external_code  <https://github.com/CanalTP/navitia/pull/599>
+  * Protobuf: rename place to pbobject  <https://github.com/CanalTP/navitia/pull/598>
+  * remove warning, remove dead code and GeographicalCoord in its file  <https://github.com/CanalTP/navitia/pull/597>
+  * Fix tyr jobs  <https://github.com/CanalTP/navitia/pull/596>
+  * Python: change requirements for protobuff to 2.4.1  <https://github.com/CanalTP/navitia/pull/595>
+  * Disruptions: add new object model  <https://github.com/CanalTP/navitia/pull/594>
+  * Jormungandr: quick fix for best filtering  <https://github.com/CanalTP/navitia/pull/592>
+  * Jormun: add transportation mode to crow fly  <https://github.com/CanalTP/navitia/pull/591>
+  * All: rewrite helps <https://github.com/CanalTP/navitia/pull/588>
+  * Jormungandr: add validity pattern to vp  <https://github.com/CanalTP/navitia/pull/581>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Wed, 08 Oct 2014 17:10:15 +0100
+
+
 navitia2 (1.1.3) unstable; urgency=medium
 
   * hotfix for "memleak" on stop_schedules
 
  -- Alexandre JACQUIN <alexandre.jacquin@canaltp.fr>  Wed, 01 Oct 2014 14:42:29 +0200
+
 
 navitia2 (1.1.2) unstable; urgency=low
 

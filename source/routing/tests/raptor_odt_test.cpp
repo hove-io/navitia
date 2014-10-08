@@ -104,7 +104,7 @@ BOOST_FIXTURE_TEST_SUITE(allow_odt, Params)
 BOOST_AUTO_TEST_CASE(test1){
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(test1){
     BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
 
     resp = make_response(false);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(test2){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(test2){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(test3){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(test3){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(test4){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(test4){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(test5){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(test5){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(test6){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(test6){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(test7){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(test7){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(test8){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(test8){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(test9){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(test9){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(test10){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(test10){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(test11){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(test11){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(test12){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(test12){
 
     resp = make_response(false);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(test13){
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     journey = resp.journeys(0);
     section = journey.sections(0);
     displ = section.pt_display_informations();

@@ -32,25 +32,25 @@
 from flask import Flask
 from flask.ext.restful import Resource, fields
 from flask.ext.restful.types import boolean
-from jormungandr import i_manager
+from jormungandr import i_manager, utils
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
-from jormungandr.interfaces.parsers import depth_argument
+from jormungandr.interfaces.parsers import depth_argument, date_time_format
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.authentification import authentification_required
+from jormungandr.authentication import authentication_required
 
 
 class TimeTables(Resource):
-    method_decorators = [authentification_required]
+    method_decorators = [authentication_required]
 
     def __init__(self):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("from_datetime", type=str,
+        parser_get.add_argument("from_datetime", type=date_time_format,
                                 required=True,
-                                description=" The date from which you\
+                                description="The date from which you\
                                 want the times")
         parser_get.add_argument("duration", type=int, default=86400,
                                 description=
@@ -73,6 +73,11 @@ class TimeTables(Resource):
     def get(self, region):
         args = self.parsers["get"].parse_args()
         args["interface_version"] = 0
+
+        # Note: no convertion to UTC thus the date is wrong with datetime
+        # but we don't care since the V0 will be drop soon
+        args['from_datetime'] = utils.date_to_timestamp(args['from_datetime'])
+
         response = i_manager.dispatch(args, self.api, instance_name=region)
         return protobuf_to_dict(response, use_enum_labels=True), 200
 

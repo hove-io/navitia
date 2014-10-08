@@ -33,7 +33,7 @@ www.navitia.io
 //forward declare
 namespace navitia{
 namespace routing{
-    class RAPTOR;
+    struct RAPTOR;
 }
 }
 
@@ -84,6 +84,8 @@ class Worker {
         pbnavitia::Response pt_ref(const pbnavitia::PTRefRequest &request);
         pbnavitia::Response disruptions(const pbnavitia::DisruptionsRequest &request);
         pbnavitia::Response calendars(const pbnavitia::CalendarsRequest &request);
+        pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request);        
+        pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
 };
 
 }

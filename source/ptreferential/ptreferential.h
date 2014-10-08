@@ -76,10 +76,7 @@ struct ptref_error : public std::exception {
     std::string more;
 
     ptref_error(const std::string & more) : more(more) {}
-    virtual const char* what() const throw() {
-        return this->more.c_str();
-    }
-    ~ptref_error() throw(){}
+    virtual const char* what() const noexcept override;
 };
 
 struct parsing_error : public ptref_error{
@@ -92,8 +89,9 @@ struct parsing_error : public ptref_error{
     error_type type;
 
     parsing_error(error_type type, const std::string & str) : ptref_error(str), type(type) {}
-
-    ~parsing_error() throw() {}
+    parsing_error(const parsing_error&) = default;
+    parsing_error& operator=(const parsing_error&) = default;
+    ~parsing_error() noexcept;
 };
 
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés

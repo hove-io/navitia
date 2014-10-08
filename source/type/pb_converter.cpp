@@ -65,9 +65,10 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
     }
 }
 
-void fill_pb_object(const navitia::georef::Admin* adm, const nt::Data&,
+void fill_pb_object(const georef::Admin* adm, const nt::Data&,
                     pbnavitia::AdministrativeRegion* admin, int,
-                    const pt::ptime&, const pt::time_period& ){
+                    const pt::ptime&, const pt::time_period&,
+                    const bool){
     if(adm == nullptr)
         return ;
     admin->set_name(adm->name);
@@ -615,57 +616,16 @@ void fill_codes(const std::string& type, const std::string& value, pbnavitia::Co
 }
 
 
-void fill_pb_placemark(const type::StopPoint* stop_point,
-                       const type::Data &data, pbnavitia::Place* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period, const bool show_codes){
-    if(stop_point == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(stop_point, data, place->mutable_stop_point(), depth,
-                   now, action_period, show_codes);
-    place->set_name(stop_point->name);
-
-    for(auto admin : place->stop_point().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-    place->set_uri(stop_point->uri);
-    place->set_embedded_type(pbnavitia::STOP_POINT);
-}
-
-void fill_pb_placemark(const type::StopArea* stop_area,
-                       const type::Data &data, pbnavitia::Place* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period,
-                       const bool show_codes) {
-    if(stop_area == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(stop_area, data, place->mutable_stop_area(), depth,
-                   now, action_period, show_codes);
-    place->set_name(stop_area->name);
-    for(auto admin : place->stop_area().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-
-    place->set_uri(stop_area->uri);
-    place->set_embedded_type(pbnavitia::STOP_AREA);
-}
-
-void fill_pb_placemark(const navitia::georef::Admin* admin,
-                       const type::Data &data, pbnavitia::Place* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period){
+void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &data, pbnavitia::PtObject* pt_object,
+                       int max_depth, const boost::posix_time::ptime& now,
+                       const boost::posix_time::time_period& action_period,
+                       const bool show_codes){
     if(admin == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(admin, data, place->mutable_administrative_region(), depth,
-                   now, action_period);
-    place->set_name(admin->name);
+    fill_pb_object(admin, data, pt_object->mutable_administrative_region(), depth,
+                   now, action_period, show_codes);
+    pt_object->set_name(admin->name);
     //If city contains multi postal code(37000;37100;37200), we show only the smallest one in the result.
     //"name": "Tours(37000;37100;37200)" becomes "name": "Tours(37000)"
     if (!admin->post_code.empty()){
@@ -686,48 +646,29 @@ void fill_pb_placemark(const navitia::georef::Admin* admin,
                     min_value = int_post_code;
             }
             if (min_value != std::numeric_limits<int>::max()){
-                place->set_name(place->name() + " (" + boost::lexical_cast<std::string>(min_value) + ")");
+                pt_object->set_name(pt_object->name() + " (" + boost::lexical_cast<std::string>(min_value) + ")");
             }
             else{
-                place->set_name(place->name() + " ()");
+                pt_object->set_name(pt_object->name() + " ()");
             }
 
         }
         else{
-            place->set_name(place->name() + " (" + admin->post_code + ")");
+            pt_object->set_name(pt_object->name() + " (" + admin->post_code + ")");
         }
     }
 
-    place->set_uri(admin->uri);
-    place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
-}
-
-void fill_pb_placemark(const navitia::georef::POI* poi,
-                       const type::Data &data, pbnavitia::Place* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period) {
-    if(poi == nullptr)
-        return;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(poi, data, place->mutable_poi(), depth,
-                   now, action_period);
-    place->set_name(poi->name);
-    for(auto admin : place->poi().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
-
-    place->set_uri(poi->uri);
-    place->set_embedded_type(pbnavitia::POI);
+    pt_object->set_uri(admin->uri);
+    pt_object->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
 }
 
 void fill_pb_placemark(const navitia::georef::Way* way,
-                       const type::Data &data, pbnavitia::Place* place,
+                       const type::Data &data, pbnavitia::PtObject* place,
                        int house_number,
                        type::GeographicalCoord& coord,
                        int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period){
+                       const pt::time_period& action_period,
+                       const bool){
     if(way == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -845,7 +786,7 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     section->set_end_date_time(navitia::to_posix_timestamp(departure + bt::seconds(total_duration)));
 
     //add the destination as a placemark
-    pbnavitia::Place* dest_place = section->mutable_destination();
+    pbnavitia::PtObject* dest_place = section->mutable_destination();
 
     bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
@@ -901,7 +842,7 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
     section->set_id(response.register_section());
     section->set_type(pbnavitia::STREET_NETWORK);
 
-    pbnavitia::Place* orig_place = section->mutable_origin();
+    pbnavitia::PtObject* orig_place = section->mutable_origin();
     // we want to have a specific place mark for vls or for the departure if we started from a poi
     if (first_item.transportation == georef::PathItem::TransportCaracteristic::BssTake) {
         const auto vls_station = get_nearest_bss_station(data, first_item.coordinates.front());
@@ -926,7 +867,7 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
 }
 
 void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
-                       pbnavitia::Place* place, int max_depth, const pt::ptime& now,
+                       pbnavitia::PtObject* place, int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period, const bool show_codes) {
     if (point.type == type::Type_e::StopPoint) {
         const auto it = data.pt_data->stop_points_map.find(point.uri);
@@ -952,6 +893,7 @@ void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
 }
 
 void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
+                          type::Mode_e mode,
                           boost::posix_time::ptime time, const type::Data& data, EnhancedResponse& response,
                           pbnavitia::Journey* pb_journey, const pt::ptime& now,
                           const pt::time_period& action_period) {
@@ -964,6 +906,24 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     section->set_length(0);
     section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
+
+    //we want to store the transportation mode used
+    switch (mode) {
+    case type::Mode_e::Walking:
+        section->mutable_street_network()->set_mode(pbnavitia::Walking);
+        break;
+    case type::Mode_e::Bike:
+        section->mutable_street_network()->set_mode(pbnavitia::Bike);
+        break;
+    case type::Mode_e::Car:
+        section->mutable_street_network()->set_mode(pbnavitia::Car);
+        break;
+    case type::Mode_e::Bss:
+        section->mutable_street_network()->set_mode(pbnavitia::Bss);
+        break;
+    default:
+        throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
+    }
 }
 
 void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& ori_dest,
@@ -1064,7 +1024,8 @@ void fill_pb_object(const georef::POIType* geo_poi_type, const type::Data &,
 
 void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
                     pbnavitia::Poi* poi, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
+                    const pt::ptime& now, const pt::time_period& action_period,
+                    const bool){
     if(geopoi == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;

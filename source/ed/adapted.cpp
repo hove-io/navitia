@@ -413,7 +413,10 @@ void AtAdaptedLoader::clean_stop_time(nt::PT_Data& data){
 
     std::sort(data.stop_times.begin(), data.stop_times.end());
 
+#ifndef NDEBUG
     size_t original_size = data.stop_times.size();
+#endif
+
     size_t count = data.stop_times.size();
 
 

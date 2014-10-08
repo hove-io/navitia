@@ -36,7 +36,7 @@ www.navitia.io
 namespace navitia {
 
 namespace type {
-    struct Data;
+    class Data;
     enum class Type_e;
 }
 
@@ -50,6 +50,5 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const std::vector <std::string> &admins,
                                  int search_type,
                                  const type::Data &d);
-
-
-}}
+}
+}

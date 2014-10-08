@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from jormungandr.interfaces.v1.Ptobjects import Ptobjects
 
 from v1 import Index
 from v1 import Uri
@@ -33,6 +34,7 @@ from v1 import Coverage
 from v1 import Journeys
 from v1 import Schedules
 from v1 import Places
+from v1 import Ptobjects
 from v1 import Coord
 from v1 import Disruptions
 from v1 import Calendars
@@ -147,6 +149,11 @@ def v1_routing(api):
                      region + 'places',
                      coord + 'places',
                      endpoint='v1.places'
+                     )
+    api.add_resource(Ptobjects.Ptobjects,
+                     region + 'pt_objects',
+                     coord + 'pt_objects',
+                     endpoint='v1.pt_objects'
                      )
 
     api.add_resource(Places.PlaceUri,

@@ -81,17 +81,8 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                    const std::vector<std::string>& forbidden_uris,
-                                   const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data, bool disruption_active) {
+                                   const pt::ptime ptime, uint32_t duration, uint32_t depth, type::Data & data, bool disruption_active) {
     pbnavitia::Response pb_response;
-
-    boost::posix_time::ptime ptime;
-    try{
-        ptime = boost::posix_time::from_iso_string(str_dt);
-    } catch(boost::bad_lexical_cast) {
-//        pb_response.set_error("DateTime " + str_dt + " is in a bad format should be YYYYMMddThhmmss ");
-          fill_pb_error(pbnavitia::Error::bad_format, "DateTime is in a bad format should be YYYYMMddThhmmss",pb_response.mutable_error());
-        return pb_response;
-    }
 
     DateTime dt = DateTimeUtils::set((ptime.date() - data.meta->production_date.begin()).days(), ptime.time_of_day().total_seconds());
 

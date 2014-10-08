@@ -611,8 +611,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
 
     navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
 
-    // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
-    std::vector<uint32_t> datetimes({ntest::to_posix_timestamp("20120614T080000"), ntest::to_posix_timestamp("20120614T090000")});
+    //we put the time not in the right order to check that they are correctly sorted
+    std::vector<uint64_t> datetimes({ntest::to_posix_timestamp("20120614T080000"), ntest::to_posix_timestamp("20120614T090000")});
     pbnavitia::Response resp = nr::make_response(raptor, origin, destination, datetimes, true,
                                                  navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
@@ -755,6 +755,13 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     BOOST_CHECK_EQUAL(section.street_network().path_items(1).duration(), 200);
     BOOST_CHECK_EQUAL(section.street_network().path_items(2).name(), "rue ar");
     BOOST_CHECK_EQUAL(section.street_network().path_items(2).duration(), 90);
+
+    // check that the shape is used, i.e. there is not only 2 points
+    // from the stop times.
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.shape().size(), 3);
 }
 
 //biking

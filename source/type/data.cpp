@@ -56,6 +56,8 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
 
+wrong_version::~wrong_version() noexcept {}
+
 Data::Data() :
     meta(std::make_unique<MetaData>()),
     pt_data(std::make_unique<PT_Data>()),
@@ -70,11 +72,12 @@ Data::Data() :
 
 Data::~Data(){}
 
-bool Data::load(const std::string & filename) {
+bool Data::load(const std::string& filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     try {
-        this->load_lz4(filename);
-        this->build_raptor();
+        std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
+        ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        this->load(ifs);
         last_load_at = pt::microsec_clock::local_time();
         last_load = true;
         loaded = true;
@@ -95,23 +98,18 @@ bool Data::load(const std::string & filename) {
     return this->last_load;
 }
 
-void Data::load_lz4(const std::string & filename) {
-    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
-    ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+void Data::load(std::istream& ifs) {
     boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
     in.push(LZ4Decompressor(2048*500),8192*500, 8192*500);
     in.push(ifs);
     eos::portable_iarchive ia(in);
     ia >> *this;
+    this->build_raptor();
 }
 
-void Data::save(const std::string & filename){
+
+void Data::save(const std::string& filename){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    this->save_lz4(filename);
-}
-
-void Data::save_lz4(const std::string & filename) {
-    auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     boost::filesystem::path p(filename);
     boost::filesystem::path dir = p.parent_path();
     try {
@@ -125,14 +123,10 @@ void Data::save_lz4(const std::string & filename) {
                      << e.code().message());
        throw navitia::exception("Unable to write file");
     }
-    try {
-        std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
-        ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
-        out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);
-        out.push(ofs);
-        eos::portable_oarchive oa(out);
-        oa << *this;
+    std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
+    ofs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try{
+        this->save(ofs);
     } catch(const boost::filesystem::filesystem_error &e) {
         if(e.code() == boost::system::errc::permission_denied)
             LOG4CPLUS_ERROR(logger, "Writing permission is denied for " << p);
@@ -153,6 +147,14 @@ void Data::save_lz4(const std::string & filename) {
     }catch(const std::ofstream::failure& e){
        throw navitia::exception(std::string("Unable to write file: ") + e.what());
     }
+}
+
+void Data::save(std::ostream& ofs) {
+    boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
+    out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);
+    out.push(ofs);
+    eos::portable_oarchive oa(out);
+    oa << *this;
 }
 
 void Data::build_uri(){
@@ -502,8 +504,10 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
         case Type_e::POI:
             result = geo_ref->pois[source_idx]->get(target, *geo_ref);
+            break;
         case Type_e::POIType:
             result = geo_ref->poitypes[source_idx]->get(target, *geo_ref);
+            break;
         default: break;
     }
     return result;

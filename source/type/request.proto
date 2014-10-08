@@ -33,7 +33,7 @@ message PlacesRequest {
 message NextStopTimeRequest {
     required string departure_filter    = 1;
     required string arrival_filter      = 2;
-    required string from_datetime       = 3;
+    required uint64 from_datetime       = 3;
     required int32 duration             = 4;
     required int32 depth                = 5;
     required int32 nb_stoptimes         = 7;
@@ -89,6 +89,22 @@ message PlaceUriRequest {
     required string uri = 1;
 }
 
+message PlaceCodeRequest {
+    enum Type {
+        StopArea = 0;
+        Network = 1;
+        Company = 2;
+        Line = 3;
+        Route = 4;
+        VehicleJourney = 5;
+        StopPoint = 6;
+        Calendar = 7;
+    }
+    required Type type= 1;
+    required string type_code = 2;
+    required string code = 3;
+}
+
 message PTRefRequest {
     required NavitiaType requested_type = 1;
     required string filter              = 2;
@@ -111,4 +127,17 @@ message Request {
     optional PlaceUriRequest place_uri              = 7;
     optional DisruptionsRequest disruptions         = 8;
     optional CalendarsRequest calendars             = 9;
+    optional PtobjectRequest pt_objects             = 10;
+    optional PlaceCodeRequest place_code        = 11;
 }
+
+
+message PtobjectRequest {
+    required string q           = 1;
+    repeated NavitiaType types  = 2;
+    required int32 depth        = 3;
+    required int32 count        = 4;
+    repeated string admin_uris  = 5;
+    optional int32 search_type  = 6;
+}
+

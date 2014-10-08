@@ -37,16 +37,13 @@ www.navitia.io
 #include <set>
 #include "ed/types.h"
 #include "ed_persistor.h"
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_point.hpp>
-#include <boost/geometry/geometries/linestring.hpp>
 #include "third_party/RTree/RTree.h"
 
 namespace bg = boost::geometry;
-typedef bg::model::point<float, 2, bg::cs::cartesian> point;
+typedef bg::model::point<double, 2, bg::cs::cartesian> point;
 typedef bg::model::polygon<point, false, false> polygon_type; // ccw, open polygon
 typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
 typedef bg::model::multi_point<point> mpoint_type;
@@ -238,6 +235,10 @@ struct OSMWay {
         }
         return result;
     }
+
+    bool is_used() const {
+        return way_ref == nullptr || this == way_ref; 
+    }
 };
 
 struct OSMHouseNumber {
@@ -268,9 +269,10 @@ struct AssociateStreetRelation {
 
 
 typedef std::set<OSMWay>::const_iterator it_way;
-typedef std::map<const OSMRelation*, std::vector<it_way>> rel_ways;
+typedef std::map<const OSMRelation*, std::set<it_way>> rel_ways;
 typedef std::set<OSMRelation>::const_iterator admin_type;
 typedef std::pair<admin_type, double> admin_distance;
+
 
 struct OSMCache {
     std::set<OSMRelation> relations;
@@ -294,6 +296,7 @@ struct OSMCache {
     void insert_ways();
     void insert_edges();
     void insert_relations();
+    void insert_rel_way_admins();
     void build_way_map();
     void fusion_ways();
     void flag_nodes();
@@ -405,5 +408,7 @@ struct PoiHouseNumberVisitor {
 
 
 };
+bool operator<(const ed::connectors::it_way w1, const ed::connectors::it_way w2) {
+    return w1->osm_id < w2->osm_id;
+}
 }}
-

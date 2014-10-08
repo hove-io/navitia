@@ -55,7 +55,7 @@ struct ValidityPatternTime {
     }
 
     ValidityPatternTime() : vp_idx(type::invalid_idx), hour(-1) {}
-    ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour){}
+    ValidityPatternTime(idx_t vp_idx, int hour) : vp_idx(vp_idx), hour(hour){}
 };
 
 

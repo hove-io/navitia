@@ -41,7 +41,7 @@ www.navitia.io
 #include "type/pt_data.h"
 
 namespace navitia{namespace ptref {
-template<typename T> std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d);
+template<typename T> std::vector<type::idx_t> get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
 }}
 
 using namespace navitia::ptref;
@@ -206,14 +206,14 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     filter.attribute = "uri";
     filter.op = EQ;
     filter.value = "stop1";
-    auto indexes = get_indexes<StopArea>(filter, Type_e::Line, *(b.data));
+    auto indexes = get_indexes<navitia::type::StopArea>(filter, Type_e::Line, *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(indexes[0], 0);
 
     // On cherche les stopareas de la ligneA
     filter.navitia_type = Type_e::Line;
     filter.value = "A";
-    indexes = get_indexes<Line>(filter, Type_e::StopArea, *(b.data));
+    indexes = get_indexes<navitia::type::Line>(filter, Type_e::StopArea, *(b.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 2);
     BOOST_CHECK_EQUAL(indexes[0], 0);
     BOOST_CHECK_EQUAL(indexes[1], 1);

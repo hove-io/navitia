@@ -46,7 +46,7 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
                pbnavitia::Response& pb_response, type::GeographicalCoord coord){
 
     for(auto result_item : result){
-        pbnavitia::Place* place = pb_response.add_places_nearby();
+        pbnavitia::PtObject* place = pb_response.add_places_nearby();
         //on récupére la date pour les impacts
         auto current_date = boost::posix_time::second_clock::local_time();
         auto idx = std::get<0>(result_item);
@@ -84,6 +84,7 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
             place->set_uri(data.geo_ref->ways[idx]->uri + ":" + boost::lexical_cast<std::string>(data.geo_ref->ways[idx]->nearest_number(coord)));
             place->set_distance(coord.distance_to(coord_item));
             place->set_embedded_type(pbnavitia::ADDRESS);
+            break;
         default:
             break;
         }

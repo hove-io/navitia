@@ -102,6 +102,27 @@ bool valid(const State & state, Label label){
     return true;
 }
 
+std::string comp_to_string(const Comp_e comp) {
+    switch (comp) {
+    case Comp_e::EQ:
+        return "=";
+    case Comp_e::NEQ:
+        return "!=";
+    case Comp_e::LT:
+        return "<";
+    case Comp_e::GT:
+        return ">";
+    case Comp_e::LTE:
+        return "<=";
+    case Comp_e::GTE:
+        return ">=";
+    case Comp_e::True:
+        return "True";
+    default:
+        throw navitia::exception("unhandled Comp case");
+    }
+}
+
 results Fare::compute_fare(const routing::Path& path) const {
     results res;
     int nb_nodes = boost::num_vertices(g);

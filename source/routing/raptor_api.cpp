@@ -43,7 +43,28 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
-void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj,
+static void add_coord(const type::GeographicalCoord& coord, pbnavitia::Section* pb_section) {
+    auto* new_coord = pb_section->add_shape();
+    new_coord->set_lon(coord.lon());
+    new_coord->set_lat(coord.lat());
+}
+
+static void fill_shape(pbnavitia::Section* pb_section,
+                       const std::vector<const type::StopTime*>& stop_times)
+{
+    if (stop_times.empty()) return;
+
+    type::GeographicalCoord last_coord;
+    for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
+        for (const auto& cur_coord: (*it)->journey_pattern_point->shape_from_prev) {
+            if (cur_coord == last_coord) continue;
+            add_coord(cur_coord, pb_section);
+            last_coord = cur_coord;
+        }
+    }
+}
+
+static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj,
         const std::vector<const type::StopTime*>& stop_times, const nt::Data & d,
         bt::ptime now, bt::time_period action_period) {
 
@@ -59,6 +80,7 @@ void fill_section(pbnavitia::Section *pb_section, const type::VehicleJourney* vj
     auto* add_info_vehicle_journey = pb_section->mutable_add_info_vehicle_journey();
     fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period);
     fill_pb_object(vj, d, stop_times, add_info_vehicle_journey, 0, now, action_period);
+    fill_shape(pb_section, stop_times);
 }
 
 
@@ -106,7 +128,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
                                           path.items.front().departures.front()+bt::minutes(1));
-            fill_crowfly_section(origin, destination_tmp, path.items.front().departures.front(),
+            fill_crowfly_section(origin, destination_tmp, origin.streetnetwork_params.mode, path.items.front().departures.front(),
                                  d, enhanced_response, pb_journey, now, action_period);
 
         } else {
@@ -137,7 +159,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             }
         }
 
-        const type::VehicleJourney* vj(nullptr);
         size_t item_idx(0);
         // La partie TC et correspondances
         for(auto path_i = path.items.begin(); path_i < path.items.end(); ++path_i) {
@@ -149,7 +170,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             if(item.type == public_transport) {
                 pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
                 bt::ptime departure_ptime, arrival_ptime;
-                vj = item.get_vj();
+                type::VehicleJourney const *const vj = item.get_vj();
                 int length = 0;
                 for(size_t i=0;i<item.stop_points.size();++i) {
                     if (vj->has_boarding() || vj->has_landing()) {
@@ -165,11 +186,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     bt::time_period action_period(p_deptime, p_arrtime);
                     fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(),
                             0, now, action_period, show_codes);
-
-                    if (item.get_vj() != nullptr) {
-                        vj = item.get_vj();
-                        fill_pb_object(item.stop_times[i], d, stop_time, 1, now, action_period);
-                    }
+                    fill_pb_object(item.stop_times[i], d, stop_time, 1, now, action_period);
 
                     // L'heure de départ du véhicule au premier stop point
                     if(departure_ptime.is_not_a_date_time())
@@ -199,10 +216,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                                 action_period, show_codes);
                 }
                 pb_section->set_length(length);
-                if(item.get_vj() != nullptr) {
-                    bt::time_period action_period(departure_ptime, arrival_ptime);
-                    fill_section(pb_section, item.get_vj(), item.stop_times, d, now, action_period);
-                }
+                bt::time_period action_period(departure_ptime, arrival_ptime);
+                fill_section(pb_section, vj, item.stop_times, d, now, action_period);
             } else {
                 pb_section->set_type(pbnavitia::TRANSFER);
                 switch(item.type) {
@@ -246,7 +261,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
                                           path.items.back().departures.back()+bt::minutes(1));
-            fill_crowfly_section(origin_tmp, destination,path.items.back().departures.back(),
+            fill_crowfly_section(origin_tmp, destination, destination.streetnetwork_params.mode,
+                                 path.items.back().departures.back(),
                                  d, enhanced_response, pb_journey, now, action_period);
 
         } else {
@@ -410,7 +426,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
 
 
 std::vector<bt::ptime>
-parse_datetimes(RAPTOR &raptor,const std::vector<uint32_t>& timestamps,
+parse_datetimes(RAPTOR &raptor,const std::vector<uint64_t>& timestamps,
                 pbnavitia::Response &response, bool clockwise) {
     std::vector<bt::ptime> datetimes;
 
@@ -434,12 +450,12 @@ parse_datetimes(RAPTOR &raptor,const std::vector<uint32_t>& timestamps,
 }
 
 pbnavitia::Response
-make_response(RAPTOR &raptor, const type::EntryPoint &origin,
-              const type::EntryPoint &destination,
-              const std::vector<uint32_t> &datetimes_str, bool clockwise,
-              const type::AccessibiliteParams & accessibilite_params,
+make_response(RAPTOR &raptor, const type::EntryPoint& origin,
+              const type::EntryPoint& destination,
+              const std::vector<uint64_t>& timestamps, bool clockwise,
+              const type::AccessibiliteParams& accessibilite_params,
               std::vector<std::string> forbidden,
-              georef::StreetNetwork & worker,
+              georef::StreetNetwork& worker,
               bool disruption_active,
               bool allow_odt,
               uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
@@ -448,7 +464,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     std::vector<Path> pathes;
 
     std::vector<bt::ptime> datetimes;
-    datetimes = parse_datetimes(raptor, datetimes_str, response, clockwise);
+    datetimes = parse_datetimes(raptor, timestamps, response, clockwise);
     if(response.has_error() || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
@@ -523,7 +539,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 pbnavitia::Response
 make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
               const std::vector<type::EntryPoint> &destinations,
-              const uint32_t &datetimes_str, bool clockwise,
+              const uint64_t &datetimes_str, bool clockwise,
               const type::AccessibiliteParams & accessibilite_params,
               std::vector<std::string> forbidden,
               georef::StreetNetwork & worker,
@@ -607,7 +623,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
-                                   const uint32_t datetime_timestamp,bool clockwise,
+                                   const uint64_t datetime_timestamp,bool clockwise,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,

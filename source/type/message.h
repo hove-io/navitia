@@ -51,6 +51,128 @@ www.navitia.io
 
 namespace navitia { namespace type {
 
+namespace new_disruption {
+
+enum class Effect {
+  NO_SERVICE,
+  REDUCED_SERVICE,
+  SIGNIFICANT_DELAYS,
+  DETOUR,
+  ADDITIONAL_SERVICE,
+  MODIFIED_SERVICE,
+  OTHER_EFFECT,
+  UNKNOWN_EFFECT,
+  STOP_MOVED
+};
+
+
+struct Cause {
+    std::string uri;
+    std::string wording;
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+};
+
+struct Severity {
+    std::string uri;
+    std::string wording;
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+    std::string color;
+
+    int priority;
+
+    Effect effect;
+};
+
+struct PtObject {
+    Type_e object_type;
+    std::string object_uri;
+};
+
+struct Disruption;
+
+struct Message {
+    std::string text;
+
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+};
+
+struct Impact {
+    std::string uri;
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+
+    // the application period define when the impact happen
+    std::vector<boost::posix_time::time_period> application_periods;
+
+    std::shared_ptr<Severity> severity;
+
+    std::vector<PtObject> informed_entities;
+
+    std::vector<Message> messages;
+
+    //link to the parent disruption
+    //Note: it is a raw pointer because an Impact is owned by it's disruption
+    //(even if the impact is stored as a share_ptr in the disruption to allow for weak_ptr towards it)
+    Disruption* disruption;
+};
+
+
+struct Tag {
+    std::string uri;
+    std::string name;
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+};
+
+
+
+struct Disruption {
+    std::string uri;
+
+    // it's the title of the disruption as shown in the backoffice
+    std::string reference;
+
+    // the publication period specify when an information can be displayed to
+    // the customer, if a request is made before or after this period the
+    // disruption must not be shown
+    boost::posix_time::time_period publication_period;
+
+    boost::posix_time::ptime created_at;
+    boost::posix_time::ptime updated_at;
+
+    std::shared_ptr<Cause> cause;
+
+    //impacts are shared_ptr because there are weak_ptr pointing to them in the impacted objects
+    std::vector<std::shared_ptr<Impact>> impacts;
+
+    // the place where the disruption happen, the impacts can be in anothers places
+    std::vector<PtObject> localization;
+
+    //additional informations on the disruption
+    std::vector<std::shared_ptr<Tag>> tags;
+
+    std::string note;
+};
+
+struct MessageHolder { //=> to be renamed as Disruptions
+    std::vector<std::unique_ptr<Disruption>> disruptions;
+
+    // causes, severities and tags are a pool (weak_ptr because the owner ship
+    // is in the linked disruption or impact)
+    std::map<std::string, std::weak_ptr<Cause>> causes; //to be wrapped
+    std::map<std::string, std::weak_ptr<Severity>> severities; //to be wrapped too
+    std::map<std::string, std::weak_ptr<Tag>> tags; //to be wrapped too
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & disruptions & causes & severities;
+    }
+};
+}
+
 enum Jours {
     Lun = 0x01,
     Mar = 0x02,
@@ -138,8 +260,6 @@ struct MessageHolder{
     template<class Archive> void serialize(Archive& ar, const unsigned int){
         ar & messages;
     }
-
-    MessageHolder& operator=(const navitia::type::MessageHolder&&);
 
 };
 

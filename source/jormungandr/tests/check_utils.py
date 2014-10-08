@@ -34,6 +34,7 @@ from navitiacommon import request_pb2, response_pb2
 from datetime import datetime
 import logging
 import re
+from shapely.geometry import shape
 
 """
 Some small functions to check the service responses
@@ -434,6 +435,10 @@ def is_valid_journey(journey, tester, query):
 
         last_arrival = get_valid_datetime(s['arrival_date_time'])
 
+        # test if geojson is valid
+        g = s.get('geojson')
+        g is None or shape(g)
+
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
 
 
@@ -497,15 +502,17 @@ def is_valid_stop_point(stop_point, depth_check=1):
     is_valid_lat(stop_point["coord"]["lat"])
     is_valid_lon(stop_point["coord"]["lon"])
 
-    if depth_check > 1:
+    if depth_check > 0:
         is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
+    else:
+        assert "stop_area" not in stop_point
 
 
 def is_valid_route(route, depth_check=1):
     get_not_null(route, "name")
     is_valid_bool(get_not_null(route, "is_frequence"))
 
-    if depth_check > 1:
+    if depth_check > 0:
         is_valid_line(get_not_null(route, "line"), depth_check - 1)
 
         direction = get_not_null(route, "direction")
@@ -513,18 +520,76 @@ def is_valid_route(route, depth_check=1):
         #the direction of the route must always be a stop point
         assert get_not_null(direction, "embedded_type") == "stop_point"
         is_valid_stop_point(get_not_null(direction, "stop_point"))
+    else:
+        assert 'line' not in route
+        assert 'direction' not in route
 
 
 def is_valid_line(route, depth_check=1):
+    if depth_check < 0:
+        return
     get_not_null(route, "name")
     get_not_null(route, "id")
     #TODO more checks
 
 
 def is_valid_place(place, depth_check=1):
+    if depth_check < 0:
+        return
     get_not_null(place, "name")
     get_not_null(place, "id")
     #TODO more checks
+
+
+def is_valid_validity_pattern(validity_pattern, depth_check=1):
+    beginning_date = get_not_null(validity_pattern, "beginning_date")
+    assert is_valid_date(beginning_date)
+
+    days = get_not_null(validity_pattern, "days")
+    assert is_valid_days(days)
+
+
+def is_valid_vehicle_journey(vj, depth_check=1):
+    if depth_check < 0:
+        return
+    get_not_null(vj, "id")
+    get_not_null(vj, "name")
+
+    if depth_check > 0:
+        is_valid_journey_pattern(get_not_null(vj, 'journey_pattern'), depth_check=depth_check-1)
+        is_valid_validity_pattern(get_not_null(vj, 'validity_pattern'), depth_check=depth_check-1)
+
+        stoptimes = get_not_null(vj, 'stop_times')
+
+        for st in stoptimes:
+            get_valid_time(get_not_null(st, 'arrival_time'))
+            get_valid_time(get_not_null(st, 'departure_time'))
+
+            if depth_check > 1:
+                #with depth > 1 (we are already in the stoptime nested object), we don't want jpp
+                is_valid_journey_pattern_point(get_not_null(st, 'journey_pattern_point'), depth_check - 2)
+            else:
+                assert 'journey_pattern_point' not in st
+    else:
+        #with depth = 0, we don't want the stop times, the jp, vp, ...
+        assert 'stop_times' not in vj
+        assert 'journey_pattern' not in vj
+        assert 'validity_pattern' not in vj
+
+
+def is_valid_journey_pattern(jp, depth_check=1):
+    if depth_check < 0:
+        return
+    get_not_null(jp, "id")
+    get_not_null(jp, "name")
+
+
+def is_valid_journey_pattern_point(jpp, depth_check=1):
+    get_not_null(jpp, "id")
+    if depth_check > 0:
+        is_valid_stop_point(get_not_null(jpp, 'stop_point'), depth_check=depth_check - 1)
+    else:
+        assert 'stop_point' not in jpp
 
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset

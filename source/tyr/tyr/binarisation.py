@@ -308,7 +308,7 @@ def ed2nav(instance_config, job_id):
         filename = instance_config.tmp_file
         connection_string = make_connection_string(instance_config)
         argv = ["-o", filename, "--connection-string", connection_string]
-        if 'CITIES_DATABASE_URI' in current_app.config:
+        if 'CITIES_DATABASE_URI' in current_app.config and current_app.config['CITIES_DATABASE_URI']:
             argv.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
         res = launch_exec('ed2nav', argv, logger)
         if res != 0:

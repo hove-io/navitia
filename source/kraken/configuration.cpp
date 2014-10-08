@@ -49,7 +49,8 @@ po::options_description get_options_description(){
         ("BROKER.username", po::value<std::string>()->default_value("guest"), "username for rabbitmq")
         ("BROKER.password", po::value<std::string>()->default_value("guest"), "password for rabbitmq")
         ("BROKER.vhost", po::value<std::string>()->default_value("/"), "vhost for rabbitmq")
-        ("BROKER.exchange", po::value<std::string>()->default_value("navitia"), "exchange used in rabbitmq");
+        ("BROKER.exchange", po::value<std::string>()->default_value("navitia"), "exchange used in rabbitmq")
+        ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance");
 
     return desc;
 
@@ -99,5 +100,12 @@ std::string Configuration::broker_vhost() const{
 }
 std::string Configuration::broker_exchange() const{
     return this->vm["BROKER.exchange"].as<std::string>();
+}
+
+std::vector<std::string> Configuration::rt_topics() const{
+    if(! this->vm.count("BROKER.rt_topics")){
+        return std::vector<std::string>();
+    }
+    return this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
 }
 }}//namespace

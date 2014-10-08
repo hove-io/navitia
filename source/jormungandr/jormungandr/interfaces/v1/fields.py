@@ -44,6 +44,8 @@ class PbField(fields.Nested):
         self.display_null = False
 
     def output(self, key, obj):
+        if not obj:
+            return None
         if self.attribute:
             key = self.attribute.split(".")[0]
         try:
@@ -58,6 +60,27 @@ class NonNullNested(fields.Nested):
     def __init__(self, *args, **kwargs):
         super(NonNullNested, self).__init__(*args, **kwargs)
         self.display_null = False
+        self.allow_null = True
+
+
+class NonNullProtobufNested(NonNullNested):
+    """
+    this class is for nested protobuff field
+    we don't want to display null or non defined values
+    """
+    def __init__(self, *args, **kwargs):
+        super(NonNullProtobufNested, self).__init__(*args, **kwargs)
+        self.display_null = False
+        self.allow_null = True
+
+    def output(self, key, obj):
+        if not obj or not obj.HasField(key):
+            value = None
+        else:
+            value = fields.get_value(key if self.attribute is None else self.attribute, obj)
+        if self.allow_null and value is None:
+            return None
+        return fields.marshal(value, self.nested, self.display_null)
 
 
 class DateTime(fields.Raw):
@@ -113,7 +136,7 @@ class SplitDateTime(DateTime):
 
     def output(self, key, obj):
 
-        date = fields.get_value(self.date, obj)
+        date = fields.get_value(self.date, obj) if self.date else None
         time = fields.get_value(self.time, obj)
 
         if time == __date_time_null_value__:
@@ -279,7 +302,7 @@ class GeoJson(fields.Raw):
             except ValueError:
                 return None
         elif obj.type == response_pb2.PUBLIC_TRANSPORT:
-            coords = [sdt.stop_point.coord for sdt in obj.stop_date_times]
+            coords = obj.shape
         elif obj.type == response_pb2.TRANSFER:
             coords.append(obj.origin.stop_point.coord)
             coords.append(obj.destination.stop_point.coord)
@@ -311,6 +334,10 @@ class GeoJson(fields.Raw):
         return response
 
 
+validity_pattern = {
+    'beginning_date': fields.String(),
+    'days': fields.String(),
+}
 
 code = {
     "type": fields.String(),
@@ -379,21 +406,31 @@ stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
 #stop_area["timezone"] = fields.String() #hidden for the moment
-journey_pattern_point = deepcopy(generic_type)
+
+journey_pattern_point = {
+    "id": fields.String(attribute="uri"),
+}
+
 journey_pattern = deepcopy(generic_type)
 jpps = NonNullList(NonNullNested(journey_pattern_point))
 journey_pattern["journey_pattern_points"] = jpps
 stop_time = {
-    "arrival_time" : fields.String(),
-    "departure_time" : fields.String(),
-    "journey_pattern_point" : NonNullNested(journey_pattern_point)
+    "arrival_time": SplitDateTime(date=None, time='arrival_time'),
+    "departure_time": SplitDateTime(date=None, time='departure_time'),
+    "journey_pattern_point": NonNullProtobufNested(journey_pattern_point)
 }
-vehicle_journey = deepcopy(generic_type)
-vehicle_journey["messages"] = NonNullList(NonNullNested(generic_message))
-vehicle_journey["journey_pattern"] = PbField(journey_pattern)
-vehicle_journey["stop_times"] = NonNullList(NonNullNested(stop_time))
-vehicle_journey["comment"] = fields.String()
-vehicle_journey["codes"] = NonNullList(NonNullNested(code))
+
+vehicle_journey = {
+    "id": fields.String(attribute="uri"),
+    "name": fields.String(),
+    "messages": NonNullList(NonNullNested(generic_message)),
+    "journey_pattern": PbField(journey_pattern),
+    "stop_times": NonNullList(NonNullNested(stop_time)),
+    "comment": fields.String(),
+    "codes": NonNullList(NonNullNested(code)),
+    "validity_pattern": NonNullProtobufNested(validity_pattern),
+}
+
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
 line["code"] = fields.String()
@@ -461,6 +498,18 @@ place = {
     "address": PbField(address),
     "poi": PbField(poi),
     "administrative_region": PbField(admin),
+    "embedded_type": enum_type(),
+    "name": fields.String(),
+    "quality": fields.Integer(),
+    "id": fields.String(attribute='uri')
+}
+
+pt_object = {
+    "network": PbField(network),
+    "mode": PbField(commercial_mode),
+    "line": PbField(line),
+    "route": PbField(route),
+    "stop_area": PbField(stop_area),
     "embedded_type": enum_type(),
     "name": fields.String(),
     "quality": fields.Integer(),

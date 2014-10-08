@@ -36,18 +36,18 @@ www.navitia.io
 //forward declare
 namespace navitia{
     namespace routing{
-        class PathItem;
+        struct PathItem;
     }
     namespace georef{
-        class PathItem;
-        class Way;
-        class POI;
-        class Path;
-        class POIType;
+        struct PathItem;
+        struct Way;
+        struct POI;
+        struct Path;
+        struct POIType;
     }
     namespace fare{
-        class results;
-        class Ticket;
+        struct results;
+        struct Ticket;
     }
     namespace timetables {
         struct Thermometer;
@@ -102,10 +102,6 @@ void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::D
         int max_depth = 0, const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(const navitia::georef::Admin* adm, const type::Data &data, pbnavitia::StopDateTime *stop_time, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
 void fill_pb_object(const navitia::type::StopTime* st, const type::Data &data, pbnavitia::StopTime *stop_time, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
@@ -116,37 +112,42 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data &data, p
 
 void fill_codes(const std::string& type, const std::string& value, pbnavitia::Code* code);
 
-void fill_pb_placemark(const type::StopPoint* stop_point, const type::Data &data,
-        pbnavitia::Place* place, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period,
-        const bool show_codes = false);
-
-void fill_pb_placemark(const navitia::georef::Way* way, const type::Data &data, pbnavitia::Place* place, int house_number, type::GeographicalCoord& coord, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_placemark(const type::StopArea* stop_area, const type::Data &data,
-        pbnavitia::Place* place, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period,
-        const bool show_codes = false);
-
-void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_placemark(const navitia::georef::POI* poi, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_placemark(const type::EntryPoint& origin, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
+void fill_pb_placemark(const navitia::georef::Way* way, const type::Data &data, pbnavitia::PtObject* place, int house_number, type::GeographicalCoord& coord, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes = false);
 
 
-void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination, boost::posix_time::ptime time,
+
+void fill_pb_placemark(const type::EntryPoint& origin, const type::Data &data, pbnavitia::PtObject* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes = false);
+
+inline pbnavitia::NavitiaType get_embedded_type(const type::Calendar*) { return pbnavitia::CALENDAR; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::VehicleJourney*) { return pbnavitia::VEHICLE_JOURNEY; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::Line*) { return pbnavitia::LINE; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::Route*) { return pbnavitia::ROUTE; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::Company*) { return pbnavitia::COMPANY; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::Network*) { return pbnavitia::NETWORK; }
+inline pbnavitia::NavitiaType get_embedded_type(const georef::POI*) { return pbnavitia::POI; }
+inline pbnavitia::NavitiaType get_embedded_type(const georef::Admin*) { return pbnavitia::ADMINISTRATIVE_REGION; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::StopArea*) { return pbnavitia::STOP_AREA; }
+inline pbnavitia::NavitiaType get_embedded_type(const type::StopPoint*) { return pbnavitia::STOP_POINT; }
+
+inline pbnavitia::Calendar* get_sub_object(const type::Calendar*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_calendar(); }
+inline pbnavitia::VehicleJourney* get_sub_object(const type::VehicleJourney*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_vehicle_journey(); }
+inline pbnavitia::Line* get_sub_object(const type::Line*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_line(); }
+inline pbnavitia::Route* get_sub_object(const type::Route*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_route(); }
+inline pbnavitia::Company* get_sub_object(const type::Company*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_company(); }
+inline pbnavitia::Network* get_sub_object(const type::Network*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_network(); }
+inline pbnavitia::Poi* get_sub_object(const georef::POI*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_poi(); }
+inline pbnavitia::AdministrativeRegion* get_sub_object(const georef::Admin*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_administrative_region(); }
+inline pbnavitia::StopArea* get_sub_object(const type::StopArea*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_area(); }
+inline pbnavitia::StopPoint* get_sub_object(const type::StopPoint*, pbnavitia::PtObject* pt_object) { return pt_object->mutable_stop_point(); }
+
+
+void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination, type::Mode_e mode, boost::posix_time::ptime time,
                           const type::Data& data, EnhancedResponse &response,  pbnavitia::Journey* pb_journey,
                           const pt::ptime& now, const pt::time_period& action_period);
 
@@ -166,15 +167,17 @@ void add_path_item(pbnavitia::StreetNetwork* sn, const navitia::georef::PathItem
 
 void fill_pb_object(const georef::POI*, const type::Data &data, pbnavitia::Poi* poi, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes=false);
 
 void fill_pb_object(const georef::POIType*, const type::Data &data, pbnavitia::PoiType* poi_type, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(const navitia::georef::Admin* adm, const type::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
+void fill_pb_object(const georef::Admin* adm, const type::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-                    const boost::posix_time::time_period& action_period = null_time_period );
+                    const boost::posix_time::time_period& action_period = null_time_period,
+                    const bool show_codes=false);
 
 void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data, pbnavitia::ScheduleStopTime* row, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
@@ -223,6 +226,28 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 void fill_pb_object(const timetables::Thermometer* thermometer,
         const navitia::type::Data& data, pbnavitia::GeoJson* geojson);
+
+
+void fill_pb_placemark(const navitia::georef::Admin* value, const type::Data &data, pbnavitia::PtObject* pt_object,
+        int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes=false);
+
+template<typename T>
+void fill_pb_placemark(const T* value, const type::Data &data, pbnavitia::PtObject* pt_object, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period,
+        const bool show_codes=false) {
+    if(value == nullptr)
+        return;
+    int depth = (max_depth <= 3) ? max_depth : 3;
+    fill_pb_object(value, data, get_sub_object(value, pt_object), depth,
+                   now, action_period, show_codes);
+    pt_object->set_name(value->name);
+    pt_object->set_uri(value->uri);
+    pt_object->set_embedded_type(get_embedded_type(value));
+}
 
 pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode);
 }//namespace navitia

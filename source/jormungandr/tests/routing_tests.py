@@ -294,3 +294,25 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
 
         response = self.query_region(query, display=False)
         assert(len(response['journeys']) == 1)
+
+@dataset(["main_routing_test"])
+class TestShapeInGeoJson(AbstractTestFixture):
+    """
+    Test if the shape is used in the GeoJson
+    """
+
+    def test_shape_in_geojson(self):
+        """
+        Test if, in the first journey, the second section:
+         - is public_transport
+         - len of stop_date_times is 2
+         - len of geojson/coordinates is 3 (and thus,
+           stop_date_times is not used to create the geojson)
+        """
+        response = self.query_region(journey_basic_query, display=False)
+        print response['journeys'][0]['sections'][1]
+        assert(len(response['journeys']) == 2)
+        assert(len(response['journeys'][0]['sections']) == 3)
+        assert(response['journeys'][0]['sections'][1]['type'] == 'public_transport')
+        assert(len(response['journeys'][0]['sections'][1]['stop_date_times']) == 2)
+        assert(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']) == 3)

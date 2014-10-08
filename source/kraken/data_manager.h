@@ -46,22 +46,34 @@ public:
 
     inline std::shared_ptr<Data> get_data() const{return current_data;}
 
-    bool load(const std::string& database){
-        bool success;
-        {
-            auto data = std::make_shared<Data>();
-            success = data->load(database);
-            if(success){
-                data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
-                std::swap(current_data, data);
-            }
-        }
-
+    void release_memory(){
 #ifndef NO_FORCE_MEMORY_RELEASE
         //we might want to force the system to release the memory after the swap
         //to reduce the memory foot print
         MallocExtension::instance()->ReleaseFreeMemory();
 #endif
+    }
+
+    bool load(const std::string& database){
+        bool success;
+        auto data = std::make_shared<Data>();
+        success = data->load(database);
+        if(success){
+            data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
+            current_data = std::move(data);
+        }
+        release_memory();
         return success;
+    }
+
+    template<typename Disruption>
+    void apply_disruptions(const Disruption& /*disruptions*/){
+        std::stringstream ss;
+        current_data->save(ss);
+        auto data = std::make_shared<Data>();
+        data->load(ss);
+        //call the required method here
+        current_data = std::move(data);
+        release_memory();
     }
 };

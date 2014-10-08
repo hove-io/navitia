@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from flask.ext.restful import fields, marshal_with, reqparse
-from jormungandr import i_manager
+from jormungandr import i_manager, utils
 from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
@@ -42,13 +42,15 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
 from flask.ext.restful.types import natural, boolean
+from jormungandr.utils import ResourceUtc
 
 
-class Schedules(ResourceUri):
+class Schedules(ResourceUri, ResourceUtc):
     parsers = {}
 
     def __init__(self, endpoint):
-        super(Schedules, self).__init__()
+        ResourceUri.__init__(self)
+        ResourceUtc.__init__(self)
         self.endpoint = endpoint
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
@@ -94,12 +96,17 @@ class Schedules(ResourceUri):
             self.collection = 'schedules'
             args["filter"] = self.get_filter(uri.split("/"))
             self.region = i_manager.get_region(region, lon, lat)
-        #@TODO: Change to timestamp
-        if not args["from_datetime"]:
-            args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
-        else:
-            args["from_datetime"] = args["from_datetime"].strftime("%Y%m%dT%H%M%S")
         timezone.set_request_timezone(self.region)
+
+        if not args["from_datetime"]:
+            args['from_datetime'] = datetime.now()
+            args['from_datetime'] = args['from_datetime'].replace(hour=13, minute=37)
+
+        # we save the original datetime for debuging purpose
+        args['original_datetime'] = args['from_datetime']
+
+        new_datetime = self.convert_to_utc(args['from_datetime'])
+        args['from_datetime'] = utils.date_to_timestamp(new_datetime)
 
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)

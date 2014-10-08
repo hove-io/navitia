@@ -54,7 +54,6 @@ struct EdPersistor{
     void persist(const ed::Georef& data);
     /// Poi
     void persist_pois(const ed::Georef& data);
-    void build_ways();
     void clean_georef();
     void clean_poi();
     /// Synonyms
@@ -73,6 +72,8 @@ struct EdPersistor{
     void insert_poi_types(const ed::Georef& data);
     void insert_pois(const ed::Georef& data);
     void insert_poi_properties(const ed::Georef& data);
+
+    void compute_bounding_shape();
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
@@ -117,8 +118,6 @@ private:
 
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
-
-    void compute_bounding_shape();
 
     std::string to_geographic_point(const navitia::type::GeographicalCoord& coord) const;
 

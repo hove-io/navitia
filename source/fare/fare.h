@@ -52,6 +52,7 @@ struct Cost {
     Cost(int v): value(v) {}
     Cost(): undefined(true) {}
     Cost(const Cost& c) = default;
+    Cost& operator=(const Cost& c) = default;
 
     Cost operator+ (Cost c) const {
         return c+= *this;
@@ -199,26 +200,7 @@ struct State {
 /// Type de comparaison possible entre un arc et une valeur
 enum class Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True};
 
-inline std::string comp_to_string(const Comp_e comp) {
-    switch (comp) {
-    case Comp_e::EQ:
-        return "=";
-    case Comp_e::NEQ:
-        return "!=";
-    case Comp_e::LT:
-        return "<";
-    case Comp_e::GT:
-        return ">";
-    case Comp_e::LTE:
-        return "<=";
-    case Comp_e::GTE:
-        return ">=";
-    case Comp_e::True:
-        return "True";
-    default:
-        throw navitia::exception("unhandled Comp case");
-    }
-}
+std::string comp_to_string(const Comp_e comp);
 
 /// Define an edge and the condition to take it
 struct Condition {

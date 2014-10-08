@@ -100,6 +100,11 @@ struct GtfsData {
     std::unordered_map<std::string, vector_sp> sa_spmap;
     std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
 
+    // the shapes are here, and then copied where needed
+    std::unordered_map<std::string, navitia::type::MultiLineString> shapes;
+    // shapes by meta vj, to create shapes in stop times
+    std::unordered_map<std::string, navitia::type::LineString> meta_vj_shapes;
+
     // timezone management
     TzHandler tz;
 
@@ -268,6 +273,7 @@ struct TransfersGtfsHandler : public GenericHandler {
     time_c;
 
     size_t nblines = 0;
+    virtual ~TransfersGtfsHandler() {}
     void init(Data&);
     void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
@@ -304,12 +310,24 @@ struct CalendarDatesGtfsHandler : public GenericHandler {
     }
 };
 
+struct ShapesGtfsHandler: public GenericHandler {
+    ShapesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int shape_id_c = -1, shape_pt_lat_c = -1, shape_pt_lon_c = -1, shape_pt_sequence_c = -1;
+    std::map<std::string, std::map<int, navitia::type::GeographicalCoord>> shapes;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void finish(Data& data);
+    const std::vector<std::string> required_headers() const {
+        return {"shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"};
+    }
+};
+
 struct TripsGtfsHandler : public GenericHandler {
     TripsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, service_c,
             trip_c, headsign_c,
             block_id_c, wheelchair_c,
-            bikes_c;
+            bikes_c, shape_id_c;
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -367,6 +385,7 @@ public:
 
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
     GenericGtfsParser(const std::string & path);
+    virtual ~GenericGtfsParser();
 
     /// Remplit la structure passée en paramètre
     void fill(ed::Data& data, const std::string beginning_date = "");

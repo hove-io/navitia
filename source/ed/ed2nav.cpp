@@ -71,6 +71,8 @@ struct FindAdminWithCities {
         admin_by_insee_code(m)
         {}
 
+    FindAdminWithCities(const FindAdminWithCities&) = default;
+    FindAdminWithCities& operator=(const FindAdminWithCities&) = default;
     ~FindAdminWithCities() {
         if (nb_call == 0) return;
 
@@ -137,8 +139,8 @@ int main(int argc, char * argv[])
     double min_non_connected_graph_ratio;
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help,h", "Affiche l'aide")
-        ("version,v", "Affiche la version")
+        ("help,h", "Show this message")
+        ("version,v", "Show version")
         ("config-file", po::value<std::string>(), "Path to config file")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"),
             "Output file")
@@ -172,7 +174,8 @@ int main(int argc, char * argv[])
     }
 
     if(vm.count("help")) {
-        std::cout << desc <<  "\n";
+        std::cout << "Extracts data from a database to a file readable by kraken" << std::endl;
+        std::cout << desc <<  std::endl;
         return 1;
     }
 

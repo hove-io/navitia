@@ -35,7 +35,7 @@ from flask.ext.restful.types import boolean
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.instance_manager import instances_comparator
-from jormungandr import authentification
+from jormungandr import authentication
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
@@ -625,7 +625,7 @@ class Journeys(ResourceUri, ResourceUtc):
         if region:
             self.region = i_manager.get_region(region)
             #we check that the user can use this api
-            authentification.authenticate(region, 'ALL', abort=True)
+            authentication.authenticate(region, 'ALL', abort=True)
             if uri:
                 objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
@@ -754,7 +754,7 @@ class Journeys(ResourceUri, ResourceUtc):
         if region:
             self.region = i_manager.get_region(region)
             #we check that the user can use this api
-            authentification.authenticate(region, 'ALL', abort=True)
+            authentication.authenticate(region, 'ALL', abort=True)
             set_request_timezone(self.region)
 
         if not region:
@@ -766,7 +766,7 @@ class Journeys(ResourceUri, ResourceUtc):
         args['origin_access_duration'] = []
         args['destination'] = []
         args['destination_access_duration'] = []
-        for loop in [('from','origin',True),('to','destination',False)]:
+        for loop in [('from', 'origin', True), ('to', 'destination', False)]:
             for location in args[loop[0]]:
                 if "access_duration" in location:
                     args[loop[1]+'_access_duration'].append(location["access_duration"])

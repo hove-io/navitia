@@ -52,9 +52,9 @@ using nt::hasProperties;
 using nt::hasVehicleProperties;
 
 
-#define FORWARD_CLASS_DECLARE(type_name, collection_name) class type_name;
+#define FORWARD_CLASS_DECLARE(type_name, collection_name) struct type_name;
 ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
-class StopTime;
+struct StopTime;
 
 using nt::ConnectionType;
 using nt::VehicleJourneyType;
@@ -68,9 +68,7 @@ struct StopPointConnection: public Header, hasProperties {
     int max_duration;
     ConnectionType connection_kind;
 
-    navitia::type::StopPointConnection* get_navitia_type() const;
-
-    StopPointConnection() : departure(NULL), destination(NULL), display_duration(0),duration(0),
+    StopPointConnection() : departure(NULL), destination(NULL), display_duration(0), duration(0),
         max_duration(0), connection_kind(ConnectionType::Default){}
 
    bool operator<(const StopPointConnection& other) const;
@@ -86,8 +84,6 @@ struct Calendar : public Nameable, public Header {
     std::vector<boost::gregorian::date_period> period_list;
     std::vector<navitia::type::ExceptionDate> exceptions;
 
-    navitia::type::Calendar* get_navitia_type() const;
-
     Calendar() {}
 
     bool operator<(const Calendar & other) const { return this < &other; }
@@ -99,8 +95,6 @@ struct StopArea : public Header, Nameable, hasProperties{
     nt::GeographicalCoord coord;
     std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
 
-    navitia::type::StopArea* get_navitia_type() const;
-
     StopArea() {}
 
     bool operator<(const StopArea& other) const;
@@ -110,8 +104,6 @@ struct StopArea : public Header, Nameable, hasProperties{
 struct Contributor : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Contributor;
     Contributor() {}
-
-    nt::Contributor* get_navitia_type() const;
 
     bool operator<(const Contributor& other)const{ return this->name < other.name;}
 };
@@ -129,8 +121,6 @@ struct Network : public Header, Nameable{
     int sort = std::numeric_limits<int>::max();
 
 
-    navitia::type::Network* get_navitia_type() const;
-
     bool operator<(const Network& other)const{ return this->name < other.name;}
 };
 
@@ -144,14 +134,11 @@ struct Company : public Header, Nameable{
     std::string website;
     std::string fax;
 
-    nt::Company* get_navitia_type() const;
-
     bool operator<(const Company& other)const{ return this->name < other.name;}
 };
 
 struct CommercialMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::CommercialMode;
-    nt::CommercialMode* get_navitia_type() const;
 
     bool operator<(const CommercialMode& other)const ;
 };
@@ -159,8 +146,6 @@ struct CommercialMode : public Header, Nameable{
 struct PhysicalMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::PhysicalMode;
     PhysicalMode() {}
-
-    nt::PhysicalMode* get_navitia_type() const;
 
     bool operator<(const PhysicalMode& other) const;
 };
@@ -179,10 +164,9 @@ struct Line : public Header, Nameable {
     CommercialMode* commercial_mode;
     Network* network;
     Company* company;
+    nt::MultiLineString shape;
 
     Line(): color(""), commercial_mode(NULL), network(NULL), company(NULL){}
-
-    nt::Line* get_navitia_type() const;
 
     bool operator<(const Line & other) const;
 };
@@ -191,8 +175,7 @@ struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
     std::string external_code;
     Line * line;
-
-    navitia::type::Route* get_navitia_type() const;
+    nt::MultiLineString shape;
 
     bool operator<(const Route& other) const;
 };
@@ -205,8 +188,6 @@ struct JourneyPattern : public Header, Nameable{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
 
     JourneyPattern(): is_frequence(false), route(NULL), physical_mode(NULL){}
-
-    navitia::type::JourneyPattern* get_navitia_type() const;
 
     bool operator<(const JourneyPattern& other) const;
  };
@@ -241,8 +222,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     VehicleJourney* prev_vj = nullptr;
     VehicleJourney* next_vj = nullptr;
 
-    navitia::type::VehicleJourney* get_navitia_type() const;
-
     bool operator<(const VehicleJourney& other) const;
 };
 
@@ -254,8 +233,7 @@ struct JourneyPatternPoint : public Header, Nameable{
     int fare_section;
     JourneyPattern* journey_pattern;
     StopPoint* stop_point;
-
-    nt::JourneyPatternPoint* get_navitia_type() const;
+    nt::LineString shape_from_prev;
 
     JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern(NULL), stop_point(NULL){}
 
@@ -281,8 +259,6 @@ public:
     bool check(int day) const;
     bool check(boost::gregorian::date day) const;
 
-    nt::ValidityPattern* get_navitia_type() const;
-
     bool operator<(const ValidityPattern& other) const;
     bool operator==(const ValidityPattern& other) const;
 };
@@ -303,8 +279,6 @@ struct StopPoint : public Header, Nameable, hasProperties{
 
     StopPoint(): fare_zone(0), stop_area(NULL), network(NULL) {}
 
-    nt::StopPoint* get_navitia_type() const;
-
     bool operator<(const StopPoint& other) const;
 };
 
@@ -321,14 +295,13 @@ struct StopTime : public Nameable {
     bool is_frequency;
     bool wheelchair_boarding;
     bool date_time_estimated;
+    nt::LineString shape_from_prev;
 
     uint16_t local_traffic_zone;
 
     StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
         ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),date_time_estimated(false),
                 local_traffic_zone(std::numeric_limits<uint16_t>::max()) {}
-
-    navitia::type::StopTime* get_navitia_type() const;
 
     bool operator<(const StopTime& other) const;
 };

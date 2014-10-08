@@ -36,7 +36,7 @@ void compute_score_poi(type::PT_Data&, georef::GeoRef &georef) {
     for (auto it = georef.fl_poi.word_quality_list.begin(); it != georef.fl_poi.word_quality_list.end(); ++it){
         for (navitia::georef::Admin* admin : georef.pois[it->first]->admin_list){
             if(admin->level == 8){
-                (it->second).score = georef.fl_admin.word_quality_list.at(admin->idx).score;
+                it->second.score = georef.fl_admin.word_quality_list.at(admin->idx).score;
             }
         }
     }
@@ -44,11 +44,11 @@ void compute_score_poi(type::PT_Data&, georef::GeoRef &georef) {
 
 
 void compute_score_way(type::PT_Data&, georef::GeoRef &georef) {
+    //The scocre of each admin(level 8) is attributed to all its ways
     for (auto it = georef.fl_way.word_quality_list.begin(); it != georef.fl_way.word_quality_list.end(); ++it){
         for (navitia::georef::Admin* admin : georef.ways[it->first]->admin_list){
             if (admin->level == 8){
-                //georef.fl_way.ac_list.at(it->first).score = georef.fl_admin.ac_list.at(admin->idx).score;
-                (it->second).score = georef.fl_admin.word_quality_list.at(admin->idx).score;
+                it->second.score = georef.fl_admin.word_quality_list.at(admin->idx).score;
             }
         }
     }
@@ -56,19 +56,28 @@ void compute_score_way(type::PT_Data&, georef::GeoRef &georef) {
 
 
 void compute_score_stop_point(type::PT_Data &pt_data, georef::GeoRef &georef) {
-    //Récupérer le score de son admin du niveau 8 dans le autocomplete: georef.fl_admin
+    //The scocre of each admin(level 8) is attributed to all its stop_points
     for (auto it = pt_data.stop_point_autocomplete.word_quality_list.begin(); it != pt_data.stop_point_autocomplete.word_quality_list.end(); ++it){
         for(navitia::georef::Admin* admin : pt_data.stop_points[it->first]->admin_list){
             if (admin->level == 8){
-                (it->second).score = georef.fl_admin.word_quality_list.at(admin->idx).score;
+                it->second.score = georef.fl_admin.word_quality_list.at(admin->idx).score;
             }
         }
     }
 }
 
-void compute_score_stop_area(type::PT_Data & pt_data){
-    //Calculate de maximum stop-point count;
+static size_t admin_score(const std::vector<navitia::georef::Admin*>& admins, const georef::GeoRef &georef) {
+    for (const auto* admin: admins) {
+        if (admin->level == 8) return georef.fl_admin.word_quality_list.at(admin->idx).score;
+    }
+    return 0;
+}
+
+void compute_score_stop_area(type::PT_Data & pt_data, const georef::GeoRef &georef){
+    //The scocre of each admin(level 8) is attributed to all its stop_areas also
+    //Find the stop-point count in all stop_areas and keep the highest;
     size_t max_score = 0;
+
     for (navitia::type::StopArea* sa : pt_data.stop_areas){
         max_score = std::max(max_score, sa->stop_point_list.size());
     }
@@ -76,14 +85,25 @@ void compute_score_stop_area(type::PT_Data & pt_data){
     //Ajust the score of each stop_area from 0 to 100 using maximum score (max_score)
     if (max_score > 0){
         for (auto & it : pt_data.stop_area_autocomplete.word_quality_list){
-            it.second.score = (pt_data.stop_areas[it.first]->stop_point_list.size() * 100)/max_score;
+            const size_t ad_score = admin_score(pt_data.stop_areas[it.first]->admin_list, georef);
+            it.second.score = ad_score + (pt_data.stop_areas[it.first]->stop_point_list.size() * 100)/max_score;
         }
     }
 }
 
+/*
+ Use natural logarithm to compute admin score as explained below.
+ City       stop_point_count    log(n+2)*10
+ Paris      3065                80
+ Lyon       1000                69
+ Versailles 418                 60
+ St Denis   248                 55
+ Melun      64                  42
+ Pouzioux   1                   11
+ Pampa      0                   7
+*/
 void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
-    int max_score = 0;
-    //Pour chaque stop_point incrémenter le score de son admin de niveau 8 par 1.
+    //For each stop_point increase the score of it's admin(level 8) by 1.
     for (navitia::type::StopPoint* sp : pt_data.stop_points){
         for (navitia::georef::Admin * admin : sp->admin_list){
             if (admin->level == 8){
@@ -91,19 +111,11 @@ void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
             }
         }
     }
-    //Calculer le max_score des admins
+
+    //Ajust the score of each admin using natural logarithm as : log(n+2)*10
     for (auto it = georef.fl_admin.word_quality_list.begin(); it != georef.fl_admin.word_quality_list.end(); ++it){
-        max_score = ((it->second).score > max_score)?(it->second).score:max_score;
+        it->second.score = log(it->second.score + 2) * 10;
     }
-
-    //Ajuster le score de chaque admin an utilisant le max_score.
-    for (auto it = georef.fl_admin.word_quality_list.begin(); it != georef.fl_admin.word_quality_list.end(); ++it){
-        (it->second).score = max_score == 0 ? 0 : ((it->second).score * 100)/max_score;
-    }
-}
-
-
-void compute_score_line(type::PT_Data&, georef::GeoRef&) {
 }
 
 template<>
@@ -111,13 +123,10 @@ void Autocomplete<type::idx_t>::compute_score(type::PT_Data &pt_data, georef::Ge
                    const type::Type_e type) {
     switch(type){
         case type::Type_e::StopArea:
-            compute_score_stop_area(pt_data);
+            compute_score_stop_area(pt_data, georef);
             break;
         case type::Type_e::StopPoint:
             compute_score_stop_point(pt_data, georef);
-            break;
-        case type::Type_e::Line:
-            compute_score_line(pt_data, georef);
             break;
         case type::Type_e::Admin:
             compute_score_admin(pt_data, georef);

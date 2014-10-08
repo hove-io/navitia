@@ -38,13 +38,7 @@ def check_valid_calendar(cal):
     is_valid_bool(get_not_null(pattern, "monday"))  # check one field in pattern
 
     validity_pattern = get_not_null(cal, "validity_pattern")
-    assert len(validity_pattern) > 0
-
-    beginning_date = get_not_null(validity_pattern, "beginning_date")
-    assert is_valid_date(beginning_date)
-
-    days = get_not_null(validity_pattern, "days")
-    assert is_valid_days(days)
+    is_valid_validity_pattern(validity_pattern)
 
     exceptions = get_not_null(cal, "exceptions")
     assert len(exceptions) > 0

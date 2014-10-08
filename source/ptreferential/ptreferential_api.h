@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 
-namespace pbnavitia { struct Response;}
+namespace pbnavitia { class Response;}
 
 namespace navitia{ namespace ptref{
 /// Execute une requête et génère la sortie protobuf

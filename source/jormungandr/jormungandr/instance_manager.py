@@ -41,7 +41,7 @@ from importlib import import_module
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
-from jormungandr import app, authentification
+from jormungandr import app, authentication
 from jormungandr.instance import Instance
 import traceback
 
@@ -214,7 +214,7 @@ class InstanceManager(object):
         if ptobject:
             instances = ptobject.instances()
             if len(instances) > 0:
-                available_instances = [i.name for i in instances if authentification.has_access(i, abort=False)]
+                available_instances = [i.name for i in instances if authentication.has_access(i, abort=False)]
 
                 if not available_instances:
                     raise RegionNotFound(custom_msg="id {i} exists but not in regions available for user"
@@ -245,7 +245,7 @@ class InstanceManager(object):
                     raise RegionNotFound(custom_msg="technical problem, impossible "
                                                     "to find region {r} in jormungandr database"
                                          .format(r=key))
-                if authentification.has_access(jormun_instance, abort=False):  #TODO, pb how to check the api ?
+                if authentication.has_access(jormun_instance, abort=False):  #TODO, pb how to check the api ?
                     valid_instances.append(key)
 
         if valid_instances:

@@ -31,6 +31,8 @@ www.navitia.io
 #include "ed_persistor.h"
 #include "ed/connectors/fare_utils.h"
 
+#include <boost/geometry.hpp>
+
 namespace bg = boost::gregorian;
 
 namespace ed{
@@ -90,33 +92,6 @@ std::string EdPersistor::to_geographic_point(const navitia::type::GeographicalCo
     std::stringstream geog;
     geog << std::setprecision(10)<<"POINT("<<coord.lon()<<" "<<coord.lat()<<")";
     return geog.str();
-}
-
-void EdPersistor::build_ways(){
-    /// Add a name for the admins with an empty name
-    PQclear(this->lotus.exec("SELECT georef.add_way_name();", "", PGRES_TUPLES_OK));
-    /// Fusion ways by name and admin
-    PQclear(this->lotus.exec("SELECT georef.fusion_ways_by_admin_name();", "", PGRES_TUPLES_OK));
-    /// Moving admin and way relations, so that the pair (admin, way) is unique
-    PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// Update way_id in table edge
-    PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
-    /// Add ways not in fusion table
-    PQclear(this->lotus.exec("SELECT georef.complete_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Add ways where admin is nil
-    PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
-    /// Update data in table 'rel_way_admin' by 'tmp_rel_way_admin'
-    PQclear(this->lotus.exec("SELECT georef.insert_rel_way_admin();", "", PGRES_TUPLES_OK));
-    /// Remove duplicate data in table of ways
-    PQclear(this->lotus.exec("SELECT georef.clean_way();", "", PGRES_TUPLES_OK));
-    /// Update way_id in housenumber table
-    PQclear(this->lotus.exec("SELECT georef.update_house_number();", "", PGRES_TUPLES_OK));
-    /// Update ways name
-    PQclear(this->lotus.exec("SELECT georef.clean_way_name();", "", PGRES_TUPLES_OK));
-    /// Update of admin cordinates  : Calcul of barycentre
-    PQclear(this->lotus.exec("SELECT georef.update_admin_coord();", "", PGRES_TUPLES_OK));
-    /// Relation between admins
-    PQclear(this->lotus.exec("SELECT georef.match_admin_to_admin();", "", PGRES_TUPLES_OK));
 }
 
 void EdPersistor::insert_admins(const ed::Georef& data){
@@ -261,7 +236,7 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
 }
 
 void EdPersistor::compute_bounding_shape() {
-    PQclear(this->lotus.exec("select georef.update_bounding_shape();", "", PGRES_TUPLES_OK));
+    this->lotus.exec("select georef.update_bounding_shape();", "", PGRES_TUPLES_OK);
 }
 
 void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
@@ -369,9 +344,9 @@ void EdPersistor::persist_synonym(const std::map<std::string, std::string>& data
 
 void EdPersistor::persist_fare(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: truncate fare tables");
-    PQclear(this->lotus.exec(
-                "TRUNCATE navitia.origin_destination, navitia.transition, "
-                "navitia.ticket, navitia.dated_ticket, navitia.od_ticket CASCADE"));
+    this->lotus.exec(
+        "TRUNCATE navitia.origin_destination, navitia.transition, "
+        "navitia.ticket, navitia.dated_ticket, navitia.od_ticket CASCADE");
     LOG4CPLUS_INFO(logger, "End: truncate fare tables");
     LOG4CPLUS_INFO(logger, "Begin: insert prices");
     this->insert_prices(data);
@@ -402,40 +377,39 @@ void EdPersistor::insert_metadata(const navitia::type::MetaData& meta) {
     + insert_query + " WHERE NOT EXISTS (SELECT * FROM upsert);";
 
     std::cout << request << std::endl;
-    PQclear(this->lotus.exec(request));
+    this->lotus.exec(request);
 }
 
 void EdPersistor::clean_georef(){
-    PQclear(this->lotus.exec(
-                "TRUNCATE georef.node, georef.house_number, georef.admin, "
-                "georef.way CASCADE;"));
+    this->lotus.exec(
+        "TRUNCATE georef.node, georef.house_number, georef.admin, "
+        "georef.way CASCADE;");
 }
 
 void EdPersistor::clean_poi(){
-    PQclear(this->lotus.exec(
-                "TRUNCATE  georef.poi_type, georef.poi CASCADE;"));
+    this->lotus.exec("TRUNCATE  georef.poi_type, georef.poi CASCADE;");
 }
 
 void EdPersistor::clean_synonym(){
-    PQclear(this->lotus.exec("TRUNCATE georef.synonym"));
+    this->lotus.exec("TRUNCATE georef.synonym");
 }
 
 void EdPersistor::clean_db(){
-    PQclear(this->lotus.exec(
-                "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
-                "navitia.physical_mode, navitia.contributor, "
-                "navitia.commercial_mode, "
-                "navitia.vehicle_properties, navitia.properties, "
-                "navitia.validity_pattern, navitia.network, "
-                "navitia.connection, navitia.calendar, navitia.period, "
-                "navitia.week_pattern, "
-                "navitia.meta_vj, navitia.rel_metavj_vj"
-                " CASCADE"));
+    this->lotus.exec(
+        "TRUNCATE navitia.stop_area, navitia.line, navitia.company, "
+        "navitia.physical_mode, navitia.contributor, "
+        "navitia.commercial_mode, "
+        "navitia.vehicle_properties, navitia.properties, "
+        "navitia.validity_pattern, navitia.network, "
+        "navitia.connection, navitia.calendar, navitia.period, "
+        "navitia.week_pattern, "
+        "navitia.meta_vj, navitia.rel_metavj_vj"
+        " CASCADE");
     //we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
-    PQclear(this->lotus.exec("update navitia.parameters set"
-                             " beginning_date = null"
-                             ", end_date = null"
-                             ", timezone = '';"));
+    this->lotus.exec("update navitia.parameters set"
+                     " beginning_date = null"
+                     ", end_date = null"
+                     ", timezone = '';");
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -637,7 +611,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
     this->lotus.prepare_bulk_insert("navitia.line",
             {"id", "uri", "external_code", "name", "comment", "color", "code",
-            "commercial_mode_id", "network_id", "sort"});
+             "commercial_mode_id", "network_id", "sort", "shape"});
 
     for(types::Line* line : lines){
         std::vector<std::string> values;
@@ -661,7 +635,16 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
                     "have any network");
             continue;
         }
+
         values.push_back(std::to_string(line->sort));
+
+        std::stringstream shape;
+        if (line->shape.empty())
+            shape << "NULL";
+        else
+            shape << std::setprecision(16) << boost::geometry::wkt(line->shape);
+        values.push_back(shape.str());
+
         this->lotus.insert(values);
     }
 
@@ -695,7 +678,7 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
 
 void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
     this->lotus.prepare_bulk_insert("navitia.route",
-            {"id", "uri", "external_code", "name", "comment", "line_id"});
+            {"id", "uri", "external_code", "name", "comment", "line_id", "shape"});
 
     for(types::Route* route : routes){
         std::vector<std::string> values;
@@ -709,6 +692,14 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
         }else{
             values.push_back(lotus.null_value);
         }
+
+        std::stringstream shape;
+        if (route->shape.empty())
+            shape << "NULL";
+        else
+            shape << std::setprecision(16) << boost::geometry::wkt(route->shape);
+        values.push_back(shape.str());
+
         this->lotus.insert(values);
     }
 
@@ -807,7 +798,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
 void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points){
     this->lotus.prepare_bulk_insert("navitia.journey_pattern_point",
             {"id", "uri", "name", "comment", "\"order\"",
-            "stop_point_id", "journey_pattern_id"});
+             "stop_point_id", "journey_pattern_id", "shape_from_prev"});
 
     for(types::JourneyPatternPoint* jpp : journey_pattern_points){
         std::vector<std::string> values;
@@ -828,6 +819,14 @@ void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyP
         }else{
             values.push_back(lotus.null_value);
         }
+
+        std::stringstream shape;
+        if (jpp->shape_from_prev.empty())
+            shape << "NULL";
+        else
+            shape << std::setprecision(16) << boost::geometry::wkt(jpp->shape_from_prev);
+        values.push_back(shape.str());
+
         this->lotus.insert(values);
     }
 
@@ -935,7 +934,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             query += boost::lexical_cast<std::string>(vj->idx);
             query += ";";
             LOG4CPLUS_TRACE(logger, "query : " << query);
-            PQclear(this->lotus.exec(query, "", PGRES_COMMAND_OK));
+            this->lotus.exec(query, "", PGRES_COMMAND_OK);
         }
     }
 }
