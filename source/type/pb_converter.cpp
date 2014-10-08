@@ -616,7 +616,6 @@ void fill_codes(const std::string& type, const std::string& value, pbnavitia::Co
 }
 
 
-template<>
 void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &data, pbnavitia::PtObject* pt_object,
                        int max_depth, const boost::posix_time::ptime& now,
                        const boost::posix_time::time_period& action_period,
