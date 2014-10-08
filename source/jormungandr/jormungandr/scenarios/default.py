@@ -38,143 +38,13 @@ from datetime import datetime, timedelta
 import itertools
 from flask import current_app
 import time
-
-
-pb_type = {
-    'stop_area': type_pb2.STOP_AREA,
-    'stop_point': type_pb2.STOP_POINT,
-    'address': type_pb2.ADDRESS,
-    'poi': type_pb2.POI,
-    'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
-    'line': type_pb2.LINE
-}
-
-
-pt_object_type = {
-    'network': type_pb2.NETWORK,
-    'mode': type_pb2.COMMERCIAL_MODE,
-    'line': type_pb2.LINE,
-    'route': type_pb2.ROUTE,
-    'stop_area': type_pb2.STOP_AREA
-}
-
-
-
-f_date_time = "%Y%m%dT%H%M%S"
-
-
-def date_to_time_stamp(date):
-    return int(time.mktime(date.timetuple()))
-
-
-def are_equals(journey1, journey2):
-    """
-    To decide that 2 journeys are equals, we loop through all values of the
-    compare_journey_generator and stop at the first non equals value
-
-    Note: the fillvalue is the value used when a generator is consumed
-    (if the 2 generators does not return the same number of elt).
-    by setting it to object(), we ensure that it will be !=
-    from any values returned by the other generator
-    """
-    return all(a == b for a, b in itertools.izip_longest(compare_journey_generator(journey1),
-                                                         compare_journey_generator(journey2),
-                                                         fillvalue=object()))
-
-
-def compare_journey_generator(journey):
-    """
-    Generator used to compare journeys together
-
-    2 journeys are equals if they share for all the sections the same :
-     * departure time
-     * arrival time
-     * vj
-     * type
-     * departure location
-     * arrival location
-    """
-    yield journey.departure_date_time
-    yield journey.arrival_date_time
-    for s in journey.sections:
-        yield s.type
-        yield s.begin_date_time
-        yield s.end_date_time
-        yield s.vehicle_journey.uri if s.vehicle_journey else 'no_vj'
-        #NOTE: we want to ensure that we always yield the same number of elt
-        yield s.origin.uri if s.origin else 'no_origin'
-        yield s.destination.uri if s.destination else 'no_destination'
-
-
-def count_typed_journeys(journeys):
-        return sum(1 for journey in journeys if journey.type)
-
-
-class JourneySorter:
-    """
-    Journey comparator for sort
-
-    the comparison is different if the query is for clockwise search or not
-    """
-    def __init__(self, clockwise):
-        self.clockwise = clockwise
-
-    def __call__(self, j1, j2):
-
-        if self.clockwise:
-            #for clockwise query, we want to sort first on the arrival time
-            if j1.arrival_date_time != j2.arrival_date_time:
-                return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
-        else:
-            #for non clockwise the first sort is done on departure
-            if j1.departure_date_time != j2.departure_date_time:
-                return -1 if j1.departure_date_time > j2.departure_date_time else 1
-
-        # afterward we compare the duration, hence it will indirectly compare
-        # the departure for clockwise, and the arrival for not clockwise
-        if j1.duration != j2.duration:
-            return j2.duration - j1.duration
-
-        if j1.nb_transfers != j2.nb_transfers:
-            return j1.nb_transfers - j2.nb_transfers
-
-        #afterward we compare the non pt duration
-        non_pt_duration_j1 = non_pt_duration_j2 = None
-        for journey in [j1, j2]:
-            non_pt_duration = 0
-            for section in journey.sections:
-                if section.type != response_pb2.PUBLIC_TRANSPORT:
-                    non_pt_duration += section.duration
-            if not non_pt_duration_j1:
-                non_pt_duration_j1 = non_pt_duration
-            else:
-                non_pt_duration_j2 = non_pt_duration
-        return non_pt_duration_j1 - non_pt_duration_j2
+from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, JourneySorter
+from jormungandr.scenarios.utils import build_pagination
 
 
 class Scenario(object):
     def __init__(self):
         self.functional_params = {}
-
-    def __pagination(self, request, ressource_name, resp):
-        pagination = resp.pagination
-        if pagination.totalResult > 0:
-            query_args = ""
-            for key, value in request.iteritems():
-                if key != "startPage":
-                    if isinstance(value, type([])):
-                        for v in value:
-                            query_args += key + "=" + unicode(v) + "&"
-                    else:
-                        query_args += key + "=" + unicode(value) + "&"
-            if pagination.startPage > 0:
-                page = pagination.startPage - 1
-                pagination.previousPage = query_args
-                pagination.previousPage += "start_page=%i" % page
-            last_id_page = (pagination.startPage + 1) * pagination.itemsPerPage
-            if last_id_page < pagination.totalResult:
-                page = pagination.startPage + 1
-                pagination.nextPage = query_args + "start_page=%i" % page
 
     def status(self, request, instance):
         req = request_pb2.Request()
@@ -221,13 +91,6 @@ class Scenario(object):
         resp = instance.send_and_receive(req)
         return resp
 
-    def load(self, request, instance, format):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.LOAD
-        resp = instance.send_and_receive(req)
-        return render_from_protobuf(resp, format,
-                                    request.arguments.get('callback'))
-
     def places(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places
@@ -247,7 +110,7 @@ class Scenario(object):
         if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
             return self.places(request, instance)
-        self.__pagination(request, "places", resp)
+        build_pagination(request, resp)
 
         return resp
 
@@ -272,10 +135,10 @@ class Scenario(object):
         if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
             return self.pt_objects(request, instance)
-        self.__pagination(request, "pt_objects", resp)
+        build_pagination(request, resp)
 
         return resp
-	
+
     def place_uri(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
@@ -454,7 +317,7 @@ class Scenario(object):
                 req.places_nearby.types.append(pb_type[type])
         req.places_nearby.filter = request["filter"]
         resp = instance.send_and_receive(req)
-        self.__pagination(request, "places_nearby", resp)
+        build_pagination(request, resp)
         return resp
 
     def __fill_uris(self, resp):
@@ -749,7 +612,7 @@ class Scenario(object):
                 req.ptref.forbidden_uri.append(forbidden_uri)
 
         resp = instance.send_and_receive(req)
-        self.__pagination(request, resource_name, resp)
+        build_pagination(request, resp)
         return resp
 
     def stop_areas(self, request, instance):
