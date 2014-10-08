@@ -116,7 +116,8 @@ class add_address_poi_id(object):
                     if 'embedded_type' in objects.keys() and\
                         (objects['embedded_type'] == 'address' or
                          objects['embedded_type'] == 'poi' or
-                         objects['embedded_type'] == 'administrative_region'):
+                         objects['embedded_type'] == 'administrative_region') and\
+			objects['embedded_type'] in objects:
                         objects["id"] = objects[objects['embedded_type']]["id"]
             if self.resource.region:
                 add_id(objects, self.resource.region)
