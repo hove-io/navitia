@@ -38,12 +38,11 @@ www.navitia.io
 #include <algorithm>
 #include <regex>
 #include <boost/regex.hpp>
-
-
 #include <map>
 #include <unordered_map>
 #include <set>
 #include "type/type.h"
+#include "utils/functions.h"
 
 namespace navitia { namespace autocomplete {
 
@@ -300,26 +299,14 @@ struct Autocomplete
         }
     };
 
-    template <typename Cmp>
-    static std::vector<fl_quality> sort_and_truncate(std::vector<fl_quality> input, size_t nbmax, Cmp cmp) {
-        typename std::vector<fl_quality>::iterator middle_iterator;
-        if(nbmax < input.size())
-            middle_iterator = input.begin() + nbmax;
-        else
-            middle_iterator = input.end();
-
-        std::partial_sort(input.begin(), middle_iterator, input.end(), cmp);
-
-        if (input.size() > nbmax){input.resize(nbmax);}
+    std::vector<fl_quality> sort_and_truncate_by_score(std::vector<fl_quality> input, size_t nbmax) const {
+        sort_and_truncate(input, nbmax, [](fl_quality a, fl_quality b){return a.score > b.score;});
         return input;
     }
 
-    std::vector<fl_quality> sort_and_truncate_by_score(std::vector<fl_quality> input, size_t nbmax) const {
-        return sort_and_truncate(input, nbmax, [](fl_quality a, fl_quality b){return a.score > b.score;});
-    }
-
     std::vector<fl_quality> sort_and_truncate_by_quality(std::vector<fl_quality> input, size_t nbmax) const {
-        return sort_and_truncate(input, nbmax, [](fl_quality a, fl_quality b){return a.quality > b.quality;});
+        sort_and_truncate(input, nbmax, [](fl_quality a, fl_quality b){return a.quality > b.quality;});
+        return input;
     }
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/

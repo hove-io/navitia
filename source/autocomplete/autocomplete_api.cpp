@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "autocomplete/autocomplete.h"
 #include "type/pt_data.h"
+#include "utils/functions.h"
 
 namespace navitia { namespace autocomplete {
 /**
@@ -342,12 +343,7 @@ pbnavitia::Response autocomplete(const std::string &q,
     if (search_type != 0) {
         nbmax = nbmax_temp;
         auto mutable_places = pb_response.mutable_places();
-        int result_size = std::min(nbmax, mutable_places->size());
-        std::partial_sort(mutable_places->begin(),mutable_places->begin() + result_size,
-                          mutable_places->end(),compare_by_quality);
-        while (mutable_places->size() > nbmax){
-            mutable_places->RemoveLast();
-        }
+        sort_and_truncate(*mutable_places, nbmax, compare_by_quality);
     }
 
 
@@ -373,13 +369,8 @@ pbnavitia::Response autocomplete(const std::string &q,
 
     nbmax = nbmax_temp;
     auto mutable_places = pb_response.mutable_places();
-    int result_size = std::min(nbmax, mutable_places->size());
-    std::partial_sort(mutable_places->begin(), mutable_places->begin() + result_size,
-                      mutable_places->end(), compare_attributs);
-
-    while (mutable_places->size() > nbmax){
-        mutable_places->RemoveLast();
-    }
+    sort_and_truncate(*mutable_places, nbmax, compare_attributs);
+    const int result_size = mutable_places->size();
 
     //Pagination
     auto pagination = pb_response.mutable_pagination();
