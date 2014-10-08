@@ -43,7 +43,7 @@ class TestJourneys(AbstractTestFixture):
         #not to use the jormungandr database
         query = "v1/coverage/main_routing_test/journeys?from={}&datetime={}"
         query = query.format(s_coord, "20120614T080000")
-        response, status_code = self.query(query, display=False)
+        self.query(query, display=False)
 
 
     def test_to_isochrone_coord(self):
@@ -51,19 +51,18 @@ class TestJourneys(AbstractTestFixture):
         #not to use the jormungandr database
         query = "v1/coverage/main_routing_test/journeys?from={}&datetime={}&datetime_represents=arrival"
         query = query.format(s_coord, "20120614T080000")
-        response, status_code = self.query(query, display=False)
+        self.query(query, display=False)
 
     def test_from_isochrone_sa(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
         query = "v1/coverage/main_routing_test/journeys?from={}&datetime={}"
         query = query.format("stopA", "20120614T080000")
-zsh:1: command not found: q
-
+        self.query(query, display=False)
 
     def test_to_isochrone_sa(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
         query = "v1/coverage/main_routing_test/journeys?from={}&datetime={}&datetime_represents=arrival"
         query = query.format("stopA", "20120614T080000")
-        response, status_code = self.query(query, display=False)
+        self.query(query, display=False)
