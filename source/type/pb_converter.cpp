@@ -614,16 +614,18 @@ void fill_codes(const std::string& type, const std::string& value, pbnavitia::Co
     code->set_type(type);
     code->set_value(value);
 }
-void fill_pb_placemark(const navitia::georef::Admin* admin,
-                       const type::Data &data, pbnavitia::PtObject* place,
-                       int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period){
+
+
+void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &data, pbnavitia::PtObject* pt_object,
+                       int max_depth, const boost::posix_time::ptime& now,
+                       const boost::posix_time::time_period& action_period,
+                       const bool show_codes){
     if(admin == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
-    fill_pb_object(admin, data, place->mutable_administrative_region(), depth,
-                   now, action_period);
-    place->set_name(admin->name);
+    fill_pb_object(admin, data, pt_object->mutable_administrative_region(), depth,
+                   now, action_period, show_codes);
+    pt_object->set_name(admin->name);
     //If city contains multi postal code(37000;37100;37200), we show only the smallest one in the result.
     //"name": "Tours(37000;37100;37200)" becomes "name": "Tours(37000)"
     if (!admin->post_code.empty()){
@@ -644,20 +646,20 @@ void fill_pb_placemark(const navitia::georef::Admin* admin,
                     min_value = int_post_code;
             }
             if (min_value != std::numeric_limits<int>::max()){
-                place->set_name(place->name() + " (" + boost::lexical_cast<std::string>(min_value) + ")");
+                pt_object->set_name(pt_object->name() + " (" + boost::lexical_cast<std::string>(min_value) + ")");
             }
             else{
-                place->set_name(place->name() + " ()");
+                pt_object->set_name(pt_object->name() + " ()");
             }
 
         }
         else{
-            place->set_name(place->name() + " (" + admin->post_code + ")");
+            pt_object->set_name(pt_object->name() + " (" + admin->post_code + ")");
         }
     }
 
-    place->set_uri(admin->uri);
-    place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
+    pt_object->set_uri(admin->uri);
+    pt_object->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
 }
 
 void fill_pb_placemark(const navitia::georef::Way* way,
@@ -665,7 +667,8 @@ void fill_pb_placemark(const navitia::georef::Way* way,
                        int house_number,
                        type::GeographicalCoord& coord,
                        int max_depth, const pt::ptime& now,
-                       const pt::time_period& action_period){
+                       const pt::time_period& action_period,
+                       const bool){
     if(way == nullptr)
         return;
     int depth = (max_depth <= 3) ? max_depth : 3;
