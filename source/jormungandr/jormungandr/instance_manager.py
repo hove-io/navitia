@@ -129,11 +129,6 @@ class InstanceManager(object):
                 module = import_module("jormungandr.scenarios.default")
                 instance.scenario = module.Scenario()
 
-            # we give all functional parameters to the script
-            if conf.has_section('functional'):
-                functional_params = dict(conf.items('functional'))
-                instance.scenario.functional_params = functional_params
-
             self.instances[conf.get('instance', 'key')] = instance
 
         #we fetch the krakens metadata first
