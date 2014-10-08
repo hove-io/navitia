@@ -16,10 +16,10 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.add_column('line', schema='navitia', sa.Column('shape', ga.Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), nullable=True))
-    op.add_column('route', schema='navitia', sa.Column('shape', ga.Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), nullable=True))
+    op.add_column('line', sa.Column('shape', ga.Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), nullable=True), schema='navitia')
+    op.add_column('route', sa.Column('shape', ga.Geography(geometry_type='MULTILINESTRING', srid=4326, spatial_index=False), nullable=True), schema='navitia')
 
 
 def downgrade():
-    op.drop_column('route', schema='navitia', 'shape')
-    op.drop_column('line', schema='navitia', 'shape')
+    op.drop_column('route', 'shape', schema='navitia')
+    op.drop_column('line', 'shape', schema='navitia')
