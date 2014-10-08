@@ -117,7 +117,7 @@ def authenticate(region, api, abort=False):
 
     user = get_user(token=get_token())
     if user:
-        if user.has_access(region, api, abort=False, user=user):
+        if has_access(region, api, abort=False, user=user):
             return True
         else:
             if abort:
@@ -154,12 +154,12 @@ def get_user(abort_if_no_token=True, token=None):
 
         return g.user
 
-def has_access(instance, abort=False, user=None):
+def has_access(instance, api, abort=False, user=None):
     if 'PUBLIC' in current_app.config \
             and current_app.config['PUBLIC']:
         #if jormungandr is on public mode we skip the authentification process
         return True
-    res = instance.is_accessible_by(user)
+    res = user.has_access(instance, api)
     if abort and not res:
         abort_request(user=user)
     else:
