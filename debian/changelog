@@ -1,3 +1,10 @@
+navitia2 (1.2.1) unstable; urgency=low
+
+  * Jormungandr: hotfix so it placemarks work
+  * Jormungandr: hotfix so authentication works
+
+ -- l-vincent-l <lara.vincent@gmail.com>  Wed, 08 Oct 2014 19:10:15 +0100
+
 navitia2 (1.2.0) unstable; urgency=low
 
   * osm2ed: compute the bounding shape of the instance at the end  <https://github.com/CanalTP/navitia/pull/617>
