@@ -44,7 +44,7 @@ class Instance(object):
         self.geom = None
         self._sockets = Queue.Queue()
         self.socket_path = None
-        self.script = None
+        self.scenario = None
         self.nb_created_socket = 0
         self.lock = Lock()
         self.context = context

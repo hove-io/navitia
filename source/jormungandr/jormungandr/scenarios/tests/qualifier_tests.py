@@ -29,7 +29,7 @@
 
 from nose.tools import eq_
 
-from ...scripts import qualifier
+from ...scenarios import qualifier
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.utils import str_to_time_stamp
 

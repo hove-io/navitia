@@ -119,17 +119,20 @@ class InstanceManager(object):
             instance = Instance(self.context, conf.get('instance', 'key'))
             instance.socket_path = conf.get('instance', 'socket')
 
-            if conf.has_option('instance', 'script'):
+            if conf.has_option('instance', 'script'):#deprecated configuration
                 module = import_module(conf.get('instance', 'script'))
-                instance.script = module.Script()
+                instance.scenario = module.Scenario()
+            elif conf.has_option('instance', 'scenario'):
+                module = import_module(conf.get('instance', 'scenario'))
+                instance.scenario = module.Scenario()
             else:
-                module = import_module("jormungandr.scripts.default")
-                instance.script = module.Script()
+                module = import_module("jormungandr.scenarios.default")
+                instance.scenario = module.Scenario()
 
             # we give all functional parameters to the script
             if conf.has_section('functional'):
                 functional_params = dict(conf.items('functional'))
-                instance.script.functional_params = functional_params
+                instance.scenario.functional_params = functional_params
 
             self.instances[conf.get('instance', 'key')] = instance
 
@@ -150,8 +153,8 @@ class InstanceManager(object):
             instance_name = instance_obj.name
         if instance_name in self.instances:
             instance = self.instances[instance_name]
-            if api in instance.script.apis:
-                api_func = getattr(instance.script, api)
+            if hasattr(instance.scenario, api) and callable(getattr(instance.scenario, api)):
+                api_func = getattr(instance.scenario, api)
                 return api_func(arguments, instance)
             else:
                 raise ApiNotFound(api)

@@ -1,5 +1,3 @@
-# coding=utf-8
-
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -154,17 +152,8 @@ class JourneySorter:
         return non_pt_duration_j1 - non_pt_duration_j2
 
 
-class Script(object):
+class Scenario(object):
     def __init__(self):
-        self.apis = ["places", "places_nearby", "next_departures",
-                     "next_arrivals", "route_schedules", "stops_schedules",
-                     "departure_boards", "stop_areas", "stop_points", "lines",
-                     "routes", "physical_modes", "commercial_modes",
-                     "connections", "journey_pattern_points",
-                     "journey_patterns", "companies", "vehicle_journeys",
-                     "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load", "networks", "place_uri", "disruptions",
-                     "calendars", "nm_journeys", "pt_objects"]
         self.functional_params = {}
 
     def __pagination(self, request, ressource_name, resp):
@@ -406,7 +395,7 @@ class Script(object):
         req.journeys.disruption_active = request["disruption_active"]
         req.journeys.show_codes = request["show_codes"]
         if "details" in request and request["details"]:
-			req.journeys.details = request["details"]
+            req.journeys.details = request["details"]
 
         self.origin_modes = request["origin_mode"]
 
