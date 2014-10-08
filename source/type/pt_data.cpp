@@ -123,7 +123,6 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
 }
 
 void PT_Data::compute_score_autocomplete(navitia::georef::GeoRef& georef){
-
     //Compute admin score using stop_point count in each admin
     georef.fl_admin.compute_score((*this), georef, type::Type_e::Admin);
     //use the score of each admin for it's objects like "POI", "way" and "stop_point"

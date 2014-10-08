@@ -403,4 +403,5 @@ message PtObject {
     optional Company company = 16;
     optional VehicleJourney vehicle_journey = 17;
     optional Calendar calendar = 18;
+    optional int32 score = 19;	
 }
