@@ -1,22 +1,15 @@
 from __future__ import with_statement
 from alembic import context
 from sqlalchemy import engine_from_config, pool, MetaData
+from geoalchemy2 import Geography
 from logging.config import fileConfig
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
 config = context.config
-from models import metadata as target_metadata
-
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
 fileConfig(config.config_file_name)
-from geoalchemy2 import Geography
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+try:
+    from models import metadata as target_metadata
+except ImportError:
+    target_metadata = None
 
 def include_object(object_, name, type_, reflected, compare_to):
     if type_ == "table":
