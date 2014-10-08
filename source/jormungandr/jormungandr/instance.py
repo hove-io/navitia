@@ -36,6 +36,8 @@ import zmq
 from navitiacommon import response_pb2
 import logging
 from .exceptions import DeadSocketException
+from navitiacommon import models
+from importlib import import_module
 
 
 class Instance(object):
@@ -44,13 +46,27 @@ class Instance(object):
         self.geom = None
         self._sockets = Queue.Queue()
         self.socket_path = None
-        self.scenario = None
+        self._scenario = None
         self.nb_created_socket = 0
         self.lock = Lock()
         self.context = context
         self.name = name
         self.timezone = None  # timezone will be fetched from the kraken
 
+    @property
+    def scenario(self):
+        if not self._scenario:
+            instance_db = models.Instance.get_by_name(self.name)
+            if instance_db:
+                logger.info('loading of scenario {} for instance {}', instance_db.scenario, self.name)
+                module = import_module("jormungandr.scenarios.{}".format(instance_db.scenario))
+                self._scenario = module.Scenario()
+            else:
+                logger = logging.getLogger(__name__)
+                logger.warn('instance %s not found in db, we use the default script', self.name)
+                module = import_module("jormungandr.scenarios.default")
+                self._scenario = module.Scenario()
+        return self._scenario
 
     @contextmanager
     def socket(self, context):

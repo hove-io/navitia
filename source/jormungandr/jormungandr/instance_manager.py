@@ -37,7 +37,6 @@ from threading import Thread, Event
 from navitiacommon import type_pb2, request_pb2, models
 import glob
 from jormungandr.singleton import singleton
-from importlib import import_module
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
@@ -118,16 +117,6 @@ class InstanceManager(object):
             conf.read(file_name)
             instance = Instance(self.context, conf.get('instance', 'key'))
             instance.socket_path = conf.get('instance', 'socket')
-
-            if conf.has_option('instance', 'script'):#deprecated configuration
-                module = import_module(conf.get('instance', 'script'))
-                instance.scenario = module.Scenario()
-            elif conf.has_option('instance', 'scenario'):
-                module = import_module(conf.get('instance', 'scenario'))
-                instance.scenario = module.Scenario()
-            else:
-                module = import_module("jormungandr.scenarios.default")
-                instance.scenario = module.Scenario()
 
             self.instances[conf.get('instance', 'key')] = instance
 
