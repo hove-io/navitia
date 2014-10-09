@@ -284,11 +284,11 @@ struct hasVehicleProperties {
 struct HasMessages{
     //on utilise des smart pointer boost car ils sont sérializable
     //si les weak_ptr était géré, c'est eux qu'ils faudrait utiliser
-    std::vector<boost::shared_ptr<Message>> messages;
+//    std::vector<boost::shared_ptr<Message>> messages;
 
     std::vector<std::weak_ptr<new_disruption::Impact>> impacts;
 
-    std::vector<boost::shared_ptr<Message>> get_applicable_messages(
+    std::vector<std::weak_ptr<new_disruption::Impact>> get_applicable_messages(
             const boost::posix_time::ptime& current_time,
             const boost::posix_time::time_period& action_period)const;
 
@@ -389,7 +389,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & uri & name & coord & stop_point_list & admin_list
-        & _properties & wheelchair_boarding & messages & visible
+        & _properties & wheelchair_boarding & impacts & visible
                 & comment & codes & timezone;
     }
 
@@ -413,7 +413,7 @@ struct Network : public Header, Nameable, HasMessages, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & address_name & address_number & address_type_name
-            & mail & website & fax & sort & line_list & messages & codes;
+            & mail & website & fax & sort & line_list & impacts & codes;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -509,7 +509,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & messages & calendar_list & codes & shape;
+                & impacts & calendar_list & codes & shape;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -541,7 +541,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     type::OdtLevel_e get_odt_level() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & journey_pattern_list & messages & codes & shape;
+        ar & idx & name & uri & line & journey_pattern_list & impacts & codes & shape;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -622,7 +622,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages
+            & odt_message & _vehicle_properties & impacts
             & codes & next_vj & prev_vj & start_time & end_time & headway_secs
             & meta_vj & utc_to_local_offset;
     }
@@ -698,7 +698,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         journey_pattern_point_list.resize(0);
         ar & uri & name & stop_area & coord & fare_zone & idx & platform_code
-            & journey_pattern_point_list & admin_list & _properties & messages
+            & journey_pattern_point_list & admin_list & _properties & impacts
             & stop_point_connection_list & comment & codes;
     }
 

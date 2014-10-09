@@ -52,12 +52,12 @@ std::string VehicleJourney::get_direction() const {
     return "";
 }
 
-std::vector<boost::shared_ptr<Message>> HasMessages::get_applicable_messages(
+std::vector<std::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable_messages(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
     std::vector<boost::shared_ptr<Message>> result;
-    for(auto message : this->messages){
-        if(message->is_valid(current_time, action_period)){
+    for(auto impact : this->impacts){
+        if(impacts->is_valid(current_time, action_period)){
             result.push_back(message);
         }
     }
@@ -69,12 +69,12 @@ bool HasMessages::has_applicable_message(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
     bool result = false;
-    for(auto message : this->messages){
-        if(message->is_valid(current_time, action_period)){
-            result = true;
-            break;
-        }
-    }
+//    for(auto message : this->messages){
+//        if(message->is_valid(current_time, action_period)){
+//            result = true;
+//            break;
+//        }
+//    }
     return result;
 }
 

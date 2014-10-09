@@ -40,22 +40,23 @@ namespace bg = boost::gregorian;
 
 namespace navitia { namespace type {
 
-bool Message::is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period) const{
+bool Impact::is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const {
+
     if(now.is_not_a_date_time() && action_period.is_null()){
         return false;
     }
 
-    bool to_return = is_publishable(now);
+    for (const auto& period: application_periods) {
+        todo!
+    }
+    bool to_return = application_periods.contains(now);
 
-    if(!action_period.is_null()){
+    if (!action_period.is_null() && to_return) {
         to_return = to_return && is_applicable(action_period);
     }
     return to_return;
 }
 
-bool Message::is_publishable(const boost::posix_time::ptime& time) const{
-    return publication_period.contains(time);
-}
 
 bool AtPerturbation::is_applicable(const boost::posix_time::time_period& period) const{
     bool days_intersects = false;

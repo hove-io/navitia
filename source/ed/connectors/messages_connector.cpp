@@ -35,11 +35,13 @@ www.navitia.io
 #include "utils/logger.h"
 #include "type/data.h"
 #include "type/pt_data.h"
+#include <boost/dynamic_bitset.hpp>
 
 namespace ed{ namespace connectors{
 
 namespace pt = boost::posix_time;
 using nt::new_disruption::Severity;
+using nt::new_disruption::Impact;
 using nt::new_disruption::Effect;
 using nt::new_disruption::DisruptionHolder;
 
@@ -69,6 +71,27 @@ get_or_create_severity(DisruptionHolder& disruptions, int id) {
     severity->effect = Effect::UNKNOWN_EFFECT; //is it right ?
 
     return severity;
+}
+
+std::vector<pt::time_period> split_period(pt::ptime start, pt::ptime end,
+                                          pt::time_duration beg_of_day, pt::time_duration end_of_day,
+                                          std::bitset<7> days) {
+    if (days.all() && beg_of_day == pt::hours(0) && end_of_day == pt::hours(24)) {
+        return {{start, end}};
+    }
+    auto period = boost::gregorian::date_period(start.date(), end.date());
+
+    std::vector<pt::time_period> res;
+    //what is the first day of the at_message bitset ? monday or sunday ? without response, I considere it to be sunday
+    for(boost::gregorian::day_iterator it(period.begin()); it<period.end(); ++it) {
+        auto day = (*it);
+        if(! days.test(day.day_of_week())) {
+            continue;
+        }
+        res.push_back(pt::time_period(pt::ptime(day, beg_of_day), pt::ptime(day, end_of_day)));
+    }
+
+    return res;
 }
 
 navitia::type::new_disruption::DisruptionHolder load_disruptions(
@@ -119,9 +142,21 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
 
             impact = std::shared_ptr<nt::new_disruption::Impact>();
             cursor["uri"].to(impact->uri);
+
+            //we need to handle the active days to split the period
             pt::ptime start = pt::time_from_string(cursor["start_application_date"].as<std::string>());
             pt::ptime end = pt::time_from_string(cursor["end_application_date"].as<std::string>());
-            impact->application_periods.push_back(pt::time_period(start, end));
+
+            auto daily_start_hour = pt::duration_from_string(
+                        cursor["start_application_daily_hour"].as<std::string>());
+            auto daily_end_hour = pt::duration_from_string(
+                        cursor["end_application_daily_hour"].as<std::string>());
+
+            std::bitset<7> active_days (cursor["active_days"].as<std::string>());
+
+            impact->application_periods = split_period(start, end,
+                                                       daily_start_hour, daily_end_hour,
+                                                       active_days);
             disruption->impacts.push_back(impact);
             disruptions.disruptions.push_back(std::move(disruption));
         }
@@ -143,53 +178,41 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
     return disruptions;
 }
 
+template <typename Container>
+void add_impact(Container& map, const std::string& uri, const std::shared_ptr<Impact>& impact) {
+    auto it = map.find(uri);
+    if(it != map.end()){
+        it->second->impacts.push_back(impact);
+    }
+}
+
 void apply_messages(navitia::type::Data& data){
-    /*
-    for(const auto message_pair : data.pt_data->message_holder.messages){
-        if(message_pair.second->object_type ==  navitia::type::Type_e::StopArea){
-            auto it = data.pt_data->stop_areas_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->stop_areas_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
 
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::StopPoint){
-            auto it = data.pt_data->stop_points_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->stop_points_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::Route){
-            auto it = data.pt_data->routes_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->routes_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::VehicleJourney){
-            auto it = data.pt_data->vehicle_journeys_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->vehicle_journeys_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::Line){
-            auto it = data.pt_data->lines_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->lines_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::Network){
-            auto it = data.pt_data->networks_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->networks_map.end()){
-                it->second->messages.push_back(message_pair.second);
+    for (const auto& disruption: data.pt_data->disruption_holder.disruptions) {
+        for (const auto& impact: disruption->impacts) {
+            for (const auto& pb_object: impact->informed_entities) {
+                if (pb_object.object_type == navitia::type::Type_e::StopArea) {
+                    add_impact(data.pt_data->stop_areas_map, pb_object.object_uri, impact);
+                }
+                if (pb_object.object_type == navitia::type::Type_e::StopPoint) {
+                    add_impact(data.pt_data->stop_points_map, pb_object.object_uri, impact);
+                }
+                if (pb_object.object_type == navitia::type::Type_e::Route) {
+                    add_impact(data.pt_data->routes_map, pb_object.object_uri, impact);
+                }
+                if (pb_object.object_type == navitia::type::Type_e::VehicleJourney) {
+                    add_impact(data.pt_data->vehicle_journeys_map, pb_object.object_uri, impact);
+                }
+                if (pb_object.object_type == navitia::type::Type_e::Line) {
+                    add_impact(data.pt_data->lines_map, pb_object.object_uri, impact);
+                }
+                if (pb_object.object_type == navitia::type::Type_e::Network) {
+                    add_impact(data.pt_data->networks_map, pb_object.object_uri, impact);
+                }
             }
         }
     }
-    */
+
 }
 
 std::vector<navitia::type::AtPerturbation> load_at_perturbations(
@@ -220,6 +243,7 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
     } catch(const pqxx::pqxx_exception &e) {
         throw navitia::exception(e.base().what());
     }
+
 
     std::vector<navitia::type::AtPerturbation> perturbations;
     for(auto cursor = result.begin(); cursor != result.end(); ++cursor){

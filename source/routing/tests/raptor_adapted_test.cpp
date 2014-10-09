@@ -121,7 +121,7 @@ This is the optimized solution.
 
 using namespace navitia;
 using namespace routing;
-
+/*
 namespace pt = boost::posix_time;
 class Params{
 public:
@@ -172,7 +172,7 @@ impact-3
                        13 14 15 16 17 **
                     19 20 21 22 23 24 25
                     26 27 28 29 30 31
-*/
+*
 
         b.vj("network:R", "line:A", "1111111111111", "", true, "vj1")("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
         b.vj("network:R", "line:A", "1111111111111", "", true, "vj2")("stop_area:stop1", 10 * 3600 + 30 * 60, 10 * 3600 + 30 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
@@ -291,7 +291,6 @@ impact-3
                                *street_network, disruption_active, true);
     }
 };
-
 BOOST_FIXTURE_TEST_SUITE(disruption_active, Params)
 
 BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
@@ -477,3 +476,4 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+*/

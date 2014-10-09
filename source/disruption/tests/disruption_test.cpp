@@ -56,7 +56,7 @@ end_application_date    = 2014-02-02 18:32:00
 start_application_daily_hour = 08h40
 end_application_daily_hour = 18h00
 active_days = 11111111
-*/
+*//*
 namespace pt = boost::posix_time;
 class Params{
 public:
@@ -315,4 +315,4 @@ BOOST_FIXTURE_TEST_CASE(Test7, Params) {
     BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "084000");
     BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "180000");
 }
-
+*/
