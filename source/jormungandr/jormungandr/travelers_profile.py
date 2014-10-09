@@ -60,14 +60,14 @@ travelers_profile = {
                                 first_and_last_section_mode=['walking', 'bss'],
                                 keolis_type_map={'rapid': ['best'],
                                     'comfort': ['less_fallback_walk'],
-                                    'healthyy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                    'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss']}),
 
     'slow_walker': TravelerProfile(walking_speed=0.83,
                                    max_duration_to_pt=20*60,
                                    first_and_last_section_mode=['walking'],
                                    keolis_type_map={'rapid': ['best'],
                                        'comfort': ['less_fallback_walk'],
-                                       'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                       'healthy': ['non_pt_walk', 'comfort']}),
 
     'fast_walker': TravelerProfile(walking_speed=1.67,
                                    bike_speed=3.33,
@@ -75,7 +75,7 @@ travelers_profile = {
                                    first_and_last_section_mode=['walking', 'bss'],
                                    keolis_type_map={'rapid': ['best'],
                                        'comfort': ['less_fallback_walk'],
-                                       'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                       'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss']}),
 
     'stroller': TravelerProfile(walking_speed=1.11,
                                 max_duration_to_pt=15*60,
@@ -83,7 +83,7 @@ travelers_profile = {
                                 wheelchair=True,
                                 keolis_type_map={'rapid': ['best'],
                                     'comfort': ['less_fallback_walk'],
-                                    'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                    'healthy': ['non_pt_walk', 'comfort']}),
 
     'wheelchair': TravelerProfile(walking_speed=0.83,
                                   max_duration_to_pt=20*60,
@@ -91,7 +91,7 @@ travelers_profile = {
                                   wheelchair=True,
                                   keolis_type_map={'rapid': ['best'],
                                       'comfort': ['less_fallback_walk'],
-                                      'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                      'healthy': ['non_pt_walk', 'comfort']}),
 
     'luggage': TravelerProfile(walking_speed=1.11,
                                max_duration_to_pt=15*60,
@@ -99,7 +99,7 @@ travelers_profile = {
                                wheelchair=True,
                                keolis_type_map={'rapid': ['best'],
                                    'comfort': ['less_fallback_walk'],
-                                   'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                   'healthy': ['non_pt_walk', 'comfort']}),
 
     'heels': TravelerProfile(walking_speed=1.11,
                              bike_speed=3.33,
@@ -107,14 +107,14 @@ travelers_profile = {
                              first_and_last_section_mode=['walking', 'bss'],
                              keolis_type_map={'rapid': ['best'],
                                  'comfort': ['less_fallback_walk'],
-                                 'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                 'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss']}),
 
     'scooter': TravelerProfile(walking_speed=2.22,
                                max_duration_to_pt=15*60,
                                first_and_last_section_mode=['walking'],
                                keolis_type_map={'rapid': ['best'],
                                    'comfort': ['less_fallback_walk'],
-                                   'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                   'healthy': ['non_pt_walk', 'comfort']}),
 
     'cyclist': TravelerProfile(walking_speed=1.39,
                                bike_speed=3.33,
@@ -132,5 +132,5 @@ travelers_profile = {
                                 last_section_mode=['walking'],
                                 keolis_type_map={'rapid': ['best'],
                                     'comfort': ['car'],
-                                    'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
+                                    'healthy': ['non_pt_walk', 'comfort']}),
 }

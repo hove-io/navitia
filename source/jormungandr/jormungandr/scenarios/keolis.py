@@ -75,7 +75,7 @@ class Scenario(default.Scenario):
 
         #filter on journey type (the qualifier)
         to_delete = []
-        tag_to_delete = [""]
+        tag_to_delete = ['']
         to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 
         # list comprehension does not work with repeated field, so we have to delete them manually
