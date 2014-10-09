@@ -1,5 +1,3 @@
-# coding=utf-8
-
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -40,314 +38,14 @@ from datetime import datetime, timedelta
 import itertools
 from flask import current_app
 import time
+from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, JourneySorter
+from jormungandr.scenarios.utils import build_pagination
+from jormungandr.scenarios import simple
 
 
-pb_type = {
-    'stop_area': type_pb2.STOP_AREA,
-    'stop_point': type_pb2.STOP_POINT,
-    'address': type_pb2.ADDRESS,
-    'poi': type_pb2.POI,
-    'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
-    'line': type_pb2.LINE
-}
-
-
-pt_object_type = {
-    'network': type_pb2.NETWORK,
-    'mode': type_pb2.COMMERCIAL_MODE,
-    'line': type_pb2.LINE,
-    'route': type_pb2.ROUTE,
-    'stop_area': type_pb2.STOP_AREA
-}
-
-
-
-f_date_time = "%Y%m%dT%H%M%S"
-
-
-def date_to_time_stamp(date):
-    return int(time.mktime(date.timetuple()))
-
-
-def are_equals(journey1, journey2):
-    """
-    To decide that 2 journeys are equals, we loop through all values of the
-    compare_journey_generator and stop at the first non equals value
-
-    Note: the fillvalue is the value used when a generator is consumed
-    (if the 2 generators does not return the same number of elt).
-    by setting it to object(), we ensure that it will be !=
-    from any values returned by the other generator
-    """
-    return all(a == b for a, b in itertools.izip_longest(compare_journey_generator(journey1),
-                                                         compare_journey_generator(journey2),
-                                                         fillvalue=object()))
-
-
-def compare_journey_generator(journey):
-    """
-    Generator used to compare journeys together
-
-    2 journeys are equals if they share for all the sections the same :
-     * departure time
-     * arrival time
-     * vj
-     * type
-     * departure location
-     * arrival location
-    """
-    yield journey.departure_date_time
-    yield journey.arrival_date_time
-    for s in journey.sections:
-        yield s.type
-        yield s.begin_date_time
-        yield s.end_date_time
-        yield s.vehicle_journey.uri if s.vehicle_journey else 'no_vj'
-        #NOTE: we want to ensure that we always yield the same number of elt
-        yield s.origin.uri if s.origin else 'no_origin'
-        yield s.destination.uri if s.destination else 'no_destination'
-
-
-def count_typed_journeys(journeys):
-        return sum(1 for journey in journeys if journey.type)
-
-
-class JourneySorter:
-    """
-    Journey comparator for sort
-
-    the comparison is different if the query is for clockwise search or not
-    """
-    def __init__(self, clockwise):
-        self.clockwise = clockwise
-
-    def __call__(self, j1, j2):
-
-        if self.clockwise:
-            #for clockwise query, we want to sort first on the arrival time
-            if j1.arrival_date_time != j2.arrival_date_time:
-                return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
-        else:
-            #for non clockwise the first sort is done on departure
-            if j1.departure_date_time != j2.departure_date_time:
-                return -1 if j1.departure_date_time > j2.departure_date_time else 1
-
-        # afterward we compare the duration, hence it will indirectly compare
-        # the departure for clockwise, and the arrival for not clockwise
-        if j1.duration != j2.duration:
-            return j2.duration - j1.duration
-
-        if j1.nb_transfers != j2.nb_transfers:
-            return j1.nb_transfers - j2.nb_transfers
-
-        #afterward we compare the non pt duration
-        non_pt_duration_j1 = non_pt_duration_j2 = None
-        for journey in [j1, j2]:
-            non_pt_duration = 0
-            for section in journey.sections:
-                if section.type != response_pb2.PUBLIC_TRANSPORT:
-                    non_pt_duration += section.duration
-            if not non_pt_duration_j1:
-                non_pt_duration_j1 = non_pt_duration
-            else:
-                non_pt_duration_j2 = non_pt_duration
-        return non_pt_duration_j1 - non_pt_duration_j2
-
-
-class Script(object):
+class Scenario(simple.Scenario):
     def __init__(self):
-        self.apis = ["places", "places_nearby", "next_departures",
-                     "next_arrivals", "route_schedules", "stops_schedules",
-                     "departure_boards", "stop_areas", "stop_points", "lines",
-                     "routes", "physical_modes", "commercial_modes",
-                     "connections", "journey_pattern_points",
-                     "journey_patterns", "companies", "vehicle_journeys",
-                     "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load", "networks", "place_uri", "disruptions",
-                     "calendars", "nm_journeys", "pt_objects"]
         self.functional_params = {}
-
-    def __pagination(self, request, ressource_name, resp):
-        pagination = resp.pagination
-        if pagination.totalResult > 0:
-            query_args = ""
-            for key, value in request.iteritems():
-                if key != "startPage":
-                    if isinstance(value, type([])):
-                        for v in value:
-                            query_args += key + "=" + unicode(v) + "&"
-                    else:
-                        query_args += key + "=" + unicode(value) + "&"
-            if pagination.startPage > 0:
-                page = pagination.startPage - 1
-                pagination.previousPage = query_args
-                pagination.previousPage += "start_page=%i" % page
-            last_id_page = (pagination.startPage + 1) * pagination.itemsPerPage
-            if last_id_page < pagination.totalResult:
-                page = pagination.startPage + 1
-                pagination.nextPage = query_args + "start_page=%i" % page
-
-    def status(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.STATUS
-        resp = instance.send_and_receive(req)
-        return resp
-
-    def metadatas(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.METADATAS
-        resp = instance.send_and_receive(req)
-        return resp
-
-    def calendars(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.calendars
-        req.calendars.depth = request['depth']
-        req.calendars.filter = request['filter']
-        req.calendars.count = request['count']
-        req.calendars.start_page = request['start_page']
-        req.calendars.start_date = request['start_date']
-        req.calendars.end_date = request['end_date']
-        if request["forbidden_uris[]"]:
-            for forbidden_uri in request["forbidden_uris[]"]:
-                req.ptref.forbidden_uri.append(forbidden_uri)
-
-        resp = instance.send_and_receive(req)
-        return resp
-
-    def disruptions(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.disruptions
-        req.disruptions.depth = request['depth']
-        req.disruptions.filter = request['filter']
-        req.disruptions.count = request['count']
-        req.disruptions.start_page = request['start_page']
-        req.disruptions.datetime = request['datetime']
-        req.disruptions.period = request['period']
-
-        if request["forbidden_uris[]"]:
-            for forbidden_uri in request["forbidden_uris[]"]:
-                req.ptref.forbidden_uri.append(forbidden_uri)
-
-        resp = instance.send_and_receive(req)
-        return resp
-
-    def load(self, request, instance, format):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.LOAD
-        resp = instance.send_and_receive(req)
-        return render_from_protobuf(resp, format,
-                                    request.arguments.get('callback'))
-
-    def places(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.places
-        req.places.q = request['q']
-        req.places.depth = request['depth']
-        req.places.count = request['count']
-        req.places.search_type = request['search_type']
-        if request["type[]"]:
-            for type in request["type[]"]:
-                req.places.types.append(pb_type[type])
-
-        if request["admin_uri[]"]:
-            for admin_uri in request["admin_uri[]"]:
-                req.places.admin_uris.append(admin_uri)
-
-        resp = instance.send_and_receive(req)
-        if len(resp.places) == 0 and request['search_type'] == 0:
-            request["search_type"] = 1
-            return self.places(request, instance)
-        self.__pagination(request, "places", resp)
-
-        return resp
-
-    def pt_objects(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.pt_objects
-        req.pt_objects.q = request['q']
-        req.pt_objects.depth = request['depth']
-        req.pt_objects.count = request['count']
-        req.pt_objects.search_type = request['search_type']
-        if request["type[]"]:
-            for type in request["type[]"]:
-                req.pt_objects.types.append(pt_object_type[type])
-
-        if request["admin_uri[]"]:
-            for admin_uri in request["admin_uri[]"]:
-                req.pt_objects.admin_uris.append(admin_uri)
-
-        resp = instance.send_and_receive(req)
-        #The result contains places but not pt_objects,
-        #object place is transformed to pt_object afterwards.
-        if len(resp.places) == 0 and request['search_type'] == 0:
-            request["search_type"] = 1
-            return self.pt_objects(request, instance)
-        self.__pagination(request, "pt_objects", resp)
-
-        return resp
-	
-    def place_uri(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.place_uri
-        req.place_uri.uri = request["uri"]
-        return instance.send_and_receive(req)
-
-    def __stop_times(self, request, instance, departure_filter,
-                     arrival_filter, api):
-        req = request_pb2.Request()
-        req.requested_api = api
-        st = req.next_stop_times
-        st.departure_filter = departure_filter
-        st.arrival_filter = arrival_filter
-        st.from_datetime = request["from_datetime"]
-        st.duration = request["duration"]
-        st.depth = request["depth"]
-        st.show_codes = request["show_codes"]
-        if not "nb_stoptimes" in request:
-            st.nb_stoptimes = 0
-        else:
-            st.nb_stoptimes = request["nb_stoptimes"]
-        if not "interface_version" in request:
-            st.interface_version = 0
-        else:
-            st.interface_version = request["interface_version"]
-        st.count = 10 if not "count" in request.keys() else request["count"]
-        if not "start_page" in request:
-            st.start_page = 0
-        else:
-            st.start_page = request["start_page"]
-        if request["max_date_times"]:
-            st.max_date_times = request["max_date_times"]
-        if request["forbidden_uris[]"]:
-            for forbidden_uri in request["forbidden_uris[]"]:
-                st.forbidden_uri.append(forbidden_uri)
-        if "calendar" in request and request["calendar"]:
-            st.calendar = request["calendar"]
-        resp = instance.send_and_receive(req)
-        return resp
-
-    def route_schedules(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "",
-                                 type_pb2.ROUTE_SCHEDULES)
-
-    def next_arrivals(self, request, instance):
-        return self.__stop_times(request, instance, "", request["filter"],
-                                 type_pb2.NEXT_ARRIVALS)
-
-    def next_departures(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "",
-                                 type_pb2.NEXT_DEPARTURES)
-
-    def stops_schedules(self, request, instance):
-        return self.__stop_times(request, instance,
-                                 request["departure_filter"],
-                                 request["arrival_filter"],
-                                 type_pb2.STOPS_SCHEDULES)
-
-    def departure_boards(self, request, instance):
-        return self.__stop_times(request, instance, request["filter"], "",
-                                 type_pb2.DEPARTURE_BOARDS)
 
     def parse_journey_request(self, requested_type, request):
         """Parse the request dict and create the protobuf version"""
@@ -406,7 +104,7 @@ class Script(object):
         req.journeys.disruption_active = request["disruption_active"]
         req.journeys.show_codes = request["show_codes"]
         if "details" in request and request["details"]:
-			req.journeys.details = request["details"]
+            req.journeys.details = request["details"]
 
         self.origin_modes = request["origin_mode"]
 
@@ -451,22 +149,6 @@ class Script(object):
             req.journeys.forbidden_uris.append(uri)
 
         return (req, "possible_cheap")
-
-    def places_nearby(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.places_nearby
-        req.places_nearby.uri = request["uri"]
-        req.places_nearby.distance = request["distance"]
-        req.places_nearby.depth = request["depth"]
-        req.places_nearby.count = request["count"]
-        req.places_nearby.start_page = request["start_page"]
-        if request["type[]"]:
-            for type in request["type[]"]:
-                req.places_nearby.types.append(pb_type[type])
-        req.places_nearby.filter = request["filter"]
-        resp = instance.send_and_receive(req)
-        self.__pagination(request, "places_nearby", resp)
-        return resp
 
     def __fill_uris(self, resp):
         if not resp:
@@ -541,7 +223,7 @@ class Script(object):
             request_type = "arrival" if new_request.journeys.clockwise else "departure"
             qualifier_one(resp.journeys, request_type)
         return resp
- 
+
     def change_request(self, pb_req, resp):
         result = copy.deepcopy(pb_req)
         def get_uri_odt_with_zones(journey):
@@ -742,76 +424,3 @@ class Script(object):
 
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
-
-    def __on_ptref(self, resource_name, requested_type, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.PTREFERENTIAL
-
-        req.ptref.requested_type = requested_type
-        req.ptref.filter = request["filter"]
-        req.ptref.depth = request["depth"]
-        req.ptref.start_page = request["start_page"]
-        req.ptref.count = request["count"]
-        req.ptref.show_codes = request["show_codes"]
-        if request["odt_level"]:
-            req.ptref.odt_level = pb_odt_level[request["odt_level"]]
-        if request["forbidden_uris[]"]:
-            for forbidden_uri in request["forbidden_uris[]"]:
-                req.ptref.forbidden_uri.append(forbidden_uri)
-
-        resp = instance.send_and_receive(req)
-        self.__pagination(request, resource_name, resp)
-        return resp
-
-    def stop_areas(self, request, instance):
-        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request,
-                               instance)
-
-    def stop_points(self, request, instance):
-        return self.__on_ptref("stop_points", type_pb2.STOP_POINT, request,
-                               instance)
-
-    def lines(self, request, instance):
-        return self.__on_ptref("lines", type_pb2.LINE, request, instance)
-
-    def routes(self, request, instance):
-        return self.__on_ptref("routes", type_pb2.ROUTE, request, instance)
-
-    def networks(self, request, instance):
-        return self.__on_ptref("networks", type_pb2.NETWORK, request, instance)
-
-    def physical_modes(self, request, instance):
-        return self.__on_ptref("physical_modes", type_pb2.PHYSICAL_MODE,
-                               request, instance)
-
-    def commercial_modes(self, request, instance):
-        return self.__on_ptref("commercial_modes", type_pb2.COMMERCIAL_MODE,
-                               request, instance)
-
-    def connections(self, request, instance):
-        return self.__on_ptref("connections", type_pb2.CONNECTION, request,
-                               instance)
-
-    def journey_pattern_points(self, request, instance):
-        return self.__on_ptref("journey_pattern_points",
-                               type_pb2.JOURNEY_PATTERN_POINT, request,
-                               instance)
-
-    def journey_patterns(self, request, instance):
-        return self.__on_ptref("journey_patterns", type_pb2.JOURNEY_PATTERN,
-                               request, instance)
-
-    def companies(self, request, instance):
-        return self.__on_ptref("companies", type_pb2.COMPANY, request,
-                               instance)
-
-    def vehicle_journeys(self, request, instance):
-        return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY,
-                               request, instance)
-
-    def pois(self, request, instance):
-        return self.__on_ptref("pois", type_pb2.POI, request, instance)
-
-    def poi_types(self, request, instance):
-        return self.__on_ptref("poi_types", type_pb2.POITYPE, request,
-                               instance)
