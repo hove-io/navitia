@@ -30,7 +30,7 @@
 from collections import OrderedDict
 
 class TravelerProfile(object):
-    def __init__(self, walking_speed=1.12, bike_speed=4.1, car_speed=11.11, max_duration_to_pt=15*60,
+    def __init__(self, walking_speed=1.12, bike_speed=3.33, car_speed=11.11, max_duration_to_pt=15*60,
                  first_section_mode=[], last_section_mode=[], wheelchair=False, first_and_last_section_mode=[],
                  keolis_type_map={}):
         self.walking_speed = walking_speed
@@ -55,7 +55,7 @@ class TravelerProfile(object):
 
 travelers_profile = {
     'standard': TravelerProfile(walking_speed=1.39,
-                                bike_speed=4.17,
+                                bike_speed=3.33,
                                 max_duration_to_pt=12*60,
                                 first_and_last_section_mode=['walking', 'bss'],
                                 keolis_type_map={'rapid': ['best'],
@@ -70,7 +70,7 @@ travelers_profile = {
                                        'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
 
     'fast_walker': TravelerProfile(walking_speed=1.67,
-                                   bike_speed=5,
+                                   bike_speed=3.33,
                                    max_duration_to_pt=20*60,
                                    first_and_last_section_mode=['walking', 'bss'],
                                    keolis_type_map={'rapid': ['best'],
@@ -102,7 +102,7 @@ travelers_profile = {
                                    'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
 
     'heels': TravelerProfile(walking_speed=1.11,
-                             bike_speed=4.17,
+                             bike_speed=3.33,
                              max_duration_to_pt=15*60,
                              first_and_last_section_mode=['walking', 'bss'],
                              keolis_type_map={'rapid': ['best'],
@@ -117,7 +117,7 @@ travelers_profile = {
                                    'healthy': ['non_pt_walk', 'comfort', 'less_fallback_bss', 'less_fallback_bike']}),
 
     'cyclist': TravelerProfile(walking_speed=1.39,
-                               bike_speed=4.17,
+                               bike_speed=3.33,
                                max_duration_to_pt=12*60,
                                first_section_mode=['walking', 'bike'],
                                last_section_mode=['walking'],
