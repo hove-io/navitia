@@ -201,7 +201,7 @@ class InstanceManager(object):
         if ptobject:
             instances = ptobject.instances()
             if len(instances) > 0:
-		user = authentication.get_user()
+                user = authentication.get_user()
                 available_instances = [i.name for i in instances if authentication.has_access(i, 'ALL', abort=False, user=user)]
 
                 if not available_instances:
@@ -233,7 +233,7 @@ class InstanceManager(object):
                     raise RegionNotFound(custom_msg="technical problem, impossible "
                                                     "to find region {r} in jormungandr database"
                                          .format(r=key))
-		user = authentication.get_user()
+                user = authentication.get_user()
                 if authentication.has_access(jormun_instance, 'ALL', abort=False, user=user):  #TODO, pb how to check the api ?
                     valid_instances.append(key)
 
