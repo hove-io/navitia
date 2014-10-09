@@ -500,6 +500,8 @@ def override_params_from_traveler_type(args):
 
     args['wheelchair'] = profile.wheelchair
 
+    args['travelers_profile_keolis_type_map'] = profile.keolis_type_map
+
 
 class Journeys(ResourceUri, ResourceUtc):
 

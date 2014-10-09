@@ -39,7 +39,6 @@ import itertools
 from flask import current_app
 import time
 from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, JourneySorter
-from jormungandr.scenarios.utils import build_pagination
 from jormungandr.scenarios import simple
 
 

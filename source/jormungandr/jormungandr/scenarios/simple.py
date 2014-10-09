@@ -267,3 +267,12 @@ class Scenario(object):
 
     def poi_types(self, request, instance):
         return self.__on_ptref("poi_types", type_pb2.POITYPE, request, instance)
+
+    def journeys(self, request, instance):
+        raise NotImplementedError()
+
+    def nm_journeys(self, request, instance):
+        raise NotImplementedError()
+
+    def isochrone(self, request, instance):
+        raise NotImplementedError()
