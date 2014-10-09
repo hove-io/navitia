@@ -142,6 +142,8 @@ struct Impact {
     void serialize(Archive& ar, const unsigned int) {
         ar & uri & created_at & updated_at & application_periods & severity & informed_entities & messages & disruption;
     }
+
+    bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
 };
 
 struct Tag {
@@ -277,9 +279,6 @@ struct Message: public AtPerturbation{
             & application_daily_end_hour & active_days & localized_messages & message_status;*/
     }
 
-    bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_time)const;
-
-    bool is_publishable(const boost::posix_time::ptime& time) const;
 };
 
 struct MessageHolder{
