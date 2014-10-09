@@ -36,11 +36,40 @@ www.navitia.io
 #include "type/data.h"
 #include "type/pt_data.h"
 
-//using nt = navitia::type;
-
 namespace ed{ namespace connectors{
 
 namespace pt = boost::posix_time;
+using nt::new_disruption::Severity;
+using nt::new_disruption::Effect;
+using nt::new_disruption::DisruptionHolder;
+
+std::shared_ptr<Severity>
+get_or_create_severity(DisruptionHolder& disruptions, int id) {
+    std::string name;
+    if (id == 0) {
+        name = "information";
+    } else if (id == 1) {
+        name = "warning";
+    } else if (id == 2) {
+        name = "disrupt";
+    } else {
+        throw navitia::exception("Disruption: invalid severity in database");
+    }
+
+    auto it = disruptions.severities.find(name);
+
+    if (it != disruptions.severities.end()) {
+        return it->second.lock(); //we acquire the weak_ptr
+    }
+
+    std::shared_ptr<Severity> severity = std::make_shared<Severity>();
+    disruptions.severities.insert({name, severity});
+
+    severity->uri = name;
+    severity->effect = Effect::UNKNOWN_EFFECT; //is it right ?
+
+    return severity;
+}
 
 navitia::type::new_disruption::DisruptionHolder load_disruptions(
         const RealtimeLoaderConfig& conf,
@@ -76,17 +105,15 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
     }
 
     nt::new_disruption::DisruptionHolder disruptions;
-    std::shared_ptr<nt::new_disruption::Disruption> disruption;
     std::shared_ptr<nt::new_disruption::Impact> impact;
-    nt::new_disruption::Message message;
-    nt::new_disruption::PtObject pt_object;
-    int object_type;
     std::string current_uri = "";
 
     for (auto cursor = result.begin(); cursor != result.end(); ++cursor) {
-
+        //we can have several language handled by the database, so we create one message for each
         if (cursor["uri"].as<std::string>() != current_uri) {
-            disruption = std::make_shared<nt::new_disruption::Disruption>();
+            disruptions.disruptions.push_back(std::make_unique<nt::new_disruption::Disruption>());
+
+            auto& disruption = disruptions.disruptions.back();
             cursor["uri"].to(current_uri);
             disruption->uri = current_uri;
 
@@ -96,23 +123,22 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
             pt::ptime end = pt::time_from_string(cursor["end_application_date"].as<std::string>());
             impact->application_periods.push_back(pt::time_period(start, end));
             disruption->impacts.push_back(impact);
+            disruptions.disruptions.push_back(std::move(disruption));
         }
-        message = nt::new_disruption::Message();
+        auto message = nt::new_disruption::Message();
         cursor["body"].to(message.text);
         impact->messages.push_back(message);
-        pt_object = nt::new_disruption::PtObject();
+        auto pt_object = nt::new_disruption::PtObject();
         cursor["object_uri"].to(pt_object.object_uri);
-        cursor["object_type_id"].to(object_type);
-        pt_object.object_type = static_cast<navitia::type::Type_e>(
-        cursor["object_type_id"].as<int>());
+        pt_object.object_type = static_cast<navitia::type::Type_e>(cursor["object_type_id"].as<int>());
         impact->informed_entities.push_back(pt_object);
 
-    }    
-    // Tag
-    // Severity
-    //cause
-    // Note
-    //localization
+        auto severity_id = cursor["message_status_id"].as<int>();
+        auto severity = get_or_create_severity(disruptions, severity_id);
+        impact->severity = severity;
+
+        // message does not have tags, notes, localization or cause
+    }
 
     return disruptions;
 }
