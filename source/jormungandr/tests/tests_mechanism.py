@@ -39,6 +39,8 @@ from jormungandr import app
 from jormungandr.instance_manager import InstanceManager
 from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
+import jormungandr.scenarios.default
+from jormungandr.instance import Instance
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
@@ -144,6 +146,12 @@ class AbstractTestFixture:
                 #change that with a real mock framework
                 pass
         User.get_from_token = bob.mock_get_token
+
+        #we don't want to use the database for the scenario, so we mock the property of instance
+        @property
+        def mock_scenario(self):
+            return jormungandr.scenarios.default.Scenario()
+        Instance.scenario = mock_scenario
 
 
 

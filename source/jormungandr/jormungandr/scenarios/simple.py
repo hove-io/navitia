@@ -39,8 +39,6 @@ class Scenario(object):
     """
     the most basic scenario, it's so simple it don't implements journeys!
     """
-    def __init__(self):
-        self.functional_params = {}
 
     def status(self, request, instance):
         req = request_pb2.Request()

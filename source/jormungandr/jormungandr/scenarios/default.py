@@ -44,8 +44,6 @@ from jormungandr.scenarios import simple
 
 
 class Scenario(simple.Scenario):
-    def __init__(self):
-        self.functional_params = {}
 
     def parse_journey_request(self, requested_type, request):
         """Parse the request dict and create the protobuf version"""
@@ -120,35 +118,6 @@ class Scenario(simple.Scenario):
 
         return req
 
-    def check_missing_journey(self, list_journey, initial_request):
-        """
-        Check if some particular journeys are missing, and return:
-                if it is the case a modified version of the request to be rerun
-                else None
-        """
-        if not "cheap_journey" in self.functional_params \
-            or self.functional_params["cheap_journey"].lower() != "true":
-            return (None, None)
-
-        #we want to check if all journeys use the TER network
-        #if it is true, we want to call kraken and forbid this network
-        ter_uris = ["network:TER", "network:SNCF"]
-        only_ter = all(
-            any(
-                section.pt_display_informations.uris.network in ter_uris
-                for section in journey.sections
-            )
-            for journey in list_journey
-        )
-
-        if not only_ter:
-            return (None, None)
-
-        req = copy.deepcopy(initial_request)
-        for uri in ter_uris:
-            req.journeys.forbidden_uris.append(uri)
-
-        return (req, "possible_cheap")
 
     def __fill_uris(self, resp):
         if not resp:
@@ -204,26 +173,6 @@ class Scenario(simple.Scenario):
         self.__fill_uris(resp)
         return resp
 
-    def get_journey(self, pb_req, instance, original_request):
-        resp = self.call_kraken(pb_req, instance)
-
-        if not resp or (pb_req.requested_api != type_pb2.PLANNER and pb_req.requested_api != type_pb2.NMPLANNER and pb_req.requested_api != type_pb2.ISOCHRONE):
-            return
-
-        new_request, tag = self.check_missing_journey(resp.journeys, pb_req)
-
-        if new_request:
-            #we have to call kraken again with a modified version of the request
-            new_resp = self.call_kraken(new_request, instance, tag)
-
-            self.merge_response(resp, new_resp)
-
-            # we qualify the journeys with the previous one
-            # because we need all journeys to qualify them correctly
-            request_type = "arrival" if new_request.journeys.clockwise else "departure"
-            qualifier_one(resp.journeys, request_type)
-        return resp
-
     def change_request(self, pb_req, resp):
         result = copy.deepcopy(pb_req)
         def get_uri_odt_with_zones(journey):
@@ -260,7 +209,7 @@ class Scenario(simple.Scenario):
         at_least_one_journey_found = False
         while ((request["min_nb_journeys"] and request["min_nb_journeys"] > nb_typed_journeys) or\
             (not request["min_nb_journeys"] and nb_typed_journeys == 0)) and cpt_attempt < max_attempts:
-            tmp_resp = self.get_journey(next_request, instance, request)
+            tmp_resp = self.call_kraken(next_request, instance)
             if len(tmp_resp.journeys) == 0:
                 # if we do not yet have journeys, we get the tmp_resp to have the error if there are some
                 if len(resp.journeys) == 0:
@@ -381,7 +330,7 @@ class Scenario(simple.Scenario):
                 to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type not in filter_type])
         else:
             #by default, we filter non tagged journeys
-            tag_to_delete = ["", "possible_cheap"]
+            tag_to_delete = [""]
             to_delete.extend([idx for idx, j in enumerate(resp.journeys) if j.type in tag_to_delete])
 
         #we want to keep only one non pt (the first one)
