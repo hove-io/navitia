@@ -144,10 +144,10 @@ pbnavitia::Response Worker::metadatas() {
 
 void Worker::init_worker_data(const std::shared_ptr<navitia::type::Data> data){
     //@TODO should be done in data_manager
-    if(data->last_load_at != this->last_load_at || !planner){
+    if(&*data != this->last_data || !planner){
         planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*data));
         street_network_worker = std::unique_ptr<georef::StreetNetwork>(new georef::StreetNetwork(*data->geo_ref));
-        this->last_load_at = data->last_load_at;
+        this->last_data = &*data;
 
         LOG4CPLUS_INFO(logger, "instanciation du planner");
     }

@@ -58,6 +58,7 @@ class Worker {
         DataManager<navitia::type::Data>& data_manager;
         const kraken::Configuration conf;
         log4cplus::Logger logger;
+        void* last_data = nullptr;
         boost::posix_time::ptime last_load_at;
 
     public:
