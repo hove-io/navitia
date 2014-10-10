@@ -41,6 +41,7 @@ import time
 from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, JourneySorter
 from jormungandr.scenarios.utils import build_pagination
 from jormungandr.scenarios import simple
+import logging
 
 
 class Scenario(simple.Scenario):
@@ -142,13 +143,12 @@ class Scenario(simple.Scenario):
         """
             for all combinaison of departure and arrival mode we call kraken
         """
+        logger = logging.getLogger(__name__)
         # filter walking if bss in mode ?
-        for o_mode, d_mode in itertools.product(
-                self.origin_modes, self.destination_modes):
+        for o_mode, d_mode in itertools.product(self.origin_modes, self.destination_modes):
             req.journeys.streetnetwork_params.origin_mode = o_mode
             req.journeys.streetnetwork_params.destination_mode = d_mode
             local_resp = instance.send_and_receive(req)
-
             if local_resp.response_type == response_pb2.ITINERARY_FOUND:
 
                 # if a specific tag was provided, we tag the journeys
@@ -168,7 +168,7 @@ class Scenario(simple.Scenario):
                     self.merge_response(resp, local_resp)
             if not resp:
                 resp = local_resp
-            current_app.logger.debug("for mode {}|{} we have found {} journeys".format(o_mode, d_mode, len(local_resp.journeys)))
+            logger.debug("for mode %s|%s we have found %s journeys: %s", o_mode, d_mode, len(local_resp.journeys), [j.type for j in local_resp.journeys])
 
         self.__fill_uris(resp)
         return resp
@@ -269,6 +269,7 @@ class Scenario(simple.Scenario):
     def merge_response(self, initial_response, new_response):
         #since it's not the first call to kraken, some kraken's id
         #might not be uniq anymore
+        logger = logging.getLogger(__name__)
         self.change_ids(new_response, len(initial_response.journeys))
         if len(new_response.journeys) == 0:
             return
@@ -278,7 +279,7 @@ class Scenario(simple.Scenario):
         for new_j in new_response.journeys:
 
             if any(are_equals(new_j, old_j) for old_j in initial_response.journeys):
-                current_app.logger.debug("the journey tag={}, departure={} "
+                logger.debug("the journey tag={}, departure={} "
                                          "was already there, we filter it".format(new_j.type, new_j.departure_date_time))
                 continue  # already there, we don't want to add it
 
