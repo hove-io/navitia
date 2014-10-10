@@ -43,9 +43,8 @@ def one_best_test():
 
         journey_direct.type = "best"
         #we set the destination else the filter will not be applicated
-        req = {'travelers_profile_keolis_type_map' : travelers_profile[profile].keolis_type_map,
-               'debug': False, 'destination': 'foo'}
-        scenario._qualification(req, response)
+        req = {'debug': False, 'destination': 'foo'}
+        scenario._qualification(req, response, travelers_profile[profile])
         eq_(type, journey_direct.type)
 
     for profile in travelers_profile.keys():
@@ -65,9 +64,8 @@ def best_and_fallback_test():
         journey_fallback_walking.type = "less_fallback_walk"
         journey_fallback_bike.type = "less_fallback_bss"
         #we set the destination else the filter will not be applicated
-        req = {'travelers_profile_keolis_type_map' : travelers_profile[profile].keolis_type_map,
-               'debug': False, 'destination': 'foo'}
-        scenario._qualification(req, response)
+        req = {'debug': False, 'destination': 'foo'}
+        scenario._qualification(req, response, travelers_profile[profile])
         eq_(type_direct, journey_direct.type)
         eq_(type_fallback_walking, journey_fallback_walking.type)
         eq_(type_fallback_bike, journey_fallback_bike.type)
@@ -91,9 +89,8 @@ def car_test():
 
         journey_car.type = "car"
         #we set the destination else the filter will not be applicated
-        req = {'travelers_profile_keolis_type_map' : travelers_profile[profile].keolis_type_map,
-               'debug': False, 'destination': 'foo'}
-        scenario._qualification(req, response)
+        req = {'debug': False, 'destination': 'foo'}
+        scenario._qualification(req, response, travelers_profile[profile])
         eq_(type_car, journey_car.type)
         eq_(len(response.journeys), nb)
 
@@ -117,9 +114,8 @@ def best_and_bike_test():
         journey_direct.type = "best"
         journey_fallback_bike.type = "less_fallback_bike"
         #we set the destination else the filter will not be applicated
-        req = {'travelers_profile_keolis_type_map' : travelers_profile[profile].keolis_type_map,
-               'debug': False, 'destination': 'foo'}
-        scenario._qualification(req, response)
+        req = {'debug': False, 'destination': 'foo'}
+        scenario._qualification(req, response, travelers_profile[profile])
         eq_(type_direct, journey_direct.type)
         eq_(type_fallback_bike, journey_fallback_bike.type)
         eq_(len(response.journeys), nb)

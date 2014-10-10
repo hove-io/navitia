@@ -53,6 +53,19 @@ class TravelerProfile(object):
     def bss_speed(self):
         return self.bike_speed
 
+    def override_params(self, args):
+        args['walking_speed'] = self.walking_speed
+        args['bike_speed'] = self.bike_speed
+        args['bss_speed'] = self.bss_speed
+        args['car_speed'] = self.car_speed
+        args['max_duration_to_pt'] = self.max_duration_to_pt
+
+        args['origin_mode'] = self.first_section_mode
+        args['destination_mode'] = self.last_section_mode
+
+        args['wheelchair'] = self.wheelchair
+
+
 travelers_profile = {
     'standard': TravelerProfile(walking_speed=1.39,
                                 bike_speed=3.33,

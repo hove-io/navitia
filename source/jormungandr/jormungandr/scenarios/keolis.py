@@ -29,19 +29,24 @@
 from jormungandr.scenarios import default
 from collections import defaultdict
 import logging
+from jormungandr.travelers_profile import travelers_profile
 
 
 class Scenario(default.Scenario):
     def __on_journeys(self, requested_type, request, instance):
+        if not request['traveler_type']:
+            request['traveler_type'] = 'standard'
+            profile = travelers_profile[request['traveler_type']]
+            profile.override_params(request)#we override the params here if there was no traveler_type set
+        else:
+            profile = travelers_profile[request['traveler_type']]
+
         resp = super(Scenario, self).__on_journeys(requested_type, request, instance)
-        self._qualification(request, resp)
+        self._qualification(request, resp, profile)
         return resp
 
-    def _qualification(self, request, response):
-        if 'travelers_profile_keolis_type_map' not in request:
-            return
+    def _qualification(self, request, response, profile):
         logging.getLogger(__name__).debug('qualification of journeys')
-        keolis_type_map = request['travelers_profile_keolis_type_map']
         map_type_journey = defaultdict(list)
         for journey in response.journeys:
             map_type_journey[journey.type].append(journey)
@@ -49,7 +54,7 @@ class Scenario(default.Scenario):
                 journey.tags.append(journey.type)
             journey.type = ''#we reset the type of all journeys
 
-        for name, types in keolis_type_map.iteritems():
+        for name, types in profile.keolis_type_map.iteritems():
             for type in types:
                 tmp = map_type_journey[type]
                 if tmp:

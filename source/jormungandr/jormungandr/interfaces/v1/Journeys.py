@@ -485,24 +485,6 @@ def compute_regions(args):
 
     return regions
 
-def override_params_from_traveler_type(args):
-    if not args['traveler_type']:
-        return
-    profile = travelers_profile[args['traveler_type']]
-    args['walking_speed'] = profile.walking_speed
-    args['bike_speed'] = profile.bike_speed
-    args['bss_speed'] = profile.bss_speed
-    args['car_speed'] = profile.car_speed
-    args['max_duration_to_pt'] = profile.max_duration_to_pt
-
-    args['origin_mode'] = profile.first_section_mode
-    args['destination_mode'] = profile.last_section_mode
-
-    args['wheelchair'] = profile.wheelchair
-
-    args['travelers_profile_keolis_type_map'] = profile.keolis_type_map
-
-
 class Journeys(ResourceUri, ResourceUtc):
 
     def __init__(self):
@@ -598,7 +580,9 @@ class Journeys(ResourceUri, ResourceUtc):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
 
-        override_params_from_traveler_type(args)
+        if args['traveler_type']:
+            profile = travelers_profile[args['traveler_type']]
+            profile.override_params(args)
 
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
@@ -735,7 +719,10 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
-        override_params_from_traveler_type(args)
+        if args['traveler_type']:
+            profile = travelers_profile[args['traveler_type']]
+            profile.override_params(args)
+
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:
             abort(400, message="from argument must contain at least one item")
