@@ -71,14 +71,8 @@ def best_and_fallback_test():
         eq_(type_fallback_bike, journey_fallback_bike.type)
         eq_(len(response.journeys), nb)
 
-    tests = [('standard', 'rapid', 'comfort', 'healthy', 3), ('slow_walker', 'rapid', 'comfort', '', 2),
-             ('fast_walker', 'rapid', 'comfort', 'healthy', 3), ('stroller', 'rapid', 'comfort', '', 2),
-             ('wheelchair', 'rapid', 'comfort', '', 2), ('luggage', 'rapid', 'comfort', '', 2),
-             ('heels', 'rapid', 'comfort', 'healthy', 3), ('scooter', 'rapid', 'comfort', '', 2),
-             ('cyclist', 'rapid', '', 'comfort', 2), ('motorist', 'rapid', '', '', 1),
-            ]
-    for test in tests:
-        yield (check, test[0], test[1], test[2], test[3], test[4])
+    for profile in travelers_profile.keys():
+        yield (check, profile, 'rapid', 'comfort', '', 2)
 
 def car_test():
     def check(profile, type_car, nb):
