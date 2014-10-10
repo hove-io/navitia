@@ -260,7 +260,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
 
     //for the moment we have to deactivate the timezone handling, so we considere all timezone as UTC
     // (Africa/Abidjan is equivalent to utc since there is no dst and 0 offset from utc)
-    std::string timezone_name = UTC_TIMEZONE;//row[time_zone_c];
+    std::string timezone_name = row[time_zone_c];
 
     if (gtfs_data.tz.default_timezone.second) {
         if (gtfs_data.tz.default_timezone.first != timezone_name) {
