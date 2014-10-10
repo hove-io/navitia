@@ -103,6 +103,13 @@ public:
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();
 
+    /// Shift stop_times, we want all stop_time to start in [0; NUMBER OF SECONDS IN A DAY[
+    /// This can happen, because we shift them during UTC conversion
+    /// we need to have all the stop time of a vehicle_journey to do that
+    /// so this can only be achieved in post-computing.
+    /// In this function, we also shift validity_patterns
+    void shift_stop_times();
+
     /// Construit les journey_patternpoint
     void build_journey_pattern_points();
 
@@ -125,6 +132,9 @@ public:
      * Finalise les start_time et end_time des stop_times en frequence
      */
     void finalize_frequency();
+
+
+    types::ValidityPattern* get_or_create_validity_pattern(types::ValidityPattern* vp);
 
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;

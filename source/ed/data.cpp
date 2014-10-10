@@ -19,7 +19,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
    
 You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
+along with this prog we shift in UTC conversionram. If not, see <http://www.gnu.org/licenses/>.
   
 Stay tuned using
 twitter @navitia 
@@ -35,6 +35,7 @@ www.navitia.io
 #include "utils/functions.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometry.hpp>
+#include "type/datetime.h"
 
 
 
@@ -118,7 +119,47 @@ make_stop_area_stop_points_map(const std::vector<ed::types::StopPoint*>& stop_po
     return res;
 }
 
+
+types::ValidityPattern* Data::get_or_create_validity_pattern(types::ValidityPattern* vp) {
+    auto find_vp_predicate = [&vp](types::ValidityPattern* vp2) {
+        return vp->days == vp2->days;
+    };
+    auto it = std::find_if(validity_patterns.begin(), validity_patterns.end(),
+            find_vp_predicate);
+    if(it != validity_patterns.end()) {
+        delete vp;
+        return *(it);
+    } else {
+         validity_patterns.push_back(vp);
+         return vp;
+    }
+}
+
+void Data::shift_stop_times() {
+    for (auto vj : vehicle_journeys) {
+        auto first_st = vj->stop_time_list.front();
+        bool is_lower = first_st->arrival_time < 0,
+             is_greater = first_st->arrival_time >= int(navitia::DateTimeUtils::SECONDS_PER_DAY);
+        if (is_lower || is_greater) {
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                           "Shift stop_times " << vj->uri << " " << vj->validity_pattern->uri);
+            double n_days = -std::floor(first_st->arrival_time / double(navitia::DateTimeUtils::SECONDS_PER_DAY));
+            for_each(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+                [&n_days] (types::StopTime* st) { st->shift_times(n_days);});
+            auto vp = new types::ValidityPattern();
+            vp->days = vj->validity_pattern->days;
+            if (is_lower) {
+                vp->days << n_days;
+            } else {
+                vp->days >> n_days;
+            }
+            vj->validity_pattern = get_or_create_validity_pattern(vp);
+            //@TODO: Gérer premier jour
+        }
+    }
+}
 void Data::complete(){
+    shift_stop_times();
     build_journey_patterns();
     build_journey_pattern_points();
     build_block_id();
