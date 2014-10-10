@@ -27,10 +27,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from collections import OrderedDict
 
 class TravelerProfile(object):
-    def __init__(self, walking_speed=1.12, bike_speed=4.1, car_speed=11.11, max_duration_to_pt=15*60,
-                 first_section_mode=[], last_section_mode=[], wheelchair=False, first_and_last_section_mode=[]):
+    def __init__(self, walking_speed=1.12, bike_speed=3.33, car_speed=11.11, max_duration_to_pt=15*60,
+                 first_section_mode=[], last_section_mode=[], wheelchair=False, first_and_last_section_mode=[],
+                 keolis_type_map={}):
         self.walking_speed = walking_speed
         self.bike_speed = bike_speed
         self.car_speed = car_speed
@@ -45,56 +47,103 @@ class TravelerProfile(object):
 
         self.wheelchair = wheelchair
 
+        self.keolis_type_map = keolis_type_map
+
     @property
     def bss_speed(self):
         return self.bike_speed
 
+    def override_params(self, args):
+        args['walking_speed'] = self.walking_speed
+        args['bike_speed'] = self.bike_speed
+        args['bss_speed'] = self.bss_speed
+        args['car_speed'] = self.car_speed
+        args['max_duration_to_pt'] = self.max_duration_to_pt
+
+        args['origin_mode'] = self.first_section_mode
+        args['destination_mode'] = self.last_section_mode
+
+        args['wheelchair'] = self.wheelchair
+
+
 travelers_profile = {
     'standard': TravelerProfile(walking_speed=1.39,
-                                 bike_speed=4.17,
-                                 max_duration_to_pt=12*60,
-                                 first_and_last_section_mode=['walking', 'bss']),
+                                bike_speed=3.33,
+                                max_duration_to_pt=12*60,
+                                first_and_last_section_mode=['walking', 'bss'],
+                                keolis_type_map={'rapid': ['best'],
+                                    'comfort': ['less_fallback_walk', 'less_fallback_bss'],
+                                    'healthy': ['non_pt_walk', 'non_pt_bss', 'comfort', 'fastest']}),
 
     'slow_walker': TravelerProfile(walking_speed=0.83,
-                                    max_duration_to_pt=20*60,
-                                    first_and_last_section_mode=['walking']),
-
-    'fast_walker': TravelerProfile(walking_speed=1.67,
-                                    bike_speed=5,
-                                    max_duration_to_pt=20*60,
-                                    first_and_last_section_mode=['walking', 'bss']),
-
-    'stroller': TravelerProfile(walking_speed=1.11,
-                                 max_duration_to_pt=15*60,
-                                 first_and_last_section_mode=['walking']),
-
-    'wheelchair': TravelerProfile(walking_speed=0.83,
                                    max_duration_to_pt=20*60,
                                    first_and_last_section_mode=['walking'],
-                                   wheelchair=True),
+                                   keolis_type_map={'rapid': ['best'],
+                                       'comfort': ['less_fallback_walk'],
+                                       'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
+
+    'fast_walker': TravelerProfile(walking_speed=1.67,
+                                   bike_speed=3.33,
+                                   max_duration_to_pt=20*60,
+                                   first_and_last_section_mode=['walking', 'bss'],
+                                   keolis_type_map={'rapid': ['best'],
+                                       'comfort': ['less_fallback_walk', 'less_fallback_bss'],
+                                       'healthy': ['non_pt_walk', 'non_pt_bss', 'comfort', 'fastest']}),
+
+    'stroller': TravelerProfile(walking_speed=1.11,
+                                max_duration_to_pt=15*60,
+                                first_and_last_section_mode=['walking'],
+                                wheelchair=True,
+                                keolis_type_map={'rapid': ['best'],
+                                    'comfort': ['less_fallback_walk'],
+                                    'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
+
+    'wheelchair': TravelerProfile(walking_speed=0.83,
+                                  max_duration_to_pt=20*60,
+                                  first_and_last_section_mode=['walking'],
+                                  wheelchair=True,
+                                  keolis_type_map={'rapid': ['best'],
+                                      'comfort': ['less_fallback_walk'],
+                                      'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
 
     'luggage': TravelerProfile(walking_speed=1.11,
-                                max_duration_to_pt=15*60,
-                                first_and_last_section_mode=['walking']),
+                               max_duration_to_pt=15*60,
+                               first_and_last_section_mode=['walking'],
+                               wheelchair=True,
+                               keolis_type_map={'rapid': ['best'],
+                                   'comfort': ['less_fallback_walk'],
+                                   'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
 
     'heels': TravelerProfile(walking_speed=1.11,
-                              bike_speed=4.17,
-                              max_duration_to_pt=15*60,
-                              first_and_last_section_mode=['walking', 'bss']),
+                             bike_speed=3.33,
+                             max_duration_to_pt=15*60,
+                             first_and_last_section_mode=['walking', 'bss'],
+                             keolis_type_map={'rapid': ['best'],
+                                 'comfort': ['less_fallback_walk', 'less_fallback_bss'],
+                                 'healthy': ['non_pt_walk', 'non_pt_bss', 'comfort', 'fastest']}),
 
     'scooter': TravelerProfile(walking_speed=2.22,
-                                max_duration_to_pt=15*60,
-                                first_and_last_section_mode=['walking']),
+                               max_duration_to_pt=15*60,
+                               first_and_last_section_mode=['walking'],
+                               keolis_type_map={'rapid': ['best'],
+                                   'comfort': ['less_fallback_walk'],
+                                   'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
 
     'cyclist': TravelerProfile(walking_speed=1.39,
-                                bike_speed=4.17,
-                                max_duration_to_pt=12*60,
-                                first_section_mode=['walking', 'bike'],
-                                last_section_mode=['walking']),
+                               bike_speed=3.33,
+                               max_duration_to_pt=12*60,
+                               first_section_mode=['walking', 'bike'],
+                               last_section_mode=['walking'],
+                               keolis_type_map={'rapid': ['best'],
+                                   'comfort': ['less_fallback_walk', 'less_fallback_bss', 'less_fallback_bike'],
+                                   'healthy': ['non_pt_walk', 'non_pt_bss', 'non_pt_bike', 'comfort', 'fastest']}),
 
     'motorist': TravelerProfile(walking_speed=1.11,
-                                 car_speed=11.11,
-                                 max_duration_to_pt=15*60,
-                                 first_section_mode=['walking', 'car'],
-                                 last_section_mode=['walking']),
+                                car_speed=11.11,
+                                max_duration_to_pt=15*60,
+                                first_section_mode=['walking', 'car'],
+                                last_section_mode=['walking'],
+                                keolis_type_map={'rapid': ['best'],
+                                    'comfort': ['car', 'less_fallback_walk'],
+                                    'healthy': ['non_pt_walk', 'comfort', 'fastest']}),
 }

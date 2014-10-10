@@ -57,12 +57,12 @@ class Instance(object):
     def scenario(self):
         if not self._scenario:
             instance_db = models.Instance.get_by_name(self.name)
+            logger = logging.getLogger(__name__)
             if instance_db:
                 logger.info('loading of scenario {} for instance {}', instance_db.scenario, self.name)
                 module = import_module("jormungandr.scenarios.{}".format(instance_db.scenario))
                 self._scenario = module.Scenario()
             else:
-                logger = logging.getLogger(__name__)
                 logger.warn('instance %s not found in db, we use the default script', self.name)
                 module = import_module("jormungandr.scenarios.default")
                 self._scenario = module.Scenario()

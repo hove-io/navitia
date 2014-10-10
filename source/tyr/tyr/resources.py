@@ -124,7 +124,7 @@ class Instance(flask_restful.Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument('scenario', type=str, required=True,
-                case_sensitive=False, help='the name of the scenario used by jormungandr', choices=['default'],
+                case_sensitive=False, help='the name of the scenario used by jormungandr', choices=['default', 'keolis'],
                 location=('json', 'values'))
         args = parser.parse_args()
         try:
