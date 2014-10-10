@@ -85,7 +85,7 @@ class Instance(object):
             if not socket.closed:
                 self._sockets.put(socket)
 
-    def send_and_receive(self, request, timeout=10000):
+    def send_and_receive(self, request, timeout=10000, quiet=False):
         with self.socket(self.context) as socket:
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
@@ -96,6 +96,6 @@ class Instance(object):
             else:
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
-                logging.error("La requete : " + request.SerializeToString()
-                              + " a echoue " + self.socket_path)
+                if not quiet:
+                    logging.error("La requete : " + request.SerializeToString() + " a echoue " + self.socket_path)
                 raise DeadSocketException(self.name, self.socket_path)
