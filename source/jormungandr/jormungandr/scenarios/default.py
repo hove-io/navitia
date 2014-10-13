@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 import itertools
 from flask import current_app
 import time
-from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, JourneySorter
+from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, journey_sorter
 from jormungandr.scenarios import simple
 import logging
 
@@ -244,7 +244,7 @@ class Scenario(simple.Scenario):
             nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
-        self.sort_journeys(resp, request['clockwise'])
+        self.sort_journeys(resp, instance.journey_order, request['clockwise'])
         self.choose_best(resp)
         self.delete_journeys(resp, request, final_filter=True)  # filter one last time to remove similar journeys
 
@@ -354,9 +354,9 @@ class Scenario(simple.Scenario):
             if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
                 del resp.journeys[request["max_nb_journeys"]:]
 
-    def sort_journeys(self, resp, clockwise=True):
+    def sort_journeys(self, resp, journey_order, clockwise=True):
         if len(resp.journeys) > 1:
-            resp.journeys.sort(JourneySorter(clockwise))
+            resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
 
     def __on_journeys(self, requested_type, request, instance):
         req = self.parse_journey_request(requested_type, request)

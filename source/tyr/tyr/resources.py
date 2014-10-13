@@ -53,7 +53,13 @@ class FieldDate(fields.Raw):
 
 key_fields = {'id': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
-instance_fields = {'id': fields.Raw, 'name': fields.Raw, "is_free": fields.Raw, 'scenario': fields.Raw}
+instance_fields = {'id': fields.Raw,
+                   'name': fields.Raw,
+                   'is_free': fields.Raw,
+                   'scenario': fields.Raw,
+                   'journey_order': fields.Raw,
+}
+
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
 user_fields = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw}
@@ -102,7 +108,7 @@ class Instance(flask_restful.Resource):
         pass
 
     @marshal_with(instance_fields)
-    def get(self):
+    def get(self, id=None, name=None):
         parser = reqparse.RequestParser()
         parser.add_argument('is_free', type=types.boolean, required=False,
                 case_sensitive=False, help='boolean for returning only free '
@@ -126,9 +132,14 @@ class Instance(flask_restful.Resource):
         parser.add_argument('scenario', type=str, required=True,
                 case_sensitive=False, help='the name of the scenario used by jormungandr', choices=['default', 'keolis'],
                 location=('json', 'values'))
+        parser.add_argument('journey_order', type=str, required=True,
+                case_sensitive=False, help='the name of the scenario used by jormungandr',
+                choices=['arrival_time', 'departure_time'], location=('json', 'values'))
         args = parser.parse_args()
+
         try:
             instance.scenario = args['scenario']
+            instance.journey_order = args['journey_order']
             db.session.commit()
         except Exception:
             logging.exception("fail")

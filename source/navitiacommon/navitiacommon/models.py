@@ -115,13 +115,20 @@ class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     is_free = db.Column(db.Boolean, default=False, nullable=False)
-    #the scenario used by jormungandr, by default we use the default scenario (clever isn't it?)
-    scenario = db.Column(db.Text, nullable=False, default='default')
 
     authorizations = db.relationship('Authorization', backref=backref('instance', lazy='joined'),
             lazy='dynamic')
 
     jobs = db.relationship('Job', backref='instance', lazy='dynamic')
+    # ============================================================
+    # params for jormungandr
+    # ============================================================
+    #the scenario used by jormungandr, by default we use the default scenario (clever isn't it?)
+    scenario = db.Column(db.Text, nullable=False, default='default')
+
+    #order of the journey, this order is for clockwise request, else it is reversed
+    journey_order = db.Column(db.Enum('arrival_time', 'departure_time', name='journey_order'), default='arrival_time', nullable=False)
+
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):

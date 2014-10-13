@@ -68,7 +68,7 @@ class Instance(object):
         if not self._scenario:
             instance_db = models.Instance.get_by_name(self.name)
             if instance_db:
-                logger.info('loading of scenario {} for instance {}', instance_db.scenario, self.name)
+                logger.info('loading of scenario %s for instance %s', instance_db.scenario, self.name)
                 module = import_module("jormungandr.scenarios.{}".format(instance_db.scenario))
                 self._scenario = module.Scenario()
             else:
@@ -77,6 +77,17 @@ class Instance(object):
                 module = import_module("jormungandr.scenarios.default")
                 self._scenario = module.Scenario()
         return self._scenario
+
+    @property
+    def journey_order(self):
+        instance_db = models.Instance.get_by_name(self.name)
+        if instance_db:
+            return instance_db.journey_order
+        else:
+            logger = logging.getLogger(__name__)
+            logger.warn('instance %s not found in db, we use the default order for journey: arrival_time', self.name)
+            return 'arrival_time'
+
 
     @contextmanager
     def socket(self, context):
