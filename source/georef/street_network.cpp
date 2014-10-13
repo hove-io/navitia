@@ -332,8 +332,16 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
                     item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Bike
                                                            : georef::PathItem::TransportCaracteristic::Walk);
                     break;
+                case georef::PathItem::TransportCaracteristic::CarLeaveParking:
+                    item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
+                                                           : georef::PathItem::TransportCaracteristic::Car);
+                    break;
+                case georef::PathItem::TransportCaracteristic::CarPark:
+                    item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Car
+                                                           : georef::PathItem::TransportCaracteristic::Walk);
+                    break;
                 default:
-                    throw navitia::exception("unhandled transportation carac case");
+                    throw navitia::recoverable_exception("unhandled transportation carac case");
                 }
             }
             add_in_path(p, item);
