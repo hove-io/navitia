@@ -38,6 +38,8 @@ import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
+from jormungandr import cache, app
+
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
       "network" : request_pb2.PlaceCodeRequest.Network,
@@ -67,18 +69,19 @@ class Instance(object):
     def scenario(self):
         if not self._scenario:
             instance_db = models.Instance.get_by_name(self.name)
+            logger = logging.getLogger(__name__)
             if instance_db:
                 logger.info('loading of scenario %s for instance %s', instance_db.scenario, self.name)
                 module = import_module("jormungandr.scenarios.{}".format(instance_db.scenario))
                 self._scenario = module.Scenario()
             else:
-                logger = logging.getLogger(__name__)
                 logger.warn('instance %s not found in db, we use the default script', self.name)
                 module = import_module("jormungandr.scenarios.default")
                 self._scenario = module.Scenario()
         return self._scenario
 
     @property
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def journey_order(self):
         instance_db = models.Instance.get_by_name(self.name)
         if instance_db:
