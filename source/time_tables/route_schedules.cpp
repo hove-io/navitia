@@ -44,7 +44,7 @@ namespace navitia { namespace timetables {
 std::vector<std::vector<datetime_stop_time> >
 get_all_stop_times(const vector_idx &journey_patterns,
                    const DateTime &dateTime,
-                   const DateTime &max_datetime, type::Data &d, bool disruption_active) {
+                   const DateTime &max_datetime, const type::Data &d, bool disruption_active) {
     std::vector<std::vector<datetime_stop_time> > result;
 
     //On cherche les premiers journey_pattern_points
@@ -128,7 +128,7 @@ route_schedule(const std::string& filter,
                const pt::ptime datetime,
                uint32_t duration, uint32_t interface_version,
                const uint32_t max_depth, int count, int start_page,
-               type::Data &d, bool disruption_active, const bool show_codes) {
+               const type::Data &d, bool disruption_active, const bool show_codes) {
     RequestHandle handler("ROUTE_SCHEDULE", filter, forbidden_uris, datetime, duration, d, {});
 
     if(handler.pb_response.has_error()) {

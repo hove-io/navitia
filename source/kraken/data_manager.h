@@ -41,13 +41,13 @@ www.navitia.io
 
 template<typename Data>
 class DataManager{
-    std::shared_ptr<Data> current_data;
+    std::shared_ptr<const Data> current_data;
 public:
 
-    DataManager() : current_data(std::make_shared<Data>()){}
+    DataManager() : current_data(std::make_shared<const Data>()){}
 
-    inline void set_data(Data *d) {current_data.reset(d);}
-    inline std::shared_ptr<Data> get_data() const{return current_data;}
+    inline void set_data(const Data *d) {current_data.reset(d);}
+    inline std::shared_ptr<const Data> get_data() const{return current_data;}
 
     void release_memory(){
 #ifndef NO_FORCE_MEMORY_RELEASE

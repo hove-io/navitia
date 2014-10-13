@@ -47,7 +47,7 @@ typedef std::pair<datetime_stop_time, datetime_stop_time> pair_dt_st;
  * @param data : Un objet data
  * @return : Renvoie l'idx des journey_patterns points de départ et l'ordre des journey_pattern points de d'arrivée
  */
-std::unordered_map<type::idx_t, uint32_t> get_arrival_order(const std::vector<type::idx_t> &departure_journey_patternpoint, const std::string &arrival_filter, type::Data & data);
+std::unordered_map<type::idx_t, uint32_t> get_arrival_order(const std::vector<type::idx_t> &departure_journey_patternpoint, const std::string &arrival_filter, const type::Data & data);
 
 /**
  * @brief departure_board : Renvoie un vecteur de paires de DateTime/StopTime, correspondant au matching effectué par departure_board
@@ -63,7 +63,7 @@ std::unordered_map<type::idx_t, uint32_t> get_arrival_order(const std::vector<ty
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                        const std::vector<std::string>& forbidden_uris,
                                        const DateTime &datetime, const DateTime &max_datetime,
-                                       type::Data & data, bool disruption_active);
+                                       const type::Data & data, bool disruption_active);
 
 /**
  * @brief departure_board : Renvoie un flux protocole, fait appel à la fonction departure_board renvoyant les paires DateTime/StopTime.
@@ -79,6 +79,6 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
  */
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                    const std::vector<std::string>& forbidden_uris,
-                                   const pt::ptime str_dt, uint32_t duration, uint32_t depth, type::Data & data, bool disruption_active);
+                                   const pt::ptime str_dt, uint32_t duration, uint32_t depth, const type::Data & data, bool disruption_active);
 
 }}

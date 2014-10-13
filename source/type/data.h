@@ -120,7 +120,12 @@ public:
 
     bool last_load = true;
     boost::posix_time::ptime last_load_at;
-    std::atomic<bool> is_connected_to_rabbitmq;
+
+    // This object is the only field mutated in this object. As it is
+    // thread safe to mutate it, we mark it as mutable.  Maybe we can
+    // find in the future a cleaner way, but now, this is cleaner than
+    // before.
+    mutable std::atomic<bool> is_connected_to_rabbitmq;
 
     Data();
     ~Data();
