@@ -134,7 +134,7 @@ public:
     void finalize_frequency();
 
 
-    types::ValidityPattern* get_or_create_validity_pattern(types::ValidityPattern* vp);
+    types::ValidityPattern* get_or_create_validity_pattern(const types::ValidityPattern& vp);
 
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;
