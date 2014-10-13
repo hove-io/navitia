@@ -77,6 +77,7 @@ public:
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
 
     navitia::type::MetaData meta;
+
     /**
          * trie les différentes donnée et affecte l'idx
          *
@@ -111,6 +112,7 @@ public:
     /// so this can only be achieved in post-computing.
     /// In this function, we also shift validity_patterns
     void shift_stop_times();
+    void shift_vp_left(types::ValidityPattern& vp);
 
     /// Construit les journey_patternpoint
     void build_journey_pattern_points();

@@ -33,6 +33,7 @@ www.navitia.io
 #include "ptreferential/where.h"
 #include "utils/timer.h"
 #include "utils/functions.h"
+#include "utils/exception.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometry.hpp>
 #include "type/datetime.h"
@@ -133,6 +134,26 @@ types::ValidityPattern* Data::get_or_create_validity_pattern(const types::Validi
          return validity_patterns.back();
     }
 }
+void Data::shift_vp_left(types::ValidityPattern& vp) {
+    if (vp.days.test(0)) {
+        // This should be done only once because some line after we shift
+        // every validity_pattern on the right, so every one has its first day
+        // deactivated
+        auto one_day = boost::gregorian::days(1);
+        auto begin_date = meta.production_date.begin() - one_day;
+        auto end_date = meta.production_date.end();
+        if (end_date - begin_date > boost::gregorian::days(366)) {
+            end_date -= one_day;
+        }
+        meta.production_date = {begin_date, end_date};
+        for (auto& vp_ : validity_patterns) {
+            vp_->days >>= 1;
+            vp_->beginning_date = begin_date;
+        }
+    }
+    //Now we need to activate the first day
+    vp.days.set(0);
+}
 
 void Data::shift_stop_times() {
     for (auto vj : vehicle_journeys) {
@@ -145,19 +166,20 @@ void Data::shift_stop_times() {
         bool is_lower = first_st->arrival_time < 0,
              is_greater = first_st->arrival_time >= int(navitia::DateTimeUtils::SECONDS_PER_DAY);
         if (is_lower || is_greater) {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                           "Shift stop_times " << vj->uri << " " << vj->validity_pattern->uri);
-            double n_days = -std::floor(first_st->arrival_time / double(navitia::DateTimeUtils::SECONDS_PER_DAY));
+            if ((is_lower && first_st->arrival_time < int(-1 * navitia::DateTimeUtils::SECONDS_PER_DAY)) ||
+                (is_greater && first_st->arrival_time >= int(2 * navitia::DateTimeUtils::SECONDS_PER_DAY))) {
+                throw navitia::exception("Ed, data: You have to shift more than two days, that's weird");
+            }
             for_each(vj->stop_time_list.begin(), vj->stop_time_list.end(),
-                [&n_days] (types::StopTime* st) { st->shift_times(n_days);});
+                [&is_lower] (types::StopTime* st) { st->shift_times(is_lower?-1:1);});
             auto vp = types::ValidityPattern(*vj->validity_pattern);
             if (is_lower) {
-                vp.days << n_days;
+                shift_vp_left(vp);
             } else {
-                vp.days >> n_days;
+                // Actually, this is valid the day after now
+                vp.days >>= 1;
             }
             vj->validity_pattern = get_or_create_validity_pattern(vp);
-            //@TODO: Gérer premier jour
         }
     }
 }
