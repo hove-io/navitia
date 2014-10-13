@@ -137,7 +137,12 @@ types::ValidityPattern* Data::get_or_create_validity_pattern(types::ValidityPatt
 
 void Data::shift_stop_times() {
     for (auto vj : vehicle_journeys) {
-        auto first_st = vj->stop_time_list.front();
+        auto first_st_it = std::find_if(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+                [](const types::StopTime* st) { return st->order == 0;});
+        if (first_st_it == vj->stop_time_list.end()) {
+            continue;
+        }
+        auto first_st = *first_st_it;
         bool is_lower = first_st->arrival_time < 0,
              is_greater = first_st->arrival_time >= int(navitia::DateTimeUtils::SECONDS_PER_DAY);
         if (is_lower || is_greater) {
