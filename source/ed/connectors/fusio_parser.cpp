@@ -68,8 +68,6 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fir
     data.networks.push_back(network);
         gtfs_data.network_map[network->uri] = network;
 
-    //for the moment we have to deactivate the timezone handling, so we considere all timezone as UTC
-    // (Africa/Abidjan is equivalent to utc since there is no dst and 0 offset from utc)
     std::string timezone_name = row[time_zone_c];
 
     if (! is_first_line) {
