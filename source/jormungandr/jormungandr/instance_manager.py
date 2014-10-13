@@ -266,7 +266,7 @@ class InstanceManager(object):
             regions.append(self.get_region(region_str=region, lon=lon,
                                            lat=lat))
         else:
-            regions = self.instances.keys()
+            regions = self.get_regions()
         for key_region in regions:
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
