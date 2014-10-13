@@ -964,32 +964,41 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
 }
 
 
-void fill_message(const boost::shared_ptr<type::Message> message,
+void fill_message(const std::weak_ptr<type::new_disruption::Impact>& impact_weak_ptr,
         const type::Data&, pbnavitia::Message* pb_message, int,
         const boost::posix_time::ptime&, const boost::posix_time::time_period&){
-    pb_message->set_uri(message->uri);
-    switch(message->message_status){
-        case type::MessageStatus::information:
-            pb_message->set_message_status(pbnavitia::MessageStatus::information);
-            break;
-        case type::MessageStatus::warning:
-            pb_message->set_message_status(pbnavitia::MessageStatus::warning);
-            break;
-        case type::MessageStatus::disrupt:
-            pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
-            break;
+    auto impact = impact_weak_ptr.lock();
+    if (! impact) {
+        return; //impact is no longer valid, we have nothing to do
     }
-    auto it = message->localized_messages.find("fr");
-    if(it !=  message->localized_messages.end()){
-        pb_message->set_message(it->second.body);
-        pb_message->set_title(it->second.title);
-    }
+    pb_message->set_uri(impact->uri);
 
-    pb_message->set_start_application_date(navitia::to_iso_string_no_fractional((message->application_period).begin()));
-    pb_message->set_end_application_date(navitia::to_iso_string_no_fractional((message->application_period).end()));
+    throw "TODO";
+    //status shouldn't be an enum anymore
+    //only one message now
 
-    pb_message->set_start_application_daily_hour(navitia::to_iso_string_no_fractional(message->application_daily_start_hour));
-    pb_message->set_end_application_daily_hour(navitia::to_iso_string_no_fractional(message->application_daily_end_hour));
+//    switch(message->message_status){
+//        case type::MessageStatus::information:
+//            pb_message->set_message_status(pbnavitia::MessageStatus::information);
+//            break;
+//        case type::MessageStatus::warning:
+//            pb_message->set_message_status(pbnavitia::MessageStatus::warning);
+//            break;
+//        case type::MessageStatus::disrupt:
+//            pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
+//            break;
+//    }
+//    auto it = message->localized_messages.find("fr");
+//    if(it !=  message->localized_messages.end()){
+//        pb_message->set_message(it->second.body);
+//        pb_message->set_title(it->second.title);
+//    }
+
+//    pb_message->set_start_application_date(navitia::to_iso_string_no_fractional((message->application_period).begin()));
+//    pb_message->set_end_application_date(navitia::to_iso_string_no_fractional((message->application_period).end()));
+
+//    pb_message->set_start_application_daily_hour(navitia::to_iso_string_no_fractional(message->application_daily_start_hour));
+//    pb_message->set_end_application_daily_hour(navitia::to_iso_string_no_fractional(message->application_daily_end_hour));
 }
 
 

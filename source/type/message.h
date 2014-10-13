@@ -167,7 +167,9 @@ struct Disruption {
     // the publication period specify when an information can be displayed to
     // the customer, if a request is made before or after this period the
     // disruption must not be shown
-    //boost::posix_time::time_period publication_period;
+    boost::posix_time::time_period publication_period {
+        boost::posix_time::not_a_date_time, boost::posix_time::seconds(1)
+    };//no default constructor for time_period, we must provide a value
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -187,7 +189,8 @@ struct Disruption {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & reference & created_at & updated_at & cause & impacts & localization & tags & note;
+        ar & uri & reference & publication_period
+           & created_at & updated_at & cause & impacts & localization & tags & note;
     }
 };
 

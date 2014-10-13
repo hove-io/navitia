@@ -158,7 +158,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint &or
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_message(const boost::shared_ptr<type::Message> message, const type::Data &data, pbnavitia::Message* pb_message, int max_depth = 0,
+void fill_message(const std::weak_ptr<type::new_disruption::Impact>& impact, const type::Data &data, pbnavitia::Message* pb_message, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
