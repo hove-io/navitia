@@ -547,6 +547,16 @@ struct Pipe {
 };
 } // anonymous namespace
 
+// We want to do a deep clone of a Data.  The problem is that there is a
+// lot of pointers that point to each other, and thus writing a copy
+// assignment operator is really tricky.
+//
+// But we already have a framework that allow this deep clone: boost
+// serialize.  Maybe we can write a dedicated Archive that clone the
+// object, but we didn't find any easy way to do this.  Thus, we
+// stream the source object in a binary_oarchive, and then stream it
+// in our object.  To avoid having the whole binary_oarchive in
+// memory, we construct a pipe between 2 threads.
 void Data::clone_from(const Data& from) {
     Pipe p;
     std::thread write([&]() {boost::archive::binary_oarchive oa(p.out); oa << from;});

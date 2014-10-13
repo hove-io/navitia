@@ -186,6 +186,7 @@ public:
     /** Sauvegarde les données en binaire compressé avec LZ4*/
     void save(std::ostream& ifs) const;
 
+    // Deep clone from the given Data.
     void clone_from(const Data&);
 private:
     /** Get similar validitypattern **/
