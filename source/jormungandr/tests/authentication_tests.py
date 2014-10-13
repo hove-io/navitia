@@ -33,6 +33,7 @@ from check_utils import *
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
 from jormungandr import app
+import json
 import logging
 
 
@@ -80,6 +81,18 @@ class TestAuthentication(AbstractTestFixture):
         self.old_public_val = app.config['PUBLIC']
         app.config['PUBLIC'] = False
         self.app = app.test_client()
+
+
+    def test_coverage(self):
+        """
+        User only has access to the first region
+        """
+        with user_set(app, 1):
+            response_obj = self.app.get('/v1/coverage')
+            response = json.loads(response_obj.data)
+            assert('regions' in response)
+            assert(len(response['regions']) == 1)
+            assert(response['regions'][0]['id'] == "main_routing_test")
 
     def test_status_code(self):
         requests_status_codes = [
