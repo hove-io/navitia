@@ -41,7 +41,6 @@ from jormungandr.helper import ReverseProxied
 
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')
-app.bob = 'bob'
 if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
 
