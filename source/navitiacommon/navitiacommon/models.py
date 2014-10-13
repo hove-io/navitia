@@ -84,7 +84,7 @@ class User(db.Model):
         res = query.first()
         return res
 
-    def _has_access(self, instance_name, api_name):
+    def has_access(self, instance_name, api_name):
         q1 = Instance.query.filter(Instance.name == instance_name,
                                    Instance.is_free == True)
         query = Instance.query.join(Authorization, Api)\
@@ -93,11 +93,6 @@ class User(db.Model):
                     Authorization.user_id == self.id).union(q1)
 
         return query.count() > 0
-
-    def has_access(self, instance_name, api_name):
-        key = '{0}_{1}_{2}'.format(self.id, instance_name, api_name)
-        res = self._has_access(instance_name, api_name)
-        return res
 
 
 class Key(db.Model):
