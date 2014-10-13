@@ -33,6 +33,7 @@ www.navitia.io
 
 #include "type/type.h"
 #include "type/data.h"
+#include "type/meta_data.h"
 #include "fare/fare.h"
 #include "type/datetime.h"
 
@@ -75,6 +76,7 @@ public:
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
 
+    navitia::type::MetaData meta;
     /**
          * trie les différentes donnée et affecte l'idx
          *

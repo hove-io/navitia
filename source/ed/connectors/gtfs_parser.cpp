@@ -1113,6 +1113,8 @@ void GenericGtfsParser::fill(Data& data, const std::string beginning_date) {
         LOG4CPLUS_FATAL(logger, error);
         throw navitia::exception(error);
     }
+    data.meta.production_date = gtfs_data.production_date;
+    data.meta.timezone = gtfs_data.tz.default_timezone.first;
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data){
