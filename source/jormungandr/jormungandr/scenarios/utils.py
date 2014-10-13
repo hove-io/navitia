@@ -93,28 +93,21 @@ def count_typed_journeys(journeys):
         return sum(1 for journey in journeys if journey.type)
 
 
-class JourneySorter:
+class JourneySorter(object):
     """
-    Journey comparator for sort
-
-    the comparison is different if the query is for clockwise search or not
+    abstract class for journey sorter
     """
     def __init__(self, clockwise):
         self.clockwise = clockwise
 
     def __call__(self, j1, j2):
+        raise NotImplementedError()
 
-        if self.clockwise:
-            #for clockwise query, we want to sort first on the arrival time
-            if j1.arrival_date_time != j2.arrival_date_time:
-                return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
-        else:
-            #for non clockwise the first sort is done on departure
-            if j1.departure_date_time != j2.departure_date_time:
-                return -1 if j1.departure_date_time > j2.departure_date_time else 1
-
-        # afterward we compare the duration, hence it will indirectly compare
-        # the departure for clockwise, and the arrival for not clockwise
+    def sort_by_duration_and_transfert(self, j1, j2):
+        """
+        we compare the duration, hence it will indirectly compare
+        the departure for clockwise, and the arrival for not clockwise
+        """
         if j1.duration != j2.duration:
             return j2.duration - j1.duration
 
@@ -133,6 +126,51 @@ class JourneySorter:
             else:
                 non_pt_duration_j2 = non_pt_duration
         return non_pt_duration_j1 - non_pt_duration_j2
+
+
+class ArrivalJourneySorter(JourneySorter):
+    """
+    Journey comparator for sort, on clockwise the sort is done by arrival time
+
+    the comparison is different if the query is for clockwise search or not
+    """
+    def __init__(self, clockwise):
+        super(ArrivalJourneySorter, self).__init__(clockwise)
+
+    def __call__(self, j1, j2):
+        if self.clockwise:
+            #for clockwise query, we want to sort first on the arrival time
+            if j1.arrival_date_time != j2.arrival_date_time:
+                return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
+        else:
+            #for non clockwise the first sort is done on departure
+            if j1.departure_date_time != j2.departure_date_time:
+                return -1 if j1.departure_date_time > j2.departure_date_time else 1
+
+        return self.sort_by_duration_and_transfert(j1, j2)
+
+
+class DepartureJourneySorter(JourneySorter):
+    """
+    Journey comparator for sort, on clockwise the sort is done by departure time
+
+    the comparison is different if the query is for clockwise search or not
+    """
+    def __init__(self, clockwise):
+        super(DepartureJourneySorter, self).__init__(clockwise)
+
+    def __call__(self, j1, j2):
+
+        if self.clockwise:
+            #for clockwise query, we want to sort first on the departure time
+            if j1.departure_date_time != j2.departure_date_time:
+                return -1 if j1.departure_date_time < j2.departure_date_time else 1
+        else:
+            #for non clockwise the first sort is done on arrival
+            if j1.arrival_date_time != j2.arrival_date_time:
+                return -1 if j1.arrival_date_time > j2.arrival_date_time else 1
+
+        return self.sort_by_duration_and_transfert(j1, j2)
 
 
 def build_pagination(request, resp):
@@ -155,3 +193,7 @@ def build_pagination(request, resp):
             page = pagination.startPage + 1
             pagination.nextPage = query_args + "start_page=%i" % page
 
+journey_sorter = {
+    'arrival_time': ArrivalJourneySorter,
+    'departure_time': DepartureJourneySorter
+}

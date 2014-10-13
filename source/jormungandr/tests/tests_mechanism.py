@@ -150,6 +150,11 @@ class AbstractTestFixture:
             return jormungandr.scenarios.default.Scenario()
         Instance.scenario = mock_scenario
 
+        @property
+        def mock_journey_order(self):
+            return 'arrival_time'
+        Instance.journey_order = mock_journey_order
+
 
 
     @classmethod

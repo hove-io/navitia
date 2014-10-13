@@ -160,7 +160,7 @@ class InstanceManager(object):
         req.requested_api = type_pb2.METADATAS
         for key, instance in self.instances.iteritems():
             try:
-                resp = instance.send_and_receive(req, timeout=1000)
+                resp = instance.send_and_receive(req, timeout=1000, quiet=True)
             except DeadSocketException:
                 instance.geom = None
                 continue
