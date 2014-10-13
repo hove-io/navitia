@@ -40,21 +40,24 @@ namespace bg = boost::gregorian;
 
 namespace navitia { namespace type {
 
-bool Impact::is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const {
+bool new_disruption::Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
 
-    if(now.is_not_a_date_time() && action_period.is_null()){
+    if(publication_date.is_not_a_date_time() && active_period.is_null()){
         return false;
     }
 
-    for (const auto& period: application_periods) {
-        todo!
+    // we check if we want to publish the impact
+    if (! disruption->publication_period.contains(publication_date)) {
+        return false;
     }
-    bool to_return = application_periods.contains(now);
 
-    if (!action_period.is_null() && to_return) {
-        to_return = to_return && is_applicable(action_period);
+    //we check if the impact applies on this period
+    for (const auto& period: application_periods) {
+        if (period.contains(active_period)) {
+            return true;
+        }
     }
-    return to_return;
+    return false;
 }
 
 

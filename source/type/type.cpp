@@ -32,6 +32,7 @@ www.navitia.io
 #include "pt_data.h"
 #include <iostream>
 #include <boost/assign.hpp>
+#include <boost/range/algorithm/remove_if.hpp>
 #include "utils/functions.h"
 #include "utils/logger.h"
 
@@ -55,12 +56,23 @@ std::string VehicleJourney::get_direction() const {
 std::vector<std::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable_messages(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
-    std::vector<boost::shared_ptr<Message>> result;
-    for(auto impact : this->impacts){
-        if(impacts->is_valid(current_time, action_period)){
-            result.push_back(message);
+    std::vector<std::weak_ptr<new_disruption::Impact>> result;
+
+    //we cleanup the released pointer (not in the loop for code clarity)
+    impacts.erase(boost::remove_if(impacts, [](const std::weak_ptr<new_disruption::Impact>& impact) {
+                                                return ! impact.lock();
+                                            }));
+
+    for (auto impact : this->impacts) {
+        auto impact_acquired = impact.lock();
+        if (! impact_acquired) {
+            continue; //pointer might still have become invalid
+        }
+        if (impact_acquired->is_valid(current_time, action_period)) {
+            result.push_back(impact);
         }
     }
+
     return result;
 
 }
@@ -68,14 +80,20 @@ std::vector<std::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable_m
 bool HasMessages::has_applicable_message(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
-    bool result = false;
-//    for(auto message : this->messages){
-//        if(message->is_valid(current_time, action_period)){
-//            result = true;
-//            break;
-//        }
-//    }
-    return result;
+    //we cleanup the released pointer (not in the loop for code clarity)
+    impacts.erase(boost::remove_if(impacts, [](const std::weak_ptr<new_disruption::Impact>& impact) {
+                                                return ! impact.lock();
+                                            }));
+    for (auto impact : this->impacts) {
+        auto impact_acquired = impact.lock();
+        if (! impact_acquired) {
+            continue; //pointer might still have become invalid
+        }
+        if (impact_acquired->is_valid(current_time, action_period)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool VehicleJourney::has_date_time_estimated() const{

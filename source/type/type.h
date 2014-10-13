@@ -282,15 +282,11 @@ struct hasVehicleProperties {
 };
 
 struct HasMessages{
-    //on utilise des smart pointer boost car ils sont sérializable
-    //si les weak_ptr était géré, c'est eux qu'ils faudrait utiliser
-//    std::vector<boost::shared_ptr<Message>> messages;
-
-    std::vector<std::weak_ptr<new_disruption::Impact>> impacts;
+    mutable std::vector<std::weak_ptr<new_disruption::Impact>> impacts;
 
     std::vector<std::weak_ptr<new_disruption::Impact>> get_applicable_messages(
             const boost::posix_time::ptime& current_time,
-            const boost::posix_time::time_period& action_period)const;
+            const boost::posix_time::time_period& action_period) const;
 
     bool has_applicable_message(
             const boost::posix_time::ptime& current_time,
