@@ -91,7 +91,7 @@ class Schedules(ResourceUri, ResourceUtc):
                 error = "Unable to parse filter {filter}"
                 return {"error": error.format(filter=args["filter"])}, 503
             else:
-                self.region = i_manager.key_of_id(parts[1].strip())
+                self.region = i_manager.get_region(object_id=parts[1].strip())
         else:
             self.collection = 'schedules'
             args["filter"] = self.get_filter(uri.split("/"))

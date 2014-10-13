@@ -44,7 +44,6 @@ from jormungandr.interfaces.parsers import depth_argument
 from errors import ManageError
 from Coord import Coord
 from jormungandr.timezone import set_request_timezone
-from navitiacommon.models import PtObject
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
@@ -94,23 +93,18 @@ class Uri(ResourceUri):
         if region is None and lat is None and lon is None:
             if "external_code" in args and args["external_code"]:
                 type_ = collections_to_resource_type[collection]
-                res = PtObject.get_from_external_code(args["external_code"],
-                                                      type_)
-                if res:
-                    id = res.uri
-                    user = authentication.get_user(token=authentication.get_token())
-                    for instance in res.instances:
-                        if authentication.has_access(instance, abort=False, user=user):
-                            region = instance.name
-                    if not region:
-                        authentication.abort_request(user=user)
-                else:
+                for instance in i_manager.get_regions():
+                    if i_manager.instances[instance].has_external_code(type_, args["external_code"]):
+                        region = instance
+                        break
+                if not region:
                     abort(404, message="Unable to find an object for the uri %s"
                           % args["external_code"])
             else:
                 abort(503, message="Not implemented yet")
         else:
-            authentication.authenticate(region, 'ALL', abort=True)
+            user = authentication.get_user(token=authentication.get_token())
+            authentication.has_access(region, 'ALL', abort=True, user=user)
         self.region = i_manager.get_region(region, lon, lat)
 
         #we store the region in the 'g' object, which is local to a request
@@ -450,10 +444,10 @@ def coords(is_collection):
 
 
 def Redirect(*args, **kwargs):
-    id = kwargs["id"]
+    id_ = kwargs["id"]
     collection = kwargs["collection"]
-    region = i_manager.key_of_id(id)
+    region = i_manager.get_region(object_id=id_)
     if not region:
         region = "{region.id}"
-    url = url_for("v1.uri", region=region, collection=collection, id=id)
+    url = url_for("v1.uri", region=region, collection=collection, id=id_)
     return redirect(url, 303)

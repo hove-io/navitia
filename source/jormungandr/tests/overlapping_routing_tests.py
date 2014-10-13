@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import logging
-from jormungandr.instance_manager import InstanceManager
 from navitiacommon import models
 
 from tests_mechanism import AbstractTestFixture, dataset

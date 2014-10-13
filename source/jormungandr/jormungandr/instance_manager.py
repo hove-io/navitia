@@ -39,8 +39,9 @@ import glob
 from jormungandr.singleton import singleton
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException
-from jormungandr import app, authentication
+from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
+    DeadSocketException, InvalidArguments
+from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
 import traceback
 
@@ -90,10 +91,18 @@ class InstanceManager(object):
     couverte par un identifiant
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, ini_files=None, instances_dir=None, start_ping=False):
+        # if a .ini file is defined in the settings we take it
+        # else we load all .ini file found in the INSTANCES_DIR
+        if ini_files is None and instances_dir is None:
+            raise ValueError("ini_files or instance_dir has to be set")
+        if ini_files:
+            self.ini_files = ini_files
+        else:
+            self.ini_files = glob.glob(instances_dir + '/*.ini')
+        self.start_ping = start_ping
 
-    def initialisation(self, start_ping=True):
+    def initialisation(self):
         """ Charge la configuration à partir d'un fichier ini indiquant
             les chemins des fichiers contenant :
             - géométries de la région sur laquelle s'applique le moteur
@@ -104,14 +113,7 @@ class InstanceManager(object):
         self.context = zmq.Context()
         self.default_socket = None
 
-        # if a .ini file is defined in the settings we take it
-        # else we load all .ini file found in the INSTANCES_DIR
-        if 'INI_FILES' in app.config:
-            ini_files = app.config['INI_FILES']
-        else:
-            ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
-
-        for file_name in ini_files:
+        for file_name in self.ini_files:
             logging.info("Initialisation, reading file : " + file_name)
             conf = ConfigParser.ConfigParser()
             conf.read(file_name)
@@ -128,7 +130,7 @@ class InstanceManager(object):
         self.thread = Thread(target=self.thread_ping)
         #daemon thread does'nt block the exit of a process
         self.thread.daemon = True
-        if start_ping:
+        if self.start_ping:
             self.thread.start()
 
     def dispatch(self, arguments, api, instance_obj=None, instance_name=None,
@@ -139,7 +141,12 @@ class InstanceManager(object):
             instance = self.instances[instance_name]
             if hasattr(instance.scenario, api) and callable(getattr(instance.scenario, api)):
                 api_func = getattr(instance.scenario, api)
-                return api_func(arguments, instance)
+                resp = api_func(arguments, instance)
+                if resp.HasField("publication_date") and\
+                  instance.publication_date != resp.publication_date:
+                    cache.delete_memoized(self._all_keys_of_id)
+                    instance.publication_date = resp.publication_date
+                return resp
             else:
                 raise ApiNotFound(api)
         else:
@@ -153,7 +160,7 @@ class InstanceManager(object):
         req.requested_api = type_pb2.METADATAS
         for key, instance in self.instances.iteritems():
             try:
-                resp = instance.send_and_receive(req, timeout=1000, quiet=True)
+                resp = instance.send_and_receive(req, timeout=1000)
             except DeadSocketException:
                 instance.geom = None
                 continue
@@ -179,12 +186,20 @@ class InstanceManager(object):
         if not self.thread_event.is_set():
             self.thread_event.set()
 
-    def key_of_id(self, object_id, only_one=True):
-        """ Retrieves the key of the region of a given id
-            if it's a coord calls key_of_coord
-            Return one region key if only_one param is true, or None if it doesn't exists
-            and the list of possible regions if only_one is set to False
-        """
+
+    def _filter_authorized_instances(self, instances, api):
+        if not instances:
+            return None
+        user = authentication.get_user(token=authentication.get_token())
+        valid_regions = [i for i in instances if authentication.has_access(i,
+            abort=False, user=user, api=api)]
+        if not valid_regions:
+            authentication.abort_request(user)
+        return valid_regions
+
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS',None))
+    def _all_keys_of_id(self, object_id):
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:
                 lon, lat = object_id.split(";")
@@ -194,78 +209,55 @@ class InstanceManager(object):
                 flon = float(lon)
                 flat = float(lat)
             except:
-                raise RegionNotFound(object_id=object_id)
-            return self.key_of_coord(flon, flat, only_one)
+                raise InvalidArguments(object_id)
+            return self._all_keys_of_coord(flon, flat)
+        instances = [i.name for i in self.instances.itervalues() if i.has_id(object_id)]
+        if not instances:
+            raise RegionNotFound(object_id=object_id)
+        return instances
 
-        ptobject = models.PtObject.get_from_uri(object_id)
-        if ptobject:
-            instances = ptobject.instances()
-            if len(instances) > 0:
-                user = authentication.get_user()
-                available_instances = [i.name for i in instances if authentication.has_access(i, 'ALL', abort=False, user=user)]
 
-                if not available_instances:
-                    raise RegionNotFound(custom_msg="id {i} exists but not in regions available for user"
-                                         .format(i=object_id))
-
-                if only_one:
-                    return choose_best_instance(available_instances)
-                return available_instances
-
-        raise RegionNotFound(object_id=object_id)
-
-    def key_of_coord(self, lon, lat, only_one=True):
-        """ For a given coordinate, return the corresponding Navitia key
-
-        Raise RegionNotFound if nothing found
-
-        if only_one param is true return only one key, else return the list of possible keys
-        """
+    def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
-        valid_instances = []
+        instances = []
         # a valid instance is an instance containing the coord and accessible by the user
-        found_one = False
         for key, instance in self.instances.iteritems():
             if instance.geom and instance.geom.contains(p):
-                found_one = True
-                jormun_instance = models.Instance.get_by_name(key)
-                if not jormun_instance:
-                    raise RegionNotFound(custom_msg="technical problem, impossible "
-                                                    "to find region {r} in jormungandr database"
-                                         .format(r=key))
-                user = authentication.get_user()
-                if authentication.has_access(jormun_instance, 'ALL', abort=False, user=user):  #TODO, pb how to check the api ?
-                    valid_instances.append(key)
-
-        if valid_instances:
-            if only_one:
-                #If we have only one instance we return the 'best one'
-                return choose_best_instance(valid_instances)
-            else:
-                return valid_instances
-        elif found_one:
-            raise RegionNotFound(custom_msg="coord {lon};{lat} are covered, "
-                                            "but not in regions available for user"
-                                 .format(lon=lon, lat=lat))
-
-        raise RegionNotFound(lon=lon, lat=lat)
+                instances.append(instance.name)
+        return instances
 
     def region_exists(self, region_str):
         if region_str in self.instances.keys():
             return True
         else:
             raise RegionNotFound(region=region_str)
+    
 
-    def get_region(self, region_str=None, lon=None, lat=None, object_id=None):
+    def get_region(self, region_str=None, lon=None, lat=None, object_id=None,
+            api='ALL'):
+        return self.get_regions(region_str, lon, lat, object_id, api,
+                only_one=True)
+
+
+    def get_regions(self, region_str=None, lon=None, lat=None, object_id=None,
+            api='ALL', only_one=False):
+        available_regions = []
         if region_str and self.region_exists(region_str):
-            return region_str
+            available_regions = [region_str]
         elif lon and lat:
-            return self.key_of_coord(lon, lat)
+            available_regions = self._all_keys_of_coord(lon, lat)
         elif object_id:
-            return self.key_of_id(object_id)
+            available_regions = self._all_keys_of_id(object_id)
         else:
-            raise RegionNotFound(region=region_str, lon=lon, lat=lat,
-                                 object_id=object_id)
+            available_regions = self.instances.keys()
+
+        valid_regions = self._filter_authorized_instances(available_regions, api)
+        if valid_regions:
+            return choose_best_instance(valid_regions) if only_one else valid_regions
+        elif available_regions:
+            authentication.abort_request(user=authentication.get_user())
+        raise RegionNotFound(region=region_str, lon=lon, lat=lat,
+                             object_id=object_id)
 
     def regions(self, region=None, lon=None, lat=None):
         response = {'regions': []}

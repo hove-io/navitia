@@ -32,39 +32,39 @@ import logging
 
 from flask_restful import reqparse, abort
 import flask_restful
-from flask import current_app, request, g
+from flask import request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 import datetime
 import base64
 from navitiacommon.models import User, Instance, db
+from jormungandr import cache, app as current_app
 
 
 def authentication_required(func):
     """
     decorateur chargé de l'authentification des requetes
     fonctionne pour chaque API prenant un paramétre la région
-    si la region est absente de la requéte la requete est automatique autorisé
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
+        logging.info('authentication_required')
         region = None
         if 'region' in kwargs:
             region = kwargs['region']
             #TODO revoir comment on gere le lon/lat
         elif 'lon' in kwargs and 'lat' in kwargs:
-            try:
-                from jormungandr import i_manager  # quick fix to avoid circular dependencies
-                region = i_manager.key_of_coord(lon=kwargs['lon'],
+            try:  # quick fix to avoid circular dependencies
+                from jormungandr import i_manager
+                region = i_manager.get_region(lon=kwargs['lon'],
                                                 lat=kwargs['lat'])
             except RegionNotFound:
                 pass
-
+        user = get_user(token=get_token())
         if not region:
             #we could not find any regions, we abort
-            abort_request(user=get_user(token=get_token()))
-
-        if not region or authenticate(region, 'ALL', abort=True):
+            abort_request(user=user)
+        if has_access(region, 'ALL', abort=True, user=user):
             return func(*args, **kwargs)
 
     return wrapper
@@ -96,41 +96,36 @@ def get_token():
         return request.headers['Authorization']
 
 
-def authenticate(region, api, abort=False):
+@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
+def has_access(region, api, abort, user):
     """
     Check the Authorization of the current user for this region and this API.
     If abort is True, the request is aborted with the appropriate HTTP code.
+    Warning: Please this function is cached therefore it should not be
+    dependent of the request context, so keep it as a pure function.
     """
-    if 'PUBLIC' in current_app.config \
-            and current_app.config['PUBLIC']:
+    if current_app.config.get('PUBLIC', False):
         #if jormungandr is on public mode we skip the authentification process
         return True
-
-    token = get_token()
-
-    if not token:
-        if abort:
-            #Since we don't have a token, we can't have a user
-            abort_request(user=None)
-        else:
-            return False
-
-    user = get_user(token=get_token())
-    if user:
-        if has_access(region, api, abort=False, user=user):
-            return True
-        else:
-            if abort:
-                abort_request(user=user)
-            else:
-                return False
+    if user and user.has_access(region, api):
+        return True
     else:
         if abort:
-           abort_request(user=user)
+            abort_request(user=user)
         else:
             return False
 
-def get_user(abort_if_no_token=True, token=None):
+
+@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
+def cache_get_user(token):
+    """
+    We allow this method to be cached even if it depends on the current time
+    because we assume the cache time is small and the error can be tolerated.
+    """
+    return User.get_from_token(token, datetime.datetime.now())
+
+
+def get_user(token, abort_if_no_token=True):
     """
     return the current authenticated User or None
     """
@@ -148,26 +143,17 @@ def get_user(abort_if_no_token=True, token=None):
                 g.user = User(login="unknown_user")
                 g.user.id = 0
         else:
-            g.user = User.get_from_token(token, datetime.datetime.now())
+            g.user = cache_get_user(token)
 
         logging.debug('user %s', g.user)
 
         return g.user
 
-def has_access(instance, api, abort=False, user=None):
-    if 'PUBLIC' in current_app.config \
-            and current_app.config['PUBLIC']:
-        #if jormungandr is on public mode we skip the authentification process
-        return True
-    res = user.has_access(instance, api)
-    if abort and not res:
-        abort_request(user=user)
-    else:
-        return res
 
 def abort_request(user=None):
     """
-    abort a request with the proper http status in case of authentification issues
+    abort a request with the proper http status in case of authentification
+    issues
     """
     if user:
         flask_restful.abort(403)
