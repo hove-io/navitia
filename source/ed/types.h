@@ -309,7 +309,6 @@ struct StopTime : public Nameable {
         arrival_time += n_days * navitia::DateTimeUtils::SECONDS_PER_DAY;
         departure_time += n_days * navitia::DateTimeUtils::SECONDS_PER_DAY;
         assert(arrival_time >= 0 && departure_time >= 0);
-        assert(arrival_time < 86400);
     }
 };
 
