@@ -36,6 +36,7 @@ www.navitia.io
 #include "utils/exception.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometry.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 #include "type/datetime.h"
 
 
@@ -125,7 +126,7 @@ types::ValidityPattern* Data::get_or_create_validity_pattern(const types::Validi
     auto find_vp_predicate = [&vp](types::ValidityPattern* vp2) {
         return vp.days == vp2->days;
     };
-    auto it = std::find_if(validity_patterns.begin(), validity_patterns.end(),
+    auto it = boost::find_if(validity_patterns,
             find_vp_predicate);
     if(it != validity_patterns.end()) {
         return *(it);
