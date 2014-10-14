@@ -135,6 +135,8 @@ types::ValidityPattern* Data::get_or_create_validity_pattern(const types::Validi
          return validity_patterns.back();
     }
 }
+
+// Please not that VP is not in the list of validity_patterns
 void Data::shift_vp_left(types::ValidityPattern& vp) {
     if (vp.check(0)) {
         // This should be done only once because few lines below we shift
@@ -144,7 +146,7 @@ void Data::shift_vp_left(types::ValidityPattern& vp) {
         auto begin_date = meta.production_date.begin() - one_day;
         auto end_date = meta.production_date.end();
         if (end_date - begin_date > boost::gregorian::days(366)) {
-            end_date -= one_day;
+            end_date = begin_date + boost::gregorian::days(365);
         }
         meta.production_date = {begin_date, end_date};
         for (auto& vp_ : validity_patterns) {
