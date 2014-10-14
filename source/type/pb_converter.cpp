@@ -259,6 +259,8 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
     line->set_name(l->name);
     line->set_uri(l->uri);
 
+    fill_pb_object(l->shape, line->mutable_geojson()); // -> for depth = 0 ?
+
     if(depth>0){
         std::vector<nt::idx_t> physical_mode_idxes;
         for(auto route : l->route_list) {
@@ -349,7 +351,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
                        now, action_period, show_codes);
     }
 
-    fill_pb_object(r->shape, route->mutable_geojson());
+    fill_pb_object(r->shape, route->mutable_geojson());// -> for depth = 0 ?
 
     auto thermometer = timetables::Thermometer();
     thermometer.generate_thermometer(r);

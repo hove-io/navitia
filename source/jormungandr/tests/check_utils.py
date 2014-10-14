@@ -519,17 +519,25 @@ def is_valid_route(route, depth_check=1):
         is_valid_place(direction, depth_check - 1)
         #the direction of the route must always be a stop point
         assert get_not_null(direction, "embedded_type") == "stop_point"
-        is_valid_stop_point(get_not_null(direction, "stop_point"))
+        is_valid_stop_point(get_not_null(direction, "stop_point"), depth_check - 1)
     else:
         assert 'line' not in route
         assert 'direction' not in route
 
+    # test if geojson is valid
+    g = route.get('geojson')
+    g is None or shape(g) #TODO check length
 
-def is_valid_line(route, depth_check=1):
+
+def is_valid_line(line, depth_check=1):
     if depth_check < 0:
         return
-    get_not_null(route, "name")
-    get_not_null(route, "id")
+    get_not_null(line, "name")
+    get_not_null(line, "id")
+
+    # test if geojson is valid
+    g = line.get('geojson')
+    g is None or shape(g) #TODO check length
     #TODO more checks
 
 

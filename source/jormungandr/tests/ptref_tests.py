@@ -83,3 +83,32 @@ class TestPtRef(AbstractTestFixture):
 
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=3)
+
+    def test_line(self):
+        """test line formating"""
+        response = self.query_region("v1/lines", display=True)
+
+        lines = get_not_null(response, 'lines')
+
+        for l in lines:
+            is_valid_line(l, depth_check=1)
+            #we know we have a geojson for this test so we can check it
+            geo = get_not_null(l, 'geojson')
+            shape(geo)
+            assert geo['properties'][0]['length'] != 0
+            #TODO check length size
+
+    def test_route(self):
+        """test line formating"""
+        response = self.query_region("v1/routes", display=True)
+
+        routes = get_not_null(response, 'routes')
+
+        for r in routes:
+            is_valid_route(r, depth_check=1)
+
+            #we know we have a geojson for this test so we can check it
+            geo = get_not_null(r, 'geojson')
+            shape(geo) #TODO check length
+            assert geo['properties'][0]['length'] != 0
+            #TODO check length size
