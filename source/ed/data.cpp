@@ -160,8 +160,8 @@ void Data::shift_vp_left(types::ValidityPattern& vp) {
 
 void Data::shift_stop_times() {
     for (auto vj : vehicle_journeys) {
-        const auto first_st_it = std::find_if(vj->stop_time_list.begin(), vj->stop_time_list.end(),
-                [](const types::StopTime* st) { return st->order == 0;});
+        const auto first_st_it = std::min_element(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+                [](const types::StopTime* st1, const types::StopTime* st2) { return st1->order < st2->order;});
         if (first_st_it == vj->stop_time_list.end()) {
             continue;
         }
