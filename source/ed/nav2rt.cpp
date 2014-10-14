@@ -125,7 +125,7 @@ int main(int argc, char * argv[])
     ed::connectors::apply_messages(data);
 
     LOG4CPLUS_INFO(logger, "loading of disruptions");
-    std::vector<navitia::type::AtPerturbation> perturbations;
+    std::vector<ed::AtPerturbation> perturbations;
     try{
         start = pt::microsec_clock::local_time();
         perturbations = ed::connectors::load_at_perturbations(config, now);

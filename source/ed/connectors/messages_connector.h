@@ -32,6 +32,7 @@ www.navitia.io
 #include <string>
 #include <map>
 #include "type/message.h"
+#include "ed/at_perturbation.h"
 
 namespace navitia{namespace type{
     class Data;
@@ -52,7 +53,7 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
 
 void apply_messages(navitia::type::Data& data);
 
-std::vector<navitia::type::AtPerturbation> load_at_perturbations(
+std::vector<ed::AtPerturbation> load_at_perturbations(
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time);
 
