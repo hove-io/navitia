@@ -76,6 +76,7 @@ public:
     static const unsigned int data_version = 27; //< Data version number. *INCREMENT* every time serialized data are modified
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
+    std::atomic<bool> loading; //< Is the data being loaded
 
     std::unique_ptr<MetaData> meta;
 

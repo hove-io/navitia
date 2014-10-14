@@ -74,6 +74,7 @@ Data::~Data(){}
 
 bool Data::load(const std::string& filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    loading = true;
     try {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -95,6 +96,7 @@ bool Data::load(const std::string& filename) {
         LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
         last_load = false;
     }
+    loading = false;
     return this->last_load;
 }
 
