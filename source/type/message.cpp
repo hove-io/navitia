@@ -42,7 +42,7 @@ namespace navitia { namespace type {
 
 bool new_disruption::Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
 
-    if(publication_date.is_not_a_date_time() && active_period.is_null()){
+    if(publication_date.is_not_a_date_time() || active_period.is_null()){
         return false;
     }
 
@@ -53,7 +53,7 @@ bool new_disruption::Impact::is_valid(const boost::posix_time::ptime& publicatio
 
     //we check if the impact applies on this period
     for (const auto& period: application_periods) {
-        if (period.contains(active_period)) {
+        if (! period.intersection(active_period).is_null()) {
             return true;
         }
     }

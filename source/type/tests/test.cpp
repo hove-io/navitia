@@ -40,6 +40,8 @@ www.navitia.io
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
+using navitia::type::new_disruption::Impact;
+using navitia::type::new_disruption::Disruption;
 
 #define BOOST_CHECK_NOT(value) BOOST_CHECK(!value)
 
@@ -128,186 +130,53 @@ BOOST_AUTO_TEST_CASE(projection) {
 }
 
 
-BOOST_AUTO_TEST_CASE(message_publishable){
-    throw "TODO";
-//    Message message;
+struct disruption_fixture {
+    disruption_fixture() : disruption(std::make_unique<Disruption>()) {
+        disruption->impacts.push_back(std::make_shared<Impact>());
 
-//    message.publication_period = pt::time_period(pt::time_from_string("2013-02-22 12:32:00"),
-//            pt::time_from_string("2013-02-23 12:32:00"));
+        disruption->publication_period = pt::time_period(
+                    pt::time_from_string("2013-02-22 12:32:00"),
+                    pt::time_from_string("2013-02-23 12:32:00"));
 
-//    BOOST_CHECK(message.is_publishable(pt::time_from_string("2013-02-22 14:00:00")));
+        _impact = disruption->impacts.back();
 
-//    BOOST_CHECK_NOT(message.is_publishable(pt::time_from_string("2013-02-24 14:00:00")));
-//    BOOST_CHECK_NOT(message.is_publishable(pt::time_from_string("2013-02-21 14:00:00")));
+        auto impact_acquired = _impact.lock();
+        impact_acquired->disruption = disruption.get();
 
-//    BOOST_CHECK_NOT(message.is_publishable(pt::time_from_string("2013-02-22 12:00:00")));
-//    BOOST_CHECK_NOT(message.is_publishable(pt::time_from_string("2013-02-23 14:00:00")));
+        //the impact can be applied every day from 6to in the publication period
+        auto publication_period = boost::gregorian::date_period(boost::gregorian::from_undelimited_string("20130301"),
+                                                              boost::gregorian::from_undelimited_string("20130401"));
+        for(boost::gregorian::day_iterator it(publication_period.begin()); it < publication_period.end(); ++it) {
+            impact_acquired->application_periods.push_back(pt::time_period(
+                                                               pt::ptime(*it, pt::duration_from_string("06:00")),
+                                                               pt::ptime(*it, pt::duration_from_string("20:00"))));
+        }
+    }
 
-//    BOOST_CHECK(message.is_publishable(pt::time_from_string("2013-02-22 12:32:00")));
-//    BOOST_CHECK(message.is_publishable(pt::time_from_string("2013-02-23 12:31:00")));
+    std::unique_ptr<Disruption> disruption;
+    std::weak_ptr<Impact> _impact;
+    pt::ptime time_in_publication_period = pt::time_from_string("2013-02-22 20:00:00");
+};
 
+
+BOOST_FIXTURE_TEST_CASE(message_publishable, disruption_fixture) {
+    auto impact = _impact.lock();
+    auto p = pt::time_period(pt::time_from_string("2013-03-01 07:00:00"), pt::hours(1)); //in publication period
+
+    BOOST_CHECK(impact->is_valid(time_in_publication_period, p));
+    BOOST_CHECK_NOT(impact->is_valid(pt::time_from_string("2013-02-22 06:00:00"), p)); //before publication period
+    BOOST_CHECK_NOT(impact->is_valid(pt::time_from_string("2013-02-24 01:00:00"), p)); //after in publication period
 }
 
-BOOST_AUTO_TEST_CASE(message_is_applicable_simple){
-    throw "TODO";
-//    navitia::type::Message message;
+BOOST_FIXTURE_TEST_CASE(message_is_applicable_simple, disruption_fixture) {
+    auto impact = _impact.lock();
+    //it is applicable if there is at least one intersection not null with a period
+    BOOST_CHECK(impact->is_valid(time_in_publication_period, pt::time_period(pt::time_from_string("2013-03-23 00:00:00"), pt::hours(24))));
+    BOOST_CHECK(impact->is_valid(time_in_publication_period, pt::time_period(pt::time_from_string("2013-03-22 10:00:00"), pt::hours(1))));
+    BOOST_CHECK_NOT(impact->is_valid(time_in_publication_period, pt::time_period(pt::time_from_string("2013-03-23 04:00:00"), pt::hours(1))));
 
-//    message.application_period = pt::time_period(pt::time_from_string("2013-02-22 12:32:00"),
-//            pt::time_from_string("2013-02-23 12:32:00"));
-
-//    message.active_days = 127;
-//    message.application_daily_start_hour = pt::duration_from_string("00:00");
-//    message.application_daily_end_hour = pt::duration_from_string("23:59");
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 00:00:00"), pt::hours(24))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 00:00:00"), pt::hours(24))));
-
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 00:00:00"), pt::hours(1))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 13::00"), pt::hours(1))));
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 12:30:00"), pt::minutes(10))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 12:30:00"), pt::minutes(10))));
-
-
-}
-
-BOOST_AUTO_TEST_CASE(message_is_applicable_daily){
-    throw "TODO";
-//    navitia::type::Message message;
-
-//    message.application_period = pt::time_period(pt::time_from_string("2013-02-22 12:30:00"),
-//            pt::time_from_string("2013-02-28 12:30:00"));
-
-//    message.active_days = 127;
-//    message.application_daily_start_hour = pt::duration_from_string("08:00");
-//    message.application_daily_end_hour = pt::duration_from_string("18:00");
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 00:00:00"), pt::hours(24))));
-
-//    //le premier jours, l'impact comment à 12H30
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 08:00:00"), pt::hours(1))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 07:30:00"), pt::hours(1))));
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 08:00:00"), pt::hours(1))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 07:30:00"), pt::hours(1))));
-
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 05:00:00"), pt::hours(1))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 19:00:00"), pt::hours(1))));
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-28 08:00:00"), pt::hours(1))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-28 07:30:00"), pt::hours(1))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-28 05:00:00"), pt::hours(1))));
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-27 13:00:00"), pt::hours(1))));
-//    //le dernier jour on s'arrete à 12H30
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-28 13:00:00"), pt::hours(1))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-28 19:00:00"), pt::hours(1))));
-
-
-}
-
-BOOST_AUTO_TEST_CASE(message_is_applicable_active_days){
-    throw "TODO";
-//    navitia::type::Message message;
-
-//    message.application_period = pt::time_period(pt::time_from_string("2013-02-22 12:30:00"),
-//            pt::time_from_string("2013-02-28 12:30:00"));
-
-//    message.active_days = Lun;
-//    message.application_daily_start_hour = pt::duration_from_string("00:00");
-//    message.application_daily_end_hour = pt::duration_from_string("23:59");
-
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-24 08:00:00"), pt::hours(1))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-25 08:00:00"), pt::hours(1))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-26 08:00:00"), pt::hours(1))));
-
-//    message.active_days = Dim;
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-24 08:00:00"), pt::hours(1))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-25 08:00:00"), pt::hours(1))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-26 08:00:00"), pt::hours(1))));
-
-//    message.active_days = Dim;
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 08:00:00"), pt::hours(28))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 08:00:00"), pt::hours(10))));
-
-
-}
-/*
-     2013 Feb
-    Su  Mo  Tu  We  Th  Fr  Sa
-                        1   2
-    3   4   5   6   7   8   9
-    10  11  12  13  14  15  16
-    17  18  19  20  21  22  23
-    24  25  26  27  28
-  */
-BOOST_AUTO_TEST_CASE(message_is_applicable_passe_minuit){
-    throw "TODO";
-//    navitia::type::Message message;
-
-//    message.application_period = pt::time_period(pt::time_from_string("2013-02-22 12:30:00"),
-//            pt::time_from_string("2013-02-23 12:30:00"));
-
-//    message.active_days = 127;
-//    message.application_daily_start_hour = pt::duration_from_string("00:00");
-//    message.application_daily_end_hour = pt::duration_from_string("23:59");
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 23:00:00"), pt::hours(2))));
-
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-21 23:00:00"), pt::hours(2))));
-
-
-//    message.application_period = pt::time_period(pt::time_from_string("2013-02-22 00:00:00"),
-//            pt::time_from_string("2013-02-23 23:59:00"));
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 23:00:00"), pt::hours(2))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 23:50:00"), pt::hours(2))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-24 00:01:00"), pt::hours(2))));
-
-//    message.active_days = Sam;
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-21 23:00:00"), pt::hours(10))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 23:00:00"), pt::hours(2))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 23:50:00"), pt::hours(2))));
-
-//    message.active_days = Ven;
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 23:00:00"), pt::hours(2))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 23:50:00"), pt::hours(2))));
-
-//    message.active_days = Sam;
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-21 23:00:00"), pt::hours(72))));
-}
-
-BOOST_AUTO_TEST_CASE(message_is_applicable_daily_passe_minuit){
-    throw "TODO";
-//    navitia::type::Message message;
-
-//    message.application_period = pt::time_period(pt::time_from_string("2013-02-22 12:30:00"),
-//            pt::time_from_string("2013-02-23 12:30:00"));
-
-//    message.active_days = 127;
-//    message.application_daily_start_hour = pt::duration_from_string("08:00");
-//    message.application_daily_end_hour = pt::duration_from_string("18:00");
-
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 23:00:00"), pt::hours(2))));
-
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-21 23:00:00"), pt::hours(2))));
-
-
-//    message.active_days = Sam;
-//    message.application_period = pt::time_period(pt::time_from_string("2013-02-22 00:00:00"),
-//            pt::time_from_string("2013-02-24 23:59:00"));
-
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 23:00:00"), pt::hours(2))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 23:50:00"), pt::hours(2))));
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-24 00:01:00"), pt::hours(2))));
-
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-22 23:00:00"), pt::hours(10))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 17:00:00"), pt::hours(10))));
-
-//    message.active_days = Sam|Dim;
-//    BOOST_CHECK_NOT(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 18:30:00"), pt::hours(10))));
-//    BOOST_CHECK(message.is_applicable(pt::time_period(pt::time_from_string("2013-02-23 23:30:00"), pt::hours(10))));
-
+    BOOST_CHECK(impact->is_valid(time_in_publication_period, pt::time_period(pt::time_from_string("2013-03-22 12:30:00"), pt::hours(10))));
+    BOOST_CHECK(impact->is_valid(time_in_publication_period, pt::time_period(pt::time_from_string("2013-03-23 12:30:00"), pt::hours(10))));
 }
 
 
