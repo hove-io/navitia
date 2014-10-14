@@ -2,7 +2,6 @@ SET(SOURCE_LIB
         data.cpp
         types.cpp
         build_helper.cpp
-        adapted.cpp
 )
 
 
@@ -37,12 +36,19 @@ add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
 target_link_libraries(ed2nav types connectors pq pqxx data georef routing fare pb_lib
     utils autocomplete ${BOOST_LIBS} log4cplus protobuf)
 
-
 add_subdirectory(connectors)
 
+SET(RT_SOURCE_LIB
+        adapted.cpp
+        at_perturbation.cpp
+)
+
+add_library(adapted ${RT_SOURCE_LIB})
+
 add_executable(nav2rt nav2rt.cpp)
-target_link_libraries(nav2rt ed types connectors pq pqxx data fare georef routing pb_lib
+target_link_libraries(nav2rt ed adapted types connectors pq pqxx data fare georef routing pb_lib
     utils autocomplete ${BOOST_LIBS} log4cplus protobuf)
+
 add_executable(geopal2ed geopal2ed.cpp)
 
 target_link_libraries(geopal2ed transportation_data_import connectors)

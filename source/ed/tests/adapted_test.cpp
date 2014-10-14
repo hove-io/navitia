@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -235,8 +235,8 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -363,8 +363,8 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
     vj->adapted_validity_pattern = vj->validity_pattern;
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 10:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -525,8 +525,8 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Line;
     m.object_uri = "line:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -703,8 +703,8 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Line;
     m.object_uri = "line:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -864,8 +864,8 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
 
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Network;
     m.object_uri = "network:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1046,8 +1046,8 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
 
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Network;
     m.object_uri = "network:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1227,8 +1227,8 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Network;
     m.object_uri = "network:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1419,8 +1419,8 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Network;
     m.object_uri = "network:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1586,8 +1586,8 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     vj->adapted_validity_pattern = vj->validity_pattern;
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1707,8 +1707,8 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1805,8 +1805,8 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1939,8 +1939,8 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop2";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-02 00:00:00"), pt::time_from_string("2013-03-02 23:59:00"));
@@ -2052,8 +2052,8 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -2236,8 +2236,8 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2014-03-01 23:59:00"));

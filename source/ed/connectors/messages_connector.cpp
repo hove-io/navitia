@@ -215,7 +215,7 @@ void apply_messages(navitia::type::Data& data){
 
 }
 
-std::vector<navitia::type::AtPerturbation> load_at_perturbations(
+std::vector<ed::AtPerturbation> load_at_perturbations(
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time){
     //pour le moment on vire les timezone et on considére que c'est de l'heure local
@@ -245,9 +245,9 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
     }
 
 
-    std::vector<navitia::type::AtPerturbation> perturbations;
+    std::vector<ed::AtPerturbation> perturbations;
     for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
-        navitia::type::AtPerturbation perturbation;
+       ed::AtPerturbation perturbation;
         cursor["uri"].to(perturbation.uri);
         //on construit le message
         cursor["object_uri"].to(perturbation.object_uri);

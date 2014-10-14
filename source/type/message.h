@@ -210,40 +210,4 @@ struct DisruptionHolder { //=> to be renamed as Disruptions
 };
 }
 
-
-/**
- * Old AT perturbation
- *
- * only used for adapated computation.
- *
- * will be soon (hope so) completly removed by Disruption
- */
-struct AtPerturbation{
-    std::string uri;
-
-    Type_e object_type;
-    std::string object_uri;
-
-    boost::posix_time::time_period application_period;
-
-    boost::posix_time::time_duration application_daily_start_hour;
-    boost::posix_time::time_duration application_daily_end_hour;
-
-    std::bitset<8> active_days;
-
-    AtPerturbation(): object_type(Type_e::ValidityPattern),
-        application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
-
-    bool valid_day_of_week(const boost::gregorian::date& date) const;
-
-    bool valid_hour_perturbation(const boost::posix_time::time_period& period) const;
-
-    bool is_applicable(const boost::posix_time::time_period& time) const;
-
-    bool operator<(const AtPerturbation& other) const {
-        return (this->uri < other.uri);
-    }
-};
-
-
 }}//namespace

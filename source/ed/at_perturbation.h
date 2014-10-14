@@ -1,63 +1,72 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/message.h"
+#pragma once
 
-#include "utils/logger.h"
+#include "type/type.h"
+#include <string>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <bitset>
 
-#include <boost/format.hpp>
+namespace ed {
+/**
+ * Old AT perturbation
+ *
+ * only used for adapated computation.
+ *
+ * will be soon (hope so) completly removed by Disruption
+ */
+struct AtPerturbation{
+    std::string uri;
 
-namespace pt = boost::posix_time;
-namespace bg = boost::gregorian;
+    navitia::type::Type_e object_type;
+    std::string object_uri;
 
+    boost::posix_time::time_period application_period;
 
-namespace navitia { namespace type {
+    boost::posix_time::time_duration application_daily_start_hour;
+    boost::posix_time::time_duration application_daily_end_hour;
 
-bool new_disruption::Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
+    std::bitset<8> active_days;
 
-    if(publication_date.is_not_a_date_time() || active_period.is_null()){
-        return false;
+    AtPerturbation(): object_type(navitia::type::Type_e::ValidityPattern),
+        application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
+
+    bool valid_day_of_week(const boost::gregorian::date& date) const;
+
+    bool valid_hour_perturbation(const boost::posix_time::time_period& period) const;
+
+    bool is_applicable(const boost::posix_time::time_period& time) const;
+
+    bool operator<(const AtPerturbation& other) const {
+        return (this->uri < other.uri);
     }
-
-    // we check if we want to publish the impact
-    if (! disruption->publication_period.contains(publication_date)) {
-        return false;
-    }
-
-    //we check if the impact applies on this period
-    for (const auto& period: application_periods) {
-        if (! period.intersection(active_period).is_null()) {
-            return true;
-        }
-    }
-    return false;
+};
 }
-
-}}//namespace
