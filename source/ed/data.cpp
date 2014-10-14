@@ -147,12 +147,13 @@ void Data::shift_vp_left(types::ValidityPattern& vp) {
         }
         meta.production_date = {begin_date, end_date};
         for (auto& vp_ : validity_patterns) {
+            // The first day is not active.
             vp_->days >>= 1;
             vp_->beginning_date = begin_date;
         }
     }
-    //Now we need to activate the first day
-    vp.days.set(0);
+    //Now we need to shift left
+    vp.days <<= 1;
 }
 
 void Data::shift_stop_times() {
@@ -168,21 +169,25 @@ void Data::shift_stop_times() {
         if (is_lower || is_greater) {
             if ((is_lower && first_st->arrival_time < int(-1 * navitia::DateTimeUtils::SECONDS_PER_DAY)) ||
                 (is_greater && first_st->arrival_time >= int(2 * navitia::DateTimeUtils::SECONDS_PER_DAY))) {
-                throw navitia::exception("Ed, data: You have to shift more than two days, that's weird");
+                throw navitia::exception("Ed, data: You have to shift more than one day, that's weird");
             }
             for_each(vj->stop_time_list.begin(), vj->stop_time_list.end(),
-                [&is_lower] (types::StopTime* st) { st->shift_times(is_lower?-1:1);});
+                [&is_lower] (types::StopTime* st) { st->shift_times(is_lower?1:-1);});
             auto vp = types::ValidityPattern(*vj->validity_pattern);
             if (is_lower) {
                 shift_vp_left(vp);
             } else {
                 // Actually, this is valid the day after now
+                // This may drop the last day if the active period last more
+                // than a year.
                 vp.days >>= 1;
             }
             vj->validity_pattern = get_or_create_validity_pattern(vp);
         }
     }
 }
+
+
 void Data::complete(){
     shift_stop_times();
     build_journey_patterns();
