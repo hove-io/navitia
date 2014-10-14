@@ -182,7 +182,7 @@ template <typename Container>
 void add_impact(Container& map, const std::string& uri, const std::shared_ptr<Impact>& impact) {
     auto it = map.find(uri);
     if(it != map.end()){
-        it->second->impacts.push_back(impact);
+        it->second->add_impact(impact);
     }
 }
 

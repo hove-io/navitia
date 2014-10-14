@@ -282,7 +282,10 @@ struct hasVehicleProperties {
 };
 
 struct HasMessages{
+protected:
     mutable std::vector<std::weak_ptr<new_disruption::Impact>> impacts;
+public:
+    void add_impact(const std::shared_ptr<new_disruption::Impact>& i) {impacts.push_back(i);}
 
     std::vector<std::weak_ptr<new_disruption::Impact>> get_applicable_messages(
             const boost::posix_time::ptime& current_time,
