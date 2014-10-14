@@ -135,8 +135,8 @@ types::ValidityPattern* Data::get_or_create_validity_pattern(const types::Validi
     }
 }
 void Data::shift_vp_left(types::ValidityPattern& vp) {
-    if (vp.days.test(0)) {
-        // This should be done only once because some line after we shift
+    if (vp.check(0)) {
+        // This should be done only once because few lines below after we shift
         // every validity_pattern on the right, so every one has its first day
         // deactivated
         auto one_day = boost::gregorian::days(1);
@@ -148,12 +148,13 @@ void Data::shift_vp_left(types::ValidityPattern& vp) {
         meta.production_date = {begin_date, end_date};
         for (auto& vp_ : validity_patterns) {
             // The first day is not active.
-            vp_->days >>= 1;
+            vp_->days <<= 1;
             vp_->beginning_date = begin_date;
         }
+        vp.beginning_date = begin_date;
+        vp.days <<= 1;
     }
-    //Now we need to shift left
-    vp.days <<= 1;
+    vp.days >>= 1;
 }
 
 void Data::shift_stop_times() {
@@ -180,7 +181,7 @@ void Data::shift_stop_times() {
                 // Actually, this is valid the day after now
                 // This may drop the last day if the active period last more
                 // than a year.
-                vp.days >>= 1;
+                vp.days <<= 1;
             }
             vj->validity_pattern = get_or_create_validity_pattern(vp);
         }
