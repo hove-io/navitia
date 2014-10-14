@@ -161,7 +161,7 @@ message Line {
     repeated Message messages = 14;
     optional string comment = 15;
     repeated Code codes = 16;
-    optional GeoJson shape = 17;
+    optional GeoJson geojson = 17;
 }
 
 message Route {
@@ -174,7 +174,7 @@ message Route {
     repeated Code codes = 10;
     repeated StopPoint stop_points = 1;
     optional PtObject direction = 12;
-    optional GeoJson shape = 13;
+    optional GeoJson geojson = 13;
 }
 
 message JourneyPattern {

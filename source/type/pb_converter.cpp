@@ -36,6 +36,9 @@ www.navitia.io
 #include <functional>
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/date_defs.hpp>
+#include <boost/geometry/algorithms/length.hpp>
+#include "type/geographical_coord.h"
+#include <boost/geometry.hpp>
 #include "fare/fare.h"
 #include "time_tables/thermometer.h"
 
@@ -298,7 +301,10 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
 }
 
 void fill_pb_object(const nt::MultiLineString& shape, pbnavitia::GeoJson* geojson) {
-    for (const auto& line: shape) {
+
+    long double length = 0;
+    for (const std::vector<nt::GeographicalCoord>& line: shape) {
+        length += boost::geometry::length(line);
         auto l = geojson->add_lines();
         for (const auto coord: line) {
             auto c = l->add_coordinates();
@@ -306,6 +312,7 @@ void fill_pb_object(const nt::MultiLineString& shape, pbnavitia::GeoJson* geojso
             c->set_lat(coord.lat());
         }
     }
+    geojson->set_length(length);
 }
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
@@ -342,7 +349,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
                        now, action_period, show_codes);
     }
 
-    fill_pb_object(r->shape, route->mutable_shape());
+    fill_pb_object(r->shape, route->mutable_geojson());
 
     auto thermometer = timetables::Thermometer();
     thermometer.generate_thermometer(r);
