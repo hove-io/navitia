@@ -48,7 +48,7 @@ next_passages(const std::string &request,
               const pt::ptime datetime,
               uint32_t duration, uint32_t nb_stoptimes, const int depth,
               const type::AccessibiliteParams & accessibilite_params,
-              type::Data & data, bool disruption_active, Visitor vis, uint32_t count,
+              const type::Data & data, bool disruption_active, Visitor vis, uint32_t count,
               uint32_t start_page, const bool show_codes) {
     RequestHandle handler(vis.api_str, request, forbidden_uris, datetime, duration, data, {});
 
@@ -107,13 +107,13 @@ pbnavitia::Response next_departures(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
-        type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
         const bool show_codes) {
 
     struct vis_next_departures {
         struct predicate_t {
-            type::Data &data;
-            predicate_t(type::Data& data) : data(data){}
+            const type::Data &data;
+            predicate_t(const type::Data& data) : data(data){}
             bool operator()(const type::idx_t jppidx) const {
                 auto jpp = data.pt_data->journey_pattern_points[jppidx];
                 auto last_jpp = jpp->journey_pattern->journey_pattern_point_list.back();
@@ -123,7 +123,7 @@ pbnavitia::Response next_departures(const std::string &request,
         std::string api_str;
         pbnavitia::API api_pb;
         predicate_t predicate;
-        vis_next_departures(type::Data& data) :
+        vis_next_departures(const type::Data& data) :
             api_str("NEXT_DEPARTURES"), api_pb(pbnavitia::NEXT_DEPARTURES), predicate(data) {}
     };
     vis_next_departures vis(data);
@@ -136,13 +136,13 @@ pbnavitia::Response next_arrivals(const std::string &request,
         const std::vector<std::string>& forbidden_uris,
         const pt::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
         const int depth, const type::AccessibiliteParams & accessibilite_params,
-        type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
         const bool show_codes) {
 
     struct vis_next_arrivals {
         struct predicate_t {
-            type::Data &data;
-            predicate_t(type::Data& data) : data(data){}
+            const type::Data &data;
+            predicate_t(const type::Data& data) : data(data){}
             bool operator()(const type::idx_t jppidx) const{
                 return data.pt_data->journey_pattern_points[jppidx]->order == 0;
             }
@@ -150,7 +150,7 @@ pbnavitia::Response next_arrivals(const std::string &request,
         std::string api_str;
         pbnavitia::API api_pb;
         predicate_t predicate;
-        vis_next_arrivals(type::Data& data) :
+        vis_next_arrivals(const type::Data& data) :
             api_str("NEXT_ARRIVALS"), api_pb(pbnavitia::NEXT_ARRIVALS), predicate(data) {}
     };
     vis_next_arrivals vis(data);

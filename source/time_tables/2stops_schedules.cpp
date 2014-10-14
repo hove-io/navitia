@@ -38,7 +38,7 @@ namespace navitia { namespace timetables {
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                        const std::vector<std::string>& forbidden_uris,
                                         const DateTime &datetime, const DateTime &max_datetime,
-                                        type::Data & data, bool disruption_active) {
+                                        const type::Data & data, bool disruption_active) {
 
     std::vector<pair_dt_st> result;
     //On va chercher tous les journey_pattern points correspondant au deuxieme filtre
@@ -81,7 +81,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                    const std::vector<std::string>& forbidden_uris,
-                                   const pt::ptime ptime, uint32_t duration, uint32_t depth, type::Data & data, bool disruption_active) {
+                                   const pt::ptime ptime, uint32_t duration, uint32_t depth, const type::Data & data, bool disruption_active) {
     pbnavitia::Response pb_response;
 
     DateTime dt = DateTimeUtils::set((ptime.date() - data.meta->production_date.begin()).days(), ptime.time_of_day().total_seconds());

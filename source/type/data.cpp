@@ -31,20 +31,20 @@ www.navitia.io
 #include "data.h"
 
 #include <fstream>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
+#include <thread>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
 #include "utils/functions.h"
 #include "utils/exception.h"
+#include "utils/threadbuf.h"
 
 #include "pt_data.h"
 #include "routing/dataraptor.h"
@@ -104,11 +104,10 @@ void Data::load(std::istream& ifs) {
     in.push(ifs);
     eos::portable_iarchive ia(in);
     ia >> *this;
-    this->build_raptor();
 }
 
 
-void Data::save(const std::string& filename){
+void Data::save(const std::string& filename) const {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     boost::filesystem::path p(filename);
     boost::filesystem::path dir = p.parent_path();
@@ -149,7 +148,7 @@ void Data::save(const std::string& filename){
     }
 }
 
-void Data::save(std::ostream& ofs) {
+void Data::save(std::ostream& ofs) const {
     boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
     out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);
     out.push(ofs);
@@ -536,5 +535,33 @@ Type_e Data::get_type_of_id(const std::string & id) const {
     return Type_e::Unknown;
 }
 
+namespace {
+struct Pipe {
+    threadbuf sbuf;
+    std::ostream out;
+    std::istream in;
+    Pipe(): out(&sbuf), in(&sbuf) {}
+    Pipe(const Pipe&) = delete;
+    Pipe& operator=(const Pipe&) = delete;
+    ~Pipe() {sbuf.close();}
+};
+} // anonymous namespace
+
+// We want to do a deep clone of a Data.  The problem is that there is a
+// lot of pointers that point to each other, and thus writing a copy
+// assignment operator is really tricky.
+//
+// But we already have a framework that allow this deep clone: boost
+// serialize.  Maybe we can write a dedicated Archive that clone the
+// object, but we didn't find any easy way to do this.  Thus, we
+// stream the source object in a binary_oarchive, and then stream it
+// in our object.  To avoid having the whole binary_oarchive in
+// memory, we construct a pipe between 2 threads.
+void Data::clone_from(const Data& from) {
+    Pipe p;
+    std::thread write([&]() {boost::archive::binary_oarchive oa(p.out); oa << from;});
+    { boost::archive::binary_iarchive ia(p.in); ia >> *this; }
+    write.join();
+}
 
 }} //namespace navitia::type
