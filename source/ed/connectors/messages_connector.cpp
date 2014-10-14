@@ -61,7 +61,8 @@ get_or_create_severity(DisruptionHolder& disruptions, int id) {
     auto it = disruptions.severities.find(name);
 
     if (it != disruptions.severities.end()) {
-        return it->second.lock(); //we acquire the weak_ptr
+        // we return the weak_ptr if it is still alive, else we'll add a new one
+        if (auto res = it->second.lock()) return res;
     }
 
     std::shared_ptr<Severity> severity = std::make_shared<Severity>();
@@ -82,10 +83,11 @@ std::vector<pt::time_period> split_period(pt::ptime start, pt::ptime end,
     auto period = boost::gregorian::date_period(start.date(), end.date());
 
     std::vector<pt::time_period> res;
-    //what is the first day of the at_message bitset ? monday or sunday ? without response, I considere it to be sunday
     for(boost::gregorian::day_iterator it(period.begin()); it<period.end(); ++it) {
         auto day = (*it);
-        if(! days.test(day.day_of_week())) {
+        //since monday is the first day of the bitset, we need to convert the weekday to a 'french' week day
+        navitia::weekdays week_day = navitia::get_weekday(day);
+        if(! days.test(week_day)) {
             continue;
         }
         res.push_back(pt::time_period(pt::ptime(day, beg_of_day), pt::ptime(day, end_of_day)));
