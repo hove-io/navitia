@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(shift_before) {
     auto vj = new ed::types::VehicleJourney();
     auto vp = new ed::types::ValidityPattern();
     vp->beginning_date = boost::gregorian::date(2014, 10, 9);
-    vp->add(1);
-    vp->add(2);
+    vp->add(boost::gregorian::date(2014, 10, 10));
+    vp->add(boost::gregorian::date(2014, 10, 11));
     vj->validity_pattern = vp;
     d.vehicle_journeys.push_back(vj);
     auto st = new ed::types::StopTime();
@@ -71,4 +71,75 @@ BOOST_AUTO_TEST_CASE(shift_before) {
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 36400);
     BOOST_CHECK_EQUAL(st->departure_time, 37400);
+    BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 9)));
+    BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 10)));
+    BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 11)));
+}
+
+
+BOOST_AUTO_TEST_CASE(shift_before_change_beginning_date) {
+    ed::Data d;
+    d.meta.production_date = {boost::gregorian::date(2014, 10, 9), boost::gregorian::date(2015, 10, 9)};
+    for (auto times : {std::pair<int, int>(-50000, -49000), std::pair<int, int>(49000,50000)}) {
+        auto vp = new ed::types::ValidityPattern();
+        vp->beginning_date = d.meta.production_date.begin();
+        vp->add(boost::gregorian::date(2014, 10, 9));
+        vp->add(boost::gregorian::date(2014, 10, 11));
+        auto vj = new ed::types::VehicleJourney();
+        vj->uri = "vj : " + std::to_string(times.first);
+        vj->validity_pattern = vp;
+        d.vehicle_journeys.push_back(vj);
+        d.validity_patterns.push_back(vp);
+        auto st = new ed::types::StopTime();
+        vj->stop_time_list.push_back(st);
+        st->arrival_time = times.first;
+        st->departure_time = times.second;
+    }
+
+    d.shift_stop_times();
+    {
+        //First vj is shift
+        auto vj = d.vehicle_journeys.front();
+        auto st = vj->stop_time_list.front();
+        BOOST_CHECK_EQUAL(st->arrival_time, 36400);
+        BOOST_CHECK_EQUAL(st->departure_time, 37400);
+        BOOST_CHECK_EQUAL(vj->validity_pattern->beginning_date, boost::gregorian::date(2014, 10, 8));
+        BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 8)));
+        BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 9)));
+        BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 10)));
+        BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 11)));
+    }
+
+    {
+        //Second vj isn't
+        auto vj = d.vehicle_journeys.back();
+        auto st = vj->stop_time_list.front();
+        BOOST_CHECK_EQUAL(st->arrival_time, 49000);
+        BOOST_CHECK_EQUAL(st->departure_time, 50000);
+        BOOST_CHECK_EQUAL(vj->validity_pattern->beginning_date, boost::gregorian::date(2014, 10, 8));
+        BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 8)));
+        BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 9)));
+        BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 10)));
+        BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 11)));
+    }
+
+}
+
+
+BOOST_AUTO_TEST_CASE(shift_after) {
+    ed::Data d;
+    auto vj = new ed::types::VehicleJourney();
+    auto vp = new ed::types::ValidityPattern();
+    vp->beginning_date = boost::gregorian::date(2014, 10, 9);
+    vp->add(1);
+    vp->add(2);
+    vj->validity_pattern = vp;
+    d.vehicle_journeys.push_back(vj);
+    auto st = new ed::types::StopTime();
+    vj->stop_time_list.push_back(st);
+    st->arrival_time = 86500;
+    st->departure_time = 86600;
+    d.shift_stop_times();
+    BOOST_CHECK_EQUAL(st->arrival_time, 100);
+    BOOST_CHECK_EQUAL(st->departure_time, 200);
 }
