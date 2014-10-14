@@ -76,6 +76,26 @@ BOOST_AUTO_TEST_CASE(shift_before) {
     BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 11)));
 }
 
+BOOST_AUTO_TEST_CASE(shift_before_overmidnight) {
+    ed::Data d;
+    auto vj = new ed::types::VehicleJourney();
+    auto vp = new ed::types::ValidityPattern();
+    vp->beginning_date = boost::gregorian::date(2014, 10, 9);
+    vp->add(boost::gregorian::date(2014, 10, 10));
+    vp->add(boost::gregorian::date(2014, 10, 11));
+    vj->validity_pattern = vp;
+    d.vehicle_journeys.push_back(vj);
+    auto st = new ed::types::StopTime();
+    vj->stop_time_list.push_back(st);
+    st->arrival_time = -100;
+    st->departure_time = 100;
+    d.shift_stop_times();
+    BOOST_CHECK_EQUAL(st->arrival_time, 86300);
+    BOOST_CHECK_EQUAL(st->departure_time, 86500);
+    BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 9)));
+    BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 10)));
+    BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 11)));
+}
 
 BOOST_AUTO_TEST_CASE(shift_before_change_beginning_date) {
     ed::Data d;
