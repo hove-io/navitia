@@ -80,6 +80,7 @@ void ValidityPattern::remove(int day){
 }
 
 bool ValidityPattern::check(int day) const {
+    assert(day >= 0);
     return days[day];
 }
 
