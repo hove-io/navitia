@@ -136,7 +136,7 @@ types::ValidityPattern* Data::get_or_create_validity_pattern(const types::Validi
 }
 void Data::shift_vp_left(types::ValidityPattern& vp) {
     if (vp.check(0)) {
-        // This should be done only once because few lines below after we shift
+        // This should be done only once because few lines below we shift
         // every validity_pattern on the right, so every one has its first day
         // deactivated
         auto one_day = boost::gregorian::days(1);
@@ -159,13 +159,13 @@ void Data::shift_vp_left(types::ValidityPattern& vp) {
 
 void Data::shift_stop_times() {
     for (auto vj : vehicle_journeys) {
-        auto first_st_it = std::find_if(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+        const auto first_st_it = std::find_if(vj->stop_time_list.begin(), vj->stop_time_list.end(),
                 [](const types::StopTime* st) { return st->order == 0;});
         if (first_st_it == vj->stop_time_list.end()) {
             continue;
         }
-        auto first_st = *first_st_it;
-        bool is_lower = first_st->arrival_time < 0,
+        const auto first_st = *first_st_it;
+        const bool is_lower = first_st->arrival_time < 0,
              is_greater = first_st->arrival_time >= int(navitia::DateTimeUtils::SECONDS_PER_DAY);
         if (is_lower || is_greater) {
             if ((is_lower && first_st->arrival_time < int(-1 * navitia::DateTimeUtils::SECONDS_PER_DAY)) ||
