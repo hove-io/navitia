@@ -121,29 +121,17 @@ This is the optimized solution.
 
 using namespace navitia;
 using namespace routing;
-/*
+
 namespace pt = boost::posix_time;
 class Params{
 public:
     std::vector<std::string> forbidden;
     ed::builder b;
-    std::vector<navitia::type::AtPerturbation> perturbations;
+    std::vector<ed::AtPerturbation> perturbations;
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;
     std::unique_ptr<navitia::routing::RAPTOR> raptor;
     std::unique_ptr<navitia::georef::StreetNetwork> street_network;
-
-    void add_perturbation(boost::shared_ptr<navitia::type::Message> & message){
-        navitia::type::AtPerturbation perturbation;
-        perturbation.uri = message->uri;
-        perturbation.object_uri = message->object_uri;
-        perturbation.object_type = message->object_type;
-        perturbation.application_daily_start_hour = message->application_daily_start_hour;
-        perturbation.application_daily_end_hour = message->application_daily_end_hour;
-        perturbation.application_period = message->application_period;
-        perturbation.active_days = message->active_days;
-        perturbations.push_back(perturbation);
-    }
 
     Params():b("20140113") {
         /*
@@ -172,7 +160,7 @@ impact-3
                        13 14 15 16 17 **
                     19 20 21 22 23 24 25
                     26 27 28 29 30 31
-*
+*/
 
         b.vj("network:R", "line:A", "1111111111111", "", true, "vj1")("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
         b.vj("network:R", "line:A", "1111111111111", "", true, "vj2")("stop_area:stop1", 10 * 3600 + 30 * 60, 10 * 3600 + 30 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
@@ -184,84 +172,68 @@ impact-3
                                                                    ("stop_area:stopP2", 23 * 3600 + 10 * 60 ,23 * 3600 + 10 * 60)
                                                                    ("stop_area:stopP3", 24 * 3600 + 10 * 60 ,24 * 3600 + 10 * 60);
 
-        navitia::type::VehicleJourney* vj2 =  b.data->pt_data->vehicle_journeys[1];
         //Impact-1 on vj2 from 2014-01-14 08:32:00 à 08h40 to 2014-01-14 18:32:00 à 18h00
-        boost::shared_ptr<navitia::type::Message> message;
-        navitia::type::StopPoint* spt;
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess1";
-        message->object_uri="vj2";
-        message->object_type = navitia::type::Type_e::VehicleJourney;
-        message->application_period = pt::time_period(pt::time_from_string("2014-01-14 00:00:00"),
+        ed::AtPerturbation at_perturabtion;
+        at_perturabtion = ed::AtPerturbation();
+        at_perturabtion.uri = "mess1";
+        at_perturabtion.object_uri="vj2";
+        at_perturabtion.object_type = navitia::type::Type_e::VehicleJourney;
+        at_perturabtion.application_period = pt::time_period(pt::time_from_string("2014-01-14 00:00:00"),
                                                       pt::time_from_string("2014-01-14 23:59:59"));
-        message->publication_period = pt::time_period(pt::time_from_string("2014-01-14 00:00:00"),
-                                                      pt::time_from_string("2014-01-30 23:59:00"));
-        message->active_days = std::bitset<8>("11111111");
-        message->application_daily_start_hour = pt::duration_from_string("08:00");
-        message->application_daily_end_hour = pt::duration_from_string("18:00");
-        vj2->messages.push_back(message);
-        add_perturbation(message);
+        at_perturabtion.active_days = std::bitset<8>("11111111");
+        at_perturabtion.application_daily_start_hour = pt::duration_from_string("08:00");
+        at_perturabtion.application_daily_end_hour = pt::duration_from_string("18:00");
+        perturbations.push_back(at_perturabtion);
 
         //Impact-2 on vj2 from 2014-01-16 00:00:00 à 08h00text_format to 2014-01-17 23:59:59 à 10h35
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess2";
-        message->object_uri="vj2";
-        message->object_type = navitia::type::Type_e::VehicleJourney;
-        message->application_period = pt::time_period(pt::time_from_string("2014-01-16 00:00:00"),
+        at_perturabtion = ed::AtPerturbation();
+        at_perturabtion.uri = "mess2";
+        at_perturabtion.object_uri="vj2";
+        at_perturabtion.object_type = navitia::type::Type_e::VehicleJourney;
+        at_perturabtion.application_period = pt::time_period(pt::time_from_string("2014-01-16 00:00:00"),
                                                       pt::time_from_string("2014-01-17 23:59:59"));
-        message->publication_period = pt::time_period(pt::time_from_string("2014-01-14 00:00:00"),
-                                                      pt::time_from_string("2014-01-30 23:59:00"));
-        message->active_days = std::bitset<8>("11111111");
-        message->application_daily_start_hour = pt::duration_from_string("08:30");
-        message->application_daily_end_hour = pt::duration_from_string("10:35");
-        vj2->messages.push_back(message);
-        add_perturbation(message);
+
+        at_perturabtion.active_days = std::bitset<8>("11111111");
+        at_perturabtion.application_daily_start_hour = pt::duration_from_string("08:30");
+        at_perturabtion.application_daily_end_hour = pt::duration_from_string("10:35");
+        perturbations.push_back(at_perturabtion);
 
         //Impact-3 on vj2 from 2014-01-18 00:00:00 à 11h00 to 2014-01-18 23:59:59 à 14h00
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess3";
-        message->object_uri="vj2";
-        message->object_type = navitia::type::Type_e::VehicleJourney;
-        message->application_period = pt::time_period(pt::time_from_string("2014-01-18 00:00:00"),
+        at_perturabtion = ed::AtPerturbation();
+        at_perturabtion.uri = "mess3";
+        at_perturabtion.object_uri="vj2";
+        at_perturabtion.object_type = navitia::type::Type_e::VehicleJourney;
+        at_perturabtion.application_period = pt::time_period(pt::time_from_string("2014-01-18 00:00:00"),
                                                       pt::time_from_string("2014-01-18 23:59:59"));
-        message->publication_period = pt::time_period(pt::time_from_string("2014-01-14 00:00:00"),
-                                                      pt::time_from_string("2014-01-30 23:59:00"));
-        message->active_days = std::bitset<8>("11111111");
-        message->application_daily_start_hour = pt::duration_from_string("08:30");
-        message->application_daily_end_hour = pt::duration_from_string("10:29");
-        vj2->messages.push_back(message);
-        add_perturbation(message);
+        at_perturabtion.active_days = std::bitset<8>("11111111");
+        at_perturabtion.application_daily_start_hour = pt::duration_from_string("08:30");
+        at_perturabtion.application_daily_end_hour = pt::duration_from_string("10:29");
+        perturbations.push_back(at_perturabtion);
 
         //Impact-4 on stop_area:stop02 from 2014-01-18 00:00:00 à 11h00 to 2014-01-18 23:59:59 à 18h00
         spt =  b.data->pt_data->stop_points[3];
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess4";
-        message->object_uri="stop_area:stop02";
-        message->object_type = navitia::type::Type_e::StopPoint;
-        message->application_period = pt::time_period(pt::time_from_string("2014-01-18 00:00:00"),
+        at_perturabtion = ed::AtPerturbation();
+        at_perturabtion.uri = "mess4";
+        at_perturabtion.object_uri="stop_area:stop02";
+        at_perturabtion.object_type = navitia::type::Type_e::StopPoint;
+        at_perturabtion.application_period = pt::time_period(pt::time_from_string("2014-01-18 00:00:00"),
                                                       pt::time_from_string("2014-01-18 23:59:59"));
-        message->publication_period = pt::time_period(pt::time_from_string("2014-01-14 00:00:00"),
-                                                      pt::time_from_string("2014-01-30 23:59:00"));
-        message->active_days = std::bitset<8>("11111111");
-        message->application_daily_start_hour = pt::duration_from_string("00:00");
-        message->application_daily_end_hour = pt::duration_from_string("23:59");
-        spt->messages.push_back(message);
-        add_perturbation(message);
+        at_perturabtion.active_days = std::bitset<8>("11111111");
+        at_perturabtion.application_daily_start_hour = pt::duration_from_string("00:00");
+        at_perturabtion.application_daily_end_hour = pt::duration_from_string("23:59");
+        perturbations.push_back(at_perturabtion);
 // PASS MINUIT
         spt =  b.data->pt_data->stop_points.back();
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess5";
-        message->object_uri="stop_area:stopP3";
-        message->object_type = navitia::type::Type_e::StopPoint;
-        message->application_period = pt::time_period(pt::time_from_string("2014-01-16 00:00:00"),
+        at_perturabtion = ed::AtPerturbation();
+        at_perturabtion.uri = "mess5";
+        at_perturabtion.object_uri="stop_area:stopP3";
+        at_perturabtion.object_type = navitia::type::Type_e::StopPoint;
+        at_perturabtion.application_period = pt::time_period(pt::time_from_string("2014-01-16 00:00:00"),
                                                       pt::time_from_string("2014-01-16 23:59:59"));
-        message->publication_period = pt::time_period(pt::time_from_string("2014-01-14 00:00:00"),
-                                                      pt::time_from_string("2014-01-30 23:59:00"));
-        message->active_days = std::bitset<8>("11111111");
-        message->application_daily_start_hour = pt::duration_from_string("00:00");
-        message->application_daily_end_hour = pt::duration_from_string("23:59");
-        spt->messages.push_back(message);
-        add_perturbation(message);
+        at_perturabtion.active_days = std::bitset<8>("11111111");
+        at_perturabtion.application_daily_start_hour = pt::duration_from_string("00:00");
+        at_perturabtion.application_daily_end_hour = pt::duration_from_string("23:59");
+        perturbations.push_back(at_perturabtion);
 
         ed::AtAdaptedLoader adapter;
         adapter.apply(perturbations, *b.data->pt_data);
@@ -476,4 +448,3 @@ BOOST_AUTO_TEST_CASE(Test_disruption_active_false) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-*/
