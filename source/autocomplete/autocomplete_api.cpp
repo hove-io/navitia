@@ -92,7 +92,7 @@ void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& res
             break;
         case nt::Type_e::CommercialMode:            
             fill_pb_pt_object(data.pt_data->commercial_modes[result_item.idx],
-                    place, place->mutable_mode(), data, pbnavitia::COMMERCIAL_MODE, depth);
+                    place, place->mutable_commercial_mode(), data, pbnavitia::COMMERCIAL_MODE, depth);
             break;
         case nt::Type_e::Line: {
             //LineName = NetworkName + ModeName + LineCode + (LineName)
