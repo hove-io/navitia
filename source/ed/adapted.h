@@ -60,14 +60,8 @@ private:
     std::unordered_map<std::string, std::vector<nt::VehicleJourney*>> stop_point_vj_map;
     std::unordered_map<std::string, std::vector<nt::StopPoint*>> stop_area_to_stop_point_map;
 
-<<<<<<< HEAD
-    std::unordered_map<nt::VehicleJourney*, std::set<nt::AtPerturbation>> duplicate_vj_map;
-    std::unordered_map<nt::VehicleJourney*, std::set<nt::AtPerturbation>> update_vj_map;
-=======
-
     std::unordered_map<nt::VehicleJourney*, std::set<AtPerturbation>> duplicate_vj_map;
     std::unordered_map<nt::VehicleJourney*, std::set<AtPerturbation>> update_vj_map;
->>>>>>> Disruption: move at_perturbation from type to ed
 
     void init_map(const nt::PT_Data& data);
     std::vector<nt::VehicleJourney*> reconcile_impact_with_vj(const AtPerturbation& perturbations, const nt::PT_Data& data);

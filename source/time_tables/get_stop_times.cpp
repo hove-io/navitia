@@ -74,13 +74,9 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
                         DateTimeUtils::update(dt_temp, st.first->vehicle_journey->end_time+st.first->departure_time);
                     }
                     next_requested_datetime[jpp_idx] = dt_temp + 1;
-                    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "jpp " << jpp_idx << " datetime " << next_requested_datetime[jpp_idx]
-                                    << " str: " << str(next_requested_datetime[jpp_idx])
-                                    );
                 }
             }
         }
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "we continue, we got " << result.size() << " / " << max_departures);
      }
     std::sort(result.begin(), result.end(),[](datetime_stop_time dst1, datetime_stop_time dst2) {return dst1.first < dst2.first;});
     if (result.size() > max_departures) {

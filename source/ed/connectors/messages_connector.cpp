@@ -193,28 +193,26 @@ void apply_messages(navitia::type::Data& data){
     for (const auto& disruption: data.pt_data->disruption_holder.disruptions) {
         for (const auto& impact: disruption->impacts) {
             for (const auto& pb_object: impact->informed_entities) {
-                if (pb_object.object_type == navitia::type::Type_e::StopArea) {
-                    add_impact(data.pt_data->stop_areas_map, pb_object.object_uri, impact);
-                }
-                if (pb_object.object_type == navitia::type::Type_e::StopPoint) {
-                    add_impact(data.pt_data->stop_points_map, pb_object.object_uri, impact);
-                }
-                if (pb_object.object_type == navitia::type::Type_e::Route) {
-                    add_impact(data.pt_data->routes_map, pb_object.object_uri, impact);
-                }
-                if (pb_object.object_type == navitia::type::Type_e::VehicleJourney) {
-                    add_impact(data.pt_data->vehicle_journeys_map, pb_object.object_uri, impact);
-                }
-                if (pb_object.object_type == navitia::type::Type_e::Line) {
-                    add_impact(data.pt_data->lines_map, pb_object.object_uri, impact);
-                }
-                if (pb_object.object_type == navitia::type::Type_e::Network) {
-                    add_impact(data.pt_data->networks_map, pb_object.object_uri, impact);
+                switch (pb_object.object_type) {
+                case navitia::type::Type_e::StopArea:
+                    add_impact(data.pt_data->stop_areas_map, pb_object.object_uri, impact);break;
+                case navitia::type::Type_e::StopPoint:
+                    add_impact(data.pt_data->stop_points_map, pb_object.object_uri, impact);break;
+                case navitia::type::Type_e::Route:
+                    add_impact(data.pt_data->routes_map, pb_object.object_uri, impact);break;
+                case navitia::type::Type_e::VehicleJourney:
+                    add_impact(data.pt_data->vehicle_journeys_map, pb_object.object_uri, impact);break;
+                case navitia::type::Type_e::Line:
+                    add_impact(data.pt_data->lines_map, pb_object.object_uri, impact);break;
+                case navitia::type::Type_e::Network:
+                    add_impact(data.pt_data->networks_map, pb_object.object_uri, impact);break;
+                default:
+                    //not everything has to be matched
+                    break;
                 }
             }
         }
     }
-
 }
 
 std::vector<ed::AtPerturbation> load_at_perturbations(
@@ -242,10 +240,9 @@ std::vector<ed::AtPerturbation> load_at_perturbations(
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des perturbations at");
         result = work.prepared("messages")(st_current_time)(st_shift_days).exec();
-    } catch(const pqxx::pqxx_exception &e) {
+    } catch(const pqxx::pqxx_exception& e) {
         throw navitia::exception(e.base().what());
     }
-
 
     std::vector<ed::AtPerturbation> perturbations;
     for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
