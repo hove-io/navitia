@@ -931,8 +931,8 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     dump_response(resp, "car_direct");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 direct path by date only because the car is faster than the bus
-    auto journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2); //2 pathes, one direct path, and one by PT even if the car is faster than PT
+    auto journey = resp.journeys(0).sections_size()==1 ? resp.journeys(0) : resp.journeys(1);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
 
@@ -1187,7 +1187,12 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     pbnavitia::Response resp = make_response();
 
     BOOST_REQUIRE(resp.journeys_size() != 0);
-    pbnavitia::Journey journey = resp.journeys(0);
+    pbnavitia::Journey journey;
+    if (resp.journeys_size() == 1) {
+        journey = resp.journeys(0);
+    } else {
+        journey = resp.journeys(0).sections_size() == 1 ? resp.journeys(0) : resp.journeys(1);
+    }
 
     BOOST_REQUIRE(journey.sections_size() );
     pbnavitia::Section section = journey.sections(0);
