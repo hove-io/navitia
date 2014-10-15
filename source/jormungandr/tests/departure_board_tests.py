@@ -58,6 +58,31 @@ def check_departure_board(schedules, tester, only_time=False):
     #check_links(schedule, tester)
 
 
+def is_valid_route_schedule(schedules):
+    assert len(schedules) == 1, "there should be only one elt"
+    schedule = schedules[0]
+    d = get_not_null(schedule, 'display_informations')
+
+    get_not_null(d, 'direction')
+    get_not_null(d, 'label')
+    get_not_null(d, 'network')
+
+    shape(get_not_null(schedule, 'geojson'))
+
+    table = get_not_null(schedule, 'table')
+
+    headers = get_not_null(table, 'headers')
+    #TODO check headers
+
+    rows = get_not_null(table, 'rows')
+    for row in rows:
+        for dt in get_not_null(row, 'date_times'):
+            assert "additional_informations" in dt
+            assert "links" in dt
+            get_valid_datetime(get_not_null(dt, "date_time"))
+
+        is_valid_stop_point(get_not_null(row, 'stop_point'), depth_check=1)
+
 @dataset(["departure_board_test"])
 class TestDepartureBoard(AbstractTestFixture):
     """
@@ -114,3 +139,13 @@ class TestDepartureBoard(AbstractTestFixture):
         #after the structure check, we check some test specific stuff
         assert response["stop_schedules"][0]["stop_point"]["id"] == "stop1"
         assert response["stop_schedules"][0]["route"]["line"]["id"] == "line:A"
+
+    def test_routes_schedule(self):
+        """
+        departure board for a given date
+        """
+        self.query_region("routes", display=True)
+        response = self.query_region("routes/line:A:0/route_schedules?from_datetime=20120615T080000", display=True)
+
+        assert "route_schedules" in response
+        is_valid_route_schedule(response["route_schedules"])

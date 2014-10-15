@@ -259,9 +259,10 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
     line->set_name(l->name);
     line->set_uri(l->uri);
 
-    fill_pb_object(l->shape, line->mutable_geojson()); // -> for depth = 0 ?
 
-    if(depth>0){
+    if (depth > 0) {
+        fill_pb_object(l->shape, line->mutable_geojson());
+
         std::vector<nt::idx_t> physical_mode_idxes;
         for(auto route : l->route_list) {
             fill_pb_object(route, data, line->add_routes(), depth-1);
@@ -302,11 +303,8 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
     }
 }
 
-void fill_pb_object(const nt::MultiLineString& shape, pbnavitia::GeoJson* geojson) {
-
-    long double length = 0;
+void fill_pb_object(const nt::MultiLineString& shape, pbnavitia::MultiLineString* geojson) {
     for (const std::vector<nt::GeographicalCoord>& line: shape) {
-        length += boost::geometry::length(line);
         auto l = geojson->add_lines();
         for (const auto coord: line) {
             auto c = l->add_coordinates();
@@ -314,7 +312,6 @@ void fill_pb_object(const nt::MultiLineString& shape, pbnavitia::GeoJson* geojso
             c->set_lat(coord.lat());
         }
     }
-    geojson->set_length(length);
 }
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
@@ -351,7 +348,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
                        now, action_period, show_codes);
     }
 
-    fill_pb_object(r->shape, route->mutable_geojson());// -> for depth = 0 ?
+    fill_pb_object(r->shape, route->mutable_geojson());
 
     auto thermometer = timetables::Thermometer();
     thermometer.generate_thermometer(r);

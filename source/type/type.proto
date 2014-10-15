@@ -139,13 +139,13 @@ enum OdtLevel{
 	all = 3;
 }
 
-message Coords {
+message LineString {
     repeated GeographicalCoord coordinates = 1;
 }
 
-message GeoJson {
-    repeated Coords lines = 1;
-    optional double length = 2; //length is optional, if not given, it is computed
+message MultiLineString {
+    repeated LineString lines = 1;
+    optional double length = 2;
 }
 	
 message Line {
@@ -161,7 +161,7 @@ message Line {
     repeated Message messages = 14;
     optional string comment = 15;
     repeated Code codes = 16;
-    optional GeoJson geojson = 17;
+    optional MultiLineString geojson = 17;
 }
 
 message Route {
@@ -174,7 +174,7 @@ message Route {
     repeated Code codes = 10;
     repeated StopPoint stop_points = 1;
     optional PtObject direction = 12;
-    optional GeoJson geojson = 13;
+    optional MultiLineString geojson = 13;
 }
 
 message JourneyPattern {

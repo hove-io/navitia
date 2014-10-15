@@ -512,17 +512,16 @@ def is_valid_route(route, depth_check=1):
     get_not_null(route, "name")
     is_valid_bool(get_not_null(route, "is_frequence"))
 
+    direction = get_not_null(route, "direction")
+    is_valid_place(direction, depth_check - 1)
+    #the direction of the route must always be a stop point
+    assert get_not_null(direction, "embedded_type") == "stop_point"
+    is_valid_stop_point(get_not_null(direction, "stop_point"), depth_check - 1)
+
     if depth_check > 0:
         is_valid_line(get_not_null(route, "line"), depth_check - 1)
-
-        direction = get_not_null(route, "direction")
-        is_valid_place(direction, depth_check - 1)
-        #the direction of the route must always be a stop point
-        assert get_not_null(direction, "embedded_type") == "stop_point"
-        is_valid_stop_point(get_not_null(direction, "stop_point"), depth_check - 1)
     else:
         assert 'line' not in route
-        assert 'direction' not in route
 
     # test if geojson is valid
     g = route.get('geojson')
@@ -530,15 +529,22 @@ def is_valid_route(route, depth_check=1):
 
 
 def is_valid_line(line, depth_check=1):
-    if depth_check < 0:
-        return
     get_not_null(line, "name")
     get_not_null(line, "id")
+
+    if depth_check > 0:
+        is_valid_network(get_not_null(line, 'network'), depth_check - 1)
+
+        routes = get_not_null(line, 'routes')
+        for r in routes:
+            is_valid_route(r, depth_check - 1)
+    else:
+        assert 'network' not in line
+        assert 'routes' not in line
 
     # test if geojson is valid
     g = line.get('geojson')
     g is None or shape(g) #TODO check length
-    #TODO more checks
 
 
 def is_valid_place(place, depth_check=1):
@@ -555,6 +561,11 @@ def is_valid_validity_pattern(validity_pattern, depth_check=1):
 
     days = get_not_null(validity_pattern, "days")
     assert is_valid_days(days)
+
+
+def is_valid_network(network, depth_check=1):
+    get_not_null(network, "id")
+    get_not_null(network, "name")
 
 
 def is_valid_vehicle_journey(vj, depth_check=1):

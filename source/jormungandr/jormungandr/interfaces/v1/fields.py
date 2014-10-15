@@ -273,9 +273,9 @@ class get_key_value(fields.Raw):
         return res
 
 
-class Geojson(fields.Raw):
+class MultiLineString(fields.Raw):
     def __init__(self, **kwargs):
-        super(Geojson, self).__init__(**kwargs)
+        super(MultiLineString, self).__init__(**kwargs)
 
     def output(self, key, obj):
         val = fields.get_value(key if self.attribute is None else self.attribute, obj)
@@ -287,9 +287,6 @@ class Geojson(fields.Raw):
         response = {
             "type": "MultiLineString",
             "coordinates": lines,
-            "properties": [{
-                "length": val.length
-            }]
         }
         return response
 
@@ -434,7 +431,7 @@ line["code"] = fields.String()
 line["color"] = fields.String()
 line["comment"] = fields.String()
 line["codes"] = NonNullList(NonNullNested(code))
-line["geojson"] = Geojson(attribute="geojson")
+line["geojson"] = MultiLineString(attribute="geojson")
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))
@@ -442,7 +439,7 @@ route["is_frequence"] = fields.String
 route["line"] = PbField(line)
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
 route["codes"] = NonNullList(NonNullNested(code))
-route["geojson"] = Geojson(attribute="geojson")
+route["geojson"] = MultiLineString(attribute="geojson")
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 

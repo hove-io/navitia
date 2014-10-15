@@ -90,13 +90,14 @@ class TestPtRef(AbstractTestFixture):
 
         lines = get_not_null(response, 'lines')
 
-        for l in lines:
-            is_valid_line(l, depth_check=1)
-            #we know we have a geojson for this test so we can check it
-            geo = get_not_null(l, 'geojson')
-            shape(geo)
-            assert geo['properties'][0]['length'] != 0
-            #TODO check length size
+        assert len(lines) == 1
+
+        l = lines[0]
+
+        is_valid_line(l, depth_check=1)
+        #we know we have a geojson for this test so we can check it
+        geo = get_not_null(l, 'geojson')
+        shape(geo)
 
     def test_route(self):
         """test line formating"""
@@ -104,11 +105,11 @@ class TestPtRef(AbstractTestFixture):
 
         routes = get_not_null(response, 'routes')
 
-        for r in routes:
-            is_valid_route(r, depth_check=1)
+        assert len(routes) == 1
 
-            #we know we have a geojson for this test so we can check it
-            geo = get_not_null(r, 'geojson')
-            shape(geo) #TODO check length
-            assert geo['properties'][0]['length'] != 0
-            #TODO check length size
+        r = routes[0]
+        is_valid_route(r, depth_check=1)
+
+        #we know we have a geojson for this test so we can check it
+        geo = get_not_null(r, 'geojson')
+        shape(geo)
