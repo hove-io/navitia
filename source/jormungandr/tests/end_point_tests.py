@@ -42,7 +42,7 @@ class TestEmptyEndPoint(AbstractTestFixture):
 
         versions = get_not_null(json_response, 'versions')
 
-        assert len(versions) == 2
+        assert len(versions) == 1
 
         current_found = False
         for v in versions:
