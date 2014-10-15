@@ -493,7 +493,7 @@ place = {
 
 pt_object = {
     "network": PbField(network),
-    "mode": PbField(commercial_mode),
+    "commercial_mode": PbField(commercial_mode),
     "line": PbField(line),
     "route": PbField(route),
     "stop_area": PbField(stop_area),

@@ -42,11 +42,11 @@ from copy import deepcopy
 
 
 pt_objects = {
-    "pt_object": NonNullList(NonNullNested(pt_object), attribute='places'),
+    "pt_objects": NonNullList(NonNullNested(pt_object), attribute='places'),
     "error": PbField(error, attribute='error'),
 }
 
-pt_object_type_values = ["network", "mode", "line","route", "stop_area"]
+pt_object_type_values = ["network", "commercial_mode", "line", "route", "stop_area"]
 
 
 class Ptobjects(ResourceUri):
