@@ -392,7 +392,7 @@ stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
-#stop_area["timezone"] = fields.String() #hidden for the moment
+stop_area["timezone"] = fields.String()
 
 journey_pattern_point = {
     "id": fields.String(attribute="uri"),

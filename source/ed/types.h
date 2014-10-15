@@ -35,6 +35,7 @@ www.navitia.io
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
+#include "type/datetime.h"
 
 #include "type/type.h"
 #include "limits.h"
@@ -283,8 +284,8 @@ struct StopPoint : public Header, Nameable, hasProperties{
 };
 
 struct StopTime : public Nameable {
-    int arrival_time; ///< En secondes depuis minuit
-    int departure_time; ///< En secondes depuis minuit
+    int arrival_time; /// Number of seconds from midnight can be negative when
+    int departure_time; /// we shift in UTC conversion
     VehicleJourney* vehicle_journey;
     JourneyPatternPoint* journey_pattern_point;
     StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
@@ -304,6 +305,11 @@ struct StopTime : public Nameable {
                 local_traffic_zone(std::numeric_limits<uint16_t>::max()) {}
 
     bool operator<(const StopTime& other) const;
+    void shift_times(int n_days) {
+        arrival_time += n_days * navitia::DateTimeUtils::SECONDS_PER_DAY;
+        departure_time += n_days * navitia::DateTimeUtils::SECONDS_PER_DAY;
+        assert(arrival_time >= 0 && departure_time >= 0);
+    }
 };
 
 

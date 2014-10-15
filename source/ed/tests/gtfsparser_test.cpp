@@ -317,9 +317,6 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
 }
 
 void check_gtfs_google_example(const ed::Data& data, const ed::connectors::GtfsParser& parser) {
-/*
-    //TEMPORARY, timezone deactivation for the moment
-
     //Agency and stop areas should not have changed compared to parse_gtfs_no_dst
     BOOST_REQUIRE_EQUAL(data.networks.size(), 1);
     BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");
@@ -432,7 +429,10 @@ void check_gtfs_google_example(const ed::Data& data, const ed::connectors::GtfsP
     BOOST_CHECK_EQUAL(data.stops[1]->tmp_stop_point->uri, "STAGECOACH");
     BOOST_CHECK_EQUAL(data.stops[1]->order, 1);
 
-*/
+    for (auto st : data.stops) {
+        BOOST_CHECK(st->departure_time > 0);
+        BOOST_CHECK(st->arrival_time > 0);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(parse_gtfs){

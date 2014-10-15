@@ -99,10 +99,6 @@ int main(int argc, char * argv[])
     gtfs_parser.fill(data, date);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    navitia::type::MetaData meta;
-    meta.production_date = gtfs_parser.gtfs_data.production_date;
-    meta.timezone = gtfs_parser.gtfs_data.tz.default_timezone.first;
-
     start = pt::microsec_clock::local_time();
     data.complete();
     complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
@@ -131,7 +127,7 @@ int main(int argc, char * argv[])
 
     start = pt::microsec_clock::local_time();
     ed::EdPersistor p(connection_string);
-    p.persist(data, meta);
+    p.persist(data);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     LOG4CPLUS_INFO(logger, "temps de traitement");

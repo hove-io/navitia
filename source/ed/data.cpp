@@ -33,8 +33,11 @@ www.navitia.io
 #include "ptreferential/where.h"
 #include "utils/timer.h"
 #include "utils/functions.h"
+#include "utils/exception.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometry.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include "type/datetime.h"
 
 
 
@@ -118,7 +121,79 @@ make_stop_area_stop_points_map(const std::vector<ed::types::StopPoint*>& stop_po
     return res;
 }
 
+
+types::ValidityPattern* Data::get_or_create_validity_pattern(const types::ValidityPattern& vp) {
+    auto find_vp_predicate = [&vp](types::ValidityPattern* vp2) {
+        return vp.days == vp2->days;
+    };
+    auto it = boost::find_if(validity_patterns,
+            find_vp_predicate);
+    if(it != validity_patterns.end()) {
+        return *(it);
+    } else {
+         validity_patterns.push_back(new types::ValidityPattern(vp));
+         return validity_patterns.back();
+    }
+}
+
+// Please not that VP is not in the list of validity_patterns
+void Data::shift_vp_left(types::ValidityPattern& vp) {
+    if (vp.check(0)) {
+        // This should be done only once because few lines below we shift
+        // every validity_pattern on the right, so every one has its first day
+        // deactivated
+        auto one_day = boost::gregorian::days(1);
+        auto begin_date = meta.production_date.begin() - one_day;
+        auto end_date = meta.production_date.end();
+        if (end_date - begin_date > boost::gregorian::days(366)) {
+            end_date = begin_date + boost::gregorian::days(365);
+        }
+        meta.production_date = {begin_date, end_date};
+        for (auto& vp_ : validity_patterns) {
+            // The first day is not active.
+            vp_->days <<= 1;
+            vp_->beginning_date = begin_date;
+        }
+        vp.beginning_date = begin_date;
+        vp.days <<= 1;
+    }
+    vp.days >>= 1;
+}
+
+void Data::shift_stop_times() {
+    for (auto vj : vehicle_journeys) {
+        const auto first_st_it = std::min_element(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+                [](const types::StopTime* st1, const types::StopTime* st2) { return st1->order < st2->order;});
+        if (first_st_it == vj->stop_time_list.end()) {
+            continue;
+        }
+        const auto first_st = *first_st_it;
+        const bool is_lower = first_st->arrival_time < 0,
+             is_greater = first_st->arrival_time >= int(navitia::DateTimeUtils::SECONDS_PER_DAY);
+        if (is_lower || is_greater) {
+            if ((is_lower && first_st->arrival_time < int(-1 * navitia::DateTimeUtils::SECONDS_PER_DAY)) ||
+                (is_greater && first_st->arrival_time >= int(2 * navitia::DateTimeUtils::SECONDS_PER_DAY))) {
+                throw navitia::exception("Ed, data: You have to shift more than one day, that's weird");
+            }
+            for_each(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+                [&is_lower] (types::StopTime* st) { st->shift_times(is_lower?1:-1);});
+            auto vp = types::ValidityPattern(*vj->validity_pattern);
+            if (is_lower) {
+                shift_vp_left(vp);
+            } else {
+                // Actually, this is valid the day after now
+                // This may drop the last day if the active period last more
+                // than a year.
+                vp.days <<= 1;
+            }
+            vj->validity_pattern = get_or_create_validity_pattern(vp);
+        }
+    }
+}
+
+
 void Data::complete(){
+    shift_stop_times();
     build_journey_patterns();
     build_journey_pattern_points();
     build_block_id();

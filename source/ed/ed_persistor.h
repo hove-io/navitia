@@ -48,7 +48,7 @@ struct EdPersistor{
 
     std::set<std::string> ignored_uris;
 
-    void persist(const ed::Data& data, const navitia::type::MetaData& meta);
+    void persist(const ed::Data& data);
     void persist_fare(const ed::Data& data);
     /// Données Georef
     void persist(const ed::Georef& data);

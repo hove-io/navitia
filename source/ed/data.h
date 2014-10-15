@@ -33,6 +33,7 @@ www.navitia.io
 
 #include "type/type.h"
 #include "type/data.h"
+#include "type/meta_data.h"
 #include "fare/fare.h"
 #include "type/datetime.h"
 
@@ -75,6 +76,8 @@ public:
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
 
+    navitia::type::MetaData meta;
+
     /**
          * trie les différentes donnée et affecte l'idx
          *
@@ -103,6 +106,15 @@ public:
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();
 
+    /// Shift stop_times, we want the first stop_time to have its
+    /// arrival time in [0; NUMBER OF SECONDS IN A DAY[
+    /// That can be false, because we shift them during UTC conversion
+    /// we need to have all the stop time of a vehicle_journey to do that
+    /// so this can only be achieved in post-computing.
+    /// In this function, we also shift validity_patterns
+    void shift_stop_times();
+    void shift_vp_left(types::ValidityPattern& vp);
+
     /// Construit les journey_patternpoint
     void build_journey_pattern_points();
 
@@ -125,6 +137,9 @@ public:
      * Finalise les start_time et end_time des stop_times en frequence
      */
     void finalize_frequency();
+
+
+    types::ValidityPattern* get_or_create_validity_pattern(const types::ValidityPattern& vp);
 
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;

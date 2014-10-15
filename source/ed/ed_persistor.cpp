@@ -239,7 +239,7 @@ void EdPersistor::compute_bounding_shape() {
     this->lotus.exec("select georef.update_bounding_shape();", "", PGRES_TUPLES_OK);
 }
 
-void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
+void EdPersistor::persist(const ed::Data& data){
 
     this->lotus.start_transaction();
 
@@ -247,7 +247,7 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     this->clean_db();
     LOG4CPLUS_INFO(logger, "End: clean db");
     LOG4CPLUS_INFO(logger, "Begin: insert metadata");
-    this->insert_metadata(meta);
+    this->insert_metadata(data.meta);
     LOG4CPLUS_INFO(logger, "End: insert metadata");
     LOG4CPLUS_INFO(logger, "Begin: insert networks");
     this->insert_networks(data.networks);
