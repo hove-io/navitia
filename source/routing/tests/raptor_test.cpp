@@ -640,7 +640,7 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     ));
     res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 8*3600 + 15*60, 0, DateTimeUtils::set(0, (8*3600+45*60)), false, true);
 
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.size(), 2);
     BOOST_CHECK(std::any_of(res1.begin(), res1.end(),
                             [&](const Path& p){
            return p.items.size() == 5  &&
