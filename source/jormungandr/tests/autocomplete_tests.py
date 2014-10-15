@@ -40,7 +40,7 @@ def valid_autocomplete_with_one_stop_area(response):
     assert len(links) == 1
     assert len(places) == 1
     assert places[0]['embedded_type'] == 'stop_area'
-    assert places[0]['name'] == 'Gare'
+    assert places[0]['name'] == 'Gare (Quimper)'
 
 def valid_autocomplete_with_multi_object(response):
     """
@@ -53,7 +53,7 @@ def valid_autocomplete_with_multi_object(response):
     assert len(places) == 10
     assert places[0]['embedded_type'] == 'administrative_region'
     assert places[1]['embedded_type'] == 'stop_area'
-    assert places[1]['name'] == 'Becharles'
+    assert places[1]['name'] == 'Becharles (Quimper)'
     assert places[2]['embedded_type'] == 'stop_area'
     assert places[3]['embedded_type'] == 'stop_area'
     assert places[4]['embedded_type'] == 'stop_area'
