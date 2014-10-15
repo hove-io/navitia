@@ -120,10 +120,17 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
                                 description=
                                 "The list of modes you want at the"\
                                 " end of your journey")
-        parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
-                                description=
-                                "maximal duration of non public "\
-                                "transport in second")
+        parser_get.add_argument("max_duration_to_pt", type=int, description=
+                                "maximal duration of non public transport in second")
+
+        parser_get.add_argument("max_walking_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of walking on public transport in second")
+        parser_get.add_argument("max_bike_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of bike on public transport in second")
+        parser_get.add_argument("max_bss_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of bss on public transport in second")
+        parser_get.add_argument("max_car_duration_to_pt", type=int, default=30*60,
+                                description="maximal duration of car on public transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.12,
                                 description=
                                 "Walking speed in meter/second")
@@ -145,7 +152,7 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
         parser_get.add_argument("debug", type=boolean, default=False,
                                 hidden=True)
         self.region = None
-    
+
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
 
@@ -153,6 +160,14 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
         args["min_nb_journeys"] = None
         args["max_nb_journeys"] = None
         args["show_codes"] = False
+
+        if args['max_duration_to_pt']:
+            #retrocompatibility: max_duration_to_pt override all individual value by mode
+            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
+
         if region is None:
             region = i_manager.get_region(object_id=args["origin"])
         self.region = region
@@ -160,7 +175,7 @@ class Journeys(Resource, ResourceUtc, FindAndFormatJourneys):
         new_datetime = self.convert_to_utc(original_datetime)
         args['original_datetime'] = date_to_timestamp(original_datetime)  # we save the original datetime for debuging purpose
         args['datetime'] = date_to_timestamp(new_datetime)
-        
+
         response = i_manager.dispatch(args, "journeys", instance_name=region)
         if response.journeys:
             before, after = extremes(response, request)
@@ -191,9 +206,16 @@ class Isochrone(Resource, ResourceUtc, FindAndFormatJourneys):
                                 type=option_value(["walking", "car", "bike",
                                                    "bss"]),
                                 action="append", default=["walking"])
-        parser_get.add_argument("max_duration_to_pt", type=int, default=10*60,
-                                description="maximal duration of non public \
-                                transport in second")
+        parser_get.add_argument("max_duration_to_pt", type=int,
+                                description="maximal duration of non public transport in second")
+        parser_get.add_argument("max_walking_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of walking on public transport in second")
+        parser_get.add_argument("max_bike_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of bike on public transport in second")
+        parser_get.add_argument("max_bss_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of bss on public transport in second")
+        parser_get.add_argument("max_car_duration_to_pt", type=int, default=30*60,
+                                description="maximal duration of car on public transport in second")
         parser_get.add_argument("walking_speed", type=float, default=1.12)
         parser_get.add_argument("bike_speed", type=float, default=4.1)
         parser_get.add_argument("bss_speed", type=float, default=4.1)
@@ -217,6 +239,14 @@ class Isochrone(Resource, ResourceUtc, FindAndFormatJourneys):
         args["min_nb_journeys"] = None
         args["max_nb_journeys"] = None
         args["show_codes"] = False
+
+        if args['max_duration_to_pt']:
+            #retrocompatibility: max_duration_to_pt override all individual value by mode
+            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
+
         response = i_manager.dispatch(args, "isochrone", instance_name=self.region)
         if response.journeys:
             (before, after) = extremes(response, request)

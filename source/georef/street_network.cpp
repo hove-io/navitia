@@ -133,6 +133,7 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin,
     if (!arrival_launched() || origin.streetnetwork_params.mode != destination.streetnetwork_params.mode) {
         arrival_path_finder.init(destination.coordinates, origin.streetnetwork_params.mode,
                                  origin.streetnetwork_params.speed_factor);
+        //@TODO: use the max_duration of the origin?
         arrival_path_finder.start_distance_dijkstra(destination.streetnetwork_params.max_duration);
     }
 
