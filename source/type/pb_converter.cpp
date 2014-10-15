@@ -1326,4 +1326,13 @@ pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
 
 }
 
+
+std::string name_formater(const type::StopArea* sa) {
+    return sa->name + get_admin_name(sa);
+}
+
+std::string name_formater(const navitia::georef::POI* poi) {
+    return poi->name + get_admin_name(poi);
+}
+
 }//namespace navitia
