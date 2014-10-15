@@ -77,13 +77,12 @@ class Scenario(simple.Scenario):
                 req.journeys.datetimes.append(dte)
         req.journeys.clockwise = request["clockwise"]
         sn_params = req.journeys.streetnetwork_params
-        if "max_duration_to_pt" in request:
-            sn_params.max_duration_to_pt = request["max_duration_to_pt"]
-        else:
-            # for the moment we compute the non_TC duration
-            # with the walking_distance
-            max_duration = request["walking_distance"] / request["walking_speed"]
-            sn_params.max_duration_to_pt = max_duration
+#we keep this field for compatibily with kraken 1.2, to be removed after the release of the 1.3
+        sn_params.max_duration_to_pt = request["max_walking_duration_to_pt"]
+        sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
+        sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
+        sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
+        sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
         sn_params.walking_speed = request["walking_speed"]
         sn_params.bike_speed = request["bike_speed"]
         sn_params.car_speed = request["car_speed"]

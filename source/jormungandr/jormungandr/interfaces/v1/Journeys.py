@@ -527,9 +527,18 @@ class Journeys(ResourceUri, ResourceUtc):
                                 type=option_value(modes),
                                 default=["walking"],
                                 dest="destination_mode", action="append")
-        parser_get.add_argument("max_duration_to_pt", type=int, default=15*60,
-                                description="maximal duration of non public \
-                                transport in second")
+        parser_get.add_argument("max_duration_to_pt", type=int,
+                                description="maximal duration of non public transport in second")
+
+        parser_get.add_argument("max_walking_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of walking on public transport in second")
+        parser_get.add_argument("max_bike_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of bike on public transport in second")
+        parser_get.add_argument("max_bss_duration_to_pt", type=int, default=15*60,
+                                description="maximal duration of bss on public transport in second")
+        parser_get.add_argument("max_car_duration_to_pt", type=int, default=30*60,
+                                description="maximal duration of car on public transport in second")
+
         parser_get.add_argument("walking_speed", type=float, default=1.12)
         parser_get.add_argument("bike_speed", type=float, default=4.1)
         parser_get.add_argument("bss_speed", type=float, default=4.1,)
@@ -583,6 +592,13 @@ class Journeys(ResourceUri, ResourceUtc):
         if args['traveler_type']:
             profile = travelers_profile[args['traveler_type']]
             profile.override_params(args)
+
+        if args['max_duration_to_pt']:
+            #retrocompatibility: max_duration_to_pt override all individual value by mode
+            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
 
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
@@ -732,6 +748,13 @@ class Journeys(ResourceUri, ResourceUtc):
             args['destination_mode'] = 'bss'
         if args['origin_mode'] == 'vls':
             args['origin_mode'] = 'bss'
+
+        if args['max_duration_to_pt']:
+            #retrocompatibility: max_duration_to_pt override all individual value by mode
+            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
 
         #count override min_nb_journey or max_nb_journey
         if 'count' in args and args['count']:
