@@ -224,7 +224,6 @@ std::pair<bool, nt::VehicleJourney*> find_reference_vj(
 
 std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey,
         const nt::AtPerturbation& perturbation, nt::PT_Data& data){
-    std::vector<nt::StopTime*> stop_to_delete;
     //map contenant le mapping entre un vj de référence et le vj adapté qui lui est lié
     //ceci permet de ne pas recréer un vj adapté à chaque fois que l'on change de vj de référence
     std::map<nt::VehicleJourney*, nt::VehicleJourney*> prec_vjs;
@@ -270,6 +269,7 @@ std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey,
         prec_vjs[current_vj] = vj_adapted;
     }
 
+    std::vector<nt::StopTime*> stop_to_delete;
     return stop_to_delete;
 }
 
