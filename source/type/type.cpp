@@ -32,7 +32,6 @@ www.navitia.io
 #include "pt_data.h"
 #include <iostream>
 #include <boost/assign.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
 #include "utils/functions.h"
 #include "utils/logger.h"
 
@@ -59,9 +58,7 @@ std::vector<std::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable_m
     std::vector<std::weak_ptr<new_disruption::Impact>> result;
 
     //we cleanup the released pointer (not in the loop for code clarity)
-    impacts.erase(boost::remove_if(impacts, [](const std::weak_ptr<new_disruption::Impact>& impact) {
-                                                return impact.expired();
-                                            }), std::end(impacts));
+    clean_up_weak_ptr(impacts);
 
     for (auto impact : this->impacts) {
         auto impact_acquired = impact.lock();
@@ -81,9 +78,8 @@ bool HasMessages::has_applicable_message(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
     //we cleanup the released pointer (not in the loop for code clarity)
-    impacts.erase(boost::remove_if(impacts, [](const std::weak_ptr<new_disruption::Impact>& impact) {
-                                                return impact.expired();
-                                            }), std::end(impacts));
+    clean_up_weak_ptr(impacts);
+
     for (auto impact : this->impacts) {
         auto impact_acquired = impact.lock();
         if (! impact_acquired) {

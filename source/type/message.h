@@ -194,7 +194,7 @@ struct Disruption {
     }
 };
 
-struct DisruptionHolder { //=> to be renamed as Disruptions
+struct DisruptionHolder {
     std::vector<std::unique_ptr<Disruption>> disruptions;
 
     // causes, severities and tags are a pool (weak_ptr because the owner ship
