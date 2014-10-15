@@ -100,7 +100,7 @@ class Uri(ResourceUri):
                     id = res.uri
                     user = authentication.get_user(token=authentication.get_token())
                     for instance in res.instances:
-                        if authentication.has_access(instance, abort=False, user=user):
+                        if authentication.has_access(instance.name, 'ALL', abort=False, user=user):
                             region = instance.name
                     if not region:
                         authentication.abort_request(user=user)
