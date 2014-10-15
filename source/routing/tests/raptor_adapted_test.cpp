@@ -211,7 +211,6 @@ impact-3
         perturbations.push_back(at_perturabtion);
 
         //Impact-4 on stop_area:stop02 from 2014-01-18 00:00:00 à 11h00 to 2014-01-18 23:59:59 à 18h00
-        spt =  b.data->pt_data->stop_points[3];
         at_perturabtion = ed::AtPerturbation();
         at_perturabtion.uri = "mess4";
         at_perturabtion.object_uri="stop_area:stop02";
@@ -223,7 +222,6 @@ impact-3
         at_perturabtion.application_daily_end_hour = pt::duration_from_string("23:59");
         perturbations.push_back(at_perturabtion);
 // PASS MINUIT
-        spt =  b.data->pt_data->stop_points.back();
         at_perturabtion = ed::AtPerturbation();
         at_perturabtion.uri = "mess5";
         at_perturabtion.object_uri="stop_area:stopP3";
