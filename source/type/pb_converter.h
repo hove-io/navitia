@@ -234,6 +234,25 @@ void fill_pb_placemark(const navitia::georef::Admin* value, const type::Data &da
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes=false);
 
+std::string name_formater(const navitia::type::StopArea* sa);
+std::string name_formater(const navitia::georef::POI* poi);
+
+template<typename T>
+std::string get_admin_name(const T* v) {
+    std::string admin_name = "";
+    for(auto admin : v->admin_list) {
+        if (admin->level == 8){
+            admin_name += " (" + admin->name + ")";
+        }
+    }
+    return admin_name;
+}
+
+template<typename T>
+std::string name_formater(const T* v) {
+    return v->name;
+}
+
 template<typename T>
 void fill_pb_placemark(const T* value, const type::Data &data, pbnavitia::PtObject* pt_object, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
@@ -244,7 +263,7 @@ void fill_pb_placemark(const T* value, const type::Data &data, pbnavitia::PtObje
     int depth = (max_depth <= 3) ? max_depth : 3;
     fill_pb_object(value, data, get_sub_object(value, pt_object), depth,
                    now, action_period, show_codes);
-    pt_object->set_name(value->name);
+    pt_object->set_name(name_formater(value));
     pt_object->set_uri(value->uri);
     pt_object->set_embedded_type(get_embedded_type(value));
 }
