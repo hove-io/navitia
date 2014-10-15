@@ -46,8 +46,19 @@ public:
 
     DataManager() : current_data(std::make_shared<const Data>()){}
 
-    inline void set_data(const Data *d) {current_data.reset(d);}
-    inline std::shared_ptr<const Data> get_data() const{return current_data;}
+    void set_data(const Data* d) { set_data(std::shared_ptr<const Data>(d)); }
+    void set_data(std::shared_ptr<const Data>&& data) {
+        if (current_data && data)
+            data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
+        current_data = std::move(data);
+        release_memory();
+    }
+    std::shared_ptr<const Data> get_data() const { return current_data; }
+    std::shared_ptr<Data> get_data_clone() const {
+        auto data = std::make_shared<Data>();
+        time_it("Clone data: ", [&]() { data->clone_from(*current_data); });
+        return std::move(data);
+    }
 
     void release_memory(){
 #ifndef NO_FORCE_MEMORY_RELEASE
@@ -61,20 +72,11 @@ public:
         bool success;
         auto data = std::make_shared<Data>();
         success = data->load(database);
-        if(success){
-            data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
-            current_data = std::move(data);
+        if (success) {
+            set_data(std::move(data));
+        } else {
+            release_memory();
         }
-        release_memory();
         return success;
-    }
-
-    template<typename Disruption>
-    void apply_disruptions(const Disruption& /*disruptions*/){
-        auto data = std::make_shared<Data>();
-        time_it("Clone data: ", [&](){data->clone_from(*current_data);});
-        //call the required method here
-        current_data = std::move(data);
-        release_memory();
     }
 };
