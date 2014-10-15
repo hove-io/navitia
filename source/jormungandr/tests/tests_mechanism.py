@@ -193,7 +193,7 @@ class AbstractTestFixture:
             to shorten the test url query /v1/coverage/{region}/url
         """
         assert len(self.krakens_pool) == 1, "the helper can only work with one region"
-        str_url = "/v1/coverage" if version == "v1" else "/v0"
+        str_url = "/v1/coverage"
         str_url += "/{region}/{url}"
         real_url = str_url.format(region=self.krakens_pool.iterkeys().next(), url=url)
 

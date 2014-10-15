@@ -27,7 +27,4 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-#__all__ = ['v0', 'v0_routing', 'v1_routing', 'v1', 'parsers', 'documentation',
-#           'argument']
-
 from jormungandr import i_manager
