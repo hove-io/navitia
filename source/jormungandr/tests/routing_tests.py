@@ -249,7 +249,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
 
         response = self.query_region(query, display=False)
-        assert(len(response['journeys']) == 2)
+        assert(len(response['journeys']) == 3)
         assert(response['journeys'][0]['arrival_date_time'] == "20120614T150000")
         assert(response['journeys'][0]['type'] == "")
         assert(response['journeys'][1]['arrival_date_time'] == "20120614T160000")
