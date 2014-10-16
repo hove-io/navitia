@@ -56,15 +56,38 @@ end_application_date    = 2014-02-02 18:32:00
 start_application_daily_hour = 08h40
 end_application_daily_hour = 18h00
 active_days = 11111111
-*//*
+*/
 namespace pt = boost::posix_time;
-class Params{
+using navitia::type::new_disruption::Impact;
+using navitia::type::new_disruption::PtObject;
+using navitia::type::new_disruption::Disruption;
+
+struct disruption_creator {
+    std::string uri;
+    std::string object_uri;
+    navitia::type::Type_e object_type;
+    pt::time_period application_period {pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00")};
+    pt::time_period publication_period {pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00")};
+    std::bitset<7> active_days = std::bitset<7>("1111111");
+    pt::time_duration application_daily_start_hour = pt::duration_from_string("00:00");
+    pt::time_duration application_daily_end_hour = pt::duration_from_string("23:59");
+};
+
+class Params {
 public:
     std::vector<std::string> forbidden;
     ed::builder b;
     size_t period;
 
-    Params():b("20120614"), period(365){
+    template <typename T>
+    void add_disruption(disruption_creator disrupt, T* obj) {
+        auto disruption = std::make_unique<Disruption>();
+        auto impact = std::make_shared<Impact>();
+        //TODO
+        obj->add_impact(impact);
+    }
+
+    Params(): b("20120614"), period(365) {
         std::vector<std::string> forbidden;
         b.vj("network:R", "line:A", "11111111", "", true, "")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.vj("network:R", "line:S", "11111111", "", true, "")("stop_area:stop5", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop6", 8*3600 + 20 * 60 ,8*3600 + 21*60);
@@ -77,77 +100,55 @@ public:
             line->network->line_list.push_back(line);
         }
         navitia::type::Line* line =  b.data->pt_data->lines[0];
-        boost::shared_ptr<navitia::type::Message> message;
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess1";
-        message->object_uri="line:A";
-        message->object_type = navitia::type::Type_e::Line;
-        message->application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
-                                                      pt::time_from_string("2013-12-21 12:32:00"));
-        message->publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
-                                                      pt::time_from_string("2013-12-21 12:32:00"));
-        message->active_days = std::bitset<8>("11111111");
-        message->application_daily_start_hour = pt::duration_from_string("00:00");
-        message->application_daily_end_hour = pt::duration_from_string("23:59");
-        line->messages.push_back(message);
+        disruption_creator disruption_wrapper;
+        disruption_wrapper = disruption_creator();
+        disruption_wrapper.uri = "mess1";
+        disruption_wrapper.object_uri="line:A";
+        disruption_wrapper.object_type = navitia::type::Type_e::Line;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00"));
+        add_disruption(disruption_wrapper, line);
 
-        line =  b.data->pt_data->lines[1];
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess0";
-        message->object_uri="line:S";
-        message->object_type = navitia::type::Type_e::Line;
-        message->application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
-                                                      pt::time_from_string("2013-12-21 12:32:00"));
-        message->publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
-                                                      pt::time_from_string("2013-12-21 12:32:00"));
-        message->active_days = std::bitset<8>("11111111");;
-        message->application_daily_start_hour = pt::duration_from_string("00:00");
-        message->application_daily_end_hour = pt::duration_from_string("23:59");
-        line->messages.push_back(message);
+        line = b.data->pt_data->lines[1];
+        disruption_wrapper = disruption_creator();
+        disruption_wrapper.uri = "mess0";
+        disruption_wrapper.object_uri="line:S";
+        disruption_wrapper.object_type = navitia::type::Type_e::Line;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00"));
+        add_disruption(disruption_wrapper, line);
 
-        line =  b.data->pt_data->lines[2];
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess2";
-        message->object_uri="line:B";
-        message->object_type = navitia::type::Type_e::Line;
-        message->application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
-                                                      pt::time_from_string("2013-12-25 12:32:00"));
-        message->publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
-                                                     pt::time_from_string("2013-12-25 12:32:00"));
-        message->active_days = std::bitset<8>("11111111");;
-        message->application_daily_start_hour = pt::duration_from_string("00:00");
-        message->application_daily_end_hour = pt::duration_from_string("23:59");
-        line->messages.push_back(message);
+        line = b.data->pt_data->lines[2];
+        disruption_wrapper = disruption_creator();
+        disruption_wrapper.uri = "mess2";
+        disruption_wrapper.object_uri="line:B";
+        disruption_wrapper.object_type = navitia::type::Type_e::Line;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),pt::time_from_string("2013-12-25 12:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),pt::time_from_string("2013-12-25 12:32:00"));
+        add_disruption(disruption_wrapper, line);
 
-        line =  b.data->pt_data->lines[3];
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess3";
-        message->object_uri="network:M";
-        message->object_type = navitia::type::Type_e::Network;
-        message->application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
-                                                      pt::time_from_string("2013-12-25 12:32:00"));
-        message->publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
-                                                     pt::time_from_string("2013-12-25 12:32:00"));
-        message->active_days = std::bitset<8>("11111111");;
-        message->application_daily_start_hour = pt::duration_from_string("00:00");
-        message->application_daily_end_hour = pt::duration_from_string("23:59");
-        line->network->messages.push_back(message);
+        line = b.data->pt_data->lines[3];
+        disruption_wrapper = disruption_creator();
+        disruption_wrapper.uri = "mess3";
+        disruption_wrapper.object_uri="network:M";
+        disruption_wrapper.object_type = navitia::type::Type_e::Network;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),pt::time_from_string("2013-12-25 12:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),pt::time_from_string("2013-12-25 12:32:00"));
+        add_disruption(disruption_wrapper, line->network);
 
         /// Cette ligne est pour effectuer les tests : Test1, ..., test5
+        line = b.data->pt_data->lines[4];
 
-        line =  b.data->pt_data->lines[4];
-        message = boost::make_shared<navitia::type::Message>();
-        message->uri = "mess4";
-        message->object_uri="network:Test";
-        message->object_type = navitia::type::Type_e::Network;
-        message->application_period = pt::time_period(pt::time_from_string("2014-01-12 08:32:00"),
-                                                      pt::time_from_string("2014-02-02 18:32:00"));
-        message->publication_period = pt::time_period(pt::time_from_string("2014-01-02 08:32:00"),
-                                                     pt::time_from_string("2014-02-10 12:32:00"));
-        message->active_days = std::bitset<8>("11111111");;
-        message->application_daily_start_hour = pt::duration_from_string("08:40");
-        message->application_daily_end_hour = pt::duration_from_string("18:00");
-        line->network->messages.push_back(message);
+        disruption_wrapper = disruption_creator();
+        disruption_wrapper.uri = "mess4";
+        disruption_wrapper.object_uri="network:Test";
+        disruption_wrapper.object_type = navitia::type::Type_e::Network;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2014-01-12 08:32:00"),pt::time_from_string("2014-02-02 18:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2014-01-02 08:32:00"),pt::time_from_string("2014-02-10 12:32:00"));
+        disruption_wrapper.application_daily_start_hour = pt::duration_from_string("08:40");
+        disruption_wrapper.application_daily_end_hour = pt::duration_from_string("18:00");
+
+        add_disruption(disruption_wrapper, line->network);
     }
 };
 
@@ -315,4 +316,3 @@ BOOST_FIXTURE_TEST_CASE(Test7, Params) {
     BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "084000");
     BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "180000");
 }
-*/
