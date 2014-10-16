@@ -41,7 +41,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
-    generic_message, GeoJson
+    generic_message, SectionGeoJson
 
 from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
@@ -161,7 +161,7 @@ section = {
     "display_informations": PbField(display_informations_vj,
                                     attribute='pt_display_informations'),
     "additional_informations": additional_informations_vj(),
-    "geojson": GeoJson(),
+    "geojson": SectionGeoJson(),
     "path": NonNullList(NonNullNested({"length": fields.Integer(),
                                        "name": fields.String(),
                                        "duration": fields.Integer(),

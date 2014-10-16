@@ -36,6 +36,9 @@ www.navitia.io
 #include <functional>
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/date_defs.hpp>
+#include <boost/geometry/algorithms/length.hpp>
+#include "type/geographical_coord.h"
+#include <boost/geometry.hpp>
 #include "fare/fare.h"
 #include "time_tables/thermometer.h"
 
@@ -256,7 +259,10 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
     line->set_name(l->name);
     line->set_uri(l->uri);
 
-    if(depth>0){
+
+    if (depth > 0) {
+        fill_pb_object(l->shape, line->mutable_geojson());
+
         std::vector<nt::idx_t> physical_mode_idxes;
         for(auto route : l->route_list) {
             fill_pb_object(route, data, line->add_routes(), depth-1);
@@ -297,21 +303,15 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
     }
 }
 
-void fill_pb_object(const timetables::Thermometer* thermometer,
-        const nt::Data& data, pbnavitia::GeoJson* geojson) {
-    double length = 0;
-    const nt::StopPoint* prev_sp = nullptr;
-    for(auto idx : thermometer->get_thermometer()) {
-        auto stop_point = data.pt_data->stop_points[idx];
-        if (prev_sp != nullptr) {
-            length += prev_sp->coord.distance_to(stop_point->coord);
+void fill_pb_object(const nt::MultiLineString& shape, pbnavitia::MultiLineString* geojson) {
+    for (const std::vector<nt::GeographicalCoord>& line: shape) {
+        auto l = geojson->add_lines();
+        for (const auto coord: line) {
+            auto c = l->add_coordinates();
+            c->set_lon(coord.lon());
+            c->set_lat(coord.lat());
         }
-        auto coord = geojson->add_coordinates();
-        coord->set_lon(stop_point->coord.lon());
-        coord->set_lat(stop_point->coord.lat());
-        prev_sp = stop_point;
     }
-    geojson->set_length(length);
 }
 
 void fill_pb_object(const nt::Route* r, const nt::Data& data,
@@ -348,9 +348,10 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
                        now, action_period, show_codes);
     }
 
+    fill_pb_object(r->shape, route->mutable_geojson());
+
     auto thermometer = timetables::Thermometer();
     thermometer.generate_thermometer(r);
-    fill_pb_object(&thermometer, data, route->mutable_geojson());
     if (depth>2) {
         for(auto idx : thermometer.get_thermometer()) {
             auto stop_point = data.pt_data->stop_points[idx];
