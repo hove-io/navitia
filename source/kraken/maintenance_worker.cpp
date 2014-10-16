@@ -94,15 +94,18 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
         LOG4CPLUS_WARN(logger, "protobuf not valid!");
         return;
     }
+    std::shared_ptr<nt::Data> data;
     for(const auto& entity: feed_message.entity()){
         if(entity.HasExtension(chaos::disruption)){
             LOG4CPLUS_WARN(logger, "has_extension");
-            data_manager.apply_disruptions(0);
+            if (!data) { data = data_manager.get_data_clone(); }
+            // add disruption
             LOG4CPLUS_DEBUG(logger, "end");
         }else{
             LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
         }
     }
+    if (data) { data_manager.set_data(std::move(data)); }
 }
 
 void MaintenanceWorker::listen_rabbitmq(){

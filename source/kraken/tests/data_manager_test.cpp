@@ -39,7 +39,7 @@ www.navitia.io
 class Data{
     public:
         bool load(const std::string&){return load_status;}
-        std::atomic<bool> is_connected_to_rabbitmq;
+        mutable std::atomic<bool> is_connected_to_rabbitmq;
         static bool load_status;
         static bool destructor_called;
 
