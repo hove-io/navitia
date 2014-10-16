@@ -36,10 +36,17 @@ class TestNullStatus(AbstractTestFixture):
     Test with an empty coverage
     """
 
-    def null_status_test(self):
+    def test_null_status_is_hidden(self):
         response = self.query("/v1/coverage", display=False)
         logging.info(response['regions'])
         assert('regions' in response)
         assert(len(response['regions']) == 1)
         assert(response['regions'][0]['id'] == 'main_routing_test')
 
+
+    def test_null_status(self):
+        response = self.query("/v1/coverage/null_status_test", display=False)
+        logging.info(response['regions'])
+        assert('regions' in response)
+        assert(len(response['regions']) == 1)
+        assert(response['regions'][0]['id'] == 'null_status_test')
