@@ -58,6 +58,15 @@ instance_fields = {'id': fields.Raw,
                    'is_free': fields.Raw,
                    'scenario': fields.Raw,
                    'journey_order': fields.Raw,
+                   'max_walking_duration_to_pt': fields.Raw,
+                   'max_bike_duration_to_pt': fields.Raw,
+                   'max_bss_duration_to_pt': fields.Raw,
+                   'max_car_duration_to_pt': fields.Raw,
+                   'max_nb_transfers': fields.Raw,
+                   'walking_speed': fields.Raw,
+                   'bike_speed': fields.Raw,
+                   'bss_speed': fields.Raw,
+                   'car_speed': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
@@ -111,8 +120,7 @@ class Instance(flask_restful.Resource):
     def get(self, id=None, name=None):
         parser = reqparse.RequestParser()
         parser.add_argument('is_free', type=types.boolean, required=False,
-                case_sensitive=False, help='boolean for returning only free '
-                'or private instances')
+                case_sensitive=False, help='boolean for returning only free or private instances')
         args = parser.parse_args()
         if args['is_free'] != None:
             return models.Instance.query.filter_by(**args).all()
@@ -129,17 +137,49 @@ class Instance(flask_restful.Resource):
 
 
         parser = reqparse.RequestParser()
-        parser.add_argument('scenario', type=str, required=True,
-                case_sensitive=False, help='the name of the scenario used by jormungandr', choices=['default', 'keolis'],
-                location=('json', 'values'))
-        parser.add_argument('journey_order', type=str, required=True,
-                case_sensitive=False, help='the name of the scenario used by jormungandr',
-                choices=['arrival_time', 'departure_time'], location=('json', 'values'))
+        parser.add_argument('scenario', type=str,  case_sensitive=False,
+                help='the name of the scenario used by jormungandr', choices=['default', 'keolis'],
+                location=('json', 'values'), default=instance.scenario)
+        parser.add_argument('journey_order', type=str, case_sensitive=False,
+                help='the sort order of the journeys in jormungandr', choices=['arrival_time', 'departure_time'],
+                location=('json', 'values'), default=instance.journey_order)
+        parser.add_argument('max_walking_duration_to_pt', type=int,
+                help='the maximum duration of walking in fallback section', location=('json', 'values'),
+                default=instance.max_walking_duration_to_pt)
+        parser.add_argument('max_bike_duration_to_pt', type=int,
+                help='the maximum duration of bike in fallback section', location=('json', 'values'),
+                default=instance.max_bike_duration_to_pt)
+        parser.add_argument('max_bss_duration_to_pt', type=int,
+                help='the maximum duration of bss in fallback section', location=('json', 'values'),
+                default=instance.max_bss_duration_to_pt)
+        parser.add_argument('max_car_duration_to_pt', type=int,
+                help='the maximum duration of car in fallback section', location=('json', 'values'),
+                default=instance.max_car_duration_to_pt)
+        parser.add_argument('max_nb_transfers', type=int,
+                help='the maximum number of transfers in a journey', location=('json', 'values'),
+                default=instance.max_nb_transfers)
+        parser.add_argument('walking_speed', type=float,
+                help='the walking speed', location=('json', 'values'), default=instance.walking_speed)
+        parser.add_argument('bike_speed', type=float,
+                help='the biking speed', location=('json', 'values'), default=instance.bike_speed)
+        parser.add_argument('bss_speed', type=float,
+                help='the speed of bss', location=('json', 'values'), default=instance.bss_speed)
+        parser.add_argument('car_speed', type=float,
+                help='the speed of car', location=('json', 'values'), default=instance.car_speed)
         args = parser.parse_args()
 
         try:
             instance.scenario = args['scenario']
             instance.journey_order = args['journey_order']
+            instance.max_walking_duration_to_pt = args['max_walking_duration_to_pt']
+            instance.max_bike_duration_to_pt = args['max_bike_duration_to_pt']
+            instance.max_bss_duration_to_pt = args['max_bss_duration_to_pt']
+            instance.max_car_duration_to_pt = args['max_car_duration_to_pt']
+            instance.max_nb_transfers = args['max_nb_transfers']
+            instance.walking_speed = args['walking_speed']
+            instance.bike_speed = args['bike_speed']
+            instance.bss_speed = args['bss_speed']
+            instance.car_speed = args['car_speed']
             db.session.commit()
         except Exception:
             logging.exception("fail")

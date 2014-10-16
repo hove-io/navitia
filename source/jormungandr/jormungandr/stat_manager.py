@@ -32,7 +32,7 @@
 from navitiacommon import response_pb2
 from flask_restful import reqparse, abort
 import flask_restful
-from flask import current_app, request, g
+from flask import request, g
 from functools import wraps
 from navitiacommon import stat_pb2
 from navitiacommon import request_pb2
@@ -102,7 +102,7 @@ class StatManager(object):
             self._manage_stat(start_time, call_result)
         except Exception as e:
             #if stat are not working we don't want jormungandr to stop.
-            current_app.logger.exception('Error during stat management')
+            logging.getLogger(__name__).exception('Error during stat management')
 
     def _manage_stat(self, start_time, call_result):
         end_time = time.time()
@@ -298,7 +298,7 @@ class StatManager(object):
             stat_coord.lon = float(to_lon)
 
         except ValueError as e:
-            current_app.logger.warn('Unable to parse coordinates: %s', str(e))
+            logging.getLogger(__name__).warn('Unable to parse coordinates: %s', str(e))
 
     def fill_sections(self, stat_journey, resp_journey):
         if 'sections' in resp_journey:

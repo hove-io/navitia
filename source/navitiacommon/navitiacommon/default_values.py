@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 #  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -28,42 +26,42 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
+"""
+This file contains the default values for parameters used in the journey planner.
+This parameters are used on the creation of the instances in the tyr database, they will not be updated automatically.
+This parameters can be used directly by jormungandr if the instance is not known in tyr, typically in development setup
+"""
+
 import logging
-import pytz
-from flask import g
-from jormungandr.exceptions import TechnicalError, RegionNotFound
-from jormungandr import i_manager
+import sys
+
+max_walking_duration_to_pt = 15*60
+
+max_bike_duration_to_pt = 15*60
+
+max_bss_duration_to_pt = 15*60
+
+max_car_duration_to_pt = 30*60
+
+walking_speed = 1.12
+
+bike_speed = 4.1
+
+bss_speed = 4.1
+
+car_speed = 11.11
+
+max_nb_transfers = 10
+
+journey_order = 'arrival_time'
 
 
-def set_request_timezone(region):
-    logger = logging.getLogger(__name__)
-    instance = i_manager.instances.get(region, None)
-
-    if not instance:
-        raise RegionNotFound(region)
-
-    if not instance.timezone:
-        logger.warn("region {} hos no timezone".format(region))
-        g.timezone = None
-        return
-
-    tz = pytz.timezone(instance.timezone)
-
-    if not tz:
-        logger.warn("impossible to find timezone: '{}' for region {}".format(instance.timezone, region))
-
-    g.timezone = tz
-
-
-def get_timezone():
-    """
-    return the time zone associated with the query
-
-    Note: for the moment ONLY ONE time zone is used for a region (a kraken instances)
-    It is this default timezone that is returned in this method
-    """
-    if not hasattr(g, 'timezone'):
-        raise TechnicalError("No timezone set for this API")  # the set_request_timezone has to be called at init
-    return g.timezone
-
-
+def get_value_or_default(attr, instance, instance_name):
+    if not instance or not getattr(instance, attr):
+        logger = logging.getLogger(__name__)
+        value = getattr(sys.modules[__name__], attr)
+        logger.warn('instance %s not found in db, we use the default value (%s) for the param %s', instance_name, value, attr)
+        return value
+    else:
+        return getattr(instance, attr)

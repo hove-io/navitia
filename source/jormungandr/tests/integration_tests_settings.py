@@ -3,6 +3,8 @@ START_MONITORING_THREAD = False
 
 SAVE_STAT = True
 
+DISABLE_DATABASE = True
+
 # désactivation de l'authentification
 PUBLIC = True
 

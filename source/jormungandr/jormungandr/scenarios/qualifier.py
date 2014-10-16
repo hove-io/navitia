@@ -32,7 +32,7 @@
 import navitiacommon.response_pb2 as response_pb2
 from functools import partial
 from datetime import datetime, timedelta
-from flask import current_app
+import logging
 
 
 #compute the duration to get to the transport plus the transfers duration
@@ -195,9 +195,10 @@ def duration_crit(j_1, j_2):
 
 
 def qualifier_one(journeys, request_type):
+    logger = logging.getLogger(__name__)
 
     if not journeys:
-        current_app.logger.info("no journeys to qualify")
+        logger.info("no journeys to qualify")
         return
 
     #The request type is made from the datetime_represents params of the request

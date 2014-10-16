@@ -36,6 +36,7 @@ from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
 from sqlalchemy import func, and_
+from navitiacommon import default_values
 
 db = SQLAlchemy()
 
@@ -127,7 +128,26 @@ class Instance(db.Model):
     scenario = db.Column(db.Text, nullable=False, default='default')
 
     #order of the journey, this order is for clockwise request, else it is reversed
-    journey_order = db.Column(db.Enum('arrival_time', 'departure_time', name='journey_order'), default='arrival_time', nullable=False)
+    journey_order = db.Column(db.Enum('arrival_time', 'departure_time', name='journey_order'),
+                              default=default_values.journey_order, nullable=False)
+
+    max_walking_duration_to_pt = db.Column(db.Integer, default=default_values.max_walking_duration_to_pt, nullable=False)
+
+    max_bike_duration_to_pt = db.Column(db.Integer, default=default_values.max_bike_duration_to_pt, nullable=False)
+
+    max_bss_duration_to_pt = db.Column(db.Integer, default=default_values.max_bss_duration_to_pt, nullable=False)
+
+    max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
+
+    walking_speed = db.Column(db.Float, default=default_values.walking_speed, nullable=False)
+
+    bike_speed = db.Column(db.Float, default=default_values.bike_speed, nullable=False)
+
+    bss_speed = db.Column(db.Float, default=default_values.bss_speed, nullable=False)
+
+    car_speed = db.Column(db.Float, default=default_values.car_speed, nullable=False)
+
+    max_nb_transfers = db.Column(db.Integer, default=default_values.max_nb_transfers, nullable=False)
 
 
     def __init__(self, name=None, is_free=False, authorizations=None,
