@@ -193,7 +193,7 @@ class Instance(db.Model):
         this version doesn't use cache
         """
         if user:
-            return self.authorizations.filter_by(user=user).count() > 0
+            return self.authorizations.filter_by(user=user).count() > 0 or self.is_free
         else:
             return False
 
