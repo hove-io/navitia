@@ -1188,11 +1188,7 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
 
     BOOST_REQUIRE(resp.journeys_size() != 0);
     pbnavitia::Journey journey;
-    if (resp.journeys_size() == 1) {
-        journey = resp.journeys(0);
-    } else {
-        journey = resp.journeys(0).sections_size() == 1 ? resp.journeys(0) : resp.journeys(1);
-    }
+    journey = resp.journeys(0).sections_size() == 1 ? resp.journeys(0) : resp.journeys(1);
 
     BOOST_REQUIRE(journey.sections_size() );
     pbnavitia::Section section = journey.sections(0);
