@@ -28,7 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from flask.globals import current_app
+import logging
 import pytz
 from flask import g
 from jormungandr.exceptions import TechnicalError, RegionNotFound
@@ -36,20 +36,21 @@ from jormungandr import i_manager
 
 
 def set_request_timezone(region):
+    logger = logging.getLogger(__name__)
     instance = i_manager.instances.get(region, None)
 
     if not instance:
         raise RegionNotFound(region)
 
     if not instance.timezone:
-        current_app.logger.warn("region {} hos no timezone".format(region))
+        logger.warn("region {} hos no timezone".format(region))
         g.timezone = None
         return
 
     tz = pytz.timezone(instance.timezone)
 
     if not tz:
-        current_app.logger.warn("impossible to find timezone: '{}' for region {}".format(instance.timezone, region))
+        logger.warn("impossible to find timezone: '{}' for region {}".format(instance.timezone, region))
 
     g.timezone = tz
 
