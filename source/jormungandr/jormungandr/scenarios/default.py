@@ -45,6 +45,34 @@ import logging
 
 class Scenario(simple.Scenario):
 
+    def _updated_request_with_default(self, request, instance):
+        if not request['max_walking_duration_to_pt']:
+            request['max_walking_duration_to_pt'] = instance.max_walking_duration_to_pt
+
+        if not request['max_bike_duration_to_pt']:
+            request['max_bike_duration_to_pt'] = instance.max_bike_duration_to_pt
+
+        if not request['max_bss_duration_to_pt']:
+            request['max_bss_duration_to_pt'] = instance.max_bss_duration_to_pt
+
+        if not request['max_car_duration_to_pt']:
+            request['max_car_duration_to_pt'] = instance.max_car_duration_to_pt
+
+        if not request['max_transfers']:
+            request['max_transfers'] = instance.max_nb_transfers
+
+        if not request['walking_speed']:
+            request['walking_speed'] = instance.walking_speed
+
+        if not request['bike_speed']:
+            request['bike_speed'] = instance.bike_speed
+
+        if not request['bss_speed']:
+            request['bss_speed'] = instance.bss_speed
+
+        if not request['car_speed']:
+            request['car_speed'] = instance.car_speed
+
     def parse_journey_request(self, requested_type, request):
         """Parse the request dict and create the protobuf version"""
         req = request_pb2.Request()
@@ -358,6 +386,7 @@ class Scenario(simple.Scenario):
             resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
 
     def __on_journeys(self, requested_type, request, instance):
+        self._updated_request_with_default(request, instance)
         req = self.parse_journey_request(requested_type, request)
 
         # call to kraken

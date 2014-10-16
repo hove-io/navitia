@@ -517,8 +517,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("datetime", type=date_time_format)
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents, default=True)
-        parser_get.add_argument("max_nb_transfers", type=int, default=10,
-                                dest="max_transfers")
+        parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
         parser_get.add_argument("first_section_mode[]",
                                 type=option_value(modes),
                                 default=["walking"],
@@ -530,19 +529,19 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("max_duration_to_pt", type=int,
                                 description="maximal duration of non public transport in second")
 
-        parser_get.add_argument("max_walking_duration_to_pt", type=int, default=15*60,
+        parser_get.add_argument("max_walking_duration_to_pt", type=int,
                                 description="maximal duration of walking on public transport in second")
-        parser_get.add_argument("max_bike_duration_to_pt", type=int, default=15*60,
+        parser_get.add_argument("max_bike_duration_to_pt", type=int,
                                 description="maximal duration of bike on public transport in second")
-        parser_get.add_argument("max_bss_duration_to_pt", type=int, default=15*60,
+        parser_get.add_argument("max_bss_duration_to_pt", type=int,
                                 description="maximal duration of bss on public transport in second")
-        parser_get.add_argument("max_car_duration_to_pt", type=int, default=30*60,
+        parser_get.add_argument("max_car_duration_to_pt", type=int,
                                 description="maximal duration of car on public transport in second")
 
-        parser_get.add_argument("walking_speed", type=float, default=1.12)
-        parser_get.add_argument("bike_speed", type=float, default=4.1)
-        parser_get.add_argument("bss_speed", type=float, default=4.1,)
-        parser_get.add_argument("car_speed", type=float, default=11.11)
+        parser_get.add_argument("walking_speed", type=float)
+        parser_get.add_argument("bike_speed", type=float)
+        parser_get.add_argument("bss_speed", type=float)
+        parser_get.add_argument("car_speed", type=float)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("min_nb_journeys", type=int)

@@ -34,6 +34,7 @@ import Queue
 from threading import Lock
 import zmq
 from navitiacommon import response_pb2, request_pb2, type_pb2
+from navitiacommon.default_values import get_value_or_default
 import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
@@ -65,32 +66,78 @@ class Instance(object):
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
 
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
+    def _get_models(self):
+        # we use the id because sqlalchemy session keep a map of  {id => instance} so we don't do a request each time we want the model
+        if app.config['DISABLE_DATABASE']:
+            return None
+        return models.Instance.get_by_name(self.name)
+
     @property
     def scenario(self):
         if not self._scenario:
-            instance_db = models.Instance.get_by_name(self.name)
             logger = logging.getLogger(__name__)
+            instance_db = self._get_models()
             if instance_db:
                 logger.info('loading of scenario %s for instance %s', instance_db.scenario, self.name)
-                module = import_module("jormungandr.scenarios.{}".format(instance_db.scenario))
+                module = import_module('jormungandr.scenarios.{}'.format(instance_db.scenario))
                 self._scenario = module.Scenario()
             else:
                 logger.warn('instance %s not found in db, we use the default script', self.name)
-                module = import_module("jormungandr.scenarios.default")
+                module = import_module('jormungandr.scenarios.default')
                 self._scenario = module.Scenario()
         return self._scenario
 
     @property
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def journey_order(self):
-        instance_db = models.Instance.get_by_name(self.name)
-        if instance_db:
-            return instance_db.journey_order
-        else:
-            logger = logging.getLogger(__name__)
-            logger.warn('instance %s not found in db, we use the default order for journey: arrival_time', self.name)
-            return 'arrival_time'
+        instance_db = self._get_models()
+        return get_value_or_default('journey_order', instance_db, self.name)
 
+    @property
+    def max_walking_duration_to_pt(self):
+        instance_db = self._get_models()
+        return get_value_or_default('max_walking_duration_to_pt', instance_db, self.name)
+
+    @property
+    def max_bss_duration_to_pt(self):
+        instance_db = self._get_models()
+        return get_value_or_default('max_bss_duration_to_pt', instance_db, self.name)
+
+    @property
+    def max_bike_duration_to_pt(self):
+        instance_db = self._get_models()
+        return get_value_or_default('max_bike_duration_to_pt', instance_db, self.name)
+
+    @property
+    def max_car_duration_to_pt(self):
+        instance_db = self._get_models()
+        return get_value_or_default('max_car_duration_to_pt', instance_db, self.name)
+
+    @property
+    def walking_speed(self):
+        instance_db = self._get_models()
+        return get_value_or_default('walking_speed', instance_db, self.name)
+
+    @property
+    def bss_speed(self):
+        instance_db = self._get_models()
+        return get_value_or_default('bss_speed', instance_db, self.name)
+
+    @property
+    def bike_speed(self):
+        instance_db = self._get_models()
+        return get_value_or_default('bike_speed', instance_db, self.name)
+
+    @property
+    def car_speed(self):
+        instance_db = self._get_models()
+        return get_value_or_default('car_speed', instance_db, self.name)
+
+    @property
+    def max_nb_transfers(self):
+        instance_db = self._get_models()
+        return get_value_or_default('max_nb_transfers', instance_db, self.name)
 
     @contextmanager
     def socket(self, context):
@@ -121,7 +168,7 @@ class Instance(object):
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
                 if not quiet:
-                    logging.error("La requete : " + request.SerializeToString() + " a echoue " + self.socket_path)
+                    logging.error("request: " + request.SerializeToString() + " failed " + self.socket_path)
                 raise DeadSocketException(self.name, self.socket_path)
 
 
@@ -133,7 +180,6 @@ class Instance(object):
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = id_
         return self.send_and_receive(req)
-    
 
     def has_id(self, id_):
         """
