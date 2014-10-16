@@ -38,6 +38,7 @@ www.navitia.io
 #endif
 
 #include "utils/timer.h"
+#include "utils/exception.h"
 
 template<typename Data>
 class DataManager{
