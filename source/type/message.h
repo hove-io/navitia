@@ -176,7 +176,9 @@ struct Disruption {
 
     std::shared_ptr<Cause> cause;
 
-    //impacts are shared_ptr because there are weak_ptr pointing to them in the impacted objects
+    //Disruption have the ownership of the Impacts.  Impacts are
+    //shared_ptr and not unique_ptr because there are weak_ptr
+    //pointing to them in the impacted objects
     std::vector<std::shared_ptr<Impact>> impacts;
 
     // the place where the disruption happen, the impacts can be in anothers places
