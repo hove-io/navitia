@@ -85,13 +85,11 @@ class User(db.Model):
         res = query.first()
         return res
 
-    def has_access(self, instance_name, api_name):
-        q1 = Instance.query.filter(Instance.name == instance_name,
-                                   Instance.is_free == True)
+    def has_access(self, instance_id, api_name):
         query = Instance.query.join(Authorization, Api)\
-            .filter(Instance.name == instance_name,
+            .filter(Instance.id == instance_id,
                     Api.name == api_name,
-                    Authorization.user_id == self.id).union(q1)
+                    Authorization.user_id == self.id)
 
         return query.count() > 0
 
@@ -179,34 +177,9 @@ class Instance(db.Model):
             result += data_sets
         return result
 
-
     @classmethod
     def get_by_name(cls, name):
         res = cls.query.filter_by(name=name).first()
-        return res
-
-
-    def _is_accessible_by(self, user):
-        """
-        Check if an instance is accessible by a user
-        We don't check the api used here!
-        """
-        if user:
-            return self.authorizations.filter_by(user=user).count() > 0
-        else:
-            return False
-
-    def is_accessible_by(self, user):
-        """
-        Check if an instance is accessible by a user
-        We don't check the api used here!
-        """
-        if user:
-            user_id = user.id
-        else:
-            user_id = None
-        key = '{0}_{1}'.format(self.name, user_id)
-        res = self._is_accessible_by(user)
         return res
 
     def __repr__(self):
