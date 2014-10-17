@@ -127,7 +127,7 @@ struct Impact {
     // the application period define when the impact happen
     std::vector<boost::posix_time::time_period> application_periods;
 
-    std::shared_ptr<Severity> severity;
+    boost::shared_ptr<Severity> severity;
 
     std::vector<PtObject> informed_entities;
 
@@ -174,18 +174,18 @@ struct Disruption {
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
-    std::shared_ptr<Cause> cause;
+    boost::shared_ptr<Cause> cause;
 
     //Disruption have the ownership of the Impacts.  Impacts are
     //shared_ptr and not unique_ptr because there are weak_ptr
     //pointing to them in the impacted objects
-    std::vector<std::shared_ptr<Impact>> impacts;
+    std::vector<boost::shared_ptr<Impact>> impacts;
 
     // the place where the disruption happen, the impacts can be in anothers places
     std::vector<PtObject> localization;
 
     //additional informations on the disruption
-    std::vector<std::shared_ptr<Tag>> tags;
+    std::vector<boost::shared_ptr<Tag>> tags;
 
     std::string note;
 
@@ -201,9 +201,9 @@ struct DisruptionHolder {
 
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
-    std::map<std::string, std::weak_ptr<Cause>> causes; //to be wrapped
-    std::map<std::string, std::weak_ptr<Severity>> severities; //to be wrapped too
-    std::map<std::string, std::weak_ptr<Tag>> tags; //to be wrapped too
+    std::map<std::string, boost::weak_ptr<Cause>> causes; //to be wrapped
+    std::map<std::string, boost::weak_ptr<Severity>> severities; //to be wrapped too
+    std::map<std::string, boost::weak_ptr<Tag>> tags; //to be wrapped too
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {

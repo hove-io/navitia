@@ -29,15 +29,8 @@ www.navitia.io
 */
 
 #include "conf.h"
-#include <iostream>
 
 #include "utils/timer.h"
-
-#include <fstream>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <pqxx/pqxx>
 #include "utils/exception.h"
 #include "ed_reader.h"
 #include "type/data.h"
@@ -45,6 +38,13 @@ www.navitia.io
 #include "utils/functions.h"
 #include "type/meta_data.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/make_shared.hpp>
+#include <pqxx/pqxx>
+#include <iostream>
+#include <fstream>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -56,7 +56,7 @@ struct FindAdminWithCities {
     typedef std::unordered_map<std::string, navitia::georef::Admin*> AdminMap;
     typedef std::vector<georef::Admin*> result_type;
 
-    std::shared_ptr<pqxx::connection> conn;
+    boost::shared_ptr<pqxx::connection> conn;
     georef::GeoRef& georef;
     AdminMap& admin_by_insee_code;
     size_t nb_call = 0;
@@ -66,7 +66,7 @@ struct FindAdminWithCities {
     std::map<size_t, size_t> cities_stats;// number of response for size of the result
 
     FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr, AdminMap& m):
-        conn(std::make_shared<pqxx::connection>(connection_string)),
+        conn(boost::make_shared<pqxx::connection>(connection_string)),
         georef(gr),
         admin_by_insee_code(m)
         {}

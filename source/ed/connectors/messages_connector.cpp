@@ -45,7 +45,7 @@ using nt::new_disruption::Impact;
 using nt::new_disruption::Effect;
 using nt::new_disruption::DisruptionHolder;
 
-std::shared_ptr<Severity>
+boost::shared_ptr<Severity>
 get_or_create_severity(DisruptionHolder& disruptions, int id) {
     std::string name;
     if (id == 0) {
@@ -65,7 +65,7 @@ get_or_create_severity(DisruptionHolder& disruptions, int id) {
         if (auto res = it->second.lock()) return res;
     }
 
-    std::shared_ptr<Severity> severity = std::make_shared<Severity>();
+    boost::shared_ptr<Severity> severity = boost::make_shared<Severity>();
     disruptions.severities.insert({name, severity});
 
     severity->uri = name;
@@ -130,7 +130,7 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
     }
 
     nt::new_disruption::DisruptionHolder disruptions;
-    std::shared_ptr<nt::new_disruption::Impact> impact;
+    boost::shared_ptr<nt::new_disruption::Impact> impact;
     std::string current_uri = "";
 
     for (auto cursor = result.begin(); cursor != result.end(); ++cursor) {
@@ -142,7 +142,7 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
             cursor["uri"].to(current_uri);
             disruption->uri = current_uri;
 
-            impact = std::shared_ptr<nt::new_disruption::Impact>();
+            impact = boost::shared_ptr<nt::new_disruption::Impact>();
             cursor["uri"].to(impact->uri);
 
             //we need to handle the active days to split the period
@@ -181,7 +181,7 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
 }
 
 template <typename Container>
-void add_impact(Container& map, const std::string& uri, const std::shared_ptr<Impact>& impact) {
+void add_impact(Container& map, const std::string& uri, const boost::shared_ptr<Impact>& impact) {
     auto it = map.find(uri);
     if(it != map.end()){
         it->second->add_impact(impact);
