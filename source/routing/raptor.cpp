@@ -244,7 +244,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     return result;
 }
 
-std::vector<Path>
+std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
 RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &departures,
 					    const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
 						const DateTime &departure_datetime,
@@ -254,7 +254,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector
 						const type::AccessibiliteParams & accessibilite_params,
 						const std::vector<std::string> & forbidden_uri,
 						bool clockwise) {
-	std::vector<Path> result;
+    std::vector<std::pair<type::EntryPoint, std::vector<Path>>> result;
 	set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri, disruption_active, allow_odt);
 	
 	auto n_calc_dep = clockwise ? departures : arrivals;
@@ -272,10 +272,31 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector
 
 	auto m_points = clockwise ? arrivals : departures;
 
-	for(auto item : m_points) {
-		auto calc_dest = item.second;
+    for(auto m_point : m_points) {
+        type::EntryPoint m_entry_point = m_point.first;
+
+        auto calc_dest = m_point.second;
 		auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
-		result.insert(result.end(), tmp.begin(), tmp.end());
+
+        for(Path& path : tmp){
+            path.origin.type = (nt::Type_e)-1;
+
+            if (path.items.size() == 0)
+                continue;
+
+            PathItem path_item = clockwise ? path.items.front() : path.items.back();
+            if (path_item.stop_points.size() == 0)
+                continue;
+
+            // must find which item of calc_dep has been computed
+            const nt::StopPoint* stop_point = clockwise ? path_item.stop_points.front() : path_item.stop_points.back();
+            for(auto n_point : n_calc_dep)
+                for(auto n_stop_point : n_point.second)
+                    if (stop_point->idx == n_stop_point.first)
+                        path.origin = n_point.first;
+        }
+
+        result.push_back(std::make_pair(m_entry_point, tmp));
 	}
 
 	return result;
