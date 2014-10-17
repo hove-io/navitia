@@ -964,7 +964,7 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint& or
 }
 
 
-void fill_message(const std::weak_ptr<type::new_disruption::Impact>& impact_weak_ptr,
+void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_weak_ptr,
         const type::Data&, pbnavitia::Message* pb_message, int,
         const boost::posix_time::ptime&, const boost::posix_time::time_period&){
     auto impact = impact_weak_ptr.lock();

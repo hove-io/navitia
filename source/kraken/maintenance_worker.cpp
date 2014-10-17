@@ -30,12 +30,12 @@ www.navitia.io
 
 #include "maintenance_worker.h"
 
+#include "fill_disruption_from_chaos.h"
+#include "type/task.pb.h"
+#include "type/pt_data.h"
+#include <boost/algorithm/string/join.hpp>
 #include <sys/stat.h>
 #include <signal.h>
-#include "type/task.pb.h"
-#include "type/chaos.pb.h"
-#include "type/gtfs-realtime.pb.h"
-#include <boost/algorithm/string/join.hpp>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -94,12 +94,12 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
         LOG4CPLUS_WARN(logger, "protobuf not valid!");
         return;
     }
-    std::shared_ptr<nt::Data> data;
+    boost::shared_ptr<nt::Data> data;
     for(const auto& entity: feed_message.entity()){
         if(entity.HasExtension(chaos::disruption)){
             LOG4CPLUS_WARN(logger, "has_extension");
             if (!data) { data = data_manager.get_data_clone(); }
-            // add disruption
+            add_disruption(*data->pt_data, entity.GetExtension(chaos::disruption));
             LOG4CPLUS_DEBUG(logger, "end");
         }else{
             LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
