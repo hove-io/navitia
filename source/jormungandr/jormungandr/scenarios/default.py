@@ -243,18 +243,23 @@ class Scenario(simple.Scenario):
                 break
             at_least_one_journey_found = True
             last_best = next((j for j in tmp_resp.journeys if j.type == 'rapid'), None)
-            if not last_best:
-                last_best = next((j for j in tmp_resp.journeys), None)
-                #In this case there is no journeys, so we stop
-                if not last_best:
-                    break
 
             new_datetime = None
             one_minute = 60
             if request['clockwise']:
                 #since dates are now posix time stamp, we only have to add the additional seconds
+                if not last_best:
+                    last_best = min(tmp_resp.journeys, key=lambda j: j.departure_date_time)
+                    #In this case there is no journeys, so we stop
+                    if not last_best:
+                        break
                 new_datetime = last_best.departure_date_time + one_minute
             else:
+                if not last_best:
+                    last_best = max(tmp_resp.journeys, key=lambda j: j.arrival_date_time)
+                    #In this case there is no journeys, so we stop
+                    if not last_best:
+                        break
                 new_datetime = last_best.arrival_date_time - one_minute
 
             next_request = self.change_request(pb_req, tmp_resp)
