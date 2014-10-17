@@ -36,6 +36,7 @@ www.navitia.io
 
 namespace navitia{namespace type{
     class Data;
+    struct PT_Data;
 }}
 
 namespace ed{ namespace connectors{
@@ -47,11 +48,10 @@ struct RealtimeLoaderConfig{
     RealtimeLoaderConfig(const std::string& connectionstring, const uint32_t shiftdays) : connection_string(connectionstring), shift_days(shiftdays){}
 };
 
-navitia::type::new_disruption::DisruptionHolder load_disruptions(
+void load_disruptions(
+        navitia::type::PT_Data& pt_data,
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time);
-
-void apply_messages(navitia::type::Data& data);
 
 std::vector<ed::AtPerturbation> load_at_perturbations(
         const RealtimeLoaderConfig& conf,

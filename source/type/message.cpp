@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #include "type/message.h"
-
+#include "type/pt_data.h"
 #include "utils/logger.h"
 
 #include <boost/format.hpp>
@@ -38,9 +38,9 @@ namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
 
-namespace navitia { namespace type {
+namespace navitia { namespace type { namespace new_disruption {
 
-bool new_disruption::Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
+bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
 
     if(publication_date.is_not_a_date_time() || active_period.is_null()){
         return false;
@@ -60,4 +60,31 @@ bool new_disruption::Impact::is_valid(const boost::posix_time::ptime& publicatio
     return false;
 }
 
-}}//namespace
+namespace {
+template<typename T>
+PtObj transform_pt_object(const std::string& uri,
+                          const std::map<std::string, T*>& map,
+                          const boost::shared_ptr<Impact>& impact) {
+    if (auto o = find_or_default(uri, map)) {
+        if (impact) o->add_impact(impact);
+        return o;
+    } else {
+        return UnknownPtObj();
+    }
+}
+}
+
+PtObj make_pt_obj(Type_e type,
+                  const std::string& uri,
+                  const PT_Data& pt_data,
+                  const boost::shared_ptr<Impact>& impact) {
+    switch (type) {
+    case Type_e::Network: return transform_pt_object(uri, pt_data.networks_map, impact);
+    case Type_e::StopArea: return transform_pt_object(uri, pt_data.stop_areas_map, impact);
+    case Type_e::Line: return transform_pt_object(uri, pt_data.lines_map, impact);
+    case Type_e::Route: return transform_pt_object(uri, pt_data.routes_map, impact);
+    default: return UnknownPtObj();
+    }
+}
+
+}}}//namespace
