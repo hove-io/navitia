@@ -107,7 +107,14 @@ def has_access(region, api, abort, user):
     if current_app.config.get('PUBLIC', False):
         #if jormungandr is on public mode we skip the authentification process
         return True
-    if user and user.has_access(region, api):
+
+    if not user:
+        #no user --> no need to continue, we can abort, a user is mandatory even for free region
+        abort_request(user=user)
+
+    model_instance = Instance.get_by_name(region)
+
+    if model_instance.is_free or user.has_access(model_instance.id, api):
         return True
     else:
         if abort:
