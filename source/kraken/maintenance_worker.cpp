@@ -89,14 +89,14 @@ void MaintenanceWorker::handle_task(AmqpClient::Envelope::ptr_t envelope){
     }
 }
 
-static std::shared_ptr<nt::new_disruption::Tag>
+static boost::shared_ptr<nt::new_disruption::Tag>
 make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& holder) {
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_tag = holder.tags[chaos_tag.id()];
     if (auto tag = weak_tag.lock()) { return std::move(tag); }
 
-    auto tag = std::make_shared<nt::new_disruption::Tag>();
+    auto tag = boost::make_shared<nt::new_disruption::Tag>();
     tag->uri = chaos_tag.id();
     tag->name = chaos_tag.name();
     tag->created_at = from_posix(chaos_tag.created_at());
@@ -106,14 +106,14 @@ make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& hold
     return std::move(tag);
 }
 
-static std::shared_ptr<nt::new_disruption::Cause>
+static boost::shared_ptr<nt::new_disruption::Cause>
 make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder& holder) {
     auto from_posix = navitia::from_posix_timestamp;
 
     auto& weak_cause = holder.causes[chaos_cause.id()];
     if (auto cause = weak_cause.lock()) { return std::move(cause); }
 
-    auto cause = std::make_shared<nt::new_disruption::Cause>();
+    auto cause = boost::make_shared<nt::new_disruption::Cause>();
     cause->uri = chaos_cause.id();
     cause->wording = chaos_cause.wording();
     cause->created_at = from_posix(chaos_cause.created_at());
@@ -124,7 +124,7 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
 
 }
 
-static std::shared_ptr<nt::new_disruption::Severity>
+static boost::shared_ptr<nt::new_disruption::Severity>
 make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::DisruptionHolder& holder) {
     namespace tr = transit_realtime;
     namespace new_disr = nt::new_disruption;
@@ -133,7 +133,7 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
     auto& weak_severity = holder.severities[chaos_severity.id()];
     if (auto severity = weak_severity.lock()) { return std::move(severity); }
 
-    auto severity = std::make_shared<new_disr::Severity>();
+    auto severity = boost::make_shared<new_disr::Severity>();
     severity->uri = chaos_severity.id();
     severity->wording = chaos_severity.wording();
     severity->created_at = from_posix(chaos_severity.created_at());
@@ -209,11 +209,11 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<transit_realtime::Entit
     return res;
 }
 
-static std::shared_ptr<nt::new_disruption::Impact>
+static boost::shared_ptr<nt::new_disruption::Impact>
 make_impact(const chaos::Impact& chaos_impact, nt::new_disruption::DisruptionHolder& holder) {
     auto from_posix = navitia::from_posix_timestamp;
 
-    auto impact = std::make_shared<nt::new_disruption::Impact>();
+    auto impact = boost::make_shared<nt::new_disruption::Impact>();
     impact->uri = chaos_impact.id();
     impact->created_at = from_posix(chaos_impact.created_at());
     impact->updated_at = from_posix(chaos_impact.updated_at());
@@ -266,7 +266,7 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
         LOG4CPLUS_WARN(logger, "protobuf not valid!");
         return;
     }
-    std::shared_ptr<nt::Data> data;
+    boost::shared_ptr<nt::Data> data;
     for(const auto& entity: feed_message.entity()){
         if(entity.HasExtension(chaos::disruption)){
             LOG4CPLUS_WARN(logger, "has_extension");

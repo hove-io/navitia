@@ -37,6 +37,7 @@ www.navitia.io
 #include "type/data.h"
 
 #include <boost/geometry.hpp>
+#include <boost/make_shared.hpp>
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -132,7 +133,7 @@ BOOST_AUTO_TEST_CASE(projection) {
 
 struct disruption_fixture {
     disruption_fixture() : disruption(std::make_unique<Disruption>()) {
-        disruption->impacts.push_back(std::make_shared<Impact>());
+        disruption->impacts.push_back(boost::make_shared<Impact>());
 
         disruption->publication_period = pt::time_period(
                     pt::time_from_string("2013-02-22 12:32:00"),
@@ -154,7 +155,7 @@ struct disruption_fixture {
     }
 
     std::unique_ptr<Disruption> disruption;
-    std::weak_ptr<Impact> _impact;
+    boost::weak_ptr<Impact> _impact;
     pt::ptime time_in_publication_period = pt::time_from_string("2013-02-22 20:00:00");
 };
 

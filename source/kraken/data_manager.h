@@ -29,34 +29,36 @@ www.navitia.io
 */
 
 #pragma once
-#include <memory>
-#include <iostream>
+
+#include "utils/timer.h"
+#include "utils/exception.h"
 
 #ifndef NO_FORCE_MEMORY_RELEASE
 //by default we force the release of the memory after the reload of the data
 #include "gperftools/malloc_extension.h"
 #endif
 
-#include "utils/timer.h"
-#include "utils/exception.h"
+#include <memory>
+#include <iostream>
+#include <boost/make_shared.hpp>
 
 template<typename Data>
 class DataManager{
-    std::shared_ptr<const Data> current_data;
+    boost::shared_ptr<const Data> current_data;
 public:
 
-    DataManager() : current_data(std::make_shared<const Data>()){}
+    DataManager() : current_data(boost::make_shared<const Data>()){}
 
-    void set_data(const Data* d) { set_data(std::shared_ptr<const Data>(d)); }
-    void set_data(std::shared_ptr<const Data>&& data) {
+    void set_data(const Data* d) { set_data(boost::shared_ptr<const Data>(d)); }
+    void set_data(boost::shared_ptr<const Data>&& data) {
         if (!data) { throw navitia::exception("Giving a null Data to DataManager::set_data"); }
         data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
         current_data = std::move(data);
         release_memory();
     }
-    std::shared_ptr<const Data> get_data() const { return current_data; }
-    std::shared_ptr<Data> get_data_clone() const {
-        auto data = std::make_shared<Data>();
+    boost::shared_ptr<const Data> get_data() const { return current_data; }
+    boost::shared_ptr<Data> get_data_clone() const {
+        auto data = boost::make_shared<Data>();
         time_it("Clone data: ", [&]() { data->clone_from(*current_data); });
         return std::move(data);
     }
@@ -71,7 +73,7 @@ public:
 
     bool load(const std::string& database){
         bool success;
-        auto data = std::make_shared<Data>();
+        auto data = boost::make_shared<Data>();
         success = data->load(database);
         if (success) {
             set_data(std::move(data));
