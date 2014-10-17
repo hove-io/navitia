@@ -37,28 +37,6 @@ www.navitia.io
 
 namespace navitia {
 
-boost::shared_ptr<navitia::type::new_disruption::Tag>
-make_tag(const chaos::Tag& chaos_tag,
-         navitia::type::new_disruption::DisruptionHolder& holder);
-
-boost::shared_ptr<navitia::type::new_disruption::Cause>
-make_cause(const chaos::Cause& chaos_cause,
-           navitia::type::new_disruption::DisruptionHolder& holder);
-
-boost::shared_ptr<navitia::type::new_disruption::Severity>
-make_severity(const chaos::Severity& chaos_severity,
-              navitia::type::new_disruption::DisruptionHolder& holder);
-
-std::vector<navitia::type::new_disruption::PtObject>
-make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects);
-
-std::vector<navitia::type::new_disruption::PtObject>
-make_pt_objects(const google::protobuf::RepeatedPtrField<transit_realtime::EntitySelector>& chaos_pt_objects);
-
-boost::shared_ptr<navitia::type::new_disruption::Impact>
-make_impact(const chaos::Impact& chaos_impact,
-            navitia::type::new_disruption::DisruptionHolder& holder);
-
 void add_disruption(navitia::type::PT_Data& pt_data,
                     const chaos::Disruption& chaos_disruption);
 
