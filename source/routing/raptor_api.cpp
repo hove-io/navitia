@@ -576,8 +576,6 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
     std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > departures;
     std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > arrivals;
     
-    //worker.init(origins[0]);
-    
     for(type::EntryPoint org : origins) {
         worker.init(org);
         std::vector<std::pair<type::idx_t, navitia::time_duration> > org_stop_points = get_stop_points(org, raptor.data, worker);
