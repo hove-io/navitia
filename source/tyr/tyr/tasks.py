@@ -31,7 +31,6 @@ from celery import chain, group
 from celery.signals import task_postrun
 from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed
 from tyr.binarisation import reload_data, move_to_backupdirectory
-from tyr.aggregate_places import aggregate_places
 from flask import current_app
 import glob
 from tyr import celery
@@ -167,10 +166,9 @@ def import_data(files, instance, backup_file, async=True, reload=True):
         #having an id
         binarisation = [ed2nav.si(instance_config, job.id),
                         nav2rt.si(instance_config, job.id)]
-        aggregate = aggregate_places.si(instance_config, job.id)
         #We pass the job id to each tasks, but job need to be commited for
         #having an id
-        actions.append(group(chain(*binarisation), aggregate))
+        actions.append(chain(*binarisation))
         if reload:
             actions.append(reload_data.si(instance_config, job.id))
         actions.append(finish_job.si(job.id))

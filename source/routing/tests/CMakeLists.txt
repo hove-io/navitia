@@ -29,3 +29,9 @@ add_executable(raptor_odt_test raptor_odt_test.cpp)
 target_link_libraries(raptor_odt_test ed data types routing fare pb_lib thermometer georef
     autocomplete utils ${BOOST_LIBS} log4cplus pthread protobuf)
 ADD_BOOST_TEST(raptor_odt_test)
+
+add_executable(disruptions_test disruptions_test.cpp)
+target_link_libraries(disruptions_test ed data types routing fare pb_lib thermometer georef
+  autocomplete utils workers
+  ${BOOST_LIBS} log4cplus pthread protobuf)
+ADD_BOOST_TEST(disruptions_test)

@@ -35,7 +35,7 @@ from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, additional_informations_vj, UrisToLinks, error, \
-    enum_type, SplitDateTime, GeoJson
+    enum_type, SplitDateTime, MultiLineString
 from ResourceUri import ResourceUri, complete_links
 from datetime import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -91,7 +91,7 @@ class Schedules(ResourceUri, ResourceUtc):
                 error = "Unable to parse filter {filter}"
                 return {"error": error.format(filter=args["filter"])}, 503
             else:
-                self.region = i_manager.key_of_id(parts[1].strip())
+                self.region = i_manager.get_region(object_id=parts[1].strip())
         else:
             self.collection = 'schedules'
             args["filter"] = self.get_filter(uri.split("/"))
@@ -138,7 +138,7 @@ route_schedule_fields = {
     "table": PbField(table_field),
     "display_informations": PbField(display_informations_route,
                                     attribute='pt_display_informations'),
-    "geojson" : GeoJson()
+    "geojson": MultiLineString()
 }
 
 route_schedules = {

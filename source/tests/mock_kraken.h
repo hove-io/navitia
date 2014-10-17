@@ -46,7 +46,7 @@ struct mock_kraken {
 
     mock_kraken(ed::builder& d, const std::string& name) {
         DataManager<navitia::type::Data> data_manager;
-        data_manager.current_data.reset(d.data.release());
+        data_manager.set_data(d.data.release());
 
         boost::thread_group threads;
         // Prepare our context and sockets

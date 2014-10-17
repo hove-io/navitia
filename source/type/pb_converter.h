@@ -224,8 +224,8 @@ void fill_pb_object(const std::string comment, const type::Data& data,
 void fill_pb_object(const navitia::type::StopTime* st, const type::Data& data,
                     pbnavitia::Properties* properties, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
-void fill_pb_object(const timetables::Thermometer* thermometer,
-        const navitia::type::Data& data, pbnavitia::GeoJson* geojson);
+
+void fill_pb_object(const navitia::type::MultiLineString& shape, pbnavitia::MultiLineString* geojson);
 
 
 void fill_pb_placemark(const navitia::georef::Admin* value, const type::Data &data, pbnavitia::PtObject* pt_object,

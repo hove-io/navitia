@@ -27,19 +27,20 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import navitiacommon.response_pb2 as response_pb2
-from ..default import Script, are_equals
+from ..default import Scenario, are_equals
 from jormungandr.utils import str_to_time_stamp
+from nose.tools import eq_
 
 
 def empty_journeys_test():
-    script = Script()
+    scenario = Scenario()
     response = response_pb2.Response()
-    script.sort_journeys(response)
+    scenario.sort_journeys(response, 'arrival_time')
     assert not response.journeys
 
 
 def different_arrival_times_test():
-    script = Script()
+    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
@@ -57,13 +58,36 @@ def different_arrival_times_test():
     journey2.sections[0].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[0].duration = 2 * 60
 
-    script.sort_journeys(response)
-    assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0758")
-    assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
+    scenario.sort_journeys(response, 'arrival_time')
+    eq_(response.journeys[0].arrival_date_time, str_to_time_stamp("20140422T0758"))
+    eq_(response.journeys[1].arrival_date_time, str_to_time_stamp("20140422T0800"))
+
+def different_departure_times_test():
+    scenario = Scenario()
+    response = response_pb2.Response()
+    journey1 = response.journeys.add()
+    journey1.departure_date_time = str_to_time_stamp("20140422T0800")
+    journey1.duration = 5 * 60
+    journey1.nb_transfers = 0
+    journey1.sections.add()
+    journey1.sections[0].type = response_pb2.PUBLIC_TRANSPORT
+    journey1.sections[0].duration = 5 * 60
+
+    journey2 = response.journeys.add()
+    journey2.departure_date_time = str_to_time_stamp("20140422T0758")
+    journey2.duration = 2 * 60
+    journey2.nb_transfers = 0
+    journey2.sections.add()
+    journey2.sections[0].type = response_pb2.PUBLIC_TRANSPORT
+    journey2.sections[0].duration = 2 * 60
+
+    scenario.sort_journeys(response, 'departure_time')
+    eq_(response.journeys[0].departure_date_time, str_to_time_stamp("20140422T0758"))
+    eq_(response.journeys[1].departure_date_time, str_to_time_stamp("20140422T0800"))
 
 
 def different_duration_test():
-    script = Script()
+    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
@@ -81,7 +105,7 @@ def different_duration_test():
     journey2.sections[0].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[0].duration = 3 * 60
 
-    script.sort_journeys(response)
+    scenario.sort_journeys(response, 'arrival_time')
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 5*60
@@ -89,7 +113,7 @@ def different_duration_test():
 
 
 def different_nb_transfers_test():
-    script = Script()
+    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
@@ -116,7 +140,7 @@ def different_nb_transfers_test():
     journey2.sections[0].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[0].duration = 25 * 60
 
-    script.sort_journeys(response)
+    scenario.sort_journeys(response, 'arrival_time')
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 25*60
@@ -126,7 +150,7 @@ def different_nb_transfers_test():
 
 
 def different_duration_non_pt_test():
-    script = Script()
+    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
@@ -165,7 +189,7 @@ def different_duration_non_pt_test():
     journey2.sections[3].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[3].duration = 15 * 60
 
-    script.sort_journeys(response)
+    scenario.sort_journeys(response, 'arrival_time')
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 25 * 60

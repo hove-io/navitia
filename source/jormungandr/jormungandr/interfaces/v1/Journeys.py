@@ -41,7 +41,7 @@ from fields import stop_point, stop_area, line, physical_mode, \
     commercial_mode, company, network, pagination, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     display_informations_vj, additional_informations_vj, error,\
-    generic_message, GeoJson
+    generic_message, SectionGeoJson
 
 from jormungandr.interfaces.parsers import option_value, date_time_format
 #from exceptions import RegionNotFound
@@ -161,7 +161,7 @@ section = {
     "display_informations": PbField(display_informations_vj,
                                     attribute='pt_display_informations'),
     "additional_informations": additional_informations_vj(),
-    "geojson": GeoJson(),
+    "geojson": SectionGeoJson(),
     "path": NonNullList(NonNullNested({"length": fields.Integer(),
                                        "name": fields.String(),
                                        "duration": fields.Integer(),
@@ -456,11 +456,11 @@ def compute_regions(args):
     from_regions = set()
     to_regions = set()
     if args['origin']:
-        from_regions = set(i_manager.key_of_id(args['origin'], only_one=False))
-        #Note: if the key_of_id does not find any region, it raises a RegionNotFoundException
+        from_regions = set(i_manager.get_regions(object_id=args['origin']))
+        #Note: if get_regions does not find any region, it raises a RegionNotFoundException
 
     if args['destination']:
-        to_regions = set(i_manager.key_of_id(args['destination'], only_one=False))
+        to_regions = set(i_manager.get_regions(object_id=args['destination']))
 
     if not from_regions:
         #we didn't get any origin, the region is in the destination's list
@@ -484,22 +484,6 @@ def compute_regions(args):
     regions = sorted(sorted_regions, cmp=instances_comparator)
 
     return regions
-
-def override_params_from_traveler_type(args):
-    if not args['traveler_type']:
-        return
-    profile = travelers_profile[args['traveler_type']]
-    args['walking_speed'] = profile.walking_speed
-    args['bike_speed'] = profile.bike_speed
-    args['bss_speed'] = profile.bss_speed
-    args['car_speed'] = profile.car_speed
-    args['max_duration_to_pt'] = profile.max_duration_to_pt
-
-    args['origin_mode'] = profile.first_section_mode
-    args['destination_mode'] = profile.last_section_mode
-
-    args['wheelchair'] = profile.wheelchair
-
 
 class Journeys(ResourceUri, ResourceUtc):
 
@@ -533,8 +517,7 @@ class Journeys(ResourceUri, ResourceUtc):
         parser_get.add_argument("datetime", type=date_time_format)
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents, default=True)
-        parser_get.add_argument("max_nb_transfers", type=int, default=10,
-                                dest="max_transfers")
+        parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
         parser_get.add_argument("first_section_mode[]",
                                 type=option_value(modes),
                                 default=["walking"],
@@ -543,13 +526,22 @@ class Journeys(ResourceUri, ResourceUtc):
                                 type=option_value(modes),
                                 default=["walking"],
                                 dest="destination_mode", action="append")
-        parser_get.add_argument("max_duration_to_pt", type=int, default=15*60,
-                                description="maximal duration of non public \
-                                transport in second")
-        parser_get.add_argument("walking_speed", type=float, default=1.12)
-        parser_get.add_argument("bike_speed", type=float, default=4.1)
-        parser_get.add_argument("bss_speed", type=float, default=4.1,)
-        parser_get.add_argument("car_speed", type=float, default=11.11)
+        parser_get.add_argument("max_duration_to_pt", type=int,
+                                description="maximal duration of non public transport in second")
+
+        parser_get.add_argument("max_walking_duration_to_pt", type=int,
+                                description="maximal duration of walking on public transport in second")
+        parser_get.add_argument("max_bike_duration_to_pt", type=int,
+                                description="maximal duration of bike on public transport in second")
+        parser_get.add_argument("max_bss_duration_to_pt", type=int,
+                                description="maximal duration of bss on public transport in second")
+        parser_get.add_argument("max_car_duration_to_pt", type=int,
+                                description="maximal duration of car on public transport in second")
+
+        parser_get.add_argument("walking_speed", type=float)
+        parser_get.add_argument("bike_speed", type=float)
+        parser_get.add_argument("bss_speed", type=float)
+        parser_get.add_argument("car_speed", type=float)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
         parser_get.add_argument("count", type=int)
         parser_get.add_argument("min_nb_journeys", type=int)
@@ -596,7 +588,16 @@ class Journeys(ResourceUri, ResourceUtc):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
 
-        override_params_from_traveler_type(args)
+        if args['traveler_type']:
+            profile = travelers_profile[args['traveler_type']]
+            profile.override_params(args)
+
+        if args['max_duration_to_pt']:
+            #retrocompatibility: max_duration_to_pt override all individual value by mode
+            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
 
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
@@ -624,8 +625,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         if region:
             self.region = i_manager.get_region(region)
-            #we check that the user can use this api
-            authentication.authenticate(region, 'ALL', abort=True)
             if uri:
                 objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
@@ -733,7 +732,10 @@ class Journeys(ResourceUri, ResourceUtc):
     @ManageError()
     def post(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['post'].parse_args()
-        override_params_from_traveler_type(args)
+        if args['traveler_type']:
+            profile = travelers_profile[args['traveler_type']]
+            profile.override_params(args)
+
         #check that we have at least one departure and one arrival
         if len(args['from']) == 0:
             abort(400, message="from argument must contain at least one item")
@@ -746,6 +748,13 @@ class Journeys(ResourceUri, ResourceUtc):
         if args['origin_mode'] == 'vls':
             args['origin_mode'] = 'bss'
 
+        if args['max_duration_to_pt']:
+            #retrocompatibility: max_duration_to_pt override all individual value by mode
+            args['max_walking_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_duration_to_pt'] = args['max_duration_to_pt']
+
         #count override min_nb_journey or max_nb_journey
         if 'count' in args and args['count']:
             args['min_nb_journeys'] = args['count']
@@ -753,8 +762,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         if region:
             self.region = i_manager.get_region(region)
-            #we check that the user can use this api
-            authentication.authenticate(region, 'ALL', abort=True)
             set_request_timezone(self.region)
 
         if not region:

@@ -37,14 +37,17 @@ www.navitia.io
 #include "gperftools/malloc_extension.h"
 #endif
 
+#include "utils/timer.h"
+
 template<typename Data>
 class DataManager{
+    std::shared_ptr<const Data> current_data;
 public:
-    std::shared_ptr<Data> current_data;
 
-    DataManager() : current_data(std::make_shared<Data>()){}
+    DataManager() : current_data(std::make_shared<const Data>()){}
 
-    inline std::shared_ptr<Data> get_data() const{return current_data;}
+    inline void set_data(const Data *d) {current_data.reset(d);}
+    inline std::shared_ptr<const Data> get_data() const{return current_data;}
 
     void release_memory(){
 #ifndef NO_FORCE_MEMORY_RELEASE
@@ -68,10 +71,8 @@ public:
 
     template<typename Disruption>
     void apply_disruptions(const Disruption& /*disruptions*/){
-        std::stringstream ss;
-        current_data->save(ss);
         auto data = std::make_shared<Data>();
-        data->load(ss);
+        time_it("Clone data: ", [&](){data->clone_from(*current_data);});
         //call the required method here
         current_data = std::move(data);
         release_memory();

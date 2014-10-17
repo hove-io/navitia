@@ -34,6 +34,7 @@ import logging.config
 import os
 from flask import Flask, got_request_exception
 from flask.ext.restful import Api
+from flask.ext.cache import Cache
 import sys
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied
@@ -57,17 +58,15 @@ rest_api = Api(app, catch_all_404s=True)
 
 from navitiacommon.models import db
 db.init_app(app)
-if not app.config['CACHE_DISABLED']:
-    from navitiacommon.cache import init_cache
-    init_cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
-               db=app.config['REDIS_DB'],
-               password=app.config['REDIS_PASSWORD'],
-               default_ttl=app.config['AUTH_CACHE_TTL'])
-
+cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
 
 from jormungandr.instance_manager import InstanceManager
-i_manager = InstanceManager()
-i_manager.initialisation(start_ping=app.config['START_MONITORING_THREAD'])
+
+
+i_manager = InstanceManager(ini_files=app.config.get('INI_FILE', None),
+                    instances_dir=app.config.get('INSTANCES_DIR', None),
+                    start_ping=app.config.get('START_MONITORING_THREAD', True))
+i_manager.initialisation()
 
 from jormungandr.stat_manager import StatManager
 stat_manager = StatManager()

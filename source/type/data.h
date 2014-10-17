@@ -76,6 +76,7 @@ public:
     static const unsigned int data_version = 27; //< Data version number. *INCREMENT* every time serialized data are modified
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
+    std::atomic<bool> loading; //< Is the data being loaded
 
     std::unique_ptr<MetaData> meta;
 
@@ -118,20 +119,23 @@ public:
     std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
 
 
-    /// Fixe les villes des voiries du filaire
-    // les admins des objets
-//    void set_admins();
-
-    friend class boost::serialization::access;
-
     bool last_load = true;
     boost::posix_time::ptime last_load_at;
-    std::atomic<bool> is_connected_to_rabbitmq;
+
+    // This object is the only field mutated in this object. As it is
+    // thread safe to mutate it, we mark it as mutable.  Maybe we can
+    // find in the future a cleaner way, but now, this is cleaner than
+    // before.
+    mutable std::atomic<bool> is_connected_to_rabbitmq;
 
     Data();
     ~Data();
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int version) {
+    friend class boost::serialization::access;
+    template<class Archive> void save(Archive & ar, const unsigned int) const {
+        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq;
+    }
+    template<class Archive> void load(Archive & ar, const unsigned int version) {
         this->version = version;
         if(this->version != data_version){
             unsigned int v = data_version;//sinon ca link pas...
@@ -139,13 +143,15 @@ public:
             throw wrong_version(msg.str());
         }
         ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq;
+        build_raptor();
     }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     /** Charge les données et effectue les initialisations nécessaires */
     bool load(const std::string & filename);
 
     /** Sauvegarde les données */
-    void save(const std::string & filename);
+    void save(const std::string & filename) const;
 
     /** Construit l'indexe ExternelCode */
     void build_uri();
@@ -179,7 +185,10 @@ public:
     void load(std::istream& ifs);
 
     /** Sauvegarde les données en binaire compressé avec LZ4*/
-    void save(std::ostream& ifs);
+    void save(std::ostream& ifs) const;
+
+    // Deep clone from the given Data.
+    void clone_from(const Data&);
 private:
     /** Get similar validitypattern **/
     ValidityPattern* get_similar_validity_pattern(ValidityPattern* vp) const;

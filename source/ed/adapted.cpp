@@ -222,9 +222,8 @@ std::pair<bool, nt::VehicleJourney*> find_reference_vj(
     return std::make_pair(found, reference_vj);
 }
 
-std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey,
+void duplicate_vj(nt::VehicleJourney* vehicle_journey,
         const nt::AtPerturbation& perturbation, nt::PT_Data& data){
-    std::vector<nt::StopTime*> stop_to_delete;
     //map contenant le mapping entre un vj de référence et le vj adapté qui lui est lié
     //ceci permet de ne pas recréer un vj adapté à chaque fois que l'on change de vj de référence
     std::map<nt::VehicleJourney*, nt::VehicleJourney*> prec_vjs;
@@ -269,8 +268,6 @@ std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey,
         current_vj->adapted_validity_pattern->remove(current_period.begin().date());
         prec_vjs[current_vj] = vj_adapted;
     }
-
-    return stop_to_delete;
 }
 
 void AtAdaptedLoader::init_map(const nt::PT_Data& data){
@@ -335,8 +332,7 @@ void AtAdaptedLoader::apply_update_on_vj(nt::VehicleJourney* vehicle_journey,
         nt::PT_Data& data){
     for(nt::AtPerturbation pert : perturbations){
         if(!vehicle_journey->stop_time_list.empty()){
-            auto tmp = duplicate_vj(vehicle_journey, pert, data);
-            stop_to_delete.insert(stop_to_delete.end(), tmp.begin(), tmp.end());
+            duplicate_vj(vehicle_journey, pert, data);
         }
     }
 }
@@ -401,86 +397,6 @@ void AtAdaptedLoader::dispatch_perturbations(
     }
 }
 
-void AtAdaptedLoader::clean(nt::PT_Data& data){
-    //on supprime les journey pattern point associé au stop time, puis les stop time
-    clean_journey_pattern_point(data);
-    clean_stop_time(data);
-}
-
-void AtAdaptedLoader::clean_stop_time(nt::PT_Data& data){
-    std::sort(stop_to_delete.begin(), stop_to_delete.end());
-    std::unique(stop_to_delete.begin(), stop_to_delete.end());
-
-    std::sort(data.stop_times.begin(), data.stop_times.end());
-
-#ifndef NDEBUG
-    size_t original_size = data.stop_times.size();
-#endif
-
-    size_t count = data.stop_times.size();
-
-
-    int stop_index = data.stop_times.size() -1;
-    int to_delete_index = stop_to_delete.size() -1;
-
-    //on itére une seule fois sur les stops; on met à la fin ceux à supprimer, puis on redimensionne le tableau
-    while(stop_index >= 0 && to_delete_index >= 0){
-        if(data.stop_times[stop_index] < stop_to_delete[to_delete_index]){
-            --to_delete_index;
-            continue;
-        }
-        if(data.stop_times[stop_index] == stop_to_delete[to_delete_index]){
-            delete data.stop_times[stop_index];
-            data.stop_times[stop_index] = data.stop_times[count - 1];
-            --count;
-        }
-
-        --stop_index;
-    }
-    data.stop_times.resize(count);
-    assert(data.stop_times.size() == (original_size - stop_to_delete.size()));
-    std::cout << "stop_to_delete: " << stop_to_delete.size() << std::endl;
-}
-
-void AtAdaptedLoader::clean_journey_pattern_point(nt::PT_Data& data){
-    std::sort(stop_to_delete.begin(), stop_to_delete.end(),
-            [](const nt::StopTime* s1, const nt::StopTime* s2){
-            return s1->journey_pattern_point < s2->journey_pattern_point;});
-
-    std::sort(data.journey_pattern_points.begin(), data.journey_pattern_points.end());
-
-    size_t original_size = data.journey_pattern_points.size();
-    size_t count = original_size;
-
-
-    int jpp_index = original_size - 1;
-    int to_delete_index = stop_to_delete.size() - 1;
-
-    //on itére une seule fois sur les jpps; on met à la fin ceux à supprimer, puis on redimensionne le tableau
-    while(jpp_index >= 0 && to_delete_index >= 0){
-        if(data.journey_pattern_points[jpp_index] < stop_to_delete[to_delete_index]->journey_pattern_point){
-            --to_delete_index;
-            continue;
-        }
-        if(data.journey_pattern_points[jpp_index] == stop_to_delete[to_delete_index]->journey_pattern_point){
-            auto jpp = data.journey_pattern_points[jpp_index]->journey_pattern;
-            auto it = std::find(jpp->journey_pattern_point_list.begin(),
-                    jpp->journey_pattern_point_list.end(),
-                    data.journey_pattern_points[jpp_index]);
-            if(it != jpp->journey_pattern_point_list.end()){
-                jpp->journey_pattern_point_list.erase(it);
-            }
-
-            delete data.journey_pattern_points[jpp_index];
-            data.journey_pattern_points[jpp_index] = data.journey_pattern_points[count - 1];
-            --count;
-        }
-
-        --jpp_index;
-    }
-    data.journey_pattern_points.resize(count);
-    assert(data.journey_pattern_points.size() == (original_size - stop_to_delete.size()));
-}
 
 void AtAdaptedLoader::apply(
         const std::vector<navitia::type::AtPerturbation>& perturbations,
@@ -495,13 +411,12 @@ void AtAdaptedLoader::apply(
     std::cout << "duplicate_vj_map: " << duplicate_vj_map.size() << std::endl;
 
     std::vector<nt::StopTime*> stop_to_delete;
-    for(auto pair : update_vj_map){
+    for(auto pair : update_vj_map) {
         apply_deletion_on_vj(pair.first, pair.second, data);
     }
-    for(auto pair : duplicate_vj_map){
+    for(auto pair : duplicate_vj_map) {
         apply_update_on_vj(pair.first, pair.second, data);
     }
-    this->clean(data);
     std::cout << (data.vehicle_journeys.size() - vj_count) << " vj ajoutés lors de l'application des données adaptées" << std::endl;
 }
 

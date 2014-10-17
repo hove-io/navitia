@@ -35,10 +35,11 @@ from check_utils import *
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
         + '/integration_tests_settings.py'
-from jormungandr import app
-from jormungandr.instance_manager import InstanceManager
+from jormungandr import app, i_manager
 from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
+import jormungandr.scenarios.default
+from jormungandr.instance import Instance
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
@@ -120,10 +121,8 @@ class AbstractTestFixture:
                      .format(cls.__name__))
         cls.launch_all_krakens()
         cls.create_dummy_ini()
-
-        i_manager = InstanceManager()
-        i_manager.initialisation(start_ping=False)
-        cls.i_manager = i_manager
+        i_manager.ini_files = app.config['INI_FILES']
+        i_manager.initialisation()
 
         #we block the stat manager not to send anything to rabbit mq
         def mock_publish(self, stat):
@@ -144,6 +143,17 @@ class AbstractTestFixture:
                 #change that with a real mock framework
                 pass
         User.get_from_token = bob.mock_get_token
+
+        #we don't want to use the database for the scenario, so we mock the property of instance
+        @property
+        def mock_scenario(self):
+            return jormungandr.scenarios.default.Scenario()
+        Instance.scenario = mock_scenario
+
+        @property
+        def mock_journey_order(self):
+            return 'arrival_time'
+        Instance.journey_order = mock_journey_order
 
 
 
@@ -183,7 +193,7 @@ class AbstractTestFixture:
             to shorten the test url query /v1/coverage/{region}/url
         """
         assert len(self.krakens_pool) == 1, "the helper can only work with one region"
-        str_url = "/v1/coverage" if version == "v1" else "/v0"
+        str_url = "/v1/coverage"
         str_url += "/{region}/{url}"
         real_url = str_url.format(region=self.krakens_pool.iterkeys().next(), url=url)
 

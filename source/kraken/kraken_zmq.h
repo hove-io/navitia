@@ -36,6 +36,7 @@ www.navitia.io
 #include <zmq.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "kraken/configuration.h"
+#include "type/meta_data.h"
 
 pbnavitia::Response make_internal_error(const navitia::recoverable_exception& e) {
     pbnavitia::Response response;
@@ -89,6 +90,11 @@ void doWork(zmq::context_t & context, DataManager<navitia::type::Data>& data_man
                LOG4CPLUS_WARN(logger, "receive invalid protobuf");
                result.mutable_error()->set_id(
                        pbnavitia::Error::invalid_protobuf_request);
+            }
+            if (! data_manager.get_data()->loaded){
+                result.set_publication_date(-1);
+            } else {
+                result.set_publication_date(navitia::to_posix_timestamp(data_manager.get_data()->meta->publication_date));
             }
             zmq::message_t reply(result.ByteSize());
             result.SerializeToArray(reply.data(), result.ByteSize());

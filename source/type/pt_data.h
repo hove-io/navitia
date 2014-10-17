@@ -49,7 +49,7 @@ struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
 namespace type {
 
 typedef std::map<std::string, std::string> code_value_map_type;
-typedef std::unordered_map<std::string, code_value_map_type> type_code_codes_map_type;
+typedef std::map<std::string, code_value_map_type> type_code_codes_map_type;
 typedef flat_enum_map<pbnavitia::PlaceCodeRequest::Type, type_code_codes_map_type> ext_codes_map_type;
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::map<std::string, type_name *> collection_name##_map;
@@ -88,6 +88,7 @@ struct PT_Data : boost::noncopyable{
         ar
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
+                & ext_codes_map
                 & stop_times
                 // the first letters for autocomplete
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete

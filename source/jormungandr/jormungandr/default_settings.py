@@ -13,26 +13,13 @@ START_MONITORING_THREAD = True
 #http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
 SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormun'
 
+DISABLE_DATABASE = False
+
 # disable authentication
 PUBLIC = True
 
 #message returned on authentication request
 HTTP_BASIC_AUTH_REALM = 'Navitia.io'
-
-REDIS_HOST = 'localhost'
-
-REDIS_PORT = 6379
-
-# index of the redis data base used (integer from 0 to 15)
-REDIS_DB = 0
-
-REDIS_PASSWORD = None
-
-# disable the redis cache (if no cache, redis is not used at all)
-CACHE_DISABLED = False
-
-# life time of authentication data, in the cache (in seconds)
-AUTH_CACHE_TTL = 300
 
 # logger configuration
 LOGGER = {
@@ -63,3 +50,11 @@ LOGGER = {
 SAVE_STAT = False
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 EXCHANGE_NAME = 'stat_persistor_exchange'
+
+#Cache configuration, see https://pythonhosted.org/Flask-Cache/ for more information
+CACHE_CONFIGURATION = {
+    'CACHE_TYPE': 'simple',
+    'TIMEOUT_PTOBJECTS': 600,
+    'TIMEOUT_AUTHENTICATION': 600,
+    'TIMEOUT_PARAMS': 600,
+}

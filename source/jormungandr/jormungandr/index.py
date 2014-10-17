@@ -41,17 +41,6 @@ class Index(Resource):
         return {
             "versions": [
                 {
-                    "value": "v0",
-                    "description": "Alpha version of the api",
-                    "status": "deprecated",
-                    "links": [
-                        {
-                            "href": url_for("v0", _external=True),
-                            "templated": False
-                        }
-                    ]
-                },
-                {
                     "value": "v1",
                     "description": "Current version of the api",
                     "status": "current",

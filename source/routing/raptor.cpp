@@ -165,7 +165,6 @@ void RAPTOR::init(Solutions departs,
         if(stop_point->accessible(required_properties) &&
                 ((clockwise && item.arrival <= bound) || (!clockwise && item.arrival >= bound))) {
             labels[0][item.jpp_idx].dt_transfer = item.arrival;
-            best_labels[item.jpp_idx] = item.arrival;
 
             if(clockwise && Q[journey_pattern_point->journey_pattern->idx] > journey_pattern_point->order)
                 Q[journey_pattern_point->journey_pattern->idx] = journey_pattern_point->order;
@@ -182,16 +181,6 @@ void RAPTOR::init(Solutions departs,
                 if(valid_journey_patterns.test(journey_pattern_point->journey_pattern->idx) &&
                    valid_journey_pattern_points.test(journey_pattern_point->idx)) {
                     b_dest.add_destination(journey_pattern_point, item.second);
-                    best_labels[jpp_idx] = clockwise ?
-                                    std::min(bound, labels[0][jpp_idx].dt_transfer) :
-                                    std::max(bound, labels[0][jpp_idx].dt_transfer);
-                    if (labels[0][jpp_idx].transfer_is_initialized()) {
-                        if (clockwise) {
-                            b_dest.add_best_clockwise(jpp_idx, labels[0][jpp_idx].dt_transfer, 0);
-                        } else {
-                            b_dest.add_best_unclockwise(jpp_idx, labels[0][jpp_idx].dt_transfer, 0);
-                        }
-                    }
                 }
             }
         }

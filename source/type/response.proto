@@ -231,7 +231,7 @@ message Table {
 message RouteSchedule {
     required Table table = 1;
     required PtDisplayInfo pt_display_informations = 2;
-    optional GeoJson geojson = 3;
+    optional MultiLineString geojson = 3;
 }
 
 message Passage {
@@ -319,6 +319,7 @@ message Response{
     optional string info = 3;
 
     optional Status status = 4;
+    optional int32 publication_date = 5;
     //PtObjects
     repeated string ignored_words = 11;
     repeated string bad_words = 12;

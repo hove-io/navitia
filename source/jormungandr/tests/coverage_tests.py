@@ -26,10 +26,35 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from tests_mechanism import AbstractTestFixture, dataset
+from check_utils import *
+import logging
 
-import default
+@dataset(["main_routing_test", "null_status_test"])
+class TestNullStatus(AbstractTestFixture):
+    """
+    Test with an empty coverage
+    """
+
+    def test_null_status_is_hidden(self):
+        """
+        There are two regions (main_routing_test, null_status_test),
+        null_status_test must be hidden
+        """
+        response = self.query("/v1/coverage", display=False)
+        logging.info(response['regions'])
+        assert 'regions' in response
+        assert len(response['regions']) == 1
+        assert response['regions'][0]['id'] == 'main_routing_test'
 
 
-class Script(default.Script):
-    def on_index(requestion, version=None, region=None):
-        return Response('Mooooooooooooooo')
+    def test_null_status(self):
+        """
+        If we ask directly for the status of an hidden region we are able
+        to see it.
+        """
+        response = self.query("/v1/coverage/null_status_test", display=False)
+        logging.info(response['regions'])
+        assert 'regions' in response
+        assert len(response['regions']) == 1
+        assert response['regions'][0]['id'] == 'null_status_test'

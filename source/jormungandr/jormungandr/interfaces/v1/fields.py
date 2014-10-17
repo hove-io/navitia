@@ -273,54 +273,48 @@ class get_key_value(fields.Raw):
         return res
 
 
-class GeoJson(fields.Raw):
-
+class MultiLineString(fields.Raw):
     def __init__(self, **kwargs):
-        super(GeoJson, self).__init__(**kwargs)
+        super(MultiLineString, self).__init__(**kwargs)
+
+    def output(self, key, obj):
+        val = fields.get_value(key if self.attribute is None else self.attribute, obj)
+
+        lines = []
+        for l in val.lines:
+            lines.append([[c.lon, c.lat] for c in l.coordinates])
+
+        response = {
+            "type": "MultiLineString",
+            "coordinates": lines,
+        }
+        return response
+
+
+class SectionGeoJson(fields.Raw):
+    """
+    format a journey section as geojson
+    """
+    def __init__(self, **kwargs):
+        super(SectionGeoJson, self).__init__(**kwargs)
 
     def output(self, key, obj):
         coords = []
-        test_geojson = True
-        try:
-            test_geojson = obj.HasField("geojson")
-        except ValueError:
-            test_geojson = False
-        if test_geojson:
-            obj = obj.geojson
-            coords = obj.coordinates
-        try:
-            obj.HasField("type")
-        except ValueError:
-            return None
+        if not obj.HasField("type"):
+            logging.warn("trying to output wrongly formated object as geojson, we skip")
+            return
 
         if obj.type == response_pb2.STREET_NETWORK:
-            try:
-                if obj.HasField("street_network"):
-                    coords = obj.street_network.coordinates
-                else:
-                    return None
-            except ValueError:
-                return None
+            coords = obj.street_network.coordinates
         elif obj.type == response_pb2.PUBLIC_TRANSPORT:
             coords = obj.shape
         elif obj.type == response_pb2.TRANSFER:
             coords.append(obj.origin.stop_point.coord)
             coords.append(obj.destination.stop_point.coord)
-        elif obj.type == response_pb2.CROW_FLY:
-            for place in [obj.origin, obj.destination]:
-                type_ = place.embedded_type
-                if type_ == type_pb2.STOP_POINT:
-                    coords.append(place.stop_point.coord)
-                elif type_ == type_pb2.STOP_AREA:
-                    coords.append(place.stop_area.coord)
-                elif type_ == type_pb2.POI:
-                    coords.append(place.poi.coord)
-                elif type_ == type_pb2.ADDRESS:
-                    coords.append(place.address.coord)
-                elif type_ == type_pb2.ADMINISTRATIVE_REGION:
-                    coords.append(place.administrative_region.coord)
         else:
-            return None
+            logging.warn("trying to output wrongly formated object as "
+                         "geojson because type is %s, we skip", obj.type)
+            return
 
         response = {
             "type": "LineString",
@@ -405,7 +399,7 @@ stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
-#stop_area["timezone"] = fields.String() #hidden for the moment
+stop_area["timezone"] = fields.String()
 
 journey_pattern_point = {
     "id": fields.String(attribute="uri"),
@@ -437,6 +431,7 @@ line["code"] = fields.String()
 line["color"] = fields.String()
 line["comment"] = fields.String()
 line["codes"] = NonNullList(NonNullNested(code))
+line["geojson"] = MultiLineString(attribute="geojson")
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))
@@ -444,7 +439,7 @@ route["is_frequence"] = fields.String
 route["line"] = PbField(line)
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
 route["codes"] = NonNullList(NonNullNested(code))
-route["geojson"] = GeoJson(attribute="geojson")
+route["geojson"] = MultiLineString(attribute="geojson")
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 
@@ -506,7 +501,7 @@ place = {
 
 pt_object = {
     "network": PbField(network),
-    "mode": PbField(commercial_mode),
+    "commercial_mode": PbField(commercial_mode),
     "line": PbField(line),
     "route": PbField(route),
     "stop_area": PbField(stop_area),

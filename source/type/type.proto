@@ -138,6 +138,15 @@ enum OdtLevel{
 	zonal = 2;
 	all = 3;
 }
+
+message LineString {
+    repeated GeographicalCoord coordinates = 1;
+}
+
+message MultiLineString {
+    repeated LineString lines = 1;
+    optional double length = 2;
+}
 	
 message Line {
     optional string name = 3;
@@ -152,11 +161,7 @@ message Line {
     repeated Message messages = 14;
     optional string comment = 15;
     repeated Code codes = 16;
-}
-
-message GeoJson {
-    required double length = 1;
-    repeated GeographicalCoord coordinates = 2;
+    optional MultiLineString geojson = 17;
 }
 
 message Route {
@@ -168,8 +173,8 @@ message Route {
     repeated Message messages = 9;
     repeated Code codes = 10;
     repeated StopPoint stop_points = 1;
-    optional GeoJson geojson = 11;
     optional PtObject direction = 12;
+    optional MultiLineString geojson = 13;
 }
 
 message JourneyPattern {
@@ -395,7 +400,7 @@ message PtObject {
     optional Address address = 7;
     optional Line line = 9;
     optional Network network = 10;
-    optional CommercialMode mode = 11;
+    optional CommercialMode commercial_mode = 11;
     optional Route route = 12;
     optional AdministrativeRegion administrative_region = 13;
     optional int32 distance = 14;

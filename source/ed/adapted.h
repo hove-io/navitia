@@ -44,8 +44,7 @@ void update_stop_times(nt::VehicleJourney* vehicle_journey, const nt::AtPerturba
 void delete_vj(nt::VehicleJourney* vehicle_journey, const nt::AtPerturbation& perturbation, nt::PT_Data& data);
 std::vector<nt::StopTime*> get_stop_from_impact(const nt::AtPerturbation& perturbation, boost::gregorian::date current_date, std::vector<nt::StopTime*> stoplist);
 
-/// retourne la liste des StopTime à supprimer
-std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey, const nt::AtPerturbation& perturbation, nt::PT_Data& data);
+void duplicate_vj(nt::VehicleJourney* vehicle_journey, const nt::AtPerturbation& perturbation, nt::PT_Data& data);
 
 std::string make_adapted_uri(const nt::VehicleJourney* vj, const nt::PT_Data& data);
 
@@ -62,12 +61,8 @@ private:
     std::unordered_map<std::string, std::vector<nt::VehicleJourney*>> stop_point_vj_map;
     std::unordered_map<std::string, std::vector<nt::StopPoint*>> stop_area_to_stop_point_map;
 
-
     std::unordered_map<nt::VehicleJourney*, std::set<nt::AtPerturbation>> duplicate_vj_map;
     std::unordered_map<nt::VehicleJourney*, std::set<nt::AtPerturbation>> update_vj_map;
-
-    std::vector<nt::StopTime*> stop_to_delete;
-
 
     void init_map(const nt::PT_Data& data);
     std::vector<nt::VehicleJourney*> reconcile_impact_with_vj(const nt::AtPerturbation& perturbations, const nt::PT_Data& data);
@@ -78,10 +73,6 @@ private:
     std::vector<nt::VehicleJourney*> get_vj_from_stoppoint(const std::string& stoppoint_uri);
     std::vector<nt::VehicleJourney*> get_vj_from_impact(const nt::AtPerturbation& perturbation);
     void dispatch_perturbations(const std::vector<nt::AtPerturbation>& perturbations, const nt::PT_Data& data);
-
-    void clean(nt::PT_Data& data);
-    void clean_stop_time(nt::PT_Data& data);
-    void clean_journey_pattern_point(nt::PT_Data& data);
 
 public:
     void apply(const std::vector<nt::AtPerturbation>& perturbations, nt::PT_Data& data);

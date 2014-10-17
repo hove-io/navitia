@@ -58,6 +58,7 @@ class Worker {
         DataManager<navitia::type::Data>& data_manager;
         const kraken::Configuration conf;
         log4cplus::Logger logger;
+        const void* last_data = nullptr;// to check that data did not change, do not use directly
         boost::posix_time::ptime last_load_at;
 
     public:
@@ -69,10 +70,10 @@ class Worker {
         pbnavitia::Response dispatch(const pbnavitia::Request & request);
 
         type::GeographicalCoord coord_of_entry_point(const type::EntryPoint & entry_point,
-                const std::shared_ptr<navitia::type::Data> data);
-        type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const std::shared_ptr<navitia::type::Data> data, const bool use_second = true);
+                const std::shared_ptr<const navitia::type::Data> data);
+        type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const std::shared_ptr<const navitia::type::Data> data, const bool use_second = true);
 
-        void init_worker_data(const std::shared_ptr<navitia::type::Data> data);
+        void init_worker_data(const std::shared_ptr<const navitia::type::Data> data);
 
         pbnavitia::Response status();
         pbnavitia::Response metadatas();

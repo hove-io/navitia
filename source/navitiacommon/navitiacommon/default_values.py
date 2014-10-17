@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,5 +27,41 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-__all__ = ['Regions', 'Ptref', 'Places', 'PlacesNearby', 'Journeys',
-           'TimeTables']
+"""
+This file contains the default values for parameters used in the journey planner.
+This parameters are used on the creation of the instances in the tyr database, they will not be updated automatically.
+This parameters can be used directly by jormungandr if the instance is not known in tyr, typically in development setup
+"""
+
+import logging
+import sys
+
+max_walking_duration_to_pt = 15*60
+
+max_bike_duration_to_pt = 15*60
+
+max_bss_duration_to_pt = 15*60
+
+max_car_duration_to_pt = 30*60
+
+walking_speed = 1.12
+
+bike_speed = 4.1
+
+bss_speed = 4.1
+
+car_speed = 11.11
+
+max_nb_transfers = 10
+
+journey_order = 'arrival_time'
+
+
+def get_value_or_default(attr, instance, instance_name):
+    if not instance or not getattr(instance, attr):
+        logger = logging.getLogger(__name__)
+        value = getattr(sys.modules[__name__], attr)
+        logger.warn('instance %s not found in db, we use the default value (%s) for the param %s', instance_name, value, attr)
+        return value
+    else:
+        return getattr(instance, attr)

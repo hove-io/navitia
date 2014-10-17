@@ -75,6 +75,20 @@ struct data_set {
                 ("stop_area:stop2", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
         b.lines["line:A"]->calendar_list.push_back(monday_cal);
+
+        //add a mock shape
+        b.lines["line:A"]->shape = {
+                                    {{1,2}, {2,2}, {4,5}},
+                                    {{10,20}, {20,20}, {40,50}}
+                                   };
+
+        for (auto r: b.lines["line:A"]->route_list) {
+            r->shape = {
+                {{1,2}, {2,2}, {4,5}},
+                {{10,20}, {20,20}, {40,50}}
+            };
+        }
+
         b.data->build_uri();
 
         navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];

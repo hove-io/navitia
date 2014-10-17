@@ -1,0 +1,282 @@
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
+import logging
+from navitiacommon import models
+
+from tests_mechanism import AbstractTestFixture, dataset
+from check_utils import *
+from contextlib import contextmanager
+from flask import appcontext_pushed, g
+from jormungandr import app
+import json
+import logging
+
+
+authorizations = {
+    'bob': {
+        "main_routing_test": {'ALL': True},
+        "departure_board_test": {'ALL': False},
+        "empty_routing_test": {'ALL': False}
+    },
+    'bobette': {
+        #bobette cannot access anything
+        "main_routing_test": {'ALL': False},
+        "departure_board_test": {'ALL': False},
+        "empty_routing_test": {'ALL': False}
+    },
+    'bobitto': {
+        #bobitto can access all since empty_routing_test is free
+        "main_routing_test": {'ALL': True},
+        "departure_board_test": {'ALL': True},
+        "empty_routing_test": {'ALL': False}
+    },
+}
+
+
+class FakeUser:
+    """
+    We create a user independent from a database
+    """
+    def __init__(self, name, id):
+        """
+        We just need a fake user, we don't really care about its identity
+        """
+        self.id = id
+        self.login = name
+
+    @classmethod
+    def get_from_token(cls, token):
+        """
+        Create an empty user
+        """
+        return user_in_db[token]
+
+    def has_access(self, instance_name, api_name):
+        """
+        This is made to avoid using of database
+        """
+        return authorizations[self.login][instance_name][api_name]
+
+
+class FakeInstance(models.Instance):
+    def __init__(self, name, is_free):
+        self.name = name
+        self.is_free = is_free
+        self.id = name
+
+    @classmethod
+    def get_by_name(cls, name):
+        return mock_instances[name]
+
+
+user_in_db = {
+    'bob': FakeUser('bob', 1),
+    'bobette': FakeUser('bobette', 2),
+    'bobitto': FakeUser('bobitto', 3)
+}
+
+mock_instances = {
+    'main_routing_test': FakeInstance('main_routing_test', False),
+    'departure_board_test': FakeInstance('departure_board_test', False),
+    'empty_routing_test': FakeInstance('empty_routing_test', True),
+}
+
+
+@contextmanager
+def user_set(app, user_name):
+    """
+    add user
+    """
+
+    def handler(sender, **kwargs):
+        g.user = FakeUser.get_from_token(user_name)
+    with appcontext_pushed.connected_to(handler, app):
+        yield
+
+
+class AbstractTestAuthentication(AbstractTestFixture):
+
+    def setUp(self):
+        self.old_public_val = app.config['PUBLIC']
+        app.config['PUBLIC'] = False
+        self.app = app.test_client()
+
+        self.old_instance_getter = models.Instance.get_by_name
+        models.Instance.get_by_name = FakeInstance.get_by_name
+
+    def tearDown(self):
+        app.config['PUBLIC'] = self.old_public_val
+        models.Instance.get_by_name = self.old_instance_getter
+
+
+@dataset(["main_routing_test", "departure_board_test"])
+class TestBasicAuthentication(AbstractTestAuthentication):
+
+    def test_coverage(self):
+        """
+        User only has access to the first region
+        """
+        with user_set(app, 'bob'):
+            response_obj = self.app.get('/v1/coverage')
+            response = json.loads(response_obj.data)
+            assert('regions' in response)
+            assert(len(response['regions']) == 1)
+            assert(response['regions'][0]['id'] == "main_routing_test")
+
+    def test_status_code(self):
+        """
+        We query the api with user 1 who have access to the main routintg test and not to the departure board
+        """
+        requests_status_codes = [
+            ('/v1/coverage/main_routing_test', 200),
+            ('/v1/coverage/departure_board_test', 403),
+            # stopA and stopB and in main routing test, all is ok
+            ('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000', 200),
+            # stop1 is in departure board -> KO
+            ('/v1/journeys?from=stopA&to=stop2&datetime=20120614T080000', 403),
+            # stop1 and stop2 are in departure board -> KO
+            ('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000', 403)
+        ]
+
+        with user_set(app, 'bob'):
+            for request, status_code in requests_status_codes:
+                assert(self.app.get(request).status_code == status_code)
+
+
+@dataset(["main_routing_test", "departure_board_test", "empty_routing_test"])
+class TestOverlappingAuthentication(AbstractTestAuthentication):
+
+    def test_coverage(self):
+        with user_set(app, 'bobitto'):
+            response = self.query('v1/coverage')
+
+            r = get_not_null(response, 'regions')
+
+            region_ids = {region['id']: region for region in r}
+            assert len(region_ids) == 3
+
+            assert 'main_routing_test' in region_ids
+            assert 'departure_board_test' in region_ids
+            # bob have not the access to this region, but the region is free so it is there anyway
+            assert 'empty_routing_test' in region_ids
+
+        with user_set(app, 'bobette'):
+            response = self.query('v1/coverage')
+            r = get_not_null(response, 'regions')
+
+            region_ids = {region['id']: region for region in r}
+            assert len(region_ids) == 1
+            # bobette does not have access to anything, so we only have the free region here
+            assert 'empty_routing_test' in region_ids
+
+    def test_pt_ref_for_bobitto(self):
+        with user_set(app, 'bobitto'):
+            response = self.query('v1/coverage/main_routing_test/stop_points')
+            assert 'error' not in response
+            response = self.query('v1/coverage/departure_board_test/stop_points')
+            assert 'error' not in response
+
+            #the empty region is empty, so no stop points. but we check that we have no authentication errors
+            response, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_points')
+            assert status == 404
+            assert 'error' in response
+            assert 'unknown_object' in response['error']['id']
+
+    def test_pt_ref_for_bobette(self):
+        with user_set(app, 'bobette'):
+            _, status = self.query_no_assert('v1/coverage/main_routing_test/stop_points')
+            assert status == 403
+            _, status = self.query_no_assert('v1/coverage/departure_board_test/stop_points')
+            assert status == 403
+
+            _, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_points')
+            assert status == 404  # same than for bobitto, we have access to the region, but no stops
+
+    def test_stop_schedules_for_bobette(self):
+        with user_set(app, 'bobette'):
+            _, status = self.query_no_assert('v1/coverage/main_routing_test/stop_areas/stopA/stop_schedules')
+            assert status == 403
+            _, status = self.query_no_assert('v1/coverage/departure_board_test/stop_areas/stop1/stop_schedules')
+            assert status == 403
+            #we get a 404 (because 'stopbidon' cannot be found) and not a 403
+            _, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_areas/'
+                                             'stopbidon/stop_schedules')
+            assert status == 404
+
+    def test_stop_schedules_for_bobitto(self):
+        with user_set(app, 'bobitto'):
+            response = self.query('v1/coverage/main_routing_test/stop_areas/'
+                                  'stopA/stop_schedules?from_datetime=20120614T080000')
+            assert 'error' not in response
+            response = self.query('v1/coverage/departure_board_test/stop_areas/'
+                                  'stop1/stop_schedules?from_datetime=20120614T080000')
+            assert 'error' not in response
+
+            _, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_areas/'
+                                             'stopbidon/stop_schedules?from_datetime=20120614T080000')
+            assert status == 404
+
+    def test_journeys_for_bobitto(self):
+        with user_set(app, 'bobitto'):
+            response = self.query('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000')
+            assert 'error' not in response
+            response = self.query('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
+            assert 'error' not in response
+
+    def test_wrong_journeys_for_bobitto(self):
+        """
+        we query with one stop for main_routing and one from departure_board,
+        we have access to both, but we get an error
+        """
+        with user_set(app, 'bobitto'):
+            response, status = self.query_no_assert('/v1/journeys?from=stopA&to=stop2&datetime=20120614T080000')
+            assert status == 404
+            assert 'error' in response and response['error']['id'] == "unknown_object"
+
+    def test_journeys_for_bobette(self):
+        """
+        bobette have access only to the empty region which overlap the main routing test
+        so by stops no access to any region
+        but by coord she can query the empty_routing_test region
+        """
+        with user_set(app, 'bobette'):
+            response, status = self.query_no_assert('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000')
+            assert status == 403
+            response, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
+            assert status == 403
+
+            response, status = self.query_no_assert('/v1/journeys?from={from_coord}&to={to_coord}&datetime={d}'
+                                                    .format(from_coord=s_coord, to_coord=r_coord, d='20120614T08'))
+            assert 'error' in response and response['error']['id'] == "no_origin_nor_destination"
+            assert status == 404
+
+    #TODO add more tests on:
+    # * coords
+    # * disruptions
+    # * get by external code ?
