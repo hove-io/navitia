@@ -369,6 +369,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
     }
+
+    return pb_response;
 }
 
 std::vector<std::pair<type::idx_t, navitia::time_duration> >
