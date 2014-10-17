@@ -110,9 +110,6 @@ pbnavitia::Response Worker::status() {
 
     auto status = result.mutable_status();
     const auto d = data_manager.get_data();
-    status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
-    status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
-    status->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
     status->set_data_version(d->version);
     status->set_navimake_version(d->meta->navimake_version);
     status->set_navitia_version(KRAKEN_VERSION);
@@ -121,8 +118,17 @@ pbnavitia::Response Worker::status() {
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
     status->set_nb_threads(conf.nb_thread());
     status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
-    for(auto data_sources: d->meta->data_sources){
-        status->add_data_sources(data_sources);
+    if (d->loaded) {
+        status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
+        status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
+        status->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
+        for(auto data_sources: d->meta->data_sources){
+            status->add_data_sources(data_sources);
+        }
+    } else {
+        status->set_publication_date("");
+        status->set_start_production_date("");
+        status->set_end_production_date("");
     }
     return result;
 }
@@ -131,13 +137,25 @@ pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
     auto metadatas = result.mutable_metadatas();
     const auto d = data_manager.get_data();
-    metadatas->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
-    metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
-    metadatas->set_shape(d->meta->shape);
-    metadatas->set_status("running");
-    metadatas->set_timezone(d->meta->timezone);
-    for(const type::Contributor* contributor : d->pt_data->contributors){
-        metadatas->add_contributors(contributor->uri);
+    if (d->loaded) {
+        metadatas->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
+        metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
+        metadatas->set_shape(d->meta->shape);
+        metadatas->set_status("running");
+        metadatas->set_timezone(d->meta->timezone);
+        for(const type::Contributor* contributor : d->pt_data->contributors) {
+            metadatas->add_contributors(contributor->uri);
+        }
+    } else {
+        metadatas->set_start_production_date("");
+        metadatas->set_end_production_date("");
+        metadatas->set_shape("");
+        metadatas->set_timezone("");
+        if (d->loading) {
+            metadatas->set_status("loading_data");
+        } else {
+            metadatas->set_status("no_data");
+        }
     }
     return result;
 }
@@ -570,12 +588,18 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
 
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response result ;
+    // These api can respond even if the data isn't loaded
+    if (request.requested_api() == pbnavitia::STATUS) {
+        return status();
+    }
+    if (request.requested_api() ==  pbnavitia::METADATAS) {
+        return metadatas();
+    }
     if (! data_manager.get_data()->loaded){
         fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data", result.mutable_error());
         return result;
     }
     switch(request.requested_api()){
-        case pbnavitia::STATUS: return status();
         case pbnavitia::places: return autocomplete(request.places());
         case pbnavitia::pt_objects: return pt_object(request.pt_objects());
         case pbnavitia::place_uri: return place_uri(request.place_uri());
@@ -590,7 +614,6 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api());
         case pbnavitia::places_nearby: return proximity_list(request.places_nearby());
         case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref());
-        case pbnavitia::METADATAS : return metadatas();
         case pbnavitia::disruptions : return disruptions(request.disruptions());
         case pbnavitia::calendars : return calendars(request.calendars());
         case pbnavitia::place_code : return place_code(request.place_code());
