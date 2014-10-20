@@ -97,8 +97,7 @@ std::pair<std::string, boost::local_time::time_zone_ptr> TzHandler::get_tz(const
 std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_period& validity_period, const boost::local_time::time_zone_ptr& tz) {
 
     if (validity_period.is_null()) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "validity period is not valid");
-        throw navitia::exception("validity period is not valid");
+        return {};
     }
     std::vector<int> years;
     //we want to have all the overlapping year
