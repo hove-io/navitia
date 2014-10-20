@@ -71,6 +71,8 @@ public:
     std::map<std::string, navitia::fare::DateTicket> fare_map;
     std::map<navitia::fare::OD_key, std::map<navitia::fare::OD_key, std::vector<std::string>>> od_tickets;
 
+    // the shapes are here, and then copied where needed
+    std::unordered_map<std::string, navitia::type::MultiLineString> shapes;
 
     std::vector<ed::types::AdminStopArea*>  admin_stop_areas;
 

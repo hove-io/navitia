@@ -704,12 +704,6 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
 
         BOOST_ASSERT(! split_periods.empty() || smallest_active_period.is_null()); //by construction it cannot be empty if the validity period is not null
 
-        if (split_periods.size() > 1) {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the calendar " << original_vp.uri
-                           << " is overlapping at least one day saving time (dst) thus we split it in "
-                           << split_periods.size());
-        }
-
         size_t cpt(1);
         for (const auto& split_period: split_periods) {
             nm::ValidityPattern* vp = new nm::ValidityPattern(gtfs_data.production_date.begin());
@@ -788,14 +782,14 @@ void ShapesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
     }
 }
 
-void ShapesGtfsHandler::finish(Data&) {
+void ShapesGtfsHandler::finish(Data& data) {
     LOG4CPLUS_INFO(logger, "Nb shapes: " << shapes.size());
     for (const auto& shape: shapes) {
         navitia::type::LineString line;
         for (const auto& coord: shape.second) {
             line.push_back(coord.second);
         }
-        gtfs_data.shapes[shape.first].push_back(line);
+        data.shapes[shape.first] = {line};
     }
 }
 
@@ -848,16 +842,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
 
     // get shape if possible
-    if (has_col(shape_id_c, row)) {
-        const auto it_shape = gtfs_data.shapes.find(row.at(shape_id_c));
-        if (it_shape != gtfs_data.shapes.end() && !it_shape->second.empty()) {
-            if (it_shape->second.size() > 1) {
-                LOG4CPLUS_WARN(logger, "shape of trip " << row[trip_c]
-                               << " is a multi line, taking only the first line.");
-            }
-            gtfs_data.meta_vj_shapes[row[trip_c]] = it_shape->second.front();
-        }
-    }
+    const std::string &shape = has_col(shape_id_c, row) ? row.at(shape_id_c) : "";
 
     const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
@@ -910,6 +895,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         //we add them on our meta vj
         meta_vj.theoric_vj.push_back(vj);
         vj->meta_vj_name = row[trip_c];
+        vj->shape = shape;
 
         // we store the split vj utc shift, in minutes
         auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];
@@ -929,48 +915,8 @@ void StopTimeGtfsHandler::init(Data&) {
             drop_off_c = csv.get_pos_col("drop_off_type");
 }
 
-static nt::LineString::const_iterator
-get_nearest(const nt::GeographicalCoord& coord, const nt::LineString& line) {
-    if (line.empty()) return line.end();
-    auto nearest = line.begin();
-    double nearest_dist = nearest->distance_to(coord);
-    for (auto it = nearest + 1; it != line.end(); ++it) {
-        double cur_dist = it->distance_to(coord);
-        if (cur_dist < nearest_dist) {
-            nearest = it;
-            nearest_dist = cur_dist;
-        }
-    }
-    return nearest;
-}
-
-static nt::LineString
-create_shape(const nt::GeographicalCoord& from,
-             const nt::GeographicalCoord& to,
-             const nt::LineString& shape)
-{
-    nt::LineString res;
-    const auto nearest_from = get_nearest(from, shape);
-    const auto nearest_to = get_nearest(to, shape);
-    res.push_back(from);
-    if (nearest_from < nearest_to) {
-        for (auto it = nearest_from + 1; it < nearest_to; ++it)
-            res.push_back(*it);
-    } else if (nearest_from > nearest_to) {
-        for (auto it = nearest_from - 1; it > nearest_to; --it)
-            res.push_back(*it);
-    }
-    res.push_back(to);
-
-    // simplification at about 1m precision
-    nt::LineString simplified;
-    boost::geometry::simplify(res, simplified, 0.00001);
-
-    return simplified;
-}
-
 void StopTimeGtfsHandler::finish(Data& data) {
-    LOG4CPLUS_INFO(logger, "sorting stoptimes of vehicle_journeys and creating shapes");
+    LOG4CPLUS_INFO(logger, "sorting stoptimes of vehicle_journeys");
     for (auto *const vj: data.vehicle_journeys) {
         if (vj->stop_time_list.empty()) continue;
 
@@ -981,19 +927,6 @@ void StopTimeGtfsHandler::finish(Data& data) {
                 }
                 return st1->order < st2->order;
             });
-
-        // create the shape_from_prev of the stop times
-        const auto end = vj->stop_time_list.end();
-        auto it = vj->stop_time_list.begin();
-        nt::GeographicalCoord from = (*it)->tmp_stop_point->coord;
-        (*it)->shape_from_prev.clear();
-        const nt::LineString& vj_shape =
-            find_or_default(vj->meta_vj_name, gtfs_data.meta_vj_shapes);
-        for (++it; it != end; ++it) {
-            const nt::GeographicalCoord &to = (*it)->tmp_stop_point->coord;
-            (*it)->shape_from_prev = create_shape(from, to, vj_shape);
-            from = to;
-        }
     }
     LOG4CPLUS_INFO(logger, "Nb stop times: " << data.stops.size());
 }

@@ -367,11 +367,16 @@ void Data::clean(){
                    << " stop point connections deleted because of duplicate connections");
 }
 
+static void affect_shape(nt::LineString& to, const nt::MultiLineString& from) {
+    if (from.empty()) return;
+    if (to.size() < from.front().size()) { to = from.front(); }
+}
+
 // TODO : For now we construct one route per journey pattern
 // We should factorise the routes.
 void Data::build_journey_patterns(){
     auto logger = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_TRACE(logger, "On calcule les journey_patterns");
+    LOG4CPLUS_INFO(logger, "building journey patterns...");
 
     // Associate each line-uri with the number of journey_pattern's found up to now
     for(auto it1 = this->vehicle_journeys.begin(); it1 != this->vehicle_journeys.end(); ++it1){
@@ -394,6 +399,7 @@ void Data::build_journey_patterns(){
             }
             journey_pattern->route = route;
             journey_pattern->physical_mode = vj1->physical_mode;
+            affect_shape(journey_pattern->shape, find_or_default(vj1->shape, shapes));
             vj1->journey_pattern = journey_pattern;
             this->journey_patterns.push_back(journey_pattern);
 
@@ -401,11 +407,52 @@ void Data::build_journey_patterns(){
                 types::VehicleJourney * vj2 = *it2;
                 if(vj2->journey_pattern == 0 && same_journey_pattern(vj1, vj2)){
                     vj2->journey_pattern = vj1->journey_pattern;
+                    affect_shape(journey_pattern->shape, find_or_default(vj2->shape, shapes));
                 }
             }
         }
     }
-    LOG4CPLUS_TRACE(logger, "Number of journey_patterns : " +boost::lexical_cast<std::string>(this->journey_patterns.size()));
+    LOG4CPLUS_INFO(logger, "Number of journey_patterns : " << journey_patterns.size());
+}
+
+static nt::LineString::const_iterator
+get_nearest(const nt::GeographicalCoord& coord, const nt::LineString& line) {
+    if (line.empty()) return line.end();
+    auto nearest = line.begin();
+    double nearest_dist = nearest->distance_to(coord);
+    for (auto it = nearest + 1; it != line.end(); ++it) {
+        double cur_dist = it->distance_to(coord);
+        if (cur_dist < nearest_dist) {
+            nearest = it;
+            nearest_dist = cur_dist;
+        }
+    }
+    return nearest;
+}
+
+static nt::LineString
+create_shape(const nt::GeographicalCoord& from,
+             const nt::GeographicalCoord& to,
+             const nt::LineString& shape)
+{
+    nt::LineString res;
+    const auto nearest_from = get_nearest(from, shape);
+    const auto nearest_to = get_nearest(to, shape);
+    res.push_back(from);
+    if (nearest_from < nearest_to) {
+        for (auto it = nearest_from + 1; it < nearest_to; ++it)
+            res.push_back(*it);
+    } else if (nearest_from > nearest_to) {
+        for (auto it = nearest_from - 1; it > nearest_to; --it)
+            res.push_back(*it);
+    }
+    res.push_back(to);
+
+    // simplification at about 3m precision
+    nt::LineString simplified;
+    boost::geometry::simplify(res, simplified, 0.00003);
+
+    return simplified;
 }
 
 void Data::build_journey_pattern_points(){
@@ -414,8 +461,8 @@ void Data::build_journey_pattern_points(){
     std::map<std::string, ed::types::JourneyPatternPoint*> journey_pattern_point_map;
 
     size_t nb_stop_time = 0;
-    size_t nb_incoherent_shapes = 0;
     for(types::VehicleJourney * vj : this->vehicle_journeys){
+        const nt::GeographicalCoord* prev_coord = nullptr;
         int stop_seq = 0;
         for(types::StopTime * stop_time : vj->stop_time_list){
             ++nb_stop_time;
@@ -430,26 +477,17 @@ void Data::build_journey_pattern_points(){
                 journey_pattern_point_map[journey_pattern_point_extcode] = journey_pattern_point;
                 journey_pattern_point->order = stop_seq;
                 journey_pattern_point->uri = journey_pattern_point_extcode;
-                journey_pattern_point->shape_from_prev = stop_time->shape_from_prev;
+                if (prev_coord) {
+                    journey_pattern_point->shape_from_prev =
+                        create_shape(*prev_coord,
+                                     stop_time->tmp_stop_point->coord,
+                                     vj->journey_pattern->shape);
+                }
                 this->journey_pattern_points.push_back(journey_pattern_point);
             } else {
                 journey_pattern_point = journey_pattern_point_it->second;
-                if (journey_pattern_point->shape_from_prev != stop_time->shape_from_prev) {
-                    if (journey_pattern_point->shape_from_prev.size() <= 2
-                        && stop_time->shape_from_prev.size() > 2) {
-                        // jpp shape is just stop_point->stop_point, so we update it
-                        journey_pattern_point->shape_from_prev = stop_time->shape_from_prev;
-                    } else if (journey_pattern_point->shape_from_prev.size() > 2
-                               && stop_time->shape_from_prev.size() > 2) {
-                        ++nb_incoherent_shapes;
-                        if (stop_time->shape_from_prev.size()
-                            > journey_pattern_point->shape_from_prev.size()) {
-                            // more points, maybe better
-                            journey_pattern_point->shape_from_prev = stop_time->shape_from_prev;
-                        }
-                    }
-                }
             }
+            prev_coord = &stop_time->tmp_stop_point->coord;
             ++stop_seq;
             stop_time->journey_pattern_point = journey_pattern_point;
         }
@@ -467,9 +505,8 @@ void Data::build_journey_pattern_points(){
             }
         }
     }
-    LOG4CPLUS_INFO(logger, "Number of journey_pattern points : "
-                   << this->journey_pattern_points.size() << " for " << nb_stop_time
-                   << " stop times, " << nb_incoherent_shapes << " incoherent shapes.");
+    LOG4CPLUS_INFO(logger, "Number of journey_pattern points : " << journey_pattern_points.size()
+                   << " for " << nb_stop_time << " stop times");
 }
 
 // Check if two vehicle_journey's belong to the same journey_pattern

@@ -187,6 +187,7 @@ struct JourneyPattern : public Header, Nameable{
     Route* route;
     PhysicalMode* physical_mode;
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
+    nt::LineString shape;
 
     JourneyPattern(): is_frequence(false), route(NULL), physical_mode(NULL){}
 
@@ -210,6 +211,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     std::string block_id;
     std::string odt_message;
     std::string meta_vj_name; //link to it's meta vj
+    std::string shape;
     int16_t utc_to_local_offset = 0; // shift used to convert the local time from the data to utc, in minute
 
     int start_time = std::numeric_limits<int>::max(); /// First departure of vehicle
@@ -296,7 +298,6 @@ struct StopTime : public Nameable {
     bool is_frequency;
     bool wheelchair_boarding;
     bool date_time_estimated;
-    nt::LineString shape_from_prev;
 
     uint16_t local_traffic_zone;
 
