@@ -425,15 +425,15 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
      */
     std::vector<std::string> forbidden;
     ed::builder b("20120614");
-    b.vj("9658", "1111111", "block1", true) ("ehv",  60300,60600)
-                                            ("ehb",  60780,60780)
-                                            ("start",  61080,61080)
-                                            ("btl",  61560,61560)
-                                            ("vg",   61920,61920)
-                                            ("ht:4", 62340,62340);
-    b.vj("4462", "1111111", "block1", true) ("end",62400,62400)
-                                            ("hto",  62940,62940)
-                                            ("rs",   63180,63180);
+    b.vj("9658", "1111111", "block1", true) ("ehv", 60300, 60600)
+                                            ("ehb", 60780, 60780)
+                                            ("start", 61080, 61080)
+                                            ("btl", 61560, 61560)
+                                            ("vg", 61920, 61920)
+                                            ("ht:4", 62340, 62340);
+    b.vj("4462", "1111111", "block1", true) ("end", 62400, 62500)
+                                            ("hto", 62940, 62940)
+                                            ("rs", 63180, 63180);
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
@@ -475,6 +475,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     BOOST_CHECK_EQUAL(section.origin().uri(), "end");
     BOOST_CHECK_EQUAL(section.destination().uri(), "end");
     BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
+    BOOST_CHECK_EQUAL(section.duration(), 0);
 }
 
 
