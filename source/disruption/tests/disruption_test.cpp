@@ -57,20 +57,41 @@ start_application_daily_hour = 08h40
 end_application_daily_hour = 18h00
 active_days = 11111111
 */
+struct logger_initialized {
+    logger_initialized()   { init_logger(); }
+};
+BOOST_GLOBAL_FIXTURE( logger_initialized )
+
 namespace pt = boost::posix_time;
 using navitia::type::new_disruption::Impact;
-using navitia::type::new_disruption::PtObject;
+using navitia::type::new_disruption::PtObj;
 using navitia::type::new_disruption::Disruption;
+
+enum class ChaosType {
+    //we copy the chaos type because we don't want chaos dependencies here
+    Network,
+    StopArea,
+    Line,
+    Route,
+    LineSection
+};
 
 struct disruption_creator {
     std::string uri;
     std::string object_uri;
-    navitia::type::Type_e object_type;
-    pt::time_period application_period {pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00")};
-    pt::time_period publication_period {pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00")};
+    ChaosType object_type;
+    pt::time_period application_period {pt::time_from_string("2013-12-19 12:32:00"),
+                pt::time_from_string("2013-12-21 12:32:00")};
+    pt::time_period publication_period {pt::time_from_string("2013-12-19 12:32:00"),
+                pt::time_from_string("2013-12-21 12:32:00")};
     std::bitset<7> active_days = std::bitset<7>("1111111");
     pt::time_duration application_daily_start_hour = pt::duration_from_string("00:00");
     pt::time_duration application_daily_end_hour = pt::duration_from_string("23:59");
+
+    std::vector<pt::time_period> get_application_periods() const {
+        return navitia::split_period(application_period.begin(), application_period.last(),
+                                     application_daily_start_hour, application_daily_end_hour, active_days);
+    }
 };
 
 class Params {
@@ -79,76 +100,112 @@ public:
     ed::builder b;
     size_t period;
 
-    template <typename T>
-    void add_disruption(disruption_creator disrupt, T* obj) {
+    void add_disruption(disruption_creator disrupt,nt::PT_Data& pt_data) {
+        nt::new_disruption::DisruptionHolder& holder = pt_data.disruption_holder;
+
         auto disruption = std::make_unique<Disruption>();
-        auto impact = std::make_shared<Impact>();
-        //TODO
-        obj->add_impact(impact);
+        disruption->uri = disrupt.uri;
+        disruption->publication_period = disrupt.publication_period;
+
+        auto impact = boost::make_shared<Impact>();
+        impact->uri = disrupt.uri;
+        impact->application_periods = disrupt.get_application_periods();
+
+        switch (disrupt.object_type) {
+        case ChaosType::Network:
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, disrupt.object_uri, pt_data, impact));
+            break;
+        case ChaosType::StopArea:
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, disrupt.object_uri, pt_data, impact));
+            break;
+        case ChaosType::Line:
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, disrupt.object_uri, pt_data, impact));
+            break;
+        case ChaosType::Route:
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, disrupt.object_uri, pt_data, impact));
+            break;
+        case ChaosType::LineSection:
+            throw navitia::exception("LineSection not handled yet");
+            break;
+        }
+
+        disruption->impacts.push_back(impact);
+        impact->disruption = disruption.get();
+
+        holder.disruptions.push_back(std::move(disruption));
     }
 
     Params(): b("20120614"), period(365) {
         std::vector<std::string> forbidden;
-        b.vj("network:R", "line:A", "11111111", "", true, "")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.vj("network:R", "line:S", "11111111", "", true, "")("stop_area:stop5", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop6", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.vj("network:K","line:B","11111111","",true, "")("stop_area:stop3", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop4", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.vj("network:M","line:M","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.vj("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+        b.vj("network:R", "line:A", "11111111", "", true, "")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)
+                ("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+        b.vj("network:R", "line:S", "11111111", "", true, "")("stop_area:stop5", 8*3600 +10*60, 8*3600 + 11 * 60)
+                ("stop_area:stop6", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+        b.vj("network:K","line:B","11111111","",true, "")("stop_area:stop3", 8*3600 +10*60, 8*3600 + 11 * 60)
+                ("stop_area:stop4", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+        b.vj("network:M","line:M","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
+                ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+        b.vj("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
+                ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.generate_dummy_basis();
         b.data->pt_data->index();
+        b.data->build_uri();
         for(navitia::type::Line *line : b.data->pt_data->lines){
             line->network->line_list.push_back(line);
         }
-        navitia::type::Line* line =  b.data->pt_data->lines[0];
         disruption_creator disruption_wrapper;
         disruption_wrapper = disruption_creator();
         disruption_wrapper.uri = "mess1";
-        disruption_wrapper.object_uri="line:A";
-        disruption_wrapper.object_type = navitia::type::Type_e::Line;
-        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00"));
-        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00"));
-        add_disruption(disruption_wrapper, line);
+        disruption_wrapper.object_uri = "line:A";
+        disruption_wrapper.object_type = ChaosType::Line;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
+                                                                pt::time_from_string("2013-12-21 12:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
+                                                                pt::time_from_string("2013-12-21 12:32:00"));
+        add_disruption(disruption_wrapper, *b.data->pt_data);
 
-        line = b.data->pt_data->lines[1];
         disruption_wrapper = disruption_creator();
         disruption_wrapper.uri = "mess0";
-        disruption_wrapper.object_uri="line:S";
-        disruption_wrapper.object_type = navitia::type::Type_e::Line;
-        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00"));
-        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),pt::time_from_string("2013-12-21 12:32:00"));
-        add_disruption(disruption_wrapper, line);
+        disruption_wrapper.object_uri = "line:S";
+        disruption_wrapper.object_type = ChaosType::Line;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
+                                                                pt::time_from_string("2013-12-21 12:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
+                                                                pt::time_from_string("2013-12-21 12:32:00"));
+        add_disruption(disruption_wrapper, *b.data->pt_data);
 
-        line = b.data->pt_data->lines[2];
         disruption_wrapper = disruption_creator();
         disruption_wrapper.uri = "mess2";
-        disruption_wrapper.object_uri="line:B";
-        disruption_wrapper.object_type = navitia::type::Type_e::Line;
-        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),pt::time_from_string("2013-12-25 12:32:00"));
-        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),pt::time_from_string("2013-12-25 12:32:00"));
-        add_disruption(disruption_wrapper, line);
+        disruption_wrapper.object_uri = "line:B";
+        disruption_wrapper.object_type = ChaosType::Line;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
+                                                                pt::time_from_string("2013-12-25 12:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
+                                                                pt::time_from_string("2013-12-25 12:32:00"));
+        add_disruption(disruption_wrapper, *b.data->pt_data);
 
-        line = b.data->pt_data->lines[3];
         disruption_wrapper = disruption_creator();
         disruption_wrapper.uri = "mess3";
-        disruption_wrapper.object_uri="network:M";
-        disruption_wrapper.object_type = navitia::type::Type_e::Network;
-        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),pt::time_from_string("2013-12-25 12:32:00"));
-        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),pt::time_from_string("2013-12-25 12:32:00"));
-        add_disruption(disruption_wrapper, line->network);
-
-        /// Cette ligne est pour effectuer les tests : Test1, ..., test5
-        line = b.data->pt_data->lines[4];
+        disruption_wrapper.object_uri = "network:M";
+        disruption_wrapper.object_type = ChaosType::Network;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
+                                                                pt::time_from_string("2013-12-25 12:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
+                                                                pt::time_from_string("2013-12-25 12:32:00"));
+        add_disruption(disruption_wrapper, *b.data->pt_data);
 
         disruption_wrapper = disruption_creator();
         disruption_wrapper.uri = "mess4";
-        disruption_wrapper.object_uri="network:Test";
-        disruption_wrapper.object_type = navitia::type::Type_e::Network;
-        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2014-01-12 08:32:00"),pt::time_from_string("2014-02-02 18:32:00"));
-        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2014-01-02 08:32:00"),pt::time_from_string("2014-02-10 12:32:00"));
+        disruption_wrapper.object_uri = "network:Test";
+        disruption_wrapper.object_type = ChaosType::Network;
+        disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2014-01-12 08:32:00"),
+                                                                pt::time_from_string("2014-02-02 18:32:00"));
+        disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2014-01-02 08:32:00"),
+                                                                pt::time_from_string("2014-02-10 12:32:00"));
         disruption_wrapper.application_daily_start_hour = pt::duration_from_string("08:40");
         disruption_wrapper.application_daily_end_hour = pt::duration_from_string("18:00");
 
-        add_disruption(disruption_wrapper, line->network);
+        add_disruption(disruption_wrapper, *b.data->pt_data);
     }
 };
 

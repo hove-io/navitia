@@ -33,6 +33,7 @@ www.navitia.io
 #include <string>
 #include <limits>
 #include <fstream>
+#include <bitset>
 #include "utils/flat_enum_map.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -173,4 +174,13 @@ inline weekdays get_weekday(const boost::gregorian::date& date) {
     return weekday_conversion_[boost_week];
 }
 
+/*
+ * Split a period starting from 'start' to 'end'
+ *
+ * the period is split for each day, each day starting from 'beg_of_day' to 'end_of_day'
+ */
+std::vector<boost::posix_time::time_period>
+split_period(boost::posix_time::ptime start, boost::posix_time::ptime end,
+             boost::posix_time::time_duration beg_of_day, boost::posix_time::time_duration end_of_day,
+             std::bitset<7> days);
 }

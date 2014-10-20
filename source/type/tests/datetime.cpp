@@ -214,3 +214,45 @@ BOOST_AUTO_TEST_CASE(time_dur_overflow) {
     BOOST_CHECK_THROW(navitia::time_duration::from_boost_duration(big_dur), navitia::exception);
 }
 
+namespace pt = boost::posix_time;
+BOOST_AUTO_TEST_CASE(split_period_full_days) {
+    auto beg = boost::posix_time::from_iso_string("20140101T120000");
+    auto end = boost::posix_time::from_iso_string("20140108T100000");
+
+    auto days = std::bitset<7>("1111111");
+    auto start_in_days = boost::posix_time::duration_from_string("00:00");
+    auto end_in_days = boost::posix_time::duration_from_string("24:00");
+    //all days and all day, we don't want to split
+
+    auto periods = navitia::split_period(beg, end, start_in_days, end_in_days, days);
+
+    BOOST_REQUIRE_EQUAL(periods.size(), 1);
+    BOOST_CHECK_EQUAL(periods[0].begin(), beg);
+    BOOST_CHECK_EQUAL(periods[0].end(), end);
+
+}
+
+BOOST_AUTO_TEST_CASE(split_period_test) {
+    auto beg = boost::posix_time::from_iso_string("20140101T120000");
+    auto end = boost::posix_time::from_iso_string("20140108T100000");
+
+    auto days = std::bitset<7>("1111111");
+    auto start_in_days = boost::posix_time::duration_from_string("11:00");
+    auto end_in_days = boost::posix_time::duration_from_string("14:00");
+
+    auto periods = navitia::split_period(beg, end, start_in_days, end_in_days, days);
+
+    BOOST_REQUIRE_EQUAL(periods.size(), 8);
+
+    //first starts from 12:00 (because it's beg's time) and finish at 14:00 (it's the regular end of a day)
+    BOOST_CHECK_EQUAL(periods[0].begin(), boost::posix_time::from_iso_string("20140101T120000"));
+    BOOST_CHECK_EQUAL(periods[0].end(), boost::posix_time::from_iso_string("20140101T140000"));
+
+    for (int i = 1; i < 7 ; ++i) {
+        BOOST_CHECK_EQUAL(periods[i].begin(), pt::ptime(boost::gregorian::date(2014,01,i+1), pt::duration_from_string("11:00")));
+        BOOST_CHECK_EQUAL(periods[i].end(), pt::ptime(boost::gregorian::date(2014,01,i+1), pt::duration_from_string("14:00")));
+    }
+
+    //last is null since the end is at 10:00 (because it's beg's time) and start is a 11:00
+    BOOST_CHECK(periods.back().is_null());
+}
