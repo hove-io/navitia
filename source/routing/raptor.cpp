@@ -59,6 +59,9 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
     bool add_vj = false;
     while(vj) {
         BOOST_FOREACH(type::StopTime* st, v.stop_time_list(vj)) {
+            const auto current_time = st->section_end_time(v.clockwise(),
+                                    DateTimeUtils::hour(workingDt));
+            DateTimeUtils::update(workingDt, current_time, v.clockwise());
             if(!st->valid_end(v.clockwise()) ||
                     !st->is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
                 continue;
@@ -68,9 +71,6 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
                 continue;
             }
             auto jpp = st->journey_pattern_point;
-            const auto current_time = st->section_end_time(v.clockwise(),
-                                    DateTimeUtils::hour(workingDt));
-            DateTimeUtils::update(workingDt, current_time, v.clockwise());
             const DateTime bound = (v.comp(best_labels[jpp->idx], b_dest.best_now) || !global_pruning) ?
                                         best_labels[jpp->idx] : b_dest.best_now;
             if(!v.comp(workingDt, bound)) {
