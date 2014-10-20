@@ -235,25 +235,31 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
                     case waiting : pb_section->set_type(pbnavitia::WAITING); break;
                     default : pb_section->set_transfer_type(pbnavitia::walking); break;
                 }
-
                 bt::time_period action_period(item.departure, item.arrival);
                 const auto origin_sp = item.stop_points.front();
                 const auto destination_sp = item.stop_points.back();
-                fill_pb_placemark(origin_sp, d, pb_section->mutable_origin(), 1,
-                        now, action_period, show_codes);
-                fill_pb_placemark(destination_sp, d, pb_section->mutable_destination(), 1,
-                        now, action_period, show_codes);
+                fill_pb_placemark(origin_sp, d, pb_section->mutable_origin(), 1, now, action_period, show_codes);
+                fill_pb_placemark(destination_sp, d, pb_section->mutable_destination(), 1, now, action_period,
+                        show_codes);
                 pb_section->set_length(origin_sp->coord.distance_to(destination_sp->coord));
             }
-            auto dep_time = navitia::to_posix_timestamp(item.departure);
+            uint64_t dep_time, arr_time;
+            if(item.stop_points.size() == 1 && item.type == public_transport){
+                //after a stay it's possible to have only one point,
+                //so we take the arrival hour as arrival and departure
+                dep_time = navitia::to_posix_timestamp(item.arrival);
+                arr_time = navitia::to_posix_timestamp(item.arrival);
+            }else{
+                dep_time = navitia::to_posix_timestamp(item.departure);
+                arr_time = navitia::to_posix_timestamp(item.arrival);
+            }
             pb_section->set_begin_date_time(dep_time);
-            auto arr_time = navitia::to_posix_timestamp(item.arrival);
             pb_section->set_end_date_time(arr_time);
 
             if(departure_time == bt::pos_infin)
                 departure_time = item.departure;
             arrival_time = item.arrival;
-            pb_section->set_duration((item.arrival - item.departure).total_seconds());
+            pb_section->set_duration(arr_time - dep_time);
         }
 
         if (!path.items.back().stop_points.empty() && use_crow_fly(destination, path.items.back().stop_points.back())){

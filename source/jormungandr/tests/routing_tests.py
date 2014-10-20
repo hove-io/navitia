@@ -30,6 +30,7 @@ import logging
 
 from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
+from nose.tools import eq_
 
 
 @dataset(["main_routing_test"])
@@ -233,10 +234,10 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
 
         response = self.query_region(query, display=False)
-        assert(len(response['journeys']) == 1)
+        eq_(len(response['journeys']), 1)
         logging.getLogger(__name__).info("arrival date: {}".format(response['journeys'][0]['arrival_date_time']))
-        assert(response['journeys'][0]['arrival_date_time'] == "20120614T160000")
-        assert(response['journeys'][0]['type'] == "best")
+        eq_(response['journeys'][0]['arrival_date_time'],  "20120614T160000")
+        eq_(response['journeys'][0]['type'], "best")
 
     def test_novalidjourney_on_first_call_debug(self):
         """
@@ -249,11 +250,11 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
 
         response = self.query_region(query, display=False)
-        assert(len(response['journeys']) == 3)
-        assert(response['journeys'][0]['arrival_date_time'] == "20120614T150000")
-        assert(response['journeys'][0]['type'] == "")
-        assert(response['journeys'][1]['arrival_date_time'] == "20120614T160000")
-        assert(response['journeys'][1]['type'] == "best")
+        eq_(len(response['journeys']), 3)
+        eq_(response['journeys'][0]['arrival_date_time'], "20120614T150000")
+        eq_(response['journeys'][0]['type'], "")
+        eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
+        eq_(response['journeys'][1]['type'], "best")
 
 
     def test_remove_one_journey_from_batch(self):
@@ -266,9 +267,9 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
             .format(from_sa="A", to_sa="D", datetime="20120615T080000")
 
         response = self.query_region(query, display=False)
-        assert(len(response['journeys']) == 1)
-        assert(response['journeys'][0]['arrival_date_time'] == u'20120615T151000')
-        assert(response['journeys'][0]['type'] == "best")
+        eq_(len(response['journeys']), 1)
+        eq_(response['journeys'][0]['arrival_date_time'], u'20120615T151000')
+        eq_(response['journeys'][0]['type'], "best")
 
 
     def test_max_attemps(self):
@@ -280,7 +281,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
             .format(from_sa="E", to_sa="H", datetime="20120615T080000")
 
         response = self.query_region(query, display=False)
-        assert(not "journeys" in response or len(response['journeys']) == 0)
+        assert(not "journeys" in response or len(response['journeys']) ==  0)
 
 
     def test_max_attemps_debug(self):
@@ -293,7 +294,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
             .format(from_sa="E", to_sa="H", datetime="20120615T080000")
 
         response = self.query_region(query, display=False)
-        assert(len(response['journeys']) == 1)
+        eq_(len(response['journeys']), 1)
 
 @dataset(["main_routing_test"])
 class TestShapeInGeoJson(AbstractTestFixture):
@@ -310,9 +311,9 @@ class TestShapeInGeoJson(AbstractTestFixture):
            stop_date_times is not used to create the geojson)
         """
         response = self.query_region(journey_basic_query, display=False)
-        print response['journeys'][0]['sections'][1]
-        assert(len(response['journeys']) == 2)
-        assert(len(response['journeys'][0]['sections']) == 3)
-        assert(response['journeys'][0]['sections'][1]['type'] == 'public_transport')
-        assert(len(response['journeys'][0]['sections'][1]['stop_date_times']) == 2)
-        assert(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']) == 3)
+        #print response['journeys'][0]['sections'][1]
+        eq_(len(response['journeys']), 2)
+        eq_(len(response['journeys'][0]['sections']), 3)
+        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
+        eq_(len(response['journeys'][0]['sections'][1]['stop_date_times']), 2)
+        eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
