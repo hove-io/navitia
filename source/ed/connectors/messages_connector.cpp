@@ -96,7 +96,8 @@ std::vector<pt::time_period> split_period(pt::ptime start, pt::ptime end,
     return res;
 }
 
-navitia::type::new_disruption::DisruptionHolder load_disruptions(
+void load_disruptions(
+        navitia::type::PT_Data& pt_data,
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time){
     //pour le moment on vire les timezone et on considére que c'est de l'heure local
@@ -129,7 +130,7 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
         throw navitia::exception(e.base().what());
     }
 
-    nt::new_disruption::DisruptionHolder disruptions;
+    nt::new_disruption::DisruptionHolder& disruptions = pt_data.disruption_holder;
     boost::shared_ptr<nt::new_disruption::Impact> impact;
     std::string current_uri = "";
 
@@ -165,9 +166,12 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
         auto message = nt::new_disruption::Message();
         cursor["body"].to(message.text);
         impact->messages.push_back(message);
-        auto pt_object = nt::new_disruption::PtObject();
-        cursor["object_uri"].to(pt_object.object_uri);
-        pt_object.object_type = static_cast<navitia::type::Type_e>(cursor["object_type_id"].as<int>());
+
+        auto pt_object = nt::new_disruption::make_pt_obj(
+            static_cast<navitia::type::Type_e>(cursor["object_type_id"].as<int>()),
+            cursor["object_uri"].as<std::string>(),
+            pt_data
+            );
         impact->informed_entities.push_back(pt_object);
 
         auto severity_id = cursor["message_status_id"].as<int>();
@@ -176,8 +180,6 @@ navitia::type::new_disruption::DisruptionHolder load_disruptions(
 
         // message does not have tags, notes, localization or cause
     }
-
-    return disruptions;
 }
 
 template <typename Container>
@@ -185,33 +187,6 @@ void add_impact(Container& map, const std::string& uri, const boost::shared_ptr<
     auto it = map.find(uri);
     if(it != map.end()){
         it->second->add_impact(impact);
-    }
-}
-
-void apply_messages(navitia::type::Data& data){
-
-    for (const auto& disruption: data.pt_data->disruption_holder.disruptions) {
-        for (const auto& impact: disruption->impacts) {
-            for (const auto& pb_object: impact->informed_entities) {
-                switch (pb_object.object_type) {
-                case navitia::type::Type_e::StopArea:
-                    add_impact(data.pt_data->stop_areas_map, pb_object.object_uri, impact);break;
-                case navitia::type::Type_e::StopPoint:
-                    add_impact(data.pt_data->stop_points_map, pb_object.object_uri, impact);break;
-                case navitia::type::Type_e::Route:
-                    add_impact(data.pt_data->routes_map, pb_object.object_uri, impact);break;
-                case navitia::type::Type_e::VehicleJourney:
-                    add_impact(data.pt_data->vehicle_journeys_map, pb_object.object_uri, impact);break;
-                case navitia::type::Type_e::Line:
-                    add_impact(data.pt_data->lines_map, pb_object.object_uri, impact);break;
-                case navitia::type::Type_e::Network:
-                    add_impact(data.pt_data->networks_map, pb_object.object_uri, impact);break;
-                default:
-                    //not everything has to be matched
-                    break;
-                }
-            }
-        }
     }
 }
 

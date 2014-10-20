@@ -39,6 +39,7 @@ www.navitia.io
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/variant.hpp>
 
 #include <atomic>
 #include <map>
@@ -95,15 +96,31 @@ struct Severity {
     }
 };
 
-struct PtObject {
-    Type_e object_type;
-    std::string object_uri;
-
+struct UnknownPtObj {
+    template<class Archive>
+    void serialize(Archive&, const unsigned int) {}
+};
+struct LineSection {
+    const Line *line = nullptr;
+    std::vector<const StopArea *> stops;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & object_type & object_uri;
+        ar & line & stops;
     }
 };
+typedef boost::variant<
+    UnknownPtObj,
+    const Network *,
+    const StopArea *,
+    LineSection,
+    const Line *,
+    const Route *
+    > PtObj;
+
+PtObj make_pt_obj(Type_e type,
+                  const std::string &uri,
+                  const PT_Data& pt_data,
+                  const boost::shared_ptr<Impact> &impact = {});
 
 struct Disruption;
 
@@ -129,7 +146,7 @@ struct Impact {
 
     boost::shared_ptr<Severity> severity;
 
-    std::vector<PtObject> informed_entities;
+    std::vector<PtObj> informed_entities;
 
     std::vector<Message> messages;
 
@@ -182,7 +199,7 @@ struct Disruption {
     std::vector<boost::shared_ptr<Impact>> impacts;
 
     // the place where the disruption happen, the impacts can be in anothers places
-    std::vector<PtObject> localization;
+    std::vector<PtObj> localization;
 
     //additional informations on the disruption
     std::vector<boost::shared_ptr<Tag>> tags;

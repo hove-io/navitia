@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "fill_disruption_from_chaos.h"
+#include "utils/logger.h"
 
 #include <boost/make_shared.hpp>
 
@@ -36,7 +37,7 @@ namespace navitia {
 
 namespace nt = navitia::type;
 
-boost::shared_ptr<nt::new_disruption::Tag>
+static boost::shared_ptr<nt::new_disruption::Tag>
 make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& holder) {
     auto from_posix = navitia::from_posix_timestamp;
 
@@ -53,7 +54,7 @@ make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& hold
     return std::move(tag);
 }
 
-boost::shared_ptr<nt::new_disruption::Cause>
+static boost::shared_ptr<nt::new_disruption::Cause>
 make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder& holder) {
     auto from_posix = navitia::from_posix_timestamp;
 
@@ -71,7 +72,7 @@ make_cause(const chaos::Cause& chaos_cause, nt::new_disruption::DisruptionHolder
 
 }
 
-boost::shared_ptr<nt::new_disruption::Severity>
+static boost::shared_ptr<nt::new_disruption::Severity>
 make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::DisruptionHolder& holder) {
     namespace tr = transit_realtime;
     namespace new_disr = nt::new_disruption;
@@ -107,58 +108,58 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
     return std::move(severity);
 }
 
-std::vector<nt::new_disruption::PtObject>
-make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects) {
-    std::vector<nt::new_disruption::PtObject> res;
+static std::vector<nt::new_disruption::PtObj>
+make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
+                nt::PT_Data& pt_data,
+                const boost::shared_ptr<nt::new_disruption::Impact> &impact = {}) {
+    using namespace nt::new_disruption;
+
+    std::vector<PtObj> res;
     for (const auto& chaos_pt_object: chaos_pt_objects) {
-        nt::Type_e type = nt::Type_e::Unknown;
         switch (chaos_pt_object.pt_object_type()) {
-        case chaos::PtObject_Type_network:      type = nt::Type_e::Network;        break;
-        case chaos::PtObject_Type_stop_area:    type = nt::Type_e::StopArea;       break;
-        case chaos::PtObject_Type_line_section: type = nt::Type_e::Line /* ??? */; break;
-        case chaos::PtObject_Type_line:         type = nt::Type_e::Line;           break;
-        case chaos::PtObject_Type_route:        type = nt::Type_e::Route;          break;
-        case chaos::PtObject_Type_unkown_type:  type = nt::Type_e::Unknown;        break;
+        case chaos::PtObject_Type_network:
+            res.push_back(make_pt_obj(nt::Type_e::Network, chaos_pt_object.uri(), pt_data, impact));
+            break;
+        case chaos::PtObject_Type_stop_area:
+            res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data, impact));
+            break;
+        case chaos::PtObject_Type_line_section:
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: LineSection not yet supported");
+            break;
+        case chaos::PtObject_Type_line:
+            res.push_back(make_pt_obj(nt::Type_e::Line, chaos_pt_object.uri(), pt_data, impact));
+            break;
+        case chaos::PtObject_Type_route:
+            res.push_back(make_pt_obj(nt::Type_e::Route, chaos_pt_object.uri(), pt_data, impact));
+            break;
+        case chaos::PtObject_Type_unkown_type:
+            res.push_back(UnknownPtObj());
+            break;
         }
-        res.push_back({type, chaos_pt_object.uri()});
         // no created_at and updated_at?
     }
     return res;
 }
 
-std::vector<nt::new_disruption::PtObject>
-make_pt_objects(const google::protobuf::RepeatedPtrField<transit_realtime::EntitySelector>& chaos_pt_objects) {
-    std::vector<nt::new_disruption::PtObject> res;
+// TODO: remove this when we remove EntitySelector in Chaos
+static std::vector<nt::new_disruption::PtObj>
+make_pt_objects(const google::protobuf::RepeatedPtrField<transit_realtime::EntitySelector>& chaos_pt_objects,
+                nt::PT_Data& pt_data) {
+    std::vector<nt::new_disruption::PtObj> res;
     for (const auto& chaos_selector: chaos_pt_objects) {
-        if (chaos_selector.has_agency_id()) {
-            res.push_back({nt::Type_e::Contributor /* ??? */, chaos_selector.agency_id()});
-            continue;
-        }
-        if (chaos_selector.has_route_id()) {
-            res.push_back({nt::Type_e::Route , chaos_selector.route_id()});
-            continue;
-        }
-        if (chaos_selector.has_route_type()) {
-            // gloups, what to do here???
-            //res.push_back({nt::Type_e::Route /* ??? */ , to_string(chaos_selector.route_type())});
-            continue;
-        }
-        if (chaos_selector.has_trip()) {
-            // there is much more information in here...
-            res.push_back({nt::Type_e::VehicleJourney , chaos_selector.trip().trip_id()});
-            continue;
-        }
         if (chaos_selector.has_stop_id()) {
-            res.push_back({nt::Type_e::StopPoint /* or StopArea??? */ , chaos_selector.stop_id()});
+            res.push_back(nt::new_disruption::make_pt_obj(nt::Type_e::StopArea, chaos_selector.stop_id(), pt_data));
             continue;
         }
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "EntitySelector contains not supported data");
     }
     return res;
 }
 
-boost::shared_ptr<nt::new_disruption::Impact>
-make_impact(const chaos::Impact& chaos_impact, nt::new_disruption::DisruptionHolder& holder) {
+static boost::shared_ptr<nt::new_disruption::Impact>
+make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     auto from_posix = navitia::from_posix_timestamp;
+    nt::new_disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
     auto impact = boost::make_shared<nt::new_disruption::Impact>();
     impact->uri = chaos_impact.id();
@@ -168,7 +169,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::new_disruption::DisruptionHol
         impact->application_periods.emplace_back(from_posix(chaos_ap.start()), from_posix(chaos_ap.end()));
     }
     impact->severity = make_severity(chaos_impact.severity(), holder);
-    impact->informed_entities = make_pt_objects(chaos_impact.informed_entities());
+    impact->informed_entities = make_pt_objects(chaos_impact.informed_entities(), pt_data, impact);
     for (const auto& chaos_message: chaos_impact.messages()) {
         impact->messages.push_back({
             chaos_message.text(),
@@ -196,9 +197,9 @@ void add_disruption(nt::PT_Data& pt_data,
     disruption->updated_at = from_posix(chaos_disruption.updated_at());
     disruption->cause = make_cause(chaos_disruption.cause(), holder);
     for (const auto& chaos_impact: chaos_disruption.impacts()) {
-        disruption->impacts.push_back(make_impact(chaos_impact, holder));
+        disruption->impacts.push_back(make_impact(chaos_impact, pt_data));
     }
-    disruption->localization = make_pt_objects(chaos_disruption.localization());
+    disruption->localization = make_pt_objects(chaos_disruption.localization(), pt_data);
     for (const auto& chaos_tag: chaos_disruption.tags()) {
         disruption->tags.push_back(make_tag(chaos_tag, holder));
     }
