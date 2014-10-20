@@ -84,17 +84,20 @@ void Data::build_block_id() {
     for(auto* vj : vehicle_journeys) {
         if(prev_vj && prev_vj->block_id != "" &&
            prev_vj->block_id == vj->block_id){
-            // Sanity check
-            // If the departure time of the 1st stoptime of vj is greater
-            // then the arrivaltime of the last stop time of prev_vj
-            // there is a time travel, and we don't like it!
-            // This is not supposed to happen
-            // @TODO: Add a parameter to avoid too long connection
-            // they can be for instance due to bad data
-            if(vj->stop_time_list.front()->departure_time >=
-                    prev_vj->stop_time_list.back()->arrival_time) {
-                prev_vj->next_vj = vj;
-                vj->prev_vj = prev_vj;
+            //NOTE: we do nothing for vj with empty stop times, they will be removed in the clean()
+            if (! vj->stop_time_list.empty() && ! prev_vj->stop_time_list.empty()) {
+
+                // Sanity check
+                // If the departure time of the 1st stoptime of vj is greater
+                // then the arrivaltime of the last stop time of prev_vj
+                // there is a time travel, and we don't like it!
+                // This is not supposed to happen
+                // @TODO: Add a parameter to avoid too long connection
+                // they can be for instance due to bad data
+                if(vj->stop_time_list.front()->departure_time >= prev_vj->stop_time_list.back()->arrival_time) {
+                    prev_vj->next_vj = vj;
+                    vj->prev_vj = prev_vj;
+                }
             }
         }
         prev_vj = vj;
@@ -248,7 +251,7 @@ void Data::clean(){
     for(auto it1 = journey_pattern_vj.begin(); it1 != journey_pattern_vj.end(); ++it1) {
 
         for(auto vj1 = it1->second.begin(); vj1 != it1->second.end(); ++vj1) {
-            if((*vj1)->stop_time_list.size() == 0) {
+            if((*vj1)->stop_time_list.empty()) {
                 toErase.insert((*vj1)->uri);
                 ++erase_emptiness;
                 continue;
