@@ -86,4 +86,38 @@ boost::posix_time::ptime from_posix_timestamp(uint64_t val) {
     return posix_epoch + navitia::seconds(val).to_posix();
 }
 
+
+std::vector<boost::posix_time::time_period>
+split_period(boost::posix_time::ptime start, boost::posix_time::ptime end,
+             boost::posix_time::time_duration beg_of_day, boost::posix_time::time_duration end_of_day,
+             std::bitset<7> days) {
+    if (days.all() && beg_of_day == boost::posix_time::hours(0) && end_of_day == boost::posix_time::hours(24)) {
+        return {{start, end}};
+    }
+    auto period = boost::gregorian::date_period(start.date(), end.date());
+
+    std::vector<boost::posix_time::time_period> res;
+    for(boost::gregorian::day_iterator it(period.begin()); it < period.end(); ++it) {
+        auto day = (*it);
+        //since monday is the first day of the bitset, we need to convert the weekday to a 'french' week day
+        navitia::weekdays week_day = navitia::get_weekday(day);
+        if(! days.test(week_day)) {
+            continue;
+        }
+        res.push_back(boost::posix_time::time_period(boost::posix_time::ptime(day, beg_of_day), boost::posix_time::ptime(day, end_of_day)));
+    }
+
+    //we want the first period to start after 'start' (and the last to finish before 'end')
+    boost::posix_time::time_period& first_period = res.front();
+    if (first_period.begin() < start) {
+        first_period = boost::posix_time::time_period(start, first_period.end());
+    }
+
+    boost::posix_time::time_period& last_period = res.front();
+    if (last_period.last() > end) {
+        last_period = boost::posix_time::time_period(last_period.begin(), end);
+    }
+
+    return res;
+}
 }

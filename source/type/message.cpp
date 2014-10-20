@@ -69,6 +69,7 @@ PtObj transform_pt_object(const std::string& uri,
         if (impact) o->add_impact(impact);
         return o;
     } else {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Impossible to find pt object " << uri);
         return UnknownPtObj();
     }
 }
