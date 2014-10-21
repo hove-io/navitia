@@ -1200,7 +1200,7 @@ BOOST_AUTO_TEST_CASE(invalid_stay_in_overmidnight) {
     ed::builder b("20120614");
     b.vj("A", "111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
     b.vj("B", "010", "block1", true)("stop2", 8*3600+15*60)("stop3", 24*3600 + 20*60, 24*3600+25*60)("stop4", 24*3600+30*60, 24*3600+35*60);
-
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1209,4 +1209,7 @@ BOOST_AUTO_TEST_CASE(invalid_stay_in_overmidnight) {
 
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
+
+    res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 1, DateTimeUtils::inf, false, true);
+    BOOST_CHECK_EQUAL(res1.size(), 1);
 }
