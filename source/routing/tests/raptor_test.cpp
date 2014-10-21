@@ -1194,3 +1194,25 @@ BOOST_AUTO_TEST_CASE(over_midnight_special) {
     BOOST_CHECK_EQUAL(res.items[2].arrival.date().day(), 14);
 
 }
+
+
+BOOST_AUTO_TEST_CASE(invalid_stay_in_overmidnight) {
+    ed::builder b("20120614");
+    b.vj("A", "111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "010", "block1", true)("stop2", 8*3600+15*60)("stop3", 24*3600 + 20*60, 24*3600+25*60)("stop4", 24*3600+30*60, 24*3600+35*60);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    // Here we want to check if the second vehicle_journey is not taken on the 
+    // first day
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
+    
+    // There must be a journey the second day
+    res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 1, DateTimeUtils::inf, false, true);
+    BOOST_CHECK_EQUAL(res1.size(), 1);
+}

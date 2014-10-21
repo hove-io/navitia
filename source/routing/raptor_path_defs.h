@@ -58,6 +58,10 @@ void handle_connection(const size_t countb, const navitia::type::idx_t current_j
 inline
 std::pair<boost::posix_time::ptime, boost::posix_time::ptime>
 handle_st(const type::StopTime* st, DateTime& workingDate, bool clockwise, const type::Data &data){
+    if (!st) {
+        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Unable to find stop_time");
+        throw navitia::recoverable_exception("impossible to rebuild the public transport path");
+    }
     boost::posix_time::ptime departure, arrival;
     if(clockwise) {
         if(st->is_frequency())
