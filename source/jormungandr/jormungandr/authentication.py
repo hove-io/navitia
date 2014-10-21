@@ -48,7 +48,6 @@ def authentication_required(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        logging.info('authentication_required')
         region = None
         if 'region' in kwargs:
             region = kwargs['region']
