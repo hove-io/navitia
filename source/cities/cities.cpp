@@ -108,10 +108,11 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &, const
  * We fill needed nodes with their coordinates
  */
 void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
-        const CanalTP::Tags& ) {
+        const CanalTP::Tags& tags) {
     auto node_it = cache.nodes.find(osm_id);
     if (node_it != cache.nodes.end()) {
         node_it->second.set_coord(lon, lat);
+        node_it->second.postal_code = find_or_default("addr:postcode", tags);
     }
 }
 
@@ -144,17 +145,18 @@ void OSMCache::build_postal_codes(){
 OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat, uint32_t level) {
     Rect search_rect(lon, lat);
     const auto p = point(lon, lat);
+    typedef std::pair<uint32_t, std::vector<OSMRelation*>*> level_relations;
 
     std::vector<OSMRelation*> result;
     auto callback = [](OSMRelation* rel, void* c)->bool{
-        std::pair<uint32_t, std::vector<OSMRelation*>*>* context;
-        context = reinterpret_cast<std::pair<uint32_t, std::vector<OSMRelation*>*>*>(c);
+        level_relations* context;
+        context = reinterpret_cast<level_relations*>(c);
         if(rel->level == context->first){
             context->second->push_back(rel);
         }
         return true;
     };
-    std::pair<uint32_t, std::vector<OSMRelation*>*> context = std::make_pair(level, &result);
+    level_relations context = std::make_pair(level, &result);
     admin_tree.Search(search_rect.min, search_rect.max, callback, &context);
     for(auto rel : result) {
         if (boost::geometry::within(p, rel->polygon)){
@@ -202,6 +204,10 @@ std::string OSMNode::to_geographic_point() const{
 OSMRelation::OSMRelation(const std::vector<CanalTP::Reference>& refs, const std::string& insee,
         const std::string postal_code, const std::string& name, const uint32_t level) :
         references(refs), insee(insee), name(name), level(level) {
+    this->add_postal_code(postal_code);
+}
+
+void OSMRelation::add_postal_code(const std::string& postal_code){
     if(postal_code.empty()){
         return;
     }else if(postal_code.find(";", 0) == std::string::npos){
@@ -315,8 +321,9 @@ void OSMRelation::build_geometry(OSMCache& cache) {
             if (!node_it->second.is_defined()) {
                 continue;
             }
-            if (ref.role == "admin_centre") {
+            if (in(ref.role, {"admin_centre", "admin_center"})) {
                 set_centre(float(node_it->second.lon()), float(node_it->second.lat()));
+                this->add_postal_code(node_it->second.postal_code);
                 break;
             }
         }

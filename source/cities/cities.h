@@ -76,6 +76,7 @@ struct OSMNode {
     // We use int32_t to save memory, these are coordinates *  factor
     int32_t ilon = std::numeric_limits<int32_t>::max(),
             ilat = std::numeric_limits<int32_t>::max();
+    std::string postal_code;
     static constexpr double factor = 1e6;
 
     bool is_defined() const {
@@ -121,6 +122,7 @@ struct OSMRelation {
                 const std::string& name, const uint32_t level);
 
     std::string postal_code() const;
+    void add_postal_code(const std::string& postal_code);
 
     void set_centre(float lon, float lat) {
         centre = point(lon, lat);
