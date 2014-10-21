@@ -1207,9 +1207,12 @@ BOOST_AUTO_TEST_CASE(invalid_stay_in_overmidnight) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
+    // Here we want to check if the second vehicle_journey is not taken on the 
+    // first day
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 0, DateTimeUtils::inf, false, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
-
+    
+    // There must be a journey the second day
     res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 1, DateTimeUtils::inf, false, true);
     BOOST_CHECK_EQUAL(res1.size(), 1);
 }
