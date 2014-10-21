@@ -62,11 +62,14 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             const auto current_time = st->section_end_time(v.clockwise(),
                                     DateTimeUtils::hour(workingDt));
             DateTimeUtils::update(workingDt, current_time, v.clockwise());
-            if(!st->valid_end(v.clockwise()) ||
-                    !st->is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
+            // If the vj is not valid for the first stop it won't be valid at all
+            if (!st->is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
+                return;
+            }
+            if (!st->valid_end(v.clockwise())) {
                 continue;
             }
-            if(l_zone != std::numeric_limits<uint16_t>::max() &&
+            if (l_zone != std::numeric_limits<uint16_t>::max() &&
                l_zone == st->local_traffic_zone) {
                 continue;
             }
