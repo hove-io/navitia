@@ -842,7 +842,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
 
     // get shape if possible
-    const std::string &shape = has_col(shape_id_c, row) ? row.at(shape_id_c) : "";
+    const std::string &shape_id = has_col(shape_id_c, row) ? row.at(shape_id_c) : "";
 
     const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
@@ -895,7 +895,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         //we add them on our meta vj
         meta_vj.theoric_vj.push_back(vj);
         vj->meta_vj_name = row[trip_c];
-        vj->shape = shape;
+        vj->shape_id = shape_id;
 
         // we store the split vj utc shift, in minutes
         auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];

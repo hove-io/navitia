@@ -344,7 +344,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
 
     // get shape if possible
-    const std::string &shape = has_col(geometry_id_c, row) ? row.at(geometry_id_c) : "";
+    const std::string &shape_id = has_col(geometry_id_c, row) ? row.at(geometry_id_c) : "";
 
     const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
@@ -391,7 +391,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         res.push_back(vj);
         meta_vj.theoric_vj.push_back(vj);
         vj->meta_vj_name = row[trip_c];
-        vj->shape = shape;
+        vj->shape_id = shape_id;
 
         // we store the split vj utc shift
         auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];

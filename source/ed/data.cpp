@@ -399,7 +399,7 @@ void Data::build_journey_patterns(){
             }
             journey_pattern->route = route;
             journey_pattern->physical_mode = vj1->physical_mode;
-            affect_shape(journey_pattern->shape, find_or_default(vj1->shape, shapes));
+            affect_shape(journey_pattern->shape, find_or_default(vj1->shape_id, shapes));
             vj1->journey_pattern = journey_pattern;
             this->journey_patterns.push_back(journey_pattern);
 
@@ -407,7 +407,7 @@ void Data::build_journey_patterns(){
                 types::VehicleJourney * vj2 = *it2;
                 if(vj2->journey_pattern == 0 && same_journey_pattern(vj1, vj2)){
                     vj2->journey_pattern = vj1->journey_pattern;
-                    affect_shape(journey_pattern->shape, find_or_default(vj2->shape, shapes));
+                    affect_shape(journey_pattern->shape, find_or_default(vj2->shape_id, shapes));
                 }
             }
         }
