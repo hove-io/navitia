@@ -19,7 +19,7 @@
 # cd navitia
 
 # /!\ WARNING /!\
-# the script needs the sudo privileges for dependencies install and databases handling
+# the script needs the sudo (installed with dependencies) privileges for dependencies install and databases handling
 # If used as an out of the box script be sure to read it beforehand
 echo "!WARNING!"
 echo "The script needs to install dependencies and update databases so it needs some privileges"
@@ -47,6 +47,8 @@ osm_file=
 
 install_dependencies=1
 
+clean_apt=
+
 usage()
 {
 cat << EOF
@@ -62,12 +64,13 @@ OPTIONS:
    -h                  Show this message
    -p                  kraken database password
    -g                  gtfs directory 
-   -o                  osm directory
+   -o                  osm file
    -n                  don't install dependencies
+   -c                  if OS is Debian, clean the APT configuration (repository)
 EOF
 }
 
-while getopts “hp:g:o:n” OPTION
+while getopts “hp:g:o:nc” OPTION
 do
      case $OPTION in
          h)
@@ -86,9 +89,12 @@ do
          n)
              install_dependencies=
              ;;
+         c)
+             clean_apt=true
+             ;;
          ?)
              usage
-             exit
+             exit 1
              ;;
      esac
 done
@@ -134,13 +140,28 @@ git submodule update --init
 #first the system and the c++ dependencies: 
 if [ $install_dependencies ]
 then
-    echo "** instaling all dependencies"
-    sudo apt-get install -y git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
-    
-    sudo apt-get install -y postgresql-9.3 postgresql-9.3-postgis-2.1 #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier ton setup 
-    
+    echo "** installing all dependencies"
+    apt-get install -y sudo git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
+
+    postgresql_package='postgresql-9.3'
+    postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
+    distrib=`lsb_release -si`
+
+    if [ "$distrib" = "Debian" ]; then
+            # on Debian, we must add the APT repository of PostgreSQL project
+            # to have the right version of postgis
+            # no magic stuff : https://wiki.postgresql.org/wiki/Apt#PostgreSQL_packages_for_Debian_and_Ubuntu
+            apt_file='/etc/apt/sources.list.d/postgresql.list'
+            echo "deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" >> $apt_file
+            sudo apt-get -y install wget ca-certificates
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+            sudo apt-get update
+    fi
+
+    sudo apt-get install -y $postgresql_package $postgresql_postgis_package #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier ton setup
+
     # then you need to install all python dependencies: ::
-    
+
     sudo pip install -r $navitia_dir/source/jormungandr/requirements.txt
     sudo pip install -r $navitia_dir/source/tyr/requirements.txt
 fi
@@ -166,27 +187,30 @@ db_owner='navitia'
 
 kraken_db_name='navitia'
 # for the default build we give ownership of the base to a 'navitia' user, but you can do whatever you want here
-sudo su postgres -c "psql postgres -tAc \"SELECT 1 FROM pg_roles WHERE rolname='$db_owner'\""  # we check if there is already a user 
-if [ ! $? ]
+encap=`sudo su - postgres -c "psql postgres -tAc \"SELECT 1 FROM pg_roles WHERE rolname='$db_owner'\""`  # we check if there is already a user 
+if [ -z $encap ]
 then
-sudo su postgres -c "psql -c \"create user $db_owner;alter user $db_owner password '$kraken_db_user_password';\""
+sudo su - postgres -c "psql -c \"create user $db_owner;alter user $db_owner password '$kraken_db_user_password';\""
 else
 echo "user $db_owner already exists"
 fi
 
-if ! sudo su postgres -c "psql -l" | grep "^ $kraken_db_name "
+if ! sudo su - postgres -c "bash -c 'psql -l | grep \"^ ${kraken_db_name}\"'"
 then
-sudo su postgres -c "createdb $kraken_db_name -O $db_owner"
-sudo su postgres -c "psql -c \"create extension postgis; \" $kraken_db_name"
+sudo su - postgres -c "createdb $kraken_db_name -O $db_owner"
+sudo su - postgres -c "psql -c \"create extension postgis; \" $kraken_db_name"
 else 
 echo "db $kraken_db_name already exists"
 fi
 
 # Then you need to update it's scheme
-# For that you can use a configuration file or just add environment variables
-# There is an configuration file example in source/script/settings.sh
-username=$db_owner server=localhost dbname=$kraken_db_name PGPASSWORD=$kraken_db_user_password $navitia_dir/source/scripts/update_db.sh
-
+# The database migration is handled by alembic
+# You can edit the alembic.ini file if you want a custom behaviour (or give your own with the alembic -c option)
+# you can give the database url either by setting the sqlalchemy.url parameter in the config file or by giving 
+# a -x dbname option
+pushd $navitia_dir/sql
+PYTHONPATH=. alembic -x dbname=postgresql://$db_owner:$kraken_db_user_password@localhost/$kraken_db_name upgrade head
+popd
 
 #====================
 # Filling up the data
@@ -273,3 +297,6 @@ echo "curl localhost:5000/v1/coverage/default/stop_areas"
 #we block the script for the user to test the api
 read -p "when you are finished, hit  a key to close kraken and jormungandr" n
 clean_exit
+
+# cleaning APT repository if -c option was specified
+test -n $clean_apt && rm -f $apt_file && printf "Option -c was specified, removing %s" "$apt_file"

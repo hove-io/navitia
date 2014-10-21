@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from alembic import context
-from sqlalchemy import engine_from_config, pool, MetaData
+from sqlalchemy import engine_from_config, pool, MetaData, create_engine
 from geoalchemy2 import Geography
 from logging.config import fileConfig
 
@@ -47,7 +47,11 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    engine = engine_from_config(
+    cmd_line_url = context.get_x_argument(as_dictionary=True).get('dbname')
+    if cmd_line_url:
+        engine = create_engine(cmd_line_url)
+    else:
+        engine = engine_from_config(
                 config.get_section(config.config_ini_section),
                 prefix='sqlalchemy.',
                 poolclass=pool.NullPool)
@@ -55,12 +59,12 @@ def run_migrations_online():
     connection = engine.connect()
     try:
         context.configure(
-                    connection=connection,
-                    target_metadata=target_metadata,
-                    include_schemas=True,
-                    include_object=include_object,
-                    render_item=render_item
-                    )
+                connection=connection,
+                target_metadata=target_metadata,
+                include_schemas=True,
+                include_object=include_object,
+                render_item=render_item
+                )
 
         with context.begin_transaction():
             context.run_migrations()
