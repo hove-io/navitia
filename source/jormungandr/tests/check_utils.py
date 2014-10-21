@@ -547,12 +547,40 @@ def is_valid_line(line, depth_check=1):
     g is None or shape(g) #TODO check length
 
 
+def is_valid_places(places, depth_check=1):
+    for p in places:
+        is_valid_place(p, depth_check)
+
+
 def is_valid_place(place, depth_check=1):
     if depth_check < 0:
         return
     get_not_null(place, "name")
     get_not_null(place, "id")
-    #TODO more checks
+    type = get_not_null(place, "embedded_type")
+    if type == "address":
+        address = get_not_null(place, "address")
+        is_valid_address(address, depth_check)
+    elif type == "stop_area":
+        stop_area = get_not_null(place, "stop_area")
+        is_valid_stop_area(stop_area, depth_check)
+    elif type == "stop_point":
+        stop_point = get_not_null(place, "stop_point")
+        is_valid_stop_point(stop_point, depth_check)
+    elif type == "poi":
+        poi = get_not_null(place, "poi")
+        # TODO
+        #is_valid_poi(poi, depth_check)
+    else:
+        assert(False, "invalid type")
+
+
+def is_valid_address(address, depth_check=1):
+    get_not_null(address, "id")
+    get_not_null(address, "house_number")
+    get_not_null(address, "name")
+    get_not_null(address, "administrative_regions") # TODO test
+    get_not_null(address, "coord") # TODO test
 
 
 def is_valid_validity_pattern(validity_pattern, depth_check=1):
