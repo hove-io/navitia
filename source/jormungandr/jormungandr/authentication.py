@@ -32,7 +32,7 @@ import logging
 
 from flask_restful import reqparse, abort
 import flask_restful
-from flask import current_app, request, g
+from flask import request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 import datetime
