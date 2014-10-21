@@ -58,14 +58,19 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
     const type::VehicleJourney* vj = v.get_extension_vj(prev_vj);
     bool add_vj = false;
     while(vj) {
-        BOOST_FOREACH(type::StopTime* st, v.stop_time_list(vj)) {
+        const auto& stop_time_list = v.stop_time_list(vj);
+        const auto& st_begin = *stop_time_list.first;
+        const auto current_time = st_begin->section_end_time(v.clockwise(),
+                                DateTimeUtils::hour(workingDt));
+        DateTimeUtils::update(workingDt, current_time, v.clockwise());
+        // If the vj is not valid for the first stop it won't be valid at all
+        if (!st_begin->is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
+            return;
+        }
+        BOOST_FOREACH(const type::StopTime* st, stop_time_list) {
             const auto current_time = st->section_end_time(v.clockwise(),
                                     DateTimeUtils::hour(workingDt));
             DateTimeUtils::update(workingDt, current_time, v.clockwise());
-            // If the vj is not valid for the first stop it won't be valid at all
-            if (!st->is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
-                return;
-            }
             if (!st->valid_end(v.clockwise())) {
                 continue;
             }
@@ -180,7 +185,6 @@ void RAPTOR::init(Solutions departs,
         const type::StopPoint* sp = data.pt_data->stop_points[item.first];
         if(sp->accessible(required_properties)) {
             for(auto journey_pattern_point : sp->journey_pattern_point_list) {
-                type::idx_t jpp_idx = journey_pattern_point->idx;
                 if(valid_journey_patterns.test(journey_pattern_point->journey_pattern->idx) &&
                    valid_journey_pattern_points.test(journey_pattern_point->idx)) {
                     b_dest.add_destination(journey_pattern_point, item.second);
