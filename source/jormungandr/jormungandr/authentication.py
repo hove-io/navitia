@@ -32,7 +32,7 @@ import logging
 
 from flask_restful import reqparse, abort
 import flask_restful
-from flask import request, g
+from flask import current_app, request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 import datetime
@@ -48,7 +48,6 @@ def authentication_required(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        logging.info('authentication_required')
         region = None
         if 'region' in kwargs:
             region = kwargs['region']

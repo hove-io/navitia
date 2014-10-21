@@ -120,6 +120,7 @@ class InstanceManager(object):
             instance = Instance(self.context, conf.get('instance', 'key'))
             instance.socket_path = conf.get('instance', 'socket')
 
+
             self.instances[conf.get('instance', 'key')] = instance
 
         #we fetch the krakens metadata first
