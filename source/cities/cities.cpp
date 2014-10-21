@@ -60,12 +60,11 @@ namespace navitia { namespace cities {
 void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const CanalTP::Tags &tags, const CanalTP::References &refs) {
     auto logger = log4cplus::Logger::getInstance("log");
     const auto boundary = tags.find("boundary");
-    if (boundary == tags.end() || (boundary->second != "administrative" && 
-                boundary->second != "multipolygon")) {
+    if (boundary == tags.end() || (boundary->second != "administrative" && boundary->second != "multipolygon")) {
         return;
     }
     const auto tmp_admin_level = tags.find("admin_level");
-    if(tmp_admin_level != tags.end() && tmp_admin_level->second == "8") {
+    if(tmp_admin_level != tags.end() && (tmp_admin_level->second == "8" || tmp_admin_level->second == "9")) {
         for (const CanalTP::Reference& ref : refs) {
             switch(ref.member_type) {
             case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
@@ -122,8 +121,49 @@ void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat,
 void OSMCache::build_relations_geometries() {
     for (auto& relation : relations) {
         relation.second.build_geometry(*this);
+        boost::geometry::model::box<point> box;
+        boost::geometry::envelope(relation.second.polygon, box);
+        Rect r(box.min_corner().get<0>(), box.min_corner().get<1>(),
+                box.max_corner().get<0>(), box.max_corner().get<1>());
+        admin_tree.Insert(r.min, r.max, &relation.second);
     }
 }
+
+void OSMCache::build_postal_codes(){
+    for(auto relation: relations){
+        if(relation.second.level != 9){
+            continue;
+        }
+        auto rel = this->match_coord_admin(relation.second.centre.get<0>(), relation.second.centre.get<1>(), 8);
+        if(rel){
+            rel->postal_codes.insert(relation.second.postal_codes.begin(), relation.second.postal_codes.end());
+        }
+    }
+}
+
+OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat, uint32_t level) {
+    Rect search_rect(lon, lat);
+    const auto p = point(lon, lat);
+
+    std::vector<OSMRelation*> result;
+    auto callback = [](OSMRelation* rel, void* c)->bool{
+        std::pair<uint32_t, std::vector<OSMRelation*>*>* context;
+        context = reinterpret_cast<std::pair<uint32_t, std::vector<OSMRelation*>*>*>(c);
+        if(rel->level == context->first){
+            context->second->push_back(rel);
+        }
+        return true;
+    };
+    std::pair<uint32_t, std::vector<OSMRelation*>*> context = std::make_pair(level, &result);
+    admin_tree.Search(search_rect.min, search_rect.max, callback, &context);
+    for(auto rel : result) {
+        if (boost::geometry::within(p, rel->polygon)){
+            return rel;
+        }
+    }
+    return nullptr;
+}
+
 /*
  * Insert relations into the database
  */
@@ -140,7 +180,7 @@ void OSMCache::insert_relations() {
             const auto coord = "POINT(" + std::to_string(relation.second.centre.get<0>())
                 + " " + std::to_string(relation.second.centre.get<1>()) + ")";
             lotus.insert({std::to_string(relation.first), relation.second.name,
-                          relation.second.postal_code, relation.second.insee,
+                          relation.second.postal_code(), relation.second.insee,
                           std::to_string(relation.second.level), coord, polygon_str,
                           "admin:"+std::to_string(relation.first)});
         } else {
@@ -158,6 +198,30 @@ std::string OSMNode::to_geographic_point() const{
     geog << std::setprecision(10)<<"POINT("<< coord_to_string() <<")";
     return geog.str();
 }
+
+OSMRelation::OSMRelation(const std::vector<CanalTP::Reference>& refs, const std::string& insee,
+        const std::string postal_code, const std::string& name, const uint32_t level) :
+        references(refs), insee(insee), name(name), level(level) {
+    if(postal_code.empty()){
+        return;
+    }else if(postal_code.find(";", 0) == std::string::npos){
+        this->postal_codes.insert(postal_code);
+    }else{
+        boost::split(this->postal_codes, postal_code, boost::is_any_of(";"));
+    }
+}
+
+std::string OSMRelation::postal_code() const{
+    if(postal_codes.empty()){
+        return "";
+    }else if(postal_codes.size() == 1){
+        return *postal_codes.begin();
+    }else{
+        return *postal_codes.begin() + "-" + *postal_codes.rbegin();
+    }
+}
+
+
 /*
  * We build the polygon of the admin
  * Ways are supposed to be order, but they're not always.
@@ -300,6 +364,7 @@ int main(int argc, char** argv) {
     navitia::cities::ReadNodesVisitor node_visitor(cache);
     CanalTP::read_osm_pbf(input, node_visitor);
     cache.build_relations_geometries();
+    cache.build_postal_codes();
     cache.insert_relations();
     return 0;
 }

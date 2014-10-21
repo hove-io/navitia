@@ -38,6 +38,8 @@ www.navitia.io
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
+#include "third_party/RTree/RTree.h"
+#include <boost/algorithm/string.hpp>
 
 namespace bg = boost::geometry;
 typedef bg::model::point<float, 2, bg::cs::cartesian> point;
@@ -45,6 +47,27 @@ typedef bg::model::polygon<point, false, false> polygon_type; // ccw, open polyg
 typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
 
 namespace navitia { namespace cities {
+
+struct Rect{
+    double min[2];
+    double max[2];
+    Rect() : min{0,0}, max{0,0} {}
+
+    Rect(double lon, double lat) {
+        min[0] = lon;
+        min[1] = lat;
+        max[0] = lon;
+        max[1] = lat;
+    }
+
+    Rect(double a_minX, double a_minY, double a_maxX, double a_maxY){
+        min[0] = a_minX;
+        min[1] = a_minY;
+
+        max[0] = a_maxX;
+        max[1] = a_maxY;
+    }
+};
 
 struct OSMRelation;
 struct OSMCache;
@@ -85,20 +108,19 @@ struct OSMNode {
 struct OSMRelation {
     CanalTP::References references;
     const std::string insee = "",
-                      postal_code = "",
                       name = "";
     const uint32_t level = std::numeric_limits<uint32_t>::max();
 
-    // these attributes are mutable because this object would be use in a set, and
-    // all object in a set are const, since these attributes are not used in the key we can modify them
+    std::set<std::string> postal_codes;
+
     mpolygon_type polygon;
     point centre = point(0.0, 0.0);
 
     OSMRelation(const std::vector<CanalTP::Reference>& refs,
                 const std::string& insee, const std::string postal_code,
-                const std::string& name, const uint32_t level) :
-        references(refs), insee(insee),
-        postal_code(postal_code), name(name), level(level) {}
+                const std::string& name, const uint32_t level);
+
+    std::string postal_code() const;
 
     void set_centre(float lon, float lat) {
         centre = point(lon, lat);
@@ -134,15 +156,17 @@ struct OSMCache {
     std::unordered_map<uint64_t, OSMRelation> relations;
     std::unordered_map<uint64_t, OSMNode> nodes;
     std::unordered_map<uint64_t, OSMWay> ways;
+    RTree<OSMRelation*, double, 2> admin_tree;
 
     Lotus lotus;
 
     OSMCache(const std::string& connection_string) : lotus(connection_string) {}
 
     void build_relations_geometries();
-    const OSMRelation* match_coord_admin(const double lon, const double lat);
+    OSMRelation* match_coord_admin(const double lon, const double lat, uint32_t level);
     void match_nodes_admin();
     void insert_relations();
+    void build_postal_codes();
 };
 
 struct ReadRelationsVisitor {
