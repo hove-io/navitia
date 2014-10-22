@@ -312,8 +312,6 @@ class SectionGeoJson(fields.Raw):
             coords.append(obj.origin.stop_point.coord)
             coords.append(obj.destination.stop_point.coord)
         else:
-            logging.warn("trying to output wrongly formated object as "
-                         "geojson because type is %s, we skip", obj.type)
             return
 
         response = {
