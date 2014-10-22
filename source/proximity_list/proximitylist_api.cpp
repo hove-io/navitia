@@ -54,36 +54,22 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
         auto type = std::get<2>(result_item);
         switch(type){
         case nt::Type_e::StopArea:
-            fill_pb_object(data.pt_data->stop_areas[idx], data, place->mutable_stop_area(), depth,
-                           current_date);
-            place->set_name(data.pt_data->stop_areas[idx]->name);
-            place->set_uri(data.pt_data->stop_areas[idx]->uri);
+            fill_pb_placemark(data.pt_data->stop_areas[idx], data, place, depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
-            place->set_embedded_type(pbnavitia::STOP_AREA);
             break;
         case nt::Type_e::StopPoint:
-            fill_pb_object(data.pt_data->stop_points[idx], data, place->mutable_stop_point(), depth,
-                           current_date);
-            place->set_name(data.pt_data->stop_points[idx]->name);
-            place->set_uri(data.pt_data->stop_points[idx]->uri);
+            fill_pb_placemark(data.pt_data->stop_points[idx], data, place, depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
-            place->set_embedded_type(pbnavitia::STOP_POINT);
             break;
         case nt::Type_e::POI:
-            fill_pb_object(data.geo_ref->pois[idx], data, place->mutable_poi(), depth,
-                           current_date);
-            place->set_name(data.geo_ref->pois[idx]->name);
-            place->set_uri(data.geo_ref->pois[idx]->uri);
+            fill_pb_placemark(data.geo_ref->pois[idx], data, place, depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
-            place->set_embedded_type(pbnavitia::POI);
             break;
         case nt::Type_e::Address:
-            fill_pb_object(data.geo_ref->ways[idx], data, place->mutable_address(),
-                           data.geo_ref->ways[idx]->nearest_number(coord), coord , depth);
-            place->set_name(data.geo_ref->ways[idx]->name);
-            place->set_uri(data.geo_ref->ways[idx]->uri + ":" + boost::lexical_cast<std::string>(data.geo_ref->ways[idx]->nearest_number(coord)));
+            fill_pb_placemark(data.geo_ref->ways[idx], data, place,
+                              data.geo_ref->ways[idx]->nearest_number(coord),
+                              coord , depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
-            place->set_embedded_type(pbnavitia::ADDRESS);
             break;
         default:
             break;

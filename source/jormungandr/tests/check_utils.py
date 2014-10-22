@@ -190,13 +190,20 @@ def get_valid_int(str):
 def is_valid_lat(str):
     lat = get_valid_float(str)
 
-    assert 90.0 >= lat >= 0.0, "lat should be between 0 and 90"
+    assert -90.0 <= lat <= 90.0, "lat should be between -90 and 90"
 
 
 def is_valid_lon(str):
     lat = get_valid_float(str)
 
     assert 180.0 >= lat >= -180.0, "lon should be between -180 and 180"
+
+
+def is_valid_coord(coord):
+    lat = get_not_null(coord, "lat")
+    lon = get_not_null(coord, "lon")
+    is_valid_lat(lat)
+    is_valid_lon(lon)
 
 
 def get_links_dict(response):
@@ -490,8 +497,8 @@ def is_valid_stop_area(stop_area, depth_check=1):
     check the structure of a stop area
     """
     get_not_null(stop_area, "name")
-    is_valid_lat(stop_area["coord"]["lat"])
-    is_valid_lon(stop_area["coord"]["lon"])
+    coord = get_not_null(stop_area, "coord")
+    is_valid_coord(coord)
 
 
 def is_valid_stop_point(stop_point, depth_check=1):
@@ -499,8 +506,8 @@ def is_valid_stop_point(stop_point, depth_check=1):
     check the structure of a stop point
     """
     get_not_null(stop_point, "name")
-    is_valid_lat(stop_point["coord"]["lat"])
-    is_valid_lon(stop_point["coord"]["lon"])
+    coord = get_not_null(stop_point, "coord")
+    is_valid_coord(coord)
 
     if depth_check > 0:
         is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
@@ -547,12 +554,41 @@ def is_valid_line(line, depth_check=1):
     g is None or shape(g) #TODO check length
 
 
+def is_valid_places(places, depth_check=1):
+    for p in places:
+        is_valid_place(p, depth_check)
+
+
 def is_valid_place(place, depth_check=1):
     if depth_check < 0:
         return
     get_not_null(place, "name")
     get_not_null(place, "id")
-    #TODO more checks
+    type = get_not_null(place, "embedded_type")
+    if type == "address":
+        address = get_not_null(place, "address")
+        is_valid_address(address, depth_check)
+    elif type == "stop_area":
+        stop_area = get_not_null(place, "stop_area")
+        is_valid_stop_area(stop_area, depth_check)
+    elif type == "stop_point":
+        stop_point = get_not_null(place, "stop_point")
+        is_valid_stop_point(stop_point, depth_check)
+    elif type == "poi":
+        poi = get_not_null(place, "poi")
+        # TODO
+        #is_valid_poi(poi, depth_check)
+    else:
+        assert(False, "invalid type")
+
+
+def is_valid_address(address, depth_check=1):
+    get_not_null(address, "id")
+    get_not_null(address, "house_number")
+    get_not_null(address, "name")
+    get_not_null(address, "administrative_regions") # TODO test
+    coord = get_not_null(address, "coord")
+    is_valid_coord(coord)
 
 
 def is_valid_validity_pattern(validity_pattern, depth_check=1):
