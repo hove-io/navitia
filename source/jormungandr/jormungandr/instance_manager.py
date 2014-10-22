@@ -283,7 +283,7 @@ class InstanceManager(object):
                         "value": "The region {} is dead".format(key_region)
                     }
                 }
-            if resp_dict['status'] == 'no_data' and not region and not lon and not lat:
+            if resp_dict.get('status') == 'no_data' and not region and not lon and not lat:
                 continue
             resp_dict['region_id'] = key_region
             response['regions'].append(resp_dict)
