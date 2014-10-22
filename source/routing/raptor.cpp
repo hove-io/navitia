@@ -281,7 +281,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector
         for(Path& path : tmp){
             path.origin.type = (nt::Type_e)-1;
 
-            if (path.items.size() == 0)
+            if (path.items.empty())
                 continue;
 
             PathItem path_item = clockwise ? path.items.front() : path.items.back();
