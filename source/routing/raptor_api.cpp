@@ -555,14 +555,14 @@ make_response(RAPTOR &raptor, const type::EntryPoint& origin,
 
 pbnavitia::Response
 make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
-              const std::vector<type::EntryPoint> &destinations,
-              const uint64_t &datetimes_str, bool clockwise,
-              const type::AccessibiliteParams & accessibilite_params,
-              std::vector<std::string> forbidden,
-              georef::StreetNetwork & worker,
-              bool disruption_active,
-              bool allow_odt,
-              uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
+                 const std::vector<type::EntryPoint> &destinations,
+                 const uint64_t &datetimes_str, bool clockwise,
+                 const type::AccessibiliteParams & accessibilite_params,
+                 std::vector<std::string> forbidden,
+                 georef::StreetNetwork & worker,
+                 bool disruption_active,
+                 bool allow_odt,
+                 uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
 
     EnhancedResponse enhanced_response; //wrapper around raw protobuff response to handle ids
     pbnavitia::Response& pb_response = enhanced_response.response;
@@ -574,41 +574,41 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
     if(pb_response.has_error() || pb_response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return pb_response;
     }
-    
+
     std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > departures;
     std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > arrivals;
-    
-    for(type::EntryPoint org : origins) {
+
+    for(const type::EntryPoint& org : origins) {
         worker.init(org);
-        std::vector<std::pair<type::idx_t, navitia::time_duration> > org_stop_points = get_stop_points(org, raptor.data, worker);
+        auto org_stop_points = get_stop_points(org, raptor.data, worker);
         for (std::pair<type::idx_t, navitia::time_duration>& org_stop_point : org_stop_points) {
             org_stop_point.second += navitia::seconds(org.access_duration);
         }
         departures.push_back(std::make_pair(org, org_stop_points));
-	}
-	
-	for(auto dst : destinations) {
+    }
+
+    for(const type::EntryPoint& dst : destinations) {
         worker.init(dst);
-        std::vector<std::pair<type::idx_t, navitia::time_duration> > dst_stop_points = get_stop_points(dst, raptor.data, worker);
+        auto dst_stop_points = get_stop_points(dst, raptor.data, worker);
         for (std::pair<type::idx_t, navitia::time_duration>& dst_stop_point : dst_stop_points) {
             dst_stop_point.second += navitia::seconds(dst.access_duration);
         }
-		arrivals.push_back(std::make_pair(dst, get_stop_points(dst, raptor.data, worker)));
-	}
-	
-	if(departures.size() == 0 && arrivals.size() == 0) {	
+        arrivals.push_back(std::make_pair(dst, dst_stop_points));
+    }
+
+    if(departures.empty() && arrivals.empty()) {
         fill_pb_error(pbnavitia::Error::no_origin_nor_destination, "no origin point nor destination point",pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return pb_response;
     }
 
-    if(departures.size() == 0){
+    if(departures.empty()) {
         fill_pb_error(pbnavitia::Error::no_origin, "no origin point",pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return pb_response;
     }
 
-    if(arrivals.size() == 0){
+    if(arrivals.empty()) {
         fill_pb_error(pbnavitia::Error::no_destination, "no destination point",pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_DESTINATION_POINT);
         return pb_response;
@@ -627,35 +627,35 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<std::pair<type::EntryPoint, std::vector<Path>>> pathes_by_entrypoint = raptor.compute_nm_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        // compute m trip in one call
+        auto paths_by_entrypoint = raptor.compute_nm_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
 
-        for(std::pair<type::EntryPoint, std::vector<Path>> pathes_for_m_point : pathes_by_entrypoint){
-            std::vector<Path> tmp = pathes_for_m_point.second;
+        for(std::pair<type::EntryPoint, std::vector<Path>> paths_for_m_point : paths_by_entrypoint) {
+            std::vector<Path>& paths = paths_for_m_point.second;
+            if(paths.empty())
+                continue;
 
-            type::EntryPoint origin;
-            origin.type = (nt::Type_e)-1;
+            // try to resolve the "n point" (kraken algorithm departure)
+            type::EntryPoint n_entry_point;
+            n_entry_point.type = nt::Type_e::Unknown;
+            for(auto& path : paths) {
+                path.request_time = datetime;
+                if (path.origin.type != nt::Type_e::Unknown)
+                    n_entry_point = path.origin;
+            }
+            if (n_entry_point.type == nt::Type_e::Unknown)
+                continue;
 
-            if(!tmp.empty()) {
-                result = tmp;
-                for(auto & path : result) {
-                    path.request_time = datetime;
-                    if (path.origin.type != (nt::Type_e)-1)
-                        origin = path.origin;
-                }
+            const type::EntryPoint& m_entry_point = paths_for_m_point.first;
 
-            } else
-                result.push_back(Path());
-
-            if (origin.type != (nt::Type_e)-1){
-                if (clockwise){
-                    std::reverse(result.begin(), result.end());
-                    worker.init(origin, {pathes_for_m_point.first});
-                    add_pathes(enhanced_response, result, raptor.data, worker, origin, pathes_for_m_point.first, datetimes, clockwise, show_codes);
-                }
-                else {
-                    worker.init(pathes_for_m_point.first, {origin});
-                    add_pathes(enhanced_response, result, raptor.data, worker, pathes_for_m_point.first, origin, datetimes, clockwise, show_codes);
-                }
+            if (clockwise){
+                std::reverse(paths.begin(), paths.end());
+                worker.init(n_entry_point, {m_entry_point});
+                add_pathes(enhanced_response, paths, raptor.data, worker, n_entry_point, m_entry_point, datetimes, clockwise, show_codes);
+            }
+            else {
+                worker.init(m_entry_point, {n_entry_point});
+                add_pathes(enhanced_response, paths, raptor.data, worker, m_entry_point, n_entry_point, datetimes, clockwise, show_codes);
             }
         }
     }
