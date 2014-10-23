@@ -31,6 +31,9 @@ www.navitia.io
 #include "raptor.h"
 #include "raptor_visitors.h"
 #include <boost/foreach.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 
 namespace bt = boost::posix_time;
 
@@ -238,7 +241,25 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
             continue;
         }
         std::vector<Path> temp = makePathes(calc_dest, calc_dep, accessibilite_params, *this, !clockwise, disruption_active);
-        result.insert(result.end(), temp.begin(), temp.end());
+
+        using boost::adaptors::filtered;
+        boost::push_back(result, temp | filtered([&](const Path& p) {
+            // We filter invalid solutions (that will begin before the departure date)
+            const auto& end_item = clockwise ? p.items.front() : p.items.back();
+            const auto* stop_time = clockwise ? end_item.stop_times.front() : end_item.stop_times.back();
+            type::idx_t end_idx = stop_time->journey_pattern_point->stop_point->idx;
+            typedef std::pair<type::idx_t, navitia::time_duration> idx_dur;
+            const auto walking_time_search = boost::find_if(calc_dep, [&](const idx_dur& elt) {
+                return elt.first == end_idx;
+            });
+            BOOST_ASSERT(walking_time_search != calc_dep.end());
+            const auto& cur_end = clockwise ? end_item.departure : end_item.arrival;
+            return clockwise
+                ? to_posix_time(departure_datetime + walking_time_search->second.total_seconds(), data)
+                  <= cur_end
+                : to_posix_time(departure_datetime - walking_time_search->second.total_seconds(), data)
+                  >= cur_end;
+        }));
     }
     BOOST_ASSERT( departures.size() > 0 );    //Assert that reversal search was symetric
     return result;
