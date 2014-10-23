@@ -586,7 +586,7 @@ void OSMRelation::build_geometry(OSMCache& cache) const {
  * We read another time nodes to insert housenumbers and poi
  */
 void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tags) {
-    this->fill_poi(osm_id, tags, lon, lat);
+    this->fill_poi(osm_id, tags, lon, lat, OsmObjectType::Node);
     this->fill_housenumber(osm_id, tags, lon, lat);
     auto logger = log4cplus::Logger::getInstance("log");
     if ((data.pois.size() + house_numbers.size()) >= max_inserts_without_bulk) {
@@ -624,7 +624,7 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &t
             auto node_it = cache.nodes.find(OSMNode(ref_id));
             if (node_it != cache.nodes.end() && node_it->is_defined()) {
                 this->fill_housenumber(osm_id, tags, node_it->lon(), node_it->lat());
-                this->fill_poi(osm_id, tags, node_it->lon(), node_it->lat());
+                this->fill_poi(osm_id, tags, node_it->lon(), node_it->lat(), OsmObjectType::Way);
                 break;
             }
         }
@@ -634,7 +634,7 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &t
         bg::envelope(tmp_polygon, envelope);
         bg::centroid(tmp_polygon, centre);
         this->fill_housenumber(osm_id, tags, centre.get<0>(), centre.get<1>());
-        this->fill_poi(osm_id, tags, centre.get<0>(), centre.get<1>());
+        this->fill_poi(osm_id, tags, centre.get<0>(), centre.get<1>(), OsmObjectType::Way);
     }
     auto logger = log4cplus::Logger::getInstance("log");
     if ((data.pois.size() + house_numbers.size()) >= max_inserts_without_bulk) {
@@ -791,7 +791,8 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
 }
 
 void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags,
-        const double lon, const double lat) {
+        const double lon, const double lat, OsmObjectType osm_relation_type) {
+
     std::string ref_tag = "";
     if (tags.find("amenity") != tags.end()) {
             ref_tag = "amenity";
@@ -802,7 +803,9 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
     if (ref_tag.empty()) {
         return;
     }
-    auto poi_it = data.pois.find(std::to_string(osm_id));
+    //Note: Pois can come from the node or the way and we need that information to have a unique id
+    const auto poi_id = to_string(osm_relation_type) + std::to_string(osm_id);
+    auto poi_it = data.pois.find(poi_id);
     if (poi_it != data.pois.end()){
         return;
     }
@@ -831,7 +834,7 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
     poi.id = this->n_inserted_pois + data.pois.size();
     poi.coord.set_lon(lon);
     poi.coord.set_lat(lat);
-    data.pois[std::to_string(osm_id)] = poi;
+    data.pois[poi_id] = poi;
 }
 
 void OSMCache::flag_nodes() {
