@@ -349,6 +349,16 @@ class Scenario(simple.Scenario):
         if "destination" not in request or not request['destination']:
             return #for isochrone we don't want to filter
 
+        if "clockwise" not in request or request['clockwise']:
+            if "destination" in request and isinstance(request['destination'], list) \
+                                        and len(request['destination']) > 1:
+                return #for n-m calculation we don't want to filter
+
+        if "clockwise" in request and not request['clockwise']:
+            if "origin" in request and isinstance(request['origin'], list) \
+                                   and len(request['origin']) > 1:
+                return #for n-m calculation we don't want to filter
+
         if resp.HasField("error"):
             return #we don't filter anything if errors
 

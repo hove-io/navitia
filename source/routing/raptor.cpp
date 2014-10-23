@@ -244,41 +244,67 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
     return result;
 }
 
-std::vector<Path>
+std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
 RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &departures,
-					    const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
-						const DateTime &departure_datetime,
-						bool disruption_active, bool allow_odt,
-						const DateTime &bound,
-						const uint32_t max_transfers,
-						const type::AccessibiliteParams & accessibilite_params,
-						const std::vector<std::string> & forbidden_uri,
-						bool clockwise) {
-	std::vector<Path> result;
-	set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri, disruption_active, allow_odt);
-	
-	auto n_calc_dep = clockwise ? departures : arrivals;
-	
-	std::vector<std::pair<type::idx_t, navitia::time_duration> > calc_dep;
-	for(auto item : n_calc_dep)
-		for (auto subitem : item.second)
-			calc_dep.push_back(subitem);
-			
-	auto calc_dep_solutions = get_solutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
-	clear(clockwise, bound);
-	init(calc_dep_solutions, {}, bound, clockwise); // no exit condition (should be improved)
+                       const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
+                       const DateTime &departure_datetime,
+                       bool disruption_active, bool allow_odt,
+                       const DateTime &bound,
+                       const uint32_t max_transfers,
+                       const type::AccessibiliteParams & accessibilite_params,
+                       const std::vector<std::string> & forbidden_uri,
+                       bool clockwise) {
+    std::vector<std::pair<type::EntryPoint, std::vector<Path>>> result;
+    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri, disruption_active, allow_odt);
 
-	boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
+    const auto& n_points = clockwise ? departures : arrivals;
 
-	auto m_points = clockwise ? arrivals : departures;
+    std::vector<std::pair<type::idx_t, navitia::time_duration> > calc_dep;
+    for(const auto& n_point : n_points)
+        for (const auto& n_stop_point : n_point.second)
+            calc_dep.push_back(n_stop_point);
 
-	for(auto item : m_points) {
-		auto calc_dest = item.second;
-		auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
-		result.insert(result.end(), tmp.begin(), tmp.end());
-	}
+    auto calc_dep_solutions = get_solutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
+    clear(clockwise, bound);
+    init(calc_dep_solutions, {}, bound, clockwise); // no exit condition (should be improved)
 
-	return result;
+    boucleRAPTOR(accessibilite_params, clockwise, disruption_active, false, max_transfers);
+
+    const auto& m_points = clockwise ? arrivals : departures;
+
+    for(const auto& m_point : m_points) {
+        const type::EntryPoint& m_entry_point = m_point.first;
+
+        const auto& calc_arr = m_point.second;
+        auto paths = makePathes(calc_dep, calc_arr, accessibilite_params, *this, clockwise, disruption_active);
+
+        for(Path& path : paths){
+            path.origin.type = nt::Type_e::Unknown;
+
+            if (path.items.empty())
+                continue;
+
+            const PathItem& path_item = clockwise ? path.items.front() : path.items.back();
+            if (path_item.stop_points.empty())
+                continue;
+
+            // must find which item of calc_dep has been computed
+            const nt::StopPoint* stop_point = clockwise ? path_item.stop_points.front() : path_item.stop_points.back();
+            for(const auto& n_point : n_points) {
+                for(const auto& n_stop_point : n_point.second)
+                    if (stop_point->idx == n_stop_point.first) {
+                        path.origin = n_point.first;
+                        break;
+                    }
+                if (path.origin.type == nt::Type_e::Unknown)
+                    break;
+            }
+        }
+
+        result.push_back(std::make_pair(m_entry_point, paths));
+    }
+
+    return result;
 }
 
 void
