@@ -1,3 +1,9 @@
+navitia2 (1.1.7) unstable; urgency=medium
+
+  * kraken: fix a segfault
+
+ -- Alexandre JACQUIN <alexandre.jacquin@canaltp.fr>  Thu, 23 Oct 2014 16:36:46 +0200
+
 navitia2 (1.1.6) unstable; urgency=medium
 
   * Jormungandr: fix authentication

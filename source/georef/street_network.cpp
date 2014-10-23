@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/data.h"
 #include "georef.h"
 #include <chrono>
+#include "utils/exception.h"
 
 namespace navitia { namespace georef {
 
@@ -189,12 +190,18 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
         //small enchancement, if the projection is done on a node, we disable the crow fly
         if (starting_edge.distances[source_e] < 0.01) {
             predecessors[starting_edge[target_e]] = starting_edge[source_e];
-            auto e = boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph).first;
-            distances[starting_edge[target_e]] = geo_ref.graph[e].duration;
+            auto e = boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph);
+            if(! e.second){
+                throw navitia::recoverable_exception("node not found");
+            }
+            distances[starting_edge[target_e]] = geo_ref.graph[e.first].duration;
         } else if (starting_edge.distances[target_e] < 0.01) {
             predecessors[starting_edge[source_e]] = starting_edge[target_e];
-            auto e = boost::edge(starting_edge[target_e], starting_edge[source_e], geo_ref.graph).first;
-            distances[starting_edge[source_e]] = geo_ref.graph[e].duration;
+            auto e = boost::edge(starting_edge[target_e], starting_edge[source_e], geo_ref.graph);
+            if(! e.second){
+                throw navitia::recoverable_exception("node not found");
+            }
+            distances[starting_edge[source_e]] = geo_ref.graph[e.first].duration;
         }
     }
 }
