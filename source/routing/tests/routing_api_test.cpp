@@ -47,6 +47,7 @@ BOOST_GLOBAL_FIXTURE( logger_initialized )
 namespace nr = navitia::routing;
 namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
+namespace ng = navitia::georef;
 
 void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
     if (! debug_info)
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
                                              true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
@@ -146,7 +147,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     navitia::type::EntryPoint origin(origin_type, "bet");
     navitia::type::EntryPoint destination(destination_type, "rs");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -199,7 +200,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     navitia::type::EntryPoint origin(origin_type, "bet");
     navitia::type::EntryPoint destination(destination_type, "rs");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -259,7 +260,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     navitia::type::EntryPoint origin(origin_type, "bet");
     navitia::type::EntryPoint destination(destination_type, "rs");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -330,7 +331,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     navitia::type::EntryPoint origin(origin_type, "start");
     navitia::type::EntryPoint destination(destination_type, "end");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
                                              true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
@@ -394,7 +395,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
     navitia::type::EntryPoint origin(origin_type, "start");
     navitia::type::EntryPoint destination(destination_type, "end");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
                                              true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
@@ -448,7 +449,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     navitia::type::EntryPoint origin(origin_type, "start");
     navitia::type::EntryPoint destination(destination_type, "end");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
                                              true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
@@ -512,7 +513,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
     navitia::type::EntryPoint origin(origin_type, "start");
     navitia::type::EntryPoint destination(destination_type, "end");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
                                              true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
@@ -557,7 +558,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     navitia::type::EntryPoint origin(origin_type, "bet");
     navitia::type::EntryPoint destination(destination_type, "rs");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T174000")}, false, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, false);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -610,7 +611,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    navitia::georef::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(*data.geo_ref);
 
     //we put the time not in the right order to check that they are correctly sorted
     std::vector<uint64_t> datetimes({ntest::to_posix_timestamp("20120614T080000"), ntest::to_posix_timestamp("20120614T090000")});
@@ -648,7 +649,7 @@ template <typename speed_provider_trait>
 struct streetnetworkmode_fixture : public routing_api_data<speed_provider_trait> {
 
     pbnavitia::Response make_response() {
-        navitia::georef::StreetNetwork sn_worker(*this->b.data->geo_ref);
+        ng::StreetNetwork sn_worker(*this->b.data->geo_ref);
         nr::RAPTOR raptor(*this->b.data);
         return nr::make_response(raptor, this->origin, this->destination, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false, true);
     }
@@ -668,7 +669,7 @@ struct direct_path_routing_api_data : routing_api_data<test_speed_provider> {
 
         worker.init(origin);
     }
-    navitia::georef::StreetNetwork worker;
+    ng::StreetNetwork worker;
 };
 
 BOOST_FIXTURE_TEST_CASE(direct_path_under_the_limit, direct_path_routing_api_data) {
@@ -1252,112 +1253,123 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     BOOST_CHECK_EQUAL(section.duration(), total_dur);
 }
 
-/*
- *     A(0,0)             B(0,0.01)                       C(0,0.020)           D(0,0.03)
- *       x-------------------x                            x-----------------x
- *           SP1______ SP2                                   SP3_______SP4
- *          (0,0.005)     (0,0.007)                        (0,021)   (0,0.025)
- *
- *
- *       Un vj de SP2 à SP3
- */
+BOOST_AUTO_TEST_CASE(projection_on_one_way) {
+    /*
+     *
+     * A
+     * ^ \
+     * |  \
+     * |   \
+     * |    \
+     * B----->C----------------->D
+     *
+     * We want to go from near A to D, we want A->C->D even if A->B->C->D would be faster
+     *
+     */
+    navitia::type::GeographicalCoord A = {0, 100, false};
+    navitia::type::GeographicalCoord B = {0, 0, false};
+    navitia::type::GeographicalCoord C = {100, 0, false};
+    navitia::type::GeographicalCoord D = {200, 0, false};
 
+    size_t AA = 0;
+    size_t BB = 1;
+    size_t CC = 2;
+    size_t DD = 3;
 
-/*BOOST_AUTO_TEST_CASE(map_depart_arrivee) {
-    namespace ng = navitia::georef;
-    int AA = 0;
-    int BB = 1;
-    int CC = 2;
-    int DD = 3;
-    ed::builder b("20120614");
+    ed::builder b = {"20120614"};
 
-    navitia::type::GeographicalCoord A(0, 0, false);
-    navitia::type::GeographicalCoord B(0, 0.1, false);
-    navitia::type::GeographicalCoord C(0, 0.02, false);
-    navitia::type::GeographicalCoord D(0, 0.03, false);
-    navitia::type::GeographicalCoord SP1(0, 0.005, false);
-    navitia::type::GeographicalCoord SP2(0, 0.007, false);
-    navitia::type::GeographicalCoord SP3(0, 0.021, false);
-    navitia::type::GeographicalCoord SP4(0, 0.025, false);
+    boost::add_vertex(ng::Vertex(A),b.data->geo_ref->graph);
+    boost::add_vertex(ng::Vertex(B),b.data->geo_ref->graph);
+    boost::add_vertex(ng::Vertex(C),b.data->geo_ref->graph);
+    boost::add_vertex(ng::Vertex(D),b.data->geo_ref->graph);
+    b.data->geo_ref->init();
 
-    b.data->geo_ref->init_offset(0);
-    navitia::georef::Way* way;
+    size_t way_idx = 0;
+    for (const auto& name: {"ab", "bc", "ac", "cd"}) {
+        ng::Way* way = new ng::Way();
+        way->name = "rue " + std::string(name);
+        way->idx = way_idx++;
+        way->way_type = "rue";
+        b.data->geo_ref->ways.push_back(way);
+    }
 
-    way = new navitia::georef::Way();
-    way->name = "rue ab"; // A->B
-    way->idx = 0;
-    way->way_type = "rue";
-    b.data->geo_ref->ways.push_back(way);
+    size_t e_idx(0);
+    //we add each edge as a one way street
+    boost::add_edge(BB, AA, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
+    //B->C is very cheap but will not be used
+    boost::add_edge(BB, CC, ng::Edge(e_idx++, navitia::seconds(1)), b.data->geo_ref->graph);
+    boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(100)), b.data->geo_ref->graph);
+    boost::add_edge(CC, DD, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
 
-    way = new navitia::georef::Way();
-    way->name = "rue cd"; // C->D
-    way->idx = 1;
-    way->way_type = "rue";
-    b.data->geo_ref->ways.push_back(way);
-
-
-    boost::add_edge(AA, BB, navitia::georef::Edge(0,10), b.data->geo_ref->graph);
-    boost::add_edge(BB, AA, navitia::georef::Edge(0,10), b.data->geo_ref->graph);
     b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
-    b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
+    b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(BB, CC));
+    b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
+    b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
 
-    boost::add_edge(CC, DD, navitia::georef::Edge(0,50), b.data->geo_ref->graph);
-    boost::add_edge(DD, CC, navitia::georef::Edge(0,50), b.data->geo_ref->graph);
-    b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
-    b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
+    //start from A
+    auto start = A;
+    start.set_lat(A.lat() - 0.000000001);
+    std::string origin_uri = str(boost::format("coord:%1%:%2%") % start.lon() % start.lat());
+    navitia::type::EntryPoint origin {navitia::type::Type_e::Coord, origin_uri};
+    origin.streetnetwork_params.max_duration = bt::pos_infin;
 
-    b.sa("stop_area:stop1", SP1.lon(), SP2.lat());
-    b.sa("stop_area:stop2", SP2.lon(), SP2.lat());
-    b.sa("stop_area:stop3", SP3.lon(), SP2.lat());
-    b.sa("stop_area:stop4", SP4.lon(), SP2.lat());
+    //to D
+    std::string destination_uri = str(boost::format("coord:%1%:%2%") % D.lon() % D.lat());
+    navitia::type::EntryPoint destination {navitia::type::Type_e::Coord, destination_uri};
+    destination.streetnetwork_params.max_duration = bt::pos_infin;
 
-    b.connection("stop_point:stop_area:stop1", "stop_point:stop_area:stop2", 120);
-    b.connection("stop_point:stop_area:stop2", "stop_point:stop_area:stop1", 120);
-    b.connection("stop_point:stop_area:stop3", "stop_point:stop_area:stop4", 120);
-    b.connection("stop_point:stop_area:stop4", "stop_point:stop_area:stop3", 120);
-    b.vj("A")("stop_point:stop_area:stop2", 8*3600 +10*60, 8*3600 + 11 * 60)
-            ("stop_point:stop_area:stop3", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     b.generate_dummy_basis();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
-    navitia::georef::StreetNetwork sn_worker(b.data->geo_ref);
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14),
+                                                                  boost::gregorian::days(7));
 
-    RAPTOR raptor(b.data);
+    //first we want to check that the projection is done on A->B (the whole point of this test)
+    auto starting_edge = ng::ProjectionData(start, *b.data->geo_ref, 0, b.data->geo_ref->pl);
+    BOOST_REQUIRE(starting_edge.found);
 
-    std::string origin_uri = "stop_area:stop1";
-    navitia::type::Type_e origin_type = b.data->get_type_of_id(origin_uri);
-    navitia::type::EntryPoint origin(origin_type, origin_uri);
-    origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
-    origin.streetnetwork_params.offset = 0;
-    origin.streetnetwork_params.distance = 15;
-    std::string destination_uri = "stop_area:stop4";
-    navitia::type::Type_e destination_type = b.data->get_type_of_id(destination_uri);
-    navitia::type::EntryPoint destination(destination_type, destination_uri);
-    destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
-    destination.streetnetwork_params.offset = 0;
-    destination.streetnetwork_params.distance = 5;
-    std::vector<std::string> datetimes({"20120614T080000"});
-    std::vector<std::string> forbidden;
+    BOOST_CHECK_EQUAL(starting_edge.vertices[ng::ProjectionData::Direction::Target], AA);
+    BOOST_CHECK_EQUAL(starting_edge.vertices[ng::ProjectionData::Direction::Source], BB);
 
-    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, navitia::type::AccessibiliteParams(), forbidden, sn_worker);
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+    nr::RAPTOR raptor(*b.data);
+    auto resp = nr::make_response(raptor, origin, destination,
+                                  {navitia::test::to_posix_timestamp("20120614T080000")},
+                                  true, navitia::type::AccessibiliteParams(), {}, sn_worker, false, true);
 
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
-    pbnavitia::Journey journey = resp.journeys(0);
-    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
-    BOOST_REQUIRE_EQUAL(journey.sections(0).type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_REQUIRE_EQUAL(journey.sections(1).type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
-    BOOST_REQUIRE_EQUAL(journey.sections(2).type(), pbnavitia::SectionType::STREET_NETWORK);
 
-}*/
+    dump_response(resp, "biking length test", true);
+
+    BOOST_REQUIRE(resp.journeys_size() == 1);
+
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
+    pbnavitia::Section section = resp.journeys(0).sections(0);
+    BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
+
+    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 3);
+
+    int cpt_item(0);
+    auto pathitem = section.street_network().path_items(cpt_item++);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ab");
+    BOOST_CHECK_EQUAL(pathitem.duration(), 0); //it takes the ab street, but without any duration
+
+    pathitem = section.street_network().path_items(cpt_item++);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue ac");
+    BOOST_CHECK_EQUAL(pathitem.duration(), 100);
+
+    pathitem = section.street_network().path_items(cpt_item++);
+    BOOST_CHECK_EQUAL(pathitem.name(), "rue cd");
+    BOOST_CHECK_EQUAL(pathitem.duration(), 10);
+
+}
 
 BOOST_AUTO_TEST_CASE(use_crow_fly){
     navitia::type::EntryPoint ep;
     navitia::type::StopPoint sp;
     navitia::type::StopArea sa;
-    navitia::georef::Admin admin;
+    ng::Admin admin;
     sp.stop_area = &sa;
     sa.admin_list.push_back(&admin);
 
