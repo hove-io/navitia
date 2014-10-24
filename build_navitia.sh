@@ -11,11 +11,13 @@
 #
 #
 # It's more an install guide but it can help as an out-of-a-box build script
-# the prerequisite the run that script is to have cloned the sources repository
+# the prerequisite the run that script is :
+# - to have git and sudo installed
+# - to have cloned the sources repository
 #
 # git clone https://github.com/CanalTP/navitia
 #
-# and to be in the cloned repository:
+# - and to be in the cloned repository:
 # cd navitia
 
 # /!\ WARNING /!\
@@ -59,6 +61,8 @@ This script setup a running navitia
 only the password is mandatory:
  - if no dataset are given a default Paris one will be used
  - by default all dependencies are installed
+
+Note that you must have sudo installed
 
 OPTIONS:
    -h                  Show this message
@@ -158,7 +162,7 @@ then
             sudo apt-get update
     fi
 
-    sudo apt-get install -y $postgresql_package $postgresql_postgis_package #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier ton setup
+    sudo apt-get install -y $postgresql_package $postgresql_postgis_package #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier to setup
 
     # then you need to install all python dependencies: ::
 
