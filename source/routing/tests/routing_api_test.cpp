@@ -1259,9 +1259,13 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
      * A
      * ^ \
      * |  \
-     * |   \
+     * |   \<----A->C is a country road, sooooo slow
      * |    \
+     * |     v
      * B----->C----------------->D
+     *    ^
+     *    |
+     *  B->C and B->A are hyperloop roads, transport is really fast
      *
      * We want to go from near A to D, we want A->C->D even if A->B->C->D would be faster
      *
@@ -1298,7 +1302,7 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     boost::add_edge(BB, AA, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
     //B->C is very cheap but will not be used
     boost::add_edge(BB, CC, ng::Edge(e_idx++, navitia::seconds(1)), b.data->geo_ref->graph);
-    boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(100)), b.data->geo_ref->graph);
+    boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(1000)), b.data->geo_ref->graph);
     boost::add_edge(CC, DD, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
 
     b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
@@ -1357,7 +1361,7 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
 
     pathitem = section.street_network().path_items(cpt_item++);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ac");
-    BOOST_CHECK_EQUAL(pathitem.duration(), 100);
+    BOOST_CHECK_EQUAL(pathitem.duration(), 1000);
 
     pathitem = section.street_network().path_items(cpt_item++);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue cd");
