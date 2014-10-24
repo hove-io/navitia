@@ -162,10 +162,10 @@ then
 
     # then you need to install all python dependencies: ::
 
-    #we want a custom protobuff version
-    sudo pip install protobuf==2.5.0
     sudo pip install -r $navitia_dir/source/jormungandr/requirements.txt
     sudo pip install -r $navitia_dir/source/tyr/requirements.txt
+    #we want a custom protobuff version
+    sudo pip install -U protobuf==2.5.0
 fi
 
 #the build procedure is explained is the install documentation
