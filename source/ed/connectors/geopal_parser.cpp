@@ -191,7 +191,6 @@ void GeopalParser::fill_ways_edges(){
                     ed::types::Node* source_node;
                     ed::types::Node* target_node;
                     auto source_it = this->data.nodes.find(source);
-                    auto target_it = this->data.nodes.find(target);
 
                     if(source_it == this->data.nodes.end()){
                         source_node = this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x1]), str_to_double(row[y1])), source);
@@ -199,6 +198,7 @@ void GeopalParser::fill_ways_edges(){
                         source_node = source_it->second;
                     }
 
+                    auto target_it = this->data.nodes.find(target);
                     if(target_it == this->data.nodes.end()){
                         target_node = this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x2]), str_to_double(row[y2])), target);
                     }else{
