@@ -195,8 +195,14 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
             distances[starting_edge[target_e]] = geo_ref.graph[e].duration;
         } else if (starting_edge.distances[target_e] < 0.01) {
             predecessors[starting_edge[source_e]] = starting_edge[target_e];
-            auto e = boost::edge(starting_edge[target_e], starting_edge[source_e], geo_ref.graph).first;
-            distances[starting_edge[source_e]] = geo_ref.graph[e].duration;
+            auto edge_pair = boost::edge(starting_edge[target_e], starting_edge[source_e], geo_ref.graph);
+            if (edge_pair.second) {
+                distances[starting_edge[source_e]] = geo_ref.graph[edge_pair.first].duration;
+            } else {
+                // since we reverse the edge (from target to source) the edge might not exists
+                // (for one way street for example). we thus forbid to start from the source
+                distances[starting_edge[source_e]] = bt::pos_infin;
+            }
         }
     }
 }
