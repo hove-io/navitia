@@ -1216,3 +1216,47 @@ BOOST_AUTO_TEST_CASE(invalid_stay_in_overmidnight) {
     res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 1, DateTimeUtils::inf, false, true);
     BOOST_CHECK_EQUAL(res1.size(), 1);
 }
+
+BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
+    // 06k   08k   10k   12k   14k   16k   18k
+    //       1|---A----|3 |------B-------|5
+    //       1|--C--|2 |--D--|4 |--E--|5
+    //    1|-------F---------|4
+    //
+    // we take 1.5k to go to 1
+    // we want to go to 5 with 6k as departure date
+    // 2 valid path: A->B and C->D->E
+    // invalid path F->E must not be returned because we can't be at 1 at 7k
+
+    ed::builder b("20120614");
+    b.vj("A")("stop1",  8000)("stop3", 11000);
+    b.vj("B")("stop3", 12000)("stop5", 17000);
+    b.vj("C")("stop1",  8000)("stop2", 10000);
+    b.vj("D")("stop2", 11000)("stop4", 13000);
+    b.vj("E")("stop4", 14000)("stop5", 16000);
+    b.vj("F")("stop1",  7000)("stop4", 13000);
+    b.connection("stop1", "stop1", 100);
+    b.connection("stop2", "stop2", 100);
+    b.connection("stop3", "stop3", 100);
+    b.connection("stop4", "stop4", 100);
+    b.connection("stop5", "stop5", 100);
+
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> departures =
+        {{b.sps["stop1"]->idx, navitia::seconds(1500)}};
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> arrivals =
+        {{b.sps["stop5"]->idx, navitia::seconds(0)}};
+
+    auto results = raptor.compute_all(departures, arrivals, 6000, false, true);
+
+    BOOST_CHECK_EQUAL(results.size(), 2);
+    for (const auto& res: results) {
+        // we can't begin the journey before 7.5k
+        BOOST_CHECK_GE(res.items.front().departure, to_posix_time(7500, *b.data));
+    }
+}
