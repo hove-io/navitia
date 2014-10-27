@@ -35,6 +35,7 @@ www.navitia.io
 #include "routing/routing.h"
 
 using namespace navitia;
+namespace pt = boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(ctor){
     DateTime d = DateTimeUtils::set(1,2);
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(weekday_conversion) {
 
 BOOST_AUTO_TEST_CASE(simple_duration_construction) {
     // we can 'cast' a boost posix duration to a navitia duration with the from_boost_duration method
-    boost::posix_time::time_duration boost_dur(12,24,49, 1);
+    pt::time_duration boost_dur(12,24,49, 1);
 
     navitia::time_duration nav_dur(navitia::time_duration::from_boost_duration(boost_dur));
 
@@ -194,37 +195,37 @@ BOOST_AUTO_TEST_CASE(simple_duration_construction) {
 }
 
 BOOST_AUTO_TEST_CASE(time_dur_no_overflow_with_infinity) {
-    boost::posix_time::time_duration big_dur = boost::posix_time::pos_infin;
+    pt::time_duration big_dur = pt::pos_infin;
 
-    boost::posix_time::time_duration other_dur (big_dur);//no problem to copy the duration with boost
+    pt::time_duration other_dur (big_dur);//no problem to copy the duration with boost
 
     navitia::time_duration nav_dur = navitia::time_duration::from_boost_duration(big_dur);
 
     //and no problem with navitia either, it is recognised as infinity
-    BOOST_CHECK_EQUAL(nav_dur, boost::posix_time::pos_infin);
+    BOOST_CHECK_EQUAL(nav_dur, pt::pos_infin);
 }
 
 BOOST_AUTO_TEST_CASE(time_dur_overflow) {
     //we build a very big duration
-    boost::posix_time::time_duration big_dur (0,0,0,std::numeric_limits<int64_t>::max() - 21);
+    pt::time_duration big_dur (0,0,0,std::numeric_limits<int64_t>::max() - 21);
 
-    boost::posix_time::time_duration other_dur (big_dur);//no problem to copy the duration with boost
+    pt::time_duration other_dur (big_dur);//no problem to copy the duration with boost
 
     //but the max should be to high for navitia duration
     BOOST_CHECK_THROW(navitia::time_duration::from_boost_duration(big_dur), navitia::exception);
 }
 
 namespace pt = boost::posix_time;
-BOOST_AUTO_TEST_CASE(split_period_full_days) {
-    auto beg = boost::posix_time::from_iso_string("20140101T120000");
-    auto end = boost::posix_time::from_iso_string("20140108T100000");
+BOOST_AUTO_TEST_CASE(expand_calendar_full_days) {
+    auto beg = pt::from_iso_string("20140101T120000");
+    auto end = pt::from_iso_string("20140108T100000");
 
     auto days = std::bitset<7>("1111111");
-    auto start_in_days = boost::posix_time::duration_from_string("00:00");
-    auto end_in_days = boost::posix_time::duration_from_string("24:00");
+    auto start_in_days = pt::duration_from_string("00:00");
+    auto end_in_days = pt::duration_from_string("24:00");
     //all days and all day, we don't want to split
 
-    auto periods = navitia::split_period(beg, end, start_in_days, end_in_days, days);
+    auto periods = navitia::expand_calendar(beg, end, start_in_days, end_in_days, days);
 
     BOOST_REQUIRE_EQUAL(periods.size(), 1);
     BOOST_CHECK_EQUAL(periods[0].begin(), beg);
@@ -232,25 +233,27 @@ BOOST_AUTO_TEST_CASE(split_period_full_days) {
 
 }
 
-BOOST_AUTO_TEST_CASE(split_period_test) {
-    auto beg = boost::posix_time::from_iso_string("20140101T120000");
-    auto end = boost::posix_time::from_iso_string("20140108T100000");
+BOOST_AUTO_TEST_CASE(expand_calendar_test) {
+    auto beg = pt::from_iso_string("20140101T120000");
+    auto end = pt::from_iso_string("20140108T100000");
 
     auto days = std::bitset<7>("1111111");
-    auto start_in_days = boost::posix_time::duration_from_string("11:00");
-    auto end_in_days = boost::posix_time::duration_from_string("14:00");
+    auto start_in_days = pt::duration_from_string("11:00");
+    auto end_in_days = pt::duration_from_string("14:00");
 
-    auto periods = navitia::split_period(beg, end, start_in_days, end_in_days, days);
+    auto periods = navitia::expand_calendar(beg, end, start_in_days, end_in_days, days);
 
     BOOST_REQUIRE_EQUAL(periods.size(), 8);
 
     //first starts from 12:00 (because it's beg's time) and finish at 14:00 (it's the regular end of a day)
-    BOOST_CHECK_EQUAL(periods[0].begin(), boost::posix_time::from_iso_string("20140101T120000"));
-    BOOST_CHECK_EQUAL(periods[0].end(), boost::posix_time::from_iso_string("20140101T140000"));
+    BOOST_CHECK_EQUAL(periods[0].begin(), pt::from_iso_string("20140101T120000"));
+    BOOST_CHECK_EQUAL(periods[0].end(), pt::from_iso_string("20140101T140000") + pt::seconds(1));
 
     for (int i = 1; i < 7 ; ++i) {
-        BOOST_CHECK_EQUAL(periods[i].begin(), pt::ptime(boost::gregorian::date(2014,01,i+1), pt::duration_from_string("11:00")));
-        BOOST_CHECK_EQUAL(periods[i].end(), pt::ptime(boost::gregorian::date(2014,01,i+1), pt::duration_from_string("14:00")));
+        BOOST_CHECK_EQUAL(periods[i].begin(), pt::ptime(boost::gregorian::date(2014,01,i+1),
+                                                        pt::duration_from_string("11:00")));
+        BOOST_CHECK_EQUAL(periods[i].end(), pt::ptime(boost::gregorian::date(2014,01,i+1),
+                                                      pt::duration_from_string("14:00") + pt::seconds(1)));
     }
 
     //last is null since the end is at 10:00 (because it's beg's time) and start is a 11:00

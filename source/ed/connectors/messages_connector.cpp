@@ -135,7 +135,7 @@ void load_disruptions(
 
             std::bitset<7> active_days (cursor["active_days"].as<std::string>());
 
-            impact->application_periods = navitia::split_period(start, end,
+            impact->application_periods = navitia::expand_calendar(start, end,
                                                        daily_start_hour, daily_end_hour,
                                                        active_days);
             disruption->impacts.push_back(impact);

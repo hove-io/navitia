@@ -35,6 +35,8 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
 #include <boost/make_shared.hpp>
+#include "tests/utils_test.h"
+
 /*
 
 publicationDate    |------------------------------------------------------------------------------------------------|
@@ -86,10 +88,10 @@ struct disruption_creator {
                 pt::time_from_string("2013-12-21 12:32:00")};
     std::bitset<7> active_days = std::bitset<7>("1111111");
     pt::time_duration application_daily_start_hour = pt::duration_from_string("00:00");
-    pt::time_duration application_daily_end_hour = pt::duration_from_string("23:59");
+    pt::time_duration application_daily_end_hour = pt::duration_from_string("24:00");
 
     std::vector<pt::time_period> get_application_periods() const {
-        return navitia::split_period(application_period.begin(), application_period.last(),
+        return navitia::expand_calendar(application_period.begin(), application_period.last(),
                                      application_daily_start_hour, application_daily_end_hour, active_days);
     }
 };
@@ -158,10 +160,11 @@ public:
         disruption_wrapper.uri = "mess1";
         disruption_wrapper.object_uri = "line:A";
         disruption_wrapper.object_type = ChaosType::Line;
+        //note we add one seconds, because the end is not is the period
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
-                                                                pt::time_from_string("2013-12-21 12:32:00"));
+                                                                pt::time_from_string("2013-12-21 12:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
-                                                                pt::time_from_string("2013-12-21 12:32:00"));
+                                                                pt::time_from_string("2013-12-21 12:32:00") + pt::seconds(1));
         add_disruption(disruption_wrapper, *b.data->pt_data);
 
         disruption_wrapper = disruption_creator();
@@ -169,9 +172,9 @@ public:
         disruption_wrapper.object_uri = "line:S";
         disruption_wrapper.object_type = ChaosType::Line;
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
-                                                                pt::time_from_string("2013-12-21 12:32:00"));
+                                                                pt::time_from_string("2013-12-21 12:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
-                                                                pt::time_from_string("2013-12-21 12:32:00"));
+                                                                pt::time_from_string("2013-12-21 12:32:00") + pt::seconds(1));
         add_disruption(disruption_wrapper, *b.data->pt_data);
 
         disruption_wrapper = disruption_creator();
@@ -179,9 +182,9 @@ public:
         disruption_wrapper.object_uri = "line:B";
         disruption_wrapper.object_type = ChaosType::Line;
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
-                                                                pt::time_from_string("2013-12-25 12:32:00"));
+                                                                pt::time_from_string("2013-12-25 12:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
-                                                                pt::time_from_string("2013-12-25 12:32:00"));
+                                                                pt::time_from_string("2013-12-25 12:32:00") + pt::seconds(1));
         add_disruption(disruption_wrapper, *b.data->pt_data);
 
         disruption_wrapper = disruption_creator();
@@ -189,9 +192,9 @@ public:
         disruption_wrapper.object_uri = "network:M";
         disruption_wrapper.object_type = ChaosType::Network;
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
-                                                                pt::time_from_string("2013-12-25 12:32:00"));
+                                                                pt::time_from_string("2013-12-25 12:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
-                                                                pt::time_from_string("2013-12-25 12:32:00"));
+                                                                pt::time_from_string("2013-12-25 12:32:00") + pt::seconds(1));
         add_disruption(disruption_wrapper, *b.data->pt_data);
 
         disruption_wrapper = disruption_creator();
@@ -199,9 +202,9 @@ public:
         disruption_wrapper.object_uri = "network:Test";
         disruption_wrapper.object_type = ChaosType::Network;
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2014-01-12 08:32:00"),
-                                                                pt::time_from_string("2014-02-02 18:32:00"));
+                                                                pt::time_from_string("2014-02-02 18:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2014-01-02 08:32:00"),
-                                                                pt::time_from_string("2014-02-10 12:32:00"));
+                                                                pt::time_from_string("2014-02-10 12:32:00") + pt::seconds(1));
         disruption_wrapper.application_daily_start_hour = pt::duration_from_string("08:40");
         disruption_wrapper.application_daily_end_hour = pt::duration_from_string("18:00");
 
@@ -225,18 +228,18 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
 
     pbnavitia::Disruption disruption = resp.disruptions(0);
     BOOST_REQUIRE_EQUAL(disruption.lines_size(), 2);
-    BOOST_REQUIRE_EQUAL(disruption.network().uri(), "network:R");
+    BOOST_CHECK_EQUAL(disruption.network().uri(), "network:R");
 
     pbnavitia::Line line = disruption.lines(0);
     BOOST_REQUIRE_EQUAL(line.uri(), "line:A");
 
     BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
     pbnavitia::Message message = line.messages(0);
-    BOOST_REQUIRE_EQUAL(message.uri(), "mess1");
-    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131219T123200");
-    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131221T123200");
-    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
-    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235900");
+    BOOST_CHECK_EQUAL(message.uri(), "mess1");
+
+    BOOST_REQUIRE_EQUAL(message.application_periods_size(), 1);
+    BOOST_CHECK_EQUAL(message.application_periods(0).begin(), navitia::test::to_posix_timestamp("20131219T123200"));
+    BOOST_CHECK_EQUAL(message.application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
 
     line = disruption.lines(1);
     BOOST_REQUIRE_EQUAL(line.uri(), "line:S");
@@ -244,10 +247,9 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
     message = line.messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess0");
-    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131219T123200");
-    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131221T123200");
-    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
-    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235900");
+    BOOST_REQUIRE_EQUAL(message.application_periods_size(), 1);
+    BOOST_CHECK_EQUAL(message.application_periods(0).begin(), navitia::test::to_posix_timestamp("20131219T123200"));
+    BOOST_CHECK_EQUAL(message.application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
 }
 
 BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
@@ -264,10 +266,9 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
     BOOST_REQUIRE_EQUAL(network.messages_size(), 1);
     pbnavitia::Message message = network.messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess3");
-    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131223T123200");
-    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131225T123200");
-    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
-    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235900");
+    BOOST_REQUIRE_EQUAL(message.application_periods_size(), 1);
+    BOOST_CHECK_EQUAL(message.application_periods(0).begin(), navitia::test::to_posix_timestamp("20131223T123200"));
+    BOOST_CHECK_EQUAL(message.application_periods(0).end(), navitia::test::to_posix_timestamp("20131225T123200"));
 }
 
 BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
@@ -287,10 +288,10 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
     pbnavitia::Message message = line.messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess0");
-    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131219T123200");
-    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131221T123200");
-    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
-    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235900");
+
+    BOOST_REQUIRE_EQUAL(message.application_periods_size(), 1);
+    BOOST_CHECK_EQUAL(message.application_periods(0).begin(), navitia::test::to_posix_timestamp("20131219T123200"));
+    BOOST_CHECK_EQUAL(message.application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
 }
 
 BOOST_FIXTURE_TEST_CASE(Test1, Params) {
@@ -314,10 +315,16 @@ BOOST_FIXTURE_TEST_CASE(Test2, Params) {
 
     pbnavitia::Message message = disruption.network().messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess4");
-    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20140112T083200");
-    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20140202T183200");
-    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "084000");
-    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "180000");
+
+    auto nb_p = message.application_periods_size();
+    BOOST_REQUIRE(nb_p > 1);
+    //many date since it has been split by days
+    //check first and last
+    BOOST_CHECK_EQUAL(message.application_periods(0).begin(), navitia::test::to_posix_timestamp("20140112T084000"));
+    BOOST_CHECK_EQUAL(message.application_periods(0).end(), navitia::test::to_posix_timestamp("20140112T180000"));
+
+    BOOST_CHECK_EQUAL(message.application_periods(nb_p - 1).begin(), navitia::test::to_posix_timestamp("20140202T084000"));
+    BOOST_CHECK_EQUAL(message.application_periods(nb_p - 1).end(), navitia::test::to_posix_timestamp("20140202T180000"));
 }
 
 BOOST_FIXTURE_TEST_CASE(Test3, Params) {
@@ -334,10 +341,15 @@ BOOST_FIXTURE_TEST_CASE(Test3, Params) {
 
     pbnavitia::Message message = disruption.network().messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess4");
-    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20140112T083200");
-    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20140202T183200");
-    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "084000");
-    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "180000");
+    auto nb_p = message.application_periods_size();
+    BOOST_REQUIRE(nb_p > 1);
+    //many date since it has been split by days
+    //check first and last
+    BOOST_CHECK_EQUAL(message.application_periods(0).begin(), navitia::test::to_posix_timestamp("20140112T084000"));
+    BOOST_CHECK_EQUAL(message.application_periods(0).end(), navitia::test::to_posix_timestamp("20140112T180000"));
+
+    BOOST_CHECK_EQUAL(message.application_periods(nb_p - 1).begin(), navitia::test::to_posix_timestamp("20140202T084000"));
+    BOOST_CHECK_EQUAL(message.application_periods(nb_p - 1).end(), navitia::test::to_posix_timestamp("20140202T180000"));
 }
 
 BOOST_FIXTURE_TEST_CASE(Test4, Params) {
@@ -368,8 +380,13 @@ BOOST_FIXTURE_TEST_CASE(Test7, Params) {
 
     pbnavitia::Message message = disruption.network().messages(0);
     BOOST_REQUIRE_EQUAL(message.uri(), "mess4");
-    BOOST_REQUIRE_EQUAL(message.start_application_date(), "20140112T083200");
-    BOOST_REQUIRE_EQUAL(message.end_application_date(), "20140202T183200");
-    BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "084000");
-    BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "180000");
+    auto nb_p = message.application_periods_size();
+    BOOST_REQUIRE(nb_p > 1);
+    //many date since it has been split by days
+    //check first and last
+    BOOST_CHECK_EQUAL(message.application_periods(0).begin(), navitia::test::to_posix_timestamp("20140112T084000"));
+    BOOST_CHECK_EQUAL(message.application_periods(0).end(), navitia::test::to_posix_timestamp("20140112T180000"));
+
+    BOOST_CHECK_EQUAL(message.application_periods(nb_p - 1).begin(), navitia::test::to_posix_timestamp("20140202T084000"));
+    BOOST_CHECK_EQUAL(message.application_periods(nb_p - 1).end(), navitia::test::to_posix_timestamp("20140202T180000"));
 }

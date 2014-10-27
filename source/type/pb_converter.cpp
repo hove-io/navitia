@@ -972,33 +972,27 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
         return; //impact is no longer valid, we have nothing to do
     }
     pb_message->set_uri(impact->uri);
+    for (const auto& app_period: impact->application_periods) {
+        auto p = pb_message->add_application_periods();
+        p->set_begin(navitia::to_posix_timestamp(app_period.begin()));
+        p->set_end(navitia::to_posix_timestamp(app_period.last()));
+    }
 
-    throw "TODO";
-    //status shouldn't be an enum anymore
-    //only one message now
+    pb_message->set_updated_at(navitia::to_posix_timestamp(impact->updated_at));
+    for (const auto& t: impact->disruption->tags) {
+        pb_message->add_tags(t->name);
+    }
+    if (impact->disruption->cause) {
+        pb_message->set_cause(impact->disruption->cause->wording);
+    }
 
-//    switch(message->message_status){
-//        case type::MessageStatus::information:
-//            pb_message->set_message_status(pbnavitia::MessageStatus::information);
-//            break;
-//        case type::MessageStatus::warning:
-//            pb_message->set_message_status(pbnavitia::MessageStatus::warning);
-//            break;
-//        case type::MessageStatus::disrupt:
-//            pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
-//            break;
-//    }
-//    auto it = message->localized_messages.find("fr");
-//    if(it !=  message->localized_messages.end()){
-//        pb_message->set_message(it->second.body);
-//        pb_message->set_title(it->second.title);
-//    }
+    for (const auto& m: impact->messages) {
+        auto pb_m = pb_message->add_messages();
+        pb_m->set_text(m.text);
+        pb_m->set_content_type(""); //what do we want ?
+    }
+//    optional ActiveStatus status                    = 11;
 
-//    pb_message->set_start_application_date(navitia::to_iso_string_no_fractional((message->application_period).begin()));
-//    pb_message->set_end_application_date(navitia::to_iso_string_no_fractional((message->application_period).end()));
-
-//    pb_message->set_start_application_daily_hour(navitia::to_iso_string_no_fractional(message->application_daily_start_hour));
-//    pb_message->set_end_application_daily_hour(navitia::to_iso_string_no_fractional(message->application_daily_end_hour));
 }
 
 

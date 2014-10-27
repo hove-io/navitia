@@ -180,7 +180,7 @@ inline weekdays get_weekday(const boost::gregorian::date& date) {
  * the period is split for each day, each day starting from 'beg_of_day' to 'end_of_day'
  */
 std::vector<boost::posix_time::time_period>
-split_period(boost::posix_time::ptime start, boost::posix_time::ptime end,
+expand_calendar(boost::posix_time::ptime start, boost::posix_time::ptime end,
              boost::posix_time::time_duration beg_of_day, boost::posix_time::time_duration end_of_day,
              std::bitset<7> days);
 }
