@@ -31,8 +31,8 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_raptor
 #include <boost/test/unit_test.hpp>
-
 #include "routing/raptor.h"
+#include "routing/routing.h"
 #include "ed/build_helper.h"
 
 
@@ -1259,4 +1259,49 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
         // we can't begin the journey before 7.5k
         BOOST_CHECK_GE(res.items.front().departure, to_posix_time(7500, *b.data));
     }
+}
+/***
+ *
+ *  I---A-----C-----B--J
+ * walking times:
+ *  I->A : 0   secs
+ *  C->J : 321 secs
+ *  B->J : 0   secs
+ *
+ * Schedules:
+ *  A     C      B
+ *  8h00  8h01   8h07
+ *
+ * We want to have two answers
+ * J1: I->C->J: arriving at 8h01 at C so at 8h05 at J with a walking time of 321 seconds
+ * J2: I->B->J: arriving at 8h01 at C so at 8h07 at J with a walking time of 0 seconds
+ */
+BOOST_AUTO_TEST_CASE(less_fallback) {
+    ed::builder b("20120614");
+    b.vj("A")("stop1", 8*3600)("stop2", 8*3600 + 1*60)("stop3", 8*3600 + 7*60);
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> departs = {
+        {d.stop_areas_map["stop1"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(0)}
+    };
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> destinations =
+        {{d.stop_areas_map["stop1"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(562)},
+         {d.stop_areas_map["stop2"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(321)},
+         {d.stop_areas_map["stop3"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(0)}};
+    auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false, true);
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 2);
+    BOOST_CHECK(std::any_of(res1.begin(), res1.end(),
+                [](const routing::Path& path) {
+                    return path.items.back().arrival.time_of_day().total_seconds() == 8*3600 + 7*60;
+                }));
+
+    BOOST_CHECK(std::any_of(res1.begin(), res1.end(),
+                [](const routing::Path& path) {
+                    return path.items.back().arrival.time_of_day().total_seconds() == 8*3600 + 60;
+                }));
 }
