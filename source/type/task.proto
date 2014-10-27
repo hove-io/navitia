@@ -11,8 +11,5 @@ enum Action{
 
 message Task{
     required Action action = 1;
-    optional pbnavitia.realtime.Message message = 3;
-    optional pbnavitia.realtime.AtPerturbation at_perturbation = 4;
 }
-
 
