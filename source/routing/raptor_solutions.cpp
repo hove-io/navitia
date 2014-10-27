@@ -151,9 +151,11 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
             for(auto spid_dep : departs) {
                 if(raptor.data.pt_data->journey_pattern_points[final_jpp_idx]->stop_point->idx == spid_dep.first) {
                     if(clockwise) {
-                        s.upper_bound = s.upper_bound + (spid_dep.second.total_seconds());
+                        s.upper_bound = s.upper_bound + spid_dep.second.total_seconds();
+                        s.total_arrival = raptor.labels[round][best_jpp].dt_pt - spid_dep.second.total_seconds();
                     }else {
                         s.upper_bound = s.upper_bound - (spid_dep.second.total_seconds());
+                        s.total_arrival = raptor.labels[round][best_jpp].dt_pt + spid_dep.second.total_seconds();
                     }
                 }
             }
