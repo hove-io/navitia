@@ -285,12 +285,18 @@ get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, bool d
 
 struct VisitorWalkingTime : public BasePathVisitor {
     navitia::time_duration walking_time = {};
+    type::idx_t departure_jpp_idx = type::invalid_idx;
     void connection(type::StopPoint* , type::StopPoint* ,
                 boost::posix_time::ptime dep_time, boost::posix_time::ptime arr_time,
                 type::StopPointConnection*) {
 
         walking_time += navitia::seconds((arr_time - dep_time).total_seconds());
     }
+
+    void final_step(type::idx_t current_jpp, size_t , const std::vector<std::vector<Label>> &){
+        departure_jpp_idx = current_jpp;
+    }
+
 };
 
 
@@ -299,7 +305,7 @@ navitia::time_duration getWalkingTime(int count, type::idx_t jpp_idx, const std:
                      bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
                      const RAPTOR& raptor) {
 
-    const type::JourneyPatternPoint* current_jpp = raptor.data.pt_data->journey_pattern_points[jpp_idx];
+    const auto* current_jpp = raptor.data.pt_data->journey_pattern_points[jpp_idx];
     navitia::time_duration walking_time = {};
 
     //Marche à la fin
@@ -313,9 +319,13 @@ navitia::time_duration getWalkingTime(int count, type::idx_t jpp_idx, const std:
     VisitorWalkingTime v;
     read_path(v, current_jpp->idx, count, !clockwise, disruption_active, accessibilite_params, raptor);
     walking_time += v.walking_time;
+    if (v.departure_jpp_idx == type::invalid_idx) {
+        return walking_time;
+    }
+    const auto* departure_jpp = raptor.data.pt_data->journey_pattern_points[v.departure_jpp_idx];
     //Marche au départ
     for(auto dep_dist : departs) {
-        if(dep_dist.first == current_jpp->stop_point->idx) {
+        if(dep_dist.first == departure_jpp->stop_point->idx) {
             walking_time += dep_dist.second;
             break;
         }
