@@ -190,14 +190,16 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                 if(raptor.labels[i][journey_pattern_point->idx].pt_is_initialized()) {
                     navitia::time_duration walking_time = getWalkingTime(i, jppidx, departs, destinations, clockwise,
                                                                          disruption_active, accessibilite_params, raptor);
-                    if(best.walking_time <= walking_time) {
+                    if(best.walking_time < walking_time) {
                         continue;
                     }
                     float lost_time;
                     if(clockwise)
-                        lost_time = raptor.labels[i][jppidx].dt_pt - (spid_dist.second.total_seconds()) - best.arrival;
+                        lost_time = best.total_arrival -
+                                    (raptor.labels[i][jppidx].dt_pt - best.walking_time.total_seconds());
                     else
-                        lost_time = raptor.labels[i][jppidx].dt_pt + (spid_dist.second.total_seconds()) - best.arrival;
+                        lost_time = (raptor.labels[i][jppidx].dt_pt + spid_dist.second.total_seconds()) -
+                                best.total_arrival;
 
 
                     //Si je gagne 5 minutes de marche a pied, je suis pret à perdre jusqu'à 10 minutes.
@@ -238,11 +240,10 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                 }
             }
             if(best_departure.jpp_idx != type::invalid_idx) {
-                type::idx_t journey_pattern = raptor.data.pt_data->journey_pattern_points[best_departure.jpp_idx]->journey_pattern->idx;
-                if(tmp.find(journey_pattern) == tmp.end()) {
-                    tmp.insert(std::make_pair(journey_pattern, best_departure));
-                } else if(tmp[journey_pattern].ratio > best_departure.ratio) {
-                    tmp[journey_pattern] = best_departure;
+                if(tmp.find(best_departure.jpp_idx) == tmp.end()) {
+                    tmp.insert(std::make_pair(best_departure.jpp_idx, best_departure));
+                } else if(tmp[best_departure.jpp_idx].ratio > best_departure.ratio) {
+                    tmp[best_departure.jpp_idx] = best_departure;
                 }
             }
         }
