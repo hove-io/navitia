@@ -131,9 +131,9 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                         }
                     }
                     if(clockwise)
-                        best_dt = l.dt_pt - (spid_dist.second.total_seconds());
+                        best_dt = l.dt_pt - spid_dist.second.total_seconds();
                     else
-                        best_dt = l.dt_pt + (spid_dist.second.total_seconds());
+                        best_dt = l.dt_pt + spid_dist.second.total_seconds();
                 }
             }
         }
@@ -154,7 +154,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                         s.upper_bound = s.upper_bound + spid_dep.second.total_seconds();
                         s.total_arrival = raptor.labels[round][best_jpp].dt_pt - spid_dep.second.total_seconds();
                     }else {
-                        s.upper_bound = s.upper_bound - (spid_dep.second.total_seconds());
+                        s.upper_bound = s.upper_bound - spid_dep.second.total_seconds();
                         s.total_arrival = raptor.labels[round][best_jpp].dt_pt + spid_dep.second.total_seconds();
                     }
                 }
