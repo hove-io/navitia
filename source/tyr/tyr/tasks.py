@@ -356,20 +356,22 @@ def bounding_shape(instance_name, shape_path):
             shape = wkt.loads(myfile.read())
     else:
         logging.error("bounding_shape: {} has an unknown extension.".format(shape_path))
+        return
 
     conf = load_instance_config(instance_name)
     connection_string = "postgres://{u}:{pw}@{h}/{db}"\
         .format(u=conf.pg_username, pw=conf.pg_password, h=conf.pg_host, db=conf.pg_dbname)
-    print(connection_string)
     engine = sqlalchemy.create_engine(connection_string)
     # create the line if it does not exists
     engine.execute("""
     INSERT INTO navitia.parameters (shape)
     SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
     """).close()
-    # update the line
-    engine.execute("UPDATE navitia.parameters SET shape_computed = FALSE, shape = '{shape}'"\
-                   .format(shape=wkt.dumps(shape))).close()
+    # update the line, simplified to approx 100m
+    engine.execute("""
+    UPDATE navitia.parameters
+    SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
+    """.format(shape=wkt.dumps(shape))).close()
 
 
 @task_postrun.connect
