@@ -254,15 +254,20 @@ def reload_kraken(instance_id):
 @celery.task()
 def build_all_data():
     for instance in models.Instance.query.all():
-        job = models.Job()
-        job.instance = instance
-        job.state = 'pending'
-        instance_config = load_instance_config(instance.name)
-        models.db.session.add(job)
-        models.db.session.commit()
-        chain(ed2nav.si(instance_config, job.id),
-                            nav2rt.si(instance_config, job.id)).delay()
-        current_app.logger.info("Job  build data of : %s queued"%instance.name)
+        build_data(instance)
+
+
+@celery.task()
+def build_data(instance):
+    job = models.Job()
+    job.instance = instance
+    job.state = 'pending'
+    instance_config = load_instance_config(instance.name)
+    models.db.session.add(job)
+    models.db.session.commit()
+    chain(ed2nav.si(instance_config, job.id),
+                        nav2rt.si(instance_config, job.id)).delay()
+    current_app.logger.info("Job build data of : %s queued"%instance.name)
 
 
 @celery.task()
