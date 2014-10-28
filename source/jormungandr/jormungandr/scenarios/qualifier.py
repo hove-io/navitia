@@ -150,29 +150,26 @@ def get_arrival_datetime(journey):
 def get_departure_datetime(journey):
     return datetime.utcfromtimestamp(float(journey.arrival_date_time))
 
+def best_standard(standard, journey, best_criteria):
+    if not standard:
+        return journey
+
+    journey_has_pt = has_pt(journey)
+    standard_has_pt = has_pt(standard)
+    if journey_has_pt != standard_has_pt:
+        return standard if standard_has_pt else journey
+    journey_has_car = has_car(journey)
+    standard_has_car = has_car(standard)
+    if journey_has_car != standard_has_car:
+        return standard if not standard_has_car else journey
+    return standard if best_criteria(standard, journey) else journey
+
+
 
 def choose_standard(journeys, best_criteria):
     standard = None
     for journey in journeys:
-        if standard is None:
-            standard = journey
-            continue
-        journey_has_pt = has_pt(journey)
-        standard_has_pt = has_pt(standard)
-        if not standard_has_pt and journey_has_pt:
-            standard = journey # the standard should use pt if possible
-            continue
-        journey_has_car = has_car(journey)
-        standard_has_car = has_car(standard)
-        if standard_has_car and not journey_has_car:
-            standard = journey  # the standard shouldnt use the car if possible
-            continue
-        if standard_has_pt and not journey_has_pt:
-            continue
-        if not standard_has_car and journey_has_car:
-            continue
-        if best_criteria(journey, standard) > 0:
-            standard = journey
+        standard = best_standard(standard, journey, best_criteria)
     return standard
 
 
