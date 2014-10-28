@@ -49,7 +49,7 @@ parameters = Table('parameters', metadata,*[
     Column('beginning_date', DATE(), primary_key=False),
     Column('end_date', DATE(), primary_key=False),
     Column('timezone', TEXT(), primary_key=False),
-    Column('shape', Geography(geometry_type='POLYGON', srid=4326, spatial_index=False), primary_key=False),
+    Column('shape', Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False),
     Column('shape_computed', BOOLEAN(), primary_key=False, default=text(u'true')),
     ],
     schema='navitia')
