@@ -27,12 +27,17 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.reload_at import ReloadAtCommand
-from tyr.command.at_reloader import AtReloader
-from tyr.command.reload_kraken import ReloadKrakenCommand
-from tyr.command.build_data import BuildDataCommand
-from tyr.command.load_data import LoadDataCommand
-import tyr.command.purge
-import tyr.command.cities
-import tyr.command.bounding_shape
-import tyr.command.import_last_dataset
+from navitiacommon import models
+from tyr import tasks
+from tyr import manager
+import logging
+
+
+@manager.command
+def bounding_shape(instance_name, bounding_shape_filename):
+    """A command used for loading a bounding shape for an instance"""
+
+    logging.info("Run command bounding shape")
+
+    tasks.bounding_shape(instance_name, bounding_shape_filename)
+
