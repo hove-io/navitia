@@ -170,6 +170,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+    BOOST_REQUIRE_EQUAL(section.duration(), 420);
 }
 
 BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
@@ -222,6 +223,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+    BOOST_REQUIRE_EQUAL(section.duration(), 420);
+
 
     section = journey.sections(2);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 3);
@@ -283,6 +286,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+    BOOST_REQUIRE_EQUAL(section.duration(), 60);
+
 
     section = journey.sections(2);
     BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
@@ -351,6 +356,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+    BOOST_REQUIRE_EQUAL(section.duration(), 60);
 
     section = journey.sections(2);
     BOOST_CHECK(! section.add_info_vehicle_journey().stay_in());
@@ -431,7 +437,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
                                             ("start", 61080, 61080)
                                             ("btl", 61560, 61560)
                                             ("vg", 61920, 61920)
-                                            ("ht:4", 62340, 62340);
+                                            ("ht:4", 62340, 62350);
     b.vj("4462", "1111111", "block1", true) ("end", 62400, 62500)
                                             ("hto", 62940, 62940)
                                             ("rs", 63180, 63180);
@@ -470,6 +476,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+    BOOST_REQUIRE_EQUAL(section.duration(), 50);
 
     section = journey.sections(2);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 1);
@@ -580,6 +587,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
+    BOOST_REQUIRE_EQUAL(section.duration(), 60);
 
     section = journey.sections(2);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 3);
