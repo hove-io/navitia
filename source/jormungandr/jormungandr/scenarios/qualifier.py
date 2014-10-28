@@ -154,11 +154,24 @@ def get_departure_datetime(journey):
 def choose_standard(journeys, best_criteria):
     standard = None
     for journey in journeys:
-        no_pt = not has_pt(journey)
-        if standard is None or not has_pt(standard) and no_pt:
+        if standard is None:
+            standard = journey
+            continue
+        journey_has_pt = has_pt(journey)
+        standard_has_pt = has_pt(standard)
+        if not standard_has_pt and journey_has_pt:
+            standard = journey # the standard should use pt if possible
+            continue
+        journey_has_car = has_car(journey)
+        standard_has_car = has_car(standard)
+        if standard_has_car and not journey_has_car:
             standard = journey  # the standard shouldnt use the car if possible
             continue
-        if not no_pt and best_criteria(journey, standard) > 0:
+        if standard_has_pt and not journey_has_pt:
+            continue
+        if not standard_has_car and journey_has_car:
+            continue
+        if best_criteria(journey, standard) > 0:
             standard = journey
     return standard
 
