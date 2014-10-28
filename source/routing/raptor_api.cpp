@@ -43,6 +43,24 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+navitia::type::Mode_e get_crowfly_mode(const georef::Path& path){
+    for(const auto& item: path.path_items){
+        switch(item.transportation){
+            case georef::PathItem::TransportCaracteristic::Car:
+                return type::Mode_e::Car;
+            case georef::PathItem::TransportCaracteristic::BssPutBack:
+            case georef::PathItem::TransportCaracteristic::BssTake:
+                return type::Mode_e::Bss;
+            case georef::PathItem::TransportCaracteristic::Bike:
+                return type::Mode_e::Bike;
+            default:
+                break;
+        }
+    }
+    //if we don't use a non walking mode, then we walk :)
+    return type::Mode_e::Walking;
+}
+
 static void add_coord(const type::GeographicalCoord& coord, pbnavitia::Section* pb_section) {
     auto* new_coord = pb_section->add_shape();
     new_coord->set_lon(coord.lon());
@@ -124,7 +142,9 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
                                           path.items.front().departures.front()+bt::minutes(1));
-            fill_crowfly_section(origin, destination_tmp, origin.streetnetwork_params.mode, path.items.front().departures.front(),
+            const auto& departure_stop_point = path.items.front().stop_points.front();
+            auto temp = worker.get_path(departure_stop_point->idx);
+            fill_crowfly_section(origin, destination_tmp, get_crowfly_mode(temp), path.items.front().departures.front(),
                                  d, enhanced_response, pb_journey, now, action_period);
 
         } else {
@@ -263,7 +283,9 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
                                           path.items.back().departures.back()+bt::minutes(1));
-            fill_crowfly_section(origin_tmp, destination, destination.streetnetwork_params.mode,
+            const auto& arrival_stop_point = path.items.back().stop_points.back();
+            auto temp = worker.get_path(arrival_stop_point->idx, true);
+            fill_crowfly_section(origin_tmp, destination, get_crowfly_mode(temp),
                                  path.items.back().departures.back(),
                                  d, enhanced_response, pb_journey, now, action_period);
 
