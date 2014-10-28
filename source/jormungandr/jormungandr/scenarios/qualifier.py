@@ -162,7 +162,7 @@ def best_standard(standard, journey, best_criteria):
     standard_has_car = has_car(standard)
     if journey_has_car != standard_has_car:
         return standard if not standard_has_car else journey
-    return standard if best_criteria(standard, journey) else journey
+    return standard if best_criteria(standard, journey) > 0 else journey
 
 
 
@@ -187,11 +187,11 @@ transfers_crit = lambda j_1, j_2: compare_minus(j_1.nb_transfers, j_2.nb_transfe
 
 
 def arrival_crit(j_1, j_2):
-    return j_1.arrival_date_time < j_2.arrival_date_time
+    return compare_minus(j_1.arrival_date_time, j_2.arrival_date_time)
 
 
 def departure_crit(j_1, j_2):
-    return j_1.departure_date_time > j_2.departure_date_time
+    return compare_minus(j_2.departure_date_time, j_1.departure_date_time)
 
 
 def nonTC_crit(j_1, j_2):
