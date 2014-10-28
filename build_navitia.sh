@@ -151,12 +151,12 @@ then
     postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
     distrib=`lsb_release -si`
 
-    if [ "$distrib" = "Debian" ]; then
+    if [ "$distrib" = "Debian" ] && grep -q '^7\.' /etc/debian_version; then
             # on Debian, we must add the APT repository of PostgreSQL project
             # to have the right version of postgis
             # no magic stuff : https://wiki.postgresql.org/wiki/Apt#PostgreSQL_packages_for_Debian_and_Ubuntu
             apt_file='/etc/apt/sources.list.d/postgresql.list'
-            echo "deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" >> $apt_file
+            sudo /bin/sh -c "echo 'deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main' > $apt_file"
             sudo apt-get -y install wget ca-certificates
             wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
             sudo apt-get update
@@ -305,4 +305,4 @@ read -p "when you are finished, hit  a key to close kraken and jormungandr" n
 clean_exit
 
 # cleaning APT repository if -c option was specified
-test -n $clean_apt && rm -f $apt_file && printf "Option -c was specified, removing %s" "$apt_file"
+test -n $clean_apt && rm -f $apt_file && printf "Option -c was specified, removing %s \n" "$apt_file"
