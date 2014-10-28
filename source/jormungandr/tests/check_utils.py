@@ -208,12 +208,12 @@ def is_valid_coord(coord):
 
 def get_links_dict(response):
     """
-    get links as dict ordered by 'rel'
+    get links as dict ordered by 'rel' or 'type"
     """
     raw_links = get_not_null(response, "links")
 
     #create a dict with the 'rel' field as key
-    links = {get_not_null(link, "rel"): link for link in raw_links}
+    links = {link.get('rel', link.get('type', None)): link for link in raw_links}
 
     return links
 
@@ -224,10 +224,10 @@ def check_links(object, tester):
      - all links must have the attributes:
        * 'internal' --> optional but must be a boolean
        * 'href' --> valid url if not templated, empty if internal
-       * 'rel' --> not empty
+       * 'rel' --> not empty if internal
        * 'title' --> optional
        * 'templated' --> optional but must be a boolean
-       * 'type' --> not empty if internal
+       * 'type' --> not empty
     """
     links = get_links_dict(object)
 
@@ -247,14 +247,15 @@ def check_links(object, tester):
 
         if not templated and not internal:
             #we check that the url is valid
-            assert check_url(tester, link['href'], might_have_additional_args=True), "href's link must be a valid url"
-
-        assert 'rel' in link
-        assert link['rel']
+            assert check_url(tester, link['href'].replace('http://localhost', ''),
+                             might_have_additional_args=False), "href's link must be a valid url"
 
         if internal:
-            assert 'type' in link
-            assert link['type']
+            assert 'rel' in link
+            assert link['rel']
+
+        assert 'type' in link
+        assert link['type']
 
     return links
 
@@ -327,24 +328,16 @@ def check_internal_links(response, tester):
     internal_link_types = set()  # set with the types we look for
 
     def add_link_visitor(name, val):
-        if name == 'links':
+        if val and name == 'links':
             if 'internal' in val and bool(val['internal']):
                 internal_links_id.add(val['id'])
                 internal_link_types.add(val['rel'])
 
     walk_dict(response, add_link_visitor)
 
-    logging.info('links: {}'.format(len(internal_links_id)))
-
-    for l in internal_links_id:
-        logging.info('--> {}'.format(l))
-    for l in internal_link_types:
-        logging.info('type --> {}'.format(l))
-
     def check_node(name, val):
 
         if name in internal_link_types:
-            logging.info("found a good node {}".format(name))
 
             if 'id' in val and val['id'] in internal_links_id:
                 #found one ref, we can remove the link
@@ -384,12 +377,21 @@ def query_from_str(str):
 
     >>> query_from_str("toto/tata?bob=toto&bobette=tata&bobinos=tutu")
     {'bobette': 'tata', 'bobinos': 'tutu', 'bob': 'toto'}
+    >>> query_from_str("toto/tata?bob=toto&bob=tata&bob=titi&bob=tata&bobinos=tutu")
+    {'bobinos': 'tutu', 'bob': ['toto', 'tata', 'titi', 'tata']}
     """
     query = {}
     last_elt = str.split("?")[-1]
     for s in last_elt.split("&"):
         k, v = s.split("=")
-        query[k] = v
+        if k in query:
+            old_val = query[k]
+            if isinstance(old_val, list):
+                old_val.append(v)
+            else:
+                query[k] = [old_val, v]
+        else:
+            query[k] = v
 
     return query
 
@@ -416,8 +418,27 @@ def is_valid_journey_response(response, tester, query_str):
 
     check_internal_links(response, tester)
 
+    #check other links
+    check_links(response, tester)
 
-    #TODO check journey links (prev/next)
+    # more checks on links, we want the prev/next/first/last,
+    # to have forwarded all params, (and the time must be right)
+    journeys_links = get_links_dict(response)
+
+    for l in ["prev", "next", "first", "last"]:
+        assert l in journeys_links
+        url = journeys_links[l]['href']
+
+        additional_args = query_from_str(url)
+        for k, v in additional_args.iteritems():
+            if k == 'datetime':
+                #TODO check datetime
+                continue
+            if k == 'datetime_represents':
+                #TODO check datetime
+                continue
+
+            assert query_dict[k] == v, "we must have the same query"
 
 
 def is_valid_journey(journey, tester, query):

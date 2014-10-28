@@ -30,9 +30,59 @@
 from flask import url_for
 from collections import OrderedDict
 from functools import wraps
+from sqlalchemy.sql.elements import _type_from_args
 from converters_collection_type import resource_type_to_collection,\
     collections_to_resource_type
 from flask.ext.restful.utils import unpack
+
+
+def create_external_link(url, rel, _type=None, templated=False, description=None, **kwargs):
+    """
+    :param url: url forwarded to flask's url_for
+    :param rel:  TODO: good explanation
+    :param _type:
+    :param templated: if the link is templated ({} is the url)
+    :param description: description of the link
+    :param kwargs: args forwarded to url_for
+    :return: a dict representing a link
+    """
+    #if no type, type is rel
+    if not _type:
+        _type = rel
+
+    d = {
+        "href": url_for(url, _external=True, **kwargs),
+        "templated": templated,
+        "rel": rel,
+        "type": _type
+    }
+    if description:
+        d['description'] = description
+
+    return d
+
+def create_internal_link(rel, _type, id, templated=False, description=None):
+    """
+    :param rel: TODO: good explanation
+    :param _type:
+    :param id: id of the link
+    :param templated: if the link is templated ({} is the url)
+    :return: a dict representing a link
+    """
+    #if no type, type is rel
+    if not _type:
+        _type = rel
+
+    d = {
+        "templated": templated,
+        "rel": rel,
+        "type": _type
+    }
+    if description:
+        d['description'] = description
+    if id:
+        d['id'] = id
+
 
 
 class generate_links(object):
@@ -153,9 +203,7 @@ class add_coverage_link(generate_links):
             if isinstance(data, OrderedDict):
                 data = self.prepare_objetcs(data)
                 kwargs = self.prepare_kwargs(kwargs, data)
-                url = url_for("v1.coverage", _external=True, **kwargs)
-                data["links"].append({"href": url, "rel": "related",
-                                      "templated": True})
+                data["links"].append(create_external_link("v1.coverage", rel='related', templated=True, **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -182,10 +230,8 @@ class add_collection_links(generate_links):
                 data = self.prepare_objetcs(objects, True)
                 kwargs = self.prepare_kwargs(kwargs, data)
                 for collection in self.collections:
-                    url = url_for("v1." + collection + ".collection",
-                                  _external=True, **kwargs)
-                    data["links"].append({"href": url, "rel": collection,
-                                          "templated": True})
+                    data["links"].append(create_external_link("v1.{c}.collection".format(c=collection),
+                                                     rel=collection, templated=True, **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -228,10 +274,10 @@ class add_id_links(generate_links):
                     endpoint += "id" if "region" in kwargs.keys() or\
                         "lon" in kwargs.keys()\
                                         else "redirect"
+
+                    data["links"].append(create_external_link(url=endpoint, rel=kwargs["collection"],
+                                                              _type=obj, templated=True, **kwargs))
                     del kwargs["collection"]
-                    url = url_for(endpoint, _external=True, **kwargs)
-                    data["links"].append({"href": url, "rel": obj,
-                                          "templated": True})
             if isinstance(objects, tuple):
                 return data, code, header
             else:

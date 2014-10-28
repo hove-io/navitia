@@ -67,7 +67,7 @@ class TestJourneys(AbstractTestFixture):
     def test_best_filtering(self):
         """Filter to get the best journey, we should have only one journey, the best one"""
         query = "{query}&type=best".format(query=journey_basic_query)
-        response = self.query_region(query, display=False)
+        response = self.query_region(query)
 
         is_valid_journey_response(response, self.tester, query)
         assert len(response['journeys']) == 1
@@ -78,7 +78,7 @@ class TestJourneys(AbstractTestFixture):
         """the basic query return a non pt walk journey and a best journey. we test the filtering of the non pt"""
 
         response = self.query_region("{query}&type=non_pt_walk".
-                                     format(query=journey_basic_query), display=False)
+                                     format(query=journey_basic_query))
 
         assert len(response['journeys']) == 1
         assert response['journeys'][0]["type"] == "non_pt_walk"
@@ -87,7 +87,7 @@ class TestJourneys(AbstractTestFixture):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
 
         response = self.query_region("{query}&type=car".
-                                     format(query=journey_basic_query), display=False)
+                                     format(query=journey_basic_query))
 
         assert not 'journeys' in response or len(response['journeys']) == 0
         assert 'error' in response
@@ -97,7 +97,8 @@ class TestJourneys(AbstractTestFixture):
     def test_dumb_filtering(self):
         """if we filter with non existent type, we get an error"""
 
-        response, status = self.query_region("{query}&type=sponge_bob".format(query=journey_basic_query), check=False, display=True)
+        response, status = self.query_region("{query}&type=sponge_bob"
+                                             .format(query=journey_basic_query), check=False)
 
         assert status == 400, "the response should not be valid"
 
@@ -105,11 +106,20 @@ class TestJourneys(AbstractTestFixture):
 
     def test_journeys_no_bss_and_walking(self):
         query = journey_basic_query + "&first_section_mode=walking&first_section_mode=bss"
-        response = self.query_region(query, display=True)
+        response = self.query_region(query)
 
-        is_valid_journey_response(response, self.tester, journey_basic_query)
+        is_valid_journey_response(response, self.tester, query)
         #Note: we need to mock the kraken instances to check that only one call has been made and not 2
-        #(only one for bss because walking should not have been added since it dupplicate bss)
+        #(only one for bss because walking should not have been added since it duplicate bss)
+
+        # we explicitly check that we find both mode in the responses link
+        # (is checked in is_valid_journey, but never hurts to check twice)
+        links = get_links_dict(response)
+        for l in ["prev", "next", "first", "last"]:
+            assert l in links
+            url = links[l]['href']
+            url_dict = query_from_str(url)
+            assert url_dict['first_section_mode'] == ['walking', 'bss']
 
     """
     test on date format

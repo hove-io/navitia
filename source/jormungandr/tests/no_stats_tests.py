@@ -64,7 +64,7 @@ class TestNoStats(AbstractTestFixture):
         stats deactivation should not alter results
         """
         stat_manager.save_stat = False # we disable the stats
-        response = self.query_region(journey_basic_query, display=False)
+        response = self.query_region(journey_basic_query)
 
         is_valid_journey_response(response, self.tester, journey_basic_query)
 
@@ -72,5 +72,5 @@ class TestNoStats(AbstractTestFixture):
         """
         Even if the stat manager is failing we want the journey result.
         """
-        response = self.query_region(journey_basic_query, display=False)
+        response = self.query_region(journey_basic_query)
         is_valid_journey_response(response, self.tester, journey_basic_query)
