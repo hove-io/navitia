@@ -262,6 +262,16 @@ def standard_choice_with_pt_test():
     print "standard ", standard.arrival_date_time
     eq_(standard, journey_1)
 
+def choose_standard_pt_car():
+    journeys = []
+
+    journey1 = response_pb2.Journey()
+    journey1.arrival_date_time = str_to_time_stamp("20141120T170000")
+    journey1.sections.add()
+
+    journey1.sections[0].type = response_pb2.STREET_NETWORK
+    journey1.sections[0].street_ne
+
 def tranfers_cri_test():
     journeys = []
 
