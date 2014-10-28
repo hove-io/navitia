@@ -39,8 +39,8 @@ from flask.ext.restful.utils import unpack
 def create_external_link(url, rel, _type=None, templated=False, description=None, **kwargs):
     """
     :param url: url forwarded to flask's url_for
-    :param rel:  TODO: good explanation
-    :param _type:
+    :param rel: relation of the link to the current object
+    :param _type: type of linked object
     :param templated: if the link is templated ({} is the url)
     :param description: description of the link
     :param kwargs: args forwarded to url_for
@@ -63,8 +63,8 @@ def create_external_link(url, rel, _type=None, templated=False, description=None
 
 def create_internal_link(rel, _type, id, templated=False, description=None):
     """
-    :param rel: TODO: good explanation
-    :param _type:
+    :param rel: relation of the link to the current object
+    :param _type: type of linked object
     :param id: id of the link
     :param templated: if the link is templated ({} is the url)
     :return: a dict representing a link
