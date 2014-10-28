@@ -58,12 +58,6 @@ enum VehicleJourneyType{
     //odt_with_zone = 2;
 }
 
-enum MessageStatus{
-	information = 0;
-	warning = 1;
-	disrupt = 2;
-}
-
 enum ResponseStatus{
 	none = 0;
 	no_departure_this_day = 1;
@@ -80,15 +74,32 @@ message Code {
     required string type = 1;
     required string value = 2;
 }
-message Message{
+
+message Period {
+    optional uint64 begin = 1;
+    optional uint64 end = 2;
+}
+
+enum ActiveStatus {
+    past = 0;
+    active = 1;
+    futur = 2;
+}
+
+message MessageContent {
+    optional string text = 1;
+    optional string content_type = 2;
+}
+message Message {
     optional string uri 							= 1;
     optional string message 						= 2;
     optional string title 							= 3;
-    optional string start_application_date 			= 4;
-    optional string end_application_date 			= 5;
-    optional string start_application_daily_hour 	= 6;
-    optional string end_application_daily_hour 		= 7;    
-    optional MessageStatus message_status 			= 8;
+    repeated Period application_periods             = 10;
+    optional ActiveStatus status    				= 11;
+    optional uint64 updated_at                      = 12;
+    repeated string tags                            = 13;
+    optional string cause                           = 14;
+    repeated MessageContent messages                = 15; 
 }
 
 message GeographicalCoord {
