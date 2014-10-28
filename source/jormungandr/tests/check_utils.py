@@ -435,7 +435,16 @@ def is_valid_journey_response(response, tester, query_str):
                 #TODO check datetime
                 continue
             if k == 'datetime_represents':
-                #TODO check datetime
+                query_dt_rep = query_dict.get('datetime_represents', 'departure')
+                if l in ['prev', 'last']:
+                    #the datetime_represents is negated
+                    if query_dt_rep == 'departure':
+                        assert v == 'arrival'
+                    else:
+                        assert v == 'departure'
+                else:
+                    query_dt_rep == v
+
                 continue
 
             assert query_dict[k] == v, "we must have the same query"
