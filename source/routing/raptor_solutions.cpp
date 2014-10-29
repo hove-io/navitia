@@ -145,6 +145,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                                             accessibilite_params, raptor);
             s.arrival = best_dt_jpp;
             s.ratio = 0;
+            s.total_arrival = best_dt;
             type::idx_t final_jpp_idx;
             std::tie(final_jpp_idx, s.upper_bound) = get_final_jppidx_and_date(round, best_jpp, clockwise,
                                                                              disruption_active, accessibilite_params, raptor);
@@ -152,10 +153,8 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                 if(raptor.data.pt_data->journey_pattern_points[final_jpp_idx]->stop_point->idx == spid_dep.first) {
                     if(clockwise) {
                         s.upper_bound = s.upper_bound + spid_dep.second.total_seconds();
-                        s.total_arrival = raptor.labels[round][best_jpp].dt_pt - spid_dep.second.total_seconds();
                     }else {
                         s.upper_bound = s.upper_bound - spid_dep.second.total_seconds();
-                        s.total_arrival = raptor.labels[round][best_jpp].dt_pt + spid_dep.second.total_seconds();
                     }
                 }
             }
