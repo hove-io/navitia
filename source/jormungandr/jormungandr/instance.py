@@ -206,4 +206,4 @@ class Instance(object):
         """
         Does this instance has the given id
         """
-        return len(self.get_external_codes(self, type_, id_).places) > 0
+        return len(self.get_external_codes(type_, id_).places) > 0
