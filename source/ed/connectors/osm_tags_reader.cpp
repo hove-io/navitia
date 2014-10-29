@@ -82,11 +82,11 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
                 car_direct = car_primary;
                 foot = foot_allowed;
                 bike_direct = bike_allowed;
-            } else if(val == "secondary") {
+            } else if(val == "secondary" || val == "secondary_link") {
                 car_direct = car_secondary;
                 foot = foot_allowed;
                 bike_direct = bike_allowed;
-            } else if(val == "tertiary") {
+            } else if(val == "tertiary" || val == "tertiary_link") {
                 car_direct = car_tertiary;
                 foot = foot_allowed;
                 bike_direct = bike_allowed;
