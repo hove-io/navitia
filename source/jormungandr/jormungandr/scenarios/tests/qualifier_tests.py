@@ -216,6 +216,61 @@ def standard_choice_test():
     print "standard ", standard.arrival_date_time
     eq_(standard, journey_1)
 
+def standard_choice_with_pt_test():
+    journeys = []
+    #the first is the worst one
+    journey_worst = response_pb2.Journey()
+    journey_worst.arrival_date_time = str_to_time_stamp("20131107T161200")
+    journey_worst.sections.add()
+
+    journey_worst.sections[0].type = response_pb2.STREET_NETWORK
+    journey_worst.sections[0].street_network.mode = response_pb2.Car
+
+    journeys.append(journey_worst)
+
+    # arrive later but no car
+    journey_not_good = response_pb2.Journey()
+    journey_not_good.arrival_date_time = str_to_time_stamp("20131107T171200")
+    journey_not_good.sections.add()
+
+    journey_not_good.sections[0].type = response_pb2.STREET_NETWORK
+    journey_not_good.sections[0].street_network.mode = response_pb2.Bike
+
+    journeys.append(journey_not_good)
+
+    #this is the standard
+    journey_1 = response_pb2.Journey()
+    journey_1.arrival_date_time = str_to_time_stamp("20131107T201200")
+    journey_1.sections.add()
+    journey_1.sections[0].type = response_pb2.PUBLIC_TRANSPORT
+
+    journeys.append(journey_1)
+
+    # a better journey, but using car
+    journey_2 = response_pb2.Journey()
+    journey_2.arrival_date_time = str_to_time_stamp("20131107T151000")
+    journey_2.sections.add()
+
+    journey_2.sections[0].type = response_pb2.STREET_NETWORK
+    journey_2.sections[0].street_network.mode = response_pb2.Car
+
+    journeys.append(journey_2)
+
+    standard = qualifier.choose_standard(journeys, qualifier.arrival_crit)
+
+    print qualifier.has_car(standard)
+    print "standard ", standard.arrival_date_time
+    eq_(standard, journey_1)
+
+def choose_standard_pt_car():
+    journeys = []
+
+    journey1 = response_pb2.Journey()
+    journey1.arrival_date_time = str_to_time_stamp("20141120T170000")
+    journey1.sections.add()
+
+    journey1.sections[0].type = response_pb2.STREET_NETWORK
+    journey1.sections[0].street_ne
 
 def tranfers_cri_test():
     journeys = []
