@@ -196,12 +196,12 @@ kraken_db_name='navitia'
 encap=`sudo su - postgres -c "psql postgres -tAc \"SELECT 1 FROM pg_roles WHERE rolname='$db_owner'\""`  # we check if there is already a user 
 if [ -z $encap ]
 then
-sudo su - postgres -c "psql -c \"create user $db_owner;alter user $db_owner password '$kraken_db_user_password';\""
+sudo -i -u postgres psql -c "create user $db_owner;alter user $db_owner password '$kraken_db_user_password';"
 else
 echo "user $db_owner already exists"
 fi
 
-if ! sudo su - postgres -c "bash -c 'psql -l | grep \"^ ${kraken_db_name}\"'"
+if ! sudo -i -u postgres psql -l | grep -q "^ ${kraken_db_name}"
 then
 sudo su - postgres -c "createdb $kraken_db_name -O $db_owner"
 sudo su - postgres -c "psql -c \"create extension postgis; \" $kraken_db_name"
