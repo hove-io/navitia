@@ -44,7 +44,7 @@ struct RAPTOR;
 struct Solution {
     type::idx_t jpp_idx;
     uint32_t count;
-    DateTime arrival, upper_bound;
+    DateTime arrival, upper_bound, total_arrival;
     float ratio;
     navitia::time_duration walking_time = {};
 
