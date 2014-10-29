@@ -57,9 +57,10 @@ def create_external_link(url, rel, _type=None, templated=False, description=None
         "type": _type
     }
     if description:
-        d['description'] = description
+        d['title'] = description
 
     return d
+
 
 def create_internal_link(rel, _type, id, templated=False, description=None):
     """
@@ -79,10 +80,9 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
         "type": _type
     }
     if description:
-        d['description'] = description
+        d['title'] = description
     if id:
         d['id'] = id
-
 
 
 class generate_links(object):
