@@ -287,6 +287,8 @@ EOFJ
 # the Jormungnandr configuration is in the source/jormungandr/jormungandr/default_settings.py file
 # should be almost enough for the moment, we just need to change the location of the krakens configuration
 sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," "$navitia_dir"/source/jormungandr/jormungandr/default_settings.py > "$run_dir"/jormungandr_settings.py
+#we also don't want to depend on the jormungandr database for this test
+sed -i 's/DISABLE_DATABASE.*/DISABLE_DATABASE=False/' "$run_dir"/jormungandr_settings.py
 
 JORMUNGANDR_CONFIG_FILE="$run_dir"/jormungandr_settings.py PYTHONPATH="$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr" python "$navitia_dir"/source/jormungandr/jormungandr/manage.py runserver -d -r & 
 
