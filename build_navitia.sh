@@ -43,7 +43,7 @@ clean_exit()
 }
 
 kraken_db_user_password=
-navitia_dir=`dirname $(readlink -f $0)`
+navitia_dir="$(dirname $(readlink -f $0))"
 gtfs_data_dir=
 osm_file=
 
@@ -76,19 +76,19 @@ EOF
 
 while getopts “hp:g:o:nc” OPTION
 do
-     case $OPTION in
+     case "$OPTION" in
          h)
              usage
              exit 1
              ;;
          p)
-             kraken_db_user_password=$OPTARG
+             kraken_db_user_password="$OPTARG"
              ;;
          g)
-             gtfs_data_dir=$OPTARG
+             gtfs_data_dir="$OPTARG"
              ;;
          o)
-             osm_file=$OPTARG
+             osm_file="$OPTARG"
              ;;
          n)
              install_dependencies=
@@ -123,8 +123,8 @@ then
     osm_file=/tmp/paris.osm.pbf
 fi
 
-run_dir=$navitia_dir/run
-mkdir -p $run_dir
+run_dir="$navitia_dir"/run
+mkdir -p "$run_dir"
 
 #Hack
 #for convenience reason, some submodule links are in ssh (easier to push)
@@ -142,7 +142,7 @@ git submodule update --init
 #First you need to install all dependencies. 
 #
 #first the system and the c++ dependencies: 
-if [ $install_dependencies ]
+if [ -n "$install_dependencies" ]
 then
     echo "** installing all dependencies"
     sudo apt-get install -y git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
@@ -166,16 +166,16 @@ then
 
     # then you need to install all python dependencies: ::
 
-    sudo pip install -r $navitia_dir/source/jormungandr/requirements.txt
-    sudo pip install -r $navitia_dir/source/tyr/requirements.txt
+    sudo pip install -r "$navitia_dir"/source/jormungandr/requirements.txt
+    sudo pip install -r "$navitia_dir"/source/tyr/requirements.txt
     #we want a custom protobuff version
     sudo pip install -U protobuf==2.5.0
 fi
 
 #the build procedure is explained is the install documentation
 echo "** building navitia"
-navitia_build_dir=$navitia_dir/release
-mkdir -p $navitia_build_dir && cd $navitia_build_dir
+navitia_build_dir="$navitia_dir"/release
+mkdir -p "$navitia_build_dir" && cd "$navitia_build_dir"
 cmake -DCMAKE_BUILD_TYPE=Release ../source
 make -j$(($(grep -c '^processor' /proc/cpuinfo)+1))
 
@@ -193,20 +193,18 @@ db_owner='navitia'
 
 kraken_db_name='navitia'
 # for the default build we give ownership of the base to a 'navitia' user, but you can do whatever you want here
-encap=`sudo su - postgres -c "psql postgres -tAc \"SELECT 1 FROM pg_roles WHERE rolname='$db_owner'\""`  # we check if there is already a user 
-if [ -z $encap ]
-then
-sudo -i -u postgres psql -c "create user $db_owner;alter user $db_owner password '$kraken_db_user_password';"
+encap=$(sudo -i -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_owner'")  # we check if there is already a user 
+if [ -z "$encap" ]; then
+    sudo -i -u postgres psql -c "create user $db_owner;alter user $db_owner password '$kraken_db_user_password';"
 else
-echo "user $db_owner already exists"
+    echo "user $db_owner already exists"
 fi
 
-if ! sudo -i -u postgres psql -l | grep -q "^ ${kraken_db_name}"
-then
-sudo su - postgres -c "createdb $kraken_db_name -O $db_owner"
-sudo su - postgres -c "psql -c \"create extension postgis; \" $kraken_db_name"
-else 
-echo "db $kraken_db_name already exists"
+if ! sudo -i -u postgres psql -l | grep -q "^ ${kraken_db_name}"; then
+    sudo -i -u postgres createdb "$kraken_db_name" -O "$db_owner"
+    sudo -i -u postgres psql -c "create extension postgis; " "$kraken_db_name"
+else
+    echo "db $kraken_db_name already exists"
 fi
 
 # Then you need to update it's scheme
@@ -214,8 +212,8 @@ fi
 # You can edit the alembic.ini file if you want a custom behaviour (or give your own with the alembic -c option)
 # you can give the database url either by setting the sqlalchemy.url parameter in the config file or by giving 
 # a -x dbname option
-cd $navitia_dir/source/sql
-PYTHONPATH=. alembic -x dbname=postgresql://$db_owner:$kraken_db_user_password@localhost/$kraken_db_name upgrade head
+cd "$navitia_dir"/source/sql
+PYTHONPATH=. alembic -x dbname="postgresql://$db_owner:$kraken_db_user_password@localhost/$kraken_db_name" upgrade head
 cd
 
 #====================
@@ -225,13 +223,13 @@ cd
 # ** filling up the database **
 
 ## we need to import the gtfs data
-$navitia_build_dir/ed/gtfs2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
+"$navitia_build_dir"/ed/gtfs2ed -i "$gtfs_data_dir" --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
 
 ## we need to import the osm data
-$navitia_build_dir/ed/osm2ed -i $osm_file --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
+"$navitia_build_dir"/ed/osm2ed -i "$osm_file" --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
 
 ## then we export the database into kraken's custom file format
-$navitia_build_dir/ed/ed2nav -o $run_dir/data.nav.lz4 --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
+"$navitia_build_dir"/ed/ed2nav -o "$run_dir"/data.nav.lz4 --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
 
 #========
 # Running
@@ -244,7 +242,7 @@ echo "** running kraken"
 # Note we run Jormungandr and kraken in the same shell so the output might be messy
 
 # We have to create the kraken configuration file
-cat << EOF > $run_dir/kraken.ini
+cat << EOF > "$run_dir"/kraken.ini
 [GENERAL]
 #file to load
 database = data.nav.lz4
@@ -264,8 +262,8 @@ log4cplus.appender.ALL_MSGS.layout.ConversionPattern=[%D{%y-%m-%d %H:%M:%S,%q}] 
 EOF
 
 # WARNING, for the moment you have to run it in the kraken.ini directory
-cd $run_dir
-$navitia_build_dir/kraken/kraken &
+cd "$run_dir"
+"$navitia_build_dir"/kraken/kraken &
 
 kraken_pid=$!
 
@@ -275,10 +273,10 @@ echo "** running jormungandr"
 
 # Jormungandr need to know how to call the kraken
 # The configuration for that is handle by a repository where every kraken is referenced by a .ini file
-mkdir -p $run_dir/jormungandr
+mkdir -p "$run_dir"/jormungandr
 
 # For our test we only need one kraken
-cat << EOFJ > $run_dir/jormungandr/default.ini 
+cat << EOFJ > "$run_dir"/jormungandr/default.ini 
 [instance]
 # name of the kraken
 key = default
@@ -288,9 +286,9 @@ EOFJ
 
 # the Jormungnandr configuration is in the source/jormungandr/jormungandr/default_settings.py file
 # should be almost enough for the moment, we just need to change the location of the krakens configuration
-sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," $navitia_dir/source/jormungandr/jormungandr/default_settings.py > $run_dir/jormungandr_settings.py
+sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," "$navitia_dir"/source/jormungandr/jormungandr/default_settings.py > "$run_dir"/jormungandr_settings.py
 
-JORMUNGANDR_CONFIG_FILE=$run_dir/jormungandr_settings.py PYTHONPATH=$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr python $navitia_dir/source/jormungandr/jormungandr/manage.py runserver -d -r & 
+JORMUNGANDR_CONFIG_FILE="$run_dir"/jormungandr_settings.py PYTHONPATH="$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr" python "$navitia_dir"/source/jormungandr/jormungandr/manage.py runserver -d -r & 
 
 jormun_pid=$!
 
@@ -305,4 +303,4 @@ read -p "when you are finished, hit  a key to close kraken and jormungandr" n
 clean_exit
 
 # cleaning APT repository if -c option was specified
-test -n $clean_apt && rm -f $apt_file && printf "Option -c was specified, removing %s \n" "$apt_file"
+test -n "$clean_apt" && rm -f "$apt_file" && printf "Option -c was specified, removing %s \n" "$apt_file"
