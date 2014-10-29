@@ -593,7 +593,6 @@ def downgrade():
     op.drop_table('origin_destination', schema='navitia')
     op.drop_table('odt_type', schema='navitia')
     op.drop_table('contributor', schema='navitia')
-    op.drop_table('alembic_version', schema='navitia')
     op.drop_table('message_status', schema='realtime')
     op.drop_table('company', schema='navitia')
     op.drop_table('node', schema='georef')
