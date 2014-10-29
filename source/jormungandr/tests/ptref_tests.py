@@ -38,7 +38,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_vj_default_depth(self):
         """default depth is 1"""
-        response = self.query_region("v1/vehicle_journeys", display=True)
+        response = self.query_region("v1/vehicle_journeys")
 
         vjs = get_not_null(response, 'vehicle_journeys')
 
@@ -86,7 +86,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line(self):
         """test line formating"""
-        response = self.query_region("v1/lines", display=True)
+        response = self.query_region("v1/lines")
 
         lines = get_not_null(response, 'lines')
 
@@ -101,7 +101,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_route(self):
         """test line formating"""
-        response = self.query_region("v1/routes", display=True)
+        response = self.query_region("v1/routes")
 
         routes = get_not_null(response, 'routes')
 

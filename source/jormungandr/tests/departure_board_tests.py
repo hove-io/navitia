@@ -144,8 +144,7 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         departure board for a given date
         """
-        self.query_region("routes", display=True)
-        response = self.query_region("routes/line:A:0/route_schedules?from_datetime=20120615T080000", display=True)
+        response = self.query_region("routes/line:A:0/route_schedules?from_datetime=20120615T080000")
 
         assert "route_schedules" in response
         is_valid_route_schedule(response["route_schedules"])

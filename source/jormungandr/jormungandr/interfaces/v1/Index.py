@@ -31,6 +31,7 @@
 
 from flask import url_for
 from flask.ext.restful import Resource
+from make_links import create_external_link
 
 
 class Index(Resource):
@@ -38,18 +39,11 @@ class Index(Resource):
     def get(self):
         response = {
             "links": [
-                {"href": url_for('v1.coverage', _external=True),
-                 "rel": "coverage",
-                 "title": "Coverage of navitia"},
-                {"href": url_for('v1.coord', lon=.0, lat=.0, _external=True),
-                 # TODO find a way to display {long:lat} in the url
-                 "rel": "coord",
-                 "title": "Inverted geocoding for a given coordinate",
-                 "templated": True
-                 },
-                {"href": url_for('v1.journeys', _external=True),
-                 "rel": "journeys",
-                 "title": "Compute journeys"}
+                create_external_link('v1.coverage', rel='coverage', description='Coverage of navitia'),
+                # TODO find a way to display {long:lat} in the url
+                create_external_link('v1.coord', rel='coord', templated=True,
+                            description='Inverted geocoding for a given coordinate', lon=.0, lat=.0),
+                create_external_link('v1.journeys', rel='journeys', description='Compute journeys'),
             ]
         }
         return response, 200
