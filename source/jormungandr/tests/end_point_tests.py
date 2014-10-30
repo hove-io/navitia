@@ -107,7 +107,7 @@ class TestEndPoint(AbstractTestFixture):
     Test the end point with 2 regions loaded
     """
     def test_coverage(self):
-        json_response = self.query("/v1/coverage", display=True)
+        json_response = self.query("/v1/coverage")
 
         check_links(json_response, self.tester)
 
@@ -130,7 +130,7 @@ class TestEndPoint(AbstractTestFixture):
             assert region_id in ['main_routing_test', 'main_ptref_test']
 
     def test_all_status(self):
-        json_response = self.query("/v1/status", display=True)
+        json_response = self.query("/v1/status")
 
         jormun_version = get_not_null(json_response, 'jormungandr_version')
 
@@ -149,6 +149,6 @@ class TestEndPoint(AbstractTestFixture):
         assert get_not_null(main_status, 'status') == 'running'
 
     def test_one_status(self):
-        json_response = self.query("/v1/coverage/main_routing_test/status", display=True)
+        json_response = self.query("/v1/coverage/main_routing_test/status")
 
         is_valid_region_status(get_not_null(json_response, "status"))

@@ -80,9 +80,7 @@ days_regexp = re.compile("^(0|1){366}$")
 
 def is_valid_days(days):
     m = days_regexp.match(days)
-    if m:
-        return True
-    return False
+    return m is not None
 
 
 version_number_regexp = re.compile("v[0-9]+\.[0-9]+\.[0-9]+[-.*]?")

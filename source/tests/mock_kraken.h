@@ -63,7 +63,8 @@ struct mock_kraken {
         int argc = 3;
         const char* const argv[] = {"bob",
                                     "--GENERAL.instance_name=default",
-                                    "--GENERAL.zmq_socket=42"};
+                                    "--GENERAL.zmq_socket=42",
+                                   nullptr};
         conf.load_from_command_line(argc, argv);
 
         // Launch only one thread for the tests
