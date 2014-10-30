@@ -317,7 +317,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector
                         path.origin = n_point.first;
                         break;
                     }
-                if (path.origin.type == nt::Type_e::Unknown)
+                if (path.origin.type != nt::Type_e::Unknown)
                     break;
             }
         }
