@@ -186,7 +186,6 @@ class InstanceManager(object):
         if not self.thread_event.is_set():
             self.thread_event.set()
 
-
     def _filter_authorized_instances(self, instances, api):
         if not instances:
             return None
@@ -196,7 +195,6 @@ class InstanceManager(object):
         if not valid_regions:
             authentication.abort_request(user)
         return valid_regions
-
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS',None))
     def _all_keys_of_id(self, object_id):
@@ -216,7 +214,6 @@ class InstanceManager(object):
             raise RegionNotFound(object_id=object_id)
         return instances
 
-
     def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
         instances = []
@@ -232,12 +229,10 @@ class InstanceManager(object):
         else:
             raise RegionNotFound(region=region_str)
     
-
     def get_region(self, region_str=None, lon=None, lat=None, object_id=None,
             api='ALL'):
         return self.get_regions(region_str, lon, lat, object_id, api,
                 only_one=True)
-
 
     def get_regions(self, region_str=None, lon=None, lat=None, object_id=None,
             api='ALL', only_one=False):
@@ -277,7 +272,7 @@ class InstanceManager(object):
             except DeadSocketException:
                 resp_dict = {
                     "status": "dead",
-                    "error" : {
+                    "error": {
                         "code": "dead_socket",
                         "value": "The region {} is dead".format(key_region)
                     }

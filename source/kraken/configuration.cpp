@@ -67,7 +67,13 @@ void Configuration::load(const std::string& filename){
     auto tmp = po::parse_config_file(stream, desc, true);
     po::store(tmp, this->vm);
     po::notify(this->vm);
+}
 
+void Configuration::load_from_command_line(int argc, const char* const argv[]) {
+    po::options_description desc = get_options_description();
+    auto tmp = po::parse_command_line(argc, argv, desc);
+    po::store(tmp, vm);
+    po::notify(vm);
 }
 
 std::string Configuration::databases_path() const{
