@@ -11,9 +11,9 @@ if(Boost_VERSION)
     set(Boost_FIND_QUIETLY TRUE)
 endif()
 
-SET(KRAKEN_VERSION_MAJOR 1)
-SET(KRAKEN_VERSION_MINOR 3)
-SET(KRAKEN_VERSION_PATCH 3)
+#get git revision as the version number
+include(GetGitRevisionDescription)
+git_describe(GIT_REVISION)
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)

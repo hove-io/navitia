@@ -33,7 +33,6 @@ from distutils.core import setup
 import glob
 
 setup(name='tyr',
-        version='0.39.0',
         description="Provide an API for managing users and handle data updates",
         author='CanalTP',
         author_email='alexandre.jacquin@canaltp.fr',

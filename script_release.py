@@ -172,25 +172,6 @@ class ReleaseManager:
 
         self.git.add(changelog_filename)
 
-    def update_version(self):
-        print "updating kraken version"
-        cmake = open("source/CMakeLists.txt", "r")
-        cmake_lines = []
-        for line in cmake:
-            line = re.sub("^SET\(KRAKEN_VERSION_MAJOR (\d+)\)$",
-                          lambda matchobj: "SET(KRAKEN_VERSION_MAJOR %i)" % self.version[0], line)
-            line = re.sub("^SET\(KRAKEN_VERSION_MINOR (\d+)\)$",
-                          lambda matchobj: "SET(KRAKEN_VERSION_MINOR %i)" % self.version[1], line)
-            line = re.sub("^SET\(KRAKEN_VERSION_PATCH (\d+)\)$",
-                          lambda matchobj: "SET(KRAKEN_VERSION_PATCH %i)" % self.version[2], line)
-            cmake_lines.append(line)
-        cmake.close()
-
-        cmake = open("source/CMakeLists.txt", "w")
-        cmake.writelines(cmake_lines)
-        cmake.close()
-        self.git.add("source/CMakeLists.txt")
-
     def get_modified_changelog(self):
         #the changelog might have been modified by the user, so we have to read it again
         changelog_filename = "debian/changelog"
@@ -254,7 +235,6 @@ class ReleaseManager:
         print "current branch {}".format(self.repo.active_branch)
 
         self.update_changelog()
-        self.update_version()
 
         self.git.commit(m="Version %s" % self.str_version)
 

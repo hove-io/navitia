@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -29,13 +27,5 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from distutils.core import setup
-from setuptools import find_packages
-
-setup(name='jormungandr',
-      description='webservice d\'exposition en http de kraken',
-      author='CanalTP',
-      author_email='vincent.lara@canaltp.fr',
-      url='www.navitia.io',
-      packages=find_packages()
-)
+# navitia version number
+__version__ = '${GIT_REVISION}'

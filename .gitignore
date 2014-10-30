@@ -27,3 +27,4 @@ debian/navitia-jormungandr
 debian/tmp
 debian/*.substvars
 debian/*.debhelper
+source/jormungandr/_version.py
