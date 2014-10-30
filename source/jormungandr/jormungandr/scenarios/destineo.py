@@ -55,6 +55,16 @@ class Scenario(default.Scenario):
             if journey.type == 'best':
                 journey.type = 'rapid'
 
+        self._remove_car_if_possible(response_alternative)
+
         self.merge_response(response_tc, response_alternative)
         return response_tc
+
+    def _remove_car_if_possible(self, response):
+        non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
+        fallback_journeys = [journey for journey in response.journeys if journey.type not in non_pt_types]
+        if len(fallback_journeys) > 1:
+            to_delete = [j for j in response.journeys if j.type == 'car']
+            for item in to_delete:
+                response.journeys.remove(item)
 
