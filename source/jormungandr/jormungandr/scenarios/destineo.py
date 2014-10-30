@@ -64,7 +64,7 @@ class Scenario(default.Scenario):
         non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
         fallback_journeys = [journey for journey in response.journeys if journey.type not in non_pt_types]
         if len(fallback_journeys) > 1:
-            to_delete = [j for j in response.journeys if j.type == 'car']
-            for item in to_delete:
-                response.journeys.remove(item)
+            to_delete = [idx for idx, j in enumerate(response.journeys) if j.type == 'car']
+            for idx in to_delete:
+                del response.journeys[idx]
 
