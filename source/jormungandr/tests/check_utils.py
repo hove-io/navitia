@@ -68,6 +68,8 @@ def get_not_null(dict, field):
     val = dict[field]
     if type(val) == bool:
         return val  # no check for booleans
+    if type(val) == int:
+        return val  # no check for integer
 
     assert val, "value of field {} is null".format(field)
     return val
@@ -78,12 +80,39 @@ days_regexp = re.compile("^(0|1){366}$")
 
 def is_valid_days(days):
     m = days_regexp.match(days)
-    return m
+    return m is not None
 
 
-def get_valid_datetime(str):
+version_number_regexp = re.compile("v[0-9]+\.[0-9]+\.[0-9]+[-.*]?")
+
+
+def is_valid_navitia_version_number(str):
+    """
+    check that the version number is valid
+    it must contains at least v{major}.{minor}.{hotfix}
+    it can also contains the git sha1 at the end
+    >>> is_valid_navitia_version_number("v1.12.126")
+    True
+    >>> is_valid_navitia_version_number("v1.3.1-73-g4c7524b")
+    True
+    >>> is_valid_navitia_version_number("1.12.126")
+    Traceback (most recent call last):
+    AssertionError
+    >>> is_valid_navitia_version_number("v12.126-73-g4c7524b")
+    Traceback (most recent call last):
+    AssertionError
+    """
+    m = version_number_regexp.match(str)
+    assert m
+    return True
+
+
+def get_valid_datetime(str, possible_errors=False):
     """
     Check is the string is a valid date and return it
+    if possible_errors, the string might be equals to
+    "not-a-date-time"
+
     >>> get_valid_datetime("bob")
     Traceback (most recent call last):
     AssertionError
@@ -91,6 +120,14 @@ def get_valid_datetime(str):
     Traceback (most recent call last):
     AssertionError
     >>> get_valid_datetime("20123101T215030")  # month is badly set
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_datetime("20123101T215030", possible_errors=True)
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_datetime("not-a-date-time", possible_errors=True)
+
+    >>> get_valid_datetime("not-a-date-time")
     Traceback (most recent call last):
     AssertionError
     >>> get_valid_datetime("20120131T215030")
@@ -101,6 +138,9 @@ def get_valid_datetime(str):
     try:
         return datetime.strptime(str, "%Y%m%dT%H%M%S")
     except ValueError:
+        if possible_errors:
+            assert str == "not-a-date-time"
+            return None
         logging.error("string '{}' is no valid datetime".format(str))
         assert False
 
@@ -675,6 +715,18 @@ def is_valid_journey_pattern_point(jpp, depth_check=1):
         is_valid_stop_point(get_not_null(jpp, 'stop_point'), depth_check=depth_check - 1)
     else:
         assert 'stop_point' not in jpp
+
+
+def is_valid_region_status(status):
+    get_not_null(status, 'status')
+    get_valid_int(get_not_null(status, 'data_version'))
+    get_valid_int(get_not_null(status, 'nb_threads'))
+    is_valid_bool(get_not_null(status, 'last_load_status'))
+    is_valid_bool(get_not_null(status, 'is_connected_to_rabbitmq'))
+    is_valid_date(get_not_null(status, 'end_production_date'))
+    is_valid_date(get_not_null(status, 'start_production_date'))
+    get_valid_datetime(get_not_null(status, 'last_load_at'), possible_errors=True)
+    get_valid_datetime(get_not_null(status, 'publication_date'), possible_errors=True)
 
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset

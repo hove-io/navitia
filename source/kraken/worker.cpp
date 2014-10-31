@@ -105,19 +105,29 @@ Worker::Worker(DataManager<navitia::type::Data>& data_manager, kraken::Configura
 
 Worker::~Worker(){}
 
+std::string get_string_status(const std::shared_ptr<const nt::Data>& data) {
+    if (data->loaded) {
+        return "running";
+    }
+    if (data->loading) {
+        return "loading_data";
+    }
+    return "no_data";
+}
+
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
 
     auto status = result.mutable_status();
     const auto d = data_manager.get_data();
     status->set_data_version(d->version);
-    status->set_navimake_version(d->meta->navimake_version);
     status->set_navitia_version(KRAKEN_VERSION);
     status->set_loaded(d->loaded);
     status->set_last_load_status(d->last_load);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
     status->set_nb_threads(conf.nb_thread());
     status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
+    status->set_status(get_string_status(d));
     if (d->loaded) {
         status->set_publication_date(pt::to_iso_string(d->meta->publication_date));
         status->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
@@ -141,7 +151,6 @@ pbnavitia::Response Worker::metadatas() {
         metadatas->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
         metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
         metadatas->set_shape(d->meta->shape);
-        metadatas->set_status("running");
         metadatas->set_timezone(d->meta->timezone);
         for(const type::Contributor* contributor : d->pt_data->contributors) {
             metadatas->add_contributors(contributor->uri);
@@ -151,12 +160,8 @@ pbnavitia::Response Worker::metadatas() {
         metadatas->set_end_production_date("");
         metadatas->set_shape("");
         metadatas->set_timezone("");
-        if (d->loading) {
-            metadatas->set_status("loading_data");
-        } else {
-            metadatas->set_status("no_data");
-        }
     }
+    metadatas->set_status(get_string_status(d));
     return result;
 }
 

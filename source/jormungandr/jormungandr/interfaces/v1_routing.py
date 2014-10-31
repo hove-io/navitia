@@ -106,6 +106,10 @@ def v1_routing(api):
                      '/v1',
                      endpoint='v1.index')
 
+    api.add_resource(Index.TechnicalStatus,
+                     '/v1/status',
+                     endpoint='v1.technical_status')
+
     coverage = '/v1/coverage/'
     region = coverage + '<region:region>/'
     coord = coverage + '<lon:lon>;<lat:lat>/'
