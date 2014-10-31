@@ -84,6 +84,8 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
     if id:
         d['id'] = id
 
+    return d
+
 
 class generate_links(object):
 
