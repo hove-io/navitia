@@ -227,9 +227,11 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
     for(const auto& itm : data.ways){
         if(itm.second->is_used){
             std::vector<std::string> values;
-            values.push_back(std::to_string(itm.second->admin->id));
-            values.push_back(std::to_string(itm.second->id));
-            this->lotus.insert(values);
+            if(itm.second->admin){
+                values.push_back(std::to_string(itm.second->admin->id));
+                values.push_back(std::to_string(itm.second->id));
+                this->lotus.insert(values);
+            }
         }
      }
     this->lotus.finish_bulk_insert();

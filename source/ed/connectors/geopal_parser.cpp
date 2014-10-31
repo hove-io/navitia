@@ -182,60 +182,63 @@ void GeopalParser::fill_ways_edges(){
             std::vector<std::string> row = reader.next();
             if (reader.is_valid(x1, row) && reader.is_valid(y1, row)
                 && reader.is_valid(x2, row) && reader.is_valid(y2, row)
-                && reader.is_valid(inseecom_d, row)
                 && reader.is_valid(id, row)){
-                auto admin = this->data.admins.find(row[inseecom_d]);
-                if(admin != this->data.admins.end()){
-                    std::string source  = row[x1] + row[y1];
-                    std::string target  = row[x2] + row[y2];
-                    ed::types::Node* source_node;
-                    ed::types::Node* target_node;
-                    auto source_it = this->data.nodes.find(source);
+                auto admin_it = this->data.admins.find(row[inseecom_d]);
+                ed::types::Admin* admin = nullptr;
+                if(admin_it != this->data.admins.end()){
+                    admin = admin_it->second;
+                }
+                std::string source  = row[x1] + row[y1];
+                std::string target  = row[x2] + row[y2];
+                ed::types::Node* source_node;
+                ed::types::Node* target_node;
+                auto source_it = this->data.nodes.find(source);
 
-                    if(source_it == this->data.nodes.end()){
-                        source_node = this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x1]), str_to_double(row[y1])), source);
-                    }else{
-                        source_node = source_it->second;
-                    }
+                if(source_it == this->data.nodes.end()){
+                    source_node = this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x1]), str_to_double(row[y1])), source);
+                }else{
+                    source_node = source_it->second;
+                }
 
-                    auto target_it = this->data.nodes.find(target);
-                    if(target_it == this->data.nodes.end()){
-                        target_node = this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x2]), str_to_double(row[y2])), target);
-                    }else{
-                        target_node = target_it->second;
+                auto target_it = this->data.nodes.find(target);
+                if(target_it == this->data.nodes.end()){
+                    target_node = this->add_node(navitia::type::GeographicalCoord(str_to_double(row[x2]), str_to_double(row[y2])), target);
+                }else{
+                    target_node = target_it->second;
+                }
+                ed::types::Way* current_way = nullptr;
+                std::string wayd_uri = row[id];
+                auto way = this->data.ways.find(wayd_uri);
+                if(way == this->data.ways.end()){
+                    ed::types::Way* wy = new ed::types::Way;
+                    if(admin){
+                        wy->admin = admin;
+                        admin->is_used = true;
                     }
-                    ed::types::Way* current_way = nullptr;
-                    std::string wayd_uri = row[id];
-                    auto way = this->data.ways.find(wayd_uri);
-                    if(way == this->data.ways.end()){
-                        ed::types::Way* wy = new ed::types::Way;
-                        wy->admin = admin->second;
-                        admin->second->is_used = true;
-                        wy->id = this->data.ways.size() + 1;
-                        if(reader.is_valid(nom_voie_d, row)){
-                            wy->name = row[nom_voie_d];
-                        }
-                        wy->type ="";
-                        wy->uri = wayd_uri;
-                        this->data.ways[wayd_uri] = wy;
-                        current_way = wy;
-                    }else{
-                        current_way = way->second;
+                    wy->id = this->data.ways.size() + 1;
+                    if(reader.is_valid(nom_voie_d, row)){
+                        wy->name = row[nom_voie_d];
                     }
-                    auto edge = this->data.edges.find(wayd_uri);
-                    if(edge == this->data.edges.end()){
-                        ed::types::Edge* edg = new ed::types::Edge;
-                        edg->source = source_node;
-                        edg->source->is_used = true;
-                        edg->target = target_node;
-                        edg->target->is_used = true;
-                        if(reader.is_valid(l, row)){
-                            edg->length = str_to_int(row[l]);
-                        }
-                        edg->way = current_way;
-                        this->data.edges[wayd_uri]= edg;
-                        current_way->edges.push_back(edg);
+                    wy->type ="";
+                    wy->uri = wayd_uri;
+                    this->data.ways[wayd_uri] = wy;
+                    current_way = wy;
+                }else{
+                    current_way = way->second;
+                }
+                auto edge = this->data.edges.find(wayd_uri);
+                if(edge == this->data.edges.end()){
+                    ed::types::Edge* edg = new ed::types::Edge;
+                    edg->source = source_node;
+                    edg->source->is_used = true;
+                    edg->target = target_node;
+                    edg->target->is_used = true;
+                    if(reader.is_valid(l, row)){
+                        edg->length = str_to_int(row[l]);
                     }
+                    edg->way = current_way;
+                    this->data.edges[wayd_uri]= edg;
+                    current_way->edges.push_back(edg);
                 }
             }
         }
