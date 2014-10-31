@@ -1,3 +1,9 @@
+navitia2 (1.4.1) unstable; urgency=low
+
+  * ormungandr: fix internal links  <https://github.com/CanalTP/navitia/pull/684> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 31 Oct 2014 17:10:40 +0100
+
 navitia2 (1.4.0) unstable; urgency=low
 
   * Jormungandr: fix rounding problems with coords as id  <https://github.com/CanalTP/navitia/pull/683>
