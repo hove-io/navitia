@@ -187,9 +187,11 @@ Fare load_fare_from_ed(const ed::Data& ed_data) {
 
 struct fare_load_fixture {
     fare_load_fixture() {
-        ed::connectors::fare_parser parser(ed_data, std::string(FIXTURES_DIR) + "/fare/idf.fares",
-                                           std::string(FIXTURES_DIR) + "/fare/prix.csv",
-                                           std::string(FIXTURES_DIR) + "/fare/tarifs_od.csv");
+        ed::connectors::fare_parser parser(
+            ed_data,
+            std::string(navitia::config::fixtures_dir) + "/fare/idf.fares",
+            std::string(navitia::config::fixtures_dir) + "/fare/prix.csv",
+            std::string(navitia::config::fixtures_dir) + "/fare/tarifs_od.csv");
         parser.load();
         f = load_fare_from_ed(parser.data);
     }
