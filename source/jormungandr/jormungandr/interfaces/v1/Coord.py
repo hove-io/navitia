@@ -51,9 +51,12 @@ class Coord(ResourceUri):
         else:
             self.region = region
         result.update(regions=[self.region])
-        if not lon is None and not lat is None:
+        if lon is not None and lat is not None:
+            # check if lon and lat can be converted to float
+            float(lon)
+            float(lat)
             args = {
-                "uri": "coord:" + str(lon) + ":" + str(lat),
+                "uri": "coord:{}:{}".format(lon, lat),
                 "count": 1,
                 "distance": 200,
                 "type[]": ["address"],
