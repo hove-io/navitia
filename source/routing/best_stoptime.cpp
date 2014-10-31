@@ -185,13 +185,14 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
             //if it is a frequency, we got to expand the timetable
 
             //Note: end can be lower than start, so we have to cycle through the day
-            auto stop_loop = [vj](u_int32_t t) {
-                if (vj->start_time < vj->end_time)
+            bool is_looping = (vj->start_time > vj->end_time);
+            auto stop_loop = [vj, is_looping](u_int32_t t) {
+                if (! is_looping)
                     return t <= vj->end_time;
                 return t > vj->end_time;
             };
             for (auto time = vj->start_time; stop_loop(time); time += vj->headway_secs) {
-                if (time > DateTimeUtils::SECONDS_PER_DAY) {
+                if (is_looping && time > DateTimeUtils::SECONDS_PER_DAY) {
                     time -= DateTimeUtils::SECONDS_PER_DAY;
                 }
 
