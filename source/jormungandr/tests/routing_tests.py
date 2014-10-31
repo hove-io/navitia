@@ -42,7 +42,7 @@ class TestJourneys(AbstractTestFixture):
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
-        response = self.query_region(journey_basic_query, display=False)
+        response = self.query_region(journey_basic_query)
 
         is_valid_journey_response(response, self.tester, journey_basic_query)
 
