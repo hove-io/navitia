@@ -49,8 +49,6 @@ struct dataRAPTOR {
     std::vector<pair_int> footpath_index_backward;
     std::vector<uint32_t> arrival_times;
     std::vector<uint32_t> departure_times;
-    std::vector<uint32_t> start_times_frequencies;
-    std::vector<uint32_t> end_times_frequencies;
     std::vector<type::StopTime*> st_idx_forward;// Nom a changer ce ne sont plus des idx mais des pointeurs
     std::vector<type::StopTime*> st_idx_backward;
     std::vector<size_t> first_stop_time;

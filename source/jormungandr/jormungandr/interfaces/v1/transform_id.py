@@ -1,4 +1,6 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# coding=utf-8
+
+#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,26 +29,21 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.script import Command, Option
-from tyr.tasks import build_all_data, build_data
-import logging
-from navitiacommon import models
-
-
-class BuildDataCommand(Command):
-    """A command used to build all the datasets
-    """
-
-    def get_options(self):
-        return [
-            Option(dest='instance_name',
-                   help="name of the instance to build. If non given, build all instances")
-        ]
-
-    def run(self, instance_name=None):
-        if not instance_name:
-            logging.info("Building all data")
-            return build_all_data()
-        instance = models.Instance.query.filter_by(name=instance_name).first()
-        return build_data(instance)
-
+def transform_id(id):
+    splitted_coord = id.split(";")
+    splitted_address = id.split(":")
+    if len(splitted_coord) == 2:
+        try:
+            # check if lon and lat are convertible to float
+            float(splitted_coord[0])
+            float(splitted_coord[1])
+            return "coord:" + id.replace(";", ":")
+        except ValueError:
+            pass
+    if len(splitted_address) >= 3 and splitted_address[0] == 'address':
+        del splitted_address[1]
+        return ':'.join(splitted_address)
+    if len(splitted_address) >= 3 and splitted_address[0] == 'admin':
+        del splitted_address[1]
+        return ':'.join(splitted_address)
+    return id

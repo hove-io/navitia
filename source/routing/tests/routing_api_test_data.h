@@ -143,89 +143,112 @@ struct routing_api_data {
 
         b.data->geo_ref->init();
 
+        b.data->geo_ref->admins.push_back(new navitia::georef::Admin());
+        auto admin = b.data->geo_ref->admins.back();
+        admin->uri = "admin:74435";
+        admin->name = "Condom";
+        admin->insee = "32107";
+        admin->level = 8;
+        admin->post_code = "32100";
+
         navitia::georef::Way* way;
         way = new navitia::georef::Way();
         way->name = "rue ab"; // A->B
         way->idx = 0;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue ae"; // A->E
         way->idx = 1;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue ef"; // E->F
         way->idx = 2;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue fc"; // F->C
         way->idx = 3;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue cb"; // C->B
         way->idx = 4;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue ag"; // A->G
         way->idx = 5;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue gh"; // G->H
         way->idx = 6;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue hi"; // H->I
         way->idx = 7;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue ij"; // I->J
         way->idx = 8;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue jk"; // J->K
         way->idx = 9;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue kb"; // K->B
         way->idx = 10;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
+        way->add_house_number(navitia::georef::HouseNumber(10., 100., 42));
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue ar"; // A->R
         way->idx = 11;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue bs"; // B->S
         way->idx = 12;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
         way->name = "rue bd"; // B->D
         way->idx = 13;
         way->way_type = "rue";
+        way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
         // A->B

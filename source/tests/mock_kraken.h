@@ -57,7 +57,16 @@ struct mock_kraken {
         zmq::socket_t workers(context, ZMQ_DEALER);
         workers.bind("inproc://workers");
 
+        //we load the conf to have the default values
         navitia::kraken::Configuration conf;
+        //we mock a command line load
+        int argc = 3;
+        const char* const argv[] = {"bob",
+                                    "--GENERAL.instance_name=default",
+                                    "--GENERAL.zmq_socket=42",
+                                   nullptr};
+        conf.load_from_command_line(argc, argv);
+
         // Launch only one thread for the tests
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));
 

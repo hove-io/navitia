@@ -116,6 +116,7 @@ struct HouseNumber{
     int number;
 
     HouseNumber(): number(-1){}
+    HouseNumber(double lon, double lat, int nb): coord(lon, lat), number(nb) {}
 
     bool operator<(const HouseNumber & other) const{
         return this->number < other.number;

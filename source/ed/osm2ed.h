@@ -356,6 +356,20 @@ struct Rect{
     }
 };
 
+enum class OsmObjectType {
+    Node,
+    Way
+};
+
+std::string to_string(OsmObjectType t) {
+    switch (t) {
+    case OsmObjectType::Node: return "n";
+    case OsmObjectType::Way: return "w";
+    default:
+        throw navitia::exception("not implemented");
+    }
+}
+
 struct PoiHouseNumberVisitor {
     const size_t max_inserts_without_bulk = 20000;
     ed::EdPersistor& persistor;
@@ -401,7 +415,7 @@ struct PoiHouseNumberVisitor {
     void way_callback(uint64_t osm_id, const CanalTP::Tags &tags, const std::vector<uint64_t> & refs);
     const OSMWay* find_way_without_name(const double lon, const double lat);
     const OSMWay* find_way(const CanalTP::Tags& tags, const double lon, const double lat);
-    void fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat);
+    void fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat, OsmObjectType t);
     void fill_housenumber(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat);
     void insert_house_numbers();
     void finish();

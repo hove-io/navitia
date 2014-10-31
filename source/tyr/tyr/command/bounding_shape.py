@@ -27,26 +27,17 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.script import Command, Option
-from tyr.tasks import build_all_data, build_data
-import logging
 from navitiacommon import models
+from tyr import tasks
+from tyr import manager
+import logging
 
 
-class BuildDataCommand(Command):
-    """A command used to build all the datasets
-    """
+@manager.command
+def bounding_shape(instance_name, bounding_shape_filename):
+    """A command used for loading a bounding shape for an instance"""
 
-    def get_options(self):
-        return [
-            Option(dest='instance_name',
-                   help="name of the instance to build. If non given, build all instances")
-        ]
+    logging.info("Run command bounding shape")
 
-    def run(self, instance_name=None):
-        if not instance_name:
-            logging.info("Building all data")
-            return build_all_data()
-        instance = models.Instance.query.filter_by(name=instance_name).first()
-        return build_data(instance)
+    tasks.bounding_shape(instance_name, bounding_shape_filename)
 

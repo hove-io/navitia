@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import logging
-from flask import Flask, request, url_for, g
+from flask import Flask, request, g
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from flask.ext.restful.types import boolean
 from jormungandr import i_manager
@@ -50,7 +50,7 @@ import datetime
 from functools import wraps
 from fields import DateTime
 from jormungandr.timezone import set_request_timezone
-from make_links import add_id_links, clean_links
+from make_links import add_id_links, clean_links, create_external_link, create_internal_link
 from errors import ManageError
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
@@ -64,6 +64,7 @@ from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
 from jormungandr.travelers_profile import travelers_profile
+from jormungandr.interfaces.v1.transform_id import transform_id
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -274,18 +275,11 @@ class add_journey_href(object):
                     kwargs["from"] = kwargs["lon"] + ';' + kwargs["lat"]
                 del kwargs["lon"]
                 del kwargs["lat"]
-            kwargs["_external"] = True
             for journey in objects[0]['journeys']:
                 if not "sections" in journey.keys():
                     kwargs["datetime"] = journey["requested_date_time"]
                     kwargs["to"] = journey["to"]["id"]
-                    journey['links'] = [
-                        {
-                            "type": "journeys",
-                            "href": url_for("v1.journeys", **kwargs),
-                            "templated": False
-                        }
-                    ]
+                    journey['links'] = [create_external_link("v1.journeys", rel="journeys", **kwargs)]
             return objects
         return wrapper
 
@@ -298,54 +292,48 @@ class add_journey_pagination(object):
             if objects[1] != 200:
                 return objects
             datetime_before, datetime_after = self.extremes(objects[0])
-            if not datetime_before is None and not datetime_after is None:
+            if datetime_before and datetime_after:
                 if not "links" in objects[0]:
                     objects[0]["links"] = []
 
-                args = dict()
-                for item in request.args.iteritems():
-                    args[item[0]] = item[1]
+                args = dict(deepcopy(request.args))
                 args["datetime"] = datetime_before.strftime(f_datetime)
                 args["datetime_represents"] = "arrival"
                 if "region" in kwargs:
                     args["region"] = kwargs["region"]
-                objects[0]["links"].append({
-                    "href": url_for("v1.journeys", _external=True, **args),
-                    "templated": False,
-                    "type": "prev"
-                })
+                # Note, it's not the right thing to do, the rel should be 'next' and
+                # the type 'journey' but for compatibility reason we cannot change before the v2
+                objects[0]["links"].append(create_external_link("v1.journeys",
+                                                       rel='prev',
+                                                       _type='prev',
+                                                       **args))
                 args["datetime"] = datetime_after.strftime(f_datetime)
                 args["datetime_represents"] = "departure"
-                objects[0]["links"].append({
-                    "href": url_for("v1.journeys", _external=True, **args),
-                    "templated": False,
-                    "type": "next"
-                })
+                objects[0]["links"].append(create_external_link("v1.journeys",
+                                                       rel='next',
+                                                       _type='next',
+                                                       **args))
 
             datetime_first, datetime_last = self.first_and_last(objects[0])
-            if not datetime_first is None and not datetime_last is None:
+            if datetime_first and datetime_last:
                 if not "links" in objects[0]:
                     objects[0]["links"] = []
 
-                args = dict()
-                for item in request.args.iteritems():
-                    args[item[0]] = item[1]
+                args = dict(deepcopy(request.args))
                 args["datetime"] = datetime_first.strftime(f_datetime)
                 args["datetime_represents"] = "departure"
                 if "region" in kwargs:
                     args["region"] = kwargs["region"]
-                objects[0]["links"].append({
-                    "href": url_for("v1.journeys", _external=True, **args),
-                    "templated": False,
-                    "type": "first"
-                })
+                objects[0]["links"].append(create_external_link("v1.journeys",
+                                                                rel='first',
+                                                                _type='first',
+                                                                **args))
                 args["datetime"] = datetime_last.strftime(f_datetime)
                 args["datetime_represents"] = "arrival"
-                objects[0]["links"].append({
-                    "href": url_for("v1.journeys", _external=True, **args),
-                    "templated": False,
-                    "type": "last"
-                })
+                objects[0]["links"].append(create_external_link("v1.journeys",
+                                                                rel='last',
+                                                                _type='last',
+                                                                **args))
             return objects
         return wrapper
 
@@ -430,11 +418,9 @@ class add_fare_links(object):
 
                     #them we add the link to the different tickets needed
                     for ticket_needed in ticket_by_section[s["id"]]:
-                        s['links'].append({"type": "ticket",
-                                           "rel": "tickets",
-                                           "internal": True,
-                                           "templated": False,
-                                           "id": ticket_needed})
+                        s['links'].append(create_internal_link(_type="ticket",
+                                                               rel="tickets",
+                                                               id=ticket_needed))
 
             return objects
         return wrapper
@@ -639,9 +625,9 @@ class Journeys(ResourceUri, ResourceUtc):
 
         #we transform the origin/destination url to add information
         if args['origin']:
-            args['origin'] = self.transform_id(args['origin'])
+            args['origin'] = transform_id(args['origin'])
         if args['destination']:
-            args['destination'] = self.transform_id(args['destination'])
+            args['destination'] = transform_id(args['destination'])
 
         if not args['datetime']:
             args['datetime'] = datetime.now()
@@ -711,19 +697,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         return resp
 
-    def transform_id(self, id):
-        splitted_coord = id.split(";")
-        splitted_address = id.split(":")
-        if len(splitted_coord) == 2:
-            return "coord:" + id.replace(";", ":")
-        if len(splitted_address) >= 3 and splitted_address[0] == 'address':
-            del splitted_address[1]
-            return ':'.join(splitted_address)
-        if len(splitted_address) >= 3 and splitted_address[0] == 'admin':
-            del splitted_address[1]
-            return ':'.join(splitted_address)
-        return id
-
     @clean_links()
     @add_id_links()
     @add_journey_pagination()
@@ -780,7 +753,7 @@ class Journeys(ResourceUri, ResourceUtc):
                 else:
                     args[loop[1]+'_access_duration'].append(0)
                 stop_uri = location["uri"]
-                stop_uri = self.transform_id(stop_uri)
+                stop_uri = transform_id(stop_uri)
                 args[loop[1]].append(stop_uri)
 
         #default Date

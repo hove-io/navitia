@@ -108,7 +108,9 @@ makePath(type::idx_t destination_idx, size_t countb, bool clockwise, bool disrup
         void change_vj(const type::StopTime* prev_st, const type::StopTime* current_st,
                        boost::posix_time::ptime prev_dt, boost::posix_time::ptime current_dt,
                        bool clockwise) {
-            PathItem item(prev_dt, current_dt);
+            PathItem item;
+            item.departure = clockwise ? current_dt : prev_dt;
+            item.arrival = clockwise ? prev_dt : current_dt;
             item.type = stay_in;
             item.stop_points.push_back(prev_st->journey_pattern_point->stop_point);
             item.stop_points.push_back(current_st->journey_pattern_point->stop_point);
@@ -129,7 +131,7 @@ makePath(type::idx_t destination_idx, size_t countb, bool clockwise, bool disrup
         }
     }
 
-    if(v.result.items.size() > 0)
+    if(!v.result.items.empty())
         v.result.duration = navitia::time_duration::from_boost_duration(v.result.items.back().arrival - v.result.items.front().departure);
     else
         v.result.duration = navitia::seconds(0);

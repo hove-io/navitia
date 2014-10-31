@@ -26,27 +26,30 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from jormungandr.interfaces.v1.transform_id import transform_id
 
-from flask.ext.script import Command, Option
-from tyr.tasks import build_all_data, build_data
-import logging
-from navitiacommon import models
+class TestTransformId:
+    def test_transform_id_coord(self):
+        id = "1.23456789012345;2.23456789012345"
+        uri = "coord:1.23456789012345:2.23456789012345"
+        assert transform_id(id) == uri
 
+    def test_transform_id_almost_coord(self):
+        id = "1.23456789012345;2.23456789012345toto"
+        uri = id
+        assert transform_id(id) == uri
 
-class BuildDataCommand(Command):
-    """A command used to build all the datasets
-    """
+    def test_transform_id_admin(self):
+        id = "admin:1:12345"
+        uri = "admin:12345"
+        assert transform_id(id) == uri
 
-    def get_options(self):
-        return [
-            Option(dest='instance_name',
-                   help="name of the instance to build. If non given, build all instances")
-        ]
+    def test_transform_id_address(self):
+        id = "address:1:12345"
+        uri = "address:12345"
+        assert transform_id(id) == uri
 
-    def run(self, instance_name=None):
-        if not instance_name:
-            logging.info("Building all data")
-            return build_all_data()
-        instance = models.Instance.query.filter_by(name=instance_name).first()
-        return build_data(instance)
-
+    def test_transform_id_something(self):
+        id = "something"
+        uri = id
+        assert transform_id(id) == uri

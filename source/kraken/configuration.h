@@ -37,6 +37,7 @@ namespace navitia { namespace kraken{
             boost::program_options::variables_map vm;
         public:
             void load(const std::string& file);
+            void load_from_command_line(int argc, const char* const argv[]);
 
             std::string databases_path() const;
             std::string zmq_socket_path() const;

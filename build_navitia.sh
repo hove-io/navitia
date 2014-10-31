@@ -11,15 +11,17 @@
 #
 #
 # It's more an install guide but it can help as an out-of-a-box build script
-# the prerequisite the run that script is to have cloned the sources repository
+# the prerequisite the run that script is :
+# - to have git and sudo installed
+# - to have cloned the sources repository
 #
 # git clone https://github.com/CanalTP/navitia
 #
-# and to be in the cloned repository:
+# - and to be in the cloned repository:
 # cd navitia
 
 # /!\ WARNING /!\
-# the script needs the sudo privileges for dependencies install and databases handling
+# the script needs the sudo (installed with dependencies) privileges for dependencies install and databases handling
 # If used as an out of the box script be sure to read it beforehand
 echo "!WARNING!"
 echo "The script needs to install dependencies and update databases so it needs some privileges"
@@ -41,11 +43,13 @@ clean_exit()
 }
 
 kraken_db_user_password=
-navitia_dir=`dirname $(readlink -f $0)`
+navitia_dir="$(dirname $(readlink -f $0))"
 gtfs_data_dir=
 osm_file=
 
 install_dependencies=1
+
+clean_apt=
 
 usage()
 {
@@ -58,37 +62,43 @@ only the password is mandatory:
  - if no dataset are given a default Paris one will be used
  - by default all dependencies are installed
 
+Note that you must have sudo installed
+
 OPTIONS:
    -h                  Show this message
    -p                  kraken database password
    -g                  gtfs directory 
-   -o                  osm directory
+   -o                  osm file
    -n                  don't install dependencies
+   -c                  if OS is Debian, clean the APT configuration (repository)
 EOF
 }
 
-while getopts “hp:g:o:n” OPTION
+while getopts “hp:g:o:nc” OPTION
 do
-     case $OPTION in
+     case "$OPTION" in
          h)
              usage
              exit 1
              ;;
          p)
-             kraken_db_user_password=$OPTARG
+             kraken_db_user_password="$OPTARG"
              ;;
          g)
-             gtfs_data_dir=$OPTARG
+             gtfs_data_dir="$OPTARG"
              ;;
          o)
-             osm_file=$OPTARG
+             osm_file="$OPTARG"
              ;;
          n)
              install_dependencies=
              ;;
+         c)
+             clean_apt=true
+             ;;
          ?)
              usage
-             exit
+             exit 1
              ;;
      esac
 done
@@ -113,8 +123,8 @@ then
     osm_file=/tmp/paris.osm.pbf
 fi
 
-run_dir=$navitia_dir/run
-mkdir -p $run_dir
+run_dir="$navitia_dir"/run
+mkdir -p "$run_dir"
 
 #Hack
 #for convenience reason, some submodule links are in ssh (easier to push)
@@ -132,23 +142,40 @@ git submodule update --init
 #First you need to install all dependencies. 
 #
 #first the system and the c++ dependencies: 
-if [ $install_dependencies ]
+if [ -n "$install_dependencies" ]
 then
-    echo "** instaling all dependencies"
+    echo "** installing all dependencies"
     sudo apt-get install -y git g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1 
-    
-    sudo apt-get install -y postgresql-9.3 postgresql-9.3-postgis-2.1 #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier ton setup 
-    
+
+    postgresql_package='postgresql-9.3'
+    postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
+    distrib=`lsb_release -si`
+
+    if [ "$distrib" = "Debian" ] && grep -q '^7\.' /etc/debian_version; then
+            # on Debian, we must add the APT repository of PostgreSQL project
+            # to have the right version of postgis
+            # no magic stuff : https://wiki.postgresql.org/wiki/Apt#PostgreSQL_packages_for_Debian_and_Ubuntu
+            apt_file='/etc/apt/sources.list.d/postgresql.list'
+            sudo /bin/sh -c "echo 'deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main' > $apt_file"
+            sudo apt-get -y install wget ca-certificates
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+            sudo apt-get update
+    fi
+
+    sudo apt-get install -y $postgresql_package $postgresql_postgis_package #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier to setup
+
     # then you need to install all python dependencies: ::
-    
-    sudo pip install -r $navitia_dir/source/jormungandr/requirements.txt
-    sudo pip install -r $navitia_dir/source/tyr/requirements.txt
+
+    sudo pip install -r "$navitia_dir"/source/jormungandr/requirements.txt
+    sudo pip install -r "$navitia_dir"/source/tyr/requirements.txt
+    #we want a custom protobuff version
+    sudo pip install -U protobuf==2.5.0
 fi
 
 #the build procedure is explained is the install documentation
 echo "** building navitia"
-navitia_build_dir=$navitia_dir/release
-mkdir -p $navitia_build_dir && cd $navitia_build_dir
+navitia_build_dir="$navitia_dir"/release
+mkdir -p "$navitia_build_dir" && cd "$navitia_build_dir"
 cmake -DCMAKE_BUILD_TYPE=Release ../source
 make -j$(($(grep -c '^processor' /proc/cpuinfo)+1))
 
@@ -166,27 +193,28 @@ db_owner='navitia'
 
 kraken_db_name='navitia'
 # for the default build we give ownership of the base to a 'navitia' user, but you can do whatever you want here
-sudo su postgres -c "psql postgres -tAc \"SELECT 1 FROM pg_roles WHERE rolname='$db_owner'\""  # we check if there is already a user 
-if [ ! $? ]
-then
-sudo su postgres -c "psql -c \"create user $db_owner;alter user $db_owner password '$kraken_db_user_password';\""
+encap=$(sudo -i -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_owner'")  # we check if there is already a user 
+if [ -z "$encap" ]; then
+    sudo -i -u postgres psql -c "create user $db_owner;alter user $db_owner password '$kraken_db_user_password';"
 else
-echo "user $db_owner already exists"
+    echo "user $db_owner already exists"
 fi
 
-if ! sudo su postgres -c "psql -l" | grep "^ $kraken_db_name "
-then
-sudo su postgres -c "createdb $kraken_db_name -O $db_owner"
-sudo su postgres -c "psql -c \"create extension postgis; \" $kraken_db_name"
-else 
-echo "db $kraken_db_name already exists"
+if ! sudo -i -u postgres psql -l | grep -q "^ ${kraken_db_name}"; then
+    sudo -i -u postgres createdb "$kraken_db_name" -O "$db_owner"
+    sudo -i -u postgres psql -c "create extension postgis; " "$kraken_db_name"
+else
+    echo "db $kraken_db_name already exists"
 fi
 
 # Then you need to update it's scheme
-# For that you can use a configuration file or just add environment variables
-# There is an configuration file example in source/script/settings.sh
-username=$db_owner server=localhost dbname=$kraken_db_name PGPASSWORD=$kraken_db_user_password $navitia_dir/source/scripts/update_db.sh
-
+# The database migration is handled by alembic
+# You can edit the alembic.ini file if you want a custom behaviour (or give your own with the alembic -c option)
+# you can give the database url either by setting the sqlalchemy.url parameter in the config file or by giving 
+# a -x dbname option
+cd "$navitia_dir"/source/sql
+PYTHONPATH=. alembic -x dbname="postgresql://$db_owner:$kraken_db_user_password@localhost/$kraken_db_name" upgrade head
+cd
 
 #====================
 # Filling up the data
@@ -195,13 +223,13 @@ username=$db_owner server=localhost dbname=$kraken_db_name PGPASSWORD=$kraken_db
 # ** filling up the database **
 
 ## we need to import the gtfs data
-$navitia_build_dir/ed/gtfs2ed -i $gtfs_data_dir --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
+"$navitia_build_dir"/ed/gtfs2ed -i "$gtfs_data_dir" --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
 
 ## we need to import the osm data
-$navitia_build_dir/ed/osm2ed -i $osm_file --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
+"$navitia_build_dir"/ed/osm2ed -i "$osm_file" --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
 
 ## then we export the database into kraken's custom file format
-$navitia_build_dir/ed/ed2nav -o $run_dir/data.nav.lz4 --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
+"$navitia_build_dir"/ed/ed2nav -o "$run_dir"/data.nav.lz4 --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
 
 #========
 # Running
@@ -214,7 +242,7 @@ echo "** running kraken"
 # Note we run Jormungandr and kraken in the same shell so the output might be messy
 
 # We have to create the kraken configuration file
-cat << EOF > $run_dir/kraken.ini
+cat << EOF > "$run_dir"/kraken.ini
 [GENERAL]
 #file to load
 database = data.nav.lz4
@@ -234,8 +262,8 @@ log4cplus.appender.ALL_MSGS.layout.ConversionPattern=[%D{%y-%m-%d %H:%M:%S,%q}] 
 EOF
 
 # WARNING, for the moment you have to run it in the kraken.ini directory
-cd $run_dir
-$navitia_build_dir/kraken/kraken &
+cd "$run_dir"
+"$navitia_build_dir"/kraken/kraken &
 
 kraken_pid=$!
 
@@ -245,10 +273,10 @@ echo "** running jormungandr"
 
 # Jormungandr need to know how to call the kraken
 # The configuration for that is handle by a repository where every kraken is referenced by a .ini file
-mkdir -p $run_dir/jormungandr
+mkdir -p "$run_dir"/jormungandr
 
 # For our test we only need one kraken
-cat << EOFJ > $run_dir/jormungandr/default.ini 
+cat << EOFJ > "$run_dir"/jormungandr/default.ini 
 [instance]
 # name of the kraken
 key = default
@@ -258,9 +286,11 @@ EOFJ
 
 # the Jormungnandr configuration is in the source/jormungandr/jormungandr/default_settings.py file
 # should be almost enough for the moment, we just need to change the location of the krakens configuration
-sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," $navitia_dir/source/jormungandr/jormungandr/default_settings.py > $run_dir/jormungandr_settings.py
+sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," "$navitia_dir"/source/jormungandr/jormungandr/default_settings.py > "$run_dir"/jormungandr_settings.py
+#we also don't want to depend on the jormungandr database for this test
+sed -i 's/DISABLE_DATABASE.*/DISABLE_DATABASE=False/' "$run_dir"/jormungandr_settings.py
 
-JORMUNGANDR_CONFIG_FILE=$run_dir/jormungandr_settings.py PYTHONPATH=$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr python $navitia_dir/source/jormungandr/jormungandr/manage.py runserver -d -r & 
+JORMUNGANDR_CONFIG_FILE="$run_dir"/jormungandr_settings.py PYTHONPATH="$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr" python "$navitia_dir"/source/jormungandr/jormungandr/manage.py runserver -d -r & 
 
 jormun_pid=$!
 
@@ -273,3 +303,6 @@ echo "curl localhost:5000/v1/coverage/default/stop_areas"
 #we block the script for the user to test the api
 read -p "when you are finished, hit  a key to close kraken and jormungandr" n
 clean_exit
+
+# cleaning APT repository if -c option was specified
+test -n "$clean_apt" && rm -f "$apt_file" && printf "Option -c was specified, removing %s \n" "$apt_file"

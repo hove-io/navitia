@@ -1,3 +1,8 @@
+#add python file to also handle version number in python modules
+configure_file("${CMAKE_SOURCE_DIR}/navitia_version.py.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/_version.py")
+
+
+#tests 
 set(JORMUN_PATH "${CMAKE_CURRENT_SOURCE_DIR}/jormungandr")
 add_test(jormungandr nosetests --with-doctest -v --with-xunit  --xunit-file=${CMAKE_BINARY_DIR}/nosetest_jormungandr.xml "--where=${JORMUN_PATH}")
 SET_PROPERTY(TEST jormungandr PROPERTY

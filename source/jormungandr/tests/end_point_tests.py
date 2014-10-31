@@ -60,6 +60,21 @@ class TestEmptyEndPoint(AbstractTestFixture):
 
         assert current_found, "we must have one current version of the api"
 
+"""
+   TODO make this test OK, bug for the moment
+ def test_status(self):
+        json_response = self.query("/v1/status")
+
+        status = get_not_null(json_response, 'jormungandr_version')
+
+        assert is_valid_navitia_version_number(status)
+
+        #we also must have an empty regions list
+        assert 'regions' in json_response
+        assert json_response['regions'] == []"""
+
+
+
 @dataset([])
 class TestHttps(AbstractTestFixture):
     """
@@ -84,6 +99,7 @@ class TestHttps(AbstractTestFixture):
 
         versions = get_not_null(json_response, 'versions')
         assert versions[0]['links'][0]['href'].startswith('http://')
+
 
 @dataset(['main_routing_test', 'main_ptref_test'])
 class TestEndPoint(AbstractTestFixture):
@@ -113,3 +129,26 @@ class TestEndPoint(AbstractTestFixture):
 
             assert region_id in ['main_routing_test', 'main_ptref_test']
 
+    def test_all_status(self):
+        json_response = self.query("/v1/status")
+
+        jormun_version = get_not_null(json_response, 'jormungandr_version')
+
+        assert is_valid_navitia_version_number(jormun_version)
+
+        #we also must have an empty regions list
+        all_status = get_not_null(json_response, 'regions')
+        assert len(all_status) == 2
+
+        all_status_dict = {s['region_id']: s for s in all_status}
+
+        main_status = get_not_null(all_status_dict, 'main_routing_test')
+
+        is_valid_region_status(main_status)
+        get_not_null(main_status, 'region_id')
+        assert get_not_null(main_status, 'status') == 'running'
+
+    def test_one_status(self):
+        json_response = self.query("/v1/coverage/main_routing_test/status")
+
+        is_valid_region_status(get_not_null(json_response, "status"))

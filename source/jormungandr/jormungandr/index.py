@@ -30,7 +30,6 @@
 from flask.ext.restful import Resource
 from flask import url_for
 
-
 def index(api):
     api.add_resource(Index, '/')
 
@@ -46,10 +45,13 @@ class Index(Resource):
                     "status": "current",
                     "links": [
                         {
-                            "href": url_for("v1.index", _external=True),
-                            "templated": False
+                            "href": url_for('v1.index', _external=True),
+                            "templated": False,
+                            "rel": 'api',
+                            "type": 'api'
                         }
                     ]
                 }
             ]
         }
+

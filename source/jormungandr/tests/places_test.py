@@ -26,27 +26,39 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-from flask.ext.script import Command, Option
-from tyr.tasks import build_all_data, build_data
 import logging
-from navitiacommon import models
+
+from tests_mechanism import AbstractTestFixture, dataset
+from check_utils import *
 
 
-class BuildDataCommand(Command):
-    """A command used to build all the datasets
+@dataset(["main_routing_test"])
+class TestPlaces(AbstractTestFixture):
+    """
+    Test places responses
     """
 
-    def get_options(self):
-        return [
-            Option(dest='instance_name',
-                   help="name of the instance to build. If non given, build all instances")
-        ]
+    def test_places_by_id(self):
+        """can we get the complete address from coords"""
 
-    def run(self, instance_name=None):
-        if not instance_name:
-            logging.info("Building all data")
-            return build_all_data()
-        instance = models.Instance.query.filter_by(name=instance_name).first()
-        return build_data(instance)
+        # we transform x,y to lon,lat using N_M_TO_DEG constant
+        lon = 10. / 111319.9
+        lat = 100. / 111319.9
+        response = self.query_region("places/{};{}".format(lon, lat))
 
+        assert(len(response['places']) == 1)
+        is_valid_places(response['places'])
+        assert(response['places'][0]['name'] == "42 rue kb (Condom)")
+
+    def test_places_do_not_loose_precision(self):
+        """do we have a good precision given back in the id"""
+
+        # it should work for any id with 15 digits max on each coords
+        # that returns a result
+        id = "8.9831195195e-05;0.000898311281954"
+        response = self.query_region("places/{}".format(id))
+
+        assert(len(response['places']) == 1)
+        is_valid_places(response['places'])
+        assert(response['places'][0]['id'] == id)
+        assert(response['places'][0]['address']['id'] == id)

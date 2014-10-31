@@ -150,16 +150,26 @@ def get_arrival_datetime(journey):
 def get_departure_datetime(journey):
     return datetime.utcfromtimestamp(float(journey.arrival_date_time))
 
+def best_standard(standard, journey, best_criteria):
+    if not standard:
+        return journey
+
+    journey_has_pt = has_pt(journey)
+    standard_has_pt = has_pt(standard)
+    if journey_has_pt != standard_has_pt:
+        return standard if standard_has_pt else journey
+    journey_has_car = has_car(journey)
+    standard_has_car = has_car(standard)
+    if journey_has_car != standard_has_car:
+        return standard if not standard_has_car else journey
+    return standard if best_criteria(standard, journey) > 0 else journey
+
+
 
 def choose_standard(journeys, best_criteria):
     standard = None
     for journey in journeys:
-        car = has_car(journey)
-        if standard is None or has_car(standard) and not car:
-            standard = journey  # the standard shouldnt use the car if possible
-            continue
-        if not car and best_criteria(journey, standard) > 0:
-            standard = journey
+        standard = best_standard(standard, journey, best_criteria)
     return standard
 
 
@@ -177,11 +187,11 @@ transfers_crit = lambda j_1, j_2: compare_minus(j_1.nb_transfers, j_2.nb_transfe
 
 
 def arrival_crit(j_1, j_2):
-    return j_1.arrival_date_time < j_2.arrival_date_time
+    return compare_minus(j_1.arrival_date_time, j_2.arrival_date_time)
 
 
 def departure_crit(j_1, j_2):
-    return j_1.departure_date_time > j_2.departure_date_time
+    return compare_minus(j_2.departure_date_time, j_1.departure_date_time)
 
 
 def nonTC_crit(j_1, j_2):
@@ -248,6 +258,7 @@ def qualifier_one(journeys, request_type):
         duration = get_nontransport_duration(journey)
         return duration <= max_allow_duration
 
+    max_waiting_duration = 3600*4
     # definition of the journeys to qualify
     # the last defined carac will take over the first one
     # if a journey is eligible to multiple tags
@@ -257,7 +268,7 @@ def qualifier_one(journeys, request_type):
             partial(has_no_car),
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
-            partial(nonTC_abs_constraint, max_allow_duration=3600*6),
+            partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
         ],
             [
                 transfers_crit,
@@ -270,7 +281,7 @@ def qualifier_one(journeys, request_type):
         ("car", trip_carac([
             partial(has_car),
             partial(has_pt),  # We don't want car only solution, we MUST have PT
-            partial(nonTC_abs_constraint, max_allow_duration=3600*6)
+            partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration)
         ],
             [
                 best_crit,
@@ -284,7 +295,7 @@ def qualifier_one(journeys, request_type):
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
             partial(nb_transfers_constraint, delta_transfers=1),
-            partial(nonTC_abs_constraint, max_allow_duration=3600*6),
+            partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
         ],
             [
                 nonTC_crit,
@@ -301,7 +312,7 @@ def qualifier_one(journeys, request_type):
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
             partial(nb_transfers_constraint, delta_transfers=1),
-            partial(nonTC_abs_constraint, max_allow_duration=3600*6),
+            partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
         ],
             [
                 nonTC_crit,
@@ -317,7 +328,7 @@ def qualifier_one(journeys, request_type):
             partial(journey_length_constraint, max_evolution=.40),
             partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
             partial(nb_transfers_constraint, delta_transfers=1),
-            partial(nonTC_abs_constraint, max_allow_duration=3600*6),
+            partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
         ],
             [
                 nonTC_crit,
@@ -331,7 +342,7 @@ def qualifier_one(journeys, request_type):
             partial(has_no_car),
             partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
             partial(nb_transfers_constraint, delta_transfers=1),
-            partial(nonTC_abs_constraint, max_allow_duration=3600*6),
+            partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
         ],
             [
                 duration_crit,
@@ -346,7 +357,7 @@ def qualifier_one(journeys, request_type):
             partial(has_pt),
             partial(journey_length_constraint, max_evolution=.10),
             partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
-            partial(nonTC_abs_constraint, max_allow_duration=3600*6),
+            partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
         ],
             [
                 transfers_crit,

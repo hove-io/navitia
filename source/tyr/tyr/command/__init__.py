@@ -34,4 +34,5 @@ from tyr.command.build_data import BuildDataCommand
 from tyr.command.load_data import LoadDataCommand
 import tyr.command.purge
 import tyr.command.cities
+import tyr.command.bounding_shape
 import tyr.command.import_last_dataset

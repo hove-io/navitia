@@ -135,8 +135,8 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
             } else {
                 current_st = current_st->vehicle_journey->next_vj->stop_time_list.front();
             }
-            auto prev_time = raptor_.labels[countb][prev_st->journey_pattern_point->idx].dt_pt,
-                 current_time = raptor_.labels[countb][current_st->journey_pattern_point->idx].dt_pt;
+            auto prev_time = prev_st->section_end_time(clockwise, workingDate),
+                 current_time = current_st->section_end_time(!clockwise, workingDate);
             v.change_vj(prev_st, current_st, to_posix_time(prev_time, raptor_.data),
                         to_posix_time(current_time, raptor_.data), clockwise);
         }

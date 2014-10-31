@@ -105,6 +105,7 @@ struct Path {
     uint32_t nb_changes;
     boost::posix_time::ptime request_time;
     std::vector<PathItem> items;
+    type::EntryPoint origin;
 
     Path() : duration(boost::posix_time::pos_infin), nb_changes(std::numeric_limits<uint32_t>::max()) {}
 

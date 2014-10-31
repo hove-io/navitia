@@ -312,8 +312,6 @@ class SectionGeoJson(fields.Raw):
             coords.append(obj.origin.stop_point.coord)
             coords.append(obj.destination.stop_point.coord)
         else:
-            logging.warn("trying to output wrongly formated object as "
-                         "geojson because type is %s, we skip", obj.type)
             return
 
         response = {
@@ -552,3 +550,17 @@ class UrisToLinks():
         if uris.note != '':
             response.append({"type": "note", "id": uris.note})
         return response
+
+instance_status = {
+        "data_version": fields.Integer(),
+        "end_production_date": fields.String(),
+        "is_connected_to_rabbitmq": fields.Boolean(),
+        "last_load_at": fields.String(),
+        "last_load_status": fields.Boolean(),
+        "kraken_version": fields.String(attribute="navitia_version"),
+        "nb_threads": fields.Integer(),
+        "publication_date": fields.String(),
+        "start_production_date": fields.String(),
+        "status": fields.String()
+    }
+

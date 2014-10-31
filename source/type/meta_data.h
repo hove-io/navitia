@@ -45,8 +45,6 @@ struct MetaData{
 
     boost::posix_time::ptime publication_date;
 
-    std::string navimake_version;
-
     std::vector<std::string> data_sources;
 
     std::string shape;
@@ -54,15 +52,14 @@ struct MetaData{
     /// default dataset timezone
     std::string timezone;
 
-    MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()),
-    navimake_version(KRAKEN_VERSION) {}
+    MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
       * Elle est appelée par boost et pas directement
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & production_date & publication_date & navimake_version & data_sources & shape & timezone;
+        ar & production_date & publication_date & data_sources & shape & timezone;
     }
 
     friend class boost::serialization::access;

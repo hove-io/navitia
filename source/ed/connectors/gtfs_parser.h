@@ -100,11 +100,6 @@ struct GtfsData {
     std::unordered_map<std::string, vector_sp> sa_spmap;
     std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
 
-    // the shapes are here, and then copied where needed
-    std::unordered_map<std::string, navitia::type::MultiLineString> shapes;
-    // shapes by meta vj, to create shapes in stop times
-    std::unordered_map<std::string, navitia::type::LineString> meta_vj_shapes;
-
     // timezone management
     TzHandler tz;
 

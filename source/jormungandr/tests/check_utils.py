@@ -68,6 +68,8 @@ def get_not_null(dict, field):
     val = dict[field]
     if type(val) == bool:
         return val  # no check for booleans
+    if type(val) == int:
+        return val  # no check for integer
 
     assert val, "value of field {} is null".format(field)
     return val
@@ -78,12 +80,39 @@ days_regexp = re.compile("^(0|1){366}$")
 
 def is_valid_days(days):
     m = days_regexp.match(days)
-    return m
+    return m is not None
 
 
-def get_valid_datetime(str):
+version_number_regexp = re.compile("v[0-9]+\.[0-9]+\.[0-9]+[-.*]?")
+
+
+def is_valid_navitia_version_number(str):
+    """
+    check that the version number is valid
+    it must contains at least v{major}.{minor}.{hotfix}
+    it can also contains the git sha1 at the end
+    >>> is_valid_navitia_version_number("v1.12.126")
+    True
+    >>> is_valid_navitia_version_number("v1.3.1-73-g4c7524b")
+    True
+    >>> is_valid_navitia_version_number("1.12.126")
+    Traceback (most recent call last):
+    AssertionError
+    >>> is_valid_navitia_version_number("v12.126-73-g4c7524b")
+    Traceback (most recent call last):
+    AssertionError
+    """
+    m = version_number_regexp.match(str)
+    assert m
+    return True
+
+
+def get_valid_datetime(str, possible_errors=False):
     """
     Check is the string is a valid date and return it
+    if possible_errors, the string might be equals to
+    "not-a-date-time"
+
     >>> get_valid_datetime("bob")
     Traceback (most recent call last):
     AssertionError
@@ -91,6 +120,14 @@ def get_valid_datetime(str):
     Traceback (most recent call last):
     AssertionError
     >>> get_valid_datetime("20123101T215030")  # month is badly set
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_datetime("20123101T215030", possible_errors=True)
+    Traceback (most recent call last):
+    AssertionError
+    >>> get_valid_datetime("not-a-date-time", possible_errors=True)
+
+    >>> get_valid_datetime("not-a-date-time")
     Traceback (most recent call last):
     AssertionError
     >>> get_valid_datetime("20120131T215030")
@@ -101,6 +138,9 @@ def get_valid_datetime(str):
     try:
         return datetime.strptime(str, "%Y%m%dT%H%M%S")
     except ValueError:
+        if possible_errors:
+            assert str == "not-a-date-time"
+            return None
         logging.error("string '{}' is no valid datetime".format(str))
         assert False
 
@@ -190,7 +230,7 @@ def get_valid_int(str):
 def is_valid_lat(str):
     lat = get_valid_float(str)
 
-    assert 90.0 >= lat >= 0.0, "lat should be between 0 and 90"
+    assert -90.0 <= lat <= 90.0, "lat should be between -90 and 90"
 
 
 def is_valid_lon(str):
@@ -199,14 +239,21 @@ def is_valid_lon(str):
     assert 180.0 >= lat >= -180.0, "lon should be between -180 and 180"
 
 
+def is_valid_coord(coord):
+    lat = get_not_null(coord, "lat")
+    lon = get_not_null(coord, "lon")
+    is_valid_lat(lat)
+    is_valid_lon(lon)
+
+
 def get_links_dict(response):
     """
-    get links as dict ordered by 'rel'
+    get links as dict ordered by 'rel' or 'type"
     """
     raw_links = get_not_null(response, "links")
 
     #create a dict with the 'rel' field as key
-    links = {get_not_null(link, "rel"): link for link in raw_links}
+    links = {link.get('rel', link.get('type', None)): link for link in raw_links}
 
     return links
 
@@ -217,10 +264,10 @@ def check_links(object, tester):
      - all links must have the attributes:
        * 'internal' --> optional but must be a boolean
        * 'href' --> valid url if not templated, empty if internal
-       * 'rel' --> not empty
+       * 'rel' --> not empty if internal
        * 'title' --> optional
        * 'templated' --> optional but must be a boolean
-       * 'type' --> not empty if internal
+       * 'type' --> not empty
     """
     links = get_links_dict(object)
 
@@ -240,14 +287,15 @@ def check_links(object, tester):
 
         if not templated and not internal:
             #we check that the url is valid
-            assert check_url(tester, link['href'], might_have_additional_args=True), "href's link must be a valid url"
-
-        assert 'rel' in link
-        assert link['rel']
+            assert check_url(tester, link['href'].replace('http://localhost', ''),
+                             might_have_additional_args=False), "href's link must be a valid url"
 
         if internal:
-            assert 'type' in link
-            assert link['type']
+            assert 'rel' in link
+            assert link['rel']
+
+        assert 'type' in link
+        assert link['type']
 
     return links
 
@@ -320,24 +368,16 @@ def check_internal_links(response, tester):
     internal_link_types = set()  # set with the types we look for
 
     def add_link_visitor(name, val):
-        if name == 'links':
+        if val and name == 'links':
             if 'internal' in val and bool(val['internal']):
                 internal_links_id.add(val['id'])
                 internal_link_types.add(val['rel'])
 
     walk_dict(response, add_link_visitor)
 
-    logging.info('links: {}'.format(len(internal_links_id)))
-
-    for l in internal_links_id:
-        logging.info('--> {}'.format(l))
-    for l in internal_link_types:
-        logging.info('type --> {}'.format(l))
-
     def check_node(name, val):
 
         if name in internal_link_types:
-            logging.info("found a good node {}".format(name))
 
             if 'id' in val and val['id'] in internal_links_id:
                 #found one ref, we can remove the link
@@ -377,12 +417,21 @@ def query_from_str(str):
 
     >>> query_from_str("toto/tata?bob=toto&bobette=tata&bobinos=tutu")
     {'bobette': 'tata', 'bobinos': 'tutu', 'bob': 'toto'}
+    >>> query_from_str("toto/tata?bob=toto&bob=tata&bob=titi&bob=tata&bobinos=tutu")
+    {'bobinos': 'tutu', 'bob': ['toto', 'tata', 'titi', 'tata']}
     """
     query = {}
     last_elt = str.split("?")[-1]
     for s in last_elt.split("&"):
         k, v = s.split("=")
-        query[k] = v
+        if k in query:
+            old_val = query[k]
+            if isinstance(old_val, list):
+                old_val.append(v)
+            else:
+                query[k] = [old_val, v]
+        else:
+            query[k] = v
 
     return query
 
@@ -409,8 +458,36 @@ def is_valid_journey_response(response, tester, query_str):
 
     check_internal_links(response, tester)
 
+    #check other links
+    check_links(response, tester)
 
-    #TODO check journey links (prev/next)
+    # more checks on links, we want the prev/next/first/last,
+    # to have forwarded all params, (and the time must be right)
+    journeys_links = get_links_dict(response)
+
+    for l in ["prev", "next", "first", "last"]:
+        assert l in journeys_links
+        url = journeys_links[l]['href']
+
+        additional_args = query_from_str(url)
+        for k, v in additional_args.iteritems():
+            if k == 'datetime':
+                #TODO check datetime
+                continue
+            if k == 'datetime_represents':
+                query_dt_rep = query_dict.get('datetime_represents', 'departure')
+                if l in ['prev', 'last']:
+                    #the datetime_represents is negated
+                    if query_dt_rep == 'departure':
+                        assert v == 'arrival'
+                    else:
+                        assert v == 'departure'
+                else:
+                    query_dt_rep == v
+
+                continue
+
+            assert query_dict[k] == v, "we must have the same query"
 
 
 def is_valid_journey(journey, tester, query):
@@ -490,8 +567,8 @@ def is_valid_stop_area(stop_area, depth_check=1):
     check the structure of a stop area
     """
     get_not_null(stop_area, "name")
-    is_valid_lat(stop_area["coord"]["lat"])
-    is_valid_lon(stop_area["coord"]["lon"])
+    coord = get_not_null(stop_area, "coord")
+    is_valid_coord(coord)
 
 
 def is_valid_stop_point(stop_point, depth_check=1):
@@ -499,8 +576,8 @@ def is_valid_stop_point(stop_point, depth_check=1):
     check the structure of a stop point
     """
     get_not_null(stop_point, "name")
-    is_valid_lat(stop_point["coord"]["lat"])
-    is_valid_lon(stop_point["coord"]["lon"])
+    coord = get_not_null(stop_point, "coord")
+    is_valid_coord(coord)
 
     if depth_check > 0:
         is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
@@ -547,12 +624,41 @@ def is_valid_line(line, depth_check=1):
     g is None or shape(g) #TODO check length
 
 
+def is_valid_places(places, depth_check=1):
+    for p in places:
+        is_valid_place(p, depth_check)
+
+
 def is_valid_place(place, depth_check=1):
     if depth_check < 0:
         return
     get_not_null(place, "name")
     get_not_null(place, "id")
-    #TODO more checks
+    type = get_not_null(place, "embedded_type")
+    if type == "address":
+        address = get_not_null(place, "address")
+        is_valid_address(address, depth_check)
+    elif type == "stop_area":
+        stop_area = get_not_null(place, "stop_area")
+        is_valid_stop_area(stop_area, depth_check)
+    elif type == "stop_point":
+        stop_point = get_not_null(place, "stop_point")
+        is_valid_stop_point(stop_point, depth_check)
+    elif type == "poi":
+        poi = get_not_null(place, "poi")
+        # TODO
+        #is_valid_poi(poi, depth_check)
+    else:
+        assert(False, "invalid type")
+
+
+def is_valid_address(address, depth_check=1):
+    get_not_null(address, "id")
+    get_not_null(address, "house_number")
+    get_not_null(address, "name")
+    get_not_null(address, "administrative_regions") # TODO test
+    coord = get_not_null(address, "coord")
+    is_valid_coord(coord)
 
 
 def is_valid_validity_pattern(validity_pattern, depth_check=1):
@@ -609,6 +715,18 @@ def is_valid_journey_pattern_point(jpp, depth_check=1):
         is_valid_stop_point(get_not_null(jpp, 'stop_point'), depth_check=depth_check - 1)
     else:
         assert 'stop_point' not in jpp
+
+
+def is_valid_region_status(status):
+    get_not_null(status, 'status')
+    get_valid_int(get_not_null(status, 'data_version'))
+    get_valid_int(get_not_null(status, 'nb_threads'))
+    is_valid_bool(get_not_null(status, 'last_load_status'))
+    is_valid_bool(get_not_null(status, 'is_connected_to_rabbitmq'))
+    is_valid_date(get_not_null(status, 'end_production_date'))
+    is_valid_date(get_not_null(status, 'start_production_date'))
+    get_valid_datetime(get_not_null(status, 'last_load_at'), possible_errors=True)
+    get_valid_datetime(get_not_null(status, 'publication_date'), possible_errors=True)
 
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset

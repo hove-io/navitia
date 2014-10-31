@@ -1,3 +1,37 @@
+navitia2 (1.4.0) unstable; urgency=low
+
+  * Jormungandr: fix rounding problems with coords as id  <https://github.com/CanalTP/navitia/pull/683>
+  * geopal2ed: we can now handle edges without a insee code  <https://github.com/CanalTP/navitia/pull/682>
+  * TimeTable: correction for frequencies  <https://github.com/CanalTP/navitia/pull/681>
+  * ed: shift frequencies start_time in [0, 24:00[  <https://github.com/CanalTP/navitia/pull/680>
+  * Jormungandr: add a scenario for destineo  <https://github.com/CanalTP/navitia/pull/678>
+  * NxM: Fix n point finder escape test issue  <https://github.com/CanalTP/navitia/pull/677>
+  * Jormun: add status api for jormungandr  <https://github.com/CanalTP/navitia/pull/676>
+  * All: Change version handling  <https://github.com/CanalTP/navitia/pull/675>
+  * SQL: force compute_bouding_shape to return multipolygon  <https://github.com/CanalTP/navitia/pull/674>
+  * Osm2ed: import way of type secondary_link and teriary_link  <https://github.com/CanalTP/navitia/pull/673>
+  * Jormungandr: fix a bug fix made too fast  <https://github.com/CanalTP/navitia/pull/672>
+  * Kraken: fix total arrival in get_pareto_front  <https://github.com/CanalTP/navitia/pull/671>
+  * Jormungandr: change max waiting duration to 4 hours  <https://github.com/CanalTP/navitia/pull/670>
+  * Tyr: add target to binarize one instance  <https://github.com/CanalTP/navitia/pull/669>
+  * kraken: to choose the mode of a crowfly we look at the mode used  <https://github.com/CanalTP/navitia/pull/668>
+  * Jormungandr: Prev next links fix  <https://github.com/CanalTP/navitia/pull/667>
+  * tyr: tyr task to import bounding shape  <https://github.com/CanalTP/navitia/pull/666>
+  * Jormungandr: avoid non pt journeys to be choosen as standard journey  <https://github.com/CanalTP/navitia/pull/665>
+  * Raptor: Fix negative stay in  <https://github.com/CanalTP/navitia/pull/664>
+  * Jormungandr: Fix less fallback  <https://github.com/CanalTP/navitia/pull/663>
+  * StreetNetwork: correction for oneway street projection  <https://github.com/CanalTP/navitia/pull/662>
+  * geopal: remove doublon of nodes  <https://github.com/CanalTP/navitia/pull/661>
+  * Install update  <https://github.com/CanalTP/navitia/pull/660>
+  * raptor: filter invalid solutions  <https://github.com/CanalTP/navitia/pull/659>
+  * Raptor: the frequencies vector were not used  <https://github.com/CanalTP/navitia/pull/658>
+  * Osm: give unique id to poi  <https://github.com/CanalTP/navitia/pull/657>
+  * Jormung: remove useless log  <https://github.com/CanalTP/navitia/pull/656>
+  * proximity_list: correct the name of the place object by using fill_pb_placemark  <https://github.com/CanalTP/navitia/pull/655>
+  * more postal code for cities  <https://github.com/CanalTP/navitia/pull/654>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 31 Oct 2014 16:10:35 +0100
+
 navitia2 (1.3.3) unstable; urgency=low
 
   * Jormungandr: fix an awfull mistake

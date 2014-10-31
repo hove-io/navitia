@@ -30,7 +30,14 @@
 # www.navitia.io
 
 from flask import url_for
-from flask.ext.restful import Resource
+from make_links import create_external_link
+from flask.ext.restful import Resource, marshal_with, marshal
+from _version import __version__
+from jormungandr.exceptions import DeadSocketException
+from navitiacommon import type_pb2, request_pb2
+from jormungandr import i_manager
+from jormungandr.protobuf_to_dict import protobuf_to_dict
+from jormungandr.interfaces.v1 import fields
 
 
 class Index(Resource):
@@ -38,18 +45,47 @@ class Index(Resource):
     def get(self):
         response = {
             "links": [
-                {"href": url_for('v1.coverage', _external=True),
-                 "rel": "coverage",
-                 "title": "Coverage of navitia"},
-                {"href": url_for('v1.coord', lon=.0, lat=.0, _external=True),
-                 # TODO find a way to display {long:lat} in the url
-                 "rel": "coord",
-                 "title": "Inverted geocoding for a given coordinate",
-                 "templated": True
-                 },
-                {"href": url_for('v1.journeys', _external=True),
-                 "rel": "journeys",
-                 "title": "Compute journeys"}
+                create_external_link('v1.coverage', rel='coverage', description='Coverage of navitia'),
+                # TODO find a way to display {long:lat} in the url
+                create_external_link('v1.coord', rel='coord', templated=True,
+                            description='Inverted geocoding for a given coordinate', lon=.0, lat=.0),
+                create_external_link('v1.journeys', rel='journeys', description='Compute journeys'),
             ]
         }
         return response, 200
+
+
+class TechnicalStatus(Resource):
+    """
+    Status is mainly used for supervision
+
+    return status for all instances
+    """
+    def get(self):
+        response = {
+            "jormungandr_version": __version__,
+            "regions": []
+        }
+        regions = i_manager.get_regions()
+        for key_region in regions:
+            req = request_pb2.Request()
+
+            req.requested_api = type_pb2.STATUS
+            try:
+                resp = i_manager.instances[key_region].send_and_receive(req, timeout=1000)
+
+                raw_resp_dict = protobuf_to_dict(resp, use_enum_labels=True)
+
+                resp_dict = marshal(raw_resp_dict['status'], fields.instance_status)
+            except DeadSocketException:
+                resp_dict = {
+                    "status": "dead",
+                    "error": {
+                        "code": "dead_socket",
+                        "value": "The region {} is dead".format(key_region)
+                    }
+                }
+            resp_dict['region_id'] = key_region
+            response['regions'].append(resp_dict)
+
+        return response

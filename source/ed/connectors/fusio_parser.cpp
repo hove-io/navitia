@@ -207,7 +207,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
         }
     }
     if (is_valid(geometry_id_c, row))
-        ed_route->shape = find_or_default(row.at(geometry_id_c), gtfs_data.shapes);
+        ed_route->shape = find_or_default(row.at(geometry_id_c), data.shapes);
 
     gtfs_data.route_map[row[route_id_c]] = ed_route;
     data.routes.push_back(ed_route);
@@ -280,21 +280,21 @@ void GeometriesFusioHandler::init(Data&) {
     geometry_id_c = csv.get_pos_col("geometry_id");
     geometry_wkt_c = csv.get_pos_col("geometry_wkt");
 }
-void GeometriesFusioHandler::handle_line(Data&, const csv_row& row, bool) {
+void GeometriesFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     try {
         nt::MultiLineString multiline;
         boost::geometry::read_wkt(row.at(geometry_wkt_c), multiline);
-        gtfs_data.shapes[row.at(geometry_id_c)] = multiline;
+        data.shapes[row.at(geometry_id_c)] = multiline;
     } catch (const boost::geometry::read_wkt_exception&) {
         nt::LineString line;
         boost::geometry::read_wkt(row.at(geometry_wkt_c), line);
-        gtfs_data.shapes[row.at(geometry_id_c)].push_back(line);
+        data.shapes[row.at(geometry_id_c)] = {line};
     } catch (const std::exception& e) {
         LOG4CPLUS_WARN(logger, "Geometry cannot be read: " << e.what());
     }
 }
-void GeometriesFusioHandler::finish(Data&) {
-    LOG4CPLUS_INFO(logger, "Nb shapes: " << gtfs_data.shapes.size());
+void GeometriesFusioHandler::finish(Data& data) {
+    LOG4CPLUS_INFO(logger, "Nb shapes: " << data.shapes.size());
 }
 
 void TripsFusioHandler::init(Data& d) {
@@ -344,16 +344,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     types::MetaVehicleJourney& meta_vj = data.meta_vj_map[row[trip_c]]; //we get a ref on a newly created meta vj
 
     // get shape if possible
-    if (is_valid(geometry_id_c, row)) {
-        const auto it_shape = gtfs_data.shapes.find(row.at(geometry_id_c));
-        if (it_shape != gtfs_data.shapes.end() && !it_shape->second.empty()) {
-            if (it_shape->second.size() > 1) {
-                LOG4CPLUS_WARN(logger, "shape of trip " << row[trip_c]
-                               << " is a multi line, taking only the first line.");
-            }
-            gtfs_data.meta_vj_shapes[row[trip_c]] = it_shape->second.front();
-        }
-    }
+    const std::string &shape_id = has_col(geometry_id_c, row) ? row.at(geometry_id_c) : "";
 
     const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
 
@@ -400,6 +391,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         res.push_back(vj);
         meta_vj.theoric_vj.push_back(vj);
         vj->meta_vj_name = row[trip_c];
+        vj->shape_id = shape_id;
 
         // we store the split vj utc shift
         auto utc_offset = gtfs_data.tz.offset_by_vp[vp_xx];
@@ -550,7 +542,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
         line->color = row[color_c];
     }
     if (is_valid(geometry_id_c, row))
-        line->shape = find_or_default(row.at(geometry_id_c), gtfs_data.shapes);
+        line->shape = find_or_default(row.at(geometry_id_c), data.shapes);
 
     line->network = nullptr;
     if (is_valid(network_c, row)) {
