@@ -2011,3 +2011,96 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
         BOOST_CHECK_EQUAL(res[i].second->journey_pattern_point->stop_point->stop_area->name, spa1);
     }
 }
+
+
+/**
+ * Test get_all_stop_times for one calendar
+ * We want to test in this test a frequency vj 'looping' through the day
+ *
+ * 2 vj going from sp1 to somewhere, valid for our calendar
+ * vj1 is a frequency vj, it's end is lower than it's begin
+ *
+ * ==========     =====
+ * stop point     sp1
+ * === ========== =====
+ * vj1 departure  every 100s from 70000 to 1000
+ *
+ */
+BOOST_AUTO_TEST_CASE(test_looping_frequency_for_calendar) {
+    ed::builder b("20120614");
+    std::string spa1 = "stop1";
+    DateTime vj1_departure = 70000;
+    size_t headway_sec = 1000;
+    b.vj("A", "1010", "", true, "vj1")
+        (spa1, vj1_departure, vj1_departure)
+        ("useless_stop", 1000, 1000).frequency(vj1_departure, 2001, headway_sec);
+
+    auto cal(new type::Calendar(b.data->meta->production_date.begin()));
+    cal->uri="cal1";
+
+    auto associated_cal = new type::AssociatedCalendar();
+    associated_cal->calendar = cal;
+    b.data->pt_data->meta_vj["vj1"]->associated_calendars.insert({cal->uri, associated_cal});
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->build_raptor();
+
+    auto jpp1 = b.data->pt_data->stop_areas_map[spa1]
+                ->stop_point_list.front()
+                ->journey_pattern_point_list.front();
+
+    auto res = get_all_stop_times(jpp1, cal->uri);
+
+    //end of day is 86400, so we have (86400 - 70000) / 1000 + the stop on the morning (2001 / 1000)
+    BOOST_REQUIRE_EQUAL(res.size(),
+                        (DateTimeUtils::SECONDS_PER_DAY - vj1_departure) /headway_sec
+                        + 2001 / headway_sec);
+
+}
+
+/**
+ * Test get_all_stop_times for one calendar
+ * We want to test in this test a frequency vj with end > 24:00
+ *
+ * 2 vj going from sp1 to somewhere, valid for our calendar
+ * vj1 is a frequency vj
+ *
+ * ==========     =====
+ * stop point     sp1
+ * === ========== =====
+ * vj1 departure  every 100s from 70000 to 90000
+ *
+ */
+BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
+    ed::builder b("20120614");
+    std::string spa1 = "stop1";
+    DateTime vj1_departure = 70000;
+    size_t headway_sec = 1000;
+    b.vj("A", "1010", "", true, "vj1")
+        (spa1, vj1_departure, vj1_departure)
+        ("useless_stop", 1000, 1000).frequency(vj1_departure, 90001, headway_sec);
+
+    auto cal(new type::Calendar(b.data->meta->production_date.begin()));
+    cal->uri="cal1";
+
+    auto associated_cal = new type::AssociatedCalendar();
+    associated_cal->calendar = cal;
+    b.data->pt_data->meta_vj["vj1"]->associated_calendars.insert({cal->uri, associated_cal});
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->build_raptor();
+
+    auto jpp1 = b.data->pt_data->stop_areas_map[spa1]
+                ->stop_point_list.front()
+                ->journey_pattern_point_list.front();
+
+    auto res = get_all_stop_times(jpp1, cal->uri);
+
+    //end of day is 86400, so we have (90001 - 70000) / 1000 + 1 (for the last second)
+    BOOST_REQUIRE_EQUAL(res.size(), (90001 - 70000) / headway_sec + 1 );
+
+}
