@@ -9,6 +9,8 @@ Here is a quick overview of the different components
 ### routing
 The core of navitia, contains all public transport routing algorithm
 
+:zap: **cpp module**
+
 ### ed
 Collection of public transport data import tools
 
@@ -16,10 +18,14 @@ This module contains tool to read GTFS, Fusio (format used by CanalTP, derived f
 
 It also contains ed2nav, the tool to build all those data together for Kraken
 
+:zap: **cpp module**
+
 ### georef
 Handle the street network in kraken.
 
 Contains the shortest path algorithms and some tools explore the street network data (address, house numbers, ...)
+
+:zap: **cpp module**
 
 ### jormungandr
 Web service around the c++ core(s).
@@ -31,15 +37,21 @@ This is the navitia api front end, based over flask
 ### kraken
 Kraken is the c++ module behind navitia.
 
+:zap: **cpp module**
+
 ### fare
 Used to handle fares in kraken.
 
 Fares are not taken into account during journey computation but as a postprocess.
 
+:zap: **cpp module**
+
 ### type
 Contains the navitia public transport c++ object model.
 
 Also contains all protobuff definition.
+
+:zap: **cpp module**
 
 ### tyr
 Here stand the law and nothing but the law.
@@ -55,14 +67,20 @@ Module used to explore the public transport data.
 
 It is this module that allow to query for all stops for a given lines and a given network
 
+:zap: **cpp module**
+
 ### disruption
 Chaos connector.
 
 Chaos is the python web service which implements the realtime aspect of Navitia.
 This connector loads Chaos data in navitia.
 
+:zap: **cpp module**
+
 ### autocomplete
 Tools for autocomplete
+
+:zap: **cpp module**
 
 ### navitiacommon
 navitia python model.
@@ -81,9 +99,13 @@ Module used to fill a database with some OSM administrative regions.
 
 The database will be used in ed2nav to find the administrative region of public transport objects outside the streetnetwork of the insances
 
+:zap: **cpp module**
+
 ### calendar
 Small module used to have to query the calendars.
 Calendars are objects used in timetables.
+
+:zap: **cpp module**
 
 ### cmake_modules
 Directory with cmake modules
@@ -94,16 +116,6 @@ Alerte Traffic (AT) connector
 Alerte Traffic are databases filled with public transport disruptions. This connector import the disruption in Navitia.
 
 :snake: **python module**
-
-### linenoise
-submodule with a lib made to create prompt.
-
-Used to a a debug cli for kraken
-
-### lz4_filter
-Module to handle lz4 compresion format in boost::serialize
-
-Kraken use data serialized with boost::serialize (and compressed with lz4)
 
 ### monitor
 Module to monitor kraken.
@@ -119,8 +131,24 @@ proximity list are tools used to get objets around a location
 
 It is for example used to get all stops around a geographical point
 
+:zap: **cpp module**
+
+### time_tables
+Module to handle timetable
+
+With this module you can query for the next departure from a stop point or for the schedule of a given route.
+
+:zap: **cpp module**
+
+### utils
+Submodule containing some code helpers
+
+:zap: **cpp module**
+
 ### scripts
 Various bash scripts
+
+:zap: **cpp module**
 
 ### sindri
 Alerte traffic (AT) connector, used to write in the Alerte traffic database
@@ -143,18 +171,25 @@ Contains kraken mock excecutable used in Jormungandr integration tests
 ### third_party
 Various third party libraries
 
-### time_tables
-Module to handle timetable
+### linenoise
+submodule with a lib made to create prompt.
 
-With this module you can query for the next departure from a stop point or for the schedule of a given route.
+Used to a a debug cli for kraken
 
-### utils
-Submodule containing some code helpers
+### lz4_filter
+Module to handle lz4 compresion format in boost::serialize
+
+Kraken use data serialized with boost::serialize (and compressed with lz4)
 
 ### validator
 Public transport data validator
+
+:zap: **cpp module**
 
 ### vptranslator
 Work in progress
 
 Module to transform a ValidityPattern (a year bitset) to a nice string like "valid from the 1st of march to the 31st of may, all working day of the week but the third webdnesday of april"
+
+:zap: **cpp module**
+
