@@ -26,39 +26,30 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import logging
+from jormungandr.interfaces.v1.transform_id import transform_id
 
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+class TestTransformId:
+    def test_transform_id_coord(self):
+        id = "1.23456789012345;2.23456789012345"
+        uri = "coord:1.23456789012345:2.23456789012345"
+        assert transform_id(id) == uri
 
+    def test_transform_id_almost_coord(self):
+        id = "1.23456789012345;2.23456789012345toto"
+        uri = id
+        assert transform_id(id) == uri
 
-@dataset(["main_routing_test"])
-class TestPlaces(AbstractTestFixture):
-    """
-    Test places responses
-    """
+    def test_transform_id_admin(self):
+        id = "admin:1:12345"
+        uri = "admin:12345"
+        assert transform_id(id) == uri
 
-    def test_places_by_id(self):
-        """can we get the complete address from coords"""
+    def test_transform_id_address(self):
+        id = "address:1:12345"
+        uri = "address:12345"
+        assert transform_id(id) == uri
 
-        # we transform x,y to lon,lat using N_M_TO_DEG constant
-        lon = 10. / 111319.9
-        lat = 100. / 111319.9
-        response = self.query_region("places/{};{}".format(lon, lat))
-
-        assert(len(response['places']) == 1)
-        is_valid_places(response['places'])
-        assert(response['places'][0]['name'] == "42 rue kb (Condom)")
-
-    def test_places_do_not_loose_precision(self):
-        """do we have a good precision given back in the id"""
-
-        # it should work for any id with 15 digits max on each coords
-        # that returns a result
-        id = "8.9831195195e-05;0.000898311281954"
-        response = self.query_region("places/{}".format(id))
-
-        assert(len(response['places']) == 1)
-        is_valid_places(response['places'])
-        assert(response['places'][0]['id'] == id)
-        assert(response['places'][0]['address']['id'] == id)
+    def test_transform_id_something(self):
+        id = "something"
+        uri = id
+        assert transform_id(id) == uri

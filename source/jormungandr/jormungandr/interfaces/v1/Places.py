@@ -39,6 +39,7 @@ from make_links import add_id_links
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from copy import deepcopy
+from jormungandr.interfaces.v1.transform_id import transform_id
 
 
 places = {
@@ -93,18 +94,7 @@ class PlaceUri(ResourceUri):
     @marshal_with(places)
     def get(self, id, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
-        args = {}
-        if id.count(";") == 1:
-            lon, lat = id.split(";")
-            try:
-                args["uri"] = "coord:" + str(float(lon)) + ":"
-                args["uri"] += str(float(lat))
-            except ValueError:
-                pass
-        elif id[:5] == "admin":
-            args["uri"] = "admin:" + id.split(":")[-1]
-        if not "uri" in args.keys():
-            args["uri"] = id
+        args = {"uri": transform_id(id)}
         response = i_manager.dispatch(args, "place_uri",
                                       instance_name=self.region)
         return response, 200
@@ -155,22 +145,14 @@ class PlacesNearby(ResourceUri):
                 uri = uri[:-1]
             uris = uri.split("/")
             if len(uris) > 1:
-                id = uris[-1]
-                if id.count(";") == 1:
-                    lon, lat = id.split(";")
-                    try:
-                        args["uri"] = "coord:" + str(float(lon)) + ":"
-                        args["uri"] += str(float(lat))
-                    except ValueError:
-                        pass
-                elif id[:5] == "admin":
-                    args["uri"] = "admin:" + id.split(":")[-1]
-                else:
-                    args["uri"] = id
+                arg["uri"] = transform_id(uris[-1])
             else:
                 abort(404)
         elif lon and lat:
-            args["uri"] = "coord:" + str(float(lon)) + ":" + str(float(lat))
+            # check if lon and lat can be converted to float
+            float(lon)
+            float(lat)
+            args["uri"] = "coord:{}:{}".format(lon, lat)
         else:
             abort(404)
         args["filter"] = args["filter"].replace(".id", ".uri")

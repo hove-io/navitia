@@ -64,6 +64,7 @@ from navitiacommon import type_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
 from jormungandr.travelers_profile import travelers_profile
+from jormungandr.interfaces.v1.transform_id import transform_id
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -624,9 +625,9 @@ class Journeys(ResourceUri, ResourceUtc):
 
         #we transform the origin/destination url to add information
         if args['origin']:
-            args['origin'] = self.transform_id(args['origin'])
+            args['origin'] = transform_id(args['origin'])
         if args['destination']:
-            args['destination'] = self.transform_id(args['destination'])
+            args['destination'] = transform_id(args['destination'])
 
         if not args['datetime']:
             args['datetime'] = datetime.now()
@@ -696,19 +697,6 @@ class Journeys(ResourceUri, ResourceUtc):
 
         return resp
 
-    def transform_id(self, id):
-        splitted_coord = id.split(";")
-        splitted_address = id.split(":")
-        if len(splitted_coord) == 2:
-            return "coord:" + id.replace(";", ":")
-        if len(splitted_address) >= 3 and splitted_address[0] == 'address':
-            del splitted_address[1]
-            return ':'.join(splitted_address)
-        if len(splitted_address) >= 3 and splitted_address[0] == 'admin':
-            del splitted_address[1]
-            return ':'.join(splitted_address)
-        return id
-
     @clean_links()
     @add_id_links()
     @add_journey_pagination()
@@ -765,7 +753,7 @@ class Journeys(ResourceUri, ResourceUtc):
                 else:
                     args[loop[1]+'_access_duration'].append(0)
                 stop_uri = location["uri"]
-                stop_uri = self.transform_id(stop_uri)
+                stop_uri = transform_id(stop_uri)
                 args[loop[1]].append(stop_uri)
 
         #default Date
