@@ -171,25 +171,40 @@ void Data::shift_stop_times() {
             continue;
         }
         const auto first_st = *first_st_it;
-        const bool is_lower = first_st->arrival_time < 0,
-             is_greater = first_st->arrival_time >= int(navitia::DateTimeUtils::SECONDS_PER_DAY);
-        if (is_lower || is_greater) {
-            if ((is_lower && first_st->arrival_time < int(-1 * navitia::DateTimeUtils::SECONDS_PER_DAY)) ||
-                (is_greater && first_st->arrival_time >= int(2 * navitia::DateTimeUtils::SECONDS_PER_DAY))) {
-                throw navitia::exception("Ed, data: You have to shift more than one day, that's weird");
-            }
-            for_each(vj->stop_time_list.begin(), vj->stop_time_list.end(),
-                [&is_lower] (types::StopTime* st) { st->shift_times(is_lower?1:-1);});
+
+        // For non-frequency vj, we must have the first stop time in
+        // [0; 24:00[ (since they are ordered, every stop time will be
+        // greatter than 0)
+        //
+        // For frequency vj, the start time must be in [0; 24:00[.
+        const int start_time = vj->is_frequency() ? vj->start_time : first_st->arrival_time;
+
+        // number of days to shift for start_time in [0; 24:00[
+        int shift = (start_time >= 0 ? 0 : 1) - start_time / int(navitia::DateTimeUtils::SECONDS_PER_DAY);
+
+        if (shift != 0) {
             auto vp = types::ValidityPattern(*vj->validity_pattern);
-            if (is_lower) {
+            switch (shift) {
+            case 1:
                 shift_vp_left(vp);
-            } else {
-                // Actually, this is valid the day after now
-                // This may drop the last day if the active period last more
-                // than a year.
+                break;
+            case -1:
                 vp.days <<= 1;
+                break;
+            default:
+                throw navitia::exception("Ed: You have to shift more than one day, that's weird");
             }
             vj->validity_pattern = get_or_create_validity_pattern(vp);
+            for (auto st: vj->stop_time_list)
+                st->shift_times(shift);
+        }
+
+        if (vj->is_frequency()) {
+            // shifting start_time in [0; 24:00[
+            vj->start_time += shift * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
+            // vj->end_time must be gretter than 0 (but it can be lesser than start_time)
+            while (vj->end_time < 0)
+                vj->end_time += int(navitia::DateTimeUtils::SECONDS_PER_DAY);
         }
     }
 }

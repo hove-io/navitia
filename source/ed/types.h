@@ -217,6 +217,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     int start_time = std::numeric_limits<int>::max(); /// First departure of vehicle
     int end_time = std::numeric_limits<int>::max(); /// Last departure of vehicle journey
     int headway_secs = std::numeric_limits<int>::max(); /// Seconds between each departure.
+    bool is_frequency() const {return start_time != std::numeric_limits<int>::max();}
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern = nullptr;

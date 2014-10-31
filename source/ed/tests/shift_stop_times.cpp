@@ -54,6 +54,59 @@ BOOST_AUTO_TEST_CASE(do_not_shift) {
     BOOST_CHECK_EQUAL(st->departure_time, 49000);
 }
 
+BOOST_AUTO_TEST_CASE(do_not_shift_freq) {
+    ed::Data d;
+    auto vj = new ed::types::VehicleJourney();
+    d.vehicle_journeys.push_back(vj);
+    auto st = new ed::types::StopTime();
+    vj->stop_time_list.push_back(st);
+    vj->start_time = 40000;
+    vj->end_time = 60000;
+    vj->headway_secs = 10;
+    st->arrival_time = 50000;
+    st->departure_time = 49000;
+    d.shift_stop_times();
+    BOOST_CHECK_EQUAL(st->arrival_time, 50000);
+    BOOST_CHECK_EQUAL(st->departure_time, 49000);
+    BOOST_CHECK_EQUAL(vj->start_time, 40000);
+    BOOST_CHECK_EQUAL(vj->end_time, 60000);
+}
+
+BOOST_AUTO_TEST_CASE(do_not_shift_freq_end_before) {
+    ed::Data d;
+    auto vj = new ed::types::VehicleJourney();
+    d.vehicle_journeys.push_back(vj);
+    auto st = new ed::types::StopTime();
+    vj->stop_time_list.push_back(st);
+    vj->start_time = 40000;
+    vj->end_time = 30000;
+    vj->headway_secs = 10;
+    st->arrival_time = 50000;
+    st->departure_time = 49000;
+    d.shift_stop_times();
+    BOOST_CHECK_EQUAL(st->arrival_time, 50000);
+    BOOST_CHECK_EQUAL(st->departure_time, 49000);
+    BOOST_CHECK_EQUAL(vj->start_time, 40000);
+    BOOST_CHECK_EQUAL(vj->end_time, 30000);
+}
+
+BOOST_AUTO_TEST_CASE(do_not_shift_freq_end_neg) {
+    ed::Data d;
+    auto vj = new ed::types::VehicleJourney();
+    d.vehicle_journeys.push_back(vj);
+    auto st = new ed::types::StopTime();
+    vj->stop_time_list.push_back(st);
+    vj->start_time = 40000;
+    vj->end_time = -10000;
+    vj->headway_secs = 10;
+    st->arrival_time = 50000;
+    st->departure_time = 49000;
+    d.shift_stop_times();
+    BOOST_CHECK_EQUAL(st->arrival_time, 50000);
+    BOOST_CHECK_EQUAL(st->departure_time, 49000);
+    BOOST_CHECK_EQUAL(vj->start_time, 40000);
+    BOOST_CHECK_EQUAL(vj->end_time, 76400);
+}
 
 BOOST_AUTO_TEST_CASE(shift_before) {
     ed::Data d;
@@ -71,6 +124,32 @@ BOOST_AUTO_TEST_CASE(shift_before) {
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 36400);
     BOOST_CHECK_EQUAL(st->departure_time, 37400);
+    BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 9)));
+    BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 10)));
+    BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 11)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_before_freq) {
+    ed::Data d;
+    auto vj = new ed::types::VehicleJourney();
+    auto vp = new ed::types::ValidityPattern();
+    vp->beginning_date = boost::gregorian::date(2014, 10, 9);
+    vp->add(boost::gregorian::date(2014, 10, 10));
+    vp->add(boost::gregorian::date(2014, 10, 11));
+    vj->validity_pattern = vp;
+    d.vehicle_journeys.push_back(vj);
+    auto st = new ed::types::StopTime();
+    vj->stop_time_list.push_back(st);
+    vj->start_time = -60000;
+    vj->end_time = 0;
+    vj->headway_secs = 10;
+    st->arrival_time = -50000;
+    st->departure_time = -49000;
+    d.shift_stop_times();
+    BOOST_CHECK_EQUAL(st->arrival_time, 36400);
+    BOOST_CHECK_EQUAL(st->departure_time, 37400);
+    BOOST_CHECK_EQUAL(vj->start_time, 26400);
+    BOOST_CHECK_EQUAL(vj->end_time, 0);
     BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 9)));
     BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 10)));
     BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 11)));
@@ -162,4 +241,27 @@ BOOST_AUTO_TEST_CASE(shift_after) {
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 100);
     BOOST_CHECK_EQUAL(st->departure_time, 200);
+}
+
+BOOST_AUTO_TEST_CASE(shift_after_freq) {
+    ed::Data d;
+    auto vj = new ed::types::VehicleJourney();
+    auto vp = new ed::types::ValidityPattern();
+    vp->beginning_date = boost::gregorian::date(2014, 10, 9);
+    vp->add(1);
+    vp->add(2);
+    vj->validity_pattern = vp;
+    d.vehicle_journeys.push_back(vj);
+    auto st = new ed::types::StopTime();
+    vj->stop_time_list.push_back(st);
+    st->arrival_time = 86500;
+    st->departure_time = 86600;
+    vj->start_time = 86400;
+    vj->end_time = 1000;
+    vj->headway_secs = 10;
+    d.shift_stop_times();
+    BOOST_CHECK_EQUAL(st->arrival_time, 100);
+    BOOST_CHECK_EQUAL(st->departure_time, 200);
+    BOOST_CHECK_EQUAL(vj->start_time, 0);
+    BOOST_CHECK_EQUAL(vj->end_time, 1000);
 }
