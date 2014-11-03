@@ -37,6 +37,9 @@ www.navitia.io
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/weak_ptr.hpp>
+#include <boost/serialization/variant.hpp>
 #include <thread>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"

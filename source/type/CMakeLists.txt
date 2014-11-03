@@ -106,7 +106,7 @@ add_dependencies(type_test protobuf_files)
 ADD_BOOST_TEST(type_test)
 
 add_executable(datetime_test tests/datetime.cpp)
-target_link_libraries(datetime_test ${BOOST_LIBS} types log4cplus)
+target_link_libraries(datetime_test types ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(datetime_test)
 
 

@@ -52,15 +52,24 @@ std::string VehicleJourney::get_direction() const {
     return "";
 }
 
-std::vector<boost::shared_ptr<Message>> HasMessages::get_applicable_messages(
+std::vector<boost::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable_messages(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
-    std::vector<boost::shared_ptr<Message>> result;
-    for(auto message : this->messages){
-        if(message->is_valid(current_time, action_period)){
-            result.push_back(message);
+    std::vector<boost::weak_ptr<new_disruption::Impact>> result;
+
+    //we cleanup the released pointer (not in the loop for code clarity)
+    clean_up_weak_ptr(impacts);
+
+    for (auto impact : this->impacts) {
+        auto impact_acquired = impact.lock();
+        if (! impact_acquired) {
+            continue; //pointer might still have become invalid
+        }
+        if (impact_acquired->is_valid(current_time, action_period)) {
+            result.push_back(impact);
         }
     }
+
     return result;
 
 }
@@ -68,14 +77,19 @@ std::vector<boost::shared_ptr<Message>> HasMessages::get_applicable_messages(
 bool HasMessages::has_applicable_message(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
-    bool result = false;
-    for(auto message : this->messages){
-        if(message->is_valid(current_time, action_period)){
-            result = true;
-            break;
+    //we cleanup the released pointer (not in the loop for code clarity)
+    clean_up_weak_ptr(impacts);
+
+    for (auto impact : this->impacts) {
+        auto impact_acquired = impact.lock();
+        if (! impact_acquired) {
+            continue; //pointer might still have become invalid
+        }
+        if (impact_acquired->is_valid(current_time, action_period)) {
+            return true;
         }
     }
-    return result;
+    return false;
 }
 
 bool VehicleJourney::has_date_time_estimated() const{

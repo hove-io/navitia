@@ -1,5 +1,5 @@
 
-add_library(workers worker.cpp maintenance_worker.cpp configuration.cpp)
+add_library(workers worker.cpp maintenance_worker.cpp configuration.cpp fill_disruption_from_chaos.cpp)
 target_link_libraries(workers disruption_api calendar_api ptreferential autocomplete georef
   routing time_tables tcmalloc)
 

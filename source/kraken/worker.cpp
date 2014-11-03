@@ -165,7 +165,7 @@ pbnavitia::Response Worker::metadatas() {
     return result;
 }
 
-void Worker::init_worker_data(const std::shared_ptr<const navitia::type::Data> data){
+void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data){
     //@TODO should be done in data_manager
     if(&*data != this->last_data || !planner){
         planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*data));
@@ -294,7 +294,7 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
 
 type::GeographicalCoord Worker::coord_of_entry_point(
         const type::EntryPoint & entry_point,
-        const std::shared_ptr<const navitia::type::Data> data) {
+        const boost::shared_ptr<const navitia::type::Data> data) {
     type::GeographicalCoord result;
     if(entry_point.type == Type_e::Address){
         auto way = data->geo_ref->way_map.find(entry_point.uri);
@@ -333,7 +333,7 @@ type::GeographicalCoord Worker::coord_of_entry_point(
 
 
 type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request,
-        const std::shared_ptr<const navitia::type::Data> data,
+        const boost::shared_ptr<const navitia::type::Data> data,
         const bool use_second){
     type::StreetNetworkParams result;
     std::string uri;

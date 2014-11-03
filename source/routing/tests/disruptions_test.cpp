@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     pbnavitia::Response resp = w.dispatch(req);
     BOOST_REQUIRE(resp.journeys_size() != 0);
 
-    // a disruption
-    data_manager.apply_disruptions(0);
+    // a clone and set
+    data_manager.set_data(data_manager.get_data_clone());
 
     // we ask for a journey, we should have the same thing
     resp = w.dispatch(req);

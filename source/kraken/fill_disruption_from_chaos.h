@@ -29,32 +29,15 @@ www.navitia.io
 */
 
 #pragma once
-#include <string>
-#include <map>
+
+#include "type/pt_data.h"
 #include "type/message.h"
-#include "ed/at_perturbation.h"
+#include "type/chaos.pb.h"
+#include "type/gtfs-realtime.pb.h"
 
-namespace navitia{namespace type{
-    class Data;
-    struct PT_Data;
-}}
+namespace navitia {
 
-namespace ed{ namespace connectors{
+void add_disruption(navitia::type::PT_Data& pt_data,
+                    const chaos::Disruption& chaos_disruption);
 
-struct RealtimeLoaderConfig{
-    std::string connection_string;
-    uint32_t shift_days;
-
-    RealtimeLoaderConfig(const std::string& connectionstring, const uint32_t shiftdays) : connection_string(connectionstring), shift_days(shiftdays){}
-};
-
-void load_disruptions(
-        navitia::type::PT_Data& pt_data,
-        const RealtimeLoaderConfig& conf,
-        const boost::posix_time::ptime& current_time);
-
-std::vector<ed::AtPerturbation> load_at_perturbations(
-        const RealtimeLoaderConfig& conf,
-        const boost::posix_time::ptime& current_time);
-
-}}//connectors
+} // namespace navitia

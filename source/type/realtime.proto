@@ -6,30 +6,6 @@ message TCObject{
     optional pbnavitia.NavitiaType object_type = 2;
 }
 
-message LocalizedMessage{
-    required string language = 1;
-    optional string body = 2;
-    optional string title = 3;
-}
-
-message Message{
-    required string uri = 1;
-    required TCObject object = 2;
-
-    //POSIX time (i.e., number of seconds since January 1st 1970 00:00:00 UTC)
-    optional uint64 start_publication_date = 3;
-    optional uint64 end_publication_date = 4;
-    optional uint64 start_application_date = 5;
-    optional uint64 end_application_date = 6;
-    //number of seconds since midnigth
-    optional uint32 start_application_daily_hour = 7;
-    optional uint32 end_application_daily_hour = 8;
-    optional string active_days = 9;
-
-    repeated LocalizedMessage localized_messages = 10;
-    required MessageStatus message_status = 11;
-}
-
 message AtPerturbation{
     required string uri = 1;
     required TCObject object = 2;

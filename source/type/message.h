@@ -39,15 +39,16 @@ www.navitia.io
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
-#include <boost/serialization/shared_ptr.hpp>
+#include <boost/variant.hpp>
 
 #include <atomic>
 #include <map>
 #include <vector>
 #include <string>
+#include "utils/serialization_unique_ptr.h"
+#include "utils/serialization_unique_ptr_container.h"
 
 #include "type/type.h"
-
 
 namespace navitia { namespace type {
 
@@ -71,6 +72,11 @@ struct Cause {
     std::string wording;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & wording & created_at & updated_at;
+    }
 };
 
 struct Severity {
@@ -83,12 +89,38 @@ struct Severity {
     int priority;
 
     Effect effect;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & wording & created_at & updated_at & color & priority & effect;
+    }
 };
 
-struct PtObject {
-    Type_e object_type;
-    std::string object_uri;
+struct UnknownPtObj {
+    template<class Archive>
+    void serialize(Archive&, const unsigned int) {}
 };
+struct LineSection {
+    const Line *line = nullptr;
+    std::vector<const StopArea *> stops;
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & line & stops;
+    }
+};
+typedef boost::variant<
+    UnknownPtObj,
+    const Network *,
+    const StopArea *,
+    LineSection,
+    const Line *,
+    const Route *
+    > PtObj;
+
+PtObj make_pt_obj(Type_e type,
+                  const std::string &uri,
+                  const PT_Data& pt_data,
+                  const boost::shared_ptr<Impact> &impact = {});
 
 struct Disruption;
 
@@ -97,6 +129,11 @@ struct Message {
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & text & created_at & updated_at;
+    }
 };
 
 struct Impact {
@@ -107,9 +144,9 @@ struct Impact {
     // the application period define when the impact happen
     std::vector<boost::posix_time::time_period> application_periods;
 
-    std::shared_ptr<Severity> severity;
+    boost::shared_ptr<Severity> severity;
 
-    std::vector<PtObject> informed_entities;
+    std::vector<PtObj> informed_entities;
 
     std::vector<Message> messages;
 
@@ -117,17 +154,26 @@ struct Impact {
     //Note: it is a raw pointer because an Impact is owned by it's disruption
     //(even if the impact is stored as a share_ptr in the disruption to allow for weak_ptr towards it)
     Disruption* disruption;
-};
 
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & created_at & updated_at & application_periods & severity & informed_entities & messages & disruption;
+    }
+
+    bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
+};
 
 struct Tag {
     std::string uri;
     std::string name;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & name & created_at & updated_at;
+    }
 };
-
-
 
 struct Disruption {
     std::string uri;
@@ -138,129 +184,49 @@ struct Disruption {
     // the publication period specify when an information can be displayed to
     // the customer, if a request is made before or after this period the
     // disruption must not be shown
-    boost::posix_time::time_period publication_period;
+    boost::posix_time::time_period publication_period {
+        boost::posix_time::not_a_date_time, boost::posix_time::seconds(1)
+    };//no default constructor for time_period, we must provide a value
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
-    std::shared_ptr<Cause> cause;
+    boost::shared_ptr<Cause> cause;
 
-    //impacts are shared_ptr because there are weak_ptr pointing to them in the impacted objects
-    std::vector<std::shared_ptr<Impact>> impacts;
+    //Disruption have the ownership of the Impacts.  Impacts are
+    //shared_ptr and not unique_ptr because there are weak_ptr
+    //pointing to them in the impacted objects
+    std::vector<boost::shared_ptr<Impact>> impacts;
 
     // the place where the disruption happen, the impacts can be in anothers places
-    std::vector<PtObject> localization;
+    std::vector<PtObj> localization;
 
     //additional informations on the disruption
-    std::vector<std::shared_ptr<Tag>> tags;
+    std::vector<boost::shared_ptr<Tag>> tags;
 
     std::string note;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & uri & reference & publication_period
+           & created_at & updated_at & cause & impacts & localization & tags & note;
+    }
 };
 
-struct MessageHolder { //=> to be renamed as Disruptions
+struct DisruptionHolder {
     std::vector<std::unique_ptr<Disruption>> disruptions;
 
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
-    std::map<std::string, std::weak_ptr<Cause>> causes; //to be wrapped
-    std::map<std::string, std::weak_ptr<Severity>> severities; //to be wrapped too
-    std::map<std::string, std::weak_ptr<Tag>> tags; //to be wrapped too
+    std::map<std::string, boost::weak_ptr<Cause>> causes; //to be wrapped
+    std::map<std::string, boost::weak_ptr<Severity>> severities; //to be wrapped too
+    std::map<std::string, boost::weak_ptr<Tag>> tags; //to be wrapped too
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions & causes & severities;
+        ar & disruptions & causes & severities & tags;
     }
 };
 }
-
-enum Jours {
-    Lun = 0x01,
-    Mar = 0x02,
-    Mer = 0x04,
-    Jeu = 0x08,
-    Ven = 0x10,
-    Sam = 0x20,
-    Dim = 0x40,
-    Fer = 0x80
-};
-
-enum MessageStatus{
-    information = 0,
-    warning = 1,
-    disrupt = 2
-};
-
-struct LocalizedMessage{
-    std::string title;
-    std::string body;
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int){
-        ar & title & body;
-    }
-};
-
-struct AtPerturbation{
-    std::string uri;
-
-    Type_e object_type;
-    std::string object_uri;
-
-    boost::posix_time::time_period application_period;
-
-    boost::posix_time::time_duration application_daily_start_hour;
-    boost::posix_time::time_duration application_daily_end_hour;
-
-    std::bitset<8> active_days;
-
-    AtPerturbation(): object_type(Type_e::ValidityPattern),
-        application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
-
-    bool valid_day_of_week(const boost::gregorian::date& date) const;
-
-    bool valid_hour_perturbation(const boost::posix_time::time_period& period) const;
-
-    bool is_applicable(const boost::posix_time::time_period& time) const;
-
-    bool operator<(const AtPerturbation& other) const {
-        return (this->uri < other.uri);
-    }
-};
-
-/**
- * les messages étant pour le moment des perturbations AT avec plus d'info
- * on en hérite pour ne pas mutliplier le code
- */
-struct Message: public AtPerturbation{
-    boost::posix_time::time_period publication_period;
-    std::map<std::string, LocalizedMessage> localized_messages;
-    MessageStatus message_status;
-
-    Message(): publication_period(boost::posix_time::not_a_date_time,
-            boost::posix_time::seconds(0)),
-        message_status(MessageStatus::information){}
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int){
-        ar & uri & object_type & object_uri & publication_period
-            & application_period & application_daily_start_hour
-            & application_daily_end_hour & active_days & localized_messages & message_status;
-    }
-
-    bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_time)const;
-
-    bool is_publishable(const boost::posix_time::ptime& time) const;
-};
-
-struct MessageHolder{
-    // external_code => message
-    std::map<std::string, boost::shared_ptr<Message>> messages;
-
-
-    MessageHolder(){}
-
-    template<class Archive> void serialize(Archive& ar, const unsigned int){
-        ar & messages;
-    }
-
-};
 
 }}//namespace
