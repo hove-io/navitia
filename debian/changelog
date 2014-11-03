@@ -1,3 +1,9 @@
+navitia2 (1.4.5) unstable; urgency=low
+
+  * Jormungandr: fix small pb on sort  <https://github.com/CanalTP/navitia/pull/687> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 03 Nov 2014 18:11:11 +0100
+
 navitia2 (1.4.4) unstable; urgency=low
 
   * jormungandr: fix places_nearby  <https://github.com/CanalTP/navitia/pull/691> 
