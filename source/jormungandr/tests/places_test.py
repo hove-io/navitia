@@ -62,3 +62,12 @@ class TestPlaces(AbstractTestFixture):
         is_valid_places(response['places'])
         assert(response['places'][0]['id'] == id)
         assert(response['places'][0]['address']['id'] == id)
+
+    def test_places_nearby(self):
+        """check places_nearby"""
+
+        id = "8.9831195195e-05;0.000898311281954"
+        response = self.query_region("places/{}/places_nearby".format(id), display=True)
+
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
