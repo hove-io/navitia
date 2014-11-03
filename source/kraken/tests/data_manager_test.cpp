@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(destructor_called){
         auto second_data = data_manager.get_data();
         BOOST_CHECK_NE(first_data, second_data);
         BOOST_CHECK_EQUAL(Data::destructor_called, false);
-        first_data = nullptr;
+        first_data = boost::shared_ptr<Data>();
     }
     BOOST_CHECK_EQUAL(Data::destructor_called, true);
     BOOST_CHECK(data_manager.get_data());
