@@ -11,9 +11,9 @@ For each data format, one executable can be found in this module to import those
 The kraken input file is a binary blob file created using boost::serialize.
 
 ## common stuff
-All executables offer a ```--help``` option to list the different option
+All executables offer a ```--help``` option to list the different options
 
-Every executables need a ```--connection-string``` option to be able to be linked to the database
+Every executable needs a ```--connection-string``` option to be able to be linked to the database
 
 This connection string must contains:
  * host: database host
