@@ -1,3 +1,9 @@
+navitia2 (1.4.2) unstable; urgency=low
+
+  * CMake: version python version file generation 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 03 Nov 2014 09:11:56 +0100
+
 navitia2 (1.4.1) unstable; urgency=low
 
   * ormungandr: fix internal links  <https://github.com/CanalTP/navitia/pull/684> 
