@@ -1,5 +1,5 @@
 #add python file to also handle version number in python modules
-configure_file("${CMAKE_SOURCE_DIR}/navitia_version.py.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/_version.py")
+configure_file("${CMAKE_SOURCE_DIR}/navitia_version.py.cmake" "${CMAKE_CURRENT_SOURCE_DIR}/jormungandr/_version.py")
 
 
 #tests 
