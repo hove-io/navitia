@@ -33,7 +33,7 @@ www.navitia.io
 #include "ed/data.h"
 #include <boost/test/unit_test.hpp>
 #include <string>
-#include "config.h"
+#include "conf.h"
 #include "ed/build_helper.h"
 #include "ed/adapted.h"
 #include "ed/types.h"

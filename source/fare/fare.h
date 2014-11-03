@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 
-#include "config.h"
+#include "conf.h"
 #include "routing/routing.h"
 #include "utils/logger.h"
 #include <boost/graph/adjacency_list.hpp>

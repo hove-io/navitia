@@ -34,7 +34,7 @@ www.navitia.io
 #define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 #include <string>
-#include "config.h"
+#include "conf.h"
 #include "ed/build_helper.h"
 #include "utils/csv.h"
 
@@ -50,7 +50,8 @@ BOOST_AUTO_TEST_CASE(required_files) {
     for(auto file : files)
     {
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) +  gtfs_path + "_sans_"+file);
+        ed::connectors::GtfsParser parser(
+            std::string(navitia::config::fixtures_dir) +  gtfs_path + "_sans_" + file);
         BOOST_REQUIRE_THROW(parser.fill(data, "20110105"), ed::connectors::FileNotFoundException);
     }
 }
@@ -67,7 +68,7 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
@@ -75,7 +76,7 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         sstream << "ratp, RATP,,Europe/Paris,,,\n";
         sstream << ", ACME,,America/New_York,,,";
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         file_parser(parser.gtfs_data, sstream).fill(data);
 
         BOOST_REQUIRE_EQUAL(data.networks.size(), 2);
@@ -110,7 +111,7 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
@@ -118,7 +119,7 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         sstream << boost::algorithm::join(required_fields, ",") << "\n";
         sstream << "\"a\", \"A\",\"bad_lon\",\"bad_lat\"";
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 }
@@ -145,7 +146,7 @@ BOOST_AUTO_TEST_CASE(parse_transfers) {
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
@@ -153,7 +154,7 @@ BOOST_AUTO_TEST_CASE(parse_transfers) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 }
@@ -173,7 +174,7 @@ BOOST_AUTO_TEST_CASE(parse_lines) {
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
@@ -181,7 +182,7 @@ BOOST_AUTO_TEST_CASE(parse_lines) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 }
@@ -200,7 +201,7 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_THROW(file_parser(parser.gtfs_data, sstream).fill(data), ed::connectors::InvalidHeaders);
     }
 
@@ -208,7 +209,7 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
         ed::Data data;
-        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
         BOOST_REQUIRE_NO_THROW(file_parser(parser.gtfs_data, sstream).fill(data));
     }
 }
@@ -219,7 +220,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
      * has been changed to "Africa/Abidjan" because "Africa/Abidjan" has no dst and no utc offset
      */
     ed::Data data;
-    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example_no_dst");
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_google_example_no_dst");
     parser.fill(data);
 
     //Agency
@@ -442,7 +443,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
      * We check the diff that can occur because the dataset timezone has dst
      */
     ed::Data data;
-    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example");
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_google_example");
     parser.fill(data);
 
     check_gtfs_google_example(data, parser);
@@ -457,7 +458,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_without_calendar) {
     //we must have the exact same thing
 
     ed::Data data;
-    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_google_example_no_calendar");
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_google_example_no_calendar");
     parser.fill(data);
 
     check_gtfs_google_example(data, parser);
@@ -470,7 +471,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_line_without_network){
      * this line should thus be linked to a default_network
      */
     ed::Data data;
-    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path + "_line_without_network");
+    ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_line_without_network");
     parser.fill(data);
 
     //since there is a real network in the dataset, we got 2 network
@@ -494,7 +495,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_line_without_network){
 //    ed::Data data;
 //    ed::connectors::GtfsData gtfs_data;
 //    //we need to provide by hand some data before loading the file
-//    std::string stop_file = std::string(FIXTURES_DIR) + gtfs_path + "_slashs" + "/stops.txt";
+//    std::string stop_file = std::string(navitia::config::fixtures_dir) + gtfs_path + "_slashs" + "/stops.txt";
 //    ed::connectors::FileParser<ed::connectors::StopsGtfsHandler> parser (gtfs_data, stop_file, true);
 //    parser.fill(data);
 
