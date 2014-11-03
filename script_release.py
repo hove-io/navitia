@@ -5,6 +5,7 @@ import subprocess
 import re
 from sys import exit, argv
 from shutil import copyfile
+import os
 from os import remove, stat
 import codecs
 import requests
@@ -243,10 +244,10 @@ class ReleaseManager:
             print "Note: you'll have to merge/tag/push manually after your fix:"
             print "git checkout release"
             print "git merge --no-ff {tmp_branch}".format(tmp_branch=tmp_name)
-            print "git tag -a{}".format(get_tag_name(self.version))
+            print "git tag -a {}".format(get_tag_name(self.version))
 
             print "git checkout dev"
-            print "git merge --no-ff {tmp_branch}".format(tmp_branch=tmp_name)
+            print "git merge --no-ff release".format(tmp_branch=tmp_name)
             print "git push {} release dev --tags".format(self.remote_name)
 
             #TODO2 try to script that (put 2 hotfix param, like hotfix init and hotfix publish ?)
@@ -256,12 +257,14 @@ class ReleaseManager:
 
 
 if __name__ == '__main__':
-    print "Be sure git is in english, to do so you can set LC_ALL=en_US "
 
     if len(argv) < 2:
         print "mandatory argument: {major|minor|hotfix}"
         print "possible additional argument: remote (default is canalTP)"
         exit(5)
+
+    #the git lib used bug when not in english
+    os.environ['LC_ALL'] = 'en_US'
 
     r_type = argv[1]
     remote = argv[2] if len(argv) >= 3 else "CanalTP"
