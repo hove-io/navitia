@@ -32,7 +32,7 @@
 from flask import url_for
 from make_links import create_external_link
 from flask.ext.restful import Resource, marshal_with, marshal
-from _version import __version__
+from jormungandr._version import __version__
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import type_pb2, request_pb2
 from jormungandr import i_manager
