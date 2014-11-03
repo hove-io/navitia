@@ -121,7 +121,7 @@ class JourneySorter(object):
             for section in journey.sections:
                 if section.type != response_pb2.PUBLIC_TRANSPORT:
                     non_pt_duration += section.duration
-            if not non_pt_duration_j1:
+            if non_pt_duration_j1 is None:
                 non_pt_duration_j1 = non_pt_duration
             else:
                 non_pt_duration_j2 = non_pt_duration
