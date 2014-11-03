@@ -1,3 +1,9 @@
+navitia2 (1.4.4) unstable; urgency=low
+
+  * jormungandr: fix places_nearby  <https://github.com/CanalTP/navitia/pull/691> 
+
+ -- Guillaume P. <texitoi@texitoi.eu>  Mon, 03 Nov 2014 16:11:21 +0100
+
 navitia2 (1.4.3) unstable; urgency=low
 
   * Jormungandr: force use of jormungandr version file  <https://github.com/CanalTP/navitia/pull/686> 
