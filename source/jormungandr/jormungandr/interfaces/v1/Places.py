@@ -145,7 +145,7 @@ class PlacesNearby(ResourceUri):
                 uri = uri[:-1]
             uris = uri.split("/")
             if len(uris) > 1:
-                arg["uri"] = transform_id(uris[-1])
+                args["uri"] = transform_id(uris[-1])
             else:
                 abort(404)
         elif lon and lat:
