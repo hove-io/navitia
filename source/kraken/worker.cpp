@@ -105,7 +105,7 @@ Worker::Worker(DataManager<navitia::type::Data>& data_manager, kraken::Configura
 
 Worker::~Worker(){}
 
-std::string get_string_status(const std::shared_ptr<const nt::Data>& data) {
+std::string get_string_status(const boost::shared_ptr<const nt::Data>& data) {
     if (data->loaded) {
         return "running";
     }
