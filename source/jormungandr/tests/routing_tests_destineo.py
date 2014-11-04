@@ -43,7 +43,7 @@ class TestJourneysDestineo(TestJourneys):
     if needed we can override the tests in this class
     """
 
-    def setUp(self):
+    def setup(self):
         logging.debug('setup for destineo')
         #we don't want to use the database for the scenario, so we mock the property of instance
         #but we want to test the scenario for destineo
@@ -53,7 +53,7 @@ class TestJourneysDestineo(TestJourneys):
         self.old_scenario = Instance.scenario
         Instance.scenario = mock_scenario
 
-    def tearDown(self):
+    def teardown(self):
         Instance.scenario = self.old_scenario
 
     def test_journeys(self):

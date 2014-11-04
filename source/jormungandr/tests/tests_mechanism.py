@@ -69,8 +69,7 @@ class AbstractTestFixture:
 
             assert os.path.exists(exe), "cannot find the kraken {}".format(exe)
 
-            fdr, fdw = os.pipe()
-            kraken = subprocess.Popen(exe, stderr=fdw, stdout=fdw, close_fds=True)
+            kraken = subprocess.Popen(exe, stderr=None, stdout=None, close_fds=False)
 
             cls.krakens_pool[kraken_name] = kraken
 
