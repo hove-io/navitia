@@ -239,17 +239,28 @@ class Scenario(default.Scenario):
         if len(response.journeys) > 1:
             response.journeys.sort(DestineoJourneySorter(clockwise=clockwise))
 
+    def filter_journeys(self, journeys):
+        section_is_pt = lambda section: section['type'] == "public_transport"\
+                           or section['type'] == "on_demand_transport"
+        filter_journey = lambda journey: 'arrival_date_time' in journey and\
+                             journey['arrival_date_time'] != '' and\
+                             "sections" in journey and\
+                             any(section_is_pt(section) for section in journey['sections'])
+        filter_journey_pure_tc = lambda journey: 'is_pure_tc' in journey['tags']
+
+        list_journeys = filter(filter_journey_pure_tc, journeys)
+        if not list_journeys:
+            #if there is no pure tc journeys, we consider all journeys with TC
+            list_journeys = filter(filter_journey, journeys)
+        return list_journeys
+
+
     def extremes(self, resp):
         logger = logging.getLogger(__name__)
         logger.debug('calling extremes for destineo')
         if 'journeys' not in resp:
             return (None, None)
-        datetime_before = None
-        datetime_after = None
-        prev_journey = None
-        next_journey = None
-        filter_journey = lambda journey: 'is_pure_tc' in journey['tags']
-        list_journeys = filter(filter_journey, resp['journeys'])
+        list_journeys = self.filter_journeys(resp['journeys'])
         if not list_journeys:
             return (None, None)
         prev_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
