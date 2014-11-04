@@ -1127,20 +1127,18 @@ boost::gregorian::date_period GenericGtfsParser::basic_production_date(const std
     }
 }
 
-boost::gregorian::date_period GenericGtfsParser::find_production_date(const std::string &beginning_date) {
+boost::gregorian::date_period GenericGtfsParser::find_production_date(const std::string& beginning_date) {
     std::string filename = path + "/stop_times.txt";
     CsvReader csv(filename, ',' , true);
     if(!csv.is_open()) {
-        LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
+        LOG4CPLUS_ERROR(logger, "Impossible to find file " + filename);
         return basic_production_date(beginning_date);
     }
 
     std::vector<std::string> mandatory_headers = {"trip_id" , "arrival_time",
                                                   "departure_time", "stop_id", "stop_sequence"};
     if(!csv.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + filename
-                        + ". Il manque les colonnes : "
-                        + csv.missing_headers(mandatory_headers));
+        LOG4CPLUS_FATAL(logger, "Error  while reading " << filename << ". Columns missing: " << csv.missing_headers(mandatory_headers));
         return basic_production_date(beginning_date);
     }
 
@@ -1156,15 +1154,14 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     filename = path + "/trips.txt";
     CsvReader csv2(filename, ',' , true);
     if(!csv2.is_open()) {
-        LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
+        LOG4CPLUS_WARN(logger, "Impossible to find file " << filename);
         return basic_production_date(beginning_date);
     }
 
     mandatory_headers = {"trip_id" , "service_id"};
     if(!csv2.validate(mandatory_headers)) {
-        LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename
-                       + ". Il manque les colonnes : "
-                       + csv2.missing_headers(mandatory_headers));
+        LOG4CPLUS_FATAL(logger, "Error  while reading " << filename << ". Columns missing: " << csv.missing_headers(mandatory_headers));
+
         return basic_production_date(beginning_date);
     }
     int service_c = csv2.get_pos_col("service_id");
@@ -1181,14 +1178,12 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     CsvReader csv3(filename, ',' , true);
     bool calendar_txt_exists = false;
     if(!csv3.is_open()) {
-        LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
+        LOG4CPLUS_WARN(logger, "impossible to find file " << filename);
     } else {
         calendar_txt_exists = true;
         mandatory_headers = {"start_date" , "end_date", "service_id"};
         if(!csv3.validate(mandatory_headers)) {
-            LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename
-                           + ". Il manque les colonnes : "
-                           + csv3.missing_headers(mandatory_headers));
+            LOG4CPLUS_FATAL(logger, "Error  while reading " << filename << ". Columns missing: " << csv.missing_headers(mandatory_headers));
             return basic_production_date(beginning_date);
         }
 
@@ -1218,15 +1213,13 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     CsvReader csv4(filename, ',' , true);
     if(!csv4.is_open()) {
         if(calendar_txt_exists)
-            LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
+            LOG4CPLUS_WARN(logger, "impossible to find file " << filename);
         else
-            LOG4CPLUS_FATAL(logger, "Aucun fichiers " + filename + " ni calendar.txt");
+            LOG4CPLUS_WARN(logger, "impossible to find file " << filename << " and calendar.txt");
     } else {
         mandatory_headers = {"service_id" , "date", "exception_type"};
         if(!csv4.validate(mandatory_headers)) {
-            LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename
-                           + ". Il manque les colonnes : "
-                           + csv4.missing_headers(mandatory_headers));
+            LOG4CPLUS_FATAL(logger, "Error  while reading " << filename << ". Columns missing: " << csv.missing_headers(mandatory_headers));
             return basic_production_date(beginning_date);
         }
         int date_c = csv4.get_pos_col("date");
