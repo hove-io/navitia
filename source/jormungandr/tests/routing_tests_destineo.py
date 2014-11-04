@@ -43,18 +43,42 @@ class TestJourneysDestineo(TestJourneys):
     if needed we can override the tests in this class
     """
 
-    @classmethod
-    def setup_class(cls):
-        #we need to recopy the dataset else it won't find it
-        AbstractTestFixture.data_sets = cls.data_sets
+    def setUp(self):
         logging.debug('setup for destineo')
-        logging.debug(cls.data_sets)
-        TestJourneys.setup_class()
-
         #we don't want to use the database for the scenario, so we mock the property of instance
         #but we want to test the scenario for destineo
         @property
         def mock_scenario(self):
             return jormungandr.scenarios.destineo.Scenario()
+        self.old_scenario = Instance.scenario
         Instance.scenario = mock_scenario
 
+    def tearDown(self):
+        Instance.scenario = self.old_scenario
+
+    def test_journeys(self):
+        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        #not to use the jormungandr database
+        response = self.query_region(journey_basic_query)
+
+        is_valid_journey_response(response, self.tester, journey_basic_query)
+        eq_(len(response['journeys']), 2)
+        eq_(response['journeys'][0]['type'], 'best')
+        eq_(response['journeys'][1]['type'], 'non_pt_walk')
+
+    def test_journeys_destineo_with_bss(self):
+        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        #not to use the jormungandr database
+        query = journey_basic_query + "&first_section_mode=bss&first_section_mode=bike&first_section_mode=car" \
+                "&last_section_mode=bss&last_section_mode=bike&last_section_mode=car"
+        response = self.query_region(query)
+
+        is_valid_journey_response(response, self.tester, query)
+        eq_(len(response['journeys']), 7)
+        eq_(response['journeys'][0]['type'], 'best')
+        eq_(response['journeys'][1]['type'], 'rapid')
+        eq_(response['journeys'][2]['type'], 'non_pt_bss')
+        eq_(response['journeys'][3]['type'], 'rapid')
+        eq_(response['journeys'][4]['type'], 'rapid')
+        eq_(response['journeys'][5]['type'], 'non_pt_walk')
+        eq_(response['journeys'][6]['type'], 'non_pt_bike')
