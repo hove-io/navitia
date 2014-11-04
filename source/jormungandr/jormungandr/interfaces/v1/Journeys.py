@@ -291,7 +291,12 @@ class add_journey_pagination(object):
             objects = f(*args, **kwargs)
             if objects[1] != 200:
                 return objects
-            datetime_before, datetime_after = self.extremes(objects[0])
+            #self is the first parameter, so the ressources
+            region = i_manager.instances[args[0].region]
+            if region and hasattr(region.scenario, 'extremes') and callable(region.scenario.extremes):
+                datetime_before, datetime_after = region.scenario.extremes(objects[0])
+            else:
+                datetime_before, datetime_after = self.extremes(objects[0])
             if datetime_before and datetime_after:
                 if not "links" in objects[0]:
                     objects[0]["links"] = []
