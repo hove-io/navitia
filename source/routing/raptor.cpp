@@ -167,7 +167,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
 
 
 void RAPTOR::init(Solutions departs,
-                  std::vector<std::pair<type::idx_t, navitia::time_duration> > destinations,
+                  const std::vector<std::pair<type::idx_t, navitia::time_duration> >& destinations,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
     for(Solution item : departs) {
