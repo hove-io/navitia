@@ -1131,7 +1131,7 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     std::string filename = path + "/stop_times.txt";
     CsvReader csv(filename, ',' , true);
     if(!csv.is_open()) {
-        LOG4CPLUS_ERROR(logger, "Impossible to find file " + filename);
+        LOG4CPLUS_FATAL(logger, "Impossible to find file " + filename);
         return basic_production_date(beginning_date);
     }
 
@@ -1154,7 +1154,7 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     filename = path + "/trips.txt";
     CsvReader csv2(filename, ',' , true);
     if(!csv2.is_open()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find file " << filename);
+        LOG4CPLUS_FATAL(logger, "Impossible to find file " << filename);
         return basic_production_date(beginning_date);
     }
 
