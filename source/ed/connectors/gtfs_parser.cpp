@@ -1138,7 +1138,8 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     std::vector<std::string> mandatory_headers = {"trip_id" , "arrival_time",
                                                   "departure_time", "stop_id", "stop_sequence"};
     if(!csv.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Error  while reading " << filename << ". Columns missing: " << csv.missing_headers(mandatory_headers));
+        LOG4CPLUS_FATAL(logger, "Error while reading " << filename << ". Columns missing: " 
+                << csv.missing_headers(mandatory_headers));
         return basic_production_date(beginning_date);
     }
 
@@ -1160,7 +1161,8 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
 
     mandatory_headers = {"trip_id" , "service_id"};
     if(!csv2.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Error  while reading " << filename << ". Columns missing: " << csv.missing_headers(mandatory_headers));
+        LOG4CPLUS_FATAL(logger, "Error while reading " << filename << ". Columns missing: "
+                << csv.missing_headers(mandatory_headers));
 
         return basic_production_date(beginning_date);
     }
@@ -1183,7 +1185,8 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
         calendar_txt_exists = true;
         mandatory_headers = {"start_date" , "end_date", "service_id"};
         if(!csv3.validate(mandatory_headers)) {
-            LOG4CPLUS_FATAL(logger, "Error  while reading " << filename << ". Columns missing: " << csv.missing_headers(mandatory_headers));
+            LOG4CPLUS_FATAL(logger, "Error while reading " << filename << ". Columns missing: " 
+                    << csv.missing_headers(mandatory_headers));
             return basic_production_date(beginning_date);
         }
 
@@ -1219,7 +1222,8 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     } else {
         mandatory_headers = {"service_id" , "date", "exception_type"};
         if(!csv4.validate(mandatory_headers)) {
-            LOG4CPLUS_FATAL(logger, "Error  while reading " << filename << ". Columns missing: " << csv.missing_headers(mandatory_headers));
+            LOG4CPLUS_FATAL(logger, "Error while reading " << filename << ". Columns missing: " 
+                    << csv.missing_headers(mandatory_headers));
             return basic_production_date(beginning_date);
         }
         int date_c = csv4.get_pos_col("date");
