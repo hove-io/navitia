@@ -242,23 +242,22 @@ class Scenario(default.Scenario):
     def extremes(self, resp):
         logger = logging.getLogger(__name__)
         logger.debug('calling extremes for destineo')
+        if 'journeys' not in resp:
+            return (None, None)
         datetime_before = None
         datetime_after = None
         prev_journey = None
         next_journey = None
         filter_journey = lambda journey: 'is_pure_tc' in journey['tags']
-        try:
-            list_journeys = filter(filter_journey, resp['journeys'])
-            prev_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
-            next_journey = max(list_journeys, key=itemgetter('departure_date_time'))
-        except:
-            logging.exception('')
+        list_journeys = filter(filter_journey, resp['journeys'])
+        if not list_journeys:
             return (None, None)
-        if prev_journey and next_journey:
-            f_datetime = "%Y%m%dT%H%M%S"
-            f_departure = datetime.strptime(next_journey['departure_date_time'], f_datetime)
-            f_arrival = datetime.strptime(prev_journey['arrival_date_time'], f_datetime)
-            datetime_after = f_departure + timedelta(minutes=1)
-            datetime_before = f_arrival - timedelta(minutes=1)
+        prev_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
+        next_journey = max(list_journeys, key=itemgetter('departure_date_time'))
+        f_datetime = "%Y%m%dT%H%M%S"
+        f_departure = datetime.strptime(next_journey['departure_date_time'], f_datetime)
+        f_arrival = datetime.strptime(prev_journey['arrival_date_time'], f_datetime)
+        datetime_after = f_departure + timedelta(minutes=1)
+        datetime_before = f_arrival - timedelta(minutes=1)
 
         return (datetime_before, datetime_after)
