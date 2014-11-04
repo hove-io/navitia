@@ -266,17 +266,17 @@ It returns, in addition of classic objects, a collection of `place`_.
 Parameters
 ##########
 
-+---------+---------------+-----------------+----------------------------------------+-------------------------------------+
-| Required| Name          | Type            | Description                            | Default value                       |
-+=========+===============+=================+========================================+=====================================+
-| yep     | q             | string          | The search term                        |                                     |
-+---------+---------------+-----------------+----------------------------------------+-------------------------------------+
-| nop     | type\[\]      | array of string | Type of objects you want to query      | \[``stop_area``, ``stop_point``,    |
-|         |               |                 |                                        | ``poi``, ``adminstrative_region``\] |
-+---------+---------------+-----------------+----------------------------------------+-------------------------------------+
-| nop     | admin_uri\[\] | array of string | If filled, will restrained the search  |                                     |
-|         |               |                 | within the given admin uris            | ""                                  |
-+---------+---------------+-----------------+----------------------------------------+-------------------------------------+
++---------+---------------+-----------------+----------------------------------------+--------------------------------------+
+| Required| Name          | Type            | Description                            | Default value                        |
++=========+===============+=================+========================================+======================================+
+| yep     | q             | string          | The search term                        |                                      |
++---------+---------------+-----------------+----------------------------------------+--------------------------------------+
+| nop     | type\[\]      | array of string | Type of objects you want to query      | \[``stop_area``, ``stop_point``,     |
+|         |               |                 |                                        | ``poi``, ``administrative_region``\] |
++---------+---------------+-----------------+----------------------------------------+--------------------------------------+
+| nop     | admin_uri\[\] | array of string | If filled, will restrained the search  |                                      |
+|         |               |                 | within the given admin uris            | ""                                   |
++---------+---------------+-----------------+----------------------------------------+--------------------------------------+
 
 Example
 #######
@@ -310,26 +310,29 @@ Places Nearby
 This api search for public transport object near another object, or near coordinates.
 It returns, in addition of classic objects, a collection of `place`_.
 
-.. warning::
-    There is no pagination for this api
++------------------------------------------+
+| *Warning*                                |
+|                                          |
+|    There is no pagination for this api   |
++------------------------------------------+
 
 Parameters
 ##########
 
-+---------+---------------+-----------------+------------------------------------------+-------------------------------------+
-| Required| name          | Type            | Description                              | Default value                       |
-+=========+===============+=================+==========================================+=====================================+
-| nop     | distance      | int             | Distance range in meters                 | 500                                 |
-+---------+---------------+-----------------+------------------------------------------+-------------------------------------+
-| nop     | type\[\]      | array of string | Type of objects you want to query        | \[``stop_area``, ``stop_point``,    |
-|         |               |                 |                                          | ``poi``, ``adminstrative_region``\] |
-+---------+---------------+-----------------+------------------------------------------+-------------------------------------+
-| nop     | admin_uri\[\] | array of string | If filled, will restrained the search    | ""                                  |
-|         |               |                 | within the given admin uris              |                                     |
-+---------+---------------+-----------------+------------------------------------------+-------------------------------------+
-| nop     | filter        | string          | Use to restrain returned objects.        |                                     |
-|         |               |                 | for example: places_type.id=theater      |                                     |
-+---------+---------------+-----------------+------------------------------------------+-------------------------------------+
++---------+---------------+-----------------+------------------------------------------+--------------------------------------+
+| Required| name          | Type            | Description                              | Default value                        |
++=========+===============+=================+==========================================+======================================+
+| nop     | distance      | int             | Distance range in meters                 | 500                                  |
++---------+---------------+-----------------+------------------------------------------+--------------------------------------+
+| nop     | type\[\]      | array of string | Type of objects you want to query        | \[``stop_area``, ``stop_point``,     |
+|         |               |                 |                                          | ``poi``, ``administrative_region``\] |
++---------+---------------+-----------------+------------------------------------------+--------------------------------------+
+| nop     | admin_uri\[\] | array of string | If filled, will restrained the search    | ""                                   |
+|         |               |                 | within the given admin uris              |                                      |
++---------+---------------+-----------------+------------------------------------------+--------------------------------------+
+| nop     | filter        | string          | Use to restrain returned objects.        |                                      |
+|         |               |                 | for example: places_type.id=theater      |                                      |
++---------+---------------+-----------------+------------------------------------------+--------------------------------------+
 
 Example
 ########
@@ -912,32 +915,32 @@ line         `line`_               The line of this route
 Stop Point
 ##########
 
-===================== ===================== =====================================================================
-Field                 Type                  Description
-===================== ===================== =====================================================================
-id                    string                Identifier of the line
-name                  string                Name of the line
-coord                 `coord`_              Coordinates of the stop point
-adminstrative_regions array of `admin`_     Administrative regions of the stop point in which is the stop point
-equipments            array of string       Equipments of the stop point
-stop_area             `stop_area`_          Stop Area containing this stop point
-===================== ===================== =====================================================================
+======================= ===================== =====================================================================
+Field                   Type                  Description
+======================= ===================== =====================================================================
+id                      string                Identifier of the line
+name                    string                Name of the line
+coord                   `coord`_              Coordinates of the stop point
+administrative_regions  array of `admin`_     Administrative regions of the stop point in which is the stop point
+equipments              array of string       Equipments of the stop point
+stop_area               `stop_area`_          Stop Area containing this stop point
+======================= ===================== =====================================================================
 
 .. _stop_area:
 
 Stop Area
 #########
 
-===================== =========================== ==================================================================
-Field                 Type                        Description
-===================== =========================== ==================================================================
-id                    string                      Identifier of the line
-name                  string                      Name of the line
-coord                 `coord`_                    Coordinates of the stop area
-adminstrative_regions array of `admin`_           Administrative regions of the stop area in which is the stop area
-equipments            array of string             Equipments of the stop area
-stop_points           array of `stop_point`_      Stop points contained in this stop area
-===================== =========================== ==================================================================
+====================== =========================== ==================================================================
+Field                  Type                        Description
+====================== =========================== ==================================================================
+id                     string                      Identifier of the line
+name                   string                      Name of the line
+coord                  `coord`_                    Coordinates of the stop area
+administrative_regions array of `admin`_           Administrative regions of the stop area in which is the stop area
+equipments             array of string             Equipments of the stop area
+stop_points            array of `stop_point`_      Stop points contained in this stop area
+====================== =========================== ==================================================================
 
 
 .. _commercial_mode:
@@ -982,35 +985,35 @@ name                 string                             Name of the company
 
 Place
 #####
-A container containing either a `stop_point`_, `stop_area`_, `address`_, , `poi`_, `admin`_
+A container containing either a `stop_point`_, `stop_area`_, `address`_, `poi`_, `admin`_
 
-==================== ============================= =================================
-Field                Type                          Description
-==================== ============================= =================================
-name                 string                        The id of the embedded object
-id                   string                        The name of the embedded object
-embedded_type        `embedded_type_place`_        The type of the embedded object
-stop_point           *optional* `stop_point`_      Embedded Stop point
-stop_area            *optional* `stop_area`_       Embedded Stop area
-address              *optional* `address`_         Embedded address
-poi                  *optional* `poi`_             Embedded poi
-adminstrative_region *optional* `admin`_           Embedded administrative region
-==================== ============================= =================================
+===================== ============================= =================================
+Field                 Type                          Description
+===================== ============================= =================================
+name                  string                        The name of the embedded object
+id                    string                        The id of the embedded object
+embedded_type         `embedded_type_place`_        The type of the embedded object
+stop_point            *optional* `stop_point`_      Embedded Stop point
+stop_area             *optional* `stop_area`_       Embedded Stop area
+address               *optional* `address`_         Embedded address
+poi                   *optional* `poi`_             Embedded poi
+administrative_region *optional* `admin`_           Embedded administrative region
+===================== ============================= =================================
 
 .. _embedded_type_place:
 
 Embedded type
 _____________
 
-==================== =================
-Value                Description
-==================== =================
+===================== =================
+Value                 Description
+===================== =================
 stop_point
 stop_area
 address
 poi
-adminstrative_region
-==================== =================
+administrative_region
+===================== =================
 
 Street network objects
 **********************
@@ -1023,8 +1026,8 @@ Poi
 ================ ================================== =======================================
 Field            Type                               Description
 ================ ================================== =======================================
-id               string                             Identifier of the poi type
-name             string                             Name of the poi type
+id               string                             Identifier of the poi
+name             string                             Name of the poi
 poi_type         `poi_type`_                        Type of the poi
 ================ ================================== =======================================
 
@@ -1045,15 +1048,15 @@ name             string                             Name of the poi type
 Address
 #######
 
-===================== =========================== ==================================================================
-Field                 Type                        Description
-===================== =========================== ==================================================================
-id                    string                      Identifier of the address
-name                  string                      Name of the address
-coord                 `coord`_                    Coordinates of the address
-house_number          int                         House number of the address
-adminstrative_regions array of `admin`_           Administrative regions of the address in which is the stop area
-===================== =========================== ==================================================================
+====================== =========================== ==================================================================
+Field                  Type                        Description
+====================== =========================== ==================================================================
+id                     string                      Identifier of the address
+name                   string                      Name of the address
+coord                  `coord`_                    Coordinates of the address
+house_number           int                         House number of the address
+administrative_regions array of `admin`_           Administrative regions of the address in which is the stop area
+====================== =========================== ==================================================================
 
 .. _admin:
 
