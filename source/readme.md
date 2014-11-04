@@ -23,14 +23,14 @@ It also contains ed2nav, the tool to build all those data together for Kraken
 ### georef
 Handle the street network in kraken.
 
-Contains the shortest path algorithms and some tools explore the street network data (address, house numbers, ...)
+Contains the shortest path algorithms and some tools to explore the street network data (addresses, house numbers, ...)
 
 :zap: **cpp module**
 
 ### jormungandr
 Web service around the c++ core(s).
 
-This is the navitia api front end, based over flask
+This is the navitia api front end, based on flask
 
 :snake: **python module**
 
@@ -177,9 +177,9 @@ submodule with a lib made to create prompt.
 Used to a a debug cli for kraken
 
 ### lz4_filter
-Module to handle lz4 compresion format in boost::serialize
+Module to handle lz4 compression format in boost::serialize
 
-Kraken use data serialized with boost::serialize (and compressed with lz4)
+Kraken uses data serialized with boost::serialize (and compressed with lz4)
 
 ### validator
 Public transport data validator
