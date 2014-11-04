@@ -22,19 +22,12 @@ Dependencies
 
 #. Python
 
-   * zmq
-   * protobuf
-   * pika (>=0.9.7)
-   * psycopg2
-   * sqlalchemy
-   * flask-restfull (https://github.com/l-vincent-l/flask-restful) **patched version**
-   * shapely
-   * six
-   * redis
-   * dict2xml
-   * Flask-SQLAlchemy (only for Tyr currently)
-   * Celery (>=3.0)
-   * kombu
+   Each python module have a pip requirements.txt file that list it's dependendies.
+
+   To install the dependencies for a module use `pip`:
+
+   ``pip install -r {path_to_navitia_source}/jormungandr/requirement.txt``
+
 
 #. Other
 
@@ -103,9 +96,13 @@ Testing
          
    #. Update the database scheme (with the usual user, not with 'postgres' anymore)
 
-      ``cd source/scripts;``
+      ``cd source/sql``
 
-      ``./update_db.sh your_settings.sh``
+      ``PYTHONPATH=. alembic -x dbname="postgresql://$db_user:$db_user_password@localhost/$db_name" upgrade head``
+
+      If you prefer, you can also copy the alembic.ini config file and update the sqlalchemy.url field with you db connection string
+
+      ``PYTHONPATH=. alembic -c your_alembic.ini upgrade head``
 
 #. Get some GTFS data. For instance from http://data.navitia.io
 
