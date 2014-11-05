@@ -197,7 +197,7 @@ void add_disruption(nt::PT_Data& pt_data,
     disruption->updated_at = from_posix(chaos_disruption.updated_at());
     disruption->cause = make_cause(chaos_disruption.cause(), holder);
     for (const auto& chaos_impact: chaos_disruption.impacts()) {
-        disruption->impacts.push_back(make_impact(chaos_impact, pt_data));
+        disruption->add_impact(make_impact(chaos_impact, pt_data));
     }
     disruption->localization = make_pt_objects(chaos_disruption.localization(), pt_data);
     for (const auto& chaos_tag: chaos_disruption.tags()) {

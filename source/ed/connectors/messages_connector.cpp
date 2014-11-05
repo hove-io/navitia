@@ -138,7 +138,7 @@ void load_disruptions(
             impact->application_periods = navitia::expand_calendar(start, end,
                                                        daily_start_hour, daily_end_hour,
                                                        active_days);
-            disruption->impacts.push_back(impact);
+            disruption->add_impact(impact);
             disruptions.disruptions.push_back(std::move(disruption));
         }
         auto message = nt::new_disruption::Message();

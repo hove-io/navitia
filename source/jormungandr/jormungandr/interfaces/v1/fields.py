@@ -336,6 +336,11 @@ code = {
     "value": fields.String()
 }
 
+"""
+Note: the 'generic_messages' are the old 'disruptions'
+
+ For the moment we output both object, but we want to remove the generic_message as soon as possible
+"""
 generic_message = {
     "level": enum_type(attribute="message_status"),
     "value": fields.String(attribute="message"),
@@ -345,6 +350,27 @@ generic_message = {
     "end_application_daily_hour": fields.String(),
 }
 
+period = {
+    "begin": DateTime(),
+    "end": DateTime(),
+}
+
+disruption_message = {
+    "text": fields.String(),
+    "content_type": fields.String(),
+}
+
+disruption = {
+    "uri": fields.String(),
+    "title": fields.String(),
+    "application_periods": NonNullList(NonNullNested(period)),
+    "status": fields.String(),
+    "updated_at": DateTime(),
+    "tags": NonNullList(NonNullNested(fields.String())),
+    "cause": fields.String(),
+    "messages": NonNullList(NonNullNested(disruption_message)),
+}
+
 display_informations_route = {
     "network": fields.String(attribute="network"),
     "direction": fields.String(attribute="direction"),
@@ -352,7 +378,8 @@ display_informations_route = {
     "label": get_label(attribute="display_information"),
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
-    "messages": NonNullList(NonNullNested(generic_message))
+    "messages": NonNullList(NonNullNested(generic_message)),
+    "disruptions": NonNullList(NonNullNested(disruption))
 }
 
 display_informations_vj = {
@@ -365,8 +392,9 @@ display_informations_vj = {
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
     "equipments": equipments(attribute="has_equipments"),
-    "headsign" : fields.String(attribute="headsign"),
-    "messages": NonNullList(NonNullNested(generic_message))
+    "headsign": fields.String(attribute="headsign"),
+    "messages": NonNullList(NonNullNested(generic_message)),
+    "disruptions": NonNullList(NonNullNested(disruption))
 }
 
 coord = {
@@ -392,11 +420,13 @@ generic_type_admin["administrative_regions"] = admins
 
 stop_point = deepcopy(generic_type_admin)
 stop_point["messages"] = NonNullList(NonNullNested(generic_message))
+stop_point["disruptions"] = NonNullList(NonNullNested(disruption))
 stop_point["comment"] = fields.String()
 stop_point["codes"] = NonNullList(NonNullNested(code))
 stop_point["label"] = fields.String()
 stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
+stop_area["disruptions"] = NonNullList(NonNullNested(disruption))
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
 stop_area["timezone"] = fields.String()
@@ -419,6 +449,7 @@ vehicle_journey = {
     "id": fields.String(attribute="uri"),
     "name": fields.String(),
     "messages": NonNullList(NonNullNested(generic_message)),
+    "disruptions": NonNullList(NonNullNested(disruption)),
     "journey_pattern": PbField(journey_pattern),
     "stop_times": NonNullList(NonNullNested(stop_time)),
     "comment": fields.String(),
@@ -428,6 +459,7 @@ vehicle_journey = {
 
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
+line["disruptions"] = NonNullList(NonNullNested(disruption))
 line["code"] = fields.String()
 line["color"] = fields.String()
 line["comment"] = fields.String()
@@ -436,6 +468,7 @@ line["geojson"] = MultiLineString(attribute="geojson")
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))
+route["disruptions"] = NonNullList(NonNullNested(disruption))
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
@@ -446,6 +479,7 @@ journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
 network["messages"] = NonNullList(NonNullNested(generic_message))
+network["disruptions"] = NonNullList(NonNullNested(disruption))
 network["lines"] = NonNullList(NonNullNested(line))
 network["codes"] = NonNullList(NonNullNested(code))
 line["network"] = PbField(network)

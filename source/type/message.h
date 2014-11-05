@@ -193,11 +193,6 @@ struct Disruption {
 
     boost::shared_ptr<Cause> cause;
 
-    //Disruption have the ownership of the Impacts.  Impacts are
-    //shared_ptr and not unique_ptr because there are weak_ptr
-    //pointing to them in the impacted objects
-    std::vector<boost::shared_ptr<Impact>> impacts;
-
     // the place where the disruption happen, the impacts can be in anothers places
     std::vector<PtObj> localization;
 
@@ -211,6 +206,16 @@ struct Disruption {
         ar & uri & reference & publication_period
            & created_at & updated_at & cause & impacts & localization & tags & note;
     }
+
+    void add_impact(const boost::shared_ptr<Impact>& impact);
+    const std::vector<boost::shared_ptr<Impact>>& get_impacts() const {
+        return impacts;
+    }
+private:
+    //Disruption have the ownership of the Impacts.  Impacts are
+    //shared_ptr and not unique_ptr because there are weak_ptr
+    //pointing to them in the impacted objects
+    std::vector<boost::shared_ptr<Impact>> impacts;
 };
 
 struct DisruptionHolder {

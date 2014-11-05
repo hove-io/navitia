@@ -90,9 +90,26 @@ message MessageContent {
     optional string text = 1;
     optional string content_type = 2;
 }
+
+//message are the old disruption, remove as soon as possible
+enum MessageStatus {
+    information = 0;
+    warning = 1;
+    disrupt = 2;
+}
 message Message {
+    optional string uri = 1;
+    optional string message = 2;
+    optional string title = 3;
+    optional string start_application_date = 4;
+    optional string end_application_date = 5;
+    optional string start_application_daily_hour = 6;
+    optional string end_application_daily_hour = 7;
+    optional MessageStatus message_status = 8;
+}
+
+message Disruption {
     optional string uri 							= 1;
-    optional string message 						= 2;
     optional string title 							= 3;
     repeated Period application_periods             = 10;
     optional ActiveStatus status    				= 11;
@@ -124,6 +141,7 @@ message StopArea {
     repeated AdministrativeRegion administrative_regions = 10;
     repeated StopPoint stop_points = 8;
     repeated Message messages = 9;
+    repeated Disruption disruptions = 20;
     optional string comment = 11;
     repeated Code codes = 12;
     optional string timezone = 15;
@@ -139,6 +157,7 @@ message StopPoint {
     optional hasEquipments has_equipments = 8;
 
     repeated Message messages = 9;
+    repeated Disruption disruptions = 20;
     optional string comment = 11;
     repeated Code codes = 12;
     optional Address address = 13;
@@ -173,6 +192,7 @@ message Line {
     optional Network network = 13;
 
     repeated Message messages = 14;
+    repeated Disruption disruptions = 20;
     optional string comment = 15;
     repeated Code codes = 16;
     optional MultiLineString geojson = 17;
@@ -185,6 +205,7 @@ message Route {
     optional Line line = 7;
     repeated JourneyPattern journey_patterns = 8;
     repeated Message messages = 9;
+    repeated Disruption disruptions = 20;
     repeated Code codes = 10;
     repeated StopPoint stop_points = 1;
     optional PtObject direction = 12;
@@ -201,6 +222,7 @@ message JourneyPattern {
     repeated JourneyPatternPoint journey_pattern_points = 8;
 
     repeated Message messages = 9;
+    repeated Disruption disruptions = 20;
 }
 
 message Destination{
@@ -270,6 +292,7 @@ message VehicleJourney {
     optional JourneyPattern journey_pattern = 8;
 
     repeated Message messages = 10;
+    repeated Disruption disruptions = 30;
 
     optional bool is_adapted = 11;
     optional ValidityPattern validity_pattern = 12;
@@ -296,6 +319,7 @@ message JourneyPatternPoint{
     optional JourneyPattern journey_pattern = 6;
 
     repeated Message messages = 7;
+    repeated Disruption disruptions = 20;
 }
 
 message Contributor {
@@ -324,6 +348,7 @@ message Network {
     optional string name 		= 4;
     repeated Line lines 		= 5;
     repeated Message messages 	= 6;
+    repeated Disruption disruptions = 20;
     repeated Code codes         = 7;
 }
 

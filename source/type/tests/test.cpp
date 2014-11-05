@@ -133,13 +133,13 @@ BOOST_AUTO_TEST_CASE(projection) {
 
 struct disruption_fixture {
     disruption_fixture() : disruption(std::make_unique<Disruption>()) {
-        disruption->impacts.push_back(boost::make_shared<Impact>());
+        disruption->add_impact(boost::make_shared<Impact>());
 
         disruption->publication_period = pt::time_period(
                     pt::time_from_string("2013-02-22 12:32:00"),
                     pt::time_from_string("2013-02-23 12:32:00"));
 
-        _impact = disruption->impacts.back();
+        _impact = disruption->get_impacts().back();
 
         auto impact_acquired = _impact.lock();
         impact_acquired->disruption = disruption.get();

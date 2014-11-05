@@ -60,6 +60,11 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
     return false;
 }
 
+void Disruption::add_impact(const boost::shared_ptr<Impact>& impact){
+    impact->disruption = this;
+    impacts.push_back(impact);
+}
+
 namespace {
 template<typename T>
 PtObj transform_pt_object(const std::string& uri,
