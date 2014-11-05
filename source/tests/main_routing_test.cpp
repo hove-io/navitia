@@ -39,6 +39,5 @@ int main() {
 
     mock_kraken kraken(routing_data.b, "main_routing_test");
 
-
     return 0;
 }

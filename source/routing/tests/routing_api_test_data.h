@@ -370,18 +370,18 @@ struct routing_api_data {
         b.data->build_raptor();
         b.data->build_uri();
         b.data->build_proximity_list();
-        b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
-        b.data->compute_labels();
+        b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 7_day);
+	b.data->compute_labels();
 
         //add bike sharing edges
-        b.data->geo_ref->default_time_bss_pickup = navitia::seconds(30);
-        b.data->geo_ref->default_time_bss_putback = navitia::seconds(45);
+        b.data->geo_ref->default_time_bss_pickup = 30_s;
+        b.data->geo_ref->default_time_bss_putback = 45_s;
         b.data->geo_ref->add_bss_edges(B);
         b.data->geo_ref->add_bss_edges(G);
 
         // add parkings
-        b.data->geo_ref->default_time_parking_park = navitia::seconds(1);
-        b.data->geo_ref->default_time_parking_leave = navitia::seconds(2);
+        b.data->geo_ref->default_time_parking_park = 1_s;
+        b.data->geo_ref->default_time_parking_leave = 2_s);
         b.data->geo_ref->add_parking_edges(D);
         b.data->geo_ref->add_parking_edges(E);
 
