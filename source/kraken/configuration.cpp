@@ -50,7 +50,10 @@ po::options_description get_options_description(){
         ("BROKER.password", po::value<std::string>()->default_value("guest"), "password for rabbitmq")
         ("BROKER.vhost", po::value<std::string>()->default_value("/"), "vhost for rabbitmq")
         ("BROKER.exchange", po::value<std::string>()->default_value("navitia"), "exchange used in rabbitmq")
-        ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance");
+        ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance")
+
+        ("CHAOS.activation", po::value<bool>()->default_value(false), "Activate or desactivate connection to chaos database")
+        ("CHAOS.database", po::value<std::string>()->default_value(""), "Chaos database connection string");
 
     return desc;
 
@@ -84,6 +87,12 @@ std::string Configuration::zmq_socket_path() const{
 }
 std::string Configuration::instance_name() const{
     return this->vm["GENERAL.instance_name"].as<std::string>();
+}
+bool Configuration::is_chaos_active() const{
+    return this->vm["CHAOS.activation"].as<bool>();
+}
+std::string Configuration::chaos_database() const{
+    return this->vm["CHAOS.database"].as<std::string>();
 }
 int Configuration::nb_thread() const{
     return this->vm["GENERAL.nb_threads"].as<int>();
