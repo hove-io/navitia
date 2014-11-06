@@ -170,7 +170,7 @@ class Instance(db.Model):
             data_sets = db.session.query(DataSet) \
                 .join(Job) \
                 .join(Instance) \
-                .filter(Instance.id == self.id, DataSet.family_type == family_type) \
+                .filter(Instance.id == self.id, DataSet.family_type == family_type, Job.state == 'done') \
                 .order_by(Job.created_at.desc()) \
                 .limit(nb_dataset) \
                 .all()
