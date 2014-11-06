@@ -102,7 +102,7 @@ public:
     ed::builder b;
     size_t period;
 
-    void add_disruption(disruption_creator disrupt,nt::PT_Data& pt_data) {
+    void add_disruption(disruption_creator disrupt, nt::PT_Data& pt_data) {
         nt::new_disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
         auto disruption = std::make_unique<Disruption>();

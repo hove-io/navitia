@@ -60,6 +60,7 @@ struct normal_speed_provider {
     }
 };
 
+
 template <typename speed_provider_trait>
 struct routing_api_data {
 
@@ -363,7 +364,13 @@ struct routing_api_data {
         //we add a very fast bus (2 seconds) to be faster than walking and biking
         b.vj("A")
             ("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)
-            ("stop_point:stopA", 8*3600 + 1 * 60 + 2 ,8*3600 + 1*60 + 2)
+            ("stop_point:stopA", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+            .st_shape({B, I, A});
+
+        //add another bus, much later. we'll use that one for disruptions
+        b.vj("B")
+            ("stop_point:stopB", 18*3600 + 1*60, 18*3600 + 1 * 60)
+            ("stop_point:stopA", 18*3600 + 1 * 60 + 2, 18*3600 + 1*60 + 2)
             .st_shape({B, I, A});
         b.generate_dummy_basis();
         b.data->pt_data->index();
@@ -381,7 +388,7 @@ struct routing_api_data {
 
         // add parkings
         b.data->geo_ref->default_time_parking_park = 1_s;
-        b.data->geo_ref->default_time_parking_leave = 2_s);
+        b.data->geo_ref->default_time_parking_leave = 2_s;
         b.data->geo_ref->add_parking_edges(D);
         b.data->geo_ref->add_parking_edges(E);
 
@@ -405,6 +412,8 @@ struct routing_api_data {
                   << ", " << R.lon() + 1e-3 << " " << S.lat() - 1e-3
                   << ", " << S.lon() - 1e-3 << " " << S.lat() - 1e-3 << "))";
         b.data->meta->shape = ss.str();
+
+        add_disruptions();
     }
 
     navitia::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
@@ -428,6 +437,42 @@ struct routing_api_data {
 
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return speed_trait.get_default_speed(); }
 
+
+    void add_disruptions() {
+//        boost::gregorian::date d = "20140101"_d;
+
+//        nt::new_disruption::DisruptionHolder& holder = b.data->pt_data.disruption_holder;
+
+//        auto disruption = std::make_unique<Disruption>();
+//        disruption->uri = "disruption";
+//        disruption->publication_period = boost::gregorian::date_period("20120614"_d, "20141231"_d);
+
+//        auto impact = boost::make_shared<Impact>();
+//        impact->uri = disrupt.uri;
+//        impact->application_periods = disrupt.get_application_periods();
+
+//        switch (disrupt.object_type) {
+//        case ChaosType::Network:
+//            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, disrupt.object_uri, pt_data, impact));
+//            break;
+//        case ChaosType::StopArea:
+//            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, disrupt.object_uri, pt_data, impact));
+//            break;
+//        case ChaosType::Line:
+//            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, disrupt.object_uri, pt_data, impact));
+//            break;
+//        case ChaosType::Route:
+//            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, disrupt.object_uri, pt_data, impact));
+//            break;
+//        case ChaosType::LineSection:
+//            throw navitia::exception("LineSection not handled yet");
+//            break;
+//        }
+
+//        disruption->add_impact(impact);
+
+//        holder.disruptions.push_back(std::move(disruption));
+    }
 
     int AA = 0;
     int GG = 1;
