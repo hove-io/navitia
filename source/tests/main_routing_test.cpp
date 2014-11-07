@@ -32,12 +32,12 @@ www.navitia.io
 #include "routing/tests/routing_api_test_data.h"
 #include "mock_kraken.h"
 
-int main() {
+int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     routing_api_data<normal_speed_provider> routing_data;
 
-    mock_kraken kraken(routing_data.b, "main_routing_test");
+    mock_kraken kraken(routing_data.b, "main_routing_test", argc, argv);
 
     return 0;
 }

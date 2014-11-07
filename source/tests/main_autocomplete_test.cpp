@@ -38,7 +38,7 @@ using namespace navitia::georef;
  * Here we test prepare a data for autocomplete test
  * The data contains One Admin, 6 stop_areas and three addresses
  */
-int main() {
+int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     ed::builder b = {"20140614"};
@@ -80,7 +80,7 @@ int main() {
     b.data->build_raptor();
     b.data->build_uri();
 
-    mock_kraken kraken(b, "main_autocomplete_test");
+    mock_kraken kraken(b, "main_autocomplete_test", argc, argv);
     return 0;
 }
 

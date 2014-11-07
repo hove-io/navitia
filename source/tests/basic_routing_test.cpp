@@ -45,7 +45,7 @@ www.navitia.io
  *    8h    9h                        17h       18h
  */
 
-int main() {
+int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     ed::builder b = {"20120614"};
@@ -63,7 +63,7 @@ int main() {
     b.data->build_raptor();
     b.data->build_uri();
 
-    mock_kraken kraken(b, "basic_routing_test");
+    mock_kraken kraken(b, "basic_routing_test", argc, argv);
     return 0;
 }
 

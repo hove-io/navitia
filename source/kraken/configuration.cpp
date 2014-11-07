@@ -31,17 +31,25 @@ www.navitia.io
 #include "configuration.h"
 #include "utils/exception.h"
 #include <fstream>
+#include <boost/optional.hpp>
 
 namespace po = boost::program_options;
 
 namespace navitia { namespace kraken{
 
-po::options_description get_options_description(){
+po::options_description get_options_description(const boost::optional<std::string> name, const boost::optional<std::string> zmq){
     po::options_description desc("Allowed options");
     desc.add_options()
         ("GENERAL.database", po::value<std::string>()->default_value("data.nav.lz4"), "path to the data file")
-        ("GENERAL.zmq_socket", po::value<std::string>()->required(), "path to the zmq socket used for receiving resquest")
-        ("GENERAL.instance_name", po::value<std::string>()->required(), "name of the instance")
+
+            //name and zmq socket can have default values (for tests)
+        ("GENERAL.zmq_socket",
+         zmq ? po::value<std::string>()->default_value(*zmq) : po::value<std::string>()->required(),
+         "path to the zmq socket used for receiving resquest")
+        ("GENERAL.instance_name",
+         name ? po::value<std::string>()->default_value(*name) : po::value<std::string>()->required(),
+         "name of the instance")
+
         ("GENERAL.nb_threads", po::value<int>()->default_value(1), "number of workers threads")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
@@ -72,11 +80,13 @@ void Configuration::load(const std::string& filename){
     po::notify(this->vm);
 }
 
-void Configuration::load_from_command_line(int argc, const char* const argv[]) {
-    po::options_description desc = get_options_description();
-    auto tmp = po::parse_command_line(argc, argv, desc);
+std::vector<std::string> Configuration::load_from_command_line(const po::options_description& desc, int argc, const char* const argv[]) {
+    auto tmp = po::basic_command_line_parser<char>(argc, argv).options(desc).allow_unregistered().run();
     po::store(tmp, vm);
     po::notify(vm);
+
+    //return unparsed options
+    return po::collect_unrecognized(tmp.options, po::include_positional);
 }
 
 std::string Configuration::databases_path() const{

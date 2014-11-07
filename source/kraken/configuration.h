@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 #include <boost/program_options.hpp>
+#include <boost/optional.hpp>
 
 namespace navitia { namespace kraken{
 
@@ -37,7 +38,8 @@ namespace navitia { namespace kraken{
             boost::program_options::variables_map vm;
         public:
             void load(const std::string& file);
-            void load_from_command_line(int argc, const char* const argv[]);
+            std::vector<std::string> load_from_command_line(const boost::program_options::options_description&,
+                                        int argc, const char* const argv[]);
 
             std::string databases_path() const;
             std::string zmq_socket_path() const;
@@ -54,5 +56,9 @@ namespace navitia { namespace kraken{
             std::string broker_exchange() const;
             std::vector<std::string> rt_topics() const;
     };
+
+    boost::program_options::options_description get_options_description(
+            const boost::optional<std::string> name = {},
+            const boost::optional<std::string> zmq = {});
 
 }}//namespace

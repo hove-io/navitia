@@ -64,12 +64,20 @@ class AbstractTestFixture:
     def launch_all_krakens(cls):
         krakens_exe = cls.data_sets
         for kraken_name in krakens_exe:
+            additional_args = []
+            if isinstance(kraken_name, tuple):
+                # if elt in data_sets is a tuble, the second elt is a list with additional args
+                additional_args = kraken_name[1]
+                kraken_name = kraken_name[0]
+
             exe = os.path.join(krakens_dir, kraken_name)
             logging.debug("spawning " + exe)
 
             assert os.path.exists(exe), "cannot find the kraken {}".format(exe)
 
-            kraken = subprocess.Popen(exe, stderr=None, stdout=None, close_fds=False)
+            args = [exe] + additional_args
+
+            kraken = subprocess.Popen(args, stderr=None, stdout=None, close_fds=False)
 
             cls.krakens_pool[kraken_name] = kraken
 
@@ -221,6 +229,10 @@ def dataset(datasets):
     decorator giving class attribute 'data_sets'
 
     each test should have this decorator to make clear the data set used for the tests
+
+    each dataset can be either:
+    just a string with the kraken name,
+    or a pair with the kraken name and a list with additional arguments for the kraken
     """
     def deco(cls):
         cls.data_sets = datasets
