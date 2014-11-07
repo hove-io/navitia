@@ -103,9 +103,7 @@ class TestDisruptions(AbstractTestFixture):
 
     def test_disruption_with_stop_areas(self):
         """
-        simple disruption call
-
-        without param we don't get the stop areas, so we'll get the impact on the line and on the network
+        when calling the pt object stopA, we should get it's disruptions
         """
 
         response = self.query_region('stop_areas/stopA', display=True)
@@ -114,4 +112,19 @@ class TestDisruptions(AbstractTestFixture):
         assert len(stops) == 1
         stop = stops[0]
 
-        disruptions = get_not_null(stop, 'disruptions')
+        get_not_null(stop, 'disruptions')
+
+    def test_no_disruption(self):
+        """
+        when calling the pt object stopB, we should get no disruptions
+        """
+
+        response = self.query_region('stop_areas/stopB', display=True)
+
+        stops = get_not_null(response, 'stop_areas')
+        assert len(stops) == 1
+        stop = stops[0]
+
+        assert 'disruptions' not in stop
+
+#TODO, test on != dates

@@ -546,7 +546,7 @@ def can_have_disruptions(pt_obj):
         get_valid_datetime(get_not_null(m, 'start_application_date'))
         get_valid_datetime(get_not_null(m, 'end_application_date'))
         get_not_null(m, 'value')
-        
+
     eq_(len(disruptions), len(msgs))
 
 

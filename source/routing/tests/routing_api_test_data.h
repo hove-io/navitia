@@ -41,6 +41,7 @@ namespace ng = navitia::georef;
 
 using navitia::type::new_disruption::Disruption;
 using navitia::type::new_disruption::Impact;
+using navitia::type::new_disruption::Tag;
 
 struct test_speed_provider {
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return test_default_speed; }
@@ -453,6 +454,11 @@ struct routing_api_data {
             disruption->uri = "disruption_on_stop_A";
             //Note: the take the current time because because we only get the current disruptions in the pt object api and we want those
             disruption->publication_period = boost::posix_time::time_period(now, boost::posix_time::hours(1000));
+            auto tag = boost::make_shared<Tag>();
+            tag->uri = "tag";
+            tag->name = "tag name";
+            disruption->tags.push_back(tag);
+
             auto impact = boost::make_shared<Impact>();
             impact->uri = "too_bad";
             impact->application_periods = {boost::posix_time::time_period(now, boost::posix_time::hours(1000))};
