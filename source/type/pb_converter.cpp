@@ -88,14 +88,19 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     }
     auto pb_disrution = pb_object->add_disruptions();
 
-    pb_disrution->set_uri(impact->uri);
+    pb_disrution->set_impact_uri(impact->uri);
+    pb_disrution->set_uri(impact->disruption->uri);
     for (const auto& app_period: impact->application_periods) {
         auto p = pb_disrution->add_application_periods();
         p->set_begin(navitia::to_posix_timestamp(app_period.begin()));
         p->set_end(navitia::to_posix_timestamp(app_period.last()));
     }
 
+    //TODO: updated at must be computed with the max of all computed values (from disruption, impact, ...)
     pb_disrution->set_updated_at(navitia::to_posix_timestamp(impact->updated_at));
+
+    //TODO tags
+
     for (const auto& t: impact->disruption->tags) {
         pb_disrution->add_tags(t->name);
     }

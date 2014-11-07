@@ -33,8 +33,14 @@ www.navitia.io
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
 #include "type/pt_data.h"
+#include "type/message.h"
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 namespace ng = navitia::georef;
+
+using navitia::type::new_disruption::Disruption;
+using navitia::type::new_disruption::Impact;
 
 struct test_speed_provider {
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return test_default_speed; }
@@ -359,6 +365,7 @@ struct routing_api_data {
         b.data->geo_ref->pois.push_back(poi_1);
         b.data->geo_ref->pois.push_back(poi_2);
 
+        b.generate_dummy_basis();
         b.sa("stopA", A.lon(), A.lat());
         b.sa("stopB", B.lon(), B.lat());
         //we add a very fast bus (2 seconds) to be faster than walking and biking
@@ -372,10 +379,9 @@ struct routing_api_data {
             ("stop_point:stopB", 18*3600 + 1*60, 18*3600 + 1 * 60)
             ("stop_point:stopA", 18*3600 + 1 * 60 + 2, 18*3600 + 1*60 + 2)
             .st_shape({B, I, A});
-        b.generate_dummy_basis();
+        b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();
-        b.data->build_uri();
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 7_day);
 	b.data->compute_labels();
@@ -439,39 +445,49 @@ struct routing_api_data {
 
 
     void add_disruptions() {
-//        boost::gregorian::date d = "20140101"_d;
+        nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
+        auto now = boost::posix_time::microsec_clock::universal_time() - boost::posix_time::hours(10);
+        {
+            //we create one disruption on stop A
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_on_stop_A";
+            //Note: the take the current time because because we only get the current disruptions in the pt object api and we want those
+            disruption->publication_period = boost::posix_time::time_period(now, boost::posix_time::hours(1000));
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad";
+            impact->application_periods = {boost::posix_time::time_period(now, boost::posix_time::hours(1000))};
 
-//        nt::new_disruption::DisruptionHolder& holder = b.data->pt_data.disruption_holder;
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "stopA", *b.data->pt_data, impact));
 
-//        auto disruption = std::make_unique<Disruption>();
-//        disruption->uri = "disruption";
-//        disruption->publication_period = boost::gregorian::date_period("20120614"_d, "20141231"_d);
+            impact->messages.push_back({"no luck", now, now});
+            impact->messages.push_back({"try again", now, now});
 
-//        auto impact = boost::make_shared<Impact>();
-//        impact->uri = disrupt.uri;
-//        impact->application_periods = disrupt.get_application_periods();
+            disruption->add_impact(impact);
 
-//        switch (disrupt.object_type) {
-//        case ChaosType::Network:
-//            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, disrupt.object_uri, pt_data, impact));
-//            break;
-//        case ChaosType::StopArea:
-//            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, disrupt.object_uri, pt_data, impact));
-//            break;
-//        case ChaosType::Line:
-//            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, disrupt.object_uri, pt_data, impact));
-//            break;
-//        case ChaosType::Route:
-//            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, disrupt.object_uri, pt_data, impact));
-//            break;
-//        case ChaosType::LineSection:
-//            throw navitia::exception("LineSection not handled yet");
-//            break;
-//        }
+            holder.disruptions.push_back(std::move(disruption));
+        }
 
-//        disruption->add_impact(impact);
+        {
+            //we create one disruption on line A
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_on_line_A";
+            disruption->publication_period = boost::posix_time::time_period(now, boost::posix_time::hours(1000));
 
-//        holder.disruptions.push_back(std::move(disruption));
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_again";
+            impact->application_periods = {boost::posix_time::time_period(now, boost::posix_time::hours(1000))};
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
+            //add another pt impacted object just to test with several
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"sad message", now, now});
+            impact->messages.push_back({"to sad message", now, now});
+
+            disruption->add_impact(impact);
+
+            holder.disruptions.push_back(std::move(disruption));
+        }
     }
 
     int AA = 0;

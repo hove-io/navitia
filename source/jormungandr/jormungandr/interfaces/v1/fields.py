@@ -362,6 +362,7 @@ disruption_message = {
 
 disruption = {
     "uri": fields.String(),
+    "impact_uri": fields.String(),
     "title": fields.String(),
     "application_periods": NonNullList(NonNullNested(period)),
     "status": fields.String(),

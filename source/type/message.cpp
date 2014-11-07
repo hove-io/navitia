@@ -42,21 +42,27 @@ namespace navitia { namespace type { namespace new_disruption {
 
 bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
 
-    if(publication_date.is_not_a_date_time() || active_period.is_null()){
+    if(publication_date.is_not_a_date_time() && active_period.is_null()){
         return false;
     }
 
     // we check if we want to publish the impact
     if (! disruption->publication_period.contains(publication_date)) {
+        std::cout << "pas sur la bonne periode de publi" << publication_date << std::endl;
         return false;
     }
 
-    //we check if the impact applies on this period
+    //if we have a active_period, we check if the impact applies on this period
+    if (active_period.is_null()) {
+        return true;
+    }
+
     for (const auto& period: application_periods) {
         if (! period.intersection(active_period).is_null()) {
             return true;
         }
     }
+    std::cout << "pas sur une periode d'appli" << active_period << std::endl;
     return false;
 }
 
