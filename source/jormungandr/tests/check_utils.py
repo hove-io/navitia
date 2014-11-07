@@ -539,7 +539,6 @@ def can_have_disruptions(pt_obj):
 
     # messages are the old school disruptions, will be refactored asap
     msgs = get_not_null(pt_obj, "messages")
-    eq_(len(disruptions), len(msgs))
     for m in msgs:
         get_valid_time(get_not_null(m, 'end_application_daily_hour'))
         get_valid_time(get_not_null(m, 'start_application_daily_hour'))
@@ -547,6 +546,8 @@ def can_have_disruptions(pt_obj):
         get_valid_datetime(get_not_null(m, 'start_application_date'))
         get_valid_datetime(get_not_null(m, 'end_application_date'))
         get_not_null(m, 'value')
+        
+    eq_(len(disruptions), len(msgs))
 
 
 def is_valid_section(section, query):
