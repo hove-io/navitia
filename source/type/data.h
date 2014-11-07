@@ -148,7 +148,8 @@ public:
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     /** Charge les données et effectue les initialisations nécessaires */
-    bool load(const std::string & filename);
+    bool load(const std::string & filename, const bool chaos_activation=false,
+            const std::string& chaos_database = "");
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;

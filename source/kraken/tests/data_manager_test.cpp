@@ -38,7 +38,7 @@ www.navitia.io
 //mock of navitia::type::Data class
 class Data{
     public:
-        bool load(const std::string&){return load_status;}
+        bool load(const std::string&, const bool, const std::string&){return load_status;}
         mutable std::atomic<bool> is_connected_to_rabbitmq;
         static bool load_status;
         static bool destructor_called;
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(load_success){
     DataManager<Data> data_manager;
     auto first_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
-    BOOST_CHECK(data_manager.load(""));
+    BOOST_CHECK(data_manager.load("", false , ""));
     auto second_data = data_manager.get_data();
     BOOST_CHECK_NE(first_data, second_data);
     BOOST_CHECK_EQUAL(Data::destructor_called, false);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(load_fail){
     auto first_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
     Data::load_status = false;
-    BOOST_CHECK(! data_manager.load(""));
+    BOOST_CHECK(! data_manager.load("", false, ""));
     Data::load_status = true;
     auto second_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(first_data, second_data);
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(destructor_called){
     {
         auto first_data = data_manager.get_data();
         BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
-        BOOST_CHECK(data_manager.load(""));
+        BOOST_CHECK(data_manager.load("", false, ""));
         auto second_data = data_manager.get_data();
         BOOST_CHECK_NE(first_data, second_data);
         BOOST_CHECK_EQUAL(Data::destructor_called, false);

@@ -46,9 +46,11 @@ namespace navitia {
 
 
 void MaintenanceWorker::load(){
-    std::string database = conf.databases_path();
+    const std::string database = conf.databases_path();
+    const bool chaos_activation = conf.is_chaos_active();
+    const std::string chaos_database = conf.chaos_database();
     LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
-    if(this->data_manager.load(database)){
+    if(this->data_manager.load(database, chaos_activation, chaos_database)){
         auto data = data_manager.get_data();
 
     }

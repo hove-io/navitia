@@ -54,6 +54,7 @@ www.navitia.io
 #include "georef/georef.h"
 #include "fare/fare.h"
 #include "type/meta_data.h"
+#include "kraken/fill_disruption_from_database.h"
 
 namespace pt = boost::posix_time;
 
@@ -75,7 +76,8 @@ Data::Data() :
 
 Data::~Data(){}
 
-bool Data::load(const std::string& filename) {
+bool Data::load(const std::string& filename, const bool chaos_activation,
+        const std::string& chaos_database) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     loading = true;
     try {
@@ -98,6 +100,9 @@ bool Data::load(const std::string& filename) {
     } catch(...) {
         LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
         last_load = false;
+    }
+    if (chaos_activation) {
+        fill_disruption_from_database(chaos_database, *pt_data);
     }
     loading = false;
     return this->last_load;

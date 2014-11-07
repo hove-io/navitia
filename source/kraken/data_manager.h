@@ -32,7 +32,6 @@ www.navitia.io
 
 #include "utils/timer.h"
 #include "utils/exception.h"
-
 #ifndef NO_FORCE_MEMORY_RELEASE
 //by default we force the release of the memory after the reload of the data
 #include "gperftools/malloc_extension.h"
@@ -71,10 +70,11 @@ public:
 #endif
     }
 
-    bool load(const std::string& database){
+    bool load(const std::string& database, const bool chaos_activation,
+            const std::string& chaos_database){
         bool success;
         auto data = boost::make_shared<Data>();
-        success = data->load(database);
+        success = data->load(database, chaos_activation, chaos_database);
         if (success) {
             set_data(std::move(data));
         } else {
