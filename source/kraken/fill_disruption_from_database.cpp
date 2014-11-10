@@ -128,7 +128,12 @@ void fill_disruption_from_database(const std::string& connection_string,
                // Message fields
                "     m.id as message_id, m.text as message_text,"
                "     extract(epoch from m.created_at) :: bigint as message_created_at,"
-               "     extract(epoch from m.updated_at) :: bigint as message_updated_at"
+               "     extract(epoch from m.updated_at) :: bigint as message_updated_at,"
+               // Channel fields
+               "     ch.id as channel_id, ch.name as channel_name,"
+               "     ch.content_type as channel_content_type, ch.max_size as channel_max_size,"
+               "     extract(epoch from ch.created_at) :: bigint as channel_created_at,"
+               "     extract(epoch from ch.updated_at) :: bigint as channel_updated_at"
                "     FROM disruption AS d"
                "     JOIN cause AS c ON (c.id = d.cause_id)"
                "     JOIN associate_disruption_tag ON associate_disruption_tag.disruption_id = d.id"
@@ -139,7 +144,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     JOIN associate_impact_pt_object ON associate_impact_pt_object.impact_id = i.id"
                "     JOIN pt_object AS p ON associate_impact_pt_object.pt_object_id = p.id"
                "     JOIN message AS m ON m.impact_id = i.id"
-               "     ORDER BY d.id, t.id, i.id, a.id, p.id"
+               "     JOIN channel AS ch ON m.channel_id = ch.id"
+               "     ORDER BY d.id, c.id, t.id, i.id, a.id, p.id, m.id, ch.id"
                "     LIMIT %i OFFSET %i"
                " ;") % items_per_request % offset).str();
 
@@ -164,11 +170,12 @@ void fill_disruption_from_database(const std::string& connection_string,
 
                 auto cause = disruption->mutable_cause();
                 FILL_TIMESTAMPMIXIN(cause)
+                FILL_REQUIRED(cause, wording, std::string)
                 impact = nullptr;
             }
             if (!tag || tag->id() != const_it["tag_id"].as<std::string>()) {
                 tag = disruption->add_tags();
-                FILL_NULLABLE(tag, id, std::string)
+                FILL_TIMESTAMPMIXIN(tag)
                 FILL_NULLABLE(tag, name, std::string)
             }
             if (!impact || impact->id() != const_it["impact_id"].as<std::string>()) {
@@ -176,10 +183,15 @@ void fill_disruption_from_database(const std::string& connection_string,
                 FILL_TIMESTAMPMIXIN(impact)
                 auto severity = impact->mutable_severity();
                 FILL_TIMESTAMPMIXIN(severity)
-                FILL_NULLABLE(severity, wording, std::string)
+                FILL_REQUIRED(severity, wording, std::string)
                 FILL_NULLABLE(severity, color, std::string)
                 FILL_NULLABLE(severity, priority, uint32_t)
-                //@TODO: set effect, this is an enum...
+                if (!const_it["severity_effect"].is_null()) {
+                    const auto& effect = const_it["severity_effect"].as<std::string>();
+                    if (effect == "blocking") {
+                        severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_NO_SERVICE);
+                    }
+                }
             }
             if (last_period_id != const_it["application_id"].as<std::string>()) {
                 auto period = impact->add_application_periods();
@@ -193,9 +205,9 @@ void fill_disruption_from_database(const std::string& connection_string,
             }
             if (last_ptobject_id != const_it["ptobject_id"].as<std::string>()) {
                 auto ptobject = impact->add_informed_entities();
-                FILL_NULLABLE(ptobject, uri, std::string)
-                FILL_NULLABLE(ptobject, created_at, uint64_t)
                 FILL_NULLABLE(ptobject, updated_at, uint64_t)
+                FILL_NULLABLE(ptobject, created_at, uint64_t)
+                FILL_NULLABLE(ptobject, uri, std::string)
                 if (!const_it["ptobject_type"].is_null()) {
                     const auto& type_ = const_it["ptobject_type"].as<std::string>();
                     if (type_ == "line") {
@@ -206,16 +218,25 @@ void fill_disruption_from_database(const std::string& connection_string,
                         ptobject->set_pt_object_type(chaos::PtObject_Type_route);
                     } else if (type_ == "stop_area") {
                         ptobject->set_pt_object_type(chaos::PtObject_Type_stop_area);
+                    } else if (type_ == "line_section") {
+                        ptobject->set_pt_object_type(chaos::PtObject_Type_line_section);
+                    } else {
+                        ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
                     }
                 }
                 last_ptobject_id = const_it["ptobject_id"].as<std::string>();
             }
             if (last_message_id != const_it["message_id"].as<std::string>()) {
                 auto message = impact->add_messages();
-                FILL_NULLABLE(message, text, std::string)
+                FILL_REQUIRED(message, text, std::string)
                 FILL_NULLABLE(message, created_at, uint64_t)
                 FILL_NULLABLE(message, updated_at, uint64_t)
                 last_message_id = const_it["message_id"].as<std::string>();
+                auto channel = message->mutable_channel();
+                FILL_TIMESTAMPMIXIN(channel)
+                FILL_REQUIRED(channel, name, std::string)
+                FILL_NULLABLE(channel, content_type, std::string)
+                FILL_NULLABLE(channel, max_size, uint32_t)
             }
         }
 
