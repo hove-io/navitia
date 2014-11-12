@@ -30,11 +30,9 @@ www.navitia.io
 #include <functional>
 
 #include "fill_disruption_from_database.h"
-#include "fill_disruption_from_chaos.h"
 #include <pqxx/pqxx>
 #include "utils/exception.h"
 #include "utils/logger.h"
-#include "type/chaos.pb.h"
 
 #include <boost/make_shared.hpp>
 #include <boost/format.hpp>
@@ -43,20 +41,7 @@ www.navitia.io
 
 namespace navitia {
 
-#define FILL_NULLABLE_(var_name, arg_name, col_name, type_name)\
- if (!const_it[#col_name].is_null()) \
-    var_name->set_##arg_name(const_it[#col_name].as<type_name>());
 
-#define FILL_NULLABLE(table_name, arg_name, type_name)\
-    FILL_NULLABLE_(table_name, arg_name, table_name##_##arg_name, type_name)
-
-#define FILL_REQUIRED(table_name, arg_name, type_name)\
-    table_name->set_##arg_name(const_it[#table_name"_"#arg_name].as<type_name>());
-
-#define FILL_TIMESTAMPMIXIN(table_name)\
-    FILL_REQUIRED(table_name, id, std::string)\
-    FILL_REQUIRED(table_name, created_at, uint64_t)\
-    FILL_NULLABLE(table_name, updated_at, uint64_t)
 
 void fill_disruption_from_database(const std::string& connection_string, 
         navitia::type::PT_Data& pt_data) {
@@ -81,13 +66,10 @@ void fill_disruption_from_database(const std::string& connection_string,
     size_t total_count = result_it["count"].as<size_t>(),
            offset = 0,
            items_per_request = 100;
-    auto* disruption = new chaos::Disruption();
-    chaos::Impact* impact = nullptr;
-    chaos::Tag* tag = nullptr;
-
-    std::string last_message_id = "",
-                last_ptobject_id = "",
-                last_period_id = "";
+    if (total_count == 0) {
+        return;
+    }
+    DatabaseReader reader(pt_data);
     while(offset < total_count) {
         std::string request = (boost::format(
                "SELECT "
@@ -151,102 +133,20 @@ void fill_disruption_from_database(const std::string& connection_string,
 
         pqxx::result result = work.exec(request);
         for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-            if (disruption->id() != const_it["disruption_id"].as<std::string>()) {
-                if (disruption->id() != "") {
-                    add_disruption(pt_data, *disruption);
-                }
-
-                disruption->Clear();
-                FILL_TIMESTAMPMIXIN(disruption)
-                auto period = disruption->mutable_publication_period();
-                if (!const_it["disruption_start_publication_date"].is_null()) {
-                    period->set_start(const_it["disruption_start_publication_date"].as<uint64_t>());
-                }
-                if (!const_it["disruption_end_publication_date"].is_null()) {
-                    period->set_end(const_it["disruption_end_publication_date"].as<uint64_t>());
-                }
-                FILL_NULLABLE(disruption, note, std::string)
-                FILL_NULLABLE(disruption, reference, std::string)
-
-                auto cause = disruption->mutable_cause();
-                FILL_TIMESTAMPMIXIN(cause)
-                FILL_REQUIRED(cause, wording, std::string)
-                impact = nullptr;
-            }
-            if (!tag || tag->id() != const_it["tag_id"].as<std::string>()) {
-                tag = disruption->add_tags();
-                FILL_TIMESTAMPMIXIN(tag)
-                FILL_NULLABLE(tag, name, std::string)
-            }
-            if (!impact || impact->id() != const_it["impact_id"].as<std::string>()) {
-                impact = disruption->add_impacts();
-                FILL_TIMESTAMPMIXIN(impact)
-                auto severity = impact->mutable_severity();
-                FILL_TIMESTAMPMIXIN(severity)
-                FILL_REQUIRED(severity, wording, std::string)
-                FILL_NULLABLE(severity, color, std::string)
-                FILL_NULLABLE(severity, priority, uint32_t)
-                if (!const_it["severity_effect"].is_null()) {
-                    const auto& effect = const_it["severity_effect"].as<std::string>();
-                    if (effect == "blocking") {
-                        severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_NO_SERVICE);
-                    }
-                }
-            }
-            if (last_period_id != const_it["application_id"].as<std::string>()) {
-                auto period = impact->add_application_periods();
-                if (!const_it["application_start_date"].is_null()) {
-                    period->set_start(const_it["application_start_date"].as<uint64_t>());
-                }
-                if (!const_it["application_end_date"].is_null()) {
-                    period->set_end(const_it["application_end_date"].as<uint64_t>());
-                }
-                last_period_id = const_it["application_id"].as<std::string>();
-            }
-            if (last_ptobject_id != const_it["ptobject_id"].as<std::string>()) {
-                auto ptobject = impact->add_informed_entities();
-                FILL_NULLABLE(ptobject, updated_at, uint64_t)
-                FILL_NULLABLE(ptobject, created_at, uint64_t)
-                FILL_NULLABLE(ptobject, uri, std::string)
-                if (!const_it["ptobject_type"].is_null()) {
-                    const auto& type_ = const_it["ptobject_type"].as<std::string>();
-                    if (type_ == "line") {
-                        ptobject->set_pt_object_type(chaos::PtObject_Type_line);
-                    } else if (type_ == "network") {
-                        ptobject->set_pt_object_type(chaos::PtObject_Type_network);
-                    } else if (type_ == "route") {
-                        ptobject->set_pt_object_type(chaos::PtObject_Type_route);
-                    } else if (type_ == "stop_area") {
-                        ptobject->set_pt_object_type(chaos::PtObject_Type_stop_area);
-                    } else if (type_ == "line_section") {
-                        ptobject->set_pt_object_type(chaos::PtObject_Type_line_section);
-                    } else {
-                        ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
-                    }
-                }
-                last_ptobject_id = const_it["ptobject_id"].as<std::string>();
-            }
-            if (last_message_id != const_it["message_id"].as<std::string>()) {
-                auto message = impact->add_messages();
-                FILL_REQUIRED(message, text, std::string)
-                FILL_NULLABLE(message, created_at, uint64_t)
-                FILL_NULLABLE(message, updated_at, uint64_t)
-                last_message_id = const_it["message_id"].as<std::string>();
-                auto channel = message->mutable_channel();
-                FILL_TIMESTAMPMIXIN(channel)
-                FILL_REQUIRED(channel, name, std::string)
-                FILL_NULLABLE(channel, content_type, std::string)
-                FILL_NULLABLE(channel, max_size, uint32_t)
-            }
+            reader.read_one_line(const_it);
         }
 
         offset += items_per_request;
     }
+
+
+    // Retrieve disruptions by 100
+}
+
+void DatabaseReader::finalize() {
     if (disruption->id() != "") {
         add_disruption(pt_data, *disruption);
     }
-
-    // Retrieve disruptions by 100
 }
 
 }
