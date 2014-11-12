@@ -205,5 +205,9 @@ class Instance(object):
     def has_external_code(self, type_, id_):
         """
         Does this instance has the given id
+        Returns None if it doesnt, the kraken uri otherwise
         """
-        return len(self.get_external_codes(type_, id_).places) > 0
+	res = self.get_external_codes(type_, id_)
+	if len(res.places) > 0:
+		return res.places[0].uri
+	return None
