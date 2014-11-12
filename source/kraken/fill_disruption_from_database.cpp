@@ -67,7 +67,7 @@ void fill_disruption_from_database(const std::string& connection_string,
     if (total_count == 0) {
         return;
     }
-    DatabaseReader reader(pt_data);
+    DisruptionDatabaseReader reader(pt_data);
     while(offset < total_count) {
         std::string request = (boost::format(
                "SELECT "
@@ -130,18 +130,14 @@ void fill_disruption_from_database(const std::string& connection_string,
                " ;") % items_per_request % offset).str();
 
         pqxx::result result = work.exec(request);
-        for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-            reader.read_one_line(const_it);
-        }
+        std::for_each(result.begin(), result.end(), reader);
 
         offset += items_per_request;
     }
-
-
-    // Retrieve disruptions by 100
+    reader.finalize();
 }
 
-void DatabaseReader::finalize() {
+void DisruptionDatabaseReader::finalize() {
     if (disruption->id() != "") {
         add_disruption(pt_data, *disruption);
     }
