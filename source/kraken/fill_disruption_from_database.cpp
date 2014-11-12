@@ -34,9 +34,7 @@ www.navitia.io
 #include "utils/exception.h"
 #include "utils/logger.h"
 
-#include <boost/make_shared.hpp>
 #include <boost/format.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 
 namespace navitia {
