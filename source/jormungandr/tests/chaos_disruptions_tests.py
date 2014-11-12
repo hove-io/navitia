@@ -36,11 +36,12 @@ from tests import gtfs_realtime_pb2
 from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 import chaos_pb2
+from time import sleep
 
-@dataset([("main_routing_test", ['--BROKER.rt_topics=bob', 'spawn_maintenance_worker'])])
-class TestChaosDisruptions(AbstractTestFixture):
+
+class ChaosDisruptionsFixture(AbstractTestFixture):
     """
-    Mock a chaos disruption message, and check the api
+    Mock a chaos disruption message, in order to check the api
     """
     def _get_producer(self):
         producer = producers[self.mock_chaos_connection].acquire(block=True, timeout=2)
@@ -49,38 +50,46 @@ class TestChaosDisruptions(AbstractTestFixture):
 
     def setup(self):
         self.mock_chaos_connection = BrokerConnection("pyamqp://guest:guest@localhost:5672")
-        self._connections = set([self.mock_chaos_connection])#set of connection for the heartbeat
+        self._connections = {self.mock_chaos_connection}
         self._exchange = Exchange('navitia', durable=True, delivry_mode=2, type='topic')
         self.mock_chaos_connection.connect()
 
     def teardown(self):
-        pass
+        #we need to release the amqp connection
+        self.mock_chaos_connection.release()
 
     def send_chaos_disruption(self, disruption_name, impacted_obj, impacted_obj_type):
         item = make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type)
         with self._get_producer() as producer:
             producer.publish(item, exchange=self._exchange, routing_key='bob', declare=[self._exchange])
 
-    def test_disruption_on_stop_area_a(self):
+@dataset([("main_routing_test", ['--BROKER.rt_topics=bob', 'spawn_maintenance_worker'])])
+class TestChaosDisruptions(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, the spawn a new kraken, in order not the get previous disruptions
+    """
+    def test_disruption_on_stop_area_b(self):
         """
-        when calling the pt object stopA, we should get it's disruptions
-        """
+        when calling the pt object stopB, at first we have no disruptions,
 
+        then we mock a disruption sent from chaos, and we call again the pt object B
+        we then must have a disruption
+        """
         response = self.query_region('stop_areas/stopB')
 
         stops = get_not_null(response, 'stop_areas')
         assert len(stops) == 1
         stop = stops[0]
+        #at first no disruption
         assert 'disruptions' not in stop
 
-        #at first we got only one disruption on A
         self.send_chaos_disruption("bob_the_disruption", "stopB", "stop_area")
 
-        from time import sleep
-        sleep(0.2)
+        #we sleep a bit to let kraken reload the data
+        sleep(0.3)
 
         #and we call again, we must have the disruption now
-        response = self.query_region('stop_areas/stopB', display=True)
+        response = self.query_region('stop_areas/stopB')
         stops = get_not_null(response, 'stop_areas')
         assert len(stops) == 1
         stop = stops[0]
@@ -95,6 +104,52 @@ class TestChaosDisruptions(AbstractTestFixture):
         assert 'bob_the_disruption' in impacts_by_uri
 
 
+@dataset([("main_routing_test", ['--BROKER.rt_topics=bob', 'spawn_maintenance_worker'])])
+class TestChaosDisruptions2(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, the spawn a new kraken, in order not the get previous disruptions
+    """
+    def test_disruption_on_journey(self):
+        """
+        same kind of test with a call on journeys
+
+        at first no disruptions, we add one and we should get it
+        """
+        response = self.query_region(journey_basic_query)
+
+        stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
+                      if s['to']['embedded_type'] == 'stop_point' and s['to']['id'] == 'stop_point:stopB']
+
+        assert stops_b_to
+
+        for b in stops_b_to:
+            assert 'disruptions' not in b['stop_area']
+
+        #we create a list with every 'to' section to the stop B (the one we added the disruption on)
+        self.send_chaos_disruption("bob_the_disruption", "stopB", "stop_area")
+
+        #we sleep a bit to let kraken reload the data
+        sleep(0.3)
+
+        response = self.query_region(journey_basic_query)
+
+        #the response must be still valid (this test the kraken data reloading)
+        is_valid_journey_response(response, self.tester, journey_basic_query)
+
+        stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
+                      if s['to']['embedded_type'] == 'stop_point' and s['to']['id'] == 'stop_point:stopB']
+
+        assert stops_b_to
+
+        for b in stops_b_to:
+            disruptions = get_not_null(b['stop_area'], 'disruptions')
+
+            impacts_by_uri = {d['uri']: d for d in disruptions}
+
+            #at first we got only one disruption on A
+            assert len(disruptions) == 1
+
+            assert 'bob_the_disruption' in impacts_by_uri
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type):
     feed_message = gtfs_realtime_pb2.FeedMessage()

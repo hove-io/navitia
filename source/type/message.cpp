@@ -48,7 +48,6 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
 
     // we check if we want to publish the impact
     if (! disruption->publication_period.contains(publication_date)) {
-        std::cout << "pas sur la bonne periode de publi" << publication_date << std::endl;
         return false;
     }
 
@@ -62,7 +61,6 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
             return true;
         }
     }
-    std::cout << "pas sur une periode d'appli" << active_period << std::endl;
     return false;
 }
 

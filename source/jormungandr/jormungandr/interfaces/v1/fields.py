@@ -367,7 +367,7 @@ disruption = {
     "application_periods": NonNullList(NonNullNested(period)),
     "status": fields.String(),
     "updated_at": DateTime(),
-    "tags": fields.String(),
+    "tags": NonNullList(fields.String()),
     "cause": fields.String(),
     "messages": NonNullList(NonNullNested(disruption_message)),
 }
