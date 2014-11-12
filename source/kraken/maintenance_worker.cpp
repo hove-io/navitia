@@ -100,7 +100,11 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
     for(const auto& entity: feed_message.entity()){
         if(entity.HasExtension(chaos::disruption)){
             LOG4CPLUS_WARN(logger, "has_extension");
-            if (!data) { data = data_manager.get_data_clone(); }
+            if (!data) {
+                data = data_manager.get_data_clone();
+                data->last_rt_data_loaded = pt::microsec_clock::local_time();
+            }
+
             add_disruption(*data->pt_data, entity.GetExtension(chaos::disruption));
             LOG4CPLUS_DEBUG(logger, "end");
         }else{

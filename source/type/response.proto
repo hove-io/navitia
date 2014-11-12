@@ -190,6 +190,8 @@ message Status{
     optional int32 nb_threads = 11;
     optional bool is_connected_to_rabbitmq = 12;
     optional string status = 13;
+
+    optional string last_rt_data_loaded = 14;
 }
 
 message PairStopTime {

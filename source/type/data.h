@@ -122,6 +122,8 @@ public:
     bool last_load = true;
     boost::posix_time::ptime last_load_at;
 
+    boost::posix_time::ptime last_rt_data_loaded; //datetime of the last Real Time loaded data
+
     // This object is the only field mutated in this object. As it is
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
     // find in the future a cleaner way, but now, this is cleaner than

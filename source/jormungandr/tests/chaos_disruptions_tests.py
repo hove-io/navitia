@@ -63,16 +63,41 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
         with self._get_producer() as producer:
             producer.publish(item, exchange=self._exchange, routing_key='bob', declare=[self._exchange])
 
+    def poll_until_reload(self, previous_val):
+        """
+        poll until the kraken have reloaded its data
+
+        check the reload_at field
+        """
+        total_wait = 0
+        waiting_time = 0.2  # in seconds
+        while True:
+            status = self.query_region('status')
+
+            last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
+            if last_loaded_data != previous_val:
+                return True
+            print "preivous = {}, new = {}".format(previous_val, last_loaded_data)
+
+            if total_wait > 30:
+                # more than that is not normal, we fail
+                assert False, "kraken has not yet reloaded the data, something's wrong"
+
+            total_wait += waiting_time
+            sleep(waiting_time)
+
+
 @dataset([("main_routing_test", ['--BROKER.rt_topics=bob', 'spawn_maintenance_worker'])])
 class TestChaosDisruptions(ChaosDisruptionsFixture):
     """
-    Note: it is done as a new fixture, the spawn a new kraken, in order not the get previous disruptions
+    Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
     """
     def test_disruption_on_stop_area_b(self):
         """
         when calling the pt object stopB, at first we have no disruptions,
 
-        then we mock a disruption sent from chaos, and we call again the pt object B
+        then we mock a disruption sent from chaos, and we call again the pt object stopB
         we then must have a disruption
         """
         response = self.query_region('stop_areas/stopB')
@@ -83,10 +108,13 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         #at first no disruption
         assert 'disruptions' not in stop
 
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
         self.send_chaos_disruption("bob_the_disruption", "stopB", "stop_area")
 
         #we sleep a bit to let kraken reload the data
-        sleep(0.3)
+        self.poll_until_reload(last_loaded_data)
 
         #and we call again, we must have the disruption now
         response = self.query_region('stop_areas/stopB')
@@ -96,18 +124,16 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
         disruptions = get_not_null(stop, 'disruptions')
 
-        impacts_by_uri = {d['uri']: d for d in disruptions}
-
-        #at first we got only one disruption on A
+        #at first we got only one disruption on B
         assert len(disruptions) == 1
 
-        assert 'bob_the_disruption' in impacts_by_uri
+        assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics=bob', 'spawn_maintenance_worker'])])
 class TestChaosDisruptions2(ChaosDisruptionsFixture):
     """
-    Note: it is done as a new fixture, the spawn a new kraken, in order not the get previous disruptions
+    Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
     """
     def test_disruption_on_journey(self):
         """
@@ -125,11 +151,14 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         for b in stops_b_to:
             assert 'disruptions' not in b['stop_area']
 
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
         #we create a list with every 'to' section to the stop B (the one we added the disruption on)
         self.send_chaos_disruption("bob_the_disruption", "stopB", "stop_area")
 
         #we sleep a bit to let kraken reload the data
-        sleep(0.3)
+        self.poll_until_reload(last_loaded_data)
 
         response = self.query_region(journey_basic_query)
 
@@ -144,12 +173,11 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         for b in stops_b_to:
             disruptions = get_not_null(b['stop_area'], 'disruptions')
 
-            impacts_by_uri = {d['uri']: d for d in disruptions}
-
             #at first we got only one disruption on A
             assert len(disruptions) == 1
 
-            assert 'bob_the_disruption' in impacts_by_uri
+            assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
+
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type):
     feed_message = gtfs_realtime_pb2.FeedMessage()
@@ -163,7 +191,6 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type):
 
     disruption = feed_entity.Extensions[chaos_pb2.disruption]
 
-    #disruption = chaos_pb2.Disruption()
     disruption.id = disruption_name
     disruption.cause.id = "CauseTest"
     disruption.cause.wording = "CauseTest"

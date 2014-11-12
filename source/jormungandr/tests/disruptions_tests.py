@@ -103,7 +103,7 @@ class TestDisruptions(AbstractTestFixture):
 
     def test_disruption_with_stop_areas(self):
         """
-        when calling the pt object stopA, we should get it's disruptions
+        when calling the pt object stopA, we should get its disruptions
         """
 
         response = self.query_region('stop_areas/stopA', display=True)
