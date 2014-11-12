@@ -94,8 +94,10 @@ class Uri(ResourceUri):
             if "external_code" in args and args["external_code"]:
                 type_ = collections_to_resource_type[collection]
                 for instance in i_manager.get_regions():
-                    if i_manager.instances[instance].has_external_code(type_, args["external_code"]):
+		    res = i_manager.instances[instance].has_external_code(type_, args["external_code"]) 
+                    if res:
                         region = instance
+			id = res
                         break
                 if not region:
                     abort(404, message="Unable to find an object for the uri %s"
