@@ -143,7 +143,7 @@ def v1_routing(api):
                              'v1.' + collection + '.redirect',
                              Uri.Redirect)
 
-    collecs = ["routes", "lines", "networks", "stop_areas", "stop_points"]
+    collecs = ["routes", "lines", "networks", "stop_areas", "stop_points", "vehicle_journeys"]
     for collection in collecs:
         api.add_resource(getattr(Uri, collection)(True),
                          '/v1/' + collection,
