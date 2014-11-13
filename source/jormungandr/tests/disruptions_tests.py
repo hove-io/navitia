@@ -114,6 +114,43 @@ class TestDisruptions(AbstractTestFixture):
 
         get_not_null(stop, 'disruptions')
 
+    def test_direct_disruption_call(self):
+        """
+        when calling the disruptions on the pt object stopB,
+        we should get the disruption summary filtered on the stopB
+
+        so
+        we get the impact on the line A (it goes through stopB),
+        and the impact on the network
+        """
+
+        response = self.query_region('stop_areas/stopB/disruptions', display=True)
+
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+
+        impacted_lines = get_not_null(disruptions[0], 'lines')
+        assert len(impacted_lines) == 1
+        is_valid_line(impacted_lines[0], depth_check=0)
+        assert impacted_lines[0]['id'] == 'A'
+
+        lines_disrupt = get_not_null(impacted_lines[0], 'disruptions')
+        assert len(lines_disrupt) == 1
+        assert lines_disrupt[0]['uri'] == 'disruption_on_line_A'
+        assert lines_disrupt[0]['impact_uri'] == 'too_bad_again'
+
+        impacted_network = get_not_null(disruptions[0], 'network')
+
+        is_valid_network(impacted_network, depth_check=0)
+        assert impacted_network['id'] == 'base_network'
+        network_disrupt = get_not_null(impacted_network, 'disruptions')
+        assert len(network_disrupt) == 1
+        assert network_disrupt[0]['uri'] == 'disruption_on_line_A'
+        assert network_disrupt[0]['impact_uri'] == 'too_bad_again'
+
+        # but we should not have disruption on stop area, B is not disrupted
+        assert 'stop_areas' not in disruptions[0]
+
     def test_no_disruption(self):
         """
         when calling the pt object stopB, we should get no disruptions
