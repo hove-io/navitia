@@ -185,10 +185,6 @@ departure_board(const std::string& request,
     if(handler.journey_pattern_points.size() == 0)
         return handler.pb_response;
 
-    if (max_date_times < 0) {
-        fill_pb_error(pbnavitia::Error::bad_filter, "stop_schedules : value of max_date_times invalid", handler.pb_response.mutable_error());
-        return handler.pb_response;
-    }
     if (calendar_id) {
         //check whether that calendar exists, to raise an early error
         if (data.pt_data->calendars_map.find(*calendar_id) == data.pt_data->calendars_map.end()) {
