@@ -1,4 +1,4 @@
-navitia2 (1.4.6ubuntu1) UNRELEASED; urgency=medium
+navitia2 (1.4.7) unstable; urgency=medium
 
   * Jormungandr: fix retrievable of objects by their external code
   * Jormungandr: add /v1/vehicle_journeys endpoint
