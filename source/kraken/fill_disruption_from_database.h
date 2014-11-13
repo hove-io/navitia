@@ -91,7 +91,7 @@ namespace navitia {
             if (!impact ||
                     impact->id() != const_it["impact_id"].template as<std::string>()) {
                 impact = disruption->add_impacts();
-                fill_impact(const_it, disruption->add_impacts());
+                fill_impact(const_it, impact);
             }
 
             if (last_period_id != const_it["application_id"].template as<std::string>()) {
@@ -168,9 +168,9 @@ namespace navitia {
 
         template<typename T>
         void fill_pt_object(T const_it, chaos::PtObject* ptobject) {
-            FILL_NULLABLE(ptobject, updated_at, uint64_t)
+            FILL_REQUIRED(ptobject, updated_at, uint64_t)
             FILL_NULLABLE(ptobject, created_at, uint64_t)
-            FILL_NULLABLE(ptobject, uri, std::string)
+            FILL_REQUIRED(ptobject, uri, std::string)
             if (!const_it["ptobject_type"].is_null()) {
                 const auto& type_ = const_it["ptobject_type"].template as<std::string>();
                 if (type_ == "line") {
