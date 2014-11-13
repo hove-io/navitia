@@ -1,3 +1,12 @@
+navitia2 (1.4.6ubuntu1) UNRELEASED; urgency=medium
+
+  * Jormungandr: fix retrievable of objects by their external code
+  * Jormungandr: add /v1/vehicle_journeys endpoint
+  * Jormungandr: return a 404 when there's no region
+  * Kraken: Show stack trace when there's a std::bad_alloc
+
+ -- Vincent Lara <vincent@PAR-LA122>  Thu, 13 Nov 2014 10:30:58 +0100
+
 navitia2 (1.4.6) unstable; urgency=low
 
   * Jormungandr: good cherry pick of commit  <https://github.com/CanalTP/navitia/pull/686> 
