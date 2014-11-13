@@ -1245,7 +1245,6 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
-    type::PT_Data & d = *b.data->pt_data;
 
     std::vector<std::pair<type::idx_t, navitia::time_duration>> departures =
         {{b.sps["stop1"]->idx, navitia::seconds(1500)}};
