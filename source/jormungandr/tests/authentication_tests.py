@@ -92,7 +92,7 @@ class FakeInstance(models.Instance):
 
     @classmethod
     def get_by_name(cls, name):
-        return mock_instances[name]
+        return mock_instances.get(name)
 
 
 user_in_db = {
@@ -168,6 +168,17 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             for request, status_code in requests_status_codes:
                 assert(self.app.get(request).status_code == status_code)
 
+    def test_unkown_region(self):
+        """
+        the authentication process must not mess if the region is not found
+        """
+        with user_set(app, 'bob'):
+            r, status = self.query_no_assert('/v1/coverage/the_marvelous_unknown_region/stop_areas', display=True)
+
+            assert status == 404
+            assert 'error' in r
+            assert get_not_null(r, 'error')['message'] \
+                   == "The region the_marvelous_unknown_region doesn't exists"
 
 @dataset(["main_routing_test", "departure_board_test", "empty_routing_test"])
 class TestOverlappingAuthentication(AbstractTestAuthentication):
