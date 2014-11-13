@@ -40,7 +40,6 @@ www.navitia.io
 #include "kraken/configuration.h"
 #include <boost/program_options.hpp>
 #include <boost/optional.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
 
 namespace po = boost::program_options;
 
@@ -72,7 +71,8 @@ struct mock_kraken {
         auto other_options = conf.load_from_command_line(desc, argc, argv);
 
         //this option is not parsed by get_options_description because it is used only here
-        if (boost::algorithm::any_of(other_options, [](const std::string& s){return s == "spawn_maintenance_worker";})) {
+        if (std::find(other_options.begin(), other_options.end(),
+                      "spawn_maintenance_worker") != other_options.end()) {
             threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
         }
 
