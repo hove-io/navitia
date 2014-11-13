@@ -26,7 +26,6 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from samba.netcmd import time
 from kombu.connection import BrokerConnection
 from kombu.entity import Exchange
 from kombu.pools import producers
