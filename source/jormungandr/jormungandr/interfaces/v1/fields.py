@@ -200,10 +200,10 @@ class additional_informations_vj(fields.Raw):
     def output(self, key, obj):
         addinfo = obj.add_info_vehicle_journey
         result = []
-        if (addinfo.has_date_time_estimated):
+        if addinfo.has_date_time_estimated:
             result.append("has_date_time_estimated")
 
-        if (addinfo.stay_in):
+        if addinfo.stay_in:
             result.append('stay_in')
 
         descriptor = addinfo.DESCRIPTOR
@@ -230,6 +230,15 @@ class equipments(fields.Raw):
         enum = descriptor.enum_types_by_name["Equipment"]
         return [str.lower(enum.values_by_number[v].name) for v
                 in equipments.has_equipments]
+
+
+class disruption_status(fields.Raw):
+    def output(self, key, obj):
+        status = obj.status
+        a = type_pb2.ActiveStatus
+        d = type_pb2.ActiveStatus.DESCRIPTOR
+        return str.lower(d.values_by_number[status].name)
+
 
 class notes(fields.Raw):
 
@@ -365,7 +374,7 @@ disruption = {
     "impact_uri": fields.String(),
     "title": fields.String(),
     "application_periods": NonNullList(NonNullNested(period)),
-    "status": fields.String(),
+    "status": disruption_status,
     "updated_at": DateTime(),
     "tags": NonNullList(fields.String()),
     "cause": fields.String(),
@@ -593,17 +602,17 @@ class UrisToLinks():
 
 
 instance_status = {
-        "data_version": fields.Integer(),
-        "end_production_date": fields.String(),
-        "is_connected_to_rabbitmq": fields.Boolean(),
-        "last_load_at": fields.String(),
-        "last_rt_data_loaded": fields.String(),
-        "last_load_status": fields.Boolean(),
-        "kraken_version": fields.String(attribute="navitia_version"),
-        "nb_threads": fields.Integer(),
-        "publication_date": fields.String(),
-        "start_production_date": fields.String(),
-        "status": fields.String(),
+    "data_version": fields.Integer(),
+    "end_production_date": fields.String(),
+    "is_connected_to_rabbitmq": fields.Boolean(),
+    "last_load_at": fields.String(),
+    "last_rt_data_loaded": fields.String(),
+    "last_load_status": fields.Boolean(),
+    "kraken_version": fields.String(attribute="navitia_version"),
+    "nb_threads": fields.Integer(),
+    "publication_date": fields.String(),
+    "start_production_date": fields.String(),
+    "status": fields.String(),
 }
 
 instance_parameters = {

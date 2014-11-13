@@ -47,6 +47,21 @@ namespace pt = boost::posix_time;
 
 namespace navitia{
 
+pbnavitia::ActiveStatus compute_disruption_status(const boost::shared_ptr<type::new_disruption::Impact>& impact,
+                         const boost::posix_time::ptime& dt) {
+
+    auto disruption = impact->disruption;
+
+    if (disruption->publication_period.contains(dt)) {
+        return pbnavitia::active;
+    }
+
+    if (disruption->publication_period.begin() < dt) {
+        return pbnavitia::past;
+    }
+    return pbnavitia::futur;
+}
+
 template <typename T>
 void fill_address(const T* obj, const nt::Data& data,
                     pbnavitia::Address* address, const std::string address_name, int house_number,
@@ -81,7 +96,7 @@ void fill_address(const T* obj, const nt::Data& data,
 template <typename T>
 void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_weak_ptr,
         const type::Data&, T pb_object, int,
-        const boost::posix_time::ptime&, const boost::posix_time::time_period&){
+        const boost::posix_time::ptime& now, const boost::posix_time::time_period&) {
     auto impact = impact_weak_ptr.lock();
     if (! impact) {
         return; //impact is no longer valid, we have nothing to do
@@ -99,8 +114,6 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     //TODO: updated at must be computed with the max of all computed values (from disruption, impact, ...)
     pb_disrution->set_updated_at(navitia::to_posix_timestamp(impact->updated_at));
 
-    //TODO tags
-
     for (const auto& t: impact->disruption->tags) {
         pb_disrution->add_tags(t->name);
     }
@@ -113,7 +126,9 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
         pb_m->set_text(m.text);
         pb_m->set_content_type(""); //what do we want ?
     }
-//    optional ActiveStatus status                    = 11;
+
+    //we need to compute the active status
+    pb_disrution->set_status(compute_disruption_status(impact, now));
 
     // we also fill the old message for the customer using it.
     //will be removed as soon as possible

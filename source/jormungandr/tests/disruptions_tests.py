@@ -106,7 +106,7 @@ class TestDisruptions(AbstractTestFixture):
         when calling the pt object stopA, we should get its disruptions
         """
 
-        response = self.query_region('stop_areas/stopA', display=True)
+        response = self.query_region('stop_areas/stopA')
 
         stops = get_not_null(response, 'stop_areas')
         assert len(stops) == 1

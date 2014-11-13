@@ -529,8 +529,11 @@ def can_have_disruptions(pt_obj):
         get_not_null(d, 'uri')
         get_not_null(d, 'impact_uri')
         get_valid_datetime(get_not_null(d, 'updated_at'))
+
+        status = get_not_null(d, 'status')
+        assert status in ['past', 'active', 'futur']
+
         periods = get_not_null(d, 'application_periods')
-        #TODO status check
         for p in periods:
             b = get_valid_datetime(get_not_null(p, 'begin'))
             e = get_valid_datetime(get_not_null(p, 'end'))
