@@ -113,6 +113,11 @@ def has_access(region, api, abort, user):
 
     model_instance = Instance.get_by_name(region)
 
+    if not model_instance:
+        if abort:
+            raise RegionNotFound(region)
+        return False
+
     if model_instance.is_free or user.has_access(model_instance.id, api):
         return True
     else:

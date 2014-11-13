@@ -47,7 +47,6 @@ class TestNullStatus(AbstractTestFixture):
         assert len(response['regions']) == 1
         assert response['regions'][0]['id'] == 'main_routing_test'
 
-
     def test_null_status(self):
         """
         If we ask directly for the status of an hidden region we are able
