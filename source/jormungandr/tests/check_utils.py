@@ -568,6 +568,7 @@ def is_valid_stop_area(stop_area, depth_check=1):
     """
     get_not_null(stop_area, "name")
     coord = get_not_null(stop_area, "coord")
+    is_valid_label(get_not_null(stop_area, "label"))
     is_valid_coord(coord)
 
 
@@ -576,6 +577,7 @@ def is_valid_stop_point(stop_point, depth_check=1):
     check the structure of a stop point
     """
     get_not_null(stop_point, "name")
+    is_valid_label(get_not_null(stop_point, "label"))
     coord = get_not_null(stop_point, "coord")
     is_valid_coord(coord)
 
@@ -632,7 +634,7 @@ def is_valid_places(places, depth_check=1):
 def is_valid_place(place, depth_check=1):
     if depth_check < 0:
         return
-    get_not_null(place, "name")
+    n = get_not_null(place, "name")
     get_not_null(place, "id")
     type = get_not_null(place, "embedded_type")
     if type == "address":
@@ -641,9 +643,16 @@ def is_valid_place(place, depth_check=1):
     elif type == "stop_area":
         stop_area = get_not_null(place, "stop_area")
         is_valid_stop_area(stop_area, depth_check)
+
+        #for stops name should be the label
+        is_valid_label(n)
+        assert stop_area['label'] == n
     elif type == "stop_point":
         stop_point = get_not_null(place, "stop_point")
         is_valid_stop_point(stop_point, depth_check)
+
+        is_valid_label(n)
+        assert stop_point['label'] == n
     elif type == "poi":
         poi = get_not_null(place, "poi")
         # TODO
@@ -727,6 +736,14 @@ def is_valid_region_status(status):
     is_valid_date(get_not_null(status, 'start_production_date'))
     get_valid_datetime(get_not_null(status, 'last_load_at'), possible_errors=True)
     get_valid_datetime(get_not_null(status, 'publication_date'), possible_errors=True)
+
+
+label_regexp = re.compile(".* \(.*\)")
+
+
+def is_valid_label(label):
+    m = label_regexp.match(label)
+    return m is not None
 
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
