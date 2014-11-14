@@ -274,13 +274,12 @@ void Data::complete(){
     build_associated_calendar();
     build_odt();
 
-    compute_labels();
-
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building administrative regions");
     build_administrative_regions();
     admin = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
+    compute_labels();
     start = pt::microsec_clock::local_time();
     pt_data->sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
