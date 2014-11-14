@@ -31,6 +31,7 @@ www.navitia.io
 
 #pragma once
 #include <string>
+#include <memory>
 #include "type/pt_data.h"
 #include "pqxx/result.hxx"
 #include "type/chaos.pb.h"
@@ -59,7 +60,7 @@ namespace navitia {
     struct DisruptionDatabaseReader {
         DisruptionDatabaseReader(type::PT_Data& pt_data) : pt_data(pt_data) {}
 
-        chaos::Disruption* disruption = nullptr;
+        std::unique_ptr<chaos::Disruption> disruption = nullptr;
         chaos::Impact* impact = nullptr;
         chaos::Tag* tag = nullptr;
 
@@ -73,10 +74,6 @@ namespace navitia {
         void operator() (T const_it) {
             if (!disruption || disruption->id() !=
                     const_it["disruption_id"].template as<std::string>()) {
-                if (disruption) {
-                    add_disruption(pt_data, *disruption);
-                    disruption->Clear();
-                }
                 fill_disruption(const_it);
                 fill_cause(const_it);
                 tag = nullptr;
@@ -111,7 +108,10 @@ namespace navitia {
 
         template<typename T>
         void fill_disruption(T const_it) {
-            disruption = new chaos::Disruption();
+            if (disruption) {
+                add_disruption(pt_data, *disruption);
+            }
+            disruption = std::make_unique<chaos::Disruption>();
             FILL_TIMESTAMPMIXIN(disruption)
             auto period = disruption->mutable_publication_period();
             auto start_date = const_it["disruption_start_publication_date"];

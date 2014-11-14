@@ -131,7 +131,9 @@ void fill_disruption_from_database(const std::string& connection_string,
                " ;") % items_per_request % offset).str();
 
         pqxx::result result = work.exec(request);
-        std::for_each(result.begin(), result.end(), reader);
+        for (auto res : result) {
+            reader(res);
+        }
 
         offset += items_per_request;
     }

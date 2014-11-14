@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(full_disruption) {
 BOOST_AUTO_TEST_CASE(minimal_cause) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
-    reader.disruption = new chaos::Disruption();
+    reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
     const_it.set_cause("1", "wording", "11");
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(minimal_cause) {
 BOOST_AUTO_TEST_CASE(full_cause) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
-    reader.disruption = new chaos::Disruption();
+    reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
     const_it.set_cause("1", "wording", "11", "22");
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(full_cause) {
 BOOST_AUTO_TEST_CASE(minimal_tag) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
-    reader.disruption = new chaos::Disruption();
+    reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
     const_it.set_tag("1", "name", "11");
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(minimal_tag) {
 BOOST_AUTO_TEST_CASE(full_tag) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
-    reader.disruption = new chaos::Disruption();
+    reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
     const_it.set_tag("1", "name", "11", "22");
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(full_tag) {
 BOOST_AUTO_TEST_CASE(minimal_impact) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
-    reader.disruption = new chaos::Disruption();
+    reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
     const_it.set_impact("1", "11");
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(minimal_impact) {
 BOOST_AUTO_TEST_CASE(full_impact) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
-    reader.disruption = new chaos::Disruption();
+    reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
     const_it.set_impact("1", "11", "22");
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(application_period) {
 BOOST_AUTO_TEST_CASE(pt_object) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
-    reader.disruption = new chaos::Disruption();
+    reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
     const_it.set_ptobject("id", "uri", "line", "1", "2");
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
     const_it.set_application_period("0", "1", "2");
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     reader(const_it);
-    auto disruption = reader.disruption;
+    const auto& disruption = reader.disruption;
     BOOST_CHECK_EQUAL(disruption->id(), "1");
     BOOST_CHECK_EQUAL(disruption->created_at(), 22);
     BOOST_CHECK_EQUAL(disruption->updated_at(), 33);
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(two_tags) {
     reader(const_it);
     const_it.set_tag("2", "name2", "33", "44");
     reader(const_it);
-    auto disruption = reader.disruption;
+    const auto& disruption = reader.disruption;
     BOOST_CHECK_EQUAL(disruption->id(), "1");
     auto cause = disruption->cause();
     BOOST_CHECK_EQUAL(cause.id(), "1");
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(two_impacts) {
     reader(const_it);
     const_it.set_impact("2", "33", "44");
     reader(const_it);
-    auto disruption = reader.disruption;
+    const auto& disruption = reader.disruption;
     BOOST_CHECK_EQUAL(disruption->id(), "1");
     auto cause = disruption->cause();
     BOOST_CHECK_EQUAL(cause.id(), "1");
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(two_application_periods) {
     reader(const_it);
     const_it.set_application_period("1", "2", "3");
     reader(const_it);
-    auto disruption = reader.disruption;
+    const auto& disruption = reader.disruption;
     BOOST_CHECK_EQUAL(disruption->id(), "1");
     auto cause = disruption->cause();
     BOOST_CHECK_EQUAL(cause.id(), "1");
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(two_ptobjects) {
     reader(const_it);
     const_it.set_ptobject("id2", "uri2", "line", "1", "2");
     reader(const_it);
-    auto disruption = reader.disruption;
+    const auto& disruption = reader.disruption;
     BOOST_CHECK_EQUAL(disruption->id(), "1");
     auto cause = disruption->cause();
     BOOST_CHECK_EQUAL(cause.id(), "1");
