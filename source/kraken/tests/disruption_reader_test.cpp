@@ -41,7 +41,9 @@ struct Const_it {
         Value(const std::string& value) : value(value) {}
 
         template<typename T>
-        T as();
+        T as() {
+            return boost::lexical_cast<T>(value);
+        }
 
 
         bool is_null() {
@@ -179,18 +181,6 @@ struct Const_it {
     }
 };
 
-template <>
-std::string Const_it::Value::as() {
-    return value;
-}
-template<>
-uint64_t Const_it::Value::as() {
-    return std::stoul(value);
-}
-template <>
-unsigned int Const_it::Value::as() {
-    return std::stoi(value);
-}
 
 BOOST_AUTO_TEST_CASE(minimal_disruption) {
     navitia::type::PT_Data pt_data;
