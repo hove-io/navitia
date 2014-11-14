@@ -87,10 +87,10 @@ struct Const_it {
             {"application_id", Value()},
             {"application_start_date", Value()},
             {"application_end_date", Value()},
-            {"ptobject_id", Value()}
-            {"ptobject_created_at", Value()}
-            {"ptobject_updated_at", Value()}
-            {"ptobject_uri", Value()}
+            {"ptobject_id", Value()},
+            {"ptobject_created_at", Value()},
+            {"ptobject_updated_at", Value()},
+            {"ptobject_uri", Value()},
             {"ptobject_type", Value()}
         };
     }

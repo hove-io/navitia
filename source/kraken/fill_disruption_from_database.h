@@ -59,7 +59,7 @@ namespace navitia {
     struct DisruptionDatabaseReader {
         DisruptionDatabaseReader(type::PT_Data& pt_data) : pt_data(pt_data) {}
 
-        chaos::Disruption* disruption = new chaos::Disruption();
+        chaos::Disruption* disruption = nullptr;
         chaos::Impact* impact = nullptr;
         chaos::Tag* tag = nullptr;
 
@@ -70,42 +70,39 @@ namespace navitia {
 
         template<typename T>
         void operator() (T const_it) {
-            if (disruption->id() !=
+            if (!disruption || disruption->id() !=
                     const_it["disruption_id"].template as<std::string>()) {
-                if (disruption->id() != "") {
+                if (disruption) {
                     add_disruption(pt_data, *disruption);
+                    disruption->Clear();
                 }
-
-                disruption->Clear();
                 fill_disruption(const_it);
-                fill_cause(const_it, disruption->mutable_cause());
-
+                fill_cause(const_it);
+                tag = nullptr;
                 impact = nullptr;
             }
 
-            if (!tag ||
-                    tag->id() != const_it["tag_id"].template as<std::string>()) {
-                fill_tag(const_it, disruption->add_tags());
+            if (disruption && (!tag ||
+                    tag->id() != const_it["tag_id"].template as<std::string>())) {
+                fill_tag(const_it);
             }
 
-            if (!impact ||
-                    impact->id() != const_it["impact_id"].template as<std::string>()) {
-                impact = disruption->add_impacts();
-                fill_impact(const_it, impact);
+            if (disruption && (!impact ||
+                    impact->id() != const_it["impact_id"].template as<std::string>())) {
+                fill_impact(const_it);
+                last_period_id = "";
+                last_ptobject_id = "";
+                last_message_id = "";
             }
 
-            if (last_period_id != const_it["application_id"].template as<std::string>()) {
-                fill_application_period(const_it, impact->add_application_periods());
-                last_period_id = const_it["application_id"].template as<std::string>();
+            if (impact && (last_period_id != const_it["application_id"].template as<std::string>())) {
+                fill_application_period(const_it);
             }
-            if (last_ptobject_id != const_it["ptobject_id"].template as<std::string>()) {
-                fill_pt_object(const_it, impact->add_informed_entities());
-                last_ptobject_id = const_it["ptobject_id"].template as<std::string>();
+            if (impact && (last_ptobject_id != const_it["ptobject_id"].template as<std::string>())) {
+                fill_pt_object(const_it);
             }
-            if (last_message_id != const_it["message_id"].template as<std::string>()) {
-                fill_message(const_it, impact->add_messages());
-
-                last_message_id = const_it["message_id"].template as<std::string>();
+            if (impact && (last_message_id != const_it["message_id"].template as<std::string>())) {
+                fill_message(const_it);
             }
         }
 
@@ -113,6 +110,7 @@ namespace navitia {
 
         template<typename T>
         void fill_disruption(T const_it) {
+            disruption = new chaos::Disruption();
             FILL_TIMESTAMPMIXIN(disruption)
             auto period = disruption->mutable_publication_period();
             auto start_date = const_it["disruption_start_publication_date"];
@@ -128,20 +126,23 @@ namespace navitia {
         }
 
         template<typename T>
-        void fill_cause(T const_it, chaos::Cause* cause) {
+        void fill_cause(T const_it) {
+            auto cause = disruption->mutable_cause();
             FILL_TIMESTAMPMIXIN(cause)
             FILL_REQUIRED(cause, wording, std::string)
         }
 
         template<typename T>
-        void fill_tag(T const_it, chaos::Tag* tag) {
+        void fill_tag(T const_it) {
+            tag = disruption->add_tags();
             FILL_TIMESTAMPMIXIN(tag)
             FILL_NULLABLE(tag, name, std::string)
         }
 
 
         template<typename T>
-        void fill_impact(T const_it, chaos::Impact* impact) {
+        void fill_impact(T const_it) {
+            impact = disruption->add_impacts();
             FILL_TIMESTAMPMIXIN(impact)
             auto severity = impact->mutable_severity();
             FILL_TIMESTAMPMIXIN(severity)
@@ -157,17 +158,20 @@ namespace navitia {
         }
 
         template<typename T>
-        void fill_application_period(T const_it, transit_realtime::TimeRange* period) {
+        void fill_application_period(T const_it) {
+            auto period = impact->add_application_periods();
             if (!const_it["application_start_date"].is_null()) {
                 period->set_start(const_it["application_start_date"].template as<uint64_t>());
             }
             if (!const_it["application_end_date"].is_null()) {
                 period->set_end(const_it["application_end_date"].template as<uint64_t>());
             }
+            last_period_id = const_it["application_id"].template as<std::string>();
         }
 
         template<typename T>
-        void fill_pt_object(T const_it, chaos::PtObject* ptobject) {
+        void fill_pt_object(T const_it) {
+            auto ptobject = impact->add_informed_entities();
             FILL_REQUIRED(ptobject, updated_at, uint64_t)
             FILL_NULLABLE(ptobject, created_at, uint64_t)
             FILL_REQUIRED(ptobject, uri, std::string)
@@ -187,14 +191,17 @@ namespace navitia {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
                 }
             }
+            last_ptobject_id = const_it["ptobject_id"].template as<std::string>();
         }
 
         template<typename T>
-        void fill_message(T const_it, chaos::Message* message) {
+        void fill_message(T const_it) {
+            auto message = impact->add_messages();
             FILL_REQUIRED(message, text, std::string)
             FILL_NULLABLE(message, created_at, uint64_t)
             FILL_NULLABLE(message, updated_at, uint64_t)
             fill_channel(const_it, message->mutable_channel());
+            last_message_id = const_it["message_id"].template as<std::string>();
         }
 
         template<typename T>
