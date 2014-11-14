@@ -72,7 +72,7 @@ public:
     }
 
     bool load(const std::string& database, 
-              const boost::optional<std::string>& chaos_database){
+              const boost::optional<std::string>& chaos_database = {}){
         bool success;
         auto data = boost::make_shared<Data>();
         success = data->load(database, chaos_database);

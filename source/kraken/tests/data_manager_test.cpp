@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(load_success){
     DataManager<Data> data_manager;
     auto first_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
-    BOOST_CHECK(data_manager.load("",  {}));
+    BOOST_CHECK(data_manager.load(""));
     auto second_data = data_manager.get_data();
     BOOST_CHECK_NE(first_data, second_data);
     BOOST_CHECK_EQUAL(Data::destructor_called, false);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(load_fail){
     auto first_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
     Data::load_status = false;
-    BOOST_CHECK(! data_manager.load("", {}));
+    BOOST_CHECK(! data_manager.load(""));
     Data::load_status = true;
     auto second_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(first_data, second_data);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(destructor_called){
     {
         auto first_data = data_manager.get_data();
         BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
-        BOOST_CHECK(data_manager.load("", {}));
+        BOOST_CHECK(data_manager.load(""));
         auto second_data = data_manager.get_data();
         BOOST_CHECK_NE(first_data, second_data);
         BOOST_CHECK_EQUAL(Data::destructor_called, false);
