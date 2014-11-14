@@ -203,9 +203,24 @@ void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
                     const boost::posix_time::time_period& action_period = null_time_period);
 
 void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
+                    pbnavitia::PtDisplayInfo* pt_display_info, const type::StopPoint* origin,
+                    const type::StopPoint* destination, int max_depth,
+                    const boost::posix_time::ptime& now,
+                    const boost::posix_time::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
                     const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
+                    pbnavitia::hasEquipments* has_equipments, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj, const type::Data&,
+                    pbnavitia::hasEquipments* has_equipments, const type::StopPoint* origin,
+                    const type::StopPoint* destination, int,
+                    const pt::ptime&, const pt::time_period&);
 
 
 void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comment,
