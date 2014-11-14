@@ -39,38 +39,74 @@ www.navitia.io
 #include "georef/georef.h"
 #include "type/pb_converter.h"
 
+BOOST_AUTO_TEST_CASE(get_label_test) {
+    //test the sfinae functions get_label
+
+    struct bob {
+        std::string label = "sponge bob";
+    };
+    struct bobette {
+        std::string name = "bobette";
+    };
+    struct bobitto {
+        std::string name = "bobitto";
+        std::string label = "bobitto's the best";
+        //label should be prefered to name
+    };
+    struct bobitta {
+        std::string label = "bobitta";
+        std::string get_label() const { return label + "'s the best"; }
+        //label should be prefered to get_label()
+    };
+
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bob>().get()), "sponge bob");
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobette>().get()), "bobette");
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobitto>().get()), "bobitto's the best");
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobitta>().get()), "bobitta");
+}
 
 BOOST_AUTO_TEST_CASE(name_formater_sa) {
+    navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
     admin1->name = "admin1";
     admin1->level = 1;
+    d.geo_ref->admins.push_back(admin1);
     auto admin8 = new navitia::georef::Admin();
     admin8->name = "admin8";
     admin8->level = 8;
+    d.geo_ref->admins.push_back(admin8);
     auto sa1 = new navitia::type::StopArea();
     sa1->name = "sa1";
     sa1->uri = "sa:sa1";
+    d.pt_data->stop_areas.push_back(sa1);
+
+    d.compute_labels();
     
-    BOOST_CHECK_EQUAL(navitia::name_formater(sa1), sa1->name);
+    BOOST_CHECK_EQUAL(navitia::get_label(sa1), sa1->name);
     sa1->admin_list.push_back(admin1);
     sa1->admin_list.push_back(admin8);
-    BOOST_CHECK_EQUAL(navitia::name_formater(sa1), sa1->name + " (" + admin8->name + ")");
+    d.compute_labels();
+    BOOST_CHECK_EQUAL(navitia::get_label(sa1), sa1->name + " (" + admin8->name + ")");
 }
 
 BOOST_AUTO_TEST_CASE(fill_pb_placemark_sa) {
+    navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
+    d.geo_ref->admins.push_back(admin1);
     admin1->name = "admin1";
     admin1->level = 1;
     auto admin8 = new navitia::georef::Admin();
     admin8->name = "admin8";
     admin8->level = 8;
+    d.geo_ref->admins.push_back(admin8);
     auto sa1 = new navitia::type::StopArea();
     sa1->name = "sa1";
     sa1->uri = "sa:sa1";
     sa1->admin_list.push_back(admin1);
     sa1->admin_list.push_back(admin8);
-    
-    navitia::type::Data d;
+    d.pt_data->stop_areas.push_back(sa1);
+    d.compute_labels();
+
     auto pb = new pbnavitia::PtObject();
     navitia::fill_pb_placemark(sa1, d, pb);
     BOOST_CHECK_EQUAL(pb->name(), sa1->name + " (" +admin8->name + ")");
@@ -79,39 +115,50 @@ BOOST_AUTO_TEST_CASE(fill_pb_placemark_sa) {
     BOOST_CHECK(pb->has_stop_area());
     BOOST_CHECK_EQUAL(pb->stop_area().uri(), sa1->uri);
     BOOST_CHECK_EQUAL(pb->stop_area().name(), sa1->name);
+    BOOST_CHECK_EQUAL(pb->stop_area().label(), sa1->name + " (" +admin8->name + ")");
 }
 
 BOOST_AUTO_TEST_CASE(name_formater_poi) {
+    navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
     admin1->name = "admin1";
     admin1->level = 1;
+    d.geo_ref->admins.push_back(admin1);
     auto admin8 = new navitia::georef::Admin();
     admin8->name = "admin8";
     admin8->level = 8;
+    d.geo_ref->admins.push_back(admin8);
     auto poi1 = new navitia::georef::POI();
     poi1->name = "poi1";
     poi1->uri = "poi:poi1";
+    d.geo_ref->pois.push_back(poi1);
+    d.compute_labels();
     
-    BOOST_CHECK_EQUAL(navitia::name_formater(poi1), poi1->name);
+    BOOST_CHECK_EQUAL(navitia::get_label(poi1), poi1->name);
     poi1->admin_list.push_back(admin1);
     poi1->admin_list.push_back(admin8);
-    BOOST_CHECK_EQUAL(navitia::name_formater(poi1), poi1->name + " (" + admin8->name + ")");
+    d.compute_labels();
+    BOOST_CHECK_EQUAL(navitia::get_label(poi1), poi1->name + " (" + admin8->name + ")");
 }
 
 BOOST_AUTO_TEST_CASE(fill_pb_placemark_poi) {
+    navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
     admin1->name = "admin1";
     admin1->level = 1;
+    d.geo_ref->admins.push_back(admin1);
     auto admin8 = new navitia::georef::Admin();
     admin8->name = "admin8";
     admin8->level = 8;
+    d.geo_ref->admins.push_back(admin8);
     auto poi1 = new navitia::georef::POI();
     poi1->name = "poi1";
     poi1->uri = "poi:poi1";
+    d.geo_ref->pois.push_back(poi1);
     poi1->admin_list.push_back(admin1);
     poi1->admin_list.push_back(admin8);
-    
-    navitia::type::Data d;
+    d.compute_labels();
+
     auto pb = new pbnavitia::PtObject();
     navitia::fill_pb_placemark(poi1, d, pb);
     BOOST_CHECK_EQUAL(pb->name(), poi1->name + " (" +admin8->name + ")");
@@ -120,45 +167,56 @@ BOOST_AUTO_TEST_CASE(fill_pb_placemark_poi) {
     BOOST_CHECK(pb->has_poi());
     BOOST_CHECK_EQUAL(pb->poi().uri(), poi1->uri);
     BOOST_CHECK_EQUAL(pb->poi().name(), poi1->name);
+    BOOST_CHECK_EQUAL(pb->poi().label(), poi1->name + " (" +admin8->name + ")");
 }
 
 BOOST_AUTO_TEST_CASE(name_formater_stop_point) {
+    navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
     admin1->name = "admin1";
     admin1->level = 1;
+    d.geo_ref->admins.push_back(admin1);
     auto admin8 = new navitia::georef::Admin();
     admin8->name = "admin8";
     admin8->level = 8;
+    d.geo_ref->admins.push_back(admin8);
     auto stop_point1 = new navitia::type::StopPoint();
     stop_point1->name = "stop_point1";
     stop_point1->uri = "stop_point:stop_point1";
+    d.pt_data->stop_points.push_back(stop_point1);
+    d.compute_labels();
     
-    BOOST_CHECK_EQUAL(navitia::name_formater(stop_point1), stop_point1->name);
+    BOOST_CHECK_EQUAL(navitia::get_label(stop_point1), stop_point1->name);
     stop_point1->admin_list.push_back(admin1);
     stop_point1->admin_list.push_back(admin8);
-    BOOST_CHECK_EQUAL(navitia::name_formater(stop_point1), stop_point1->name);
+    BOOST_CHECK_EQUAL(navitia::get_label(stop_point1), stop_point1->name);
 }
 
 BOOST_AUTO_TEST_CASE(fill_pb_placemark_stop_point) {
+    navitia::type::Data d;
     auto admin1 = new navitia::georef::Admin();
     admin1->name = "admin1";
     admin1->level = 1;
+    d.geo_ref->admins.push_back(admin1);
     auto admin8 = new navitia::georef::Admin();
     admin8->name = "admin8";
     admin8->level = 8;
+    d.geo_ref->admins.push_back(admin8);
     auto stop_point1 = new navitia::type::StopPoint();
     stop_point1->name = "stop_point1";
     stop_point1->uri = "stop_point:stop_point1";
     stop_point1->admin_list.push_back(admin1);
     stop_point1->admin_list.push_back(admin8);
-    
-    navitia::type::Data d;
+    d.pt_data->stop_points.push_back(stop_point1);
+    d.compute_labels();
+
     auto pb = new pbnavitia::PtObject();
     navitia::fill_pb_placemark(stop_point1, d, pb);
-    BOOST_CHECK_EQUAL(pb->name(), stop_point1->name);
+    BOOST_CHECK_EQUAL(pb->name(), stop_point1->name + " (" +admin8->name + ")");
     BOOST_CHECK_EQUAL(pb->uri(), stop_point1->uri);
     BOOST_CHECK_EQUAL(pb->embedded_type(), pbnavitia::STOP_POINT);
     BOOST_CHECK(pb->has_stop_point());
     BOOST_CHECK_EQUAL(pb->stop_point().uri(), stop_point1->uri);
     BOOST_CHECK_EQUAL(pb->stop_point().name(), stop_point1->name);
+    BOOST_CHECK_EQUAL(pb->stop_point().label(), stop_point1->name + " (" +admin8->name + ")");
 }
