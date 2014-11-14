@@ -229,10 +229,11 @@ BOOST_AUTO_TEST_CASE(full_disruption) {
 BOOST_AUTO_TEST_CASE(minimal_cause) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
+    reader.disruption = new chaos::Disruption();
 
     Const_it const_it;
     const_it.set_cause("1", "wording", "11");
-    reader.fill_cause(const_it, reader.disruption->mutable_cause());
+    reader.fill_cause(const_it);
     BOOST_REQUIRE(reader.disruption->mutable_cause() != nullptr);
     auto cause = reader.disruption->cause();
     BOOST_CHECK_EQUAL(cause.id(), "1");
@@ -243,10 +244,11 @@ BOOST_AUTO_TEST_CASE(minimal_cause) {
 BOOST_AUTO_TEST_CASE(full_cause) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
+    reader.disruption = new chaos::Disruption();
 
     Const_it const_it;
     const_it.set_cause("1", "wording", "11", "22");
-    reader.fill_cause(const_it, reader.disruption->mutable_cause());
+    reader.fill_cause(const_it);
     BOOST_REQUIRE(reader.disruption->mutable_cause() != nullptr);
     auto cause = reader.disruption->cause();
     BOOST_CHECK_EQUAL(cause.id(), "1");
@@ -258,64 +260,72 @@ BOOST_AUTO_TEST_CASE(full_cause) {
 BOOST_AUTO_TEST_CASE(minimal_tag) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
+    reader.disruption = new chaos::Disruption();
 
     Const_it const_it;
     const_it.set_tag("1", "name", "11");
-    auto tag = reader.disruption->add_tags();
-    reader.fill_tag(const_it, tag);
-    BOOST_CHECK_EQUAL(tag->id(), "1");
-    BOOST_CHECK_EQUAL(tag->name(), "name");
-    BOOST_CHECK_EQUAL(tag->created_at(), 11);
+    reader.fill_tag(const_it);
+    BOOST_REQUIRE_EQUAL(reader.disruption->tags_size(), 1);
+    auto tag = reader.disruption->tags(0);
+    BOOST_CHECK_EQUAL(tag.id(), "1");
+    BOOST_CHECK_EQUAL(tag.name(), "name");
+    BOOST_CHECK_EQUAL(tag.created_at(), 11);
 }
 BOOST_AUTO_TEST_CASE(full_tag) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
+    reader.disruption = new chaos::Disruption();
 
     Const_it const_it;
     const_it.set_tag("1", "name", "11", "22");
-    auto tag = reader.disruption->add_tags();
-    reader.fill_tag(const_it, tag);
-    BOOST_CHECK_EQUAL(tag->id(), "1");
-    BOOST_CHECK_EQUAL(tag->name(), "name");
-    BOOST_CHECK_EQUAL(tag->created_at(), 11);
-    BOOST_CHECK_EQUAL(tag->updated_at(), 22);
+    reader.fill_tag(const_it);
+    BOOST_REQUIRE_EQUAL(reader.disruption->tags_size(), 1);
+    auto tag = reader.disruption->tags(0);
+    BOOST_CHECK_EQUAL(tag.id(), "1");
+    BOOST_CHECK_EQUAL(tag.name(), "name");
+    BOOST_CHECK_EQUAL(tag.created_at(), 11);
+    BOOST_CHECK_EQUAL(tag.updated_at(), 22);
 }
 
 BOOST_AUTO_TEST_CASE(minimal_impact) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
+    reader.disruption = new chaos::Disruption();
 
     Const_it const_it;
     const_it.set_impact("1", "11");
     const_it.set_severity("2", "wording", "22");
-    auto impact = reader.disruption->add_impacts();
-    reader.fill_impact(const_it, impact);
-    BOOST_CHECK_EQUAL(impact->id(), "1");
-    BOOST_CHECK_EQUAL(impact->created_at(), 11);
-    BOOST_CHECK_EQUAL(impact->severity().id(), "2");
-    BOOST_CHECK_EQUAL(impact->severity().created_at(), 22);
-    BOOST_CHECK_EQUAL(impact->severity().wording(), "wording");
+    reader.fill_impact(const_it);
+    BOOST_REQUIRE_EQUAL(reader.disruption->impacts_size(), 1);
+    auto impact = reader.disruption->impacts(0);
+    BOOST_CHECK_EQUAL(impact.id(), "1");
+    BOOST_CHECK_EQUAL(impact.created_at(), 11);
+    BOOST_CHECK_EQUAL(impact.severity().id(), "2");
+    BOOST_CHECK_EQUAL(impact.severity().created_at(), 22);
+    BOOST_CHECK_EQUAL(impact.severity().wording(), "wording");
 }
 
 BOOST_AUTO_TEST_CASE(full_impact) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
+    reader.disruption = new chaos::Disruption();
 
     Const_it const_it;
     const_it.set_impact("1", "11", "22");
     const_it.set_severity("2", "wording", "22", "33",
             "blocking", "color", "2");
-    auto impact = reader.disruption->add_impacts();
-    reader.fill_impact(const_it, impact);
-    BOOST_CHECK_EQUAL(impact->id(), "1");
-    BOOST_CHECK_EQUAL(impact->created_at(), 11);
-    BOOST_CHECK_EQUAL(impact->updated_at(), 22);
-    BOOST_CHECK_EQUAL(impact->severity().id(), "2");
-    BOOST_CHECK_EQUAL(impact->severity().created_at(), 22);
-    BOOST_CHECK_EQUAL(impact->severity().wording(), "wording");
-    BOOST_CHECK_EQUAL(impact->severity().updated_at(), 33);
-    BOOST_CHECK_EQUAL(impact->severity().color(), "color");
-    BOOST_CHECK_EQUAL(impact->severity().effect(), transit_realtime::Alert::Effect::Alert_Effect_NO_SERVICE);
+    reader.fill_impact(const_it);
+    BOOST_REQUIRE_EQUAL(reader.disruption->impacts_size(), 1);
+    auto impact = reader.disruption->impacts(0);
+    BOOST_CHECK_EQUAL(impact.id(), "1");
+    BOOST_CHECK_EQUAL(impact.created_at(), 11);
+    BOOST_CHECK_EQUAL(impact.updated_at(), 22);
+    BOOST_CHECK_EQUAL(impact.severity().id(), "2");
+    BOOST_CHECK_EQUAL(impact.severity().created_at(), 22);
+    BOOST_CHECK_EQUAL(impact.severity().wording(), "wording");
+    BOOST_CHECK_EQUAL(impact.severity().updated_at(), 33);
+    BOOST_CHECK_EQUAL(impact.severity().color(), "color");
+    BOOST_CHECK_EQUAL(impact.severity().effect(), transit_realtime::Alert::Effect::Alert_Effect_NO_SERVICE);
 }
 
 BOOST_AUTO_TEST_CASE(application_period) {
@@ -324,26 +334,29 @@ BOOST_AUTO_TEST_CASE(application_period) {
 
     Const_it const_it;
     const_it.set_application_period("0", "1", "2");
-    auto impact = reader.disruption->add_impacts();
-    auto application = impact->add_application_periods();
-    reader.fill_application_period(const_it, application);
-    BOOST_CHECK_EQUAL(application->start(), 1);
-    BOOST_CHECK_EQUAL(application->end(), 2);
+    reader.impact = new chaos::Impact();
+    reader.fill_application_period(const_it);
+    BOOST_CHECK_EQUAL(reader.impact->application_periods_size(), 1);
+    auto application = reader.impact->application_periods(0);
+    BOOST_CHECK_EQUAL(application.start(), 1);
+    BOOST_CHECK_EQUAL(application.end(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(pt_object) {
     navitia::type::PT_Data pt_data;
     navitia::DisruptionDatabaseReader reader(pt_data);
+    reader.disruption = new chaos::Disruption();
 
     Const_it const_it;
     const_it.set_ptobject("id", "uri", "line", "1", "2");
-    auto impact = reader.disruption->add_impacts();
-    auto ptobject = impact->add_informed_entities();
-    reader.fill_pt_object(const_it, ptobject);
-    BOOST_CHECK_EQUAL(ptobject->uri(), "uri");
-    BOOST_CHECK_EQUAL(ptobject->pt_object_type(), chaos::PtObject_Type_line);
-    BOOST_CHECK_EQUAL(ptobject->created_at(), 1);
-    BOOST_CHECK_EQUAL(ptobject->updated_at(), 2);
+    reader.impact = new chaos::Impact();
+    reader.fill_pt_object(const_it);
+    BOOST_REQUIRE_EQUAL(reader.impact->informed_entities_size(), 1);
+    auto ptobject = reader.impact->informed_entities(0);
+    BOOST_CHECK_EQUAL(ptobject.uri(), "uri");
+    BOOST_CHECK_EQUAL(ptobject.pt_object_type(), chaos::PtObject_Type_line);
+    BOOST_CHECK_EQUAL(ptobject.created_at(), 1);
+    BOOST_CHECK_EQUAL(ptobject.updated_at(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(one_of_each) {
@@ -402,4 +415,182 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
     BOOST_CHECK_EQUAL(ptobject.pt_object_type(), chaos::PtObject_Type_line);
     BOOST_CHECK_EQUAL(ptobject.created_at(), 1);
     BOOST_CHECK_EQUAL(ptobject.updated_at(), 2);
+}
+BOOST_AUTO_TEST_CASE(two_tags) {
+    navitia::type::PT_Data pt_data;
+    navitia::DisruptionDatabaseReader reader(pt_data);
+
+    Const_it const_it;
+    const_it.set_disruption("1", "22", "33", "44", "55",
+            "note", "reference");
+    const_it.set_cause("1", "wording", "11", "22");
+    const_it.set_tag("1", "name", "11", "22");
+    const_it.set_impact("1", "11", "22");
+    const_it.set_severity("2", "wording", "22", "33",
+            "blocking", "color", "2");
+    const_it.set_application_period("0", "1", "2");
+    const_it.set_ptobject("id", "uri", "line", "1", "2");
+    reader(const_it);
+    const_it.set_tag("2", "name2", "33", "44");
+    reader(const_it);
+    auto disruption = reader.disruption;
+    BOOST_CHECK_EQUAL(disruption->id(), "1");
+    auto cause = disruption->cause();
+    BOOST_CHECK_EQUAL(cause.id(), "1");
+    BOOST_REQUIRE_EQUAL(disruption->tags_size(), 2);
+    auto tag = disruption->tags(0);
+    BOOST_CHECK_EQUAL(tag.id(), "1");
+    BOOST_CHECK_EQUAL(tag.name(), "name");
+    BOOST_CHECK_EQUAL(tag.created_at(), 11);
+    BOOST_CHECK_EQUAL(tag.updated_at(), 22);
+    BOOST_REQUIRE_EQUAL(disruption->impacts_size(), 1);
+    tag = disruption->tags(1);
+    BOOST_CHECK_EQUAL(tag.id(), "2");
+    BOOST_CHECK_EQUAL(tag.name(), "name2");
+    BOOST_CHECK_EQUAL(tag.created_at(), 33);
+    BOOST_CHECK_EQUAL(tag.updated_at(), 44);
+    BOOST_REQUIRE_EQUAL(disruption->impacts_size(), 1);
+    auto impact = disruption->impacts(0);
+    BOOST_CHECK_EQUAL(impact.id(), "1");
+    auto severity = impact.severity();
+    BOOST_CHECK_EQUAL(severity.id(), "2");
+    BOOST_REQUIRE_EQUAL(impact.application_periods_size(), 1);
+    auto application = impact.application_periods(0);
+    BOOST_CHECK_EQUAL(application.start(), 1);
+    BOOST_REQUIRE_EQUAL(impact.informed_entities_size(), 1);
+    auto ptobject = impact.informed_entities(0);
+    BOOST_CHECK_EQUAL(ptobject.uri(), "uri");
+}
+BOOST_AUTO_TEST_CASE(two_impacts) {
+    navitia::type::PT_Data pt_data;
+    navitia::DisruptionDatabaseReader reader(pt_data);
+
+    Const_it const_it;
+    const_it.set_disruption("1", "22", "33", "44", "55",
+            "note", "reference");
+    const_it.set_cause("1", "wording", "11", "22");
+    const_it.set_tag("1", "name", "11", "22");
+    const_it.set_impact("1", "11", "22");
+    const_it.set_severity("2", "wording", "22", "33",
+            "blocking", "color", "2");
+    const_it.set_application_period("0", "1", "2");
+    const_it.set_ptobject("id", "uri", "line", "1", "2");
+    reader(const_it);
+    const_it.set_impact("2", "33", "44");
+    reader(const_it);
+    auto disruption = reader.disruption;
+    BOOST_CHECK_EQUAL(disruption->id(), "1");
+    auto cause = disruption->cause();
+    BOOST_CHECK_EQUAL(cause.id(), "1");
+    BOOST_REQUIRE_EQUAL(disruption->tags_size(), 1);
+    auto tag = disruption->tags(0);
+    BOOST_CHECK_EQUAL(tag.id(), "1");
+    BOOST_CHECK_EQUAL(tag.name(), "name");
+    BOOST_CHECK_EQUAL(tag.created_at(), 11);
+    BOOST_CHECK_EQUAL(tag.updated_at(), 22);
+    BOOST_REQUIRE_EQUAL(disruption->impacts_size(), 2);
+    auto impact = disruption->impacts(0);
+    BOOST_CHECK_EQUAL(impact.id(), "1");
+    BOOST_CHECK_EQUAL(impact.created_at(), 11);
+    BOOST_CHECK_EQUAL(impact.updated_at(), 22);
+    impact = disruption->impacts(1);
+    BOOST_CHECK_EQUAL(impact.id(), "2");
+    BOOST_CHECK_EQUAL(impact.created_at(), 33);
+    BOOST_CHECK_EQUAL(impact.updated_at(), 44);
+    auto severity = impact.severity();
+    BOOST_CHECK_EQUAL(severity.id(), "2");
+    BOOST_REQUIRE_EQUAL(impact.application_periods_size(), 1);
+    auto application = impact.application_periods(0);
+    BOOST_CHECK_EQUAL(application.start(), 1);
+    BOOST_REQUIRE_EQUAL(impact.informed_entities_size(), 1);
+    auto ptobject = impact.informed_entities(0);
+    BOOST_CHECK_EQUAL(ptobject.uri(), "uri");
+}
+
+BOOST_AUTO_TEST_CASE(two_application_periods) {
+    navitia::type::PT_Data pt_data;
+    navitia::DisruptionDatabaseReader reader(pt_data);
+
+    Const_it const_it;
+    const_it.set_disruption("1", "22", "33", "44", "55",
+            "note", "reference");
+    const_it.set_cause("1", "wording", "11", "22");
+    const_it.set_tag("1", "name", "11", "22");
+    const_it.set_impact("1", "11", "22");
+    const_it.set_severity("2", "wording", "22", "33",
+            "blocking", "color", "2");
+    const_it.set_application_period("0", "1", "2");
+    const_it.set_ptobject("id", "uri", "line", "1", "2");
+    reader(const_it);
+    const_it.set_application_period("1", "2", "3");
+    reader(const_it);
+    auto disruption = reader.disruption;
+    BOOST_CHECK_EQUAL(disruption->id(), "1");
+    auto cause = disruption->cause();
+    BOOST_CHECK_EQUAL(cause.id(), "1");
+    BOOST_REQUIRE_EQUAL(disruption->tags_size(), 1);
+    auto tag = disruption->tags(0);
+    BOOST_CHECK_EQUAL(tag.id(), "1");
+    BOOST_CHECK_EQUAL(tag.name(), "name");
+    BOOST_CHECK_EQUAL(tag.created_at(), 11);
+    BOOST_CHECK_EQUAL(tag.updated_at(), 22);
+    BOOST_REQUIRE_EQUAL(disruption->impacts_size(), 1);
+    auto impact = disruption->impacts(0);
+    BOOST_CHECK_EQUAL(impact.id(), "1");
+    BOOST_CHECK_EQUAL(impact.created_at(), 11);
+    BOOST_CHECK_EQUAL(impact.updated_at(), 22);
+    auto severity = impact.severity();
+    BOOST_CHECK_EQUAL(severity.id(), "2");
+    BOOST_REQUIRE_EQUAL(impact.application_periods_size(), 2);
+    auto application = impact.application_periods(0);
+    BOOST_CHECK_EQUAL(application.start(), 1);
+    application = impact.application_periods(1);
+    BOOST_CHECK_EQUAL(application.start(), 2);
+    BOOST_REQUIRE_EQUAL(impact.informed_entities_size(), 1);
+    auto ptobject = impact.informed_entities(0);
+    BOOST_CHECK_EQUAL(ptobject.uri(), "uri");
+}
+
+BOOST_AUTO_TEST_CASE(two_ptobjects) {
+    navitia::type::PT_Data pt_data;
+    navitia::DisruptionDatabaseReader reader(pt_data);
+
+    Const_it const_it;
+    const_it.set_disruption("1", "22", "33", "44", "55",
+            "note", "reference");
+    const_it.set_cause("1", "wording", "11", "22");
+    const_it.set_tag("1", "name", "11", "22");
+    const_it.set_impact("1", "11", "22");
+    const_it.set_severity("2", "wording", "22", "33",
+            "blocking", "color", "2");
+    const_it.set_application_period("0", "1", "2");
+    const_it.set_ptobject("id", "uri", "line", "1", "2");
+    reader(const_it);
+    const_it.set_ptobject("id2", "uri2", "line", "1", "2");
+    reader(const_it);
+    auto disruption = reader.disruption;
+    BOOST_CHECK_EQUAL(disruption->id(), "1");
+    auto cause = disruption->cause();
+    BOOST_CHECK_EQUAL(cause.id(), "1");
+    BOOST_REQUIRE_EQUAL(disruption->tags_size(), 1);
+    auto tag = disruption->tags(0);
+    BOOST_CHECK_EQUAL(tag.id(), "1");
+    BOOST_CHECK_EQUAL(tag.name(), "name");
+    BOOST_CHECK_EQUAL(tag.created_at(), 11);
+    BOOST_CHECK_EQUAL(tag.updated_at(), 22);
+    BOOST_REQUIRE_EQUAL(disruption->impacts_size(), 1);
+    auto impact = disruption->impacts(0);
+    BOOST_CHECK_EQUAL(impact.id(), "1");
+    BOOST_CHECK_EQUAL(impact.created_at(), 11);
+    BOOST_CHECK_EQUAL(impact.updated_at(), 22);
+    auto severity = impact.severity();
+    BOOST_CHECK_EQUAL(severity.id(), "2");
+    BOOST_REQUIRE_EQUAL(impact.application_periods_size(), 1);
+    auto application = impact.application_periods(0);
+    BOOST_CHECK_EQUAL(application.start(), 1);
+    BOOST_REQUIRE_EQUAL(impact.informed_entities_size(), 2);
+    auto ptobject = impact.informed_entities(0);
+    BOOST_CHECK_EQUAL(ptobject.uri(), "uri");
+    ptobject = impact.informed_entities(1);
+    BOOST_CHECK_EQUAL(ptobject.uri(), "uri2");
 }
