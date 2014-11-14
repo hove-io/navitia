@@ -280,6 +280,7 @@ void Data::complete(){
     admin = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     compute_labels();
+
     start = pt::microsec_clock::local_time();
     pt_data->sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
@@ -442,14 +443,18 @@ void Data::compute_labels() {
             boost::algorithm::split(str_vec, admin->post_code, boost::algorithm::is_any_of(";"));
             int min_value = std::numeric_limits<int>::max();
             int max_value = std::numeric_limits<int>::min();
+            try {
             for (const std::string& str_post_code : str_vec) {
                 int int_post_code;
-                try {
+
                     int_post_code = boost::lexical_cast<int>(str_post_code);
                     min_value = std::min(min_value, int_post_code);
                     max_value = std::max(max_value, int_post_code);
                 }
-                catch (boost::bad_lexical_cast) {}
+            }
+            catch (boost::bad_lexical_cast) {
+                //if one fail, we display all postcode
+                min_value = std::numeric_limits<int>::max();
             }
             if (min_value != std::numeric_limits<int>::max()) {
                 post_code = boost::lexical_cast<std::string>(min_value)
