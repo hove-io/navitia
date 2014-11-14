@@ -67,6 +67,10 @@ instance_fields = {'id': fields.Raw,
                    'bike_speed': fields.Raw,
                    'bss_speed': fields.Raw,
                    'car_speed': fields.Raw,
+                   'destineo_min_bike': fields.Raw,
+                   'destineo_min_car': fields.Raw,
+                   'destineo_min_tc_with_bike': fields.Raw,
+                   'destineo_min_tc_with_car': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
