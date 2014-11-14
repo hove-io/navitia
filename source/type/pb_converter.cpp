@@ -1196,7 +1196,8 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 }
 
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
-                    pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
+                    pbnavitia::PtDisplayInfo* pt_display_info, const nt::StopPoint* origin,
+                    const nt::StopPoint* destination, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period)
 {
     if(vj == nullptr)
@@ -1219,8 +1220,58 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     }
     pt_display_info->set_description(vj->odt_message);
     pt_display_info->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
-
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
+    if(origin && destination){
+        fill_pb_object(vj, data, has_equipments, origin, destination,  max_depth-1, now, action_period);
+    }else{
+        fill_pb_object(vj, data, has_equipments, max_depth-1, now, action_period);
+    }
+}
+
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data&,
+                    pbnavitia::hasEquipments* has_equipments, const nt::StopPoint* origin,
+                    const nt::StopPoint* destination, int,
+                    const pt::ptime&, const pt::time_period&){
+    bool wheelchair_accessible = vj->wheelchair_accessible() && origin->wheelchair_boarding()
+        && destination->wheelchair_boarding();
+    if (wheelchair_accessible){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_accessibility);
+    }
+    if (vj->bike_accepted()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_bike_accepted);
+    }
+    if (vj->air_conditioned()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_air_conditioned);
+    }
+    bool visual_announcement = vj->visual_announcement() && origin->visual_announcement()
+        && destination->visual_announcement();
+    if (visual_announcement){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_visual_announcement);
+    }
+    bool audible_announcement = vj->audible_announcement() && origin->audible_announcement()
+        && destination->audible_announcement();
+    if (audible_announcement){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_audible_announcement);
+    }
+    bool appropriate_escort = vj->appropriate_escort() && origin->appropriate_escort()
+        && destination->appropriate_escort();
+    if (appropriate_escort){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_escort);
+    }
+    bool appropriate_signage = vj->appropriate_signage() && origin->appropriate_signage()
+        && destination->appropriate_signage();
+    if (appropriate_signage){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_appropriate_signage);
+    }
+    if (vj->school_vehicle()){
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_school_vehicle);
+    }
+
+}
+
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data&,
+                    pbnavitia::hasEquipments* has_equipments, int,
+                    const pt::ptime&, const pt::time_period&){
     if (vj->wheelchair_accessible()){
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_accessibility);
     }
@@ -1245,6 +1296,14 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     if (vj->school_vehicle()){
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_school_vehicle);
     }
+
+}
+
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
+                    pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period)
+{
+    fill_pb_object(vj, data, pt_display_info, nullptr, nullptr, max_depth, now, action_period);
 }
 
 void fill_pb_object(const nt::Calendar* cal, const nt::Data& data,

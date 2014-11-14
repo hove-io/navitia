@@ -70,12 +70,12 @@ message PtDisplayInfo {
     optional string color = 5;
     optional string commercial_mode = 6;
     optional string physical_mode = 7;
-  	optional string description = 8;
-  	optional Uris uris = 9;
-  	optional VehicleJourneyType vehicle_journey_type = 10;
-  	optional hasEquipments has_equipments = 11;
-  	optional string name = 12;
-  	repeated Message messages = 13;
+    optional string description = 8;
+    optional Uris uris = 9;
+    optional VehicleJourneyType vehicle_journey_type = 10;
+    optional hasEquipments has_equipments = 11;
+    optional string name = 12;
+    repeated Message messages = 13;
 }
 
 message Uris {
@@ -218,8 +218,8 @@ message addInfoVehicleJourney{
 }
 
 message Header{
-	required PtDisplayInfo pt_display_informations = 1;
-	required addInfoVehicleJourney add_info_vehicle_journey = 2;
+    required PtDisplayInfo pt_display_informations = 1;
+    required addInfoVehicleJourney add_info_vehicle_journey = 2;
 }
 
 message Table {
@@ -307,9 +307,9 @@ message Error{
 }
 
 message Disruption{
-	optional Network network = 1;
-	repeated Line lines = 2;
-	repeated StopArea stop_areas = 3;	
+    optional Network network = 1;
+    repeated Line lines = 2;
+    repeated StopArea stop_areas = 3;   
 }
 
 message Response{
