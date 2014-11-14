@@ -47,7 +47,8 @@ void fill_disruption_from_database(const std::string& connection_string,
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
     }catch(const pqxx::pqxx_exception& e){
-        throw navitia::exception(e.base().what());
+        throw navitia::exception(std::string("Unable to connect to chaos database: ")
+                + std::string(e.base().what()));
     }
     pqxx::work work(*conn, "loading disruptions");
 
