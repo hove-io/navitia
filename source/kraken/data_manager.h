@@ -40,6 +40,7 @@ www.navitia.io
 #include <memory>
 #include <iostream>
 #include <boost/make_shared.hpp>
+#include <boost/optional.hpp>
 
 template<typename Data>
 class DataManager{
@@ -70,11 +71,11 @@ public:
 #endif
     }
 
-    bool load(const std::string& database, const bool chaos_activation,
-            const std::string& chaos_database){
+    bool load(const std::string& database, 
+              const boost::optional<std::string>& chaos_database){
         bool success;
         auto data = boost::make_shared<Data>();
-        success = data->load(database, chaos_activation, chaos_database);
+        success = data->load(database, chaos_database);
         if (success) {
             set_data(std::move(data));
         } else {

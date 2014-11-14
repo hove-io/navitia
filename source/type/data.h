@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <atomic>
 #include "type/type.h"
 #include "utils/serialization_unique_ptr.h"
@@ -150,8 +151,8 @@ public:
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     /** Charge les données et effectue les initialisations nécessaires */
-    bool load(const std::string & filename, const bool chaos_activation=false,
-            const std::string& chaos_database = "");
+    bool load(const std::string & filename,
+            const boost::optional<std::string>& chaos_database = {{""}});
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;

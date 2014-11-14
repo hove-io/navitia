@@ -76,8 +76,8 @@ Data::Data() :
 
 Data::~Data(){}
 
-bool Data::load(const std::string& filename, const bool chaos_activation,
-        const std::string& chaos_database) {
+bool Data::load(const std::string& filename,
+        const boost::optional<std::string>& chaos_database) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     loading = true;
     try {
@@ -101,8 +101,8 @@ bool Data::load(const std::string& filename, const bool chaos_activation,
         LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
         last_load = false;
     }
-    if (chaos_activation) {
-        fill_disruption_from_database(chaos_database, *pt_data);
+    if (chaos_database) {
+        fill_disruption_from_database(*chaos_database, *pt_data);
     }
     loading = false;
     return this->last_load;
