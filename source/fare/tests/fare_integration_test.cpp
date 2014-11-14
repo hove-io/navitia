@@ -60,6 +60,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
+    b.data->compute_labels();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
 
     RAPTOR raptor(*b.data);
@@ -147,6 +148,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
+    b.data->compute_labels();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
 
     RAPTOR raptor(*b.data);
