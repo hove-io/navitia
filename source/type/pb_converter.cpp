@@ -1037,6 +1037,8 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
                 pb_address->mutable_coord()->set_lat(geopoi->coord.lat());
                 pb_address->mutable_coord()->set_lon(geopoi->coord.lon());
             }
+            pb_address->set_label(std::to_string(geopoi->address_number) + " "
+                                  + geopoi->label);
         }
     }
     for(const auto& propertie : geopoi->properties){
