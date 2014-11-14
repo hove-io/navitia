@@ -68,6 +68,7 @@ namespace navitia {
                     last_period_id = "";
         navitia::type::PT_Data& pt_data;
 
+        // This function and all others below are templated so they can be tested
         template<typename T>
         void operator() (T const_it) {
             if (!disruption || disruption->id() !=
