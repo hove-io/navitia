@@ -139,6 +139,26 @@ class Instance(object):
         instance_db = self._get_models()
         return get_value_or_default('max_nb_transfers', instance_db, self.name)
 
+    @property
+    def destineo_min_tc_with_car(self):
+        instance_db = self._get_models()
+        return get_value_or_default('destineo_min_tc_with_car', instance_db, self.name)
+
+    @property
+    def destineo_min_tc_with_bike(self):
+        instance_db = self._get_models()
+        return get_value_or_default('destineo_min_tc_with_bike', instance_db, self.name)
+
+    @property
+    def destineo_min_bike(self):
+        instance_db = self._get_models()
+        return get_value_or_default('destineo_min_bike', instance_db, self.name)
+
+    @property
+    def destineo_min_car(self):
+        instance_db = self._get_models()
+        return get_value_or_default('destineo_min_car', instance_db, self.name)
+
     @contextmanager
     def socket(self, context):
         socket = None

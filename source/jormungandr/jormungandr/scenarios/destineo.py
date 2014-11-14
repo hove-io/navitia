@@ -34,6 +34,8 @@ from navitiacommon import response_pb2
 from operator import itemgetter
 from datetime import datetime, timedelta
 
+non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
+
 def is_pure_tc(journey):
     has_tc = False
     for section in journey.sections:
@@ -106,6 +108,37 @@ def is_non_pt_bike(journey):
 def is_alternative(journey):
     return is_non_pt_bike(journey) or is_non_pt_walk(journey)
 
+def bike_duration(journey):
+    duration = 0
+    in_bss = False
+    for section in journey.sections:
+        if section.type == response_pb2.BSS_RENT:
+            in_bss = True
+        if section.type == response_pb2.BSS_PUT_BACK:
+            in_bss = False
+        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
+                and section.street_network.mode == response_pb2.Bike \
+                and not in_bss:
+            duration = duration + section.duration
+
+    return duration
+
+def car_duration(journey):
+    duration = 0
+    for section in journey.sections:
+        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
+                and section.street_network.mode == response_pb2.Car:
+            duration = duration + section.duration
+
+    return duration
+
+def tc_duration(journey):
+    duration = 0
+    for section in journey.sections:
+        if section.type == response_pb2.PUBLIC_TRANSPORT:
+            duration = duration + section.duration
+
+    return duration
 
 class DestineoJourneySorter(JourneySorter):
     """
@@ -210,6 +243,8 @@ class Scenario(default.Scenario):
         logger.debug('merge and sort reponses')
 
         self._remove_car_if_possible(response_alternative)
+        self._remove_not_long_enough_fallback(response_alternative.journeys, instance)
+        self._remove_not_long_enough_tc_with_fallback(response_alternative.journeys, instance)
 
         self.merge_response(response_tc, response_alternative)
         for journey in response_tc.journeys:
@@ -227,8 +262,47 @@ class Scenario(default.Scenario):
         return response_tc
 
 
+    def _remove_not_long_enough_fallback(self, journeys, instance):
+        to_delete = []
+        for idx, journey in enumerate(journeys):
+            if journey.type in non_pt_types:
+                continue
+            bike_dur = bike_duration(journey)
+            car_dur = car_duration(journey)
+            if bike_dur and bike_dur < instance.destineo_min_bike:
+                to_delete.append(idx)
+            elif car_dur and car_dur < instance.destineo_min_car:
+                to_delete.append(idx)
+
+        logger = logging.getLogger(__name__)
+        logger.debug('remove %s journey with not enough fallback duration: %s',
+                len(to_delete), [journeys[i].type for i in to_delete])
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del journeys[idx]
+
+
+    def _remove_not_long_enough_tc_with_fallback(self, journeys, instance):
+        to_delete = []
+        for idx, journey in enumerate(journeys):
+            if journey.type in non_pt_types:
+                continue
+            bike_dur = bike_duration(journey)
+            car_dur = car_duration(journey)
+            tc_dur = tc_duration(journey)
+            if bike_dur and tc_dur < instance.destineo_min_tc_with_bike:
+                to_delete.append(idx)
+            elif car_dur and tc_dur < instance.destineo_min_tc_with_car:
+                to_delete.append(idx)
+
+        logger = logging.getLogger(__name__)
+        logger.debug('remove %s journey with not enough tc duration: %s',
+                len(to_delete), [journeys[i].type for i in to_delete])
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del journeys[idx]
+
     def _remove_car_if_possible(self, response):
-        non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
         fallback_journeys = [journey for journey in response.journeys if journey.type not in non_pt_types]
         if len(fallback_journeys) > 1:
             to_delete = [idx for idx, j in enumerate(response.journeys) if j.type == 'car']
