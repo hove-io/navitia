@@ -246,6 +246,12 @@ find_matching_calendar(const Data&, const std::string& name, const ValidityPatte
     LOG4CPLUS_TRACE(log, "meta vj " << name << " :" << validity_pattern.days.to_string());
 
     for (const auto calendar : calendar_list) {
+        // sometimes a calendar can be empty (for example if it's validity period does not
+        // intersect the data's validity period)
+        // we do not filter those calendar since it's a user input, but we do not match them
+        if (! calendar->validity_pattern.days.any()) {
+            continue;
+        }
         auto diff = get_difference(calendar->validity_pattern.days, validity_pattern.days);
         size_t nb_diff = diff.count();
 
