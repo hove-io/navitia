@@ -149,6 +149,7 @@ public:
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges;
     }
+    std::string get_label() const;
 
 private:
       nt::GeographicalCoord get_geographical_coord(const std::vector< HouseNumber>&, const int);

@@ -47,6 +47,37 @@ namespace pt = boost::posix_time;
 
 namespace navitia{
 
+template <typename T>
+void fill_address(const T* obj, const nt::Data& data,
+                    pbnavitia::Address* address, const std::string address_name, int house_number,
+                    const type::GeographicalCoord& coord, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period) {
+    if(obj == nullptr)
+        return ;
+    int depth = (max_depth <= 3) ? max_depth : 3;
+    address->set_name(address_name);
+    std::string label;
+    if(house_number >= 0){
+        address->set_house_number(house_number);
+        label += std::to_string(house_number) + " ";
+    }
+    label += get_label(obj);
+    address->set_label(label);
+
+    if(coord.is_initialized()) {
+        address->mutable_coord()->set_lon(coord.lon());
+        address->mutable_coord()->set_lat(coord.lat());
+    }
+    address->set_uri(obj->uri);
+
+    if(depth > 0){
+        for(georef::Admin* admin : obj->admin_list){
+            fill_pb_object(admin, data,  address->add_administrative_regions(),
+                           depth-1, now, action_period);
+        }
+    }
+}
+
 void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
                     pbnavitia::Properties* properties, int,
                     const boost::posix_time::ptime&, const boost::posix_time::time_period&){
@@ -201,35 +232,11 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
     }
 }
 
-
 void fill_pb_object(const navitia::georef::Way* way, const nt::Data& data,
                     pbnavitia::Address * address, int house_number,
                     const type::GeographicalCoord& coord, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
-    if(way == nullptr)
-        return ;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    address->set_name(way->name);
-    std::string label;
-    if(house_number >= 0){
-        address->set_house_number(house_number);
-        label += std::to_string(house_number) + " ";
-    }
-    label += way->name + navitia::type::get_admin_name(way);
-    address->set_label(label);
-
-    if(coord.is_initialized()) {
-        address->mutable_coord()->set_lon(coord.lon());
-        address->mutable_coord()->set_lat(coord.lat());
-    }
-    address->set_uri(way->uri);
-
-    if(depth > 0){
-        for(georef::Admin* admin : way->admin_list){
-            fill_pb_object(admin, data,  address->add_administrative_regions(),
-                           depth-1, now, action_period);
-        }
-    }
+   fill_address(way, data, address, way->name, house_number, coord, max_depth, now, action_period);
 }
 
 void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::Data &data, pbnavitia::Address* address,
@@ -655,19 +662,8 @@ void fill_pb_placemark(const navitia::georef::Way* way,
     fill_pb_object(way, data, place->mutable_address(),
                    house_number, coord , depth,
                    now, action_period);
-    if(place->address().has_house_number()) {
-        if (house_number > 0){
-            auto str_house_number = std::to_string(house_number) + " ";
-            place->set_name(str_house_number);
-        }
-    }
-    auto str_street_name = place->address().name();
-    place->set_name(place->name() + str_street_name);
-    for(auto admin : place->address().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
+
+    place->set_name(place->address().label());
 
     place->set_uri(place->address().uri());
     place->set_embedded_type(pbnavitia::ADDRESS);
@@ -1027,18 +1023,12 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
             fill_pb_object(admin, data,  poi->add_administrative_regions(),
                            depth-1, now, action_period);
         }
-        pbnavitia::Address * pb_address = poi->mutable_address();
+        pbnavitia::Address* pb_address = poi->mutable_address();
         if(geopoi->address_name.empty()){
             fill_pb_object(geopoi->coord, data, pb_address, depth - 1, now, action_period);
         }else{
-            pb_address->set_name(geopoi->address_name);
-            pb_address->set_house_number(geopoi->address_number);
-            if(geopoi->coord.is_initialized()) {
-                pb_address->mutable_coord()->set_lat(geopoi->coord.lat());
-                pb_address->mutable_coord()->set_lon(geopoi->coord.lon());
-            }
-            pb_address->set_label(std::to_string(geopoi->address_number) + " "
-                                  + geopoi->label);
+            fill_address(geopoi, data, pb_address,
+                         geopoi->address_name, geopoi->address_number, geopoi->coord, max_depth, now, action_period);
         }
     }
     for(const auto& propertie : geopoi->properties){

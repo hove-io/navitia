@@ -738,6 +738,9 @@ def is_valid_region_status(status):
     get_valid_datetime(get_not_null(status, 'publication_date'), possible_errors=True)
 
 
+# for () are mandatory for the label even if is reality it is not
+# (for example if the admin has no post code or a stop no admin)
+# This make the test data a bit more difficult to create, but that way we can check the label creation
 label_regexp = re.compile(".* \(.*\)")
 
 

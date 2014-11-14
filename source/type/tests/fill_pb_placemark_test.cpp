@@ -53,16 +53,16 @@ BOOST_AUTO_TEST_CASE(get_label_test) {
         std::string label = "bobitto's the best";
         //label should be prefered to name
     };
-    struct bobitta {
-        std::string label = "bobitta";
-        std::string get_label() const { return label + "'s the best"; }
-        //label should be prefered to get_label()
+    struct bobitte {
+        std::string name = "bobitte";
+        std::string get_label() const { return name + "'s the best"; }
+        //get_label should be prefered to name
     };
 
     BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bob>().get()), "sponge bob");
     BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobette>().get()), "bobette");
     BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobitto>().get()), "bobitto's the best");
-    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobitta>().get()), "bobitta");
+    BOOST_CHECK_EQUAL(navitia::get_label(std::make_unique<bobitte>().get()), "bobitte's the best");
 }
 
 BOOST_AUTO_TEST_CASE(name_formater_sa) {

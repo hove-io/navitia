@@ -237,12 +237,11 @@ void fill_pb_placemark(const navitia::georef::Admin* value, const type::Data &da
 
 /**
  * get_label() is a function that returns:
- * * the label if the object has it
- * * call get_label if possible
+ * * the label (or a function get_label()) if the object has it
  * * else return the name of the object
  *
  * Note: the trick is that int is a better match for 0 than
- * long and long is better than double, and template resolution takes the best match
+ * long and template resolution takes the best match
  */
 namespace detail {
 template<typename T>
@@ -251,12 +250,12 @@ auto get_label_if_exists(const T* v, int) -> decltype(v->label) {
 }
 
 template<typename T>
-auto get_label_if_exists(const T* v, long) -> decltype(v->get_label()) {
+auto get_label_if_exists(const T* v, int) -> decltype(v->get_label()) {
     return v->get_label();
 }
 
 template<typename T>
-auto get_label_if_exists(const T* v, double) -> decltype(v->name) {
+auto get_label_if_exists(const T* v, long) -> decltype(v->name) {
     return v->name;
 }
 }
