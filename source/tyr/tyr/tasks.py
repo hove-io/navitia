@@ -266,18 +266,13 @@ def build_data(instance):
     models.db.session.add(job)
     models.db.session.commit()
     chain(ed2nav.si(instance_config, job.id),
-                        nav2rt.si(instance_config, job.id)).delay()
+                        nav2rt.si(instance_config, job.id), finish_job.si(job.id)).delay()
     current_app.logger.info("Job build data of : %s queued"%instance.name)
 
 
 @celery.task()
 def load_data(instance_id, data_path):
     instance = models.Instance.query.get(instance_id)
-    job = models.Job()
-    job.instance = instance
-    job.state = 'pending'
-    models.db.session.add(job)
-    models.db.session.commit()
     files = glob.glob(data_path + "/*")
 
     import_data(files, instance, backup_file=False, async=False)
