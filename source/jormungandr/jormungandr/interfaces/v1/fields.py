@@ -235,7 +235,6 @@ class equipments(fields.Raw):
 class disruption_status(fields.Raw):
     def output(self, key, obj):
         status = obj.status
-        a = type_pb2.ActiveStatus
         d = type_pb2.ActiveStatus.DESCRIPTOR
         return str.lower(d.values_by_number[status].name)
 
