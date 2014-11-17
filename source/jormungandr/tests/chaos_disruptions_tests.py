@@ -36,6 +36,11 @@ from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 import chaos_pb2
 from time import sleep
+import uuid
+
+
+#we need to generate a unique topic not to have conflict between tests
+chaos_rt_topic = 'bob_{}'.format(uuid.uuid1())
 
 
 class ChaosDisruptionsFixture(AbstractTestFixture):
@@ -60,7 +65,7 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
     def send_chaos_disruption(self, disruption_name, impacted_obj, impacted_obj_type):
         item = make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type)
         with self._get_producer() as producer:
-            producer.publish(item, exchange=self._exchange, routing_key='bob', declare=[self._exchange])
+            producer.publish(item, exchange=self._exchange, routing_key=chaos_rt_topic, declare=[self._exchange])
 
     def poll_until_reload(self, previous_val):
         """
@@ -70,6 +75,7 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
         """
         total_wait = 0
         waiting_time = 0.2  # in seconds
+        
         while True:
             status = self.query_region('status')
 
@@ -77,17 +83,37 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
 
             if last_loaded_data != previous_val:
                 return True
-            print "preivous = {}, new = {}".format(previous_val, last_loaded_data)
+            print "previous = {}, new = {}".format(previous_val, last_loaded_data)
 
-            if total_wait > 30:
+            if total_wait > 10:
                 # more than that is not normal, we fail
                 assert False, "kraken has not yet reloaded the data, something's wrong"
 
             total_wait += waiting_time
             sleep(waiting_time)
 
+    def wait_for_rabbit_mq_cnx(self):
+        """
+        poll until the kraken is connected to rabbitmq
+        """
+        total_wait = 0
+        waiting_time = 0.2  # in seconds
+        while True:
+            status = self.query_region('status')
 
-@dataset([("main_routing_test", ['--BROKER.rt_topics=bob', 'spawn_maintenance_worker'])])
+            is_connected = get_not_null(status['status'], 'is_connected_to_rabbitmq')
+
+            if is_connected:
+                return True
+
+            if total_wait > 20:
+                # more than that is not normal, we fail
+                assert False, "kraken is not yet connected to rabbitmq, something's wrong"
+
+            total_wait += waiting_time
+            sleep(waiting_time)
+
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptions(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -99,6 +125,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         then we mock a disruption sent from chaos, and we call again the pt object stopB
         we then must have a disruption
         """
+        self.wait_for_rabbit_mq_cnx()
         response = self.query_region('stop_areas/stopB')
 
         stops = get_not_null(response, 'stop_areas')
@@ -129,7 +156,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
 
 
-@dataset([("main_routing_test", ['--BROKER.rt_topics=bob', 'spawn_maintenance_worker'])])
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptions2(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -140,6 +167,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         at first no disruptions, we add one and we should get it
         """
+        self.wait_for_rabbit_mq_cnx()
         response = self.query_region(journey_basic_query)
 
         stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
@@ -246,3 +274,4 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type):
     message.channel.content_type = "html"
 
     return feed_message.SerializeToString()
+

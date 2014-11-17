@@ -162,8 +162,6 @@ class AbstractTestFixture:
             return 'arrival_time'
         Instance.journey_order = mock_journey_order
 
-
-
     @classmethod
     def teardown_class(cls):
         logging.info("Tearing down the tests {}, time to hunt the krakens down"
