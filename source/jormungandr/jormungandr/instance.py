@@ -59,6 +59,7 @@ class Instance(object):
         self._sockets = Queue.Queue()
         self.socket_path = None
         self._scenario = None
+        self._scenario_name = None
         self.nb_created_socket = 0
         self.lock = Lock()
         self.context = context
@@ -81,11 +82,13 @@ class Instance(object):
             instance_db = self._get_models()
             if instance_db:
                 logger.info('loading of scenario %s for instance %s', instance_db.scenario, self.name)
+                self._scenario_name = instance_db.scenario
                 module = import_module('jormungandr.scenarios.{}'.format(instance_db.scenario))
                 self._scenario = module.Scenario()
             else:
                 logger.warn('instance %s not found in db, we use the default script', self.name)
                 module = import_module('jormungandr.scenarios.default')
+                self._scenario_name = 'default'
                 self._scenario = module.Scenario()
         return self._scenario
 

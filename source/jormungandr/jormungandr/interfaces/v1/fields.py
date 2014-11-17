@@ -556,6 +556,7 @@ class UrisToLinks():
             response.append({"type": "note", "id": uris.note})
         return response
 
+
 instance_status = {
         "data_version": fields.Integer(),
         "end_production_date": fields.String(),
@@ -566,6 +567,27 @@ instance_status = {
         "nb_threads": fields.Integer(),
         "publication_date": fields.String(),
         "start_production_date": fields.String(),
-        "status": fields.String()
-    }
+        "status": fields.String(),
+}
+
+instance_parameters = {
+    'scenario': fields.Raw(attribute='_scenario_name'),
+    'journey_order': fields.Raw,
+    'max_walking_duration_to_pt': fields.Raw,
+    'max_bike_duration_to_pt': fields.Raw,
+    'max_bss_duration_to_pt': fields.Raw,
+    'max_car_duration_to_pt': fields.Raw,
+    'max_nb_transfers': fields.Raw,
+    'walking_speed': fields.Raw,
+    'bike_speed': fields.Raw,
+    'bss_speed': fields.Raw,
+    'car_speed': fields.Raw,
+    'destineo_min_bike': fields.Raw,
+    'destineo_min_car': fields.Raw,
+    'destineo_min_tc_with_bike': fields.Raw,
+    'destineo_min_tc_with_car': fields.Raw,
+}
+
+instance_status_with_parameters = deepcopy(instance_status)
+instance_status_with_parameters['parameters'] = fields.Nested(instance_parameters, allow_null=True)
 
