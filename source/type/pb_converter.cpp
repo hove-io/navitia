@@ -47,6 +47,37 @@ namespace pt = boost::posix_time;
 
 namespace navitia{
 
+template <typename T>
+void fill_address(const T* obj, const nt::Data& data,
+                    pbnavitia::Address* address, const std::string address_name, int house_number,
+                    const type::GeographicalCoord& coord, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period) {
+    if(obj == nullptr)
+        return ;
+    int depth = (max_depth <= 3) ? max_depth : 3;
+    address->set_name(address_name);
+    std::string label;
+    if(house_number >= 0){
+        address->set_house_number(house_number);
+        label += std::to_string(house_number) + " ";
+    }
+    label += get_label(obj);
+    address->set_label(label);
+
+    if(coord.is_initialized()) {
+        address->mutable_coord()->set_lon(coord.lon());
+        address->mutable_coord()->set_lat(coord.lat());
+    }
+    address->set_uri(obj->uri);
+
+    if(depth > 0){
+        for(georef::Admin* admin : obj->admin_list){
+            fill_pb_object(admin, data,  address->add_administrative_regions(),
+                           depth-1, now, action_period);
+        }
+    }
+}
+
 void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
                     pbnavitia::Properties* properties, int,
                     const boost::posix_time::ptime&, const boost::posix_time::time_period&){
@@ -76,6 +107,7 @@ void fill_pb_object(const georef::Admin* adm, const nt::Data&,
         return ;
     admin->set_name(adm->name);
     admin->set_uri(adm->uri);
+    admin->set_label(adm->label);
     if(adm->post_code != "")
         admin->set_zip_code(adm->post_code);
     admin->set_level(adm->level);
@@ -99,6 +131,7 @@ void fill_pb_object(const nt::StopArea * sa,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_area->set_uri(sa->uri);
     stop_area->set_name(sa->name);
+    stop_area->set_label(sa->label);
     stop_area->set_timezone(sa->timezone);
     if(!sa->comment.empty()) {
         stop_area->set_comment(sa->comment);
@@ -133,6 +166,7 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
     stop_point->set_uri(sp->uri);
     stop_point->set_name(sp->name);
+    stop_point->set_label(sp->label);
     if(!sp->platform_code.empty()) {
         stop_point->set_platform_code(sp->platform_code);
     }
@@ -198,30 +232,11 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
     }
 }
 
-
 void fill_pb_object(const navitia::georef::Way* way, const nt::Data& data,
                     pbnavitia::Address * address, int house_number,
                     const type::GeographicalCoord& coord, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
-    if(way == nullptr)
-        return ;
-    int depth = (max_depth <= 3) ? max_depth : 3;
-    address->set_name(way->name);
-    if(house_number >= 0){
-        address->set_house_number(house_number);
-    }
-    if(coord.is_initialized()) {
-        address->mutable_coord()->set_lon(coord.lon());
-        address->mutable_coord()->set_lat(coord.lat());
-    }
-    address->set_uri(way->uri);
-
-    if(depth > 0){
-        for(georef::Admin* admin : way->admin_list){
-            fill_pb_object(admin, data,  address->add_administrative_regions(),
-                           depth-1, now, action_period);
-        }
-    }
+   fill_address(way, data, address, way->name, house_number, coord, max_depth, now, action_period);
 }
 
 void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::Data &data, pbnavitia::Address* address,
@@ -626,38 +641,9 @@ void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &da
     int depth = (max_depth <= 3) ? max_depth : 3;
     fill_pb_object(admin, data, pt_object->mutable_administrative_region(), depth,
                    now, action_period, show_codes);
-    pt_object->set_name(admin->name);
-    //If city contains multi postal code(37000;37100;37200), we show only the smallest one in the result.
-    //"name": "Tours(37000;37100;37200)" becomes "name": "Tours(37000)"
-    if (!admin->post_code.empty()){
-        if (admin->post_code.find(";") != std::string::npos){
-            std::vector<std::string> str_vec;
-            boost::algorithm::split(str_vec, admin->post_code, boost::algorithm::is_any_of(";"));
-            assert(!str_vec.empty());
-            int min_value = std::numeric_limits<int>::max();
-            for (const std::string &str_post_code : str_vec){
-                int int_post_code;
-                try{
-                    int_post_code = boost::lexical_cast<int>(str_post_code);
-                }
-                catch (boost::bad_lexical_cast){
-                    continue;
-                }
-                if (int_post_code < min_value)
-                    min_value = int_post_code;
-            }
-            if (min_value != std::numeric_limits<int>::max()){
-                pt_object->set_name(pt_object->name() + " (" + boost::lexical_cast<std::string>(min_value) + ")");
-            }
-            else{
-                pt_object->set_name(pt_object->name() + " ()");
-            }
 
-        }
-        else{
-            pt_object->set_name(pt_object->name() + " (" + admin->post_code + ")");
-        }
-    }
+    // we get the label instead of the name to get some additional informations
+    pt_object->set_name(admin->label);
 
     pt_object->set_uri(admin->uri);
     pt_object->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
@@ -676,19 +662,8 @@ void fill_pb_placemark(const navitia::georef::Way* way,
     fill_pb_object(way, data, place->mutable_address(),
                    house_number, coord , depth,
                    now, action_period);
-    if(place->address().has_house_number()) {
-        if (house_number > 0){
-            auto str_house_number = std::to_string(house_number) + " ";
-            place->set_name(str_house_number);
-        }
-    }
-    auto str_street_name = place->address().name();
-    place->set_name(place->name() + str_street_name);
-    for(auto admin : place->address().administrative_regions()) {
-        if (admin.level() == 8){
-            place->set_name(place->name() + " (" + admin.name() + ")");
-        }
-    }
+
+    place->set_name(place->address().label());
 
     place->set_uri(place->address().uri());
     place->set_embedded_type(pbnavitia::ADDRESS);
@@ -1033,6 +1008,8 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
 
     poi->set_name(geopoi->name);
     poi->set_uri(geopoi->uri);
+    poi->set_label(geopoi->label);
+
     if(geopoi->coord.is_initialized()) {
         poi->mutable_coord()->set_lat(geopoi->coord.lat());
         poi->mutable_coord()->set_lon(geopoi->coord.lon());
@@ -1046,16 +1023,12 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
             fill_pb_object(admin, data,  poi->add_administrative_regions(),
                            depth-1, now, action_period);
         }
-        pbnavitia::Address * pb_address = poi->mutable_address();
+        pbnavitia::Address* pb_address = poi->mutable_address();
         if(geopoi->address_name.empty()){
             fill_pb_object(geopoi->coord, data, pb_address, depth - 1, now, action_period);
         }else{
-            pb_address->set_name(geopoi->address_name);
-            pb_address->set_house_number(geopoi->address_number);
-            if(geopoi->coord.is_initialized()) {
-                pb_address->mutable_coord()->set_lat(geopoi->coord.lat());
-                pb_address->mutable_coord()->set_lon(geopoi->coord.lon());
-            }
+            fill_address(geopoi, data, pb_address,
+                         geopoi->address_name, geopoi->address_number, geopoi->coord, max_depth, now, action_period);
         }
     }
     for(const auto& propertie : geopoi->properties){
@@ -1073,7 +1046,7 @@ pbnavitia::ExceptionType get_pb_exception_type(const navitia::type::ExceptionDat
         return pbnavitia::Remove;
     default:
         throw navitia::exception("exception date case not handled");
-    } 
+    }
 }
 
 void fill_pb_object(const navitia::type::StopTime* stop_time,
@@ -1384,15 +1357,6 @@ pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
     throw navitia::exception("Techinical Error, unable to convert mode " +
             std::to_string(static_cast<int>(mode)));
 
-}
-
-
-std::string name_formater(const type::StopArea* sa) {
-    return sa->name + get_admin_name(sa);
-}
-
-std::string name_formater(const navitia::georef::POI* poi) {
-    return poi->name + get_admin_name(poi);
 }
 
 }//namespace navitia

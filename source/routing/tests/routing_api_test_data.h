@@ -371,6 +371,7 @@ struct routing_api_data {
         b.data->build_uri();
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+        b.data->compute_labels();
 
         //add bike sharing edges
         b.data->geo_ref->default_time_bss_pickup = navitia::seconds(30);
