@@ -242,9 +242,9 @@ class Scenario(default.Scenario):
 
         logger.debug('merge and sort reponses')
 
-        self._remove_car_if_possible(response_alternative)
         self._remove_not_long_enough_fallback(response_alternative.journeys, instance)
         self._remove_not_long_enough_tc_with_fallback(response_alternative.journeys, instance)
+        self._remove_car_if_possible(response_alternative)
 
         self.merge_response(response_tc, response_alternative)
         for journey in response_tc.journeys:
