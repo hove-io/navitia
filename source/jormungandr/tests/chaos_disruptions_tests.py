@@ -29,6 +29,7 @@
 from kombu.connection import BrokerConnection
 from kombu.entity import Exchange
 from kombu.pools import producers
+from retrying import Retrying
 from jormungandr.interfaces.parsers import parse_input_date
 from jormungandr.utils import str_to_time_stamp
 from tests import gtfs_realtime_pb2
@@ -71,47 +72,20 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
         """
         poll until the kraken have reloaded its data
 
-        check the reload_at field
+        check that the last_rt_data_loaded field is different from the first call
         """
-        total_wait = 0
-        waiting_time = 0.2  # in seconds
-        
-        while True:
-            status = self.query_region('status')
+        Retrying(stop_max_delay=10 * 1000, wait_fixed=100,
+                 retry_on_result=lambda status: get_not_null(status['status'], 'last_rt_data_loaded') == previous_val) \
+            .call(lambda: self.query_region('status'))
 
-            last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
-
-            if last_loaded_data != previous_val:
-                return True
-            print "previous = {}, new = {}".format(previous_val, last_loaded_data)
-
-            if total_wait > 10:
-                # more than that is not normal, we fail
-                assert False, "kraken has not yet reloaded the data, something's wrong"
-
-            total_wait += waiting_time
-            sleep(waiting_time)
-
-    def wait_for_rabbit_mq_cnx(self):
+    def wait_for_rabbitmq_cnx(self):
         """
         poll until the kraken is connected to rabbitmq
         """
-        total_wait = 0
-        waiting_time = 0.2  # in seconds
-        while True:
-            status = self.query_region('status')
+        Retrying(stop_max_delay=20 * 1000, wait_fixed=100,
+                 retry_on_result=lambda status: get_not_null(status['status'], 'is_connected_to_rabbitmq') is False) \
+            .call(lambda: self.query_region('status'))
 
-            is_connected = get_not_null(status['status'], 'is_connected_to_rabbitmq')
-
-            if is_connected:
-                return True
-
-            if total_wait > 20:
-                # more than that is not normal, we fail
-                assert False, "kraken is not yet connected to rabbitmq, something's wrong"
-
-            total_wait += waiting_time
-            sleep(waiting_time)
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptions(ChaosDisruptionsFixture):
@@ -274,4 +248,3 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type):
     message.channel.content_type = "html"
 
     return feed_message.SerializeToString()
-
