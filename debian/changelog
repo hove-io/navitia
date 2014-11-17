@@ -1,3 +1,33 @@
+navitia2 (1.5.0) unstable; urgency=low
+
+  * All: Add label to ptobject  <https://github.com/CanalTP/navitia/pull/712>
+  * remove some small bug for the scenario destineo  <https://github.com/CanalTP/navitia/pull/710>
+  * kraken: return the accessibility of the section and not only the vj  <https://github.com/CanalTP/navitia/pull/709>
+  * TimeTable: do not associate empty calendars  <https://github.com/CanalTP/navitia/pull/708>
+  * remove journey without enough tc or alternative fallback  <https://github.com/CanalTP/navitia/pull/707>
+  * Kraken: remove warning  <https://github.com/CanalTP/navitia/pull/706>
+  * Jormungandr: fix auth bug if no region  <https://github.com/CanalTP/navitia/pull/705>
+  * Kraken: do not catch dying worker  <https://github.com/CanalTP/navitia/pull/704>
+  * Jormungandr: Add v1 vehicle journeys  <https://github.com/CanalTP/navitia/pull/703>
+  * Tyr: only keep data_set correctly integrated  <https://github.com/CanalTP/navitia/pull/701>
+  * Documentation: Update the doc  <https://github.com/CanalTP/navitia/pull/700>
+  * Jormungandr: fix test for destineo  <https://github.com/CanalTP/navitia/pull/699>
+  * Raptor: Fix pareto front  <https://github.com/CanalTP/navitia/pull/697>
+  * Doc: update the install doc with alembic  <https://github.com/CanalTP/navitia/pull/696>
+  * Gtfs: clean some log  <https://github.com/CanalTP/navitia/pull/695>
+  * Georef: fix linking of street_network_test  <https://github.com/CanalTP/navitia/pull/694>
+  * Destineo sort  <https://github.com/CanalTP/navitia/pull/693>
+  * Add more doc  <https://github.com/CanalTP/navitia/pull/692>
+  * jormungandrm: fix places_nearby  <https://github.com/CanalTP/navitia/pull/691>
+  * Release: fix some bugs in release script  <https://github.com/CanalTP/navitia/pull/690>
+  * correct .gitignore  <https://github.com/CanalTP/navitia/pull/689>
+  * Fix sort_by_duration_and_transfert jormungandr method  <https://github.com/CanalTP/navitia/pull/687>
+  * Jormungandr: import right version file  <https://github.com/CanalTP/navitia/pull/686>
+  * update config.h to limit compilation time  <https://github.com/CanalTP/navitia/pull/685>
+  * Jormungandr: fix internal links  <https://github.com/CanalTP/navitia/pull/684>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 17 Nov 2014 09:11:37 +0100
+
 navitia2 (1.4.7) unstable; urgency=medium
 
   * Jormungandr: fix retrievable of objects by their external code
