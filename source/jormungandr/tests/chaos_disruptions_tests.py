@@ -81,8 +81,10 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
     def wait_for_rabbitmq_cnx(self):
         """
         poll until the kraken is connected to rabbitmq
+
+        small timeout because it must not be long (otherwise it way be a server configuration problem)
         """
-        Retrying(stop_max_delay=20 * 1000, wait_fixed=100,
+        Retrying(stop_max_delay=1 * 1000, wait_fixed=50,
                  retry_on_result=lambda status: get_not_null(status['status'], 'is_connected_to_rabbitmq') is False) \
             .call(lambda: self.query_region('status'))
 
