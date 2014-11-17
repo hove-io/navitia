@@ -83,7 +83,7 @@ message Period {
 enum ActiveStatus {
     past = 0;
     active = 1;
-    futur = 2;
+    future = 2;
 }
 
 message MessageContent {

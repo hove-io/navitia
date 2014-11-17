@@ -531,7 +531,7 @@ def can_have_disruptions(pt_obj):
         get_valid_datetime(get_not_null(d, 'updated_at'))
 
         status = get_not_null(d, 'status')
-        assert status in ['past', 'active', 'futur']
+        assert status in ['past', 'active', 'future']
 
         periods = get_not_null(d, 'application_periods')
         for p in periods:

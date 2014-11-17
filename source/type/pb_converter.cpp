@@ -59,7 +59,7 @@ pbnavitia::ActiveStatus compute_disruption_status(const boost::shared_ptr<type::
     if (disruption->publication_period.begin() < dt) {
         return pbnavitia::past;
     }
-    return pbnavitia::futur;
+    return pbnavitia::future;
 }
 
 template <typename T>
