@@ -99,7 +99,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         then we mock a disruption sent from chaos, and we call again the pt object stopB
         we then must have a disruption
         """
-        self.wait_for_rabbit_mq_cnx()
+        self.wait_for_rabbitmq_cnx()
         response = self.query_region('stop_areas/stopB')
 
         stops = get_not_null(response, 'stop_areas')
@@ -141,7 +141,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         at first no disruptions, we add one and we should get it
         """
-        self.wait_for_rabbit_mq_cnx()
+        self.wait_for_rabbitmq_cnx()
         response = self.query_region(journey_basic_query)
 
         stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
