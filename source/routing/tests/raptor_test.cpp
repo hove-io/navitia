@@ -1245,7 +1245,6 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
-    type::PT_Data & d = *b.data->pt_data;
 
     std::vector<std::pair<type::idx_t, navitia::time_duration>> departures =
         {{b.sps["stop1"]->idx, navitia::seconds(1500)}};
@@ -1289,9 +1288,9 @@ BOOST_AUTO_TEST_CASE(less_fallback) {
         {d.stop_areas_map["stop1"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(0)}
     };
     std::vector<std::pair<type::idx_t, navitia::time_duration>> destinations =
-        {{d.stop_areas_map["stop1"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(560)},
-         {d.stop_areas_map["stop2"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(320)},
-         {d.stop_areas_map["stop3"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(0)}};
+        {{d.stop_areas_map["stop1"]->stop_point_list.front()->idx, navitia::seconds(560)},
+         {d.stop_areas_map["stop2"]->stop_point_list.front()->idx, navitia::seconds(320)},
+         {d.stop_areas_map["stop3"]->stop_point_list.front()->idx, navitia::seconds(0)}};
     auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
@@ -1303,5 +1302,60 @@ BOOST_AUTO_TEST_CASE(less_fallback) {
     BOOST_CHECK(std::any_of(res1.begin(), res1.end(),
                 [](const routing::Path& path) {
                     return path.items.back().arrival.time_of_day().total_seconds() == 8*3600 + 60;
+                }));
+}
+
+
+/*
+ * Schedules:
+ *      Line 1:
+ *      stop1   stop2
+ *      9h      9h50
+ *
+ *      Line 2:
+ *      stop2   stop3
+ *      9h55    10h00
+ *
+ * walking times:
+ *  stop2->J: 15 minutes
+ *  stop3->J: 0 minute
+ *
+ * We want to leave from stop1 after 8h, and we want to go to J
+ * So we want to have two answers, one arriving without transfers in stop2.
+ * The other with one transfer in stop3.
+ *
+ */
+BOOST_AUTO_TEST_CASE(pareto_front) {
+    ed::builder b("20120614");
+    b.vj("line1")("stop1", 9*3600)("stop2", 9*3600 + 50*60);
+    b.vj("line2")("stop2", 9*3600 + 55*60)("stop3", 10*3600);
+    b.connection("stop2", "stop2", 120);
+
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> departs = {
+        {d.stop_areas_map["stop1"]->stop_point_list.front()->idx, navitia::seconds(0)}
+    };
+    // We are going to J point, so we add the walking times
+    std::vector<std::pair<type::idx_t, navitia::time_duration>> destinations =
+        {{d.stop_areas_map["stop2"]->stop_point_list.front()->idx, navitia::seconds(15*60)},
+         {d.stop_areas_map["stop3"]->stop_point_list.front()->idx, navitia::seconds(0)}};
+    auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false, true);
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 2);
+    BOOST_CHECK(std::any_of(res1.begin(), res1.end(),
+                [](const routing::Path& path) {
+                    return path.items.size() == 1 &&
+                           path.items.back().arrival.time_of_day().total_seconds() == 9*3600 + 50*60;
+                }));
+
+    BOOST_CHECK(std::any_of(res1.begin(), res1.end(),
+                [](const routing::Path& path) {
+                return path.items.size() == 3 &&
+                    path.items.back().arrival.time_of_day().total_seconds() == 10*3600;
                 }));
 }

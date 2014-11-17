@@ -147,6 +147,14 @@ class Instance(db.Model):
 
     max_nb_transfers = db.Column(db.Integer, default=default_values.max_nb_transfers, nullable=False)
 
+    destineo_min_tc_with_car = db.Column(db.Integer, default=default_values.destineo_min_tc_with_car, nullable=False)
+
+    destineo_min_tc_with_bike = db.Column(db.Integer, default=default_values.destineo_min_tc_with_bike, nullable=False)
+
+    destineo_min_bike = db.Column(db.Integer, default=default_values.destineo_min_bike, nullable=False)
+
+    destineo_min_car = db.Column(db.Integer, default=default_values.destineo_min_car, nullable=False)
+
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
@@ -170,7 +178,7 @@ class Instance(db.Model):
             data_sets = db.session.query(DataSet) \
                 .join(Job) \
                 .join(Instance) \
-                .filter(Instance.id == self.id, DataSet.family_type == family_type) \
+                .filter(Instance.id == self.id, DataSet.family_type == family_type, Job.state == 'done') \
                 .order_by(Job.created_at.desc()) \
                 .limit(nb_dataset) \
                 .all()

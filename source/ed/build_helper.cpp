@@ -469,5 +469,6 @@ void builder::connection(const std::string & name1, const std::string & name2, f
  void builder::build_autocomplete() {
     data->pt_data->build_autocomplete(*(data->geo_ref));
     data->geo_ref->build_autocomplete_list();
- }
+    data->compute_labels();
+}
 }

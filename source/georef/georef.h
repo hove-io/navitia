@@ -149,6 +149,7 @@ public:
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges;
     }
+    std::string get_label() const;
 
 private:
       nt::GeographicalCoord get_geographical_coord(const std::vector< HouseNumber>&, const int);
@@ -387,11 +388,12 @@ struct POI : public nt::Nameable, nt::Header{
     nt::idx_t poitype_idx;
     int address_number;
     std::string address_name;
+    std::string label;
 
     POI(): weight(0), poitype_idx(type::invalid_idx), address_number(-1){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri &name & weight & coord & admin_list & properties & poitype_idx & visible & address_number & address_name;
+        ar &idx & uri & name & weight & coord & admin_list & properties & poitype_idx & visible & address_number & address_name & label;
     }
 
     std::vector<type::idx_t> get(type::Type_e type, const GeoRef &) const;

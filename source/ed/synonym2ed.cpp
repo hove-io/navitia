@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 
-#include "config.h"
+#include "conf.h"
 #include <iostream>
 #include "ed/connectors/synonym_parser.h"
 
@@ -65,7 +65,8 @@ int main(int argc, char * argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     if(vm.count("version")){
-        std::cout << argv[0] << " V" << KRAKEN_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
+        std::cout << argv[0] << " V" << navitia::config::kraken_version << " "
+                  << navitia::config::navitia_build_type << std::endl;
         return 0;
     }
 

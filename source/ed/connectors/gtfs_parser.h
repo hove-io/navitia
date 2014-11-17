@@ -442,17 +442,18 @@ template <typename Handler>
 inline void FileParser<Handler>::fill(Data& data) {
     auto logger = log4cplus::Logger::getInstance("log");
     if (! csv.is_open() && ! csv.filename.empty()) {
-        LOG4CPLUS_ERROR(logger, "Impossible to read " + csv.filename);
         if ( fail_if_no_file ) {
+            LOG4CPLUS_FATAL(logger, "Impossible to read " << csv.filename);
             throw FileNotFoundException(csv.filename);
         }
+        LOG4CPLUS_WARN(logger, "Impossible to read " << csv.filename);
         return;
     }
 
     typename Handler::csv_row headers = handler.required_headers();
     if(!csv.validate(headers)) {
-        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename +
-                        " missing headers : " + csv.missing_headers(headers));
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename <<
+                        " missing headers : " << csv.missing_headers(headers));
         throw InvalidHeaders(csv.filename);
     }
     handler.init(data);

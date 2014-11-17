@@ -243,7 +243,7 @@ struct small_cal_fixture {
     ed::builder b;
     small_cal_fixture(): b("20120614") {
         //vj1 has stoptimes all day from 00:10 every hour
-        b.vj("network:R", "line:A", "1", "", true, "vj1")
+        b.vj("network:R", "line:A", "1111111", "", true, "vj1")
                 ("stop1", 0, 0)
                 ("stop2", 10, 20) //we need stop1 not to be the terminus
                 .frequency(60*10, 24*60*60 + 60*10 - 1, 60*60);
@@ -251,10 +251,22 @@ struct small_cal_fixture {
         //we add a calendar that match the vj
         auto cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
         cal->uri = "cal";
+        cal->active_periods.emplace_back(boost::gregorian::from_undelimited_string("20120614"),
+                                         boost::gregorian::from_undelimited_string("20120621"));
         cal->week_pattern = std::bitset<7>{"1111111"};
 
         b.data->pt_data->calendars.push_back(cal);
         b.lines["line:A"]->calendar_list.push_back(cal);
+
+        //we add a calendar with no activity
+        auto empty_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
+        empty_cal->uri = "empty_cal";
+        empty_cal->active_periods.emplace_back(boost::gregorian::from_undelimited_string("20120614"),
+                                         boost::gregorian::from_undelimited_string("20120621"));
+        empty_cal->week_pattern = std::bitset<7>{"0000000"};
+
+        b.data->pt_data->calendars.push_back(empty_cal);
+        b.lines["line:A"]->calendar_list.push_back(empty_cal);
 
         //call all the init again
         b.data->build_uri();
@@ -291,6 +303,23 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time, small_cal_fixture) {
     }
 }
 
+
+/**
+ * test the departarture board with a calenday without activity
+ * No board must be returned
+ */
+BOOST_FIXTURE_TEST_CASE(test_not_matched_cal, small_cal_fixture) {
+
+    pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("empty_cal"), {}, d("20120615T080000"),
+                                                86400, 0, std::numeric_limits<int>::max(),
+                                                1, 10, 0, *(b.data), false);
+
+    BOOST_REQUIRE(! resp.has_error());
+    //no error but no results
+    BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
+    pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+}
 
 /**
  * test that when asked for a schedule from a given *period* in a day

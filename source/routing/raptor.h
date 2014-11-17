@@ -85,7 +85,7 @@ struct RAPTOR
 
     ///Initialise les structure retour et b_dest
     void init(Solutions departures,
-              std::vector<std::pair<type::idx_t, navitia::time_duration> > destinations,
+              const std::vector<std::pair<type::idx_t, navitia::time_duration> >& destinations,
               navitia::DateTime bound, const bool clockwise,
               const type::Properties &properties = 0);
 

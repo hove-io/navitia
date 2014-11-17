@@ -167,7 +167,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
 
 
 void RAPTOR::init(Solutions departs,
-                  std::vector<std::pair<type::idx_t, navitia::time_duration> > destinations,
+                  const std::vector<std::pair<type::idx_t, navitia::time_duration> >& destinations,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
     for(Solution item : departs) {
@@ -207,6 +207,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
                     const type::AccessibiliteParams & accessibilite_params,
                     const std::vector<std::string> & forbidden_uri,
                     bool clockwise) {
+
     std::vector<Path> result;
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri, disruption_active, allow_odt);
 
@@ -498,13 +499,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                 working_labels[jpp_idx].dt_pt = workingDt;
                                 working_labels[jpp_idx].boarding_jpp_pt = boarding->idx;
                                 best_labels[jpp_idx] = working_labels[jpp_idx].dt_pt;
-                                // We want to apply connection only if it's not a destination point
-                                if(!best_add_result) {
-                                    auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
-                                    if(best_jpp == type::invalid_idx || visitor.comp(workingDt, working_labels[best_jpp].dt_pt)) {
-                                        best_jpp = jpp->idx;
-                                        end = false;
-                                    }
+                                auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
+                                if(best_jpp == type::invalid_idx || visitor.comp(workingDt, working_labels[best_jpp].dt_pt)) {
+                                    best_jpp = jpp->idx;
+                                    end = false;
                                 }
                             }
                         }

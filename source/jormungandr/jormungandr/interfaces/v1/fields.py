@@ -383,6 +383,7 @@ generic_type = {
 admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
+admin["label"] = fields.String()
 
 generic_type_admin = deepcopy(generic_type)
 admins = NonNullList(NonNullNested(admin))
@@ -393,11 +394,13 @@ stop_point = deepcopy(generic_type_admin)
 stop_point["messages"] = NonNullList(NonNullNested(generic_message))
 stop_point["comment"] = fields.String()
 stop_point["codes"] = NonNullList(NonNullNested(code))
+stop_point["label"] = fields.String()
 stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
 stop_area["timezone"] = fields.String()
+stop_area["label"] = fields.String()
 
 journey_pattern_point = {
     "id": fields.String(attribute="uri"),
@@ -457,6 +460,7 @@ poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type_admin)
 poi["poi_type"] = PbField(poi_type)
 poi["properties"] = get_key_value()
+poi["label"] = fields.String()
 
 company = deepcopy(generic_type)
 company["codes"] = NonNullList(NonNullNested(code))
@@ -466,6 +470,7 @@ stop_area["stop_point"] = PbField(deepcopy(stop_point))
 journey_pattern_point["stop_point"] = PbField(deepcopy(stop_point))
 address = deepcopy(generic_type_admin)
 address["house_number"] = fields.Integer()
+address["label"] = fields.String()
 
 stop_point["address"] = PbField(address)
 poi["address"] = PbField(address)

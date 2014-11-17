@@ -56,9 +56,17 @@ max_nb_transfers = 10
 
 journey_order = 'arrival_time'
 
+destineo_min_tc_with_car = 5*60
+
+destineo_min_tc_with_bike = 5*60
+
+destineo_min_bike = 5*60
+
+destineo_min_car = 5*60
+
 
 def get_value_or_default(attr, instance, instance_name):
-    if not instance or not getattr(instance, attr):
+    if not instance or getattr(instance, attr) == None:
         logger = logging.getLogger(__name__)
         value = getattr(sys.modules[__name__], attr)
         logger.warn('instance %s not found in db, we use the default value (%s) for the param %s', instance_name, value, attr)

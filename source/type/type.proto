@@ -103,6 +103,7 @@ message AdministrativeRegion {
     optional string zip_code = 4;
     optional int32 level = 5;
     optional GeographicalCoord coord = 6;
+    optional string label = 7;
 }
 
 message StopArea {
@@ -115,6 +116,7 @@ message StopArea {
     optional string comment = 11;
     repeated Code codes = 12;
     optional string timezone = 15;
+    optional string label = 16;
 }
 
 message StopPoint {
@@ -128,8 +130,9 @@ message StopPoint {
     repeated Message messages = 9;
     optional string comment = 11;
     repeated Code codes = 12;
-	optional Address address = 13;
+    optional Address address = 13;
     optional string platform_code = 14;
+    optional string label = 15;
 }
 
 enum OdtLevel{
@@ -302,6 +305,7 @@ message Poi {
     repeated AdministrativeRegion administrative_regions = 10;
     optional Address address = 11;
     repeated Code properties = 12;
+    optional string label = 13;
 }
 
 message Network {
@@ -342,6 +346,7 @@ message Address {
     optional GeographicalCoord coord = 6;
     repeated AdministrativeRegion administrative_regions = 10;
     optional int32 house_number = 2;
+    optional string label = 16;
 }
 
 enum ExceptionType {

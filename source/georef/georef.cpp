@@ -61,6 +61,11 @@ void Way::add_house_number(const HouseNumber& house_number){
     }
 }
 
+std::string Way::get_label() const {
+    //the label of the way is it's name + the city
+    return name + navitia::type::get_admin_name(this);
+}
+
 /** Recherche des coordonnées les plus proches à un un numéro
     * les coordonnées par extrapolation
 */

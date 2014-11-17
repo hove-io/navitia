@@ -58,6 +58,8 @@ namespace navitia {
 
             std::string post_code;
             std::string insee;
+            std::string label;
+
             nt::GeographicalCoord coord;
             polygon_type boundary;
             std::vector<const Admin*> admin_list;
@@ -66,7 +68,7 @@ namespace navitia {
             Admin():level(-1){}
             Admin(int lev):level(lev){}
             template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-                ar & idx & level & from_original_dataset & post_code & insee & name & uri & coord & admin_list & main_stop_areas;
+                ar & idx & level & from_original_dataset & post_code & insee & name & uri & coord & admin_list & main_stop_areas & label;
             }
         };
     }

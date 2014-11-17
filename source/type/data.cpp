@@ -246,6 +246,12 @@ find_matching_calendar(const Data&, const std::string& name, const ValidityPatte
     LOG4CPLUS_TRACE(log, "meta vj " << name << " :" << validity_pattern.days.to_string());
 
     for (const auto calendar : calendar_list) {
+        // sometimes a calendar can be empty (for example if it's validity period does not
+        // intersect the data's validity period)
+        // we do not filter those calendar since it's a user input, but we do not match them
+        if (! calendar->validity_pattern.days.any()) {
+            continue;
+        }
         auto diff = get_difference(calendar->validity_pattern.days, validity_pattern.days);
         size_t nb_diff = diff.count();
 
@@ -278,6 +284,8 @@ void Data::complete(){
     LOG4CPLUS_INFO(logger, "Building administrative regions");
     build_administrative_regions();
     admin = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    compute_labels();
 
     start = pt::microsec_clock::local_time();
     pt_data->sort();
@@ -411,6 +419,64 @@ void Data::build_odt(){
 void Data::build_grid_validity_pattern() {
     for(Calendar* cal : this->pt_data->calendars){
         cal->build_validity_pattern(meta->production_date);
+    }
+}
+
+void Data::compute_labels() {
+    //labels are to be used as better name
+
+    //for stop points, stop areas and poi we want to add the admin name
+    for (auto sp: pt_data->stop_points) {
+        sp->label = sp->name + get_admin_name(sp);
+    }
+    for (auto sa: pt_data->stop_areas) {
+        sa->label = sa->name + get_admin_name(sa);
+    }
+    for (auto poi: geo_ref->pois) {
+        poi->label = poi->name + get_admin_name(poi);
+    }
+    //for admin we want the post code
+    for (auto admin: geo_ref->admins) {
+        std::string post_code;
+
+        if (admin->post_code.find(";") == std::string::npos) {
+            post_code = admin->post_code;
+        } else {
+            // if there is more than one post code, the label is the range of the postcode
+            // ex: Tours (37000;37100;37200) -> Tours (37000-37200)
+            // if no postcode, we'll add nothing
+            std::vector<std::string> str_vec;
+            boost::algorithm::split(str_vec, admin->post_code, boost::algorithm::is_any_of(";"));
+            int min_value = std::numeric_limits<int>::max();
+            int max_value = std::numeric_limits<int>::min();
+            try {
+            for (const std::string& str_post_code : str_vec) {
+                int int_post_code;
+
+                    int_post_code = boost::lexical_cast<int>(str_post_code);
+                    min_value = std::min(min_value, int_post_code);
+                    max_value = std::max(max_value, int_post_code);
+                }
+            }
+            catch (boost::bad_lexical_cast) {
+                //if one fail, we display all postcode
+                min_value = std::numeric_limits<int>::max();
+            }
+            if (min_value != std::numeric_limits<int>::max()) {
+                post_code = boost::lexical_cast<std::string>(min_value)
+                        + "-" + boost::lexical_cast<std::string>(max_value);
+            }
+            else {
+                post_code = admin->post_code;
+            }
+        }
+
+        if (post_code.empty()) {
+            admin->label = admin->name;
+        } else {
+            admin->label = admin->name + " (" + post_code + ")";
+        }
+
     }
 }
 

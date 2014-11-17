@@ -32,20 +32,21 @@ www.navitia.io
 #include "data.h"
 #include "type/type.pb.h"
 #include "type/response.pb.h"
+#include "type/pt_data.h"
 
 //forward declare
-namespace navitia{
-    namespace routing{
+namespace navitia {
+    namespace routing {
         struct PathItem;
     }
-    namespace georef{
+    namespace georef {
         struct PathItem;
         struct Way;
         struct POI;
         struct Path;
         struct POIType;
     }
-    namespace fare{
+    namespace fare {
         struct results;
         struct Ticket;
     }
@@ -203,9 +204,24 @@ void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
                     const boost::posix_time::time_period& action_period = null_time_period);
 
 void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
+                    pbnavitia::PtDisplayInfo* pt_display_info, const type::StopPoint* origin,
+                    const type::StopPoint* destination, int max_depth,
+                    const boost::posix_time::ptime& now,
+                    const boost::posix_time::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
                     const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
+                    pbnavitia::hasEquipments* has_equipments, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj, const type::Data&,
+                    pbnavitia::hasEquipments* has_equipments, const type::StopPoint* origin,
+                    const type::StopPoint* destination, int,
+                    const pt::ptime&, const pt::time_period&);
 
 
 void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comment,
@@ -234,23 +250,34 @@ void fill_pb_placemark(const navitia::georef::Admin* value, const type::Data &da
         const boost::posix_time::time_period& action_period = null_time_period,
         const bool show_codes=false);
 
-std::string name_formater(const navitia::type::StopArea* sa);
-std::string name_formater(const navitia::georef::POI* poi);
-
+/**
+ * get_label() is a function that returns:
+ * * the label (or a function get_label()) if the object has it
+ * * else return the name of the object
+ *
+ * Note: the trick is that int is a better match for 0 than
+ * long and template resolution takes the best match
+ */
+namespace detail {
 template<typename T>
-std::string get_admin_name(const T* v) {
-    std::string admin_name = "";
-    for(auto admin : v->admin_list) {
-        if (admin->level == 8){
-            admin_name += " (" + admin->name + ")";
-        }
-    }
-    return admin_name;
+auto get_label_if_exists(const T* v, int) -> decltype(v->label) {
+    return v->label;
 }
 
 template<typename T>
-std::string name_formater(const T* v) {
+auto get_label_if_exists(const T* v, int) -> decltype(v->get_label()) {
+    return v->get_label();
+}
+
+template<typename T>
+auto get_label_if_exists(const T* v, long) -> decltype(v->name) {
     return v->name;
+}
+}
+
+template<typename T>
+std::string get_label(const T* v) {
+    return detail::get_label_if_exists(v, 0);
 }
 
 template<typename T>
@@ -263,7 +290,8 @@ void fill_pb_placemark(const T* value, const type::Data &data, pbnavitia::PtObje
     int depth = (max_depth <= 3) ? max_depth : 3;
     fill_pb_object(value, data, get_sub_object(value, pt_object), depth,
                    now, action_period, show_codes);
-    pt_object->set_name(name_formater(value));
+    pt_object->set_name(get_label(value));
+    std::cout << "name " << pt_object->name() << " for object: " << value->uri << std::endl;
     pt_object->set_uri(value->uri);
     pt_object->set_embedded_type(get_embedded_type(value));
 }
