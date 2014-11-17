@@ -291,7 +291,6 @@ void fill_pb_placemark(const T* value, const type::Data &data, pbnavitia::PtObje
     fill_pb_object(value, data, get_sub_object(value, pt_object), depth,
                    now, action_period, show_codes);
     pt_object->set_name(get_label(value));
-    std::cout << "name " << pt_object->name() << " for object: " << value->uri << std::endl;
     pt_object->set_uri(value->uri);
     pt_object->set_embedded_type(get_embedded_type(value));
 }
