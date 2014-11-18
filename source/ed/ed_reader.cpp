@@ -1063,6 +1063,12 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
         if (const_it["pede"].as<bool>()) {
             e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
 
+            // overflow check since we want to store that on a int32
+            if (e.duration.total_seconds() + 1 < len / ng::default_speed[nt::Mode_e::Walking]) {
+                LOG4CPLUS_WARN(log, "edge length overflow for source "
+                               << source << " target " << target << " length: " << len << ", we ignore this edge");
+                continue;
+            }
             way->edges.push_back(std::make_pair(source, target));
             nb_walking_edges++;
         }
