@@ -515,7 +515,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     std::vector<type::EntryPoint> destinations;
     if(api != pbnavitia::ISOCHRONE) {
         for (int i = 0; i < request.destination().size(); i++) {
-            Type_e destination_type = data->get_type_of_id(request.destination(i).place());
+            Type_e destination_type = data->get_coord_type_of_id(request.destination(i).place());
             type::EntryPoint destination = type::EntryPoint(destination_type, request.destination(i).place(), request.destination(i).access_duration());
 
             if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
@@ -567,7 +567,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                 request.clockwise(), accessibilite_params,
                 forbidden, *street_network_worker,
                 request.disruption_active(), request.allow_odt(), request.max_duration(),
-                request.max_transfers(), request.show_codes());
+                request.max_transfers(), request.show_codes(), request.details());
         default:
             return routing::make_response(*planner, origins[0], destinations[0], datetimes,
                 request.clockwise(), accessibilite_params,
