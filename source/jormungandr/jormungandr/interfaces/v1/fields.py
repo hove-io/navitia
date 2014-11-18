@@ -235,8 +235,8 @@ class equipments(fields.Raw):
 class disruption_status(fields.Raw):
     def output(self, key, obj):
         status = obj.status
-        d = type_pb2.ActiveStatus.DESCRIPTOR
-        return str.lower(d.values_by_number[status].name)
+        enum = type_pb2._ACTIVESTATUS
+        return str.lower(enum.values_by_number[status].name)
 
 
 class notes(fields.Raw):
