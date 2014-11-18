@@ -49,7 +49,7 @@ struct dataRAPTOR {
     std::vector<pair_int> footpath_index_backward;
 
     // arrival_times (resp. departure_times) are the different arrival
-    // (resp. departure) times of each stop points sorted by
+    // (resp. departure) times of each stop time sorted by
     //     lex(jp, jpp, arrival_time (resp. departure_time)).
     //
     // Then, you have:
