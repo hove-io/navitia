@@ -91,11 +91,11 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             working_labels[jpp->idx].boarding_jpp_pt = boarding_jpp_idx;
             best_labels[jpp->idx] = working_labels[jpp->idx].dt_pt;
             add_vj = true;
-            if(!this->b_dest.add_best(v, jpp->idx, working_labels[jpp->idx].dt_pt, this->count)) {
-                auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
-                if(best_jpp == type::invalid_idx || v.comp(workingDt, working_labels[best_jpp].dt_pt)) {
-                    best_jpp = jpp->idx;
-                }
+            this->b_dest.add_best(v, jpp->idx, working_labels[jpp->idx].dt_pt, this->count);
+            auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
+            if(best_jpp == type::invalid_idx || v.comp(workingDt, working_labels[best_jpp].dt_pt)) {
+                best_jpp = jpp->idx;
+                end_algorithm = false;
             }
         }
         //If we never marked a vj, we don't want to continue
@@ -111,7 +111,10 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
 
 template<typename Visitor>
 void RAPTOR::foot_path(const Visitor & v) {
-
+    if (end_algorithm) {
+        return;
+    }
+    end_algorithm = true;
     int last = 0;
     const auto foot_path_list = v.clockwise() ? data.dataRaptor->foot_path_forward :
                                                 data.dataRaptor->foot_path_backward;
@@ -131,12 +134,23 @@ void RAPTOR::foot_path(const Visitor & v) {
         DateTime next = v.worst_datetime(),
                  previous = working_labels[best_jpp].dt_pt;
         it += index.first - last;
-        const auto end = it + index.second;
-        for(; it != end; ++it) {
+        const auto end_it = it + index.second;
+        for(; it != end_it; ++it) {
             const type::StopPointConnection* spc = *it;
             const auto destination = v.clockwise() ? spc->destination : spc->departure;
             next = v.combine(previous, spc->duration); // ludo
-            mark_all_jpp_of_sp(destination, next, best_jpp, working_labels, v);
+            for(auto jpp : destination->journey_pattern_point_list) {
+                type::idx_t jpp_idx = jpp->idx;
+                if(jpp_idx != best_jpp && v.comp(next, best_labels[jpp_idx])) {
+                   working_labels[jpp_idx].dt_transfer = next;
+                   working_labels[jpp_idx].boarding_jpp_transfer = best_jpp;
+                   best_labels[jpp_idx] = next;
+                   if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
+                       Q[jpp->journey_pattern->idx] = jpp->order;
+                       end_algorithm = false;
+                   }
+                }
+            }
         }
         last = index.first + index.second;
     }
@@ -456,12 +470,12 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
 template<typename Visitor>
 void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active,
         bool global_pruning, uint32_t max_transfers) {
-    bool end = false;
+    end_algorithm = false;
     count = 0; //< Count iteration of raptor algorithm
 
-    while(!end && count <= max_transfers) {
+    while(!end_algorithm && count <= max_transfers) {
         ++count;
-        end = true;
+        end_algorithm = true;
         if(count == labels.size()) {
             if(visitor.clockwise()) {
                 this->labels.push_back(this->data.dataRaptor->labels_const);
@@ -518,7 +532,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                 auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
                                 if(best_jpp == type::invalid_idx || visitor.comp(workingDt, working_labels[best_jpp].dt_pt)) {
                                     best_jpp = jpp->idx;
-                                    end = false;
+                                    end_algorithm = false;
                                 }
                             }
                         }
