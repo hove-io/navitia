@@ -299,24 +299,22 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
                 const auto& arrival_stop_point = path.items.back().stop_points.back();
                 // for stop areas, we don't want to display the fallback section if start
                 // from one of the stop area's stop point
-                if (destination.uri != arrival_stop_point->stop_area->uri) {
-                    auto temp = worker.get_path(arrival_stop_point->idx, true);
-                    if(temp.path_items.size() > 0) {
-                       //add a junction between the routing path and the walking one if needed
-                        nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
-                        if (temp.path_items.front().coordinates.front() != routing_last_coord) {
-                            temp.path_items.front().coordinates.push_front(routing_last_coord);
-                        }
-
-                        auto begin_section_time = arrival_time;
-                        fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
-                                begin_section_time);
-                        arrival_time = arrival_time + temp.duration.to_posix();
+                auto temp = worker.get_path(arrival_stop_point->idx, true);
+                if(temp.path_items.size() > 0) {
+                   //add a junction between the routing path and the walking one if needed
+                    nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
+                    if (temp.path_items.front().coordinates.front() != routing_last_coord) {
+                        temp.path_items.front().coordinates.push_front(routing_last_coord);
                     }
-                    // We add coherence with the last pt section
+
+                    auto begin_section_time = arrival_time;
+                    fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
+                            begin_section_time);
+                    arrival_time = arrival_time + temp.duration.to_posix();
+
                     auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
                     bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                                  navitia::from_posix_timestamp(section->end_date_time()));
+                                              navitia::from_posix_timestamp(section->end_date_time()));
                     fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
                     //We add coherence with the destination object of the request
                     fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
