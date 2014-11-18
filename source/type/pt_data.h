@@ -56,7 +56,6 @@ struct PT_Data : boost::noncopyable{
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
 
     ext_codes_map_type ext_codes_map;
-    std::vector<StopTime*> stop_times;
     std::vector<StopPointConnection*> stop_point_connections;
 
     // meta vj map
@@ -89,7 +88,6 @@ struct PT_Data : boost::noncopyable{
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
                 & ext_codes_map
-                & stop_times
                 // the first letters for autocomplete
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
                 & network_autocomplete & mode_autocomplete & route_autocomplete
@@ -123,6 +121,12 @@ struct PT_Data : boost::noncopyable{
     void build_admins_stop_areas();
     /// tris les collections et affecte un idx a chaque élément
     void sort();
+
+    size_t nb_stop_times() const {
+        size_t nb = 0;
+        for (const auto* vj: vehicle_journeys) { nb += vj->stop_time_list.size(); }
+        return nb;
+    }
 
     /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
       *

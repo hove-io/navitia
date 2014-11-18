@@ -216,7 +216,7 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "stoparea: " << data.pt_data->stop_areas.size());
     LOG4CPLUS_INFO(logger, "stoppoint: " << data.pt_data->stop_points.size());
     LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.pt_data->vehicle_journeys.size());
-    LOG4CPLUS_INFO(logger, "stop: " << data.pt_data->stop_times.size());
+    LOG4CPLUS_INFO(logger, "stop: " << data.pt_data->nb_stop_times());
     LOG4CPLUS_INFO(logger, "connection: " << data.pt_data->stop_point_connections.size());
     LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.pt_data->journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.pt_data->physical_modes.size());

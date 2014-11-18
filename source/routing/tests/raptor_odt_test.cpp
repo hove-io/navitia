@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(test1){
    VJ2 : Not ODT, Not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test2){
-    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front().set_odt(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -162,8 +162,8 @@ BOOST_AUTO_TEST_CASE(test2){
    VJ2 : Not ODT, Not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test3){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -195,9 +195,9 @@ BOOST_AUTO_TEST_CASE(test3){
    VJ2 : Not ODT, Not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test4){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
-    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    vj1->stop_time_list.back().set_odt(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -229,10 +229,10 @@ BOOST_AUTO_TEST_CASE(test4){
    VJ2 : Not ODT, Not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test5){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
-    vj1->stop_time_list.back()->set_odt(true);
-    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    vj1->stop_time_list.back().set_odt(true);
+    vj1->stop_time_list.back().set_date_time_estimated(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -255,10 +255,10 @@ BOOST_AUTO_TEST_CASE(test5){
     BOOST_CHECK_EQUAL(journey.duration(), 2400);
     BOOST_CHECK_EQUAL(journey.departure_date_time(), navitia::test::to_posix_timestamp("20140114T103000"));
     BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20140114T111000"));
-    vj1->stop_time_list.front()->set_odt(false);
-    vj1->stop_time_list.front()->set_date_time_estimated(false);
-    vj1->stop_time_list.back()->set_odt(false);
-    vj1->stop_time_list.back()->set_date_time_estimated(false);
+    vj1->stop_time_list.front().set_odt(false);
+    vj1->stop_time_list.front().set_date_time_estimated(false);
+    vj1->stop_time_list.back().set_odt(false);
+    vj1->stop_time_list.back().set_date_time_estimated(false);
     unset_odt_jp();
 }
 
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(test5){
    VJ2 : first stoptime is odt && not estimated_date_time, last stoptime is not odt && not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test6){
-    vj2->stop_time_list.front()->set_odt(true);
+    vj2->stop_time_list.front().set_odt(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -300,8 +300,8 @@ BOOST_AUTO_TEST_CASE(test6){
    VJ2 : first stoptime is odt && estimated_date_time, last stoptime is not odt && not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test7){
-    vj2->stop_time_list.front()->set_odt(true);
-    vj2->stop_time_list.front()->set_date_time_estimated(true);
+    vj2->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_date_time_estimated(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -333,9 +333,9 @@ BOOST_AUTO_TEST_CASE(test7){
    VJ2 : first stoptime is odt && estimated_date_time, last stoptime is odt && not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test8){
-    vj2->stop_time_list.front()->set_odt(true);
-    vj2->stop_time_list.front()->set_date_time_estimated(true);
-    vj2->stop_time_list.back()->set_odt(true);
+    vj2->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_date_time_estimated(true);
+    vj2->stop_time_list.back().set_odt(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -367,10 +367,10 @@ BOOST_AUTO_TEST_CASE(test8){
    VJ2 : first stoptime is odt && estimated_date_time, last stoptime is odt && estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test9){
-    vj2->stop_time_list.front()->set_odt(true);
-    vj2->stop_time_list.front()->set_date_time_estimated(true);
-    vj2->stop_time_list.back()->set_odt(true);
-    vj2->stop_time_list.back()->set_date_time_estimated(true);
+    vj2->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_date_time_estimated(true);
+    vj2->stop_time_list.back().set_odt(true);
+    vj2->stop_time_list.back().set_date_time_estimated(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -402,8 +402,8 @@ BOOST_AUTO_TEST_CASE(test9){
    VJ2 : first stoptime is odt && not estimated_date_time, last stoptime is not odt && not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test10){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj2->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_odt(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -435,10 +435,10 @@ BOOST_AUTO_TEST_CASE(test10){
    VJ2 : first stoptime is odt && estimated_date_time, last stoptime is not odt && not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test11){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
-    vj2->stop_time_list.front()->set_odt(true);
-    vj2->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    vj2->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_date_time_estimated(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -470,12 +470,12 @@ BOOST_AUTO_TEST_CASE(test11){
    VJ2 : first stoptime is odt && estimated_date_time, last stoptime is odt && not estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test12){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
-    vj1->stop_time_list.back()->set_odt(true);
-    vj2->stop_time_list.front()->set_odt(true);
-    vj2->stop_time_list.front()->set_date_time_estimated(true);
-    vj2->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    vj1->stop_time_list.back().set_odt(true);
+    vj2->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_date_time_estimated(true);
+    vj2->stop_time_list.back().set_odt(true);
     b.data->build_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -507,15 +507,15 @@ BOOST_AUTO_TEST_CASE(test12){
    VJ2 : first stoptime is odt && estimated_date_time, last stoptime is odt && estimated_date_time
 */
 BOOST_AUTO_TEST_CASE(test13){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
-    vj1->stop_time_list.back()->set_odt(true);
-    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    vj1->stop_time_list.back().set_odt(true);
+    vj1->stop_time_list.back().set_date_time_estimated(true);
 
-    vj2->stop_time_list.front()->set_odt(true);
-    vj2->stop_time_list.front()->set_date_time_estimated(true);
-    vj2->stop_time_list.back()->set_odt(true);
-    vj2->stop_time_list.back()->set_date_time_estimated(true);
+    vj2->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_date_time_estimated(true);
+    vj2->stop_time_list.back().set_odt(true);
+    vj2->stop_time_list.back().set_date_time_estimated(true);
 
     b.data->build_odt();
     resp = make_response(true);
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(test13){
 */
 
 BOOST_AUTO_TEST_CASE(test14){
-    vj1->stop_time_list.front()->set_odt(true);
+    vj1->stop_time_list.front().set_odt(true);
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::none), true);
     unset_odt_jp();
@@ -554,8 +554,8 @@ BOOST_AUTO_TEST_CASE(test14){
 */
 
 BOOST_AUTO_TEST_CASE(test15){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
@@ -568,9 +568,9 @@ BOOST_AUTO_TEST_CASE(test15){
 */
 
 BOOST_AUTO_TEST_CASE(test16){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
-    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    vj1->stop_time_list.back().set_odt(true);
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
@@ -583,10 +583,10 @@ BOOST_AUTO_TEST_CASE(test16){
 */
 
 BOOST_AUTO_TEST_CASE(test17){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
-    vj1->stop_time_list.back()->set_odt(true);
-    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    vj1->stop_time_list.back().set_odt(true);
+    vj1->stop_time_list.back().set_date_time_estimated(true);
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::zonal), true);
     unset_odt_jp();
@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(test17){
 */
 
 BOOST_AUTO_TEST_CASE(test18){
-    vj1->stop_time_list.back()->set_odt(true);
+    vj1->stop_time_list.back().set_odt(true);
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::none), true);
     unset_odt_jp();
@@ -612,8 +612,8 @@ BOOST_AUTO_TEST_CASE(test18){
 */
 
 BOOST_AUTO_TEST_CASE(test19){
-    vj1->stop_time_list.back()->set_odt(true);
-    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    vj1->stop_time_list.back().set_odt(true);
+    vj1->stop_time_list.back().set_date_time_estimated(true);
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
@@ -626,9 +626,9 @@ BOOST_AUTO_TEST_CASE(test19){
 */
 
 BOOST_AUTO_TEST_CASE(test20){
-    vj1->stop_time_list.front()->set_odt(true);
-    vj1->stop_time_list.back()->set_odt(true);
-    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.back().set_odt(true);
+    vj1->stop_time_list.back().set_date_time_estimated(true);
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
@@ -641,9 +641,9 @@ BOOST_AUTO_TEST_CASE(test20){
 */
 
 BOOST_AUTO_TEST_CASE(test21){
-    vj1->stop_time_list.front()->set_date_time_estimated(true);
-    vj1->stop_time_list.back()->set_odt(true);
-    vj1->stop_time_list.back()->set_date_time_estimated(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    vj1->stop_time_list.back().set_odt(true);
+    vj1->stop_time_list.back().set_date_time_estimated(true);
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();

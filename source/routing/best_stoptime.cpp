@@ -53,7 +53,7 @@ const type::StopTime* next_valid_pick_up(type::idx_t idx, const type::idx_t end,
     const auto date = DateTimeUtils::date(dt);
     const auto hour = DateTimeUtils::hour(dt);
     for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor->st_idx_forward[idx];
+        const type::StopTime* st = data.dataRaptor->st_forward[idx];
         if (st->valid_end(reconstructing_path) && st->valid_hour(hour, true) &&
             st->is_valid_day(date, false, disruption_active)
             && st->vehicle_journey->accessible(required_vehicle_properties) ){
@@ -96,7 +96,7 @@ const type::StopTime* valid_drop_off(type::idx_t idx, const type::idx_t end, con
     const auto date = DateTimeUtils::date(dt);
     const auto hour = DateTimeUtils::hour(dt);
     for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor->st_idx_backward[idx];
+        const type::StopTime* st = data.dataRaptor->st_backward[idx];
         if (st->valid_end(!reconstructing_path) && st->valid_hour(hour, false) &&
             st->is_valid_day(date, true, disruption_active)
             && st->vehicle_journey->accessible(required_vehicle_properties) ){
@@ -134,7 +134,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
             DateTimeUtils::update(first_st.second, first_st.first->departure_time);
         } else {
             first_st.second = dt;
-            const DateTime tmp_dt = f_departure_time(DateTimeUtils::hour(first_st.second), first_st.first);
+            const DateTime tmp_dt = f_departure_time(DateTimeUtils::hour(first_st.second), *first_st.first);
             DateTimeUtils::update(first_st.second, DateTimeUtils::hour(tmp_dt));
         }
         assert(first_st.first->journey_pattern_point == jpp);
@@ -177,11 +177,11 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
     std::vector<std::pair<DateTime, const type::StopTime*>> res;
     for (const auto vj: vjs) {
         //loop through stop times for stop jpp->stop_point
-        auto st = *(vj->stop_time_list.begin() + jpp->order);
-        if (! st->vehicle_journey->accessible(vehicle_properties)) {
+        const auto& st = *(vj->stop_time_list.begin() + jpp->order);
+        if (! st.vehicle_journey->accessible(vehicle_properties)) {
             continue; //the stop time must be accessible
         }
-        if (st->is_frequency()) {
+        if (st.is_frequency()) {
             //if it is a frequency, we got to expand the timetable
 
             //Note: end can be lower than start, so we have to cycle through the day
@@ -197,12 +197,12 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
                 }
 
                 //we need to convert this to local there since we do not have a precise date (just a period)
-                res.push_back({time + vj->utc_to_local_offset, st});
+                res.push_back({time + vj->utc_to_local_offset, &st});
             }
 
         } else {
             //same utc tranformation
-            res.push_back({st->departure_time + vj->utc_to_local_offset, st});
+            res.push_back({st.departure_time + vj->utc_to_local_offset, &st});
         }
 
     }
@@ -246,7 +246,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
             DateTimeUtils::update(working_dt, DateTimeUtils::hour(first_st->arrival_time), false);
         } else {
             working_dt = dt;
-            const DateTime tmp_dt = f_arrival_time(DateTimeUtils::hour(working_dt), first_st);
+            const DateTime tmp_dt = f_arrival_time(DateTimeUtils::hour(working_dt), *first_st);
             DateTimeUtils::update(working_dt, DateTimeUtils::hour(tmp_dt), false);
         }
         assert(first_st->journey_pattern_point == jpp);

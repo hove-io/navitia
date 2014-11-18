@@ -1597,12 +1597,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
 
     messages.push_back(m);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 3);
+    BOOST_CHECK_EQUAL(b.data->pt_data->nb_stop_times(), 3);
 
     AtAdaptedLoader loader;
     loader.apply(messages, *b.data->pt_data);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 5);
+    BOOST_CHECK_EQUAL(b.data->pt_data->nb_stop_times(), 5);
 
     vj = b.data->pt_data->vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -1728,12 +1728,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
 
     messages.push_back(m);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 2);
+    BOOST_CHECK_EQUAL(b.data->pt_data->nb_stop_times(), 2);
 
     AtAdaptedLoader loader;
     loader.apply(messages, *b.data->pt_data);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 2);
+    BOOST_CHECK_EQUAL(b.data->pt_data->nb_stop_times(), 2);
 
     vj = b.data->pt_data->vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -1826,10 +1826,10 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
 
     messages.push_back(m);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 2);
+    BOOST_CHECK_EQUAL(b.data->pt_data->nb_stop_times(), 2);
     AtAdaptedLoader loader;
     loader.apply(messages, *b.data->pt_data);
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 3);
+    BOOST_CHECK_EQUAL(b.data->pt_data->nb_stop_times(), 3);
 
     vj = b.data->pt_data->vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -2153,7 +2153,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front()->journey_pattern_point->stop_point->uri, "stop_point:stop2");
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().journey_pattern_point->stop_point->uri, "stop_point:stop2");
     //check stopoint:2
 
 
@@ -2215,7 +2215,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front()->journey_pattern_point->stop_point->uri, "stop_point:stop1");
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().journey_pattern_point->stop_point->uri, "stop_point:stop1");
 }
 
 BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
@@ -2253,10 +2253,10 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     m.active_days = Jours::Ven | Jours::Lun;
     messages.push_back(m);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 2);
+    BOOST_CHECK_EQUAL(b.data->pt_data->nb_stop_times(), 2);
     AtAdaptedLoader loader;
     loader.apply(messages, *b.data->pt_data);
-    BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 4);
+    BOOST_CHECK_EQUAL(b.data->pt_data->nb_stop_times(), 4);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
 
@@ -2326,7 +2326,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 2);
     for(unsigned int i=0; i < vj->stop_time_list.size(); ++i){
-        BOOST_CHECK_EQUAL(vj->stop_time_list[i]->journey_pattern_point->order, i);
+        BOOST_CHECK_EQUAL(vj->stop_time_list[i].journey_pattern_point->order, i);
     }
 
 
@@ -2372,7 +2372,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
     for(unsigned int i=0; i < vj->stop_time_list.size(); ++i){
-        BOOST_CHECK_EQUAL(vj->stop_time_list[i]->journey_pattern_point->order, i);
+        BOOST_CHECK_EQUAL(vj->stop_time_list[i].journey_pattern_point->order, i);
     }
 
     vj = b.data->pt_data->vehicle_journeys[2];
@@ -2416,7 +2416,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
     for(unsigned int i=0; i < vj->stop_time_list.size(); ++i){
-        BOOST_CHECK_EQUAL(vj->stop_time_list[i]->journey_pattern_point->order, i);
+        BOOST_CHECK_EQUAL(vj->stop_time_list[i].journey_pattern_point->order, i);
     }
 
     vj = b.data->pt_data->vehicle_journeys[3];

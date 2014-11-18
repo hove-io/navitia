@@ -92,10 +92,10 @@ public:
         sort_vehicle_journey_list(const navitia::type::PT_Data & data) : data(data){}
         bool operator ()(const nt::VehicleJourney* vj1, const nt::VehicleJourney* vj2) const {
             if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
-                unsigned int dt1 = vj1->stop_time_list.front()->departure_time;
-                unsigned int dt2 = vj2->stop_time_list.front()->departure_time;
-                unsigned int at1 = vj1->stop_time_list.back()->arrival_time;
-                unsigned int at2 = vj2->stop_time_list.back()->arrival_time;
+                unsigned int dt1 = vj1->stop_time_list.front().departure_time;
+                unsigned int dt2 = vj2->stop_time_list.front().departure_time;
+                unsigned int at1 = vj1->stop_time_list.back().arrival_time;
+                unsigned int at2 = vj2->stop_time_list.back().arrival_time;
                 if(dt1 != dt2)
                     return dt1 < dt2;
                 else

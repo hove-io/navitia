@@ -116,7 +116,7 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
             else{
                 order++;
             }
-            current_st = current_st->vehicle_journey->stop_time_list[order];
+            current_st = &current_st->vehicle_journey->stop_time_list[order];
         }
         else {
             // Here we have to change of vehicle journey, this happen with connection_stay_in
@@ -131,9 +131,9 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
                 throw navitia::recoverable_exception("impossible to rebuild the public transport path");
             }
             if(clockwise) {
-                current_st = current_st->vehicle_journey->prev_vj->stop_time_list.back();
+                current_st = &current_st->vehicle_journey->prev_vj->stop_time_list.back();
             } else {
-                current_st = current_st->vehicle_journey->next_vj->stop_time_list.front();
+                current_st = &current_st->vehicle_journey->next_vj->stop_time_list.front();
             }
             auto prev_time = prev_st->section_end_time(clockwise, workingDate),
                  current_time = current_st->section_end_time(!clockwise, workingDate);

@@ -65,13 +65,13 @@ get_all_stop_times(const vector_idx &journey_patterns,
     for(auto ho : first_dt_st) {
         result.push_back(std::vector<datetime_stop_time>());
         DateTime dt = ho.first;
-        for(const type::StopTime* stop_time : ho.second->vehicle_journey->stop_time_list) {
-            if(!stop_time->is_frequency()) {
-                DateTimeUtils::update(dt, stop_time->departure_time);
+        for(const type::StopTime& stop_time : ho.second->vehicle_journey->stop_time_list) {
+            if(!stop_time.is_frequency()) {
+                DateTimeUtils::update(dt, stop_time.departure_time);
             } else {
                 DateTimeUtils::update(dt, routing::f_departure_time(dt, stop_time));
             }
-            result.back().push_back(std::make_pair(dt, stop_time));
+            result.back().push_back(std::make_pair(dt, &stop_time));
         }
     }
     return result;

@@ -157,12 +157,12 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
                     const boost::posix_time::ptime&, const boost::posix_time::time_period&){
     if (((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed())
         // No display pick up only information if first stoptime in vehiclejourney
-        && ((stop_time->vehicle_journey != nullptr) && (stop_time->vehicle_journey->stop_time_list.front() != stop_time))){
+        && ((stop_time->vehicle_journey != nullptr) && (&stop_time->vehicle_journey->stop_time_list.front() != stop_time))){
         properties->add_additional_informations(pbnavitia::Properties::pick_up_only);
     }
     if((stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed()))
         // No display drop off only information if last stoptime in vehiclejourney
-        && ((stop_time->vehicle_journey != nullptr) && (stop_time->vehicle_journey->stop_time_list.back() != stop_time))){
+        && ((stop_time->vehicle_journey != nullptr) && (&stop_time->vehicle_journey->stop_time_list.back() != stop_time))){
         properties->add_additional_informations(pbnavitia::Properties::drop_off_only);
     }
     if (stop_time->odt()){
@@ -595,8 +595,8 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
                        now, action_period, show_codes);
     }
     if(depth > 0) {
-        for(auto* stop_time : vj->stop_time_list) {
-            fill_pb_object(stop_time, data, vehicle_journey->add_stop_times(),
+        for(const auto& stop_time : vj->stop_time_list) {
+            fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
                            depth-1, now, action_period);
         }
         fill_pb_object(vj->journey_pattern->physical_mode, data,
@@ -1122,8 +1122,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     navitia::type::StopPoint* spt = nullptr;
     if ((stop_time->vehicle_journey != nullptr)
         && (!stop_time->vehicle_journey->stop_time_list.empty())
-        && (stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point != nullptr)){
-        spt = stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point->stop_point;
+        && (stop_time->vehicle_journey->stop_time_list.back().journey_pattern_point != nullptr)){
+        spt = stop_time->vehicle_journey->stop_time_list.back().journey_pattern_point->stop_point;
     }
 
     if(destination && spt && (spt->idx != destination->idx)){
