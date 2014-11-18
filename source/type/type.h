@@ -601,7 +601,6 @@ struct StopTime {
     uint32_t departure_time = 0; ///< En secondes depuis minuit
     VehicleJourney* vehicle_journey = nullptr;
     JourneyPatternPoint* journey_pattern_point = nullptr;
-    std::string comment;
 
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
@@ -652,7 +651,7 @@ struct StopTime {
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
-            & properties & local_traffic_zone & comment;
+            & properties & local_traffic_zone;
     }
 
     bool operator<(const StopTime& other) const;

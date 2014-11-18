@@ -79,6 +79,24 @@ struct PT_Data : boost::noncopyable{
     //Message
     new_disruption::DisruptionHolder disruption_holder;
 
+    // comments for stop times, indexed by (jp->uri, jpp->order)
+    std::map<std::pair<std::string, uint16_t>, std::string> stop_time_comment;
+    const std::string &get_comment(const StopTime& st) const {
+        const auto* jpp = st.journey_pattern_point;
+        return find_or_default(
+            std::pair<const std::string&, uint16_t>(jpp->journey_pattern->uri, jpp->order),
+            stop_time_comment);
+    }
+    void set_comment(const std::string& comment, const StopTime& st) {
+        const auto* jpp = st.journey_pattern_point;
+        const auto key = std::make_pair(jpp->journey_pattern->uri, jpp->order);
+        if (comment.empty()) {
+            stop_time_comment.erase(key);
+        } else {
+            stop_time_comment[key] = comment;
+        }
+    }
+
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
       * Elle est appelée par boost et pas directement
@@ -88,17 +106,13 @@ struct PT_Data : boost::noncopyable{
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
                 & ext_codes_map
-                // the first letters for autocomplete
                 & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
                 & network_autocomplete & mode_autocomplete & route_autocomplete
-                // the proximity lists
                 & stop_area_proximity_list & stop_point_proximity_list
-                // custom types
                 & stop_point_connections
-                //messages
                 & disruption_holder
-                //the meta vjs
                 & meta_vj;
+                & stop_time_comment;
     }
 
     /** Initialise tous les indexes
