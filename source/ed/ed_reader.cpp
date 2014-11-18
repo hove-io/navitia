@@ -1059,14 +1059,13 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
         navitia::georef::Edge e;
         float len = const_it["leng"].as<float>();
         e.way_idx = way->idx;
-        way->edges.push_back(std::make_pair(source, target));
 
-        //TODO et les pietons ??!
+        if (const_it["pede"].as<bool>()) {
+            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
 
-        e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
-        boost::add_edge(source, target, e, data.geo_ref->graph);
-        nb_walking_edges++;
-
+            way->edges.push_back(std::make_pair(source, target));
+            nb_walking_edges++;
+        }
         if (const_it["bike"].as<bool>()) {
             e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
             auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
