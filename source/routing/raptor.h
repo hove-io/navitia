@@ -129,7 +129,7 @@ struct RAPTOR
                    const uint32_t max_transfers,
                    const type::AccessibiliteParams & accessibilite_params,
                    const std::vector<std::string> & forbidden_uri,
-                   bool clockwise);
+                   bool clockwise, bool details);
 
 
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
