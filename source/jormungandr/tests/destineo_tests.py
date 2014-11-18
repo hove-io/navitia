@@ -398,7 +398,7 @@ def sort_destineo_test():
     section.street_network.mode = response_pb2.Walking
 
     scenario = destineo.Scenario()
-    scenario._custom_sort_journeys(response)
+    scenario._custom_sort_journeys(response, clockwise=True, timezone='Africa/Abidjan')
     eq_(response.journeys[0], journey_tc1)
     eq_(response.journeys[1], journey_tc2)
     eq_(response.journeys[2], journey_tc3)
@@ -462,10 +462,65 @@ def sort_destineo_date_test():
 
 
     scenario = destineo.Scenario()
-    scenario._custom_sort_journeys(response)
+    scenario._custom_sort_journeys(response, clockwise=True, timezone='Africa/Abidjan')
     eq_(response.journeys[0], journey_bss_and_tc)
     eq_(response.journeys[1], journey_tc1)
     eq_(response.journeys[2], journey_tc3)
+
+
+def sort_destineo_date_timezone_test():
+    response = response_pb2.Response()
+
+    journey_tc3 = response.journeys.add()
+    journey_tc3.type = "rapid"
+    journey_tc3.departure_date_time = str_to_time_stamp('20141104T113000')
+    section = journey_tc3.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey_tc3.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey_tc3.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    journey_tc1 = response.journeys.add()
+    journey_tc1.type = "rapid"
+    journey_tc1.departure_date_time = str_to_time_stamp('20141104T110000')
+    section = journey_tc1.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey_tc1.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey_tc1.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    #at paris it's 20141104T003000 so it's the same day
+    journey_bss_and_tc = response.journeys.add()
+    journey_bss_and_tc.departure_date_time = str_to_time_stamp('20141103T233000')
+    journey_bss_and_tc.type = "rapid"
+    section = journey_bss_and_tc.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey_bss_and_tc.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey_bss_and_tc.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey_bss_and_tc.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey_bss_and_tc.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey_bss_and_tc.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+
+    scenario = destineo.Scenario()
+    scenario._custom_sort_journeys(response, clockwise=True, timezone='Europe/Paris')
+    eq_(response.journeys[0], journey_tc1)
+    eq_(response.journeys[1], journey_tc3)
+    eq_(response.journeys[2], journey_bss_and_tc)
 
 def bike_duration_walking_test():
     journey = response_pb2.Journey()
