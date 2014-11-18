@@ -1064,8 +1064,8 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
             e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
 
             // overflow check since we want to store that on a int32
-            if (e.duration.total_seconds() + 1 < len / ng::default_speed[nt::Mode_e::Walking]) {
-                LOG4CPLUS_WARN(log, "edge length overflow for source "
+            if (e.duration.total_seconds() < std::floor(len / ng::default_speed[nt::Mode_e::Walking])) {
+                LOG4CPLUS_WARN(log, "edge length overflow for walking for source "
                                << source << " target " << target << " length: " << len << ", we ignore this edge");
                 continue;
             }
@@ -1073,6 +1073,12 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
             nb_walking_edges++;
         }
         if (const_it["bike"].as<bool>()) {
+            if (e.duration.total_seconds() < std::floor(len / ng::default_speed[nt::Mode_e::Bike])) {
+                LOG4CPLUS_WARN(log, "edge length overflow for bike for source "
+                               << source << " target " << target << " length: " << len << ", we ignore this edge");
+                continue;
+            }
+
             e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
             auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
             auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
@@ -1081,6 +1087,11 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
             nb_biking_edges++;
         }
         if (const_it["car"].as<bool>()) {
+            if (e.duration.total_seconds() < std::floor(len / ng::default_speed[nt::Mode_e::Car])) {
+                LOG4CPLUS_WARN(log, "edge length overflow for car for source "
+                               << source << " target " << target << " length: " << len << ", we ignore this edge");
+                continue;
+            }
             e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Car]);
             auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
             auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
