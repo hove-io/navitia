@@ -275,7 +275,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector
                        const uint32_t max_transfers,
                        const type::AccessibiliteParams & accessibilite_params,
                        const std::vector<std::string> & forbidden_uri,
-                       bool clockwise, bool details) {
+                       bool clockwise) {
     std::vector<std::pair<type::EntryPoint, std::vector<Path>>> result;
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri, disruption_active, allow_odt);
 
@@ -297,48 +297,32 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector
     for(const auto& m_point : m_points) {
         const type::EntryPoint& m_entry_point = m_point.first;
 
-        std::vector<Path> paths;
+        const auto& calc_arr = m_point.second;
+        auto paths = makePathes(calc_dep, calc_arr, accessibilite_params, *this, clockwise, disruption_active);
 
-        if (!details) {
-          // just returns destination stop points
-          for (auto& m_stop_point : m_point.second) {
-              Path path;
-              path.nb_changes = 0;
-              PathItem path_item;
-              navitia::type::StopPoint* sp = data.pt_data->stop_points[m_stop_point.first];
-              path_item.stop_points.push_back(sp);
-              path_item.type = public_transport;
-              path.items.push_back(path_item);
-              paths.push_back(path);
-          }
-        }
-        else {
-            const auto& calc_arr = m_point.second;
-            paths = makePathes(calc_dep, calc_arr, accessibilite_params, *this, clockwise, disruption_active);
+        for(Path& path : paths){
+            path.origin.type = nt::Type_e::Unknown;
 
-            for(Path& path : paths){
-                path.origin.type = nt::Type_e::Unknown;
+            if (path.items.empty())
+                continue;
 
-                if (path.items.empty())
-                    continue;
+            const PathItem& path_item = clockwise ? path.items.front() : path.items.back();
+            if (path_item.stop_points.empty())
+                continue;
 
-                const PathItem& path_item = clockwise ? path.items.front() : path.items.back();
-                if (path_item.stop_points.empty())
-                    continue;
-
-                // must find which item of calc_dep has been computed
-                const nt::StopPoint* stop_point = clockwise ? path_item.stop_points.front() : path_item.stop_points.back();
-                for(const auto& n_point : n_points) {
-                    for(const auto& n_stop_point : n_point.second)
-                        if (stop_point->idx == n_stop_point.first) {
-                            path.origin = n_point.first;
-                            break;
-                        }
-                    if (path.origin.type != nt::Type_e::Unknown)
+            // must find which item of calc_dep has been computed
+            const nt::StopPoint* stop_point = clockwise ? path_item.stop_points.front() : path_item.stop_points.back();
+            for(const auto& n_point : n_points) {
+                for(const auto& n_stop_point : n_point.second)
+                    if (stop_point->idx == n_stop_point.first) {
+                        path.origin = n_point.first;
                         break;
-                }
+                    }
+                if (path.origin.type != nt::Type_e::Unknown)
+                    break;
             }
         }
+
         result.push_back(std::make_pair(m_entry_point, paths));
     }
 
