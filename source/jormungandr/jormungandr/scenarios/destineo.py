@@ -164,6 +164,17 @@ class DestineoJourneySorter(JourneySorter):
         return self.sort_by_duration_and_transfert(j1, j2)
 
     def __call__(self, j1, j2):
+
+        j1_date = datetime.fromtimestamp(j1.departure_date_time).date()
+        j2_date = datetime.fromtimestamp(j2.departure_date_time).date()
+
+        #we first sort by date, we want the journey of the first day in first even if it's a non_pt
+        if j1_date != j2_date:
+            if j1_date < j2_date:
+                return -1
+            else:
+                return 1
+
         #first we want the pure tc journey
         if is_pure_tc(j1) and is_pure_tc(j2):
             return self.sort_by_time(j1, j2)
