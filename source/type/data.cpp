@@ -588,19 +588,6 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     return result;
 }
 
-// 10x faster than "get_type_of_id" when "id" is coord or stop_area
-Type_e Data::get_coord_type_of_id(const std::string & id) const {
-    if(id.size()>6 && id.substr(0,6) == "coord:")
-        return Type_e::Coord;
-    #define GET_TYPE(type_name, collection_name) \
-    auto collection_name##_map = pt_data->collection_name##_map;\
-    if(collection_name##_map.find(id) != collection_name##_map.end())\
-        return Type_e::type_name;
-    GET_TYPE(StopArea, stop_areas)
-    GET_TYPE(StopPoint, stop_points)
-    return Type_e::Unknown;
-}
-
 Type_e Data::get_type_of_id(const std::string & id) const {
     if(id.size()>6 && id.substr(0,6) == "coord:")
         return Type_e::Coord;
@@ -609,8 +596,8 @@ Type_e Data::get_type_of_id(const std::string & id) const {
     if(id.size()>6 && id.substr(0,6) == "admin:")
         return Type_e::Admin;
     #define GET_TYPE(type_name, collection_name) \
-    auto collection_name##_map = pt_data->collection_name##_map;\
-    if(collection_name##_map.find(id) != collection_name##_map.end())\
+    auto &collection_name##_map = pt_data->collection_name##_map;\
+    if(collection_name##_map.count(id) != 0 )\
         return Type_e::type_name;
     ITERATE_NAVITIA_PT_TYPES(GET_TYPE)
     if(geo_ref->poitype_map.find(id) != geo_ref->poitype_map.end())
