@@ -33,6 +33,7 @@ from jormungandr.scenarios.utils import JourneySorter
 from navitiacommon import response_pb2
 from operator import itemgetter
 from datetime import datetime, timedelta
+import pytz
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -153,8 +154,9 @@ class DestineoJourneySorter(JourneySorter):
          - 1 direct bike journey
 
     """
-    def __init__(self, clockwise):
+    def __init__(self, clockwise, timezone):
         super(DestineoJourneySorter, self).__init__(clockwise)
+        self.timezone = timezone
 
     def sort_by_time(self, j1, j2):
         # we don't care about the clockwise for destineo
@@ -164,6 +166,19 @@ class DestineoJourneySorter(JourneySorter):
         return self.sort_by_duration_and_transfert(j1, j2)
 
     def __call__(self, j1, j2):
+
+        j1_dt = datetime.utcfromtimestamp(j1.departure_date_time)
+        j2_dt = datetime.utcfromtimestamp(j2.departure_date_time)
+        j1_date = pytz.utc.localize(j1_dt).astimezone(pytz.timezone(self.timezone)).date()
+        j2_date = pytz.utc.localize(j2_dt).astimezone(pytz.timezone(self.timezone)).date()
+
+        #we first sort by date, we want the journey of the first day in first even if it's a non_pt
+        if j1_date != j2_date:
+            if j1_date < j2_date:
+                return -1
+            else:
+                return 1
+
         #first we want the pure tc journey
         if is_pure_tc(j1) and is_pure_tc(j2):
             return self.sort_by_time(j1, j2)
@@ -250,7 +265,7 @@ class Scenario(default.Scenario):
         for journey in response_tc.journeys:
             if journey.type == 'best':
                 journey.type = 'rapid'
-        self._custom_sort_journeys(response_tc, request['clockwise'])
+        self._custom_sort_journeys(response_tc, clockwise=request['clockwise'], timezone=instance.timezone)
         self.choose_best(response_tc)
         for journey in response_tc.journeys:
             if is_alternative(journey):
@@ -309,9 +324,9 @@ class Scenario(default.Scenario):
             for idx in to_delete:
                 del response.journeys[idx]
 
-    def _custom_sort_journeys(self, response, clockwise=True):
+    def _custom_sort_journeys(self, response, timezone, clockwise=True):
         if len(response.journeys) > 1:
-            response.journeys.sort(DestineoJourneySorter(clockwise=clockwise))
+            response.journeys.sort(DestineoJourneySorter(clockwise, timezone))
 
     def filter_journeys(self, journeys):
         section_is_pt = lambda section: section['type'] == "public_transport"\
