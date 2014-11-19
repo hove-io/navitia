@@ -774,33 +774,26 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nt::StopTime* stop = new nt::StopTime();
-        const_it["arrival_time"].to(stop->arrival_time);
-        const_it["departure_time"].to(stop->departure_time);
-        const_it["local_traffic_zone"].to(stop->local_traffic_zone);
-        const_it["comment"].to(stop->comment);
-
-        stop->set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
-
-        stop->set_odt(const_it["odt"].as<bool>());
-
-        stop->set_pick_up_allowed(const_it["pick_up_allowed"].as<bool>());
-
-        stop->set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
-
-        stop->set_is_frequency(const_it["is_frequency"].as<bool>());
-
-        stop->journey_pattern_point = journey_pattern_point_map[const_it["journey_pattern_point_id"].as<idx_t>()];
-
         auto vj = vehicle_journey_map[const_it["vehicle_journey_id"].as<idx_t>()];
-        vj->stop_time_list.push_back(stop);
-        stop->vehicle_journey = vj;
-        data.pt_data->stop_times.push_back(stop);
+        vj->stop_time_list.emplace_back();
+        nt::StopTime& stop = vj->stop_time_list.back();
+
+        const_it["arrival_time"].to(stop.arrival_time);
+        const_it["departure_time"].to(stop.departure_time);
+        const_it["local_traffic_zone"].to(stop.local_traffic_zone);
+        stop.set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
+        stop.set_odt(const_it["odt"].as<bool>());
+        stop.set_pick_up_allowed(const_it["pick_up_allowed"].as<bool>());
+        stop.set_drop_off_allowed(const_it["drop_off_allowed"].as<bool>());
+        stop.set_is_frequency(const_it["is_frequency"].as<bool>());
+        stop.journey_pattern_point = journey_pattern_point_map[const_it["journey_pattern_point_id"].as<idx_t>()];
+        stop.vehicle_journey = vj;
+        data.pt_data->set_comment(const_it["comment"].as<std::string>(), stop);
     }
 
     for(auto* vj: data.pt_data->vehicle_journeys) {
         std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end(),
-                  [](const nt::StopTime* st1, const nt::StopTime* st2){return st1->journey_pattern_point->order < st2->journey_pattern_point->order;});
+                  [](const nt::StopTime& st1, const nt::StopTime& st2){return st1.journey_pattern_point->order < st2.journey_pattern_point->order;});
     }
 
 }

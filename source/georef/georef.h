@@ -31,7 +31,6 @@ www.navitia.io
 #pragma once
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
-#include "third_party/RTree/RTree.h"
 #include "adminref.h"
 #include "utils/exception.h"
 #include "utils/flat_enum_map.h"

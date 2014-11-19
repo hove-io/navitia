@@ -157,12 +157,12 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const type::Data&,
                     const boost::posix_time::ptime&, const boost::posix_time::time_period&){
     if (((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed())
         // No display pick up only information if first stoptime in vehiclejourney
-        && ((stop_time->vehicle_journey != nullptr) && (stop_time->vehicle_journey->stop_time_list.front() != stop_time))){
+        && ((stop_time->vehicle_journey != nullptr) && (&stop_time->vehicle_journey->stop_time_list.front() != stop_time))){
         properties->add_additional_informations(pbnavitia::Properties::pick_up_only);
     }
     if((stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed()))
         // No display drop off only information if last stoptime in vehiclejourney
-        && ((stop_time->vehicle_journey != nullptr) && (stop_time->vehicle_journey->stop_time_list.back() != stop_time))){
+        && ((stop_time->vehicle_journey != nullptr) && (&stop_time->vehicle_journey->stop_time_list.back() != stop_time))){
         properties->add_additional_informations(pbnavitia::Properties::drop_off_only);
     }
     if (stop_time->odt()){
@@ -595,8 +595,8 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
                        now, action_period, show_codes);
     }
     if(depth > 0) {
-        for(auto* stop_time : vj->stop_time_list) {
-            fill_pb_object(stop_time, data, vehicle_journey->add_stop_times(),
+        for(const auto& stop_time : vj->stop_time_list) {
+            fill_pb_object(&stop_time, data, vehicle_journey->add_stop_times(),
                            depth-1, now, action_period);
         }
         fill_pb_object(vj->journey_pattern->physical_mode, data,
@@ -669,8 +669,9 @@ void fill_pb_object(const nt::StopTime* st, const type::Data& data,
     pbnavitia::Properties* properties = stop_date_time->mutable_properties();
     fill_pb_object(st, data, properties, max_depth, now, action_period);
 
-    if(!st->comment.empty()){
-        fill_pb_object(st->comment, data,  properties->add_notes(), max_depth, now, action_period);
+    const std::string& comment = data.pt_data->get_comment(*st);
+    if(!comment.empty()){
+        fill_pb_object(comment, data,  properties->add_notes(), max_depth, now, action_period);
     }
 }
 
@@ -1122,8 +1123,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     navitia::type::StopPoint* spt = nullptr;
     if ((stop_time->vehicle_journey != nullptr)
         && (!stop_time->vehicle_journey->stop_time_list.empty())
-        && (stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point != nullptr)){
-        spt = stop_time->vehicle_journey->stop_time_list.back()->journey_pattern_point->stop_point;
+        && (stop_time->vehicle_journey->stop_time_list.back().journey_pattern_point != nullptr)){
+        spt = stop_time->vehicle_journey->stop_time_list.back().journey_pattern_point->stop_point;
     }
 
     if(destination && spt && (spt->idx != destination->idx)){
@@ -1132,8 +1133,9 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         destination->set_uri("destination:"+std::to_string(hash_fn(spt->name)));
         destination->set_destination(spt->name);
     }
-    if (!stop_time->comment.empty()){
-        fill_pb_object(stop_time->comment, data,  hn->add_notes(),max_depth,now,action_period);
+    const auto& comment = data.pt_data->get_comment(*stop_time);
+    if (!comment.empty()){
+        fill_pb_object(comment, data,  hn->add_notes(),max_depth,now,action_period);
     }
     if (stop_time->vehicle_journey != nullptr) {
         if(!stop_time->vehicle_journey->odt_message.empty()){

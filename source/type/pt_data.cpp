@@ -47,7 +47,7 @@ void PT_Data::sort(){
     std::for_each(stop_point_connections.begin(), stop_point_connections.end(), Indexer<idx_t>());
 
     for(auto* vj: this->vehicle_journeys){
-        std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end(), Less());
+        std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end());
     }
 }
 
@@ -210,9 +210,6 @@ PT_Data::~PT_Data() {
                 [](type_name* obj){delete obj;});
     ITERATE_NAVITIA_PT_TYPES(DELETE_PTDATA)
 
-    for(StopTime* st : stop_times) {
-        delete st;
-    }
     for (auto metavj: meta_vj) {
         delete metavj.second;
     }

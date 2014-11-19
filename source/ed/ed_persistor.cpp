@@ -238,7 +238,11 @@ void EdPersistor::build_relation_way_admin(const ed::Georef& data){
 }
 
 void EdPersistor::compute_bounding_shape() {
-    this->lotus.exec("select georef.update_bounding_shape();", "", PGRES_TUPLES_OK);
+    try {
+        this->lotus.exec("select georef.update_bounding_shape();", "", PGRES_TUPLES_OK);
+    } catch (LotusException &e) {
+        LOG4CPLUS_ERROR(logger, "Failure in EdPersistor::compute_bounding_shape: " << e.what());
+    }
 }
 
 void EdPersistor::persist(const ed::Data& data){

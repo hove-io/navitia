@@ -87,8 +87,8 @@ bool Data::load(const std::string& filename,
         last_load_at = pt::microsec_clock::local_time();
         last_load = true;
         loaded = true;
-        LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-                % pt_data->stop_times.size() % dataRaptor->arrival_times.size()
+        LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
+                % dataRaptor->arrival_times.size()
                 % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
                 );
     } catch(const wrong_version& ex) {

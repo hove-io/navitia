@@ -77,7 +77,7 @@ void update_adapted_validity_pattern(nt::VehicleJourney* vehicle_journey,
    vehicle_journey->adapted_validity_pattern = get_validity_pattern(vehicle_journey->adapted_validity_pattern,
                                                                      pert,
                                                                      data,
-                                                                     vehicle_journey->stop_time_list.front()->departure_time
+                                                                     vehicle_journey->stop_time_list.front().departure_time
                                                                      );
 }
 
@@ -102,23 +102,23 @@ pt::time_period build_stop_period(const nt::StopTime& stop,
     return pt::time_period(arrival, departure);
 }
 
-std::vector<nt::StopTime*> get_stop_from_impact(
+std::vector<nt::StopTime> get_stop_from_impact(
         const ed::AtPerturbation& perturbation,
         bg::date current_date,
-        std::vector<nt::StopTime*> stoplist){
-    std::vector<nt::StopTime*> result;
+        const std::vector<nt::StopTime>& stoplist){
+    std::vector<nt::StopTime> result;
     if(perturbation.object_type == navitia::type::Type_e::StopPoint){
-        for(auto stop : stoplist){
-            if((stop->journey_pattern_point->stop_point->uri == perturbation.object_uri)
-                    && (perturbation.is_applicable(build_stop_period(*stop, current_date)))){
+        for(const auto& stop : stoplist){
+            if((stop.journey_pattern_point->stop_point->uri == perturbation.object_uri)
+                    && (perturbation.is_applicable(build_stop_period(stop, current_date)))){
                 result.push_back(stop);
             }
         }
     }
     if(perturbation.object_type == navitia::type::Type_e::StopArea){
-        for(auto stop : stoplist){
-            if((stop->journey_pattern_point->stop_point->stop_area->uri == perturbation.object_uri)
-                    && (perturbation.is_applicable(build_stop_period(*stop, current_date)))){
+        for(const auto& stop : stoplist){
+            if((stop.journey_pattern_point->stop_point->stop_area->uri == perturbation.object_uri)
+                    && (perturbation.is_applicable(build_stop_period(stop, current_date)))){
                 result.push_back(stop);
             }
         }
@@ -135,7 +135,7 @@ std::string make_adapted_uri(const nt::VehicleJourney* vj, nt::PT_Data&){
 //duplique un VJ et tout ce qui lui est lié pour construire un VJ adapté
 nt::VehicleJourney* create_adapted_vj(
         nt::VehicleJourney* current_vj, nt::VehicleJourney* theorical_vj,
-        std::vector<nt::StopTime*> impacted_st,
+        const std::vector<nt::StopTime>& impacted_st,
         nt::PT_Data& data){
     //on duplique le VJ
     nt::VehicleJourney* vj_adapted = new nt::VehicleJourney(*current_vj);
@@ -171,10 +171,10 @@ nt::VehicleJourney* create_adapted_vj(
     //on duplique les journey pattern point
     jp->journey_pattern_point_list = std::vector<nt::JourneyPatternPoint*>();
     //On duplique les StopTime
-    vj_adapted->stop_time_list = std::vector<nt::StopTime*>();
+    vj_adapted->stop_time_list.clear();
     for(auto jpp : current_vj->journey_pattern->journey_pattern_point_list) {
         auto it = std::find_if(impacted_st.begin(), impacted_st.end(),
-                               [&](const nt::StopTime* st) {return st->journey_pattern_point == jpp;});
+                               [&](const nt::StopTime& st) {return st.journey_pattern_point == jpp;});
         if (it != impacted_st.end()) {
             continue;
         }
@@ -185,13 +185,10 @@ nt::VehicleJourney* create_adapted_vj(
         new_jpp->journey_pattern = jp;
         //@TODO changer l'uri
         new_jpp->uri = jpp->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_pattern_points.size());
-        auto* stop = current_vj->stop_time_list[jpp->order];
-        nt::StopTime* new_stop = new nt::StopTime(*stop);
-        new_stop->vehicle_journey = vj_adapted;
-        new_stop->journey_pattern_point = new_jpp;
-
-        vj_adapted->stop_time_list.push_back(new_stop);
-        data.stop_times.push_back(new_stop);
+        vj_adapted->stop_time_list.push_back(current_vj->stop_time_list[jpp->order]);
+        nt::StopTime& new_stop = vj_adapted->stop_time_list.back();
+        new_stop.vehicle_journey = vj_adapted;
+        new_stop.journey_pattern_point = new_jpp;
     }
     return vj_adapted;
 }
@@ -237,7 +234,7 @@ void duplicate_vj(nt::VehicleJourney* vehicle_journey,
         //construction de la période de circulation du VJ entre [current_date minuit] et [current_date 23H59] dans le cas d'une
         //circulation normal, ou, l'heure d'arrivé dans le cas d'un train passe minuit (période plus de 24H)
         pt::time_period current_period(pt::ptime(vehicle_journey->validity_pattern->beginning_date + bg::days(i), pt::seconds(0)),
-                std::max(pt::seconds(86400), pt::seconds(vehicle_journey->stop_time_list.back()->arrival_time)));
+                std::max(pt::seconds(86400), pt::seconds(vehicle_journey->stop_time_list.back().arrival_time)));
 
         if(!current_period.intersects(perturbation.application_period)){
             //on est en dehors la plage d'application du message
@@ -253,7 +250,7 @@ void duplicate_vj(nt::VehicleJourney* vehicle_journey,
         }
 
         // on utilise la stop_time_list du vj de référence: ce n'est pas forcément le vj théorique!
-        std::vector<nt::StopTime*> impacted_stop = get_stop_from_impact(perturbation, current_period.begin().date(), current_vj->stop_time_list);
+        std::vector<nt::StopTime> impacted_stop = get_stop_from_impact(perturbation, current_period.begin().date(), current_vj->stop_time_list);
         if(impacted_stop.empty()){
             continue;
         }
@@ -280,9 +277,9 @@ void AtAdaptedLoader::init_map(const nt::PT_Data& data){
                 network_vj_map[tmp_line->network->uri].push_back(vj);
             }
         }
-        for(auto* stop : vj->stop_time_list){
-            assert(stop->journey_pattern_point->stop_point != NULL);
-            stop_point_vj_map[stop->journey_pattern_point->stop_point->uri].push_back(vj);
+        for(const auto& stop : vj->stop_time_list){
+            assert(stop.journey_pattern_point->stop_point != NULL);
+            stop_point_vj_map[stop.journey_pattern_point->stop_point->uri].push_back(vj);
         }
     }
 

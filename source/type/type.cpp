@@ -92,15 +92,81 @@ bool HasMessages::has_applicable_message(
     return false;
 }
 
+uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
+    if(clockwise) {
+        if (this == &this->vehicle_journey->stop_time_list.front())
+            return hour;
+        const auto& prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
+        return hour + this->arrival_time - prec_st.arrival_time;
+    } else {
+        if (this == &this->vehicle_journey->stop_time_list.back())
+            return hour;
+        const auto& next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
+        return hour - (next_st.arrival_time - this->arrival_time);
+    }
+}
+
+uint32_t StopTime::end_time(const bool is_departure) const {
+    return vehicle_journey->end_time + (is_departure? departure_time : arrival_time);
+}
+
+uint32_t StopTime::start_time(const bool is_departure) const {
+    return vehicle_journey->start_time + (is_departure? departure_time : arrival_time);
+}
+
+bool StopTime::valid_hour(uint hour, bool clockwise) const {
+    if(!this->is_frequency())
+        return true;
+    else
+        return clockwise ? hour <= (this->end_time(true)) :
+            (this->vehicle_journey->start_time+arrival_time) <= hour;
+}
+
+bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
+    if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
+       || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
+        if(day == 0)
+            return false;
+        --day;
+    }
+    if(!is_adapted) {
+        return vehicle_journey->validity_pattern->check(day);
+    } else {
+        return vehicle_journey->adapted_validity_pattern->check(day);
+    }
+}
+
+bool StopTime::operator<(const StopTime& other) const {
+    if(this->vehicle_journey == other.vehicle_journey){
+        return this->journey_pattern_point->order < other.journey_pattern_point->order;
+    } else {
+        return *this->vehicle_journey < *other.vehicle_journey;
+    }
+}
+
+uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const {
+    if(clockwise) {
+        if (this == &this->vehicle_journey->stop_time_list.front())
+            return hour;
+        const auto& prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
+        return hour + this->departure_time - prec_st.departure_time;
+    } else {
+        if (this == &this->vehicle_journey->stop_time_list.back())
+            return hour;
+        const auto& next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
+        return hour - (next_st.departure_time - this->departure_time);
+    }
+}
+
+
+
 bool VehicleJourney::has_date_time_estimated() const{
-    bool to_return = false;
-    for(StopTime* st : this->stop_time_list){
-        if (st->date_time_estimated()){
-            to_return = true;
-            break;
+    for(const StopTime& st : this->stop_time_list){
+        if (st.date_time_estimated()){
+            return true;
         }
     }
-    return to_return;
+    return false;
 }
 
 bool VehicleJourney::has_boarding() const{
@@ -133,13 +199,11 @@ type::OdtLevel_e VehicleJourney::get_odt_level() const{
         return result;
     }
 
-    const StopTime* st = this->stop_time_list.front();
-    if (st->is_odt_and_date_time_estimated()){
+    if (stop_time_list.front().is_odt_and_date_time_estimated()){
         result = type::OdtLevel_e::zonal;
     }
-    for(idx_t idx = 1; idx < this->stop_time_list.size(); idx++){
-        st = this->stop_time_list[idx];
-        if (st->is_odt_and_date_time_estimated()){
+    for(const auto& st: stop_time_list){
+        if (st.is_odt_and_date_time_estimated()){
             if (result != type::OdtLevel_e::zonal){
                 result = type::OdtLevel_e::mixt;
                 break;
@@ -435,9 +499,9 @@ idx_t Route::main_destination() const {
     for(const JourneyPattern* jp : this->journey_pattern_list) {
         for(const VehicleJourney* vj : jp->vehicle_journey_list) {
             if((!vj->stop_time_list.empty())
-                && (vj->stop_time_list.back()->journey_pattern_point != nullptr)
-                    && (vj->stop_time_list.back()->journey_pattern_point->stop_point != nullptr)){
-                const StopPoint* sp = vj->stop_time_list.back()->journey_pattern_point->stop_point;
+                && (vj->stop_time_list.back().journey_pattern_point != nullptr)
+                    && (vj->stop_time_list.back().journey_pattern_point->stop_point != nullptr)){
+                const StopPoint* sp = vj->stop_time_list.back().journey_pattern_point->stop_point;
                 stop_point_map[sp->idx] += 1;
                 size_t val = stop_point_map[sp->idx];
                 if (( best.first == invalid_idx) || (best.second < val)){

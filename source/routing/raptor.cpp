@@ -63,25 +63,25 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
     while(vj) {
         const auto& stop_time_list = v.stop_time_list(vj);
         const auto& st_begin = *stop_time_list.first;
-        const auto current_time = st_begin->section_end_time(v.clockwise(),
+        const auto current_time = st_begin.section_end_time(v.clockwise(),
                                 DateTimeUtils::hour(workingDt));
         DateTimeUtils::update(workingDt, current_time, v.clockwise());
         // If the vj is not valid for the first stop it won't be valid at all
-        if (!st_begin->is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
+        if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
             return;
         }
-        BOOST_FOREACH(const type::StopTime* st, stop_time_list) {
-            const auto current_time = st->section_end_time(v.clockwise(),
+        BOOST_FOREACH(const type::StopTime& st, stop_time_list) {
+            const auto current_time = st.section_end_time(v.clockwise(),
                                     DateTimeUtils::hour(workingDt));
             DateTimeUtils::update(workingDt, current_time, v.clockwise());
-            if (!st->valid_end(v.clockwise())) {
+            if (!st.valid_end(v.clockwise())) {
                 continue;
             }
             if (l_zone != std::numeric_limits<uint16_t>::max() &&
-               l_zone == st->local_traffic_zone) {
+               l_zone == st.local_traffic_zone) {
                 continue;
             }
-            auto jpp = st->journey_pattern_point;
+            auto jpp = st.journey_pattern_point;
             const DateTime bound = (v.comp(best_labels[jpp->idx], b_dest.best_now) || !global_pruning) ?
                                         best_labels[jpp->idx] : b_dest.best_now;
             if(!v.comp(workingDt, bound)) {
@@ -482,14 +482,14 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                         // We update workingDt with the new arrival time
                         // We need at each journey pattern point when we have a st
                         // If we don't it might cause problem with overmidnight vj
-                        const type::StopTime* st = *it_st;
-                        const auto current_time = st->section_end_time(visitor.clockwise(),
+                        const type::StopTime& st = *it_st;
+                        const auto current_time = st.section_end_time(visitor.clockwise(),
                                                 DateTimeUtils::hour(workingDt));
                         DateTimeUtils::update(workingDt, current_time, visitor.clockwise());
                         // We check if there are no drop_off_only and if the local_zone is okay
-                        if(st->valid_end(visitor.clockwise())&&
+                        if(st.valid_end(visitor.clockwise())&&
                                 (l_zone == std::numeric_limits<uint16_t>::max() ||
-                                 l_zone != st->local_traffic_zone)) {
+                                 l_zone != st.local_traffic_zone)) {
                             const DateTime bound = (visitor.comp(best_labels[jpp_idx], b_dest.best_now) || !global_pruning) ?
                                                         best_labels[jpp_idx] : b_dest.best_now;
                             // We want to update the labels, if it's better than the one computed before
@@ -518,17 +518,17 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                                accessibilite_params.vehicle_properties,
                                                visitor.clockwise(), disruption_active, data);
 
-                        if(tmp_st_dt.first != nullptr && (boarding == nullptr || tmp_st_dt.first != *it_st || tmp_st_dt.second != workingDt)) {
+                        if(tmp_st_dt.first != nullptr && (boarding == nullptr || tmp_st_dt.first != &*it_st || tmp_st_dt.second != workingDt)) {
                             boarding = jpp;
-                            it_st = visitor.first_stoptime(tmp_st_dt.first);
+                            it_st = visitor.first_stoptime(*tmp_st_dt.first);
                             workingDt = tmp_st_dt.second;
                             BOOST_ASSERT(visitor.comp(previous_dt, workingDt) || previous_dt == workingDt);
-                            l_zone = (*it_st)->local_traffic_zone;
+                            l_zone = it_st->local_traffic_zone;
                         }
                     }
                 }
                 if(boarding) {
-                    apply_vj_extension(visitor, global_pruning, (*it_st)->vehicle_journey, boarding->idx,
+                    apply_vj_extension(visitor, global_pruning, it_st->vehicle_journey, boarding->idx,
                         workingDt, l_zone, disruption_active);
                 }
             }

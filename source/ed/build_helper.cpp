@@ -48,14 +48,13 @@ void VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
     vj->end_time = start_time + ( nb_trips * headway_secs );
     vj->headway_secs = headway_secs;
 
-    navitia::type::StopTime* first_st = vj->stop_time_list.front();
-    uint32_t begin = first_st->arrival_time;
-    for(navitia::type::StopTime* st : vj->stop_time_list) {
-        st->set_is_frequency(true);
+    uint32_t begin = vj->stop_time_list.front().arrival_time;
+    for(navitia::type::StopTime& st : vj->stop_time_list) {
+        st.set_is_frequency(true);
         //For frequency based trips, make arrival and departure time relative from the first stop.
         if (begin > 0){
-            st->arrival_time -= begin;
-            st->departure_time -= begin;
+            st.arrival_time -= begin;
+            st.departure_time -= begin;
         }
     }
 }
@@ -162,10 +161,10 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
 VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     assert(shape.size() >= 2);
     assert(vj->stop_time_list.size() >= 2);
-    assert(vj->stop_time_list.back()->journey_pattern_point->stop_point->coord == shape.back());
-    assert(vj->stop_time_list.at(vj->stop_time_list.size() - 2)->journey_pattern_point->stop_point->coord
+    assert(vj->stop_time_list.back().journey_pattern_point->stop_point->coord == shape.back());
+    assert(vj->stop_time_list.at(vj->stop_time_list.size() - 2).journey_pattern_point->stop_point->coord
            == shape.front());
-    vj->stop_time_list.back()->journey_pattern_point->shape_from_prev = shape;
+    vj->stop_time_list.back().journey_pattern_point->shape_from_prev = shape;
     return *this;
 }
 
@@ -178,7 +177,6 @@ VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee, cons
 
 VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone,
                     bool drop_off_allowed, bool pick_up_allowed){
-    navitia::type::StopTime* st = new navitia::type::StopTime();
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;
     navitia::type::JourneyPatternPoint* jpp = nullptr;
@@ -228,25 +226,26 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
         jpp->journey_pattern = vj->journey_pattern;
         jpp->uri = "stop:" + sp->uri + "::jp:" + vj->journey_pattern->uri;
         if (!vj->stop_time_list.empty()) {
-            jpp->shape_from_prev.push_back(vj->stop_time_list.back()->journey_pattern_point->stop_point->coord);
+            jpp->shape_from_prev.push_back(vj->stop_time_list.back().journey_pattern_point->stop_point->coord);
             jpp->shape_from_prev.push_back(jpp->stop_point->coord);
         }
         b.data->pt_data->journey_pattern_points.push_back(jpp);
     }
+
     //on construit un nouveau journey pattern point à chaque fois
-    st->journey_pattern_point = jpp;
+    navitia::type::StopTime st;
+    st.journey_pattern_point = jpp;
 
     if(depart == -1) depart = arrivee;
-    st->arrival_time = arrivee;
-    st->departure_time = depart;
-    st->vehicle_journey = vj;
+    st.arrival_time = arrivee;
+    st.departure_time = depart;
+    st.vehicle_journey = vj;
     jpp->order = vj->stop_time_list.size();
-    st->local_traffic_zone = local_trafic_zone;
-    st->set_drop_off_allowed(drop_off_allowed);
-    st->set_pick_up_allowed(pick_up_allowed);
+    st.local_traffic_zone = local_trafic_zone;
+    st.set_drop_off_allowed(drop_off_allowed);
+    st.set_pick_up_allowed(pick_up_allowed);
 
     vj->stop_time_list.push_back(st);
-    b.data->pt_data->stop_times.push_back(st);
     return *this;
 }
 
@@ -429,8 +428,8 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
      std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
              [](const navitia::type::VehicleJourney* vj1, const navitia::type::VehicleJourney* vj2) {
-             return vj1->stop_time_list.back()->arrival_time <=
-                         vj2->stop_time_list.front()->departure_time;
+             return vj1->stop_time_list.back().arrival_time <=
+                         vj2->stop_time_list.front().departure_time;
 
              }
       );
@@ -450,10 +449,10 @@ void builder::connection(const std::string & name1, const std::string & name2, f
      build_blocks();
      for(navitia::type::VehicleJourney* vj : this->data->pt_data->vehicle_journeys) {
          if(!vj->prev_vj) {
-             vj->stop_time_list.front()->set_drop_off_allowed(false);
+             vj->stop_time_list.front().set_drop_off_allowed(false);
          }
          if(!vj->next_vj) {
-            vj->stop_time_list.back()->set_pick_up_allowed(false);
+            vj->stop_time_list.back().set_pick_up_allowed(false);
          }
      }
  }
