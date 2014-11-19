@@ -72,7 +72,7 @@ void Disruption::add_impact(const boost::shared_ptr<Impact>& impact){
 namespace {
 template<typename T>
 PtObj transform_pt_object(const std::string& uri,
-                          const std::map<std::string, T*>& map,
+                          const std::unordered_map<std::string, T*>& map,
                           const boost::shared_ptr<Impact>& impact) {
     if (auto o = find_or_default(uri, map)) {
         if (impact) o->add_impact(impact);
