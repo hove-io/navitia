@@ -65,11 +65,11 @@ get_or_create_severity(DisruptionHolder& disruptions, int id) {
         if (auto res = it->second.lock()) return res;
     }
 
-    boost::shared_ptr<Severity> severity = boost::make_shared<Severity>();
+    auto severity = boost::make_shared<Severity>();
     disruptions.severities.insert({name, severity});
 
     severity->uri = name;
-    severity->effect = Effect::UNKNOWN_EFFECT; //is it right ?
+    severity->effect = Effect::UNKNOWN_EFFECT;
 
     return severity;
 }
@@ -113,7 +113,7 @@ void load_disruptions(
     std::string current_uri = "";
 
     for (auto cursor = result.begin(); cursor != result.end(); ++cursor) {
-        //we can have several language handled by the database, so we create one message for each
+        //we can have several message for each impact, (and one impact by disruption)
         if (cursor["uri"].as<std::string>() != current_uri) {
             disruptions.disruptions.push_back(std::make_unique<nt::new_disruption::Disruption>());
 

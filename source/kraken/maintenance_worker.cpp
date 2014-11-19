@@ -105,7 +105,7 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
             LOG4CPLUS_WARN(logger, "has_extension");
             if (!data) {
                 data = data_manager.get_data_clone();
-                data->last_rt_data_loaded = pt::microsec_clock::local_time();
+                data->last_rt_data_loaded = pt::microsec_clock::universal_time();
             }
 
             add_disruption(*data->pt_data, entity.GetExtension(chaos::disruption));

@@ -38,23 +38,20 @@ namespace ed {
 bool AtPerturbation::is_applicable(const boost::posix_time::time_period& period) const{
     bool days_intersects = false;
 
-    //intersection de la period ou se déroule l'action et de la periode de validité de la perturbation
     pt::time_period common_period = period.intersection(application_period);
 
-    //si la periode commune est null, l'impact n'est pas valide
+    //null period -> not valid
     if(common_period.is_null()){
         return false;
     }
 
-    //on doit travailler jour par jour
-    //
     bg::date current_date = common_period.begin().date();
 
     while(!days_intersects && current_date <= common_period.end().date()){
-        //on test uniquement le debut de la period, si la fin est valide, elle sera testé à la prochaine itération
+        // we only test the start of the period, the end will be tested next iter
         days_intersects = valid_day_of_week(current_date);
 
-        //vérification des plages horaires journaliéres
+        //check daily ranges
         pt::time_period current_period = common_period.intersection(pt::time_period(pt::ptime(current_date, pt::seconds(0)), pt::hours(24)));
         days_intersects = days_intersects && valid_hour_perturbation(current_period);
 
@@ -82,6 +79,6 @@ bool AtPerturbation::valid_day_of_week(const bg::date& date) const{
         case bg::Saturday: return this->active_days[5];
         case bg::Sunday: return this->active_days[6];
     }
-    return false; // Ne devrait pas arriver
+    return false;
 }
 }
