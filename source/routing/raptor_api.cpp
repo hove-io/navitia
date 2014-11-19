@@ -403,7 +403,8 @@ void add_isochrone_response(RAPTOR &raptor, pbnavitia::Response& response,
                             bool clockwise,
                             const type::AccessibiliteParams & accessibilite_params,
                             bool disruption_active,
-                            DateTime init_dt , DateTime bound, int max_duration, bool show_codes) {
+                            DateTime init_dt , DateTime bound, int max_duration,
+                            bool show_codes, bool show_stop_area) {
     bt::ptime now = bt::second_clock::local_time();
     for(const type::StopPoint* sp : stop_points) {
         DateTime best = bound;
@@ -441,8 +442,12 @@ void add_isochrone_response(RAPTOR &raptor, pbnavitia::Response& response,
                 pb_journey->set_nb_transfers(best_round);
                 bt::time_period action_period(navitia::to_posix_time(label-duration, raptor.data),
                         navitia::to_posix_time(label, raptor.data));
-                fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point,
-                        raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
+                if (show_stop_area)
+                    fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point->stop_area,
+                            raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
+               else
+                    fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point,
+                            raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
             }
         }
     }
@@ -749,9 +754,12 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                     stop_points.push_back(const_cast<type::StopPoint*>(sp));
                 }
 
+                const type::EntryPoint& m_point = paths_for_m_point.first;
+
                 add_isochrone_response(raptor, pb_response, stop_points, clockwise,
                                        accessibilite_params, disruption_active,
-                                       init_dt, bound, max_duration, show_codes);
+                                       init_dt, bound, max_duration, show_codes,
+                                       (m_point.type == nt::Type_e::StopArea));
             }
         }
     }
@@ -801,7 +809,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 
     add_isochrone_response(raptor, response, raptor.data.pt_data->stop_points, clockwise,
                            accessibilite_params, disruption_active,
-                           init_dt, bound, max_duration, show_codes);
+                           init_dt, bound, max_duration, show_codes, false);
 
      std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
                [](const pbnavitia::Journey & journey1, const pbnavitia::Journey & journey2) {
