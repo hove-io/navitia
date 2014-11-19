@@ -38,6 +38,7 @@ www.navitia.io
 #include "utils/flat_enum_map.h"
 
 #include <boost/serialization/map.hpp>
+#include "utils/serialization_unordered_map.h"
 
 namespace navitia { 
 template <>
@@ -52,7 +53,7 @@ typedef std::map<std::string, std::string> code_value_map_type;
 typedef std::map<std::string, code_value_map_type> type_code_codes_map_type;
 typedef flat_enum_map<pbnavitia::PlaceCodeRequest::Type, type_code_codes_map_type> ext_codes_map_type;
 struct PT_Data : boost::noncopyable{
-#define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::map<std::string, type_name *> collection_name##_map;
+#define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::unordered_map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
 
     ext_codes_map_type ext_codes_map;
