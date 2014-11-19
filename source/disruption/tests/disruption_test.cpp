@@ -36,6 +36,7 @@ www.navitia.io
 #include "ed/build_helper.h"
 #include <boost/make_shared.hpp>
 #include "tests/utils_test.h"
+#include "type/chaos.pb.h"
 
 /*
 
@@ -69,19 +70,11 @@ using navitia::type::new_disruption::Impact;
 using navitia::type::new_disruption::PtObj;
 using navitia::type::new_disruption::Disruption;
 
-enum class ChaosType {
-    //we copy the chaos type because we don't want chaos dependencies here
-    Network,
-    StopArea,
-    Line,
-    Route,
-    LineSection
-};
 
-struct disruption_creator {
+struct DisruptionCreator {
     std::string uri;
     std::string object_uri;
-    ChaosType object_type;
+    chaos::PtObject::Type object_type;
     pt::time_period application_period {pt::time_from_string("2013-12-19 12:32:00"),
                 pt::time_from_string("2013-12-21 12:32:00")};
     pt::time_period publication_period {pt::time_from_string("2013-12-19 12:32:00"),
@@ -102,7 +95,7 @@ public:
     ed::builder b;
     size_t period;
 
-    void add_disruption(disruption_creator disrupt, nt::PT_Data& pt_data) {
+    void add_disruption(DisruptionCreator disrupt, nt::PT_Data& pt_data) {
         nt::new_disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
         auto disruption = std::make_unique<Disruption>();
@@ -114,21 +107,22 @@ public:
         impact->application_periods = disrupt.get_application_periods();
 
         switch (disrupt.object_type) {
-        case ChaosType::Network:
+        case chaos::PtObject::Type::PtObject_Type_network:
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, disrupt.object_uri, pt_data, impact));
             break;
-        case ChaosType::StopArea:
+        case chaos::PtObject::Type::PtObject_Type_stop_area:
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, disrupt.object_uri, pt_data, impact));
             break;
-        case ChaosType::Line:
+        case chaos::PtObject::Type::PtObject_Type_line:
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, disrupt.object_uri, pt_data, impact));
             break;
-        case ChaosType::Route:
+        case chaos::PtObject::Type::PtObject_Type_route:
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Route, disrupt.object_uri, pt_data, impact));
             break;
-        case ChaosType::LineSection:
+        case chaos::PtObject::Type::PtObject_Type_line_section:
             throw navitia::exception("LineSection not handled yet");
-            break;
+        default:
+            throw navitia::exception("not handled yet");
         }
 
         disruption->add_impact(impact);
@@ -154,11 +148,11 @@ public:
         for(navitia::type::Line *line : b.data->pt_data->lines){
             line->network->line_list.push_back(line);
         }
-        disruption_creator disruption_wrapper;
-        disruption_wrapper = disruption_creator();
+        DisruptionCreator disruption_wrapper;
+        disruption_wrapper = DisruptionCreator();
         disruption_wrapper.uri = "mess1";
         disruption_wrapper.object_uri = "line:A";
-        disruption_wrapper.object_type = ChaosType::Line;
+        disruption_wrapper.object_type = chaos::PtObject::Type::PtObject_Type_line;
         //note we add one seconds, because the end is not is the period
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
                                                                 pt::time_from_string("2013-12-21 12:32:00") + pt::seconds(1));
@@ -166,40 +160,40 @@ public:
                                                                 pt::time_from_string("2013-12-21 12:32:00") + pt::seconds(1));
         add_disruption(disruption_wrapper, *b.data->pt_data);
 
-        disruption_wrapper = disruption_creator();
+        disruption_wrapper = DisruptionCreator();
         disruption_wrapper.uri = "mess0";
         disruption_wrapper.object_uri = "line:S";
-        disruption_wrapper.object_type = ChaosType::Line;
+        disruption_wrapper.object_type = chaos::PtObject::Type::PtObject_Type_line;
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
                                                                 pt::time_from_string("2013-12-21 12:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-19 12:32:00"),
                                                                 pt::time_from_string("2013-12-21 12:32:00") + pt::seconds(1));
         add_disruption(disruption_wrapper, *b.data->pt_data);
 
-        disruption_wrapper = disruption_creator();
+        disruption_wrapper = DisruptionCreator();
         disruption_wrapper.uri = "mess2";
         disruption_wrapper.object_uri = "line:B";
-        disruption_wrapper.object_type = ChaosType::Line;
+        disruption_wrapper.object_type = chaos::PtObject::Type::PtObject_Type_line;
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
                                                                 pt::time_from_string("2013-12-25 12:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
                                                                 pt::time_from_string("2013-12-25 12:32:00") + pt::seconds(1));
         add_disruption(disruption_wrapper, *b.data->pt_data);
 
-        disruption_wrapper = disruption_creator();
+        disruption_wrapper = DisruptionCreator();
         disruption_wrapper.uri = "mess3";
         disruption_wrapper.object_uri = "network:M";
-        disruption_wrapper.object_type = ChaosType::Network;
+        disruption_wrapper.object_type = chaos::PtObject::Type::PtObject_Type_network;
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
                                                                 pt::time_from_string("2013-12-25 12:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2013-12-23 12:32:00"),
                                                                 pt::time_from_string("2013-12-25 12:32:00") + pt::seconds(1));
         add_disruption(disruption_wrapper, *b.data->pt_data);
 
-        disruption_wrapper = disruption_creator();
+        disruption_wrapper = DisruptionCreator();
         disruption_wrapper.uri = "mess4";
         disruption_wrapper.object_uri = "network:Test";
-        disruption_wrapper.object_type = ChaosType::Network;
+        disruption_wrapper.object_type = chaos::PtObject::Type::PtObject_Type_network;
         disruption_wrapper.application_period = pt::time_period(pt::time_from_string("2014-01-12 08:32:00"),
                                                                 pt::time_from_string("2014-02-02 18:32:00") + pt::seconds(1));
         disruption_wrapper.publication_period = pt::time_period(pt::time_from_string("2014-01-02 08:32:00"),
