@@ -1057,40 +1057,40 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
             e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
 
             // overflow check since we want to store that on a int32
-            if (e.duration.total_seconds() < std::floor(len / ng::default_speed[nt::Mode_e::Walking])) {
+            if (e.duration.total_seconds() == std::floor(len / ng::default_speed[nt::Mode_e::Walking])) {
+                way->edges.push_back(std::make_pair(source, target));
+                nb_walking_edges++;
+            } else {
                 LOG4CPLUS_WARN(log, "edge length overflow for walking for source "
                                << source << " target " << target << " length: " << len << ", we ignore this edge");
-                continue;
             }
-            way->edges.push_back(std::make_pair(source, target));
-            nb_walking_edges++;
         }
         if (const_it["bike"].as<bool>()) {
-            if (e.duration.total_seconds() < std::floor(len / ng::default_speed[nt::Mode_e::Bike])) {
+            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
+            if (e.duration.total_seconds() == std::floor(len / ng::default_speed[nt::Mode_e::Bike])) {
+                auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
+                auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
+                boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
+                way->edges.push_back(std::make_pair(bike_source, bike_target));
+                nb_biking_edges++;
+            } else {
                 LOG4CPLUS_WARN(log, "edge length overflow for bike for source "
                                << source << " target " << target << " length: " << len << ", we ignore this edge");
-                continue;
             }
-
-            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
-            auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
-            auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
-            boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
-            way->edges.push_back(std::make_pair(bike_source, bike_target));
-            nb_biking_edges++;
         }
         if (const_it["car"].as<bool>()) {
-            if (e.duration.total_seconds() < std::floor(len / ng::default_speed[nt::Mode_e::Car])) {
+            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Car]);
+            if (e.duration.total_seconds() == std::floor(len / ng::default_speed[nt::Mode_e::Car])) {
+                auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
+                auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
+                boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
+                way->edges.push_back(std::make_pair(car_source, car_target));
+                nb_driving_edges++;
+
+            } else {
                 LOG4CPLUS_WARN(log, "edge length overflow for car for source "
                                << source << " target " << target << " length: " << len << ", we ignore this edge");
-                continue;
             }
-            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Car]);
-            auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
-            auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
-            boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
-            way->edges.push_back(std::make_pair(car_source, car_target));
-            nb_driving_edges++;
         }
     }
 
