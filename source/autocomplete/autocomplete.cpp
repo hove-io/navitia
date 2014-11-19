@@ -104,9 +104,22 @@ void compute_score_stop_area(type::PT_Data & pt_data, const georef::GeoRef &geor
 */
 void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
     //For each stop_point increase the score of it's admin(level 8) by 1.
+    for (navitia::georef::Way* way: georef.ways) {
+        for (navitia::georef::Admin * admin : way->admin_list){
+            if (admin->level == 8){
+                georef.fl_admin.word_quality_list.at(admin->idx).score++;
+            }
+        }
+    }
+    std::set<navitia::georef::Admin*> without_way_admins;
+    for(auto admin : georef.admins) {
+        if (admin->level == 8 && georef.fl_admin.word_quality_list.at(admin->idx).score == 0) {
+            without_way_admins.insert(admin);
+        }
+    }
     for (navitia::type::StopPoint* sp : pt_data.stop_points){
         for (navitia::georef::Admin * admin : sp->admin_list){
-            if (admin->level == 8){
+            if (admin->level == 8 && without_way_admins.count(admin) > 0){
                 georef.fl_admin.word_quality_list.at(admin->idx).score++;
             }
         }
