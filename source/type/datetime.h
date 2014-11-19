@@ -35,6 +35,7 @@ www.navitia.io
 #include <fstream>
 #include <bitset>
 #include "utils/flat_enum_map.h"
+#include "time_duration.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_config.hpp>
@@ -184,3 +185,58 @@ expand_calendar(boost::posix_time::ptime start, boost::posix_time::ptime end,
              boost::posix_time::time_duration beg_of_day, boost::posix_time::time_duration end_of_day,
              std::bitset<7> days);
 }
+
+/*
+ * enable simple date construction
+ *
+ * build it like "20140101"_d
+ */
+inline boost::gregorian::date operator"" _d(const char* str, size_t s) {
+    return boost::gregorian::from_undelimited_string(std::string(str, s));
+}
+
+/*
+ * enable simple posix time construction
+ *
+ * build it like "20140101T120000"_dt
+ */
+inline boost::posix_time::ptime operator"" _dt(const char* str, size_t s) {
+    return boost::posix_time::from_iso_string(std::string(str, s));
+}
+
+/*
+ * enable simple duration construction (in days)
+ *
+ * build it like 7_days
+ */
+inline boost::gregorian::days operator"" _days(unsigned long long v) {
+    return boost::gregorian::days(v);
+}
+
+/*
+ * enable simple duration construction (in seconds)
+ *
+ * build it like 12_s => creates a boost::time_duration of 12 seconds
+ */
+inline navitia::time_duration operator"" _s(unsigned long long v) {
+    return navitia::seconds(v);
+}
+
+/*
+ * enable simple duration construction (in minutes)
+ *
+ * build it like 12_min => creates a boost::time_duration of 12 minutes
+ */
+inline navitia::time_duration operator"" _min(unsigned long long v) {
+    return navitia::minutes(v);
+}
+
+/*
+ * enable simple duration construction (in hours)
+ *
+ * build it like 12_h => creates a boost::time_duration of 12 hours
+ */
+inline navitia::time_duration operator"" _h(unsigned long long v) {
+    return navitia::hours(v);
+}
+

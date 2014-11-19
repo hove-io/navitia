@@ -384,7 +384,7 @@ struct routing_api_data {
         b.data->pt_data->index();
         b.data->build_raptor();
         b.data->build_proximity_list();
-        b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 7_day);
+        b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 7_days);
 	b.data->compute_labels();
 
         //add bike sharing edges
