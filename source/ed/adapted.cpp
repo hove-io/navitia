@@ -53,7 +53,7 @@ nt::ValidityPattern* get_or_create_validity_pattern(nt::PT_Data& data, nt::Valid
 }
 
 nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
-                          const nt::AtPerturbation& pert,
+                          const AtPerturbation& pert,
                           nt::PT_Data& data, uint32_t time){
     nt::ValidityPattern* vp = new nt::ValidityPattern(*validity_pattern);
 
@@ -73,7 +73,7 @@ nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
 }
 
 void update_adapted_validity_pattern(nt::VehicleJourney* vehicle_journey,
-        const nt::AtPerturbation& pert, nt::PT_Data& data){
+        const AtPerturbation& pert, nt::PT_Data& data){
    vehicle_journey->adapted_validity_pattern = get_validity_pattern(vehicle_journey->adapted_validity_pattern,
                                                                      pert,
                                                                      data,
@@ -103,7 +103,7 @@ pt::time_period build_stop_period(const nt::StopTime& stop,
 }
 
 std::vector<nt::StopTime*> get_stop_from_impact(
-        const navitia::type::AtPerturbation& perturbation,
+        const ed::AtPerturbation& perturbation,
         bg::date current_date,
         std::vector<nt::StopTime*> stoplist){
     std::vector<nt::StopTime*> result;
@@ -223,7 +223,7 @@ std::pair<bool, nt::VehicleJourney*> find_reference_vj(
 }
 
 void duplicate_vj(nt::VehicleJourney* vehicle_journey,
-        const nt::AtPerturbation& perturbation, nt::PT_Data& data){
+        const AtPerturbation& perturbation, nt::PT_Data& data){
     //map contenant le mapping entre un vj de référence et le vj adapté qui lui est lié
     //ceci permet de ne pas recréer un vj adapté à chaque fois que l'on change de vj de référence
     std::map<nt::VehicleJourney*, nt::VehicleJourney*> prec_vjs;
@@ -293,7 +293,7 @@ void AtAdaptedLoader::init_map(const nt::PT_Data& data){
 }
 
 std::vector<nt::VehicleJourney*> AtAdaptedLoader::reconcile_impact_with_vj(
-        const navitia::type::AtPerturbation& perturbation, const nt::PT_Data&){
+        const ed::AtPerturbation& perturbation, const nt::PT_Data&){
     std::vector<nt::VehicleJourney*> result;
 
     if(perturbation.object_type == nt::Type_e::VehicleJourney){
@@ -319,8 +319,8 @@ std::vector<nt::VehicleJourney*> AtAdaptedLoader::reconcile_impact_with_vj(
 
 
 void AtAdaptedLoader::apply_deletion_on_vj(nt::VehicleJourney* vehicle_journey,
-        const std::set<nt::AtPerturbation>& perturbations, nt::PT_Data& data){
-    for(nt::AtPerturbation pert : perturbations){
+        const std::set<AtPerturbation>& perturbations, nt::PT_Data& data){
+    for(AtPerturbation pert : perturbations){
         if(vehicle_journey->stop_time_list.size() > 0){
             update_adapted_validity_pattern(vehicle_journey, pert, data);
         }
@@ -328,9 +328,9 @@ void AtAdaptedLoader::apply_deletion_on_vj(nt::VehicleJourney* vehicle_journey,
 }
 
 void AtAdaptedLoader::apply_update_on_vj(nt::VehicleJourney* vehicle_journey,
-        const std::set<nt::AtPerturbation>& perturbations,
+        const std::set<AtPerturbation>& perturbations,
         nt::PT_Data& data){
-    for(nt::AtPerturbation pert : perturbations){
+    for(AtPerturbation pert : perturbations){
         if(!vehicle_journey->stop_time_list.empty()){
             duplicate_vj(vehicle_journey, pert, data);
         }
@@ -353,7 +353,7 @@ std::vector<nt::VehicleJourney*> AtAdaptedLoader::get_vj_from_stop_area(
 }
 
 std::vector<nt::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(
-        const navitia::type::AtPerturbation& perturbation){
+        const ed::AtPerturbation& perturbation){
     std::vector<nt::VehicleJourney*> result;
     if(perturbation.object_type == navitia::type::Type_e::StopPoint){
         auto tmp = get_vj_from_stoppoint(perturbation.object_uri);
@@ -368,7 +368,7 @@ std::vector<nt::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(
 
 
 void AtAdaptedLoader::dispatch_perturbations(
-        const std::vector<navitia::type::AtPerturbation>& perturbations,
+        const std::vector<ed::AtPerturbation>& perturbations,
         const nt::PT_Data& data){
     auto logger = log4cplus::Logger::getInstance("adapted");
     for(const auto& pert : perturbations){
@@ -399,7 +399,7 @@ void AtAdaptedLoader::dispatch_perturbations(
 
 
 void AtAdaptedLoader::apply(
-        const std::vector<navitia::type::AtPerturbation>& perturbations,
+        const std::vector<ed::AtPerturbation>& perturbations,
         nt::PT_Data& data){
     if(perturbations.size() < 1){
         return;

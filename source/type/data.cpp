@@ -37,6 +37,9 @@ www.navitia.io
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/weak_ptr.hpp>
+#include <boost/serialization/variant.hpp>
 #include <thread>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
@@ -51,6 +54,7 @@ www.navitia.io
 #include "georef/georef.h"
 #include "fare/fare.h"
 #include "type/meta_data.h"
+#include "kraken/fill_disruption_from_database.h"
 
 namespace pt = boost::posix_time;
 
@@ -72,7 +76,8 @@ Data::Data() :
 
 Data::~Data(){}
 
-bool Data::load(const std::string& filename) {
+bool Data::load(const std::string& filename,
+        const boost::optional<std::string>& chaos_database) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     loading = true;
     try {
@@ -95,6 +100,9 @@ bool Data::load(const std::string& filename) {
     } catch(...) {
         LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
         last_load = false;
+    }
+    if (chaos_database) {
+        fill_disruption_from_database(*chaos_database, *pt_data);
     }
     loading = false;
     return this->last_load;

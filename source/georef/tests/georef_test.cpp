@@ -35,6 +35,7 @@ www.navitia.io
 #include <iostream>
 
 #include "georef/georef.h"
+#include "tests/utils_test.h"
 #include "type/data.h"
 #include "builder.h"
 #include "georef/street_network.h"
@@ -44,28 +45,6 @@ struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
-
-/**
- * just to ease the test writing
- * enable the creation of duration just by writing 123_s => creates a boost::time_duration of 123 seconds
- * Note: I had to create a new class since boost does not define the constructors constexpr
- */
-struct custom_seconds
-{
-    int dur;
-    constexpr custom_seconds(int s) : dur(s) {}
-    custom_seconds(const custom_seconds&) = default;
-    custom_seconds& operator=(const custom_seconds&) = default;
-    operator navitia::time_duration() const { return navitia::seconds(dur); }
-};
-std::ostream & operator<<(std::ostream& os, custom_seconds s) {
-    os << s.dur << " seconds";
-    return os;
-}
-
-inline constexpr custom_seconds operator"" _s(unsigned long long v) {
-    return custom_seconds(v);
-}
 
 using namespace navitia::georef;
 using namespace boost;

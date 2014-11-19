@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "build_helper.h"
 #include "ed/connectors/gtfs_parser.h"
+#include <boost/range/algorithm/find_if.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -320,8 +321,15 @@ VJ builder::vj(const std::string& network_name,
         this->nts[network_name] = network;
         this->data->pt_data->networks.push_back(network);
         vj->journey_pattern->route->line->network = network;
+        network->line_list.push_back(vj->journey_pattern->route->line);
     } else {
         vj->journey_pattern->route->line->network = it->second;
+
+        auto line = vj->journey_pattern->route->line;
+        if (boost::find_if(it->second->line_list, [line](navitia::type::Line* l) { return l->uri == line->uri;})
+                == it->second->line_list.end()) {
+            it->second->line_list.push_back(vj->journey_pattern->route->line);
+        }
     }
     if(block_id != "") {
         block_vjs.insert(std::make_pair(block_id, vj));
@@ -356,12 +364,15 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     company->uri = "base_company";
     this->data->pt_data->companies.push_back(company);
 
-    navitia::type::Network *network = new navitia::type::Network();
-    network->idx = this->data->pt_data->networks.size();
-    network->name = "base_network";
-    network->uri = "base_network";
-    this->data->pt_data->networks.push_back(network);
-    this->nts.insert({network->uri, network});
+    const std::string default_network_name = "base_network";
+    if (data->pt_data->networks_map.find(default_network_name) == data->pt_data->networks_map.end()) {
+        navitia::type::Network *network = new navitia::type::Network();
+        network->idx = this->data->pt_data->networks.size();
+        network->name = default_network_name;
+        network->uri = default_network_name;
+        this->data->pt_data->networks.push_back(network);
+        this->nts.insert({network->uri, network});
+    }
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();

@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <atomic>
 #include "type/type.h"
 #include "utils/serialization_unique_ptr.h"
@@ -122,6 +123,8 @@ public:
     bool last_load = true;
     boost::posix_time::ptime last_load_at;
 
+    boost::posix_time::ptime last_rt_data_loaded; //datetime of the last Real Time loaded data
+
     // This object is the only field mutated in this object. As it is
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
     // find in the future a cleaner way, but now, this is cleaner than
@@ -148,7 +151,8 @@ public:
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     /** Charge les données et effectue les initialisations nécessaires */
-    bool load(const std::string & filename);
+    bool load(const std::string & filename,
+            const boost::optional<std::string>& chaos_database = {});
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;

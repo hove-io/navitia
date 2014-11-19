@@ -41,6 +41,17 @@ www.navitia.io
 
 namespace pt = boost::posix_time;
 
+enum Jours {
+    Lun = 0x01,
+    Mar = 0x02,
+    Mer = 0x04,
+    Jeu = 0x08,
+    Ven = 0x10,
+    Sam = 0x20,
+    Dim = 0x40,
+    Fer = 0x80
+};
+
 using namespace ed;
 
 using namespace navitia::type;
@@ -99,12 +110,12 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven;
+    m.active_days = Jours::Ven;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -224,12 +235,12 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Lun | nt::Mar | nt::Mer | nt::Jeu | nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Lun | Jours::Mar | Jours::Mer | Jours::Jeu | Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -352,12 +363,12 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
     vj->adapted_validity_pattern = vj->validity_pattern;
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 10:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Lun | nt::Mar | nt::Mer | nt::Jeu | nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Lun | Jours::Mar | Jours::Mer | Jours::Jeu | Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("09:30");
 
@@ -514,12 +525,12 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Line;
     m.object_uri = "line:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Lun | nt::Mar | nt::Mer | nt::Jeu | nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Lun | Jours::Mar | Jours::Mer | Jours::Jeu | Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -692,12 +703,12 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Line;
     m.object_uri = "line:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven;
+    m.active_days = Jours::Ven;
     m.application_daily_start_hour = pt::duration_from_string("08:30");
     m.application_daily_end_hour = pt::duration_from_string("09:30");
 
@@ -853,12 +864,12 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
 
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Network;
     m.object_uri = "network:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Lun | nt::Mar | nt::Mer | nt::Jeu | nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Lun | Jours::Mar | Jours::Mer | Jours::Jeu | Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -1035,12 +1046,12 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
 
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Network;
     m.object_uri = "network:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven;
+    m.active_days = Jours::Ven;
     m.application_daily_start_hour = pt::duration_from_string("08:30");
     m.application_daily_end_hour = pt::duration_from_string("09:30");
 
@@ -1216,12 +1227,12 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Network;
     m.object_uri = "network:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven;
+    m.active_days = Jours::Ven;
     m.application_daily_start_hour = pt::duration_from_string("08:30");
     m.application_daily_end_hour = pt::duration_from_string("09:30");
 
@@ -1231,7 +1242,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-04 23:59:00"));
-    m.active_days = nt::Sam;
+    m.active_days = Jours::Sam;
     m.application_daily_start_hour = pt::duration_from_string("08:30");
     m.application_daily_end_hour = pt::duration_from_string("09:30");
 
@@ -1408,12 +1419,12 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::Network;
     m.object_uri = "network:A";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven;
+    m.active_days = Jours::Ven;
     m.application_daily_start_hour = pt::duration_from_string("08:30");
     m.application_daily_end_hour = pt::duration_from_string("09:30");
 
@@ -1423,7 +1434,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven;
+    m.active_days = Jours::Ven;
     m.application_daily_start_hour = pt::duration_from_string("08:30");
     m.application_daily_end_hour = pt::duration_from_string("09:30");
 
@@ -1575,12 +1586,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     vj->adapted_validity_pattern = vj->validity_pattern;
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -1696,12 +1707,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -1711,7 +1722,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -1794,12 +1805,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -1809,7 +1820,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop2";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -1928,12 +1939,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop2";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-02 00:00:00"), pt::time_from_string("2013-03-02 23:59:00"));
-    m.active_days = nt::Lun | nt::Mar | nt::Mer | nt::Jeu | nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Lun | Jours::Mar | Jours::Mer | Jours::Jeu | Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -2041,12 +2052,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
-    m.active_days = nt::Lun | nt::Mar | nt::Mer | nt::Jeu | nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Lun | Jours::Mar | Jours::Mer | Jours::Jeu | Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -2056,7 +2067,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop2";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-02 00:00:00"), pt::time_from_string("2013-03-05 23:59:00"));
-    m.active_days = nt::Lun | nt::Mar | nt::Mer | nt::Jeu | nt::Ven | nt::Sam | nt::Dim;
+    m.active_days = Jours::Lun | Jours::Mar | Jours::Mer | Jours::Jeu | Jours::Ven | Jours::Sam | Jours::Dim;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -2225,12 +2236,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
 
-    std::vector<nt::AtPerturbation> messages;
-    nt::AtPerturbation m;
+    std::vector<ed::AtPerturbation> messages;
+    ed::AtPerturbation m;
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2014-03-01 23:59:00"));
-    m.active_days = nt::Sam | nt::Dim | nt::Lun;
+    m.active_days = Jours::Sam | Jours::Dim | Jours::Lun;
     m.application_daily_start_hour = pt::duration_from_string("00:00");
     m.application_daily_end_hour = pt::duration_from_string("23:59");
 
@@ -2239,7 +2250,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     m.uri = "2";
     m.object_uri = "stop_point:stop2";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-15 23:59:00"));
-    m.active_days = nt::Ven | nt::Lun;
+    m.active_days = Jours::Ven | Jours::Lun;
     messages.push_back(m);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->stop_times.size(), 2);

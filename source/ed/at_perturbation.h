@@ -28,17 +28,45 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "ed/build_helper.h"
-#include "mock_kraken.h"
-#include "utils/init.h"
+#pragma once
 
-int main(int argc, const char* const argv[]) {
-    ed::builder b("20141010");
-    navitia::init_app();
-    b.data->loaded = false;
-    b.data->loading = false;
-    mock_kraken kraken(b, "null_status_test", argc, argv);
+#include "type/type.h"
+#include <string>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <bitset>
 
-    return 0;
+namespace ed {
+/**
+ * Old AT perturbation
+ *
+ * only used for adapated computation.
+ *
+ * will be soon (hope so) completly removed by Disruption
+ */
+struct AtPerturbation{
+    std::string uri;
+
+    navitia::type::Type_e object_type;
+    std::string object_uri;
+
+    boost::posix_time::time_period application_period;
+
+    boost::posix_time::time_duration application_daily_start_hour;
+    boost::posix_time::time_duration application_daily_end_hour;
+
+    std::bitset<8> active_days;
+
+    AtPerturbation(): object_type(navitia::type::Type_e::ValidityPattern),
+        application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
+
+    bool valid_day_of_week(const boost::gregorian::date& date) const;
+
+    bool valid_hour_perturbation(const boost::posix_time::time_period& period) const;
+
+    bool is_applicable(const boost::posix_time::time_period& time) const;
+
+    bool operator<(const AtPerturbation& other) const {
+        return (this->uri < other.uri);
+    }
+};
 }
-

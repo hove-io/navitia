@@ -76,6 +76,7 @@ message PtDisplayInfo {
     optional hasEquipments has_equipments = 11;
     optional string name = 12;
     repeated Message messages = 13;
+    repeated Disruption disruptions = 14;
 }
 
 message Uris {
@@ -189,6 +190,8 @@ message Status{
     optional int32 nb_threads = 11;
     optional bool is_connected_to_rabbitmq = 12;
     optional string status = 13;
+
+    optional string last_rt_data_loaded = 14;
 }
 
 message PairStopTime {
@@ -306,7 +309,7 @@ message Error{
     optional string message = 2;
 }
 
-message Disruption{
+message Disruptions{
     optional Network network = 1;
     repeated Line lines = 2;
     repeated StopArea stop_areas = 3;   
@@ -362,7 +365,7 @@ message Response{
     optional Pagination pagination = 49;
     
     //Disruptions
-    repeated Disruption disruptions = 50;
+    repeated Disruptions disruptions = 60;
 
     //Fare
     repeated Ticket tickets = 51;

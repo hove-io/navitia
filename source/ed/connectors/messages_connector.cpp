@@ -35,12 +35,47 @@ www.navitia.io
 #include "utils/logger.h"
 #include "type/data.h"
 #include "type/pt_data.h"
+#include <boost/dynamic_bitset.hpp>
 
 namespace ed{ namespace connectors{
 
 namespace pt = boost::posix_time;
+using nt::new_disruption::Severity;
+using nt::new_disruption::Impact;
+using nt::new_disruption::Effect;
+using nt::new_disruption::DisruptionHolder;
 
-std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
+boost::shared_ptr<Severity>
+get_or_create_severity(DisruptionHolder& disruptions, int id) {
+    std::string name;
+    if (id == 0) {
+        name = "information";
+    } else if (id == 1) {
+        name = "warning";
+    } else if (id == 2) {
+        name = "disrupt";
+    } else {
+        throw navitia::exception("Disruption: invalid severity in database");
+    }
+
+    auto it = disruptions.severities.find(name);
+
+    if (it != disruptions.severities.end()) {
+        // we return the weak_ptr if it is still alive, else we'll add a new one
+        if (auto res = it->second.lock()) return res;
+    }
+
+    auto severity = boost::make_shared<Severity>();
+    disruptions.severities.insert({name, severity});
+
+    severity->uri = name;
+    severity->effect = Effect::UNKNOWN_EFFECT;
+
+    return severity;
+}
+
+void load_disruptions(
+        navitia::type::PT_Data& pt_data,
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time){
     //pour le moment on vire les timezone et on considére que c'est de l'heure local
@@ -69,114 +104,71 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des messages");
         result = work.prepared("messages")(st_current_time)(st_shift_days).exec();
-    }catch(const pqxx::pqxx_exception &e){
+    } catch(const pqxx::pqxx_exception& e) {
         throw navitia::exception(e.base().what());
-
     }
 
-    std::map<std::string, boost::shared_ptr<navitia::type::Message>> messages;
-    boost::shared_ptr<navitia::type::Message> message;
+    nt::new_disruption::DisruptionHolder& disruptions = pt_data.disruption_holder;
+    boost::shared_ptr<nt::new_disruption::Impact> impact;
     std::string current_uri = "";
 
-    for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
-        if(cursor["uri"].as<std::string>() != current_uri){//on traite un nouveau message
-            if(message){//si on a un message précédent, on le rajoute au map de résultat
-                messages[message->uri] = message;
-            }
+    for (auto cursor = result.begin(); cursor != result.end(); ++cursor) {
+        //we can have several message for each impact, (and one impact by disruption)
+        if (cursor["uri"].as<std::string>() != current_uri) {
+            disruptions.disruptions.push_back(std::make_unique<nt::new_disruption::Disruption>());
+
+            auto& disruption = disruptions.disruptions.back();
             cursor["uri"].to(current_uri);
-            //on construit le message
-            message = boost::make_shared<navitia::type::Message>();
-            message->uri = current_uri;
-            cursor["object_uri"].to(message->object_uri);
+            disruption->uri = current_uri;
 
-            message->object_type = static_cast<navitia::type::Type_e>(
-                    cursor["object_type_id"].as<int>());
+            impact = boost::shared_ptr<nt::new_disruption::Impact>();
+            cursor["uri"].to(impact->uri);
 
-            message->message_status = static_cast<navitia::type::MessageStatus>(
-                    cursor["message_status_id"].as<int>());
+            //we need to handle the active days to split the period
+            pt::ptime start = pt::time_from_string(cursor["start_application_date"].as<std::string>());
+            pt::ptime end = pt::time_from_string(cursor["end_application_date"].as<std::string>());
 
-            message->application_daily_start_hour = pt::duration_from_string(
-                    cursor["start_application_daily_hour"].as<std::string>());
+            auto daily_start_hour = pt::duration_from_string(
+                        cursor["start_application_daily_hour"].as<std::string>());
+            auto daily_end_hour = pt::duration_from_string(
+                        cursor["end_application_daily_hour"].as<std::string>());
 
-            message->application_daily_end_hour = pt::duration_from_string(
-                    cursor["end_application_daily_hour"].as<std::string>());
+            std::bitset<7> active_days (cursor["active_days"].as<std::string>());
 
-            pt::ptime start = pt::time_from_string(
-                    cursor["start_application_date"].as<std::string>());
-
-            pt::ptime end = pt::time_from_string(
-                    cursor["end_application_date"].as<std::string>());
-            message->application_period = pt::time_period(start, end);
-
-            start = pt::time_from_string(
-                    cursor["start_publication_date"].as<std::string>());
-
-            end = pt::time_from_string(
-                    cursor["end_publication_date"].as<std::string>());
-            message->publication_period = pt::time_period(start, end);
-
-            message->active_days = std::bitset<8>(
-                    cursor["active_days"].as<std::string>());
+            impact->application_periods = navitia::expand_calendar(start, end,
+                                                       daily_start_hour, daily_end_hour,
+                                                       active_days);
+            disruption->add_impact(impact);
+            disruptions.disruptions.push_back(std::move(disruption));
         }
-        std::string language = cursor["language"].as<std::string>();
-        cursor["body"].to(message->localized_messages[language].body);
-        cursor["title"].to(message->localized_messages[language].title);
-    }
-    if(message){//on ajoute le dernier message traité
-        messages[message->uri] = message;
-    }
+        auto message = nt::new_disruption::Message();
+        cursor["body"].to(message.text);
+        impact->messages.push_back(message);
 
-    return messages;
-}
+        auto pt_object = nt::new_disruption::make_pt_obj(
+            static_cast<navitia::type::Type_e>(cursor["object_type_id"].as<int>()),
+            cursor["object_uri"].as<std::string>(),
+            pt_data
+            );
+        impact->informed_entities.push_back(pt_object);
 
-void apply_messages(navitia::type::Data& data){
-    for(const auto message_pair : data.pt_data->message_holder.messages){
-        if(message_pair.second->object_type ==  navitia::type::Type_e::StopArea){
-            auto it = data.pt_data->stop_areas_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->stop_areas_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
+        auto severity_id = cursor["message_status_id"].as<int>();
+        auto severity = get_or_create_severity(disruptions, severity_id);
+        impact->severity = severity;
 
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::StopPoint){
-            auto it = data.pt_data->stop_points_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->stop_points_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::Route){
-            auto it = data.pt_data->routes_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->routes_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::VehicleJourney){
-            auto it = data.pt_data->vehicle_journeys_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->vehicle_journeys_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::Line){
-            auto it = data.pt_data->lines_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->lines_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
-
-        if(message_pair.second->object_type ==  navitia::type::Type_e::Network){
-            auto it = data.pt_data->networks_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data->networks_map.end()){
-                it->second->messages.push_back(message_pair.second);
-            }
-        }
+        // message does not have tags, notes, localization or cause
     }
 }
 
-std::vector<navitia::type::AtPerturbation> load_at_perturbations(
+template <typename Container>
+void add_impact(Container& map, const std::string& uri, const boost::shared_ptr<Impact>& impact) {
+    auto it = map.find(uri);
+    if(it != map.end()){
+        it->second->add_impact(impact);
+    }
+}
+
+std::vector<ed::AtPerturbation> load_at_perturbations(
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time){
     //pour le moment on vire les timezone et on considére que c'est de l'heure local
@@ -201,15 +193,13 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des perturbations at");
         result = work.prepared("messages")(st_current_time)(st_shift_days).exec();
-
-    }catch(const pqxx::pqxx_exception &e){
+    } catch(const pqxx::pqxx_exception& e) {
         throw navitia::exception(e.base().what());
-
     }
 
-    std::vector<navitia::type::AtPerturbation> perturbations;
+    std::vector<ed::AtPerturbation> perturbations;
     for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
-        navitia::type::AtPerturbation perturbation;
+       ed::AtPerturbation perturbation;
         cursor["uri"].to(perturbation.uri);
         //on construit le message
         cursor["object_uri"].to(perturbation.object_uri);

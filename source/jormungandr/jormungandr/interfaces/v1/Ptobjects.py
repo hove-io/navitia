@@ -31,7 +31,7 @@
 
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
-from jormungandr import i_manager
+from jormungandr import i_manager, timezone
 from make_links import add_id_links
 from fields import NonNullList, NonNullNested, PbField, error, pt_object
 from ResourceUri import ResourceUri
@@ -80,6 +80,7 @@ class Ptobjects(ResourceUri):
     @marshal_with(pt_objects)
     def get(self, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
+        timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
         if len(args['q']) == 0:
             abort(400, message="Search word absent")

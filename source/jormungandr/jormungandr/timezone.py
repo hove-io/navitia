@@ -43,7 +43,7 @@ def set_request_timezone(region):
         raise RegionNotFound(region)
 
     if not instance.timezone:
-        logger.warn("region {} hos no timezone".format(region))
+        logger.warn("region {} has no timezone".format(region))
         g.timezone = None
         return
 

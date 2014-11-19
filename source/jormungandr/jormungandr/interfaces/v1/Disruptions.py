@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from flask.ext.restful import marshal_with, reqparse
-from jormungandr import i_manager
+from jormungandr import i_manager, timezone
 from fields import PbField, error, network, line,\
     NonNullList, NonNullNested, pagination, stop_area
 from ResourceUri import ResourceUri
@@ -79,6 +79,7 @@ class Disruptions(ResourceUri):
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
+        timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
 
         if not args["datetime"]:

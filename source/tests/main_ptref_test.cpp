@@ -101,12 +101,12 @@ struct data_set {
     ed::builder b;
 };
 
-int main() {
+int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     data_set data;
 
-    mock_kraken kraken(data.b, "main_ptref_test");
+    mock_kraken kraken(data.b, "main_ptref_test", argc, argv);
 
     return 0;
 }

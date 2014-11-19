@@ -32,7 +32,7 @@ www.navitia.io
 #include "routing/tests/routing_api_test_data.h"
 #include "mock_kraken.h"
 
-int main() {
+int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     //for some tests we want an empty region but with a bounding box
@@ -49,7 +49,7 @@ int main() {
               << ", " << routing_data.S.lon() - 1e-3 << " " << routing_data.S.lat() - 1e-3 << "))";
     b.data->meta->shape = ss.str();
 
-    mock_kraken kraken(b, "empty_routing_test");
+    mock_kraken kraken(b, "empty_routing_test", argc, argv);
 
 
     return 0;
