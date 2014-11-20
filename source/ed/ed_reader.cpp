@@ -1058,6 +1058,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
 
             // overflow check since we want to store that on a int32
             if (e.duration.total_seconds() == std::floor(len / ng::default_speed[nt::Mode_e::Walking])) {
+                boost::add_edge(source, target, e, data.geo_ref->graph);
                 way->edges.push_back(std::make_pair(source, target));
                 nb_walking_edges++;
             } else {
@@ -1086,7 +1087,6 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
                 boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
                 way->edges.push_back(std::make_pair(car_source, car_target));
                 nb_driving_edges++;
-
             } else {
                 LOG4CPLUS_WARN(log, "edge length overflow for car for source "
                                << source << " target " << target << " length: " << len << ", we ignore this edge");
