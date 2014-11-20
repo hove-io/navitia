@@ -183,6 +183,7 @@ public:
     void compute_labels();
 
     /** Retourne le type de l'id donné */
+
     Type_e get_type_of_id(const std::string & id) const;
 
     /** Charge les données binaires compressées en LZ4

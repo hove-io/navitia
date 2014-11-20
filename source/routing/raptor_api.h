@@ -70,7 +70,8 @@ pbnavitia::Response make_nm_response(RAPTOR &raptor, const std::vector<type::Ent
                                      georef::StreetNetwork & worker,
                                      bool disruption_active,
                                      bool allow_odt,
-                                     uint32_t max_duration, uint32_t max_transfers, bool show_codes);
+                                     uint32_t max_duration, uint32_t max_transfers,
+                                     bool show_codes, bool details);
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,

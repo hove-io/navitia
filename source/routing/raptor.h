@@ -124,12 +124,14 @@ struct RAPTOR
     compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &departures,
                    const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
                    const DateTime &departure_datetime,
-                   bool disruption_active, bool allow_odt,
+                   bool disruption_active, 
+                   bool allow_odt,
                    const DateTime &bound,
                    const uint32_t max_transfers,
                    const type::AccessibiliteParams & accessibilite_params,
                    const std::vector<std::string> & forbidden_uri,
-                   bool clockwise);
+                   bool clockwise, 
+                   bool details);
 
 
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
