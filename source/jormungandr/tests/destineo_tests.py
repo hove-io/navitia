@@ -794,7 +794,7 @@ def remove_not_long_enough_no_removal_test():
     eq_(len(response.journeys), 2)
 
 
-def remove_not_long_enough_bike():
+def remove_not_long_enough_bike_test():
     response = response_pb2.Response()
 
     journey = response.journeys.add()
@@ -861,7 +861,7 @@ def remove_not_long_enough_bike():
     eq_(response.journeys[1], journey4)
 
 
-def remove_not_long_enough_car():
+def remove_not_long_enough_car_test():
     response = response_pb2.Response()
 
     journey = response.journeys.add()
@@ -926,3 +926,501 @@ def remove_not_long_enough_car():
     eq_(len(response.journeys), 2)
     eq_(response.journeys[0], journey)
     eq_(response.journeys[1], journey4)
+
+
+def get_walking_walking_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_walking_bike_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+
+    return journey
+
+def get_walking_bss_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_walking_car_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.LEAVE_PARKING
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Car
+    section = journey.sections.add()
+    section.type = response_pb2.PARK
+    section = journey.sections.add()
+
+    return journey
+
+def get_bike_walking_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_bike_bike_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+
+    return journey
+
+def get_bike_bss_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_bike_car_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.LEAVE_PARKING
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Car
+    section = journey.sections.add()
+    section.type = response_pb2.PARK
+    section = journey.sections.add()
+
+    return journey
+
+def get_bss_walking_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_bss_bike_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+
+    return journey
+
+def get_bss_bss_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_bss_car_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.LEAVE_PARKING
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Car
+    section = journey.sections.add()
+    section.type = response_pb2.PARK
+    section = journey.sections.add()
+
+    return journey
+
+
+#==============================================================================
+# has_bss_first_and_walking_last test
+#==============================================================================
+def has_bss_first_and_walking_last__walking_walking_test():
+    assert not destineo.has_bss_first_and_walking_last(get_walking_walking_journey())
+
+def has_bss_first_and_walking_last__walking_bike_test():
+    assert not destineo.has_bss_first_and_walking_last(get_walking_bike_journey())
+
+def has_bss_first_and_walking_last__walking_bss_test():
+    assert not destineo.has_bss_first_and_walking_last(get_walking_bss_journey())
+
+def has_bss_first_and_walking_last__walking_car_test():
+    assert not destineo.has_bss_first_and_walking_last(get_walking_car_journey())
+
+def has_bss_first_and_walking_last__bss_walking_test():
+    assert destineo.has_bss_first_and_walking_last(get_bss_walking_journey())
+
+def has_bss_first_and_walking_last__bss_bike_test():
+    assert not destineo.has_bss_first_and_walking_last(get_bss_bike_journey())
+
+def has_bss_first_and_walking_last__bss_bss_test():
+    assert not destineo.has_bss_first_and_walking_last(get_bss_bss_journey())
+
+def has_bss_first_and_walking_last__bss_car_test():
+    assert not destineo.has_bss_first_and_walking_last(get_bss_car_journey())
+
+def has_bss_first_and_walking_last__bike_walking_test():
+    assert not destineo.has_bss_first_and_walking_last(get_bike_walking_journey())
+
+def has_bss_first_and_walking_last__bike_bike_test():
+    assert not destineo.has_bss_first_and_walking_last(get_bike_bike_journey())
+
+def has_bss_first_and_walking_last__bike_bss_test():
+    assert not destineo.has_bss_first_and_walking_last(get_bike_bss_journey())
+
+def has_bss_first_and_walking_last__bike_car_test():
+    assert not destineo.has_bss_first_and_walking_last(get_bike_car_journey())
+
+
+#==============================================================================
+# has_walking_first_and_bss_last test
+#==============================================================================
+def has_walking_first_and_bss_last__walking_walking_test():
+    assert not destineo.has_walking_first_and_bss_last(get_walking_walking_journey())
+
+def has_walking_first_and_bss_last__walking_bike_test():
+    assert not destineo.has_walking_first_and_bss_last(get_walking_bike_journey())
+
+def has_walking_first_and_bss_last__walking_bss_test():
+    assert destineo.has_walking_first_and_bss_last(get_walking_bss_journey())
+
+def has_walking_first_and_bss_last__walking_car_test():
+    assert not destineo.has_walking_first_and_bss_last(get_walking_car_journey())
+
+def has_walking_first_and_bss_last__bss_walking_test():
+    assert not destineo.has_walking_first_and_bss_last(get_bss_walking_journey())
+
+def has_walking_first_and_bss_last__bss_bike_test():
+    assert not destineo.has_walking_first_and_bss_last(get_bss_bike_journey())
+
+def has_walking_first_and_bss_last__bss_bss_test():
+    assert not destineo.has_walking_first_and_bss_last(get_bss_bss_journey())
+
+def has_walking_first_and_bss_last__bss_car_test():
+    assert not destineo.has_walking_first_and_bss_last(get_bss_car_journey())
+
+def has_walking_first_and_bss_last__bike_walking_test():
+    assert not destineo.has_walking_first_and_bss_last(get_bike_walking_journey())
+
+def has_walking_first_and_bss_last__bike_bike_test():
+    assert not destineo.has_walking_first_and_bss_last(get_bike_bike_journey())
+
+def has_walking_first_and_bss_last__bike_bss_test():
+    assert not destineo.has_walking_first_and_bss_last(get_bike_bss_journey())
+
+def has_walking_first_and_bss_last__bike_car_test():
+    assert not destineo.has_walking_first_and_bss_last(get_bike_car_journey())
+
+#==============================================================================
+# has_bss_first_and_bss_last test
+#==============================================================================
+def has_bss_first_and_bss_last__walking_walking_test():
+    assert not destineo.has_bss_first_and_bss_last(get_walking_walking_journey())
+
+def has_bss_first_and_bss_last__walking_bike_test():
+    assert not destineo.has_bss_first_and_bss_last(get_walking_bike_journey())
+
+def has_bss_first_and_bss_last__walking_bss_test():
+    assert not destineo.has_bss_first_and_bss_last(get_walking_bss_journey())
+
+def has_bss_first_and_bss_last__walking_car_test():
+    assert not destineo.has_bss_first_and_bss_last(get_walking_car_journey())
+
+def has_bss_first_and_bss_last__bss_walking_test():
+    assert not destineo.has_bss_first_and_bss_last(get_bss_walking_journey())
+
+def has_bss_first_and_bss_last__bss_bike_test():
+    assert not destineo.has_bss_first_and_bss_last(get_bss_bike_journey())
+
+def has_bss_first_and_bss_last__bss_bss_test():
+    assert destineo.has_bss_first_and_bss_last(get_bss_bss_journey())
+
+def has_bss_first_and_bss_last__bss_car_test():
+    assert not destineo.has_bss_first_and_bss_last(get_bss_car_journey())
+
+def has_bss_first_and_bss_last__bike_walking_test():
+    assert not destineo.has_bss_first_and_bss_last(get_bike_walking_journey())
+
+def has_bss_first_and_bss_last__bike_bike_test():
+    assert not destineo.has_bss_first_and_bss_last(get_bike_bike_journey())
+
+def has_bss_first_and_bss_last__bike_bss_test():
+    assert not destineo.has_bss_first_and_bss_last(get_bike_bss_journey())
+
+def has_bss_first_and_bss_last__bike_car_test():
+    assert not destineo.has_bss_first_and_bss_last(get_bike_car_journey())
+
+#==============================================================================
+# has_bike_first_and_walking_last test
+#==============================================================================
+def has_bike_first_and_walking_last__walking_walking_test():
+    assert not destineo.has_bike_first_and_walking_last(get_walking_walking_journey())
+
+def has_bike_first_and_walking_last__walking_bike_test():
+    assert not destineo.has_bike_first_and_walking_last(get_walking_bike_journey())
+
+def has_bike_first_and_walking_last__walking_bss_test():
+    assert not destineo.has_bike_first_and_walking_last(get_walking_bss_journey())
+
+def has_bike_first_and_walking_last__walking_car_test():
+    assert not destineo.has_bike_first_and_walking_last(get_walking_car_journey())
+
+def has_bike_first_and_walking_last__bss_walking_test():
+    assert not destineo.has_bike_first_and_walking_last(get_bss_walking_journey())
+
+def has_bike_first_and_walking_last__bss_bike_test():
+    assert not destineo.has_bike_first_and_walking_last(get_bss_bike_journey())
+
+def has_bike_first_and_walking_last__bss_bss_test():
+    assert not destineo.has_bike_first_and_walking_last(get_bss_bss_journey())
+
+def has_bike_first_and_walking_last__bss_car_test():
+    assert not destineo.has_bike_first_and_walking_last(get_bss_car_journey())
+
+def has_bike_first_and_walking_last__bike_walking_test():
+    assert destineo.has_bike_first_and_walking_last(get_bike_walking_journey())
+
+def has_bike_first_and_walking_last__bike_bike_test():
+    assert not destineo.has_bike_first_and_walking_last(get_bike_bike_journey())
+
+def has_bike_first_and_walking_last__bike_bss_test():
+    assert not destineo.has_bike_first_and_walking_last(get_bike_bss_journey())
+
+def has_bike_first_and_walking_last__bike_car_test():
+    assert not destineo.has_bike_first_and_walking_last(get_bike_car_journey())
+
+#==============================================================================
+# has_bike_first_and_bss_last test
+#==============================================================================
+def has_bike_first_and_bss_last__walking_walking_test():
+    assert not destineo.has_bike_first_and_bss_last(get_walking_walking_journey())
+
+def has_bike_first_and_bss_last__walking_bike_test():
+    assert not destineo.has_bike_first_and_bss_last(get_walking_bike_journey())
+
+def has_bike_first_and_bss_last__walking_bss_test():
+    assert not destineo.has_bike_first_and_bss_last(get_walking_bss_journey())
+
+def has_bike_first_and_bss_last__walking_car_test():
+    assert not destineo.has_bike_first_and_bss_last(get_walking_car_journey())
+
+def has_bike_first_and_bss_last__bss_walking_test():
+    assert not destineo.has_bike_first_and_bss_last(get_bss_walking_journey())
+
+def has_bike_first_and_bss_last__bss_bike_test():
+    assert not destineo.has_bike_first_and_bss_last(get_bss_bike_journey())
+
+def has_bike_first_and_bss_last__bss_bss_test():
+    assert not destineo.has_bike_first_and_bss_last(get_bss_bss_journey())
+
+def has_bike_first_and_bss_last__bss_car_test():
+    assert not destineo.has_bike_first_and_bss_last(get_bss_car_journey())
+
+def has_bike_first_and_bss_last__bike_walking_test():
+    assert not destineo.has_bike_first_and_bss_last(get_bike_walking_journey())
+
+def has_bike_first_and_bss_last__bike_bike_test():
+    assert not destineo.has_bike_first_and_bss_last(get_bike_bike_journey())
+
+def has_bike_first_and_bss_last__bike_bss_test():
+    assert destineo.has_bike_first_and_bss_last(get_bike_bss_journey())
+
+def has_bike_first_and_bss_last__bike_car_test():
+    assert not destineo.has_bike_first_and_bss_last(get_bike_car_journey())
+
+def choose_best_alternatives_simple_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
+    scenario = destineo.Scenario()
+    scenario._choose_best_alternatives(journeys)
+    eq_(len(journeys), 1)
+    eq_(journeys[0], get_bss_walking_journey())
+
+def choose_best_alternatives__bike_bss_test():
+    journeys = [get_bike_bss_journey(), get_bike_car_journey()]
+    scenario = destineo.Scenario()
+    scenario._choose_best_alternatives(journeys)
+    eq_(len(journeys), 1)
+    eq_(journeys[0], get_bike_bss_journey())
+
+def choose_best_alternatives__car_test():
+    journeys = [get_bike_car_journey()]
+    scenario = destineo.Scenario()
+    scenario._choose_best_alternatives(journeys)
+    eq_(len(journeys), 1)
+    eq_(journeys[0], get_bike_car_journey())
+
+def choose_best_alternatives_non_pt_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
+    j1 = response_pb2.Journey()
+    j1.type = 'non_pt_bss'
+    journeys.append(j1)
+
+    j2 = response_pb2.Journey()
+    j2.type = 'non_pt_bike'
+    journeys.append(j2)
+
+    scenario = destineo.Scenario()
+    scenario._choose_best_alternatives(journeys)
+    eq_(len(journeys), 3)
+    eq_(journeys[0], get_bss_walking_journey())
+    eq_(journeys[1], j1)
+    eq_(journeys[2], j2)
