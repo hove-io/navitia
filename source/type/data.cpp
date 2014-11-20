@@ -596,7 +596,7 @@ Type_e Data::get_type_of_id(const std::string & id) const {
     if(id.size()>6 && id.substr(0,6) == "admin:")
         return Type_e::Admin;
     #define GET_TYPE(type_name, collection_name) \
-    auto &collection_name##_map = pt_data->collection_name##_map;\
+    const auto &collection_name##_map = pt_data->collection_name##_map;\
     if(collection_name##_map.count(id) != 0 )\
         return Type_e::type_name;
     ITERATE_NAVITIA_PT_TYPES(GET_TYPE)
