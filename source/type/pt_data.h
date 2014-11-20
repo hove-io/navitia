@@ -111,7 +111,7 @@ struct PT_Data : boost::noncopyable{
                 & stop_area_proximity_list & stop_point_proximity_list
                 & stop_point_connections
                 & disruption_holder
-                & meta_vj;
+                & meta_vj
                 & stop_time_comment;
     }
 
