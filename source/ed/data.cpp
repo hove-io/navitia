@@ -433,35 +433,66 @@ void Data::build_journey_patterns(){
     LOG4CPLUS_INFO(logger, "Number of journey_patterns : " << journey_patterns.size());
 }
 
-static nt::LineString::const_iterator
+typedef nt::LineString::const_iterator LineStringIter;
+typedef std::pair<LineStringIter, LineStringIter> LineStringIterPair;
+
+// Returns the nearest segment or point from coord under the form of a
+// pair of iterators {it1, it2}.  If it is a segment, it1 + 1 == it2.
+// If it is a point, it1 == it2.  If line is empty, it1 == it2 == line.end()
+static LineStringIterPair
 get_nearest(const nt::GeographicalCoord& coord, const nt::LineString& line) {
-    if (line.empty()) return line.end();
-    auto nearest = line.begin();
-    double nearest_dist = nearest->distance_to(coord);
-    for (auto it = nearest + 1; it != line.end(); ++it) {
-        double cur_dist = it->distance_to(coord);
-        if (cur_dist < nearest_dist) {
-            nearest = it;
-            nearest_dist = cur_dist;
+    if (line.empty()) return {line.end(), line.end()};
+    auto nearest = std::make_pair(line.begin(), line.begin());
+    auto nearest_dist = coord.project(*nearest.first, *nearest.second).second;
+    for (auto it1 = line.begin(), it2 = it1 + 1; it2 != line.end(); ++it1, ++it2) {
+        auto projection = coord.project(*it1, *it2);
+        if (nearest_dist <= projection.second) continue;
+
+        nearest_dist = projection.second;
+        if (projection.first == *it1) {
+            nearest = {it1, it1};
+        } else if (projection.first == *it2) {
+            nearest = {it2, it2};
+        } else {
+            nearest = {it1, it2};
         }
     }
     return nearest;
 }
 
-static nt::LineString
+static size_t abs_distance(LineStringIterPair pair) {
+    return pair.first < pair.second
+                        ? pair.second - pair.first
+                        : pair.first - pair.second;
+}
+
+static LineStringIterPair
+get_smallest_range(const LineStringIterPair& p1, const LineStringIterPair& p2) {
+    typedef LineStringIterPair P;
+    P res = {p1.first, p2.first};
+    for (P p: {P(p1.first, p2.second), P(p1.second, p2.first), P(p1.second, p2.second)}) {
+        if (abs_distance(res) > abs_distance(p)) res = p;
+    }
+    return res;
+}
+
+nt::LineString
 create_shape(const nt::GeographicalCoord& from,
              const nt::GeographicalCoord& to,
              const nt::LineString& shape)
 {
-    nt::LineString res;
     const auto nearest_from = get_nearest(from, shape);
     const auto nearest_to = get_nearest(to, shape);
+    if (nearest_from == nearest_to) { return {from, to}; }
+
+    nt::LineString res;
+    const auto range = get_smallest_range(nearest_from, nearest_to);
     res.push_back(from);
-    if (nearest_from < nearest_to) {
-        for (auto it = nearest_from + 1; it < nearest_to; ++it)
+    if (range.first < range.second) {
+        for (auto it = range.first; it <= range.second; ++it)
             res.push_back(*it);
-    } else if (nearest_from > nearest_to) {
-        for (auto it = nearest_from - 1; it > nearest_to; --it)
+    } else {
+        for (auto it = range.first; it >= range.second; --it)
             res.push_back(*it);
     }
     res.push_back(to);
