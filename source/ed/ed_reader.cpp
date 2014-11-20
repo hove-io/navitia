@@ -147,7 +147,7 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         auto it_admin = admin_by_insee_code.find(const_it["admin_id"].as<std::string>());
         if (it_admin == admin_by_insee_code.end()) {
-            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "impossible to find admin " << const_it["admin_id"]
+            LOG4CPLUS_TRACE(log, "impossible to find admin " << const_it["admin_id"]
                     << ", we cannot associate stop_area " << const_it["stop_area_id"] << " to it");
             nb_unknown_admin++;
             continue;
@@ -156,7 +156,7 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
 
         auto it_sa = stop_area_map.find(const_it["stop_area_id"].as<idx_t>());
         if (it_sa == stop_area_map.end()) {
-            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "impossible to find stop_area " << const_it["stop_area_id"]
+            LOG4CPLUS_TRACE(log, "impossible to find stop_area " << const_it["stop_area_id"]
                     << ", we cannot associate it to admin " << const_it["admin_id"]);
             nb_unknown_stop++;
             continue;
@@ -167,13 +167,13 @@ void EdReader::fill_admin_stop_areas(navitia::type::Data&, pqxx::work& work) {
         admin->main_stop_areas.push_back(sa);
         nb_valid_admin++;
     }
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_valid_admin << " admin with at least one main stop");
+    LOG4CPLUS_INFO(log, nb_valid_admin << " admin with at least one main stop");
 
     if (nb_unknown_admin) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_unknown_admin << " admin not found for admin main stops");
+        LOG4CPLUS_WARN(log, nb_unknown_admin << " admin not found for admin main stops");
     }
     if (nb_unknown_stop) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_unknown_stop << " stops not found for admin main stops");
+        LOG4CPLUS_WARN(log, nb_unknown_stop << " stops not found for admin main stops");
     }
 
 }
@@ -747,7 +747,7 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
         const auto vj_it = vehicle_journey_map.find(vj_idx);
 
         if ( vj_it == vehicle_journey_map.end()) {
-            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Impossible to find the vj " << vj_idx << ", we won't add it in a meta vj");
+            LOG4CPLUS_ERROR(log, "Impossible to find the vj " << vj_idx << ", we won't add it in a meta vj");
             continue;
         }
         auto* vj = vj_it->second;
@@ -949,15 +949,15 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         }
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), component_size.size() << " connexes components found");
+    LOG4CPLUS_INFO(log, component_size.size() << " connexes components found");
 
     if (! principal_component) {
-        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Impossible to find a main composent in graph. Graph must be empty (nb vertices = "
+        LOG4CPLUS_ERROR(log, "Impossible to find a main composent in graph. Graph must be empty (nb vertices = "
                         << boost::num_vertices(geo_ref_temp.graph) <<")");
         return;
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "the biggest has " << principal_component->second << " nodes");
+    LOG4CPLUS_INFO(log, "the biggest has " << principal_component->second << " nodes");
 
     std::set<navitia::georef::edge_t> graph_edge_to_ignore;
     // we fill the node_to_ignore and edge_to_ignore lists
@@ -992,12 +992,12 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         }
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), way_to_ignore.size() << " way to ignore");
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), edge_to_ignore.size() << " edge to ignore");
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), node_to_ignore.size() << " node to ignore");
+    LOG4CPLUS_INFO(log, way_to_ignore.size() << " way to ignore");
+    LOG4CPLUS_INFO(log, edge_to_ignore.size() << " edge to ignore");
+    LOG4CPLUS_INFO(log, node_to_ignore.size() << " node to ignore");
 }
 
-void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
+void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work) {
     std::string request = "select id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat from georef.node;";
     pqxx::result result = work.exec(request);
     uint64_t idx = 0;
@@ -1019,14 +1019,14 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
     data.geo_ref->init();
 }
 
-void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
+void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
     std::string request = "select e.source_node_id, target_node_id, e.way_id, "
                           "ST_LENGTH(the_geog) AS leng, e.pedestrian_allowed as pede, "
                           "e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
     pqxx::result result = work.exec(request);
     size_t nb_edges_no_way = 0;
     int nb_walking_edges(0), nb_biking_edges(0), nb_driving_edges(0);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
 
         auto it_source = node_map.find(const_it["source_node_id"].as<uint64_t>());
@@ -1052,40 +1052,56 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::Edge e;
         float len = const_it["leng"].as<float>();
         e.way_idx = way->idx;
-        way->edges.push_back(std::make_pair(source, target));
 
-        //TODO et les pietons ??!
+        if (const_it["pede"].as<bool>()) {
+            e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
 
-        e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Walking]);
-        boost::add_edge(source, target, e, data.geo_ref->graph);
-        nb_walking_edges++;
-
+            // overflow check since we want to store that on a int32
+            if (e.duration.total_seconds() == std::floor(len / ng::default_speed[nt::Mode_e::Walking])) {
+                way->edges.push_back(std::make_pair(source, target));
+                nb_walking_edges++;
+            } else {
+                LOG4CPLUS_WARN(log, "edge length overflow for walking for source "
+                               << source << " target " << target << " length: " << len << ", we ignore this edge");
+            }
+        }
         if (const_it["bike"].as<bool>()) {
             e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Bike]);
-            auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
-            auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
-            boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
-            way->edges.push_back(std::make_pair(bike_source, bike_target));
-            nb_biking_edges++;
+            if (e.duration.total_seconds() == std::floor(len / ng::default_speed[nt::Mode_e::Bike])) {
+                auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
+                auto bike_target = data.geo_ref->offsets[nt::Mode_e::Bike] + target;
+                boost::add_edge(bike_source, bike_target, e, data.geo_ref->graph);
+                way->edges.push_back(std::make_pair(bike_source, bike_target));
+                nb_biking_edges++;
+            } else {
+                LOG4CPLUS_WARN(log, "edge length overflow for bike for source "
+                               << source << " target " << target << " length: " << len << ", we ignore this edge");
+            }
         }
         if (const_it["car"].as<bool>()) {
             e.duration = navitia::seconds(len / ng::default_speed[nt::Mode_e::Car]);
-            auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
-            auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
-            boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
-            way->edges.push_back(std::make_pair(car_source, car_target));
-            nb_driving_edges++;
+            if (e.duration.total_seconds() == std::floor(len / ng::default_speed[nt::Mode_e::Car])) {
+                auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
+                auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
+                boost::add_edge(car_source, car_target, e, data.geo_ref->graph);
+                way->edges.push_back(std::make_pair(car_source, car_target));
+                nb_driving_edges++;
+
+            } else {
+                LOG4CPLUS_WARN(log, "edge length overflow for car for source "
+                               << source << " target " << target << " length: " << len << ", we ignore this edge");
+            }
         }
     }
 
     if (nb_edges_no_way) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), nb_edges_no_way << " edges have an unkown way");
+        LOG4CPLUS_WARN(log, nb_edges_no_way << " edges have an unkown way");
     }
 
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), boost::num_edges(data.geo_ref->graph) << " edges added ");
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_walking_edges << " walking edges");
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_biking_edges << " biking edges");
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), nb_driving_edges << " driving edges");
+    LOG4CPLUS_INFO(log, boost::num_edges(data.geo_ref->graph) << " edges added ");
+    LOG4CPLUS_INFO(log, nb_walking_edges << " walking edges");
+    LOG4CPLUS_INFO(log, nb_biking_edges << " biking edges");
+    LOG4CPLUS_INFO(log, nb_driving_edges << " driving edges");
 }
 
 void EdReader::fill_graph_bss(navitia::type::Data& data, pqxx::work& work){
@@ -1104,10 +1120,10 @@ void EdReader::fill_graph_bss(navitia::type::Data& data, pqxx::work& work){
         if (data.geo_ref->add_bss_edges(coord)) {
             cpt_bike_sharing++;
         } else {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "Impossible to find the nearest edge for the bike sharing station poi_id = " << const_it["id"].as<std::string>());
+            LOG4CPLUS_WARN(log, "Impossible to find the nearest edge for the bike sharing station poi_id = " << const_it["id"].as<std::string>());
         }
     }
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_bike_sharing << " bike sharing stations added");
+    LOG4CPLUS_INFO(log, cpt_bike_sharing << " bike sharing stations added");
 }
 
 void EdReader::fill_graph_parking(navitia::type::Data& data, pqxx::work& work){
@@ -1127,10 +1143,10 @@ void EdReader::fill_graph_parking(navitia::type::Data& data, pqxx::work& work){
         if (data.geo_ref->add_parking_edges(coord)) {
             ++cpt_parking;
         } else {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "Impossible to find the nearest edge for the parking poi_id = " << const_it["id"].as<std::string>());
+            LOG4CPLUS_WARN(log, "Impossible to find the nearest edge for the parking poi_id = " << const_it["id"].as<std::string>());
         }
     }
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), cpt_parking << " parkings added");
+    LOG4CPLUS_INFO(log, cpt_parking << " parkings added");
 }
 
 void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
@@ -1265,7 +1281,7 @@ void EdReader::fill_periods(navitia::type::Data& , pqxx::work& work){
         auto cal_id = const_it["calendar_id"].as<idx_t>();
         navitia::type::Calendar* cal = this->calendar_map[cal_id];
         if (cal == nullptr) {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unable to find calendar " << cal_id);
+            LOG4CPLUS_WARN(log, "unable to find calendar " << cal_id);
             continue;
         }
         boost::gregorian::date start(bg::from_string(const_it["begin_date"].as<std::string>()));
@@ -1301,7 +1317,7 @@ void EdReader::fill_rel_calendars_lines(navitia::type::Data& , pqxx::work& work)
         if ((cal != nullptr) && (line != nullptr)){
             line->calendar_list.push_back(cal);
         } else {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "impossible to find "
+            LOG4CPLUS_WARN(log, "impossible to find "
                            << (cal == nullptr ? "calendar " +  std::to_string(cal_id) + ", ": "")
                             << (line == nullptr ? "line " + std::to_string(line_id) : "") );
         }
@@ -1337,7 +1353,6 @@ void EdReader::build_rel_admin_admin(navitia::type::Data&, pqxx::work& work){
 }
 
 void EdReader::check_coherence(navitia::type::Data& data) const {
-    auto log = log4cplus::Logger::getInstance("log");
     //check not associated lines
     size_t non_associated_lines(0);
     for (navitia::type::Line* line: data.pt_data->lines) {

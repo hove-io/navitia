@@ -147,6 +147,8 @@ private:
 
     /// coherence check for logging purpose
     void check_coherence(navitia::type::Data& data) const;
+
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
 };
 
 }

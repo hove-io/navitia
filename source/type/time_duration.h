@@ -164,11 +164,18 @@ inline std::string to_iso_string(time_duration<T, rep_type> td) {
 namespace navitia {
 
 
+// traits struct for time_resolution_traits using unsigned int32
+struct time_resolution_traits_adapted_int32_impl {
+  typedef int32_t int_type;
+  typedef boost::date_time::int_adapter<int_type> impl_type;
+  static int_type as_number(impl_type i) { return i.as_number(); }
+  static bool is_adapted() { return true; }
+};
 
-using time_res_traits = boost::date_time::milli_res;
+using time_res_traits = boost::date_time::time_resolution_traits<time_resolution_traits_adapted_int32_impl, boost::date_time::tenth, 10, 1>;
 
 /**
- * For georef we only need millisecond precision, micro or nano second are not needed.
+ * For georef we only need tenth fo seconds precision, milli, micro or nano second are not needed.
  *
  * We thus can store the duration in an int32 instead of a int64.
  *
