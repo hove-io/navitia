@@ -354,7 +354,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
         std::vector<nt::idx_t> physical_mode_idxes;
         for(auto route : l->route_list) {
-            fill_pb_object(route, data, line->add_routes(), depth-1);
+            fill_pb_object(route, data, line->add_routes(), depth-1), now, action_period, show_codes);
         }
         for(auto physical_mode : l->physical_mode_list){
             fill_pb_object(physical_mode, data, line->add_physical_mode(),
@@ -363,7 +363,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
         fill_pb_object(l->commercial_mode, data,
                 line->mutable_commercial_mode(), depth-1);
-        fill_pb_object(l->network, data, line->mutable_network(), depth-1);
+        fill_pb_object(l->network, data, line->mutable_network(), depth-1), now, action_period, show_codes);
     }
     for(const auto message : l->get_applicable_messages(now, action_period)){
         fill_message(message, data, line, depth-1, now, action_period);
@@ -463,7 +463,6 @@ void fill_pb_object(const nt::Network* n, const nt::Data& data,
     for(const auto& message : n->get_applicable_messages(now, action_period)){
         fill_message(message, data, network, max_depth-1, now, action_period);
     }
-
     if(show_codes) {
         for(auto type_value : n->codes) {
             fill_codes(type_value.first, type_value.second, network->add_codes());
