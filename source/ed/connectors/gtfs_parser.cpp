@@ -129,6 +129,11 @@ std::vector<period_with_utc_shift> get_dst_periods(const boost::gregorian::date_
     //we add the last non DST period
     res.push_back({ {res.back().period.end(), boost::gregorian::date(years.back() + 1, 1, 1)},
                     tz->base_utc_offset() });
+
+    //we want the shift in seconds, and it is in minute in the tzdb
+    for (auto& p_shift: res) {
+        p_shift.utc_shift *= 60;
+    }
     return res;
 }
 
@@ -932,7 +937,7 @@ void StopTimeGtfsHandler::finish(Data& data) {
 }
 
 int to_utc(const std::string& local_time, int utc_offset) {
-    return time_to_int(local_time) - utc_offset * 60;
+    return time_to_int(local_time) - utc_offset;
 }
 
 std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {

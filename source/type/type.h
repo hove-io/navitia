@@ -611,7 +611,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
     // For example for departure board over a period (calendar)
     // thus we store the shit needed to convert all stop times of the vehicle journey to local
-    int16_t utc_to_local_offset = 0; //in minutes
+    int16_t utc_to_local_offset = 0; //in seconds
 
     bool is_adapted = false; //REMOVE (change to enum ?)
     ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
