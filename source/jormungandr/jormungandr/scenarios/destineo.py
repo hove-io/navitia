@@ -31,9 +31,13 @@ import copy
 import logging
 from jormungandr.scenarios.utils import JourneySorter
 from navitiacommon import response_pb2
-from operator import itemgetter
+from operator import itemgetter, indexOf, attrgetter
 from datetime import datetime, timedelta
 import pytz
+from collections import defaultdict, OrderedDict
+from jormungandr.scenarios.helpers import bike_duration, pt_duration, car_duration
+from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \
+        has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -109,37 +113,7 @@ def is_non_pt_bike(journey):
 def is_alternative(journey):
     return is_non_pt_bike(journey) or is_non_pt_walk(journey)
 
-def bike_duration(journey):
-    duration = 0
-    in_bss = False
-    for section in journey.sections:
-        if section.type == response_pb2.BSS_RENT:
-            in_bss = True
-        if section.type == response_pb2.BSS_PUT_BACK:
-            in_bss = False
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                and section.street_network.mode == response_pb2.Bike \
-                and not in_bss:
-            duration = duration + section.duration
 
-    return duration
-
-def car_duration(journey):
-    duration = 0
-    for section in journey.sections:
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                and section.street_network.mode == response_pb2.Car:
-            duration = duration + section.duration
-
-    return duration
-
-def tc_duration(journey):
-    duration = 0
-    for section in journey.sections:
-        if section.type == response_pb2.PUBLIC_TRANSPORT:
-            duration = duration + section.duration
-
-    return duration
 
 class DestineoJourneySorter(JourneySorter):
     """
@@ -253,13 +227,9 @@ class Scenario(default.Scenario):
         response_tc = super(Scenario, self).journeys(request_tc, instance)
 
         logger.debug('journeys with alternative mode')
-        response_alternative = super(Scenario, self).journeys(request_alternative, instance)
+        response_alternative = self._get_alternatives(request_alternative, instance)
 
         logger.debug('merge and sort reponses')
-
-        self._remove_not_long_enough_fallback(response_alternative.journeys, instance)
-        self._remove_not_long_enough_tc_with_fallback(response_alternative.journeys, instance)
-        self._remove_car_if_possible(response_alternative)
 
         self.merge_response(response_tc, response_alternative)
         for journey in response_tc.journeys:
@@ -276,6 +246,46 @@ class Scenario(default.Scenario):
 
         return response_tc
 
+    def _get_alternatives(self, args, instance):
+        response_alternative = super(Scenario, self).journeys(args, instance)
+
+        if not args['debug']:
+            # in debug we don't filter
+            self._remove_not_long_enough_fallback(response_alternative.journeys, instance)
+            self._remove_not_long_enough_tc_with_fallback(response_alternative.journeys, instance)
+
+            self._choose_best_alternatives(response_alternative.journeys)
+        return response_alternative
+
+
+    def _choose_best_alternatives(self, journeys):
+        to_keep = []
+        mapping = defaultdict(list)
+        best = None
+        functors = OrderedDict([
+            ('bss_walking', has_bss_first_and_walking_last),
+            ('walking_bss', has_walking_first_and_bss_last),
+            ('bss_bss', has_bss_first_and_bss_last),
+            ('bike_walking', has_bike_first_and_walking_last),
+            ('bike_bss', has_bike_first_and_bss_last),
+            ('car', has_car_and_tc)
+        ])
+        for idx, journey in enumerate(journeys):
+            if journey.type in non_pt_types:
+                to_keep.append(idx)
+            for key, func in functors.iteritems():
+                if func(journey):
+                    mapping[key].append(journey)
+
+        for key, _ in functors.iteritems():
+            if not best and mapping[key]:
+                best = min(mapping[key], key=attrgetter('duration'))
+                to_keep.append(indexOf(journeys, best))
+
+        to_delete = list(set(range(len(journeys))) - set(to_keep))
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del journeys[idx]
 
     def _remove_not_long_enough_fallback(self, journeys, instance):
         to_delete = []
@@ -304,7 +314,7 @@ class Scenario(default.Scenario):
                 continue
             bike_dur = bike_duration(journey)
             car_dur = car_duration(journey)
-            tc_dur = tc_duration(journey)
+            tc_dur = pt_duration(journey)
             if bike_dur and tc_dur < instance.destineo_min_tc_with_bike:
                 to_delete.append(idx)
             elif car_dur and tc_dur < instance.destineo_min_tc_with_car:
@@ -317,12 +327,6 @@ class Scenario(default.Scenario):
         for idx in to_delete:
             del journeys[idx]
 
-    def _remove_car_if_possible(self, response):
-        fallback_journeys = [journey for journey in response.journeys if journey.type not in non_pt_types]
-        if len(fallback_journeys) > 1:
-            to_delete = [idx for idx, j in enumerate(response.journeys) if j.type == 'car']
-            for idx in to_delete:
-                del response.journeys[idx]
 
     def _custom_sort_journeys(self, response, timezone, clockwise=True):
         if len(response.journeys) > 1:
