@@ -35,6 +35,9 @@ from operator import itemgetter, indexOf, attrgetter
 from datetime import datetime, timedelta
 import pytz
 from collections import defaultdict, OrderedDict
+from jormungandr.scenarios.helpers import bike_duration, pt_duration, car_duration
+from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \
+        has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -110,178 +113,7 @@ def is_non_pt_bike(journey):
 def is_alternative(journey):
     return is_non_pt_bike(journey) or is_non_pt_walk(journey)
 
-def bike_duration(journey):
-    duration = 0
-    in_bss = False
-    for section in journey.sections:
-        if section.type == response_pb2.BSS_RENT:
-            in_bss = True
-        if section.type == response_pb2.BSS_PUT_BACK:
-            in_bss = False
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                and section.street_network.mode == response_pb2.Bike \
-                and not in_bss:
-            duration = duration + section.duration
 
-    return duration
-
-def car_duration(journey):
-    duration = 0
-    for section in journey.sections:
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                and section.street_network.mode == response_pb2.Car:
-            duration = duration + section.duration
-
-    return duration
-
-def tc_duration(journey):
-    duration = 0
-    for section in journey.sections:
-        if section.type == response_pb2.PUBLIC_TRANSPORT:
-            duration = duration + section.duration
-
-    return duration
-
-def has_bss_first_and_walking_last(journey):
-    has_bss_first = False
-    has_tc = False
-    for section in journey.sections:
-        if section.type == response_pb2.PUBLIC_TRANSPORT:
-            has_tc = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bss \
-                and not has_tc:
-            has_bss_first = True
-        elif section.type == response_pb2.BSS_RENT \
-                and not has_tc:
-            has_bss_first = True
-        elif has_tc \
-                and section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode != response_pb2.Walking:
-            return False
-        elif has_tc \
-                and section.type == response_pb2.STREET_NETWORK \
-                and section.street_network.mode != response_pb2.Walking:
-            return False
-    return has_bss_first and has_tc
-
-def has_walking_first_and_bss_last(journey):
-    has_bss_last = False
-    has_tc = False
-    for section in journey.sections:
-        if section.type == response_pb2.PUBLIC_TRANSPORT:
-            has_tc = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bss \
-                and has_tc:
-            has_bss_last = True
-        elif section.type == response_pb2.BSS_RENT \
-                and has_tc:
-            has_bss_last = True
-        elif not has_tc \
-                and section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode != response_pb2.Walking:
-            return False
-        elif not has_tc \
-                and section.type == response_pb2.STREET_NETWORK \
-                and section.street_network.mode != response_pb2.Walking:
-            return False
-    return has_bss_last and has_tc
-
-def has_bss_first_and_bss_last(journey):
-    has_bss_last = False
-    has_bss_first = False
-    has_tc = False
-    for section in journey.sections:
-        if section.type == response_pb2.PUBLIC_TRANSPORT:
-            has_tc = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bss \
-                and has_tc:
-            has_bss_last = True
-        elif section.type == response_pb2.BSS_RENT \
-                and has_tc:
-            has_bss_last = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bss \
-                and not has_tc:
-            has_bss_first = True
-        elif section.type == response_pb2.BSS_RENT \
-                and not has_tc:
-            has_bss_first = True
-    return has_bss_first and has_bss_last and has_tc
-
-
-def has_bike_first_and_walking_last(journey):
-    in_bss = False
-    has_bike_first = False
-    has_tc = False
-    for section in journey.sections:
-        if section.type == response_pb2.PUBLIC_TRANSPORT:
-            has_tc = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bike \
-                and not has_tc:
-            has_bike_first = True
-        elif section.type == response_pb2.BSS_RENT:
-            return False
-        elif section.type == response_pb2.STREET_NETWORK \
-                and section.street_network.mode == response_pb2.Bike \
-                and not has_tc \
-                and not in_bss:
-            has_bike_first = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bike \
-                and not has_tc:
-            has_bike_first = True
-        elif section.type == response_pb2.BSS_RENT \
-                and not has_tc:
-            has_bss_first = True
-        elif has_tc \
-                and section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode != response_pb2.Walking:
-            return False
-        elif has_tc \
-                and section.type == response_pb2.STREET_NETWORK \
-                and section.street_network.mode != response_pb2.Walking:
-            return False
-    return has_bike_first and has_tc
-
-def has_bike_first_and_bss_last(journey):
-    in_bss = False
-    has_bike_first = False
-    has_bss_last = False
-    has_tc = False
-    for section in journey.sections:
-        if section.type == response_pb2.PUBLIC_TRANSPORT:
-            has_tc = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bike \
-                and not has_tc:
-            has_bike_first = True
-        elif section.type == response_pb2.BSS_RENT:
-            in_bss = True
-        elif section.type == response_pb2.BSS_PUT_BACK:
-            in_bss = True
-        elif section.type == response_pb2.STREET_NETWORK \
-                and section.street_network.mode == response_pb2.Bike \
-                and not has_tc \
-                and not in_bss:
-            has_bike_first = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bike \
-                and not has_tc:
-            has_bike_first = True
-        elif section.type == response_pb2.CROW_FLY \
-                and section.street_network.mode == response_pb2.Bss \
-                and has_tc:
-            has_bss_last = True
-        elif section.type == response_pb2.STREET_NETWORK \
-                and section.street_network.mode == response_pb2.Bike \
-                and has_tc \
-                and in_bss:
-            has_bss_last = True
-    return has_bike_first and has_bss_last and has_tc
 
 class DestineoJourneySorter(JourneySorter):
     """
@@ -482,7 +314,7 @@ class Scenario(default.Scenario):
                 continue
             bike_dur = bike_duration(journey)
             car_dur = car_duration(journey)
-            tc_dur = tc_duration(journey)
+            tc_dur = pt_duration(journey)
             if bike_dur and tc_dur < instance.destineo_min_tc_with_bike:
                 to_delete.append(idx)
             elif car_dur and tc_dur < instance.destineo_min_tc_with_car:
