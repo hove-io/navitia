@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
                                              true, navitia::type::AccessibiliteParams()/*false*/, forbidden, sn_worker, false, true);
 
-    dump_response(resp, "arrival_before", true);
+    dump_response(resp, "arrival_before");
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
@@ -772,6 +772,20 @@ BOOST_FIXTURE_TEST_CASE(walking_test, streetnetworkmode_fixture<test_speed_provi
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(1);
     BOOST_CHECK_EQUAL(section.shape().size(), 3);
+
+    //check durations
+    for (int idx_j = 0; idx_j < resp.journeys_size(); idx_j ++) {
+        const auto& j = resp.journeys(idx_j);
+        auto journey_duration = j.duration();
+        int total_dur(0);
+        for (int idx_section = 0; idx_section < j.sections().size(); ++idx_section) {
+                const auto& section = j.sections(idx_section);
+                total_dur += section.duration();
+        }
+
+        BOOST_CHECK_EQUAL(journey_duration, total_dur);
+    }
+
 }
 
 //biking
@@ -1352,7 +1366,7 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
                                   true, navitia::type::AccessibiliteParams(), {}, sn_worker, false, true);
 
 
-    dump_response(resp, "biking length test", true);
+    dump_response(resp, "biking length test");
 
     BOOST_REQUIRE(resp.journeys_size() == 1);
 
