@@ -68,53 +68,6 @@ std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
     return result;
 }
 
-
-pbnavitia::Response
-render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
-          DateTime datetime, DateTime max_datetime,
-          const type::Data &data) {
-    pbnavitia::Response response;
-    auto current_time = pt::second_clock::local_time();
-    pt::time_period action_period(to_posix_time(datetime, data),
-                                  to_posix_time(max_datetime, data));
-
-    auto sort_predicate =
-        [&](datetime_stop_time d1, datetime_stop_time d2)->bool {
-            auto hour1 = DateTimeUtils::hour(d1.first) % DateTimeUtils::SECONDS_PER_DAY;
-            auto hour2 = DateTimeUtils::hour(d2.first) % DateTimeUtils::SECONDS_PER_DAY;
-            return std::abs(hour1 - DateTimeUtils::hour(datetime)) <
-                   std::abs(hour2 - DateTimeUtils::hour(datetime));
-        };
-
-    for(auto id_vec : map_route_stop_point) {
-
-        auto board = response.add_departure_boards();
-        fill_pb_object(data.pt_data->stop_points[id_vec.first.first], data,
-                       board->mutable_stop_point(), 1,
-                       current_time, action_period);
-        fill_pb_object(data.pt_data->routes[id_vec.first.second], data,
-                       board->mutable_route(), 2, current_time, action_period);
-
-        auto vec_st = id_vec.second;
-        std::sort(vec_st.begin(), vec_st.end(), sort_predicate);
-
-        for(auto vec : make_columuns(vec_st)) {
-            pbnavitia::BoardItem *item = board->add_board_items();
-
-            for(DateTime dt : vec) {
-                if(!item->has_hour()) {
-                    auto hours = DateTimeUtils::hour(dt)/3600;
-                    item->set_hour(boost::lexical_cast<std::string>(hours));
-                }
-                auto minutes = (DateTimeUtils::hour(dt)%3600)/60;
-                item->add_minutes(boost::lexical_cast<std::string>(minutes));
-            }
-        }
-    }
-    return response;
-}
-
-
 pbnavitia::Response
 render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
           const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
@@ -231,7 +184,7 @@ departure_board(const std::string& request,
             if(jpp->journey_pattern->route != route) {
                 continue;
             }
-            if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx) { // dans le cas de terminus
+            if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx) { // for terminus
                 response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
                 continue;
             }
@@ -257,11 +210,12 @@ departure_board(const std::string& request,
                       [&handler](datetime_stop_time dst1, datetime_stop_time dst2) {
                 auto is_before_start1 = (DateTimeUtils::hour(dst1.first) < DateTimeUtils::hour(handler.date_time));
                 auto is_before_start2 = (DateTimeUtils::hour(dst2.first) < DateTimeUtils::hour(handler.date_time));
+
                 if (is_before_start1 != is_before_start2) {
                     //if one is before and one is after, we want the one after first
                     return ! is_before_start1;
                 }
-                return dst1.first < dst2.first;
+                return DateTimeUtils::hour(dst1.first) < DateTimeUtils::hour(dst2.first);
                 });
             if (stop_times.size() > max_date_times) {
                 stop_times.resize(max_date_times);
@@ -280,15 +234,14 @@ departure_board(const std::string& request,
         }
     }
 
-    if(interface_version == 0) {
-        handler.pb_response = render_v0(map_route_stop_point,
-                                        handler.date_time,
-                                        handler.max_datetime, data);
-    } else if(interface_version == 1) {
+    if(interface_version == 1) {
         handler.pb_response = render_v1(response_status, map_route_stop_point,
                                         handler.date_time,
                                         handler.max_datetime,
                                         calendar_id, depth, show_codes, data);
+    } else {
+        fill_pb_error(pbnavitia::Error::bad_filter, "invalid interface version", handler.pb_response.mutable_error());
+        return handler.pb_response;
     }
 
 

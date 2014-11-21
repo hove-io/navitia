@@ -105,8 +105,12 @@ class Schedules(ResourceUri, ResourceUtc):
         # we save the original datetime for debuging purpose
         args['original_datetime'] = args['from_datetime']
 
-        new_datetime = self.convert_to_utc(args['from_datetime'])
-        args['from_datetime'] = utils.date_to_timestamp(new_datetime)
+        if not args.get('calendar'):
+            #if a calendar is given all times will be given in local (because it might span over dst)
+            new_datetime = self.convert_to_utc(args['from_datetime'])
+            args['from_datetime'] = utils.date_to_timestamp(new_datetime)
+        else:
+            args['from_datetime'] = utils.date_to_timestamp(args['from_datetime'])
 
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)
