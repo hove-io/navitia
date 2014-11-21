@@ -87,6 +87,7 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
         //we have to reverse the path
         std::reverse(result.path_items.begin(), result.path_items.end());
         int last_angle = 0;
+        const auto& speed_factor = arrival_path_finder.speed_factor;
         for (auto& item : result.path_items) {
             std::reverse(item.coordinates.begin(), item.coordinates.end());
 
@@ -100,17 +101,19 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
             // FIXME: ugly temporary fix
             // while we don't use a boost::reverse_graph, the easiest way to handle
             // the bss rent/putback section in the arrival section is to swap them
-            // This patch is wrong since we don't handle the different duration of
-            // bss_rent and bss_put_back, but it'll do for the moment
             if (item.transportation == PathItem::TransportCaracteristic::BssTake) {
                 item.transportation = PathItem::TransportCaracteristic::BssPutBack;
+                item.duration = geo_ref.default_time_bss_putback / speed_factor;
             } else if (item.transportation == PathItem::TransportCaracteristic::BssPutBack) {
                 item.transportation = PathItem::TransportCaracteristic::BssTake;
+                item.duration = geo_ref.default_time_bss_pickup / speed_factor;
             }
             if (item.transportation == PathItem::TransportCaracteristic::CarPark) {
                 item.transportation = PathItem::TransportCaracteristic::CarLeaveParking;
+                item.duration = geo_ref.default_time_parking_leave / speed_factor;
             } else if (item.transportation == PathItem::TransportCaracteristic::CarLeaveParking) {
                 item.transportation = PathItem::TransportCaracteristic::CarPark;
+                item.duration = geo_ref.default_time_parking_park / speed_factor;
             }
         }
 
