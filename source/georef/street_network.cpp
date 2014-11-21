@@ -311,9 +311,13 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
 
     auto duration = crow_fly_duration(projection.distances[d]);
 
+    //we need to update the total length
+    p.duration += duration;
+
     //we aither add the starting coordinate to the first path item or create a new path item if it was another way
     nt::idx_t first_way_idx = (p.path_items.empty() ? type::invalid_idx : item_to_update(p).way_idx);
     if (start_edge.way_idx != first_way_idx || first_way_idx == type::invalid_idx) {
+
         if (! p.path_items.empty() && item_to_update(p).way_idx == type::invalid_idx) { //there can be an item with no way, so we will update this item
             item_to_update(p).way_idx = start_edge.way_idx;
             item_to_update(p).duration += duration;
@@ -356,7 +360,11 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
             }
             add_in_path(p, item);
         }
+    } else {
+        //we just need to update the duration
+        item_to_update(p).duration += duration;
     }
+
     auto& coord_list = item_to_update(p).coordinates;
     if (append_to_begin) {
         if (coord_list.empty() || coord_list.front() != projection.projected) {
@@ -375,9 +383,8 @@ Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_
         return {};
 
     auto result = this->build_path(target[nearest_edge.second]);
-    add_projections_to_path(result, true);
 
-    result.duration = nearest_edge.first;
+    add_projections_to_path(result, true);
 
     //we need to put the end projections too
     add_custom_projections_to_path(result, false, target, nearest_edge.second);
