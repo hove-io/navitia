@@ -37,7 +37,8 @@ import pytz
 from collections import defaultdict, OrderedDict
 from jormungandr.scenarios.helpers import bike_duration, pt_duration, car_duration
 from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \
-        has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last
+        has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last, \
+        is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -101,14 +102,6 @@ def has_car_and_tc(journey):
 
     return has_tc and has_car
 
-def is_non_pt_bss(journey):
-    return journey.type == 'non_pt_bss'
-
-def is_non_pt_walk(journey):
-    return journey.type == 'non_pt_walk'
-
-def is_non_pt_bike(journey):
-    return journey.type == 'non_pt_bike'
 
 def is_alternative(journey):
     return is_non_pt_bike(journey) or is_non_pt_walk(journey)
