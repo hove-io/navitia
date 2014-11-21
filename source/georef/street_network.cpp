@@ -317,8 +317,8 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
     //we aither add the starting coordinate to the first path item or create a new path item if it was another way
     nt::idx_t first_way_idx = (p.path_items.empty() ? type::invalid_idx : item_to_update(p).way_idx);
     if (start_edge.way_idx != first_way_idx || first_way_idx == type::invalid_idx) {
-
-        if (! p.path_items.empty() && item_to_update(p).way_idx == type::invalid_idx) { //there can be an item with no way, so we will update this item
+        //there can be an item with no way, so we will update this item
+        if (! p.path_items.empty() && item_to_update(p).way_idx == type::invalid_idx) {
             item_to_update(p).way_idx = start_edge.way_idx;
             item_to_update(p).duration += duration;
         }
