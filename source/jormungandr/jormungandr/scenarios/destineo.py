@@ -417,10 +417,12 @@ class Scenario(default.Scenario):
     def _get_alternatives(self, args, instance):
         response_alternative = super(Scenario, self).journeys(args, instance)
 
-        self._remove_not_long_enough_fallback(response_alternative.journeys, instance)
-        self._remove_not_long_enough_tc_with_fallback(response_alternative.journeys, instance)
+        if not args['debug']:
+            # in debug we don't filter
+            self._remove_not_long_enough_fallback(response_alternative.journeys, instance)
+            self._remove_not_long_enough_tc_with_fallback(response_alternative.journeys, instance)
 
-        self._choose_best_alternatives(response_alternative.journeys)
+            self._choose_best_alternatives(response_alternative.journeys)
         return response_alternative
 
 
