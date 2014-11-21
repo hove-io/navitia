@@ -560,6 +560,10 @@ void Data::build_journey_pattern_points(){
 
 // Check if two vehicle_journey's belong to the same journey_pattern
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2){
+ 
+    if (vj1->tmp_line != vj2->tmp_line || vj1->tmp_route != vj2->tmp_route){
+        return false;
+    }
 
     if(vj1->stop_time_list.size() != vj2->stop_time_list.size())
         return false;
