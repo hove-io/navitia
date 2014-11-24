@@ -21,20 +21,28 @@ PUBLIC = True
 #message returned on authentication request
 HTTP_BASIC_AUTH_REALM = 'Navitia.io'
 
+from jormungandr.logging_utils import IdFilter
+
 # logger configuration
 LOGGER = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters':{
         'default': {
-            'format': '[%(asctime)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s',
+            'format': '[%(asctime)s] [%(request_id)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s',
         },
+    },
+    'filters': {
+        'IdFilter': {
+            '()': IdFilter,
+        }
     },
     'handlers': {
         'default': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'default',
+            'filters': ['IdFilter'],
         },
     },
     'loggers': {
