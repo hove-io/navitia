@@ -137,8 +137,10 @@ def bss_duration(journey):
     for section in journey.sections:
         if section.type == response_pb2.BSS_RENT:
             in_bss = True
+            duration += section.duration
         if section.type == response_pb2.BSS_PUT_BACK:
             in_bss = False
+            duration += section.duration
         if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
                 and section.street_network.mode == response_pb2.Bike \
                 and in_bss:
