@@ -41,6 +41,7 @@ import time
 from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, journey_sorter
 from jormungandr.scenarios import simple
 import logging
+from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration
 
 
 class Scenario(simple.Scenario):
@@ -276,6 +277,8 @@ class Scenario(simple.Scenario):
             nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
+        if not request['debug']:
+            self._delete_non_optimal_journey(resp.journeys)
         self.sort_journeys(resp, instance.journey_order, request['clockwise'])
         self.choose_best(resp)
         self.delete_journeys(resp, request, final_filter=True)  # filter one last time to remove similar journeys
@@ -286,6 +289,27 @@ class Scenario(simple.Scenario):
             error.message = "No journey found, all were filtered"
 
         return resp
+
+    def _delete_non_optimal_journey(self, journeys):
+        logger = logging.getLogger(__name__)
+        type_journeys = {'non_pt_bss': None, 'non_pt_bike': None, 'non_pt_walk': None}
+        type_func = {'non_pt_bss': bss_duration, 'non_pt_bike': bike_duration, 'non_pt_walk': walking_duration}
+        to_delete = []
+        for journey in journeys:
+            if journey.type in type_journeys:
+                type_journeys[journey.type] = journey
+        for idx, journey in enumerate(journeys):
+            for type, func in type_func.iteritems():
+                if not type_journeys[type] or type_journeys[type] == journey:
+                    continue
+                if func(journey) > type_journeys[type].duration:
+                    to_delete.append(idx)
+                    logger.debug('delete journey %s because it has more fallback than %s', journey.type, type)
+                    break
+        to_delete.sort(reverse=True)
+        for idx in to_delete:
+            del journeys[idx]
+
 
     def choose_best(self, resp):
         """
