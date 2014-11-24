@@ -56,8 +56,40 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
                       const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data, bool disruption_active) {
     const auto& label = labels[count][journey_pattern_point];
     if(label.pt_is_initialized()) {
+        const auto date = DateTimeUtils::date(label.dt_pt);
+        const auto hour = DateTimeUtils::hour(label.dt_pt);
         const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[journey_pattern_point];
-        return best_stop_time(jpp, label.dt_pt, accessibilite_params.vehicle_properties, clockwise, disruption_active, data, true);
+        for (type::VehicleJourney* vj : jpp->journey_pattern->vehicle_journey_list) {
+            const type::StopTime& st = vj->stop_time_list[jpp->order];
+            auto st_hour = clockwise ? st.arrival_time : st.departure_time;
+            if (!st.is_frequency()) {
+                if ((st_hour%86400) != hour) {
+                    continue;
+                }
+            } else {
+                auto start_time = st.start_time(!clockwise),
+                     end_time = st.end_time(!clockwise) % 86400;
+                if ((start_time < end_time && (hour < start_time || hour > end_time)) ||
+                    (start_time > end_time && (hour <= start_time && hour >= end_time)) ||
+                    start_time == end_time) {
+                    continue;
+                }
+            }
+            if (st.is_valid_day(date, clockwise, disruption_active)
+                    && st.valid_end(clockwise) && st.vehicle_journey->accessible(accessibilite_params.vehicle_properties)) {
+                DateTime result_hour = !clockwise ? st.arrival_time : st.departure_time;
+                if (st.is_frequency()) {
+                    if (!clockwise) {
+                        result_hour = st.f_arrival_time(hour, !clockwise);
+                    } else {
+                        result_hour = st.f_departure_time(hour, !clockwise);
+                    }
+                }
+                auto result = label.dt_pt;
+                DateTimeUtils::update(result, result_hour, clockwise);
+                return std::make_pair(&st, result);
+            }
+        }
     }
     return std::make_pair(nullptr, std::numeric_limits<uint32_t>::max());
 }
