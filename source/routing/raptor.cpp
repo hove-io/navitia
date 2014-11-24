@@ -53,13 +53,14 @@ void RAPTOR::make_queue() {
  * If the given vj also has an extension we apply it.
  */
 template<typename Visitor>
-void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
+bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
                                 const type::VehicleJourney* prev_vj, type::idx_t boarding_jpp_idx,
                                 DateTime workingDt, const uint16_t l_zone,
                                 const bool disruption_active) {
     auto& working_labels = labels[count];
     const type::VehicleJourney* vj = v.get_extension_vj(prev_vj);
     bool add_vj = false;
+    bool result = false;
     while(vj) {
         const auto& stop_time_list = v.stop_time_list(vj);
         const auto& st_begin = *stop_time_list.first;
@@ -68,7 +69,7 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
         DateTimeUtils::update(workingDt, current_time, v.clockwise());
         // If the vj is not valid for the first stop it won't be valid at all
         if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), disruption_active)) {
-            return;
+            return result;
         }
         BOOST_FOREACH(const type::StopTime& st, stop_time_list) {
             const auto current_time = st.section_end_time(v.clockwise(),
@@ -95,7 +96,7 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
             if(best_jpp == type::invalid_idx || v.comp(workingDt, working_labels[best_jpp].dt_pt)) {
                 best_jpp = jpp->idx;
-                end_algorithm = false;
+                result = true;
             }
         }
         //If we never marked a vj, we don't want to continue
@@ -106,15 +107,13 @@ void RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             vj = nullptr;
         }
     }
+    return result;
 }
 
 
 template<typename Visitor>
-void RAPTOR::foot_path(const Visitor & v) {
-    if (end_algorithm) {
-        return;
-    }
-    end_algorithm = true;
+bool RAPTOR::foot_path(const Visitor & v) {
+    bool result = false;
     int last = 0;
     const auto foot_path_list = v.clockwise() ? data.dataRaptor->foot_path_forward :
                                                 data.dataRaptor->foot_path_backward;
@@ -147,13 +146,14 @@ void RAPTOR::foot_path(const Visitor & v) {
                    best_labels[jpp_idx] = next;
                    if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
                        Q[jpp->journey_pattern->idx] = jpp->order;
-                       end_algorithm = false;
+                       result = true;
                    }
                 }
             }
         }
         last = index.first + index.second;
     }
+    return result;
 }
 
 
@@ -470,7 +470,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
 template<typename Visitor>
 void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active,
         bool global_pruning, uint32_t max_transfers) {
-    end_algorithm = false;
+    bool end_algorithm = false;
     count = 0; //< Count iteration of raptor algorithm
 
     while(!end_algorithm && count <= max_transfers) {
@@ -558,13 +558,13 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     }
                 }
                 if(boarding) {
-                    apply_vj_extension(visitor, global_pruning, it_st->vehicle_journey, boarding->idx,
+                    end_algorithm &= !apply_vj_extension(visitor, global_pruning, it_st->vehicle_journey, boarding->idx,
                         workingDt, l_zone, disruption_active);
                 }
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
         }
-        this->foot_path(visitor);
+        end_algorithm &= !this->foot_path(visitor);
     }
 }
 
