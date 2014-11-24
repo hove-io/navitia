@@ -717,22 +717,22 @@ def bss_duration_test():
 
     eq_(bss_duration(get_walking_bike_journey()), 0)
 
-    eq_(bss_duration(get_walking_bss_journey()), 55)
+    eq_(bss_duration(get_walking_bss_journey()), 85)
 
     eq_(bss_duration(get_walking_car_journey()), 0)
 
-    eq_(bss_duration(get_bss_walking_journey()), 25)
+    eq_(bss_duration(get_bss_walking_journey()), 45)
 
-    eq_(bss_duration(get_bss_bike_journey()), 75)
+    eq_(bss_duration(get_bss_bike_journey()), 85)
 
-    eq_(bss_duration(get_bss_bss_journey()), 70)
+    eq_(bss_duration(get_bss_bss_journey()), 100)
 
-    eq_(bss_duration(get_bss_car_journey()), 15)
+    eq_(bss_duration(get_bss_car_journey()), 25)
 
     eq_(bss_duration(get_bike_walking_journey()), 0)
 
     eq_(bss_duration(get_bike_bike_journey()), 0)
 
-    eq_(bss_duration(get_bike_bss_journey()), 50)
+    eq_(bss_duration(get_bike_bss_journey()), 70)
 
     eq_(bss_duration(get_bike_car_journey()), 0)
