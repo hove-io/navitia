@@ -16,3 +16,9 @@ ADD_BOOST_TEST(thermometer_test)
 add_executable(departure_boards_test departure_boards_test.cpp)
 target_link_libraries(departure_boards_test time_tables ptreferential ed data fare routing utils pb_lib thermometer georef ${BOOST_LIBS} log4cplus pthread protobuf)
 ADD_BOOST_TEST(departure_boards_test)
+
+
+
+add_executable(route_schedules_test route_schedules_test.cpp)
+target_link_libraries(route_schedules_test time_tables ptreferential ed data fare routing utils pb_lib thermometer georef ${BOOST_LIBS} log4cplus pthread protobuf)
+ADD_BOOST_TEST(route_schedules_test)
