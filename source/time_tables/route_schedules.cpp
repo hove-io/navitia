@@ -36,6 +36,7 @@ www.navitia.io
 #include "utils/paginate.h"
 #include "type/datetime.h"
 #include "routing/best_stoptime.h"
+#include <boost/range/adaptor/reversed.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -77,50 +78,105 @@ get_all_stop_times(const vector_idx &journey_patterns,
     return result;
 }
 
+std::vector<datetime_stop_time>::const_iterator get_first_dt_st_after(
+        const std::vector<datetime_stop_time>& v, size_t order) {
+    if (order < v.size()) {
+        return std::find_if(v.begin() + order, v.end(),
+                            [](datetime_stop_time dt_st) {
+                                return dt_st.second != nullptr;
+                            });
+    }
+    return v.end();
+}
+
+std::vector<datetime_stop_time>::const_iterator get_first_dt_st_before(
+        const std::vector<datetime_stop_time>& v, size_t order) {
+    if (order < v.size()) {
+        for (auto it = v.rbegin()+order; it != v.rend(); ++ it) {
+            if (it->second != nullptr) {
+                return it.base() - 1;
+            }
+        }
+    }
+    return v.end();
+}
+
+/*
+ *  We want to compare the first filled dt_st of v1, named d1 with order o1
+ *  with the first filled dt_st of v2 having an order >= o1
+ *  If cannot find such an element in v2, we will compare with the last filled
+ *  dt_st in v2.
+ *  We want to compare v2, with the first st in v1 before o2.
+ */
+bool compare(const std::vector<datetime_stop_time>& v1,
+        const std::vector<datetime_stop_time>& v2) {
+    if (v1.empty()) {
+        return false;
+    }
+    if (v2.empty()) {
+        return true;
+    }
+    auto first_st_a_it = get_first_dt_st_after(v1, 0);
+    if (first_st_a_it == v1.end()) {
+        return false;
+    }
+    auto first_st_b_it = v2.end();
+    size_t order = std::distance(first_st_a_it, v1.begin());
+    if (order < v2.size()) {
+        first_st_b_it = get_first_dt_st_after(v2, order);
+    }
+    if (first_st_b_it == v2.end()) {
+        first_st_b_it = get_first_dt_st_before(v2, 0);
+        if (first_st_b_it == v2.end()) {
+            return true;
+        }
+    }
+    auto r_first_st_b_it = std::reverse_iterator<std::vector<datetime_stop_time>::const_iterator>(first_st_b_it);
+    size_t distance = std::distance(v2.rbegin(), r_first_st_b_it);
+    // Even if r_first_st_b_it == v2.rbegin(), distance will be 1... So we need to decrease it.
+    --distance;
+    first_st_a_it = get_first_dt_st_before(v1, distance);
+    return first_st_a_it->first < first_st_b_it->first;
+}
+
 
 std::vector<std::vector<datetime_stop_time> >
 make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
              const Thermometer &thermometer, const type::Data &) {
-    std::vector<std::vector<datetime_stop_time> > result;
-    //On initilise le tableau vide
-    for(unsigned int i=0; i<thermometer.get_thermometer().size(); ++i) {
-        result.push_back(std::vector<datetime_stop_time>());
-        result.back().resize(stop_times.size());
+    // result group stop_times by stop_point, tmp by vj.
+    std::vector<std::vector<datetime_stop_time> > result, tmp;
+    const size_t thermometer_size = thermometer.get_thermometer().size();
+    for (size_t i=0; i < stop_times.size(); ++i) {
+        tmp.push_back(std::vector<datetime_stop_time>(thermometer_size));
     }
 
-    //On remplit le tableau
+    // We match every stop_time with the journey pattern
     int y=0;
     for(std::vector<datetime_stop_time> vec : stop_times) {
         auto jpp = *vec.front().second->vehicle_journey->journey_pattern;
         std::vector<uint32_t> orders = thermometer.match_journey_pattern(jpp);
         int order = 0;
         for(datetime_stop_time dt_stop_time : vec) {
-            result[orders[order]][y] = dt_stop_time;
+            tmp[y][orders[order]] = dt_stop_time;
             ++order;
         }
         ++y;
     }
 
-    return result;
-}
+    std::sort(tmp.begin(), tmp.end(), compare);
 
-
-std::vector<type::VehicleJourney*>
-get_vehicle_journey(const std::vector<std::vector<datetime_stop_time> >& stop_times){
-    std::vector<type::VehicleJourney*> result;
-    for(const std::vector<datetime_stop_time> vec : stop_times){
-        type::VehicleJourney* vj = vec.front().second->vehicle_journey;
-        auto it = std::find_if(result.begin(), result.end(),
-                               [vj](type::VehicleJourney* vj1){
-                                return (vj->idx == vj1->idx);
-                        });
-        if(it == result.end()){
-            result.push_back(vj);
+    for(unsigned int i=0; i<thermometer_size; ++i) {
+        result.push_back(std::vector<datetime_stop_time>());
+        result.back().resize(stop_times.size());
+    }
+    // We rotate the matrice, so it can be handle more easily in route_schedule
+    for (size_t i=0; i<tmp.size(); ++i) {
+        for (size_t j=0; j<tmp[i].size(); ++j) {
+            result[j][i] = tmp[i][j];
         }
     }
     return result;
 }
-
 
 pbnavitia::Response
 route_schedule(const std::string& filter,
@@ -159,21 +215,12 @@ route_schedule(const std::string& filter,
         thermometer.generate_thermometer(stop_points);
         //On génère la matrice
         auto  matrice = make_matrice(stop_times, thermometer, d);
-         //On récupère les vehicleJourny de manière unique
-        auto vehicle_journy_list = get_vehicle_journey(stop_times);
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
         auto m_pt_display_informations = schedule->mutable_pt_display_informations();
         fill_pb_object(route, d, m_pt_display_informations, 0, now, action_period);
 
-        for(type::VehicleJourney* vj : vehicle_journy_list){
-            pbnavitia::Header* header = table->add_headers();
-            pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
-            pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = header->mutable_add_info_vehicle_journey();
-            fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
-            fill_pb_object(vj, d, {}, add_info_vehicle_journey, 0, now, action_period);
-        }
-
+        std::vector<bool> is_vj_set(stop_times.size(), false);
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint* sp = d.pt_data->stop_points[spidx];
@@ -183,6 +230,15 @@ route_schedule(const std::string& filter,
                            now, action_period, show_codes);
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 datetime_stop_time dt_stop_time  = matrice[i][j];
+                if (!is_vj_set[j] && dt_stop_time.second != nullptr) {
+                    pbnavitia::Header* header = table->add_headers();
+                    pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
+                    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = header->mutable_add_info_vehicle_journey();
+                    auto vj = dt_stop_time.second->vehicle_journey;
+                    fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
+                    fill_pb_object(vj, d, {}, add_info_vehicle_journey, 0, now, action_period);
+                    is_vj_set[j] = true;
+                }
                 if(interface_version == 1) {
                     auto pb_dt = row->add_date_times();
                     fill_pb_object(dt_stop_time.second, d, pb_dt, max_depth,
