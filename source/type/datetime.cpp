@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/data.h"
 #include "type/time_duration.h"
 #include "type/meta_data.h"
+#include "datetime.h"
 
 namespace pt = boost::posix_time;
 
@@ -93,7 +94,8 @@ std::vector<pt::time_period>
 expand_calendar(pt::ptime start, pt::ptime end,
              pt::time_duration beg_of_day, pt::time_duration end_of_day,
              std::bitset<7> days) {
-    if (days.all() && beg_of_day == pt::hours(0) && end_of_day == pt::hours(24)) {
+    if (days.all() && beg_of_day == pt::hours(0) && (pt::hours(24) - end_of_day) <= (1_s).to_posix()) {
+        //Note, we have one second tolerance on the end of the day
         return {{start, end}};
     }
     auto period = boost::gregorian::date_period(start.date(), end.date() + boost::gregorian::days(1));
@@ -107,7 +109,7 @@ expand_calendar(pt::ptime start, pt::ptime end,
             continue;
         }
         //end is not in the period, so we add one second
-        res.push_back(pt::time_period(pt::ptime(day, beg_of_day), pt::ptime(day, end_of_day) + pt::seconds(1)));
+        res.push_back(pt::time_period(pt::ptime(day, beg_of_day), pt::ptime(day, end_of_day) + (1_s).to_posix()));
     }
 
     //we want the first period to start after 'start' (and the last to finish before 'end')
