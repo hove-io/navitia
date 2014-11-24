@@ -70,7 +70,7 @@ nt::MetaVehicleJourney* get_or_create_metavj(builder& b, const std::string name)
     return it->second;
 }
 
-nt::JourneyPattern* get_or_create_journey_pattern(builder&b, std::string uri) {
+nt::JourneyPattern* get_or_create_journey_pattern(builder& b, const std::string& uri) {
     auto it = std::find_if(b.data->pt_data->journey_patterns.begin(),
                         b.data->pt_data->journey_patterns.end(),
                         [uri](nt::JourneyPattern* jp) {
