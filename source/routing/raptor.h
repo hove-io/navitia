@@ -68,7 +68,6 @@ struct RAPTOR
     boost::dynamic_bitset<> valid_journey_pattern_points;
     ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
     queue_t Q;
-    bool end_algorithm = false;
 
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :
@@ -159,12 +158,13 @@ struct RAPTOR
                       bool global_pruning = true,
                       const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
-    /// Fonction générique pour la marche à pied
-    /// Il faut spécifier le visiteur selon le sens souhaité
-    template<typename Visitor> void foot_path(const Visitor & v);
+    /// Apply foot pathes to labels
+    /// Return true if it improves at least one label, false otherwise
+    template<typename Visitor> bool foot_path(const Visitor & v);
 
+    /// Returns true if we improve at least one label, false otherwise
     template<typename Visitor>
-    void apply_vj_extension(const Visitor& v, const bool global_pruning,
+    bool apply_vj_extension(const Visitor& v, const bool global_pruning,
                             const type::VehicleJourney* prev_vj, type::idx_t boarding_jpp_idx,
                             DateTime workingDt, const uint16_t l_zone,
                             const bool disruption_active);
