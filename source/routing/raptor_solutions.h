@@ -105,4 +105,7 @@ getWalkingTime(int count, type::idx_t jpp_idx, const std::vector<std::pair<type:
                bool clockwise, bool disruption_active, const type::AccessibiliteParams &accessibilite_params,
                const navitia::routing::RAPTOR &raptor);
 
+size_t nb_jpp_of_path(int count, type::idx_t jpp_idx, bool clockwise, bool disruption_active,
+                      const type::AccessibiliteParams & accessibilite_params, const RAPTOR& raptor);
+
 }}
