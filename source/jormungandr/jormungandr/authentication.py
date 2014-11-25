@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import logging
+import binascii
 
 from flask_restful import reqparse, abort
 import flask_restful
@@ -89,7 +90,7 @@ def get_token():
         try:
             decoded = base64.decodestring(b64)
             return decoded.split(':')[0]
-        except:
+        except binascii.Error:
             logging.info('badly formated token %s', auth)
             flask_restful.abort(401, message="Unauthorized, invalid token", status=401)
             return None
