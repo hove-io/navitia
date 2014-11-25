@@ -130,20 +130,25 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                 best_jpp = jppidx;
                 best_dt_jpp = l.dt_pt;
                 best_nb_jpp_of_path = nb_jpp;
-                // Dans le sens horaire : lors du calcul on gardé que l’heure de départ, mais on veut l’arrivée
-                // Il faut donc retrouver le stop_time qui nous intéresse avec best_stop_time
-                const type::StopTime* st;
+                // When computing with clockwise, in the second pass we store deparutre time
+                // in labels, but we want arrival time, so we need to retrive the good stop_time
+                // with best_stop_time
+                const type::StopTime* st = nullptr;
                 DateTime dt = 0;
 
-                std::tie(st, dt) = best_stop_time(journey_pattern_point, l.dt_pt, accessibilite_params.vehicle_properties,
-                                                  !clockwise, disruption_active, raptor.data, true);
-                BOOST_ASSERT(st);
+                std::tie(st, dt) = best_stop_time(journey_pattern_point, l.dt_pt,
+                        accessibilite_params.vehicle_properties,
+                        !clockwise, disruption_active, raptor.data, true);
                 if(st != nullptr) {
                     if(clockwise) {
-                        auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(DateTimeUtils::hour(dt));
+                        auto arrival_time = !st->is_frequency() ? 
+                                st->arrival_time :
+                                st->f_arrival_time(DateTimeUtils::hour(dt));
                         DateTimeUtils::update(best_dt_jpp, arrival_time, false);
                     } else {
-                        auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(DateTimeUtils::hour(dt));
+                        auto departure_time = !st->is_frequency() ?
+                            st->departure_time :
+                            st->f_departure_time(DateTimeUtils::hour(dt));
                         DateTimeUtils::update(best_dt_jpp, departure_time, true);
                     }
                 }
