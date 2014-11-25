@@ -69,6 +69,20 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
             } else {
                 auto start_time = st.start_time(!clockwise),
                      end_time = st.end_time(!clockwise) % DateTimeUtils::SECONDS_PER_DAY;
+                // Here we check if hour is out of the period of the frequency.
+                // In normal case we have something like:
+                // 0-------------------------------------86400(midnight)
+                //     start_time-------end_time
+                // So hour is out of the period if (hour < start_time || hour > end_time)
+                // If end_time, is after midnight, so end_time%86400 will be < start_time
+                // So we will have something like:
+                // 0-------------------------------------86400(midnight)
+                //     end_time-------start_time
+                // So hour will be out of the period if (hour <= start_time && hour >= end_time)
+                // We can think of a case where even with the modulo, end_time is superior
+                // to start_time, so the vehicle always runs, therefore the dataset should have
+                // start_time=0, end_time=86400, if this happens, we should handle it in
+                // the ed part
                 if ((start_time < end_time && (hour < start_time || hour > end_time)) ||
                     (start_time > end_time && (hour <= start_time && hour >= end_time)) ||
                     start_time == end_time) {
