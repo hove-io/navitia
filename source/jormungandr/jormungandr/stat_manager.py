@@ -29,17 +29,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from navitiacommon import response_pb2
-from flask_restful import reqparse, abort
-import flask_restful
 from flask import request, g
 from functools import wraps
 from navitiacommon import stat_pb2
-from navitiacommon import request_pb2
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from jormungandr import app
-from jormungandr.instance import Instance
 from jormungandr.authentication import get_user, get_token
 from jormungandr import utils
 
@@ -159,6 +154,8 @@ class StatManager(object):
         stat_coverage = stat_request.coverages.add()
         if 'region' in request.view_args:
             stat_coverage.region_id = request.view_args['region']
+        elif hasattr(g, 'regions_called') and len(g.regions_called) == 1:
+            stat_coverage.region_id = g.regions_called[0]
 
     def fill_error(self, stat_request, error):
         stat_error = stat_request.error
