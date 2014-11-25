@@ -82,17 +82,19 @@ def get_token():
     """
     if 'Authorization' not in request.headers:
         return None
-
-    args = request.headers['Authorization'].split(' ')
+    auth = request.headers['Authorization']
+    args = auth.split(' ')
     if len(args) == 2:
+        b64 = args[1]
         try:
-            b64 = args[1]
             decoded = base64.decodestring(b64)
             return decoded.split(':')[0]
-        except ValueError:
+        except:
+            #if the token is not correctly formated, we do not consider it
+            logging.info('badly formated token %s', auth)
             return None
     else:
-        return request.headers['Authorization']
+        return auth
 
 
 @cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
