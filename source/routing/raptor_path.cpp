@@ -63,12 +63,12 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
             const type::StopTime& st = vj->stop_time_list[jpp->order];
             auto st_hour = clockwise ? st.arrival_time : st.departure_time;
             if (!st.is_frequency()) {
-                if ((st_hour%86400) != hour) {
+                if ((st_hour%DateTimeUtils::SECONDS_PER_DAY) != hour) {
                     continue;
                 }
             } else {
                 auto start_time = st.start_time(!clockwise),
-                     end_time = st.end_time(!clockwise) % 86400;
+                     end_time = st.end_time(!clockwise) % DateTimeUtils::SECONDS_PER_DAY;
                 if ((start_time < end_time && (hour < start_time || hour > end_time)) ||
                     (start_time > end_time && (hour <= start_time && hour >= end_time)) ||
                     start_time == end_time) {
