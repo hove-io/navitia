@@ -153,8 +153,8 @@ make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
     // We match every stop_time with the journey pattern
     int y=0;
     for(const std::vector<datetime_stop_time>& vec : stop_times) {
-        auto jpp = *vec.front().second->vehicle_journey->journey_pattern;
-        std::vector<uint32_t> orders = thermometer.match_journey_pattern(jpp);
+        auto journey_pattern = vec.front().second->vehicle_journey->journey_pattern;
+        std::vector<uint32_t> orders = thermometer.match_journey_pattern(*journey_pattern);
         int order = 0;
         for(datetime_stop_time dt_stop_time : vec) {
             tmp[y][orders[order]] = dt_stop_time;
