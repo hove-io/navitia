@@ -291,6 +291,9 @@ class Scenario(simple.Scenario):
         return resp
 
     def _delete_non_optimal_journey(self, journeys):
+        """
+        remove all journeys with a greater fallback duration with a specific mode than the corresponding non_pt journey
+        """
         logger = logging.getLogger(__name__)
         type_journeys = {'non_pt_bss': None, 'non_pt_bike': None, 'non_pt_walk': None}
         type_func = {'non_pt_bss': bss_duration, 'non_pt_bike': bike_duration, 'non_pt_walk': walking_duration}
@@ -302,7 +305,7 @@ class Scenario(simple.Scenario):
             for type, func in type_func.iteritems():
                 if not type_journeys[type] or type_journeys[type] == journey:
                     continue
-                if func(journey) > type_journeys[type].duration:
+                if func(journey) > func(type_journeys[type]):
                     to_delete.append(idx)
                     logger.debug('delete journey %s because it has more fallback than %s', journey.type, type)
                     break
@@ -319,7 +322,7 @@ class Scenario(simple.Scenario):
         for j in resp.journeys:
             if j.type == 'rapid':
                 j.type = 'best'
-                break  # we want to ensure the unicity of the best
+                break # we want to ensure the unicity of the best
 
     def merge_response(self, initial_response, new_response):
         #since it's not the first call to kraken, some kraken's id
