@@ -144,12 +144,10 @@ std::vector<std::vector<datetime_stop_time> >
 make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
              const Thermometer &thermometer, const type::Data &) {
     // result group stop_times by stop_point, tmp by vj.
-    std::vector<std::vector<datetime_stop_time> > result, tmp;
     const size_t thermometer_size = thermometer.get_thermometer().size();
-    for (size_t i=0; i < stop_times.size(); ++i) {
-        tmp.push_back(std::vector<datetime_stop_time>(thermometer_size));
-    }
-
+    std::vector<std::vector<datetime_stop_time> > 
+        result(thermometer_size, std::vector<datetime_stop_time>(stop_times.size())),
+        tmp(stop_times.size(), std::vector<datetime_stop_time>(thermometer_size));
     // We match every stop_time with the journey pattern
     int y=0;
     for(const std::vector<datetime_stop_time>& vec : stop_times) {
@@ -164,11 +162,6 @@ make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
     }
 
     std::sort(tmp.begin(), tmp.end(), compare);
-
-    for(unsigned int i=0; i<thermometer_size; ++i) {
-        result.push_back(std::vector<datetime_stop_time>());
-        result.back().resize(stop_times.size());
-    }
     // We rotate the matrice, so it can be handle more easily in route_schedule
     for (size_t i=0; i<tmp.size(); ++i) {
         for (size_t j=0; j<tmp[i].size(); ++j) {
