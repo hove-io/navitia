@@ -162,7 +162,7 @@ def delete_non_optimal_journey_bike_test():
     journey4.type = "non_pt_bike"
     section = journey4.sections.add()
     section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
+    section.street_network.mode = response_pb2.Bike
     section.duration = 140
     journey4.duration = sum([section.duration for section in journey4.sections])
 
