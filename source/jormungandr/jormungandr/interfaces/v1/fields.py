@@ -367,7 +367,6 @@ disruption_message = {
     "text": fields.String(),
     "content_type": fields.String(),
 }
-
 disruption = {
     "uri": fields.String(),
     "impact_uri": fields.String(),
@@ -379,6 +378,7 @@ disruption = {
     "cause": fields.String(),
     "messages": NonNullList(NonNullNested(disruption_message)),
 }
+
 
 display_informations_route = {
     "network": fields.String(attribute="network"),

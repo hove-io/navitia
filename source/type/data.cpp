@@ -92,13 +92,13 @@ bool Data::load(const std::string& filename,
                 % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
                 );
     } catch(const wrong_version& ex) {
-        LOG4CPLUS_ERROR(logger, boost::format("Data loading failed: %s") % ex.what());
+        LOG4CPLUS_ERROR(logger, "Cannot laod data: " << ex.what());
         last_load = false;
     } catch(const std::exception& ex) {
-        LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
+        LOG4CPLUS_ERROR(logger, "Data loading failed: " << ex.what());
         last_load = false;
     } catch(...) {
-        LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
+        LOG4CPLUS_ERROR(logger, "Data loading failed");
         last_load = false;
     }
     if (chaos_database) {
