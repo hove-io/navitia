@@ -155,9 +155,8 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                 const type::StopTime* st = nullptr;
                 DateTime dt = 0;
 
-                std::tie(st, dt) = best_stop_time(journey_pattern_point, l.dt_pt,
-                        accessibilite_params.vehicle_properties,
-                        !clockwise, disruption_active, raptor.data, true);
+                std::tie(st, dt) = get_current_stidx_gap(round, jppidx, raptor.labels, accessibilite_params,
+                                                                      !clockwise, raptor.data, disruption_active);
                 if(st != nullptr) {
                     if(clockwise) {
                         auto arrival_time = !st->is_frequency() ? 
@@ -170,11 +169,11 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                             st->f_departure_time(DateTimeUtils::hour(dt));
                         DateTimeUtils::update(best_dt_jpp, departure_time, true);
                     }
+                    if(clockwise)
+                        best_dt = l.dt_pt - spid_dist.second.total_seconds();
+                    else
+                        best_dt = l.dt_pt + spid_dist.second.total_seconds();
                 }
-                if(clockwise)
-                    best_dt = l.dt_pt - spid_dist.second.total_seconds();
-                else
-                    best_dt = l.dt_pt + spid_dist.second.total_seconds();
             }
         }
         if(best_jpp != type::invalid_idx) {
