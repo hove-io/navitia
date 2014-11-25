@@ -151,11 +151,13 @@ class StatManager(object):
             stat_parameter.value = item[1]
 
     def fill_coverages(self, stat_request):
-        stat_coverage = stat_request.coverages.add()
         if 'region' in request.view_args:
+            stat_coverage = stat_request.coverages.add()
             stat_coverage.region_id = request.view_args['region']
-        elif hasattr(g, 'regions_called') and len(g.regions_called) == 1:
-            stat_coverage.region_id = g.regions_called[0]
+        elif hasattr(g, 'regions_called'):
+            for region_id in g.regions_called:
+                stat_coverage = stat_request.coverages.add()
+                stat_coverage.region_id = g.regions_called[0]
 
     def fill_error(self, stat_request, error):
         stat_error = stat_request.error
