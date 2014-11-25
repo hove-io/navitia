@@ -295,17 +295,17 @@ class Scenario(simple.Scenario):
         remove all journeys with a greater fallback duration with a specific mode than the corresponding non_pt journey
         """
         logger = logging.getLogger(__name__)
-        type_journeys = {'non_pt_bss': None, 'non_pt_bike': None, 'non_pt_walk': None}
+        reference_journeys = {'non_pt_bss': None, 'non_pt_bike': None, 'non_pt_walk': None}
         type_func = {'non_pt_bss': bss_duration, 'non_pt_bike': bike_duration, 'non_pt_walk': walking_duration}
         to_delete = []
         for journey in journeys:
-            if journey.type in type_journeys:
-                type_journeys[journey.type] = journey
+            if journey.type in reference_journeys:
+                reference_journeys[journey.type] = journey
         for idx, journey in enumerate(journeys):
             for type, func in type_func.iteritems():
-                if not type_journeys[type] or type_journeys[type] == journey:
+                if not reference_journeys[type] or reference_journeys[type] == journey:
                     continue
-                if func(journey) > func(type_journeys[type]):
+                if func(journey) > func(reference_journeys[type]):
                     to_delete.append(idx)
                     logger.debug('delete journey %s because it has more fallback than %s', journey.type, type)
                     break
