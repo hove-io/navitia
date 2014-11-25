@@ -93,6 +93,25 @@ bool is_equal(const DateTime & best_so_far, bool clockwise, const DateTime & cur
     return dt == best_so_far;
 }
 
+size_t nb_jpp_of_path(int count, type::idx_t jpp_idx, bool clockwise, bool disruption_active,
+                      const type::AccessibiliteParams & accessibilite_params, const RAPTOR& raptor) {
+    struct VisitorNbJPP : public BasePathVisitor {
+        size_t nb_jpp = 0;
+        void loop_vj(const type::StopTime*, boost::posix_time::ptime, boost::posix_time::ptime) {
+            ++nb_jpp;
+        }
+
+        void change_vj(const type::StopTime*, const type::StopTime*,
+                       boost::posix_time::ptime ,boost::posix_time::ptime,
+                       bool) {
+            ++nb_jpp;
+        }
+    };
+    VisitorNbJPP v;
+    read_path(v, jpp_idx, count, !clockwise, disruption_active, accessibilite_params, raptor);
+    return v.nb_jpp;
+}
+
 Solutions
 get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
                const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
@@ -352,25 +371,6 @@ navitia::time_duration getWalkingTime(int count, type::idx_t jpp_idx, const std:
     }
 
     return walking_time;
-}
-
-size_t nb_jpp_of_path(int count, type::idx_t jpp_idx, bool clockwise, bool disruption_active,
-                      const type::AccessibiliteParams & accessibilite_params, const RAPTOR& raptor) {
-    struct VisitorNbJPP : public BasePathVisitor {
-        size_t nb_jpp = 0;
-        void loop_vj(const type::StopTime*, boost::posix_time::ptime, boost::posix_time::ptime) {
-            ++nb_jpp;
-        }
-
-        void change_vj(const type::StopTime*, const type::StopTime*,
-                       boost::posix_time::ptime ,boost::posix_time::ptime,
-                       bool) {
-            ++nb_jpp;
-        }
-    };
-    VisitorNbJPP v;
-    read_path(v, jpp_idx, count, !clockwise, disruption_active, accessibilite_params, raptor);
-    return v.nb_jpp;
 }
 
 }}
