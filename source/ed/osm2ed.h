@@ -361,7 +361,7 @@ enum class OsmObjectType {
     Way
 };
 
-std::string to_string(OsmObjectType t) {
+inline std::string to_string(OsmObjectType t) {
     switch (t) {
     case OsmObjectType::Node: return "n";
     case OsmObjectType::Way: return "w";
@@ -422,7 +422,7 @@ struct PoiHouseNumberVisitor {
 
 
 };
-bool operator<(const ed::connectors::it_way w1, const ed::connectors::it_way w2) {
+inline bool operator<(const ed::connectors::it_way w1, const ed::connectors::it_way w2) {
     return w1->osm_id < w2->osm_id;
 }
 }}
