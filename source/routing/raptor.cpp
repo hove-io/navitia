@@ -486,7 +486,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
         const auto & prec_labels=labels[count -1];
         auto& working_labels = labels[this->count];
         this->make_queue();
-
+        std::vector<std::tuple<const type::VehicleJourney*, type::idx_t, uint16_t, DateTime>> stay_in_vjs;
         for(const auto & journey_pattern : data.pt_data->journey_patterns) {
             if(Q[journey_pattern->idx] != std::numeric_limits<int>::max()
                     && Q[journey_pattern->idx] != -1
@@ -558,11 +558,17 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     }
                 }
                 if(boarding) {
-                    end_algorithm &= !apply_vj_extension(visitor, global_pruning, it_st->vehicle_journey, boarding->idx,
-                        workingDt, l_zone, disruption_active);
+                    const type::VehicleJourney* vj_stay_in = visitor.get_extension_vj(it_st->vehicle_journey);
+                    if (vj_stay_in) {
+                        stay_in_vjs.emplace_back(vj_stay_in, boarding->idx, l_zone, workingDt);
+                    }
                 }
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
+        }
+        for (auto vj_boarding : stay_in_vjs) {
+            end_algorithm &= !apply_vj_extension(visitor, global_pruning, std::get<0>(vj_boarding),
+                std::get<1>(vj_boarding), std::get<3>(vj_boarding), std::get<2>(vj_boarding), disruption_active);
         }
         end_algorithm &= !this->foot_path(visitor);
     }
