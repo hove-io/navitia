@@ -1,9 +1,9 @@
 # coding=utf-8
 
-#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-#     the software to build cool stuff with public transport.
+# the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -30,37 +30,44 @@
 # www.navitia.io
 
 from flask import url_for
-from make_links import create_external_link
-from flask.ext.restful import Resource, marshal_with, marshal
+from jormungandr.interfaces.v1.make_links import create_external_link
+from flask_restful import marshal
 from jormungandr._version import __version__
 from jormungandr.exceptions import DeadSocketException
+from jormungandr.module_resource import ModuleResource
 from navitiacommon import type_pb2, request_pb2
 from jormungandr import i_manager
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.interfaces.v1 import fields
 
 
-class Index(Resource):
-
+class Index(ModuleResource):
     def get(self):
         response = {
             "links": [
-                create_external_link('v1.coverage', rel='coverage', description='Coverage of navitia'),
+                create_external_link(self.module_name + '.coverage',
+                                     rel='coverage',
+                                     description='Coverage of navitia'),
                 # TODO find a way to display {long:lat} in the url
-                create_external_link('v1.coord', rel='coord', templated=True,
-                            description='Inverted geocoding for a given coordinate', lon=.0, lat=.0),
-                create_external_link('v1.journeys', rel='journeys', description='Compute journeys'),
+                create_external_link(self.module_name + '.coord', rel='coord',
+                                     templated=True,
+                                     description='Inverted geocoding for a given coordinate',
+                                     lon=.0, lat=.0),
+                create_external_link(self.module_name + '.journeys',
+                                     rel='journeys',
+                                     description='Compute journeys'),
             ]
         }
         return response, 200
 
 
-class TechnicalStatus(Resource):
+class TechnicalStatus(ModuleResource):
     """
     Status is mainly used for supervision
 
     return status for all instances
     """
+
     def get(self):
         response = {
             "jormungandr_version": __version__,
@@ -72,11 +79,13 @@ class TechnicalStatus(Resource):
 
             req.requested_api = type_pb2.STATUS
             try:
-                resp = i_manager.instances[key_region].send_and_receive(req, timeout=1000)
+                resp = i_manager.instances[key_region].send_and_receive(req,
+                                                                        timeout=1000)
 
                 raw_resp_dict = protobuf_to_dict(resp, use_enum_labels=True)
 
-                resp_dict = marshal(raw_resp_dict['status'], fields.instance_status)
+                resp_dict = marshal(raw_resp_dict['status'],
+                                    fields.instance_status)
             except DeadSocketException:
                 resp_dict = {
                     "status": "dead",

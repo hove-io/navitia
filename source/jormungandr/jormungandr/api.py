@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -29,12 +29,14 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
 from flask_restful.representations import json
-from jormungandr.interfaces.v1_routing import v1_routing
 from flask import request
 from jormungandr import rest_api
 from jormungandr.index import index
+from jormungandr.modules.tisseo_routing.TisseoRouting import TisseoRouting
+from jormungandr.modules_loader import ModulesLoader
+
+from jormungandr.modules.v1_routing.v1_routing import V1Routing
 
 
 @rest_api.representation("text/jsonp")
@@ -46,5 +48,16 @@ def output_jsonp(data, code, headers=None):
         resp.data = str(callback) + '(' + resp.data + ')'
     return resp
 
+
+rest_api.module_loader = ModulesLoader(rest_api)
+
+rest_api.module_loader.load(V1Routing(rest_api, 'v1',
+                                      'Current version of navitia API',
+                                      status='current'))
+# Uncomment the following lines if you want to activate the test module
+#rest_api.module_loader.load(TisseoRouting(rest_api, 'tisseo/test',
+#                                          'Test module',
+#                                          status='testing'))
+rest_api.module_loader.run()
+
 index(rest_api)
-v1_routing(rest_api)
