@@ -58,17 +58,15 @@ struct FindAdminWithCities {
 
     boost::shared_ptr<pqxx::connection> conn;
     georef::GeoRef& georef;
-    AdminMap& admin_by_insee_code;
+    AdminMap added_admins;
     size_t nb_call = 0;
     size_t nb_uninitialized = 0;
     size_t nb_georef = 0;
-    size_t nb_admin_added = 0;
     std::map<size_t, size_t> cities_stats;// number of response for size of the result
 
-    FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr, AdminMap& m):
+    FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr):
         conn(boost::make_shared<pqxx::connection>(connection_string)),
-        georef(gr),
-        admin_by_insee_code(m)
+        georef(gr)
         {}
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
@@ -81,7 +79,7 @@ struct FindAdminWithCities {
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_uninitialized
                        << " calls with uninitialized or zeroed coord");
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_georef << " GeoRef responses");
-        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_admin_added << " admins added using cities");
+        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << added_admins.size() << " admins added using cities");
         for (const auto& elt: cities_stats) {
             LOG4CPLUS_INFO(log, "FindAdminWithCities: "
                            << elt.second << " cities responses with "
@@ -107,13 +105,13 @@ struct FindAdminWithCities {
         pqxx::result result = work.exec(request);
         result_type res;
         for (auto it = result.begin(); it != result.end(); ++it) {
-            navitia::georef::Admin*& admin =
-                admin_by_insee_code[it["insee"].as<std::string>()];
+            const std::string uri = it["uri"].as<std::string>() + "extern";
+            navitia::georef::Admin*& admin = added_admins[uri];
             if (!admin) {
                 georef.admins.push_back(new navitia::georef::Admin());
                 admin = georef.admins.back();
                 admin->comment = "from cities";
-                it["uri"].to(admin->uri);
+                admin->uri = uri;
                 it["name"].to(admin->name);
                 it["insee"].to(admin->insee);
                 it["level"].to(admin->level);
@@ -122,7 +120,6 @@ struct FindAdminWithCities {
                 admin->coord.set_lat(it["lat"].as<double>());
                 admin->idx = georef.admins.size() - 1;
                 admin->from_original_dataset = false;
-                ++nb_admin_added;
             }
             res.push_back(admin);
         }
@@ -193,8 +190,7 @@ int main(int argc, char * argv[])
     ed::EdReader reader(connection_string);
 
     if (!cities_connection_string.empty()) {
-        data.find_admins = FindAdminWithCities(
-            cities_connection_string, *data.geo_ref, reader.admin_by_insee_code);
+        data.find_admins = FindAdminWithCities(cities_connection_string, *data.geo_ref);
     }
 
     try {
