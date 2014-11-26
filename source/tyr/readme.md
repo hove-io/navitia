@@ -17,7 +17,7 @@ Tyr uses the same database as Jormungandr
 
 ### Overview 
 
-Tyr based on flask, so it is used like:
+Tyr is based on flask, so it is used like:
 
     TYR_CONFIG_FILE=<your_config_file.py> manage_tyr.py <command>
 
