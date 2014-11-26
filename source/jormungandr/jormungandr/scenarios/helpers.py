@@ -131,11 +131,37 @@ def bike_duration(journey):
 
     return duration
 
+def bss_duration(journey):
+    duration = 0
+    in_bss = False
+    for section in journey.sections:
+        if section.type == response_pb2.BSS_RENT:
+            in_bss = True
+            duration += section.duration
+        if section.type == response_pb2.BSS_PUT_BACK:
+            in_bss = False
+            duration += section.duration
+        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
+                and section.street_network.mode == response_pb2.Bike \
+                and in_bss:
+            duration = duration + section.duration
+
+    return duration
+
 def car_duration(journey):
     duration = 0
     for section in journey.sections:
         if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
                 and section.street_network.mode == response_pb2.Car:
+            duration = duration + section.duration
+
+    return duration
+
+def walking_duration(journey):
+    duration = 0
+    for section in journey.sections:
+        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
+                and section.street_network.mode == response_pb2.Walking:
             duration = duration + section.duration
 
     return duration
@@ -147,3 +173,12 @@ def pt_duration(journey):
             duration = duration + section.duration
 
     return duration
+
+def is_non_pt_bss(journey):
+    return journey.type == 'non_pt_bss'
+
+def is_non_pt_walk(journey):
+    return journey.type == 'non_pt_walk'
+
+def is_non_pt_bike(journey):
+    return journey.type == 'non_pt_bike'
