@@ -158,6 +158,9 @@ class StatManager(object):
             for region_id in g.regions_called:
                 stat_coverage = stat_request.coverages.add()
                 stat_coverage.region_id = g.regions_called[0]
+        else:
+            # We need an empty coverage.
+            stat_request.coverages.add()
 
     def fill_error(self, stat_request, error):
         stat_error = stat_request.error
