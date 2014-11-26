@@ -57,6 +57,7 @@ In CanalTP production environments tyr is installed as a service via debian pack
 Honcho is handy to launch all the different services.
 
 install honcho:
+
     pip install honcho
 
 In the tyr directory create 2 files:
@@ -105,7 +106,7 @@ Subscription is done via calls to Tyr webservice. Tyr handles:
  
 The api returns 4XX response on failure, with a json message containing the attribute error and the message.
 
-For a simple user account creation see the [example section below](### example)
+For a simple user account creation see the [example section](#simple-example)
 
 ### Tyr API
 
@@ -200,7 +201,7 @@ Get all a user information:
 
 To create a user, parameters need to given in the query's body 
 
-Note: email addresses are validated via api not only on the format but on it's existence. Hosever no email are send.
+Note: email addresses are validated via api not only on the format but on it's existence. However no email are send.
 
     POST /v0/users/?email=alex@example.com&login=alex  
 
@@ -284,23 +285,48 @@ This is usefull only is the instance is not "free"
 }
 ```
 
-### Example of user account creation with access to public instances
+### Simple example
 
 Here a quick example of how to create a user with access to public instances using curl (but you can use whatever you want):
 
-Create a user
+Note: by default tyr is accessed on localhost:5000
 
-```bash
+Create a user:
 
-tyr_url = localhost # change this for your needs
+    curl -X POST "localhost:5000/v0/users/?email=toto@canaltp.fr&login=bob"
 
-curl -X POST $tyr_url/v0/users
+Note: the email must exists
 
-To create a user with access to public instances, one need only to make a http call to:
+If the creation went well, a json is returned with an id:
 
-    POST /v0/users/
-    POST /v0/users/<userid>/keys/
+```json
+[
+    {
+        "email": "toto@canaltp.fr", 
+        "id": 1, 
+        "login": "bob"
+    }
+]
 
+```
 
-<userid> is returned by the first call
+Use the id in the next query
+
+    curl -X POST "localhost:5000/v0/users/1/keys"
+
+```json
+{
+    "authorizations": [], 
+    "email": "toto@canaltp.fr", 
+    "id": 1, 
+    "keys": [
+        {
+            "id": 1, 
+            "token": "faa80b5f-f747-45bf-ad89-b3f2b29dd4aa", 
+            "valid_until": null
+        }
+    ], 
+    "login": "bob"
+}
+
 ```
