@@ -378,40 +378,37 @@ void GeoRef::build_proximity_list(){
     poi_proximity_list.build();
 }
 
+static const Admin* find_city_admin(const std::vector<Admin*>& admins) {
+    for(Admin* admin : admins){
+        //Level 8: City
+        if (admin->level == 8) { return admin; }
+    }
+    return nullptr;
+}
+
 void GeoRef::build_autocomplete_list(){
-    int pos = 0;
+    int pos = -1;
     fl_way.clear();
-    for(Way* way : ways){
-        if (!way->name.empty()) {
-            std::string key="";
-            for(Admin* admin : way->admin_list){
-                //Level Admin 8  : City
-                if (admin->level == 8) {
-                    key+= " " + admin->name;
-                }
-                if ((!admin->post_code.empty()) && (admin->level == 8)) {
-                    key += " "+ admin->post_code;
-                }
-            }
-            fl_way.add_string(way->way_type +" "+ way->name + " " + key, pos, this->synonyms);
+    for (Way* way: ways) {
+        ++pos;
+        if (way->name.empty()) { continue; }
+        if (auto admin = find_city_admin(way->admin_list)) {
+            std::string key = way->way_type + " " + way->name + " " + admin->name;
+            if (!admin->post_code.empty()) { key += " " + admin->post_code; }
+            fl_way.add_string(key, pos, this->synonyms);
         }
-        pos++;
     }
     fl_way.build();
 
     fl_poi.clear();
     //Autocomplete poi list
     for(const POI* poi : pois){
-        if ((!poi->name.empty()) && (poi->visible)) {
-            std::string key="";
-            for(Admin* admin : poi->admin_list) {
-                //Level Admin 8  : City
-                if (admin->level == 8) {
-                    key += " " + admin->name;
-                }
-            }
-            fl_poi.add_string(poi->name + " " + key, poi->idx , this->synonyms);
+        if (poi->name.empty() || !poi->visible) { continue; }
+        std::string key = poi->name;
+        if (auto admin = find_city_admin(poi->admin_list)) {
+            key += " " + admin->name;
         }
+        fl_poi.add_string(key, poi->idx , this->synonyms);
     }
     fl_poi.build();
 
