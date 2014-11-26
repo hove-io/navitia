@@ -37,12 +37,14 @@ from flask.ext.restful import Api
 from flask.ext.cache import Cache
 import sys
 from jormungandr.exceptions import log_exception
-from jormungandr.helper import ReverseProxied
+from jormungandr.helper import ReverseProxied, NavitiaRequest
 
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')
 if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
+
+app.request_class = NavitiaRequest
 
 if 'LOGGER' in app.config:
     logging.config.dictConfig(app.config['LOGGER'])
