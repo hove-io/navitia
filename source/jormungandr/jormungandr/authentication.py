@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import logging
+import binascii
 
 from flask_restful import reqparse, abort
 import flask_restful
@@ -82,17 +83,19 @@ def get_token():
     """
     if 'Authorization' not in request.headers:
         return None
-
-    args = request.headers['Authorization'].split(' ')
+    auth = request.headers['Authorization']
+    args = auth.split(' ')
     if len(args) == 2:
+        b64 = args[1]
         try:
-            b64 = args[1]
             decoded = base64.decodestring(b64)
             return decoded.split(':')[0]
-        except ValueError:
+        except binascii.Error:
+            logging.info('badly formated token %s', auth)
+            flask_restful.abort(401, message="Unauthorized, invalid token", status=401)
             return None
     else:
-        return request.headers['Authorization']
+        return auth
 
 
 @cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))

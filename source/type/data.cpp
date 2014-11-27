@@ -92,13 +92,13 @@ bool Data::load(const std::string& filename,
                 % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
                 );
     } catch(const wrong_version& ex) {
-        LOG4CPLUS_ERROR(logger, boost::format("Data loading failed: %s") % ex.what());
+        LOG4CPLUS_ERROR(logger, "Cannot laod data: " << ex.what());
         last_load = false;
     } catch(const std::exception& ex) {
-        LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
+        LOG4CPLUS_ERROR(logger, "Data loading failed: " << ex.what());
         last_load = false;
     } catch(...) {
-        LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
+        LOG4CPLUS_ERROR(logger, "Data loading failed");
         last_load = false;
     }
     if (chaos_database) {
@@ -591,13 +591,13 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
 Type_e Data::get_type_of_id(const std::string & id) const {
     if(id.size()>6 && id.substr(0,6) == "coord:")
         return Type_e::Coord;
-    if(id.size()>6 && id.substr(0,8) == "address:")
+    if(id.size()>8 && id.substr(0,8) == "address:")
         return Type_e::Address;
     if(id.size()>6 && id.substr(0,6) == "admin:")
         return Type_e::Admin;
     #define GET_TYPE(type_name, collection_name) \
-    auto collection_name##_map = pt_data->collection_name##_map;\
-    if(collection_name##_map.find(id) != collection_name##_map.end())\
+    const auto &collection_name##_map = pt_data->collection_name##_map;\
+    if(collection_name##_map.count(id) != 0 )\
         return Type_e::type_name;
     ITERATE_NAVITIA_PT_TYPES(GET_TYPE)
     if(geo_ref->poitype_map.find(id) != geo_ref->poitype_map.end())

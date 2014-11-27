@@ -124,12 +124,14 @@ struct RAPTOR
     compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &departures,
                    const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
                    const DateTime &departure_datetime,
-                   bool disruption_active, bool allow_odt,
+                   bool disruption_active, 
+                   bool allow_odt,
                    const DateTime &bound,
                    const uint32_t max_transfers,
                    const type::AccessibiliteParams & accessibilite_params,
                    const std::vector<std::string> & forbidden_uri,
-                   bool clockwise);
+                   bool clockwise, 
+                   bool details);
 
 
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
@@ -156,12 +158,13 @@ struct RAPTOR
                       bool global_pruning = true,
                       const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
-    /// Fonction générique pour la marche à pied
-    /// Il faut spécifier le visiteur selon le sens souhaité
-    template<typename Visitor> void foot_path(const Visitor & v);
+    /// Apply foot pathes to labels
+    /// Return true if it improves at least one label, false otherwise
+    template<typename Visitor> bool foot_path(const Visitor & v);
 
+    /// Returns true if we improve at least one label, false otherwise
     template<typename Visitor>
-    void apply_vj_extension(const Visitor& v, const bool global_pruning,
+    bool apply_vj_extension(const Visitor& v, const bool global_pruning,
                             const type::VehicleJourney* prev_vj, type::idx_t boarding_jpp_idx,
                             DateTime workingDt, const uint16_t l_zone,
                             const bool disruption_active);
@@ -176,23 +179,6 @@ struct RAPTOR
     /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint
     /// Retourne -1 s'il n'existe pas de meilleure solution
     int best_round(type::idx_t journey_pattern_point_idx);
-
-    template<typename Visitor>
-    inline
-    void mark_all_jpp_of_sp(const type::StopPoint* stop_point, const DateTime dt, const type::idx_t boarding_jpp,
-                            label_vector_t& working_labels, Visitor visitor) {
-        for(auto jpp : stop_point->journey_pattern_point_list) {
-            type::idx_t jpp_idx = jpp->idx;
-            if(jpp_idx != boarding_jpp && visitor.comp(dt, best_labels[jpp_idx])) {
-               working_labels[jpp_idx].dt_transfer = dt;
-               working_labels[jpp_idx].boarding_jpp_transfer = boarding_jpp;
-               best_labels[jpp_idx] = dt;
-               if(visitor.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
-                   Q[jpp->journey_pattern->idx] = jpp->order;
-               }
-            }
-        }
-    }
 
     ~RAPTOR() {}
 };

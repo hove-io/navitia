@@ -354,7 +354,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
         std::vector<nt::idx_t> physical_mode_idxes;
         for(auto route : l->route_list) {
-            fill_pb_object(route, data, line->add_routes(), depth-1);
+            fill_pb_object(route, data, line->add_routes(), depth-1, now, action_period, show_codes);
         }
         for(auto physical_mode : l->physical_mode_list){
             fill_pb_object(physical_mode, data, line->add_physical_mode(),
@@ -363,7 +363,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
 
         fill_pb_object(l->commercial_mode, data,
                 line->mutable_commercial_mode(), depth-1);
-        fill_pb_object(l->network, data, line->mutable_network(), depth-1);
+        fill_pb_object(l->network, data, line->mutable_network(), depth-1, now, action_period, show_codes);
     }
     for(const auto message : l->get_applicable_messages(now, action_period)){
         fill_message(message, data, line, depth-1, now, action_period);
@@ -463,7 +463,6 @@ void fill_pb_object(const nt::Network* n, const nt::Data& data,
     for(const auto& message : n->get_applicable_messages(now, action_period)){
         fill_message(message, data, network, max_depth-1, now, action_period);
     }
-
     if(show_codes) {
         for(auto type_value : n->codes) {
             fill_codes(type_value.first, type_value.second, network->add_codes());
@@ -800,20 +799,32 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     pb_fare->set_found(! fare.not_found);
 }
 
-const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
-    const navitia::georef::POI* vls = nullptr;
-    //we loop through all poi near the coord to find a vls station within 50 meter
+const navitia::georef::POI* get_nearest_poi(const navitia::type::Data& data, const nt::GeographicalCoord& coord,
+        const navitia::georef::POIType& poi_type) {
+    const navitia::georef::POI* nearest_poi = nullptr;
+    //we loop through all poi near the coord to find a poi of the required type
     for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
         const auto poi = data.geo_ref->pois[poi_idx];
-        const auto poi_type = data.geo_ref->poitypes[poi->poitype_idx];
-        if (poi_type->uri == "poi_type:amenity:bicycle_rental") {
-            vls = poi;
-            break;
+        if (poi->poitype_idx == poi_type.idx) {
+            return poi;
         }
     }
+    return nullptr;
+}
 
-    return vls;
+const navitia::georef::POI* get_nearest_parking(const navitia::type::Data& data,
+        const nt::GeographicalCoord& coord) {
+    navitia::type::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:parking"];
+    const navitia::georef::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
+    return get_nearest_poi(data, coord, poi_type);
+}
+
+const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& data,
+        const nt::GeographicalCoord& coord) {
+    navitia::type::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
+    const navitia::georef::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
+    return get_nearest_poi(data, coord, poi_type);
 }
 
 void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,
@@ -839,22 +850,35 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     //add the destination as a placemark
     pbnavitia::PtObject* dest_place = section->mutable_destination();
 
-    bool poi_found = false;
     // we want to have a specific place mark for vls or for the departure if we started from a poi
-    if (item.transportation == georef::PathItem::TransportCaracteristic::BssPutBack) {
-        const auto vls_station = get_nearest_bss_station(data, item.coordinates.front());
-        if (vls_station) {
-            fill_pb_placemark(vls_station, data, dest_place, depth, now, action_period);
-            poi_found = true;
-        } else {
-            LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS putback station poi for coord " << last_item.coordinates.front());
+    switch(item.transportation){
+        case georef::PathItem::TransportCaracteristic::BssPutBack:
+        {
+            const auto vls_station = get_nearest_bss_station(data, item.coordinates.front());
+            if (vls_station) {
+                fill_pb_placemark(vls_station, data, dest_place, depth, now, action_period);
+            } else {
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "impossible to find the associated BSS putback station poi for coord " << last_item.coordinates.front());
+            }
+            break;
         }
+        case georef::PathItem::TransportCaracteristic::CarPark:
+        case georef::PathItem::TransportCaracteristic::CarLeaveParking:
+        {
+            const auto parking = get_nearest_parking(data, item.coordinates.front());
+            if (parking) {
+                fill_pb_placemark(parking, data, dest_place, depth, now, action_period);
+            } else {
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "impossible to find the associated parking poi for coord " << last_item.coordinates.front());
+            }
+            break;
+        }
+        default: break;
     }
-    if (! poi_found && last_item.transportation != georef::PathItem::TransportCaracteristic::BssTake) {
+    if (! dest_place->IsInitialized()) {
         auto way = data.geo_ref->ways[last_item.way_idx];
         type::GeographicalCoord coord = last_item.coordinates.back();
-        fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord,
-                                depth, now, action_period);
+        fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord, depth, now, action_period);
     }
 
     switch (last_item.transportation) {

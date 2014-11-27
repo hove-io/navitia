@@ -121,8 +121,13 @@ void load_disruptions(
             cursor["uri"].to(current_uri);
             disruption->uri = current_uri;
 
-            impact = boost::shared_ptr<nt::new_disruption::Impact>();
+            impact = boost::make_shared<nt::new_disruption::Impact>();
             cursor["uri"].to(impact->uri);
+
+            disruption->publication_period = boost::posix_time::time_period(
+                        pt::time_from_string(cursor["start_publication_date"].as<std::string>()),
+                    pt::time_from_string(cursor["end_publication_date"].as<std::string>())
+                    );
 
             //we need to handle the active days to split the period
             pt::ptime start = pt::time_from_string(cursor["start_application_date"].as<std::string>());
@@ -148,7 +153,8 @@ void load_disruptions(
         auto pt_object = nt::new_disruption::make_pt_obj(
             static_cast<navitia::type::Type_e>(cursor["object_type_id"].as<int>()),
             cursor["object_uri"].as<std::string>(),
-            pt_data
+            pt_data,
+            impact
             );
         impact->informed_entities.push_back(pt_object);
 

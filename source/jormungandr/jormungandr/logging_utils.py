@@ -27,39 +27,16 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-import re
-from flask import Request
-import uuid
+import logging
+from flask import request
 
 
-class ReverseProxied(object):
-    """
-    Wrap the application in this middleware and configure the
-    front-end server to add these headers, to let you quietly bind
-    this to an HTTP scheme that is different than what is used locally.
+class IdFilter(logging.Filter):
 
-    In nginx:
-    location /myprefix {
-        proxy_set_header X-Scheme $scheme;
-    }
-
-    :param app: the WSGI application
-    """
-    def __init__(self, app):
-        self.app = app
-        self.re = re.compile('^https?$')
-
-    def __call__(self, environ, start_response):
-        scheme = environ.get('HTTP_X_SCHEME', '')
-        if scheme and self.re.match(scheme):
-            environ['wsgi.url_scheme'] = scheme
-        return self.app(environ, start_response)
-
-
-class NavitiaRequest(Request):
-    """
-    override the request of flask to add an id on all request
-    """
-    def __init__(self, *args, **kwargs):
-        super(Request, self).__init__(*args, **kwargs)
-        self.id = str(uuid.uuid4())
+    def filter(self, record):
+        try:
+            record.request_id = request.id
+        except RuntimeError:
+            #if we are outside of a application context
+            record.request_id = None
+        return True

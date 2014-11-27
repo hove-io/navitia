@@ -152,23 +152,16 @@ class ArrivalJourneySorter(JourneySorter):
 
 class DepartureJourneySorter(JourneySorter):
     """
-    Journey comparator for sort, on clockwise the sort is done by departure time
+    Journey comparator for sort, the sort is done by departure time
 
-    the comparison is different if the query is for clockwise search or not
     """
     def __init__(self, clockwise):
         super(DepartureJourneySorter, self).__init__(clockwise)
 
     def __call__(self, j1, j2):
 
-        if self.clockwise:
-            #for clockwise query, we want to sort first on the departure time
-            if j1.departure_date_time != j2.departure_date_time:
-                return -1 if j1.departure_date_time < j2.departure_date_time else 1
-        else:
-            #for non clockwise the first sort is done on arrival
-            if j1.arrival_date_time != j2.arrival_date_time:
-                return -1 if j1.arrival_date_time > j2.arrival_date_time else 1
+        if j1.departure_date_time != j2.departure_date_time:
+            return -1 if j1.departure_date_time < j2.departure_date_time else 1
 
         return self.sort_by_duration_and_transfert(j1, j2)
 

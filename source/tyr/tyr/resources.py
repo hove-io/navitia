@@ -68,8 +68,10 @@ instance_fields = {'id': fields.Raw,
                    'bss_speed': fields.Raw,
                    'car_speed': fields.Raw,
                    'destineo_min_bike': fields.Raw,
+                   'destineo_min_bss': fields.Raw,
                    'destineo_min_car': fields.Raw,
                    'destineo_min_tc_with_bike': fields.Raw,
+                   'destineo_min_tc_with_bss': fields.Raw,
                    'destineo_min_tc_with_car': fields.Raw,
 }
 
@@ -176,9 +178,15 @@ class Instance(flask_restful.Resource):
         parser.add_argument('destineo_min_tc_with_bike', type=int,
                 help='minimum duration of tc when a bike fallback is used', location=('json', 'values'),
                 default=instance.destineo_min_tc_with_bike)
+        parser.add_argument('destineo_min_tc_with_bss', type=int,
+                help='minimum duration of tc when a bss fallback is used', location=('json', 'values'),
+                default=instance.destineo_min_tc_with_bss)
         parser.add_argument('destineo_min_bike', type=int,
                 help='minimum duration of bike fallback', location=('json', 'values'),
                 default=instance.destineo_min_bike)
+        parser.add_argument('destineo_min_bss', type=int,
+                help='minimum duration of bss fallback', location=('json', 'values'),
+                default=instance.destineo_min_bss)
         parser.add_argument('destineo_min_car', type=int,
                 help='minimum duration of car fallback', location=('json', 'values'),
                 default=instance.destineo_min_car)
@@ -199,7 +207,9 @@ class Instance(flask_restful.Resource):
             instance.car_speed = args['car_speed']
             instance.destineo_min_tc_with_car = args['destineo_min_tc_with_car']
             instance.destineo_min_tc_with_bike = args['destineo_min_tc_with_bike']
+            instance.destineo_min_tc_with_bss = args['destineo_min_tc_with_bss']
             instance.destineo_min_bike = args['destineo_min_bike']
+            instance.destineo_min_bss = args['destineo_min_bss']
             instance.destineo_min_car = args['destineo_min_car']
             db.session.commit()
         except Exception:

@@ -1359,3 +1359,41 @@ BOOST_AUTO_TEST_CASE(pareto_front) {
                     path.items.back().arrival.time_of_day().total_seconds() == 10*3600;
                 }));
 }
+
+ BOOST_AUTO_TEST_CASE(overlapping_on_first_st) {
+     ed::builder b("20120614");
+     b.vj("A")("stop1", 8000, 8200)("stop2", 8500);
+     b.vj("A")("stop1", 8100, 8300)("stop2", 8600);
+     b.data->pt_data->index();
+     b.data->build_raptor();
+     RAPTOR raptor(*b.data);
+     auto res1 = raptor.compute(b.data->pt_data->stop_areas[0], b.data->pt_data->stop_areas[1], 7900, 0, DateTimeUtils::inf, false, true);
+
+     BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+     auto res = res1.back();
+     BOOST_CHECK_EQUAL(res.items[0].stop_points[0]->idx, 0);
+     BOOST_CHECK_EQUAL(res.items[0].stop_points[1]->idx, 1);
+     BOOST_CHECK_EQUAL(res.items[0].departure.time_of_day().total_seconds(), 8200);
+     BOOST_CHECK_EQUAL(res.items[0].arrival.time_of_day().total_seconds(), 8500);
+     BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items[0].departure, *(b.data))), 0);
+     BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res.items[0].arrival, *(b.data))), 0);
+
+ }
+
+BOOST_AUTO_TEST_CASE(stay_in_unnecessary) {
+    ed::builder b("20120614");
+    b.vj("A", "1111111", "block1", true)("stop2", 8*3600)("stop3", 8*3600+10*60);
+    b.vj("B", "1111111", "block1", true)("stop1", 7*3600)("stop2", 8*3600);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 5*60, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.back().items.size(), 1);
+}
+

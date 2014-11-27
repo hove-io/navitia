@@ -87,6 +87,7 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
         //we have to reverse the path
         std::reverse(result.path_items.begin(), result.path_items.end());
         int last_angle = 0;
+        const auto& speed_factor = arrival_path_finder.speed_factor;
         for (auto& item : result.path_items) {
             std::reverse(item.coordinates.begin(), item.coordinates.end());
 
@@ -100,17 +101,19 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
             // FIXME: ugly temporary fix
             // while we don't use a boost::reverse_graph, the easiest way to handle
             // the bss rent/putback section in the arrival section is to swap them
-            // This patch is wrong since we don't handle the different duration of
-            // bss_rent and bss_put_back, but it'll do for the moment
             if (item.transportation == PathItem::TransportCaracteristic::BssTake) {
                 item.transportation = PathItem::TransportCaracteristic::BssPutBack;
+                item.duration = geo_ref.default_time_bss_putback / speed_factor;
             } else if (item.transportation == PathItem::TransportCaracteristic::BssPutBack) {
                 item.transportation = PathItem::TransportCaracteristic::BssTake;
+                item.duration = geo_ref.default_time_bss_pickup / speed_factor;
             }
             if (item.transportation == PathItem::TransportCaracteristic::CarPark) {
                 item.transportation = PathItem::TransportCaracteristic::CarLeaveParking;
+                item.duration = geo_ref.default_time_parking_leave / speed_factor;
             } else if (item.transportation == PathItem::TransportCaracteristic::CarLeaveParking) {
                 item.transportation = PathItem::TransportCaracteristic::CarPark;
+                item.duration = geo_ref.default_time_parking_park / speed_factor;
             }
         }
 
@@ -308,10 +311,14 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
 
     auto duration = crow_fly_duration(projection.distances[d]);
 
+    //we need to update the total length
+    p.duration += duration;
+
     //we aither add the starting coordinate to the first path item or create a new path item if it was another way
     nt::idx_t first_way_idx = (p.path_items.empty() ? type::invalid_idx : item_to_update(p).way_idx);
     if (start_edge.way_idx != first_way_idx || first_way_idx == type::invalid_idx) {
-        if (! p.path_items.empty() && item_to_update(p).way_idx == type::invalid_idx) { //there can be an item with no way, so we will update this item
+        //there can be an item with no way, so we will update this item
+        if (! p.path_items.empty() && item_to_update(p).way_idx == type::invalid_idx) {
             item_to_update(p).way_idx = start_edge.way_idx;
             item_to_update(p).duration += duration;
         }
@@ -353,7 +360,11 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
             }
             add_in_path(p, item);
         }
+    } else {
+        //we just need to update the duration
+        item_to_update(p).duration += duration;
     }
+
     auto& coord_list = item_to_update(p).coordinates;
     if (append_to_begin) {
         if (coord_list.empty() || coord_list.front() != projection.projected) {
@@ -372,9 +383,8 @@ Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_
         return {};
 
     auto result = this->build_path(target[nearest_edge.second]);
-    add_projections_to_path(result, true);
 
-    result.duration = nearest_edge.first;
+    add_projections_to_path(result, true);
 
     //we need to put the end projections too
     add_custom_projections_to_path(result, false, target, nearest_edge.second);

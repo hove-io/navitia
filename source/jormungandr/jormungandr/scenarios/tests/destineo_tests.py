@@ -522,230 +522,14 @@ def sort_destineo_date_timezone_test():
     eq_(response.journeys[1], journey_tc3)
     eq_(response.journeys[2], journey_bss_and_tc)
 
-def bike_duration_walking_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-
-    eq_(destineo.bike_duration(journey), 0)
-
-def bike_duration_bike_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 70
-
-    eq_(destineo.bike_duration(journey), 130)
-
-
-def bike_duration_bss_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 30
-    section = journey.sections.add()
-    section.type = response_pb2.BSS_RENT
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 120
-    section = journey.sections.add()
-    section.type = response_pb2.BSS_PUT_BACK
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 5
-
-    eq_(destineo.bike_duration(journey), 5)
-
-def car_duration_walking_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-
-    eq_(destineo.car_duration(journey), 0)
-
-def car_duration_car_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.LEAVE_PARKING
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Car
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PARK
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 70
-
-    eq_(destineo.car_duration(journey), 60)
-
-
-def car_duration_bss_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 30
-    section = journey.sections.add()
-    section.type = response_pb2.BSS_RENT
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 120
-    section = journey.sections.add()
-    section.type = response_pb2.BSS_PUT_BACK
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.LEAVE_PARKING
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Car
-    section.duration = 180
-    section = journey.sections.add()
-    section.type = response_pb2.PARK
-    section.duration = 10
-
-    eq_(destineo.car_duration(journey), 180)
-
-def tc_duration_walking_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-
-    eq_(destineo.tc_duration(journey), 80)
-
-def tc_duration_bike_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.TRANSFER
-    section.duration = 20
-    section = journey.sections.add()
-    section.type = response_pb2.WAITING
-    section.duration = 25
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 40
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 70
-
-    eq_(destineo.tc_duration(journey), 120)
-
-
-def tc_duration_bss_test():
-    journey = response_pb2.Journey()
-
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 30
-    section = journey.sections.add()
-    section.type = response_pb2.BSS_RENT
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 120
-    section = journey.sections.add()
-    section.type = response_pb2.BSS_PUT_BACK
-    section.duration = 10
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section.duration = 60
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section.duration = 80
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Bike
-    section.duration = 5
-
-    eq_(destineo.tc_duration(journey), 80)
 
 class Instance(object):
     def __init__(self):
         self.destineo_min_bike = 30
+        self.destineo_min_bss = 25
         self.destineo_min_car = 20
         self.destineo_min_tc_with_bike = 40
+        self.destineo_min_tc_with_bss = 35
         self.destineo_min_tc_with_car = 50
 
 def remove_not_long_enough_no_removal_test():
@@ -793,8 +577,104 @@ def remove_not_long_enough_no_removal_test():
     scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
     eq_(len(response.journeys), 2)
 
+def remove_not_long_enough_bss_test():
+    response = response_pb2.Response()
 
-def remove_not_long_enough_bike():
+    journey1 = response.journeys.add()
+    section = journey1.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+    section = journey1.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 80
+    section = journey1.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    journey2 = response.journeys.add()
+    section = journey2.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+    section = journey2.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 80
+    section = journey2.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section.duration = 5
+    section = journey2.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 14
+    section = journey2.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section.duration = 5
+    section = journey2.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    journey3 = response.journeys.add()
+    section = journey3.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+    section = journey3.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 34
+    section = journey3.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section.duration = 5
+    section = journey3.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 16
+    section = journey3.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section.duration = 5
+    section = journey3.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    journey4 = response.journeys.add()
+    section = journey4.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+    section = journey4.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 36
+    section = journey4.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section.duration = 5
+    section = journey4.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 16
+    section = journey4.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section.duration = 5
+    section = journey4.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    scenario = destineo.Scenario()
+    scenario._remove_not_long_enough_fallback(response.journeys, Instance())
+    eq_(len(response.journeys), 3)
+    eq_(response.journeys[0], journey1)
+    eq_(response.journeys[1], journey3)
+    eq_(response.journeys[2], journey4)
+    scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
+    eq_(len(response.journeys), 2)
+    eq_(response.journeys[0], journey1)
+    eq_(response.journeys[1], journey4)
+
+
+def remove_not_long_enough_bike_test():
     response = response_pb2.Response()
 
     journey = response.journeys.add()
@@ -861,7 +741,7 @@ def remove_not_long_enough_bike():
     eq_(response.journeys[1], journey4)
 
 
-def remove_not_long_enough_car():
+def remove_not_long_enough_car_test():
     response = response_pb2.Response()
 
     journey = response.journeys.add()
@@ -926,3 +806,304 @@ def remove_not_long_enough_car():
     eq_(len(response.journeys), 2)
     eq_(response.journeys[0], journey)
     eq_(response.journeys[1], journey4)
+
+
+def get_walking_walking_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_walking_bike_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+
+    return journey
+
+def get_walking_bss_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_walking_car_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.LEAVE_PARKING
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Car
+    section = journey.sections.add()
+    section.type = response_pb2.PARK
+    section = journey.sections.add()
+
+    return journey
+
+def get_bike_walking_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_bike_bike_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+
+    return journey
+
+def get_bike_bss_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_bike_car_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.LEAVE_PARKING
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Car
+    section = journey.sections.add()
+    section.type = response_pb2.PARK
+    section = journey.sections.add()
+
+    return journey
+
+def get_bss_walking_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_bss_bike_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+
+    return journey
+
+def get_bss_bss_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    return journey
+
+def get_bss_car_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section = journey.sections.add()
+    section.type = response_pb2.LEAVE_PARKING
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Car
+    section = journey.sections.add()
+    section.type = response_pb2.PARK
+    section = journey.sections.add()
+
+    return journey
+
+def choose_best_alternatives_simple_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
+    scenario = destineo.Scenario()
+    scenario._choose_best_alternatives(journeys)
+    eq_(len(journeys), 1)
+    eq_(journeys[0], get_bss_walking_journey())
+
+def choose_best_alternatives__bike_bss_test():
+    journeys = [get_bike_bss_journey(), get_bike_car_journey()]
+    scenario = destineo.Scenario()
+    scenario._choose_best_alternatives(journeys)
+    eq_(len(journeys), 1)
+    eq_(journeys[0], get_bike_bss_journey())
+
+def choose_best_alternatives__car_test():
+    journeys = [get_bike_car_journey()]
+    scenario = destineo.Scenario()
+    scenario._choose_best_alternatives(journeys)
+    eq_(len(journeys), 1)
+    eq_(journeys[0], get_bike_car_journey())
+
+def choose_best_alternatives_non_pt_test():
+    journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
+    j1 = response_pb2.Journey()
+    j1.type = 'non_pt_bss'
+    journeys.append(j1)
+
+    j2 = response_pb2.Journey()
+    j2.type = 'non_pt_bike'
+    journeys.append(j2)
+
+    scenario = destineo.Scenario()
+    scenario._choose_best_alternatives(journeys)
+    eq_(len(journeys), 3)
+    eq_(journeys[0], get_bss_walking_journey())
+    eq_(journeys[1], j1)
+    eq_(journeys[2], j2)

@@ -351,6 +351,12 @@ struct routing_api_data {
         poi_type->idx = 0;
         b.data->geo_ref->poitypes.push_back(poi_type);
 
+        navitia::georef::POIType* poi_type_parking = new navitia::georef::POIType();
+        poi_type_parking->uri = "poi_type:amenity:parking";
+        poi_type_parking->name = "parking";
+        poi_type_parking->idx = 1;
+        b.data->geo_ref->poitypes.push_back(poi_type_parking);
+
         navitia::georef::POI* poi_1 = new navitia::georef::POI();
         poi_1->uri = "station_1";
         poi_1->name = "first station";
@@ -363,8 +369,23 @@ struct routing_api_data {
         poi_2->coord = G;
         poi_2->poitype_idx = 0;
         poi_2->idx = 1;
+        navitia::georef::POI* poi_3 = new navitia::georef::POI();
+        poi_3->uri = "parking_1";
+        poi_3->name = "first parking";
+        poi_3->coord = D;
+        poi_3->poitype_idx = 1;
+        poi_3->idx = 2;
+        navitia::georef::POI* poi_4 = new navitia::georef::POI();
+        poi_4->uri = "parking_2";
+        poi_4->name = "second parking";
+        poi_4->coord = E;
+        poi_4->poitype_idx = 1;
+        poi_4->idx = 3;
+
         b.data->geo_ref->pois.push_back(poi_1);
         b.data->geo_ref->pois.push_back(poi_2);
+        b.data->geo_ref->pois.push_back(poi_3);
+        b.data->geo_ref->pois.push_back(poi_4);
 
         b.generate_dummy_basis();
         b.sa("stopA", A.lon(), A.lat());
@@ -380,12 +401,17 @@ struct routing_api_data {
             ("stop_point:stopB", 18*3600 + 1*60, 18*3600 + 1 * 60)
             ("stop_point:stopA", 18*3600 + 1 * 60 + 2, 18*3600 + 1*60 + 2)
             .st_shape({B, I, A});
+
+        b.vj("C")
+            ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
+            ("stop_point:stopB", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+            .st_shape({A, I, B});
         b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 7_days);
-	b.data->compute_labels();
+        b.data->compute_labels();
 
         //add bike sharing edges
         b.data->geo_ref->default_time_bss_pickup = 30_s;
