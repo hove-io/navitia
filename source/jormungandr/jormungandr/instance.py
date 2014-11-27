@@ -153,9 +153,19 @@ class Instance(object):
         return get_value_or_default('destineo_min_tc_with_bike', instance_db, self.name)
 
     @property
+    def destineo_min_tc_with_bss(self):
+        instance_db = self._get_models()
+        return get_value_or_default('destineo_min_tc_with_bss', instance_db, self.name)
+
+    @property
     def destineo_min_bike(self):
         instance_db = self._get_models()
         return get_value_or_default('destineo_min_bike', instance_db, self.name)
+
+    @property
+    def destineo_min_bss(self):
+        instance_db = self._get_models()
+        return get_value_or_default('destineo_min_bss', instance_db, self.name)
 
     @property
     def destineo_min_car(self):

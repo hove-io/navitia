@@ -526,8 +526,10 @@ def sort_destineo_date_timezone_test():
 class Instance(object):
     def __init__(self):
         self.destineo_min_bike = 30
+        self.destineo_min_bss = 25
         self.destineo_min_car = 20
         self.destineo_min_tc_with_bike = 40
+        self.destineo_min_tc_with_bss = 35
         self.destineo_min_tc_with_car = 50
 
 def remove_not_long_enough_no_removal_test():
@@ -574,6 +576,102 @@ def remove_not_long_enough_no_removal_test():
     eq_(len(response.journeys), 2)
     scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
     eq_(len(response.journeys), 2)
+
+def remove_not_long_enough_bss_test():
+    response = response_pb2.Response()
+
+    journey1 = response.journeys.add()
+    section = journey1.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+    section = journey1.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 80
+    section = journey1.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    journey2 = response.journeys.add()
+    section = journey2.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+    section = journey2.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 80
+    section = journey2.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section.duration = 5
+    section = journey2.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 14
+    section = journey2.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section.duration = 5
+    section = journey2.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    journey3 = response.journeys.add()
+    section = journey3.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+    section = journey3.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 34
+    section = journey3.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section.duration = 5
+    section = journey3.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 16
+    section = journey3.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section.duration = 5
+    section = journey3.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    journey4 = response.journeys.add()
+    section = journey4.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+    section = journey4.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 36
+    section = journey4.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section.duration = 5
+    section = journey4.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 16
+    section = journey4.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section.duration = 5
+    section = journey4.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 60
+
+    scenario = destineo.Scenario()
+    scenario._remove_not_long_enough_fallback(response.journeys, Instance())
+    eq_(len(response.journeys), 3)
+    eq_(response.journeys[0], journey1)
+    eq_(response.journeys[1], journey3)
+    eq_(response.journeys[2], journey4)
+    scenario._remove_not_long_enough_tc_with_fallback(response.journeys, Instance())
+    eq_(len(response.journeys), 2)
+    eq_(response.journeys[0], journey1)
+    eq_(response.journeys[1], journey4)
 
 
 def remove_not_long_enough_bike_test():

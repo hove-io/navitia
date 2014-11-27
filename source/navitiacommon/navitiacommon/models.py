@@ -151,7 +151,11 @@ class Instance(db.Model):
 
     destineo_min_tc_with_bike = db.Column(db.Integer, default=default_values.destineo_min_tc_with_bike, nullable=False)
 
+    destineo_min_tc_with_bss = db.Column(db.Integer, default=default_values.destineo_min_tc_with_bss, nullable=False)
+
     destineo_min_bike = db.Column(db.Integer, default=default_values.destineo_min_bike, nullable=False)
+
+    destineo_min_bss = db.Column(db.Integer, default=default_values.destineo_min_bss, nullable=False)
 
     destineo_min_car = db.Column(db.Integer, default=default_values.destineo_min_car, nullable=False)
 

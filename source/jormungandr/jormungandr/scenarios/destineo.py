@@ -38,7 +38,7 @@ from collections import defaultdict, OrderedDict
 from jormungandr.scenarios.helpers import bike_duration, pt_duration, car_duration
 from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \
         has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last, \
-        is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
+        is_non_pt_bss, is_non_pt_bike, is_non_pt_walk, bss_duration
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -287,7 +287,10 @@ class Scenario(default.Scenario):
                 continue
             bike_dur = bike_duration(journey)
             car_dur = car_duration(journey)
+            bss_dur = bss_duration(journey)
             if bike_dur and bike_dur < instance.destineo_min_bike:
+                to_delete.append(idx)
+            elif bss_dur and bss_dur < instance.destineo_min_bss:
                 to_delete.append(idx)
             elif car_dur and car_dur < instance.destineo_min_car:
                 to_delete.append(idx)
@@ -308,7 +311,10 @@ class Scenario(default.Scenario):
             bike_dur = bike_duration(journey)
             car_dur = car_duration(journey)
             tc_dur = pt_duration(journey)
+            bss_dur = bss_duration(journey)
             if bike_dur and tc_dur < instance.destineo_min_tc_with_bike:
+                to_delete.append(idx)
+            if bss_dur and tc_dur < instance.destineo_min_tc_with_bss:
                 to_delete.append(idx)
             elif car_dur and tc_dur < instance.destineo_min_tc_with_car:
                 to_delete.append(idx)
