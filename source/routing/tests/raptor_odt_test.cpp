@@ -62,6 +62,15 @@ public:
 
         b.vj("network:R", "line:A", "1111111111111", "", true, "vj1")("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
         b.vj("network:R", "line:C", "1111111111111", "", true, "vj2")("stop_area:stop1", 10 * 3600 + 30 * 60, 10 * 3600 + 30 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
+        b.vj("network:R", "line:D", "1111111111111", "", true, "vj3")("stop_area:stop2", 11 * 3600 + 15 * 60, 11 * 3600 + 15 * 60)("stop_area:stop3", 13 * 3600 + 10 * 60 ,13 * 3600 + 10 * 60);
+        b.vj("network:R", "line:E", "1111111111111", "", true, "vj4")("stop_area:stop4", 8 * 3600 + 30 * 60, 8* 3600 + 30 * 60)("stop_area:stop1", 9 * 3600 + 10 * 60 , 9 * 3600 + 10 * 60);
+        b.vj("network:R", "line:F", "1111111111111", "", true, "vj5")("stop_area:stop5", 11 * 3600 + 15 * 60, 11 * 3600 + 15 * 60)("stop_area:stop6", 13 * 3600 + 10 * 60 ,13 * 3600 + 10 * 60);
+        b.vj("network:R", "line:G", "1111111111111", "", true, "vj6")("stop_area:stop7", 8 * 3600 + 30 * 60, 8* 3600 + 30 * 60)("stop_area:stop8", 9 * 3600 + 10 * 60 , 9 * 3600 + 10 * 60);
+        b.connection("stop_area:stop2", "stop_area:stop2", 120);
+        b.connection("stop_area:stop1", "stop_area:stop1", 120);
+        b.connection("stop_area:stop2", "stop_area:stop5", 120);
+        b.connection("stop_area:stop8", "stop_area:stop1", 120);
+
 
         b.build_relations(*b.data->pt_data);
         b.generate_dummy_basis();
@@ -80,8 +89,14 @@ public:
         vj2 = b.data->pt_data->vehicle_journeys_map["vj2"];
 
     }
+
     pbnavitia::Response make_response(bool allow_odt) {
-        return navitia::routing::make_response(*raptor, origin, destination,
+        return make_response(allow_odt, origin, destination);
+    }
+
+    pbnavitia::Response make_response(bool allow_odt, navitia::type::EntryPoint from,
+                                      navitia::type::EntryPoint to) {
+        return navitia::routing::make_response(*raptor, from, to,
                                {navitia::test::to_posix_timestamp("20140114T101000")}, true,
                                navitia::type::AccessibiliteParams(),
                                forbidden,
@@ -647,8 +662,81 @@ BOOST_AUTO_TEST_CASE(test21){
     b.data->build_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
-    std::cout<<std::endl<<b.data->pt_data->routes.front()->uri<<std::endl;
-    std::cout<<std::endl<<b.data->pt_data->routes.back()->uri<<std::endl;
 }
+BOOST_AUTO_TEST_CASE(waiting_after){
+    vj2->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true, navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop1"),
+            navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop3"));
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
 
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::WAITING);
+    BOOST_CHECK(section.add_info_vehicle_journey().has_date_time_estimated());
+    unset_odt_jp();
+}
+BOOST_AUTO_TEST_CASE(waiting_before){
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true, navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop4"),
+            navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop2"));
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj4");
+
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::WAITING);
+    BOOST_CHECK(section.add_info_vehicle_journey().has_date_time_estimated());
+    unset_odt_jp();
+}
+BOOST_AUTO_TEST_CASE(waiting_after_with_transfer){
+    vj2->stop_time_list.front().set_odt(true);
+    vj2->stop_time_list.front().set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true, navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop1"),
+            navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop6"));
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 4);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj2");
+
+    section = journey.sections(2);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::WAITING);
+    BOOST_CHECK(section.add_info_vehicle_journey().has_date_time_estimated());
+    unset_odt_jp();
+}
+BOOST_AUTO_TEST_CASE(waiting_before_with_transfer){
+    vj1->stop_time_list.front().set_odt(true);
+    vj1->stop_time_list.front().set_date_time_estimated(true);
+    b.data->build_odt();
+    resp = make_response(true, navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop7"),
+            navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop2"));
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 4);
+    section = journey.sections(0);
+    displ = section.pt_display_informations();
+    BOOST_CHECK_EQUAL(displ.uris().vehicle_journey(), "vj6");
+
+    section = journey.sections(2);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::WAITING);
+    BOOST_CHECK(section.add_info_vehicle_journey().has_date_time_estimated());
+    unset_odt_jp();
+}
 BOOST_AUTO_TEST_SUITE_END()
