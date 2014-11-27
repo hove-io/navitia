@@ -35,6 +35,7 @@ import os
 from flask import Flask, got_request_exception
 from flask.ext.restful import Api
 from flask.ext.cache import Cache
+from flask.ext.cors import CORS
 import sys
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest
@@ -45,6 +46,9 @@ if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
 
 app.request_class = NavitiaRequest
+CORS(app, vary_headers=True, allow_credentials=True, send_wildcard=False,
+		headers=['Access-Control-Request-Headers', 'Authorization'])
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 if 'LOGGER' in app.config:
     logging.config.dictConfig(app.config['LOGGER'])
