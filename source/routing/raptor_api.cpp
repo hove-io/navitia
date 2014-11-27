@@ -411,7 +411,8 @@ void add_isochrone_response(RAPTOR &raptor, pbnavitia::Response& response,
         type::idx_t best_jpp = type::invalid_idx;
         int best_round = -1;
         for(auto jpp : sp->journey_pattern_point_list) {
-            if(raptor.best_labels[jpp->idx] < best) {
+            if((clockwise && raptor.best_labels[jpp->idx] < best) ||
+                (!clockwise && raptor.best_labels[jpp->idx] > best)){
                 int round = raptor.best_round(jpp->idx);
                 if(round != -1 && raptor.labels[round][jpp->idx].pt_is_initialized()) {
                     best = raptor.best_labels[jpp->idx];
@@ -750,7 +751,8 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
 
                 std::vector<type::StopPoint*> stop_points;
                 for(auto& path : paths) {
-                    const type::StopPoint* sp = path.items[0].stop_points[0];
+                    const type::StopPoint* sp = clockwise ? path.items.front().stop_points.front() :
+                                                             path.items.back().stop_points.back();
                     stop_points.push_back(const_cast<type::StopPoint*>(sp));
                 }
 
