@@ -485,6 +485,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
         const auto & prec_labels=labels[count -1];
         auto& working_labels = labels[this->count];
         this->make_queue();
+        /*
+         * We need to store it so we can apply stay_in after applying normal vjs
+         * We want to do it, to favoritize normal vj against stay_in vjs
+         */
         std::vector<RoutingState> states_stay_in;
         for(const auto & journey_pattern : data.pt_data->journey_patterns) {
             if(Q[journey_pattern->idx] != std::numeric_limits<int>::max()
