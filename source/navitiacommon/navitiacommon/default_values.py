@@ -62,7 +62,7 @@ destineo_min_tc_with_bike = 5*60
 
 destineo_min_tc_with_bss = 5*60
 
-destineo_min_bike = 5*60
+destineo_min_bike = 4*60
 
 destineo_min_bss = 4*60 + 3*60 #we want 4minute on the bike, so we add the time to pick et put back the bss
 
