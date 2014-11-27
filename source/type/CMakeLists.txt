@@ -121,3 +121,10 @@ add_executable(accessible_test tests/accessible.cpp)
 target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
 add_dependencies(accessible_test protobuf_files)
 ADD_BOOST_TEST(accessible_test)
+
+
+
+add_executable(fill_pb_object_tests tests/fill_pb_object_tests.cpp)
+target_link_libraries(fill_pb_object_tests pb_lib ed thermometer time_tables data types fare routing georef autocomplete ${BOOST_LIBS} log4cplus)
+add_dependencies(fill_pb_object_tests protobuf_files)
+ADD_BOOST_TEST(fill_pb_object_tests)
