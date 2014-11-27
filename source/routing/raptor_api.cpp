@@ -235,10 +235,20 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
                     fill_pb_placemark(item.stop_points.back(), d,
                                 pb_section->mutable_destination(), 1, now,
                                 action_period, show_codes);
+
                 }
                 pb_section->set_length(length);
                 bt::time_period action_period(departure_ptime, arrival_ptime);
-                fill_section(pb_section, vj, item.stop_times, d, now, action_period);
+                fill_section(pb_section, vj, item.stop_times, d, now, action_period);                    // If this section has estimated stop times,
+                // if the previous section is a waiting section, we also
+                // want to set it to estimated.
+                if (pb_section->add_info_vehicle_journey().has_date_time_estimated() &&
+                        pb_journey->sections_size()>0) {
+                    auto previous_section = pb_journey->mutable_sections(pb_journey->sections_size()-2);
+                    if (previous_section->type() == pbnavitia::WAITING) {
+                        previous_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
+                    }
+                }
             } else {
                 pb_section->set_type(pbnavitia::TRANSFER);
                 switch(item.type) {
@@ -256,6 +266,13 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
                     case waiting : pb_section->set_type(pbnavitia::WAITING); break;
                     default : pb_section->set_transfer_type(pbnavitia::walking); break;
                 }
+                // For a waiting section, if the previous public transport section,
+                // has estimated datetime we need to set it has estimated too.
+                if ((pb_journey->sections_size() >= 2 &&
+                        pb_journey->sections(pb_journey->sections_size()-3).add_info_vehicle_journey().has_date_time_estimated())) {
+                    pb_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
+                }
+
                 bt::time_period action_period(item.departure, item.arrival);
                 const auto origin_sp = item.stop_points.front();
                 const auto destination_sp = item.stop_points.back();
@@ -394,7 +411,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
     }
-
+    std::cout << pb_response.DebugString() << std::endl;
     return pb_response;
 }
 
