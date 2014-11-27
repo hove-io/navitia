@@ -980,7 +980,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     BOOST_CHECK_EQUAL(pathitem.length(), 0);
 }
 
-// Car + bus using parking
+// car + bus using parking
 BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_provider>) {
     using namespace navitia;
     using type::Mode_e;
@@ -1021,7 +1021,7 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
     // section 0: goto parking
     BOOST_CHECK_EQUAL(sections.Get(0).type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(sections.Get(0).origin().address().name(), "rue bs");
-    BOOST_CHECK_EQUAL(sections.Get(0).destination().address().name(), "rue bd");
+    BOOST_CHECK_EQUAL(sections.Get(0).destination().poi().name(), "first parking");
     BOOST_CHECK_EQUAL(sections.Get(0).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
     BOOST_CHECK_EQUAL(sections.Get(0).street_network().duration(), 6);
     const auto pathitems0 = sections.Get(0).street_network().path_items();
@@ -1031,7 +1031,7 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
 
     // section 1: park
     BOOST_CHECK_EQUAL(sections.Get(1).type(), pbnavitia::SectionType::PARK);
-    BOOST_CHECK_EQUAL(sections.Get(1).origin().address().name(), "rue bd");
+    BOOST_CHECK_EQUAL(sections.Get(1).origin().poi().name(), "first parking");
     BOOST_CHECK_EQUAL(sections.Get(1).destination().address().name(), "rue bd");
     BOOST_CHECK_EQUAL(sections.Get(1).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_CHECK_EQUAL(sections.Get(1).street_network().duration(), 1);
@@ -1067,6 +1067,87 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
     BOOST_CHECK_EQUAL(pathitems4.Get(0).name(), "rue ab");
     BOOST_CHECK_EQUAL(pathitems4.Get(1).name(), "rue ar");
 }
+
+// bus + car using parking
+BOOST_FIXTURE_TEST_CASE(bus_car_parking, streetnetworkmode_fixture<test_speed_provider>) {
+    using namespace navitia;
+    using type::Mode_e;
+    using navitia::seconds;
+
+    const auto distance_sd = S.distance_to(B) + B.distance_to(D);
+    const auto distance_ar = A.distance_to(R);
+    const double speed_factor = 1;
+
+    origin.streetnetwork_params.mode = Mode_e::Car;
+    origin.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Car];
+    origin.streetnetwork_params.max_duration =
+        seconds(distance_sd / get_default_speed()[Mode_e::Car] / speed_factor)
+        + b.data->geo_ref->default_time_parking_park
+        + seconds(B.distance_to(D) / get_default_speed()[Mode_e::Walking] / speed_factor)
+        + seconds(2);
+    origin.streetnetwork_params.speed_factor = speed_factor;
+
+    destination.streetnetwork_params.mode = Mode_e::Walking;
+    destination.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Walking];
+    destination.streetnetwork_params.max_duration =
+        seconds(distance_ar / get_default_speed()[Mode_e::Walking] / speed_factor)
+        + seconds(1);
+    destination.streetnetwork_params.speed_factor = speed_factor;
+
+    ng::StreetNetwork sn_worker(*this->b.data->geo_ref);
+    nr::RAPTOR raptor(*this->b.data);
+    auto resp = nr::make_response(raptor, this->destination, this->origin, this->datetimes, true, navitia::type::AccessibiliteParams(), this->forbidden, sn_worker, false, true);
+
+    dump_response(resp, "bus_car_parking");
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 direct car + 1 car->bus->walk
+
+    // the car->bus->walk journey
+    const auto journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 5);
+    const auto sections = journey.sections();
+
+    // section 0: goto to the station
+    BOOST_CHECK_EQUAL(sections.Get(0).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(sections.Get(0).origin().address().name(), "rue ar");
+    BOOST_CHECK_EQUAL(sections.Get(0).destination().stop_point().name(), "stop_point:stopA");
+    BOOST_CHECK_EQUAL(sections.Get(0).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+    BOOST_CHECK_EQUAL(sections.Get(0).street_network().duration(), 90);
+
+    // section 1: PT A->B
+    BOOST_CHECK_EQUAL(sections.Get(1).type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(sections.Get(1).origin().stop_point().name(), "stop_point:stopA");
+    BOOST_CHECK_EQUAL(sections.Get(1).destination().stop_point().name(), "stop_point:stopB");
+
+    // section 2: goto the parking
+    BOOST_CHECK_EQUAL(sections.Get(2).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(sections.Get(2).origin().stop_point().name(), "stop_point:stopB");
+    BOOST_CHECK_EQUAL(sections.Get(2).destination().poi().name(), "first parking");
+    BOOST_CHECK_EQUAL(sections.Get(2).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+    BOOST_CHECK_EQUAL(sections.Get(2).street_network().duration(), 10);
+    const auto pathitems2 = sections.Get(2).street_network().path_items();
+    BOOST_REQUIRE_EQUAL(pathitems2.size(), 2);
+    BOOST_CHECK_EQUAL(pathitems2.Get(0).name(), "rue ab");
+    BOOST_CHECK_EQUAL(pathitems2.Get(1).name(), "rue bd");
+
+    // section 3: leave parking
+    BOOST_CHECK_EQUAL(sections.Get(3).type(), pbnavitia::SectionType::LEAVE_PARKING);
+    BOOST_CHECK_EQUAL(sections.Get(3).origin().poi().name(), "first parking");
+    BOOST_CHECK_EQUAL(sections.Get(3).destination().address().name(), "rue bd");
+
+    // section 4: car
+    BOOST_CHECK_EQUAL(sections.Get(4).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_CHECK_EQUAL(sections.Get(4).origin().address().name(), "rue bd");
+    BOOST_CHECK_EQUAL(sections.Get(4).destination().address().name(), "rue bs");
+    BOOST_CHECK_EQUAL(sections.Get(4).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
+    BOOST_CHECK_EQUAL(sections.Get(4).street_network().duration(), 6);
+    const auto pathitems4 = sections.Get(4).street_network().path_items();
+    BOOST_REQUIRE_EQUAL(pathitems4.size(), 2);
+    BOOST_CHECK_EQUAL(pathitems4.Get(0).name(), "rue bd");
+    BOOST_CHECK_EQUAL(pathitems4.Get(1).name(), "rue bs");
+}
+
 
 // BSS test
 BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>) {
