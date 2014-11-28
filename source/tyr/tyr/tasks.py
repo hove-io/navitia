@@ -104,7 +104,7 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(files, instance, backup_file, async=True, reload=True, custom_output=None):
+def import_data(files, instance, backup_file, async=True, reload=True, custom_output_dir=None):
     """
     import the data contains in the list of 'files' in the 'instance'
 
@@ -167,8 +167,8 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             action.kwargs['job_id'] = job.id
         #We pass the job id to each tasks, but job need to be commited for
         #having an id
-        binarisation = [ed2nav.si(instance_config, job.id),
-                        nav2rt.si(instance_config, job.id, custom_output)]
+        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir),
+                        nav2rt.si(instance_config, job.id, custom_output_dir)]
         #We pass the job id to each tasks, but job need to be commited for
         #having an id
         actions.append(chain(*binarisation))

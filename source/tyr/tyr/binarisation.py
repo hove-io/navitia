@@ -295,7 +295,7 @@ def reload_data(instance_config, job_id):
 
 
 @celery.task()
-def ed2nav(instance_config, job_id):
+def ed2nav(instance_config, job_id, custom_output_dir):
     """ Launch ed2nav"""
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -304,12 +304,23 @@ def ed2nav(instance_config, job_id):
         ed2nav.retry(countdown=300, max_retries=10)
 
     logger = get_instance_logger(instance)
+
     try:
-        filename = instance_config.tmp_file
+        output_file = instance_config.tmp_file
+
+        if custom_output_dir:
+            # we change the target_filename to store it in a subdir
+            target_path = os.path.join(os.path.dirname(output_file), custom_output_dir)
+            output_file = os.path.join(target_path, os.path.basename(output_file))
+            if not os.path.exists(target_path):
+                os.makedirs(target_path)
+
+
         connection_string = make_connection_string(instance_config)
-        argv = ["-o", filename, "--connection-string", connection_string]
+        argv = ["-o", output_file, "--connection-string", connection_string]
         if 'CITIES_DATABASE_URI' in current_app.config and current_app.config['CITIES_DATABASE_URI']:
             argv.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
+
         res = launch_exec('ed2nav', argv, logger)
         if res != 0:
             raise ValueError('ed2nav failed')
@@ -323,7 +334,7 @@ def ed2nav(instance_config, job_id):
 
 
 @celery.task()
-def nav2rt(instance_config, job_id, custom_output):
+def nav2rt(instance_config, job_id, custom_output_dir):
     """ Launch nav2rt"""
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -336,10 +347,15 @@ def nav2rt(instance_config, job_id, custom_output):
         source_filename = instance_config.tmp_file
         target_filename = instance_config.target_file
 
-        if custom_output:
-            # we change the target_filename with the custom_output
-            target_path = os.path.dirname(target_filename)
-            target_filename = os.path.join(target_path, custom_output)
+        if custom_output_dir:
+            # we change destination to store it in a subdir
+            source_path = os.path.dirname(source_filename)
+            source_filename = os.path.join(source_path, custom_output_dir, os.path.basename(source_filename))
+
+            target_path = os.path.join(os.path.dirname(target_filename), custom_output_dir)
+            target_filename = os.path.join(target_path, os.path.basename(target_filename))
+            if not os.path.exists(target_path):
+                os.makedirs(target_path)
 
         connection_string = make_connection_string(instance_config)
         res = launch_exec('nav2rt',
