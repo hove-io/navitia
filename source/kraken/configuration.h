@@ -44,8 +44,7 @@ namespace navitia { namespace kraken{
             std::string databases_path() const;
             std::string zmq_socket_path() const;
             std::string instance_name() const;
-            std::string chaos_database() const;
-            bool is_chaos_active() const;
+            boost::optional<std::string> chaos_database() const;
             int nb_thread() const;
 
             std::string broker_host() const;
