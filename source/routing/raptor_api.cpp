@@ -132,7 +132,7 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
          *    to the origin stop point of the first section only if the stop point belongs to this area.
          *
          * 2) we start from an area but the chosen stop point don't belongs to this area, for example we want to start
-         * from an city, but the pt part of the journey start in another city, in this case 
+         * from an city, but the pt part of the journey start in another city, in this case
          * we add a street network section from the centroid of this area to the departure of the first pt_section
          *
          * 3) We start from a ponctual place (everything but stop_area or admin)
@@ -142,7 +142,8 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
          * same we do nothing
          **/
 
-        if (!path.items.front().stop_points.empty() && use_crow_fly(origin, path.items.front().stop_points.front())){
+        if (!path.items.front().stop_points.empty()
+                && use_crow_fly(origin, path.items.front().stop_points.front(), d)){
             const auto sp_dest = path.items.front().stop_points.front();
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
@@ -308,7 +309,8 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
             pb_section->set_duration(arr_time - dep_time);
         }
 
-        if (!path.items.back().stop_points.empty() && use_crow_fly(destination, path.items.back().stop_points.back())){
+        if (!path.items.back().stop_points.empty()
+                && use_crow_fly(destination, path.items.back().stop_points.back(), d)){
             const auto sp_orig = path.items.back().stop_points.back();
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
