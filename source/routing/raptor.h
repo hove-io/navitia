@@ -47,6 +47,19 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+/*
+ * Use to save routing test to launch stay_in
+ */
+struct RoutingState {
+    const type::VehicleJourney* vj = nullptr;
+    type::idx_t boarding_jpp_idx = type::invalid_idx;
+    uint16_t l_zone = std::numeric_limits<uint16_t>::max();
+    DateTime workingDate = DateTimeUtils::inf;
+
+    RoutingState(const type::VehicleJourney* vj, type::idx_t boarding_jpp_idx, uint16_t l_zone, DateTime workingDate) :
+        vj(vj), boarding_jpp_idx(boarding_jpp_idx), l_zone(l_zone), workingDate(workingDate) {}
+};
+
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
 {
@@ -165,9 +178,8 @@ struct RAPTOR
     /// Returns true if we improve at least one label, false otherwise
     template<typename Visitor>
     bool apply_vj_extension(const Visitor& v, const bool global_pruning,
-                            const type::VehicleJourney* prev_vj, type::idx_t boarding_jpp_idx,
-                            DateTime workingDt, const uint16_t l_zone,
-                            const bool disruption_active);
+                            const bool disruption_active,
+                            const RoutingState& state);
 
     void make_queue();
 
@@ -182,5 +194,6 @@ struct RAPTOR
 
     ~RAPTOR() {}
 };
+
 
 }}

@@ -54,11 +54,10 @@ void RAPTOR::make_queue() {
  */
 template<typename Visitor>
 bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
-                                const type::VehicleJourney* prev_vj, type::idx_t boarding_jpp_idx,
-                                DateTime workingDt, const uint16_t l_zone,
-                                const bool disruption_active) {
+                                const bool disruption_active, const RoutingState& state) {
     auto& working_labels = labels[count];
-    const type::VehicleJourney* vj = v.get_extension_vj(prev_vj);
+    auto workingDt = state.workingDate;
+    auto vj = state.vj;
     bool add_vj = false;
     bool result = false;
     while(vj) {
@@ -78,8 +77,8 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             if (!st.valid_end(v.clockwise())) {
                 continue;
             }
-            if (l_zone != std::numeric_limits<uint16_t>::max() &&
-               l_zone == st.local_traffic_zone) {
+            if (state.l_zone != std::numeric_limits<uint16_t>::max() &&
+               state.l_zone == st.local_traffic_zone) {
                 continue;
             }
             auto jpp = st.journey_pattern_point;
@@ -89,7 +88,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
                 continue;
             }
             working_labels[jpp->idx].dt_pt = workingDt;
-            working_labels[jpp->idx].boarding_jpp_pt = boarding_jpp_idx;
+            working_labels[jpp->idx].boarding_jpp_pt = state.boarding_jpp_idx;
             best_labels[jpp->idx] = working_labels[jpp->idx].dt_pt;
             add_vj = true;
             this->b_dest.add_best(v, jpp->idx, working_labels[jpp->idx].dt_pt, this->count);
@@ -486,7 +485,11 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
         const auto & prec_labels=labels[count -1];
         auto& working_labels = labels[this->count];
         this->make_queue();
-
+        /*
+         * We need to store it so we can apply stay_in after applying normal vjs
+         * We want to do it, to favoritize normal vj against stay_in vjs
+         */
+        std::vector<RoutingState> states_stay_in;
         for(const auto & journey_pattern : data.pt_data->journey_patterns) {
             if(Q[journey_pattern->idx] != std::numeric_limits<int>::max()
                     && Q[journey_pattern->idx] != -1
@@ -558,11 +561,16 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     }
                 }
                 if(boarding) {
-                    end_algorithm &= !apply_vj_extension(visitor, global_pruning, it_st->vehicle_journey, boarding->idx,
-                        workingDt, l_zone, disruption_active);
+                    const type::VehicleJourney* vj_stay_in = visitor.get_extension_vj(it_st->vehicle_journey);
+                    if (vj_stay_in) {
+                        states_stay_in.emplace_back(vj_stay_in, boarding->idx, l_zone, workingDt);
+                    }
                 }
             }
             Q[journey_pattern->idx] = visitor.init_queue_item();
+        }
+        for (auto state : states_stay_in) {
+            end_algorithm &= !apply_vj_extension(visitor, global_pruning, disruption_active, state);
         }
         end_algorithm &= !this->foot_path(visitor);
     }

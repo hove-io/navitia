@@ -1397,3 +1397,21 @@ BOOST_AUTO_TEST_CASE(stay_in_unnecessary) {
     BOOST_REQUIRE_EQUAL(res1.back().items.size(), 1);
 }
 
+
+BOOST_AUTO_TEST_CASE(stay_in_unnecessary2) {
+    ed::builder b("20120614");
+    b.vj("B", "1111111", "block1", true)("stop2", 8*3600)("stop3", 9*3600);
+    b.vj("A", "1111111", "block1", true)("stop1", 7*3600)("stop2", 8*3600);
+    b.vj("line2")("stop2", 9*3600 + 55*60)("stop4", 10*3600);
+    b.connection("stop2", "stop2", 120);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 5*60, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1.back().items.size(), 3);
+}
