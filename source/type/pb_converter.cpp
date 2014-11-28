@@ -321,10 +321,9 @@ void fill_pb_object(const navitia::type::GeographicalCoord& coord, const type::D
     }
 
     try{
-        georef::edge_t edge = data.geo_ref->nearest_edge(coord);
-        georef::Way *way = data.geo_ref->ways[data.geo_ref->graph[edge].way_idx];
-        int house_number = way->nearest_number(coord);
-        fill_pb_object(way, data, address, house_number, coord, max_depth, now, action_period);
+        const auto nb_way = data.geo_ref->nearest_addr(coord);
+        fill_pb_object(nb_way.second, data, address, nb_way.first,
+                       coord, max_depth, now, action_period);
     }catch(proximitylist::NotFound){
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("Logger"),
                        "unable to find a way from coord ["<< coord.lon() << "-" << coord.lat() << "]");
@@ -801,7 +800,6 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
 
 const navitia::georef::POI* get_nearest_poi(const navitia::type::Data& data, const nt::GeographicalCoord& coord,
         const navitia::georef::POIType& poi_type) {
-    const navitia::georef::POI* nearest_poi = nullptr;
     //we loop through all poi near the coord to find a poi of the required type
     for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
@@ -878,7 +876,8 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     if (! dest_place->IsInitialized()) {
         auto way = data.geo_ref->ways[last_item.way_idx];
         type::GeographicalCoord coord = last_item.coordinates.back();
-        fill_pb_placemark(way, data, dest_place, way->nearest_number(coord), coord, depth, now, action_period);
+        fill_pb_placemark(way, data, dest_place, way->nearest_number(coord).first,
+                          coord, depth, now, action_period);
     }
 
     switch (last_item.transportation) {
@@ -932,8 +931,8 @@ pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journe
     } else if (first_item.way_idx != nt::invalid_idx) {
         auto way = data.geo_ref->ways[first_item.way_idx];
         type::GeographicalCoord departure_coord = first_item.coordinates.front();
-        fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord), departure_coord,
-            depth, now, action_period);
+        fill_pb_placemark(way, data, orig_place, way->nearest_number(departure_coord).first,
+                          departure_coord, depth, now, action_period);
     }
 
     //NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?

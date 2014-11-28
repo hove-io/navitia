@@ -38,6 +38,7 @@ www.navitia.io
 #include "tests/utils_test.h"
 #include "type/data.h"
 #include "builder.h"
+#include "ed/build_helper.h"
 #include "georef/street_network.h"
 #include <boost/graph/detail/adjacency_list.hpp>
 
@@ -640,20 +641,20 @@ BOOST_AUTO_TEST_CASE(coord){
 
 
 // les coordonnées sont à l'extérieur de la rue coté supérieur
-    int result = way.nearest_number(nt::GeographicalCoord(1.0,55.0));
+    int result = way.nearest_number(nt::GeographicalCoord(1.0,55.0)).first;
     BOOST_CHECK_EQUAL(result, 54);
 
 // les coordonnées sont à l'extérieur de la rue coté inférieur
-    result = way.nearest_number(nt::GeographicalCoord(2.0,3.0));
+    result = way.nearest_number(nt::GeographicalCoord(2.0,3.0)).first;
     BOOST_CHECK_EQUAL(result, 4);
 
 // coordonnées recherchées est = à coordonnées dans la rue
-    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0));
+    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0)).first;
     BOOST_CHECK_EQUAL(result, 8);
 
 // les deux listes des numéros sont vides
     way.house_number_right.clear();
-    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0));
+    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0)).first;
     BOOST_CHECK_EQUAL(result, -1);
 
 }
@@ -914,4 +915,89 @@ BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bss], true);
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Car], false);
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Bss][nt::Mode_e::Bike], false);
+}
+
+namespace std {
+template<typename T, typename U>
+static std::ostream& operator<<(std::ostream& os, const std::pair<T, U>& p) {
+    return os << "(" << p.first << ", " << p.second << ")";
+}
+}
+
+BOOST_AUTO_TEST_CASE(geolocalization) {
+    //     (0,100)    rue AB   (100,100)
+    //      A +--------------------+ B
+    //        |             
+    //        | + D (10,80): 2 rue AB
+    //        | + E (10,70): 3 rue AC
+    // rue AC |
+    //        |
+    //        |
+    //        |
+    //      C + (0,0)
+    using nt::GeographicalCoord;
+    using navitia::georef::HouseNumber;
+    using navitia::georef::Edge;
+
+    const int AA = 0; const GeographicalCoord A = {0, 100, false};
+    const int BB = 1; const GeographicalCoord B = {100, 100, false};
+    const int CC = 2; const GeographicalCoord C = {0, 0, false};
+    const GeographicalCoord D = {10, 80, false};
+    const GeographicalCoord E = {10, 70, false};
+
+    ed::builder b = {"20140828"};
+
+    boost::add_vertex(navitia::georef::Vertex(A),b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(B),b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(C),b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(D),b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(E),b.data->geo_ref->graph);
+    b.data->geo_ref->init();
+
+    b.data->geo_ref->admins.push_back(new navitia::georef::Admin());
+    auto admin = b.data->geo_ref->admins.back();
+    admin->uri = "admin:74435";
+    admin->name = "Condom";
+    admin->insee = "32107";
+    admin->level = 8;
+    admin->post_code = "32100";
+
+    navitia::georef::Way* ab = new navitia::georef::Way();
+    ab->name = "rue AB";
+    ab->idx = 0;
+    ab->way_type = "rue";
+    ab->house_number_right.push_back(HouseNumber(D.lon(), D.lat(), 2));
+    ab->admin_list.push_back(admin);
+    b.data->geo_ref->ways.push_back(ab);
+
+    navitia::georef::Way* ac = new navitia::georef::Way();
+    ac->name = "rue AC";
+    ac->idx = 1;
+    ac->way_type = "rue";
+    ac->house_number_left.push_back(HouseNumber(E.lon(), E.lat(), 3));
+    ac->admin_list.push_back(admin);
+    b.data->geo_ref->ways.push_back(ac);
+
+    // A->B
+    add_edge(AA, BB, Edge(0, 42_s), b.data->geo_ref->graph);
+    add_edge(BB, AA, Edge(0, 42_s), b.data->geo_ref->graph);
+    ab->edges.push_back(std::make_pair(AA, BB));
+    ab->edges.push_back(std::make_pair(BB, AA));
+
+    // A->C
+    add_edge(AA, CC, Edge(1, 42_s), b.data->geo_ref->graph);
+    add_edge(CC, AA, Edge(1, 42_s), b.data->geo_ref->graph);
+    ac->edges.push_back(std::make_pair(AA, CC));
+    ac->edges.push_back(std::make_pair(CC, AA));
+
+    /*
+    b.generate_dummy_basis();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    */
+    b.data->build_uri();
+    b.data->build_proximity_list();
+
+    BOOST_CHECK_EQUAL(b.data->geo_ref->nearest_addr(D), std::make_pair(2, (const Way*)ab));
+    BOOST_CHECK_EQUAL(b.data->geo_ref->nearest_addr(E), std::make_pair(3, (const Way*)ac));
 }
