@@ -210,6 +210,8 @@ class additional_informations_vj(fields.Raw):
         enum_t = descriptor.fields_by_name['vehicle_journey_type'].enum_type
         values = enum_t.values_by_name
         vj_type = addinfo.vehicle_journey_type
+        if not vj_type:
+            return result
         if vj_type == values['virtual_with_stop_time'].number:
             result.append("odt_with_stop_time")
         else:

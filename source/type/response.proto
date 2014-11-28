@@ -215,7 +215,7 @@ message RouteScheduleRow {
 }
 
 message addInfoVehicleJourney{
-    required VehicleJourneyType vehicle_journey_type = 1;
+    optional VehicleJourneyType vehicle_journey_type = 1;
     optional bool has_date_time_estimated = 2;
     optional bool stay_in = 3 [default=false];
 }
