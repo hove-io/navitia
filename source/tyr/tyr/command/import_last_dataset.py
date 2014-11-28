@@ -34,10 +34,13 @@ from tyr import manager
 from tyr.helper import get_instance_logger
 
 @manager.command
-def import_last_dataset(instance_name, background=False, reload_kraken=False):
+def import_last_dataset(instance_name, background=False, reload_kraken=False, custom_output=None):
     """
     reimport the last dataset of a instance
     By default the kraken is not reloaded, the '-r' switch can activate it
+
+    the output parameter is the name of the nav file create. If not given, the instance default one is taken
+    Note that the output file will be created in the same directory as the instance default output file
     """
     instance = models.Instance.query.filter_by(name=instance_name).first()
 
@@ -47,6 +50,7 @@ def import_last_dataset(instance_name, background=False, reload_kraken=False):
     files = [d.name for d in instance.last_datasets(1)]
     logger = get_instance_logger(instance)
     logger.info('we reimport the last dataset of %s, composed of: %s', instance.name, files)
-    tasks.import_data(files, instance, backup_file=False, async=background, reload=reload_kraken)
+    tasks.import_data(files, instance, backup_file=False,
+                      async=background, reload=reload_kraken, custom_output=custom_output)
 
 

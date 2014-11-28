@@ -323,7 +323,7 @@ def ed2nav(instance_config, job_id):
 
 
 @celery.task()
-def nav2rt(instance_config, job_id):
+def nav2rt(instance_config, job_id, custom_output):
     """ Launch nav2rt"""
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -335,6 +335,12 @@ def nav2rt(instance_config, job_id):
     try:
         source_filename = instance_config.tmp_file
         target_filename = instance_config.target_file
+
+        if custom_output:
+            # we change the target_filename with the custom_output
+            target_path = os.path.dirname(target_filename)
+            target_filename = os.path.join(target_path, custom_output)
+
         connection_string = make_connection_string(instance_config)
         res = launch_exec('nav2rt',
                     ["-i", source_filename, "-o", target_filename,
