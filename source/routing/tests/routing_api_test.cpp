@@ -1476,34 +1476,47 @@ BOOST_AUTO_TEST_CASE(use_crow_fly){
     navitia::type::EntryPoint ep;
     navitia::type::StopPoint sp;
     navitia::type::StopArea sa;
-    ng::Admin admin;
+    ng::Admin* admin = new ng::Admin();
     sp.stop_area = &sa;
-    sa.admin_list.push_back(&admin);
+    sa.admin_list.push_back(admin);
 
     sa.uri = "sa:foo";
-    admin.uri = "admin";
+    admin->uri = "admin";
     ep.uri = "foo";
     ep.type = navitia::type::Type_e::Address;
+    navitia::type::Data data;
+    data.geo_ref->admins.push_back(admin);
+    data.geo_ref->admin_map[admin->uri] = 0;
 
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
 
     ep.type = navitia::type::Type_e::POI;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
 
     ep.type = navitia::type::Type_e::Coord;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
 
     ep.type = navitia::type::Type_e::StopArea;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
 
     ep.type = navitia::type::Type_e::Admin;
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp));
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, data));
 
     ep.type = navitia::type::Type_e::Admin;
     ep.uri = "admin";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, data));
 
     ep.type = navitia::type::Type_e::StopArea;
     ep.uri = "sa:foo";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp));
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp, data));
+
+    ep.type = navitia::type::Type_e::Admin;
+    ep.uri = "admin";
+    navitia::type::StopPoint sp2;
+    navitia::type::StopArea sa2;
+    sp2.stop_area = &sa2;
+    BOOST_CHECK(! nr::use_crow_fly(ep, &sp2, data));
+
+    admin->main_stop_areas.push_back(&sa2);
+    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, data));
 }

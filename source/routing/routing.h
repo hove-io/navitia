@@ -124,7 +124,7 @@ bool operator==(const PathItem & a, const PathItem & b);
  * @param point: the object where we are going/coming: the requested origin for the first section or the destination for the last section
  * @param stop_point: for the first section, the stop point where we are going, or for the last section the stop point from where we come
  */
-bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point);
+bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point, const type::Data& data);
 
 
 }}
