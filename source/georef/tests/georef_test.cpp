@@ -640,20 +640,20 @@ BOOST_AUTO_TEST_CASE(coord){
 
 
 // les coordonnées sont à l'extérieur de la rue coté supérieur
-    int result = way.nearest_number(nt::GeographicalCoord(1.0,55.0));
+    int result = way.nearest_number(nt::GeographicalCoord(1.0,55.0)).first;
     BOOST_CHECK_EQUAL(result, 54);
 
 // les coordonnées sont à l'extérieur de la rue coté inférieur
-    result = way.nearest_number(nt::GeographicalCoord(2.0,3.0));
+    result = way.nearest_number(nt::GeographicalCoord(2.0,3.0)).first;
     BOOST_CHECK_EQUAL(result, 4);
 
 // coordonnées recherchées est = à coordonnées dans la rue
-    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0));
+    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0)).first;
     BOOST_CHECK_EQUAL(result, 8);
 
 // les deux listes des numéros sont vides
     way.house_number_right.clear();
-    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0));
+    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0)).first;
     BOOST_CHECK_EQUAL(result, -1);
 
 }
