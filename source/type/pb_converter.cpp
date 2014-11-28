@@ -1208,11 +1208,11 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 
     }else{
         //Here we format display_informations.direction for route_schedules.
-        pt_display_info->set_direction(r->name);
         navitia::type::StopPoint* spt = data.pt_data->stop_points[r->main_destination()];
+        pt_display_info->set_direction(spt->name);
         for(auto admin : spt->admin_list) {
             if (admin->level == 8){
-                pt_display_info->set_direction(r->name + " (" + admin->name + ")");
+                pt_display_info->set_direction(spt->name + " (" + admin->name + ")");
             }
         }
     }
