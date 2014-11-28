@@ -87,13 +87,13 @@ SET(DATA_SRC
     pt_data.cpp
 )
 
-add_library(data ${DATA_SRC})
-target_link_libraries(data types fill_disruption_from_database)
-
 SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY})
+
+add_library(data ${DATA_SRC})
+target_link_libraries(data types fill_disruption_from_database fare routing autocomplete ${BOOST_LIBS})
 
 add_executable(main_destination_test tests/main_destination_test.cpp)
 target_link_libraries(main_destination_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
