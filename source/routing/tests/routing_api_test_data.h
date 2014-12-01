@@ -473,13 +473,13 @@ struct routing_api_data {
 
     void add_disruptions() {
         nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
-        auto now = boost::posix_time::microsec_clock::universal_time() - boost::posix_time::hours(10);
+        auto now = boost::posix_time::microsec_clock::universal_time() - (10_h).to_posix();
         {
             //we create one disruption on stop A
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_stop_A";
             //Note: the take the current time because because we only get the current disruptions in the pt object api and we want those
-            disruption->publication_period = boost::posix_time::time_period(now, boost::posix_time::hours(1000));
+            disruption->publication_period = boost::posix_time::time_period(now, (1000_h).to_posix());
             auto tag = boost::make_shared<Tag>();
             tag->uri = "tag";
             tag->name = "tag name";
@@ -487,7 +487,7 @@ struct routing_api_data {
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "too_bad";
-            impact->application_periods = {boost::posix_time::time_period(now, boost::posix_time::hours(1000))};
+            impact->application_periods = {boost::posix_time::time_period(now, (1000_h).to_posix())};
 
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "stopA", *b.data->pt_data, impact));
 
@@ -503,7 +503,7 @@ struct routing_api_data {
             //we create one disruption on line A
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_line_A";
-            disruption->publication_period = boost::posix_time::time_period(now, boost::posix_time::hours(1000));
+            disruption->publication_period = boost::posix_time::time_period(now, (1000_h).to_posix());
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "too_bad_again";
