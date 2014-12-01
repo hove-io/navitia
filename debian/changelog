@@ -1,3 +1,31 @@
+navitia2 (1.6.0) unstable; urgency=low
+
+  * fix geolocalization  <https://github.com/CanalTP/navitia/pull/764>
+  * Kraken: fix filling of direction in pt_display_info  <https://github.com/CanalTP/navitia/pull/763>
+  * Kraken: We want to favoritize normal vj against stay_in vj  <https://github.com/CanalTP/navitia/pull/762>
+  * Waiting time estimated  <https://github.com/CanalTP/navitia/pull/761>
+  * Tyr: add param to give a file name for the data.nav.lz4  <https://github.com/CanalTP/navitia/pull/760>
+  * kraken: handling crowfly for main_stop_area  <https://github.com/CanalTP/navitia/pull/758>
+  * Nm planner  <https://github.com/CanalTP/navitia/pull/756>
+  * jormungandr: when sorting by departure, we always sort by departure  <https://github.com/CanalTP/navitia/pull/753>
+  * minimum duration of bss for destineo  <https://github.com/CanalTP/navitia/pull/751>
+  * ed: fix bad admin with cities  <https://github.com/CanalTP/navitia/pull/750>
+  * Documentation: Add doc on tyr  <https://github.com/CanalTP/navitia/pull/749>
+  * Jormungandr: add CORS support  <https://github.com/CanalTP/navitia/pull/748>
+  * Do not index (for autocomplete) way without city associated  <https://github.com/CanalTP/navitia/pull/747>
+  * Jormungandr: save region of v1/journeys request in stats  <https://github.com/CanalTP/navitia/pull/745>
+  * Alembic: change the bounding shape computation  <https://github.com/CanalTP/navitia/pull/744>
+  * Jormungandr: fix error for wrongly formated tokens  <https://github.com/CanalTP/navitia/pull/743>
+  * Kraken: In car we go to a parking and we park in it  <https://github.com/CanalTP/navitia/pull/742>
+  * Kraken: better handling of vehicle_journeys with stay_in  <https://github.com/CanalTP/navitia/pull/741>
+  * utils: improve csv parser  <https://github.com/CanalTP/navitia/pull/740>
+  * Kraken: fix overlapping of two stop_times of a vehicle_journey  <https://github.com/CanalTP/navitia/pull/739>
+  * jormungandr: add an id on each request and log this id for traceability  <https://github.com/CanalTP/navitia/pull/737>
+  *  Remove journey with more fallback than the matching non_pt   <https://github.com/CanalTP/navitia/pull/736>
+  * Fix sorting of vj in route schedules  <https://github.com/CanalTP/navitia/pull/735>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 01 Dec 2014 08:12:55 +0100
+
 navitia2 (1.5.0) unstable; urgency=low
 
   * All: Add label to ptobject  <https://github.com/CanalTP/navitia/pull/712>
