@@ -156,22 +156,22 @@ def build_error(config, validate_result):
         result += section_string + ' => ' + str(error) + "\n"
     return result
 
+
 def get_instance_logger(instance):
     """
     return the logger for this instance
-    all log will be in a file specific to this instance
+
+    get the logger name 'instance' as the parent logger
+
+    For file handler, all log will be in a file specific to this instance
     """
-    logger = logging.getLogger('tyr.{0}'.format(instance.name))
+    logger = logging.getLogger('instance.{0}'.format(instance.name))
 
-    #to configure the logger we copy the 'instance' logger if we have one
-    root_instance_logger = logging.getLogger('instance')
-    logger.setLevel(root_instance_logger.level)
-
-    # if the logger already has handler it has already been inited, we can stop
+    # if the logger has already been inited, we can stop
     if logger.handlers:
         return logger
 
-    for handler in root_instance_logger.handlers:
+    for handler in logger.parent.handlers:
         #trick for FileHandler, we change the file name
         if isinstance(handler, logging.FileHandler):
             #we use the %(name) notation to use the same grammar as the python module
@@ -181,6 +181,6 @@ def get_instance_logger(instance):
             handler = new_handler
 
         logger.addHandler(handler)
-        logger.propagate = False
 
+    logger.propagate = False
     return logger
