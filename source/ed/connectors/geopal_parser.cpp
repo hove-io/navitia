@@ -269,7 +269,10 @@ void GeopalParser::fill_house_numbers(){
             if (reader.is_valid(x_c, row) && reader.is_valid(y_c, row)
                 && reader.is_valid(insee_c, row) && reader.is_valid(numero_c, row)
                 && reader.is_valid(nom_voie_c, row)
-                && reader.is_valid(id_tr, row)){
+                && reader.is_valid(id_tr, row)
+                && row[numero_c] != "0"
+                && row[numero_c] != "-1"){
+                //we want to ignore house number at 0 or -1
                 std::string way_uri = row[id_tr];
                 auto it = this->data.fusion_ways.find(way_uri);
                 if(it != this->data.fusion_ways.end()){
