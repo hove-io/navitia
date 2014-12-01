@@ -1,3 +1,10 @@
+navitia2 (1.6.1) unstable; urgency=low
+
+  * geopal2ed: in geopal, a "number" at 0 ou -1 is invalid  <https://github.com/CanalTP/navitia/pull/767>
+  * Tyr: change instance logger handling  <https://github.com/CanalTP/navitia/pull/766>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 01 Dec 2014 17:12:32 +0100
+
 navitia2 (1.6.0) unstable; urgency=low
 
   * fix geolocalization  <https://github.com/CanalTP/navitia/pull/764>
