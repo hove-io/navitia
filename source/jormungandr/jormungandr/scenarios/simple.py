@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from jormungandr.utils import date_to_timestamp
 
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
@@ -75,8 +76,8 @@ class Scenario(object):
         req.disruptions.filter = request['filter']
         req.disruptions.count = request['count']
         req.disruptions.start_page = request['start_page']
-        req.disruptions.datetime = request['datetime']
-        req.disruptions.period = request['period']
+        req.disruptions.period_begin = date_to_timestamp(request['datetime'])
+        req.disruptions.period_end = date_to_timestamp(request['period_end'])
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:

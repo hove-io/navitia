@@ -35,10 +35,11 @@ from fields import PbField, error, network, line,\
     NonNullList, NonNullNested, pagination, stop_area
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.common import odt_levels
-from jormungandr.interfaces.parsers import option_value
+from jormungandr.interfaces.parsers import date_time_format
 from errors import ManageError
 from datetime import datetime
+import aniso8601
+from datetime import timedelta
 
 disruption = {
     "network": PbField(network, attribute='network'),
@@ -53,6 +54,13 @@ disruptions = {
 }
 
 
+def duration(param):
+    try:
+        return aniso8601.parse_duration(param)
+    except ValueError as e:
+        raise ValueError("Unable to parse duration {}, {}".format(param, e.message))
+
+
 class Disruptions(ResourceUri):
     def __init__(self):
         ResourceUri.__init__(self)
@@ -65,11 +73,12 @@ class Disruptions(ResourceUri):
                                 description="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("period", type=int, default=365,
-                                description="Period from datetime")
-        parser_get.add_argument("datetime", type=str,
-                                description="The datetime from which you want\
-                                the disruption")
+        parser_get.add_argument("period", type=int,
+                                description="Period in days from datetime. DEPRECATED use duration parameter")
+        parser_get.add_argument("duration", type=duration, default=timedelta(days=365),
+                                description="Duration from the period we want to display the disruption on")
+        parser_get.add_argument("datetime", type=date_time_format,
+                                description="The datetime from which you want the disruption")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",
@@ -83,15 +92,23 @@ class Disruptions(ResourceUri):
         args = self.parsers["get"].parse_args()
 
         if not args["datetime"]:
-            args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
+            args['datetime'] = datetime.now()
+            args['datetime'] = args['datetime'].replace(hour=13, minute=37)
 
-        if(uri):
+        if uri:
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
             args["filter"] = self.get_filter(uris)
         else:
             args["filter"] = ""
+
+        #we compute the period end with the duration (or the deprecated 'period' argument)
+        period_end = args['datetime'] + args['duration']
+        if args.get('period'):
+            period_end = args['datetime'] + timedelta(days=args.get('period'))
+
+        args['period_end'] = period_end
 
         response = i_manager.dispatch(args, "disruptions",
                                       instance_name=self.region)
