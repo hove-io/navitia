@@ -156,25 +156,31 @@ def build_error(config, validate_result):
         result += section_string + ' => ' + str(error) + "\n"
     return result
 
+
 def get_instance_logger(instance):
     """
     return the logger for this instance
-    all log will be in a file specific to this instance
+
+    get the logger name 'instance' as the parent logger
+
+    For file handler, all log will be in a file specific to this instance
     """
-    logger = logging.getLogger('tyr.{0}'.format(instance.name))
-    root_logger = logging.root
-    logger.setLevel(root_logger.level)
-    file_hanlders = [h for h in root_logger.handlers
-                    if isinstance(h, logging.FileHandler)]
-    #does not add the handler at each time or if we do not log to a file
-    if not logger.handlers and file_hanlders:
-        log_dir = os.path.dirname(file_hanlders[0].stream.name)
-        log_filename = '{log_dir}/{name}.log'.format(log_dir=log_dir,
-                                                     name=instance.name)
-        handler = logging.FileHandler(log_filename)
-        handler.setFormatter(file_hanlders[0].formatter)
+    logger = logging.getLogger('instance.{0}'.format(instance.name))
+
+    # if the logger has already been inited, we can stop
+    if logger.handlers:
+        return logger
+
+    for handler in logger.parent.handlers:
+        #trick for FileHandler, we change the file name
+        if isinstance(handler, logging.FileHandler):
+            #we use the %(name) notation to use the same grammar as the python module
+            log_filename = handler.stream.name.replace('%(name)', instance.name)
+            new_handler = logging.FileHandler(log_filename)
+            new_handler.setFormatter(handler.formatter)
+            handler = new_handler
+
         logger.addHandler(handler)
-        logger.propagate = False
 
-
+    logger.propagate = False
     return logger
