@@ -37,6 +37,9 @@ www.navitia.io
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/weak_ptr.hpp>
+#include <boost/serialization/variant.hpp>
 #include <thread>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
@@ -51,6 +54,7 @@ www.navitia.io
 #include "georef/georef.h"
 #include "fare/fare.h"
 #include "type/meta_data.h"
+#include "kraken/fill_disruption_from_database.h"
 
 namespace pt = boost::posix_time;
 
@@ -72,7 +76,8 @@ Data::Data() :
 
 Data::~Data(){}
 
-bool Data::load(const std::string& filename) {
+bool Data::load(const std::string& filename,
+        const boost::optional<std::string>& chaos_database) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     loading = true;
     try {
@@ -82,19 +87,22 @@ bool Data::load(const std::string& filename) {
         last_load_at = pt::microsec_clock::local_time();
         last_load = true;
         loaded = true;
-        LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-                % pt_data->stop_times.size() % dataRaptor->arrival_times.size()
+        LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
+                % dataRaptor->arrival_times.size()
                 % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
                 );
     } catch(const wrong_version& ex) {
-        LOG4CPLUS_ERROR(logger, boost::format("Data loading failed: %s") % ex.what());
+        LOG4CPLUS_ERROR(logger, "Cannot laod data: " << ex.what());
         last_load = false;
     } catch(const std::exception& ex) {
-        LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
+        LOG4CPLUS_ERROR(logger, "Data loading failed: " << ex.what());
         last_load = false;
     } catch(...) {
-        LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
+        LOG4CPLUS_ERROR(logger, "Data loading failed");
         last_load = false;
+    }
+    if (chaos_database) {
+        fill_disruption_from_database(*chaos_database, *pt_data);
     }
     loading = false;
     return this->last_load;
@@ -583,13 +591,13 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
 Type_e Data::get_type_of_id(const std::string & id) const {
     if(id.size()>6 && id.substr(0,6) == "coord:")
         return Type_e::Coord;
-    if(id.size()>6 && id.substr(0,8) == "address:")
+    if(id.size()>8 && id.substr(0,8) == "address:")
         return Type_e::Address;
     if(id.size()>6 && id.substr(0,6) == "admin:")
         return Type_e::Admin;
     #define GET_TYPE(type_name, collection_name) \
-    auto collection_name##_map = pt_data->collection_name##_map;\
-    if(collection_name##_map.find(id) != collection_name##_map.end())\
+    const auto &collection_name##_map = pt_data->collection_name##_map;\
+    if(collection_name##_map.count(id) != 0 )\
         return Type_e::type_name;
     ITERATE_NAVITIA_PT_TYPES(GET_TYPE)
     if(geo_ref->poitype_map.find(id) != geo_ref->poitype_map.end())

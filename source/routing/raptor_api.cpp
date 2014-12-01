@@ -132,7 +132,7 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
          *    to the origin stop point of the first section only if the stop point belongs to this area.
          *
          * 2) we start from an area but the chosen stop point don't belongs to this area, for example we want to start
-         * from an city, but the pt part of the journey start in another city, in this case 
+         * from an city, but the pt part of the journey start in another city, in this case
          * we add a street network section from the centroid of this area to the departure of the first pt_section
          *
          * 3) We start from a ponctual place (everything but stop_area or admin)
@@ -142,7 +142,8 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
          * same we do nothing
          **/
 
-        if (!path.items.front().stop_points.empty() && use_crow_fly(origin, path.items.front().stop_points.front())){
+        if (!path.items.front().stop_points.empty()
+                && use_crow_fly(origin, path.items.front().stop_points.front(), d)){
             const auto sp_dest = path.items.front().stop_points.front();
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
             bt::time_period action_period(path.items.front().departures.front(),
@@ -235,10 +236,21 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
                     fill_pb_placemark(item.stop_points.back(), d,
                                 pb_section->mutable_destination(), 1, now,
                                 action_period, show_codes);
+
                 }
                 pb_section->set_length(length);
                 bt::time_period action_period(departure_ptime, arrival_ptime);
                 fill_section(pb_section, vj, item.stop_times, d, now, action_period);
+                // If this section has estimated stop times,
+                // if the previous section is a waiting section, we also
+                // want to set it to estimated.
+                if (pb_section->add_info_vehicle_journey().has_date_time_estimated() &&
+                        pb_journey->sections_size()>=2) {
+                    auto previous_section = pb_journey->mutable_sections(pb_journey->sections_size()-2);
+                    if (previous_section->type() == pbnavitia::WAITING) {
+                        previous_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
+                    }
+                }
             } else {
                 pb_section->set_type(pbnavitia::TRANSFER);
                 switch(item.type) {
@@ -256,6 +268,20 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
                     case waiting : pb_section->set_type(pbnavitia::WAITING); break;
                     default : pb_section->set_transfer_type(pbnavitia::walking); break;
                 }
+                // For a waiting section, if the previous public transport section,
+                // has estimated datetime we need to set it has estimated too.
+                if (pb_journey->sections_size() > 1) {
+                    for (int i=pb_journey->sections_size()-1; i>=0; --i) {
+                        auto section = pb_journey->sections(i);
+                        if (section.type() == pbnavitia::PUBLIC_TRANSPORT) {
+                            if (section.add_info_vehicle_journey().has_date_time_estimated()) {
+                                pb_section->mutable_add_info_vehicle_journey()->set_has_date_time_estimated(true);
+                            }
+                            break;
+                        }
+                    }
+                }
+
                 bt::time_period action_period(item.departure, item.arrival);
                 const auto origin_sp = item.stop_points.front();
                 const auto destination_sp = item.stop_points.back();
@@ -283,7 +309,8 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
             pb_section->set_duration(arr_time - dep_time);
         }
 
-        if (!path.items.back().stop_points.empty() && use_crow_fly(destination, path.items.back().stop_points.back())){
+        if (!path.items.back().stop_points.empty()
+                && use_crow_fly(destination, path.items.back().stop_points.back(), d)){
             const auto sp_orig = path.items.back().stop_points.back();
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
             bt::time_period action_period(path.items.back().departures.back(),
@@ -299,24 +326,22 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
                 const auto& arrival_stop_point = path.items.back().stop_points.back();
                 // for stop areas, we don't want to display the fallback section if start
                 // from one of the stop area's stop point
-                if (destination.uri != arrival_stop_point->stop_area->uri) {
-                    auto temp = worker.get_path(arrival_stop_point->idx, true);
-                    if(temp.path_items.size() > 0) {
-                       //add a junction between the routing path and the walking one if needed
-                        nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
-                        if (temp.path_items.front().coordinates.front() != routing_last_coord) {
-                            temp.path_items.front().coordinates.push_front(routing_last_coord);
-                        }
-
-                        auto begin_section_time = arrival_time;
-                        fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
-                                begin_section_time);
-                        arrival_time = arrival_time + temp.duration.to_posix();
+                auto temp = worker.get_path(arrival_stop_point->idx, true);
+                if(temp.path_items.size() > 0) {
+                   //add a junction between the routing path and the walking one if needed
+                    nt::GeographicalCoord routing_last_coord = arrival_stop_point->coord;
+                    if (temp.path_items.front().coordinates.front() != routing_last_coord) {
+                        temp.path_items.front().coordinates.push_front(routing_last_coord);
                     }
-                    // We add coherence with the last pt section
+
+                    auto begin_section_time = arrival_time;
+                    fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
+                            begin_section_time);
+                    arrival_time = arrival_time + temp.duration.to_posix();
+
                     auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
                     bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                                  navitia::from_posix_timestamp(section->end_date_time()));
+                                              navitia::from_posix_timestamp(section->end_date_time()));
                     fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
                     //We add coherence with the destination object of the request
                     fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
@@ -396,8 +421,62 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
     }
-
     return pb_response;
+}
+
+void add_isochrone_response(RAPTOR &raptor, pbnavitia::Response& response,
+                            const std::vector<type::StopPoint*> stop_points,
+                            bool clockwise,
+                            const type::AccessibiliteParams & accessibilite_params,
+                            bool disruption_active,
+                            DateTime init_dt , DateTime bound, int max_duration,
+                            bool show_codes, bool show_stop_area) {
+    bt::ptime now = bt::second_clock::local_time();
+    for(const type::StopPoint* sp : stop_points) {
+        DateTime best = bound;
+        type::idx_t best_jpp = type::invalid_idx;
+        int best_round = -1;
+        for(auto jpp : sp->journey_pattern_point_list) {
+            if(raptor.best_labels[jpp->idx] < best) {
+                int round = raptor.best_round(jpp->idx);
+                if(round != -1 && raptor.labels[round][jpp->idx].pt_is_initialized()) {
+                    best = raptor.best_labels[jpp->idx];
+                    best_jpp = jpp->idx;
+                    best_round = round;
+                }
+            }
+        }
+
+        if(best_jpp != type::invalid_idx) {
+            auto label = raptor.best_labels[best_jpp];
+            type::idx_t initial_jpp;
+            DateTime initial_dt;
+            boost::tie(initial_jpp, initial_dt) = get_final_jppidx_and_date(best_round,
+                    best_jpp, !clockwise, disruption_active, accessibilite_params, raptor);
+
+            int duration = ::abs(label - init_dt);
+
+            if(duration <= max_duration) {
+                auto pb_journey = response.add_journeys();
+                const auto str_departure = to_posix_timestamp(label, raptor.data);
+                const auto str_arrival = to_posix_timestamp(label, raptor.data);
+                const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
+                pb_journey->set_arrival_date_time(str_arrival);
+                pb_journey->set_departure_date_time(str_departure);
+                pb_journey->set_requested_date_time(str_requested);
+                pb_journey->set_duration(duration);
+                pb_journey->set_nb_transfers(best_round);
+                bt::time_period action_period(navitia::to_posix_time(label-duration, raptor.data),
+                        navitia::to_posix_time(label, raptor.data));
+                if (show_stop_area)
+                    fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point->stop_area,
+                            raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
+               else
+                    fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point,
+                            raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
+            }
+        }
+    }
 }
 
 std::vector<std::pair<type::idx_t, navitia::time_duration> >
@@ -466,7 +545,6 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
 
     return result;
 }
-
 
 std::vector<bt::ptime>
 parse_datetimes(RAPTOR &raptor,const std::vector<uint64_t>& timestamps,
@@ -589,7 +667,8 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
                  georef::StreetNetwork & worker,
                  bool disruption_active,
                  bool allow_odt,
-                 uint32_t max_duration, uint32_t max_transfers, bool show_codes) {
+                 uint32_t max_duration, uint32_t max_transfers,
+                 bool show_codes, bool details) {
 
     EnhancedResponse enhanced_response; //wrapper around raw protobuff response to handle ids
     pbnavitia::Response& pb_response = enhanced_response.response;
@@ -641,8 +720,6 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         return pb_response;
     }
 
-    std::vector<Path> result;
-
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
 
     for(bt::ptime datetime : datetimes) {
@@ -655,34 +732,60 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         }
 
         // compute m trip in one call
-        auto paths_by_entrypoint = raptor.compute_nm_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers, accessibilite_params, forbidden, clockwise);
+        auto paths_by_entrypoint = raptor.
+                compute_nm_all(departures, arrivals, init_dt, disruption_active, allow_odt, bound, max_transfers,
+                               accessibilite_params, forbidden, clockwise, details);
 
-        for(std::pair<type::EntryPoint, std::vector<Path>> paths_for_m_point : paths_by_entrypoint) {
-            std::vector<Path>& paths = paths_for_m_point.second;
-            if(paths.empty())
-                continue;
+        // compute complete path from "n point" to "m point"
+        if (details) {
+            for(std::pair<type::EntryPoint, std::vector<Path>> paths_for_m_point : paths_by_entrypoint) {
+                std::vector<Path>& paths = paths_for_m_point.second;
+                if(paths.empty())
+                    continue;
 
-            // try to resolve the "n point" (kraken algorithm departure)
-            type::EntryPoint n_entry_point;
-            n_entry_point.type = nt::Type_e::Unknown;
-            for(auto& path : paths) {
-                path.request_time = datetime;
-                if (path.origin.type != nt::Type_e::Unknown)
-                    n_entry_point = path.origin;
+                // try to resolve the "n point" (kraken algorithm departure)
+                type::EntryPoint n_entry_point;
+                n_entry_point.type = nt::Type_e::Unknown;
+                for(auto& path : paths) {
+                    path.request_time = datetime;
+                    if (path.origin.type != nt::Type_e::Unknown)
+                        n_entry_point = path.origin;
+                }
+                if (n_entry_point.type == nt::Type_e::Unknown)
+                    continue;
+
+                const type::EntryPoint& m_entry_point = paths_for_m_point.first;
+
+                if (clockwise){
+                    std::reverse(paths.begin(), paths.end());
+                    worker.init(n_entry_point, {m_entry_point});
+                    add_pathes(enhanced_response, paths, raptor.data, worker, n_entry_point, m_entry_point, datetimes, clockwise, show_codes);
+                }
+                else {
+                    worker.init(m_entry_point, {n_entry_point});
+                    add_pathes(enhanced_response, paths, raptor.data, worker, m_entry_point, n_entry_point, datetimes, clockwise, show_codes);
+                }
             }
-            if (n_entry_point.type == nt::Type_e::Unknown)
-                continue;
+        }
+        // compute isochron style result at "m point"
+        else {
+            for(std::pair<type::EntryPoint, std::vector<Path>> paths_for_m_point : paths_by_entrypoint) {
+                std::vector<Path>& paths = paths_for_m_point.second;
+                if(paths.empty())
+                    continue;
 
-            const type::EntryPoint& m_entry_point = paths_for_m_point.first;
+                std::vector<type::StopPoint*> stop_points;
+                for(auto& path : paths) {
+                    const type::StopPoint* sp = path.items[0].stop_points[0];
+                    stop_points.push_back(const_cast<type::StopPoint*>(sp));
+                }
 
-            if (clockwise){
-                std::reverse(paths.begin(), paths.end());
-                worker.init(n_entry_point, {m_entry_point});
-                add_pathes(enhanced_response, paths, raptor.data, worker, n_entry_point, m_entry_point, datetimes, clockwise, show_codes);
-            }
-            else {
-                worker.init(m_entry_point, {n_entry_point});
-                add_pathes(enhanced_response, paths, raptor.data, worker, m_entry_point, n_entry_point, datetimes, clockwise, show_codes);
+                const type::EntryPoint& m_point = paths_for_m_point.first;
+
+                add_isochrone_response(raptor, pb_response, stop_points, clockwise,
+                                       accessibilite_params, disruption_active,
+                                       init_dt, bound, max_duration, show_codes,
+                                       (m_point.type == nt::Type_e::StopArea));
             }
         }
     }
@@ -730,49 +833,9 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     raptor.isochrone(departures, init_dt, bound, max_transfers,
                            accessibilite_params, forbidden, clockwise, disruption_active, allow_odt);
 
-
-    bt::ptime now = bt::second_clock::local_time();
-    for(const type::StopPoint* sp : raptor.data.pt_data->stop_points) {
-        DateTime best = bound;
-        type::idx_t best_jpp = type::invalid_idx;
-        int best_round = -1;
-        for(auto jpp : sp->journey_pattern_point_list) {
-            if(raptor.best_labels[jpp->idx] < best) {
-                int round = raptor.best_round(jpp->idx);
-                if(round != -1 && raptor.labels[round][jpp->idx].pt_is_initialized()) {
-                    best = raptor.best_labels[jpp->idx];
-                    best_jpp = jpp->idx;
-                    best_round = round;
-                }
-            }
-        }
-
-        if(best_jpp != type::invalid_idx) {
-            auto label = raptor.best_labels[best_jpp];
-            type::idx_t initial_jpp;
-            DateTime initial_dt;
-            boost::tie(initial_jpp, initial_dt) = get_final_jppidx_and_date(best_round,
-                    best_jpp, !clockwise, disruption_active, accessibilite_params, raptor);
-
-            int duration = ::abs(label - init_dt);
-
-            if(duration <= max_duration) {
-                auto pb_journey = response.add_journeys();
-                const auto str_departure = to_posix_timestamp(label, raptor.data);
-                const auto str_arrival = to_posix_timestamp(label, raptor.data);
-                const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
-                pb_journey->set_arrival_date_time(str_arrival);
-                pb_journey->set_departure_date_time(str_departure);
-                pb_journey->set_requested_date_time(str_requested);
-                pb_journey->set_duration(duration);
-                pb_journey->set_nb_transfers(best_round);
-                bt::time_period action_period(navitia::to_posix_time(label-duration, raptor.data),
-                        navitia::to_posix_time(label, raptor.data));
-                fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point,
-                        raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
-            }
-        }
-    }
+    add_isochrone_response(raptor, response, raptor.data.pt_data->stop_points, clockwise,
+                           accessibilite_params, disruption_active,
+                           init_dt, bound, max_duration, show_codes, false);
 
      std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
                [](const pbnavitia::Journey & journey1, const pbnavitia::Journey & journey2) {

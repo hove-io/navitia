@@ -32,12 +32,12 @@ www.navitia.io
 #include "mock_kraken.h"
 #include "utils/init.h"
 
-int main() {
+int main(int argc, const char* const argv[]) {
     ed::builder b("20141010");
     navitia::init_app();
     b.data->loaded = false;
     b.data->loading = false;
-    mock_kraken kraken(b, "null_status_test");
+    mock_kraken kraken(b, "null_status_test", argc, argv);
 
     return 0;
 }

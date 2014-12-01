@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <atomic>
 #include "type/type.h"
 #include "utils/serialization_unique_ptr.h"
@@ -73,7 +74,7 @@ struct wrong_version : public navitia::exception {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 29; //< Data version number. *INCREMENT* every time serialized data are modified
+    static const unsigned int data_version = 30; //< Data version number. *INCREMENT* every time serialized data are modified
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
     std::atomic<bool> loading; //< Is the data being loaded
@@ -122,6 +123,8 @@ public:
     bool last_load = true;
     boost::posix_time::ptime last_load_at;
 
+    boost::posix_time::ptime last_rt_data_loaded; //datetime of the last Real Time loaded data
+
     // This object is the only field mutated in this object. As it is
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
     // find in the future a cleaner way, but now, this is cleaner than
@@ -148,7 +151,8 @@ public:
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     /** Charge les données et effectue les initialisations nécessaires */
-    bool load(const std::string & filename);
+    bool load(const std::string & filename,
+            const boost::optional<std::string>& chaos_database = {});
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;
@@ -179,6 +183,7 @@ public:
     void compute_labels();
 
     /** Retourne le type de l'id donné */
+
     Type_e get_type_of_id(const std::string & id) const;
 
     /** Charge les données binaires compressées en LZ4

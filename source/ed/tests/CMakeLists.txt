@@ -1,16 +1,16 @@
 #We use the BOOST_LIBS define is the parent
 SET(BOOST_LIBS ${BOOST_LIBS} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-SET(SOURCE
-    tests.cpp
-)
+add_executable(jpp_shape_test jpp_shape_test.cpp)
+target_link_libraries(jpp_shape_test ed data types ${BOOST_LIBS})
+ADD_BOOST_TEST(jpp_shape_test)
 
 add_executable(gtfs_parser_test gtfsparser_test.cpp)
 target_link_libraries(gtfs_parser_test ed connectors data types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(gtfs_parser_test)
 
 add_executable(adapted_test adapted_test.cpp)
-target_link_libraries(adapted_test ed types connectors pq pqxx data fare georef pb_lib
+target_link_libraries(adapted_test ed adapted types connectors pq pqxx data fare georef pb_lib
     routing utils autocomplete ${BOOST_LIBS} log4cplus protobuf)
 
 ADD_BOOST_TEST(adapted_test)

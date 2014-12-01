@@ -31,7 +31,7 @@
 
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
-from jormungandr import i_manager
+from jormungandr import i_manager, timezone
 from make_links import add_id_links
 from fields import place, NonNullList, NonNullNested, PbField, pagination, error
 from ResourceUri import ResourceUri
@@ -139,6 +139,7 @@ class PlacesNearby(ResourceUri):
     @marshal_with(places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
+        timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
         if uri:
             if uri[-1] == '/':

@@ -47,10 +47,24 @@ struct dataRAPTOR {
     std::vector<pair_int> footpath_index_forward;
     std::vector<const navitia::type::StopPointConnection*> foot_path_backward;
     std::vector<pair_int> footpath_index_backward;
-    std::vector<uint32_t> arrival_times;
-    std::vector<uint32_t> departure_times;
-    std::vector<type::StopTime*> st_idx_forward;// Nom a changer ce ne sont plus des idx mais des pointeurs
-    std::vector<type::StopTime*> st_idx_backward;
+
+    // arrival_times (resp. departure_times) are the different arrival
+    // (resp. departure) times of each stop time sorted by
+    //     lex(jp, jpp, arrival_time (resp. departure_time)).
+    //
+    // Then, you have:
+    //     for all i, st_forward[i]->departure_time == departure_times[i]
+    //     for all i, st_backward[i]->arrival_time == arrival_times[i]
+    //
+    // st_forward and st_backward contains StopTime* from
+    // std::vector<StopTime> (in VehicleJourney).  This is safe as
+    // pt_data MUST be const for a given dataRAPTOR (else, you'll have
+    // much troubles, and not only from here).
+    std::vector<DateTime> arrival_times;
+    std::vector<DateTime> departure_times;
+    std::vector<const type::StopTime*> st_forward;
+    std::vector<const type::StopTime*> st_backward;
+
     std::vector<size_t> first_stop_time;
     std::vector<size_t> nb_trips;
     label_vector_t labels_const;

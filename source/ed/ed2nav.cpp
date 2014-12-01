@@ -29,15 +29,8 @@ www.navitia.io
 */
 
 #include "conf.h"
-#include <iostream>
 
 #include "utils/timer.h"
-
-#include <fstream>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <pqxx/pqxx>
 #include "utils/exception.h"
 #include "ed_reader.h"
 #include "type/data.h"
@@ -45,6 +38,13 @@ www.navitia.io
 #include "utils/functions.h"
 #include "type/meta_data.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/make_shared.hpp>
+#include <pqxx/pqxx>
+#include <iostream>
+#include <fstream>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -56,19 +56,17 @@ struct FindAdminWithCities {
     typedef std::unordered_map<std::string, navitia::georef::Admin*> AdminMap;
     typedef std::vector<georef::Admin*> result_type;
 
-    std::shared_ptr<pqxx::connection> conn;
+    boost::shared_ptr<pqxx::connection> conn;
     georef::GeoRef& georef;
-    AdminMap& admin_by_insee_code;
+    AdminMap added_admins;
     size_t nb_call = 0;
     size_t nb_uninitialized = 0;
     size_t nb_georef = 0;
-    size_t nb_admin_added = 0;
     std::map<size_t, size_t> cities_stats;// number of response for size of the result
 
-    FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr, AdminMap& m):
-        conn(std::make_shared<pqxx::connection>(connection_string)),
-        georef(gr),
-        admin_by_insee_code(m)
+    FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr):
+        conn(boost::make_shared<pqxx::connection>(connection_string)),
+        georef(gr)
         {}
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
@@ -81,7 +79,7 @@ struct FindAdminWithCities {
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_uninitialized
                        << " calls with uninitialized or zeroed coord");
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_georef << " GeoRef responses");
-        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_admin_added << " admins added using cities");
+        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << added_admins.size() << " admins added using cities");
         for (const auto& elt: cities_stats) {
             LOG4CPLUS_INFO(log, "FindAdminWithCities: "
                            << elt.second << " cities responses with "
@@ -107,13 +105,13 @@ struct FindAdminWithCities {
         pqxx::result result = work.exec(request);
         result_type res;
         for (auto it = result.begin(); it != result.end(); ++it) {
-            navitia::georef::Admin*& admin =
-                admin_by_insee_code[it["insee"].as<std::string>()];
+            const std::string uri = it["uri"].as<std::string>() + "extern";
+            navitia::georef::Admin*& admin = added_admins[uri];
             if (!admin) {
                 georef.admins.push_back(new navitia::georef::Admin());
                 admin = georef.admins.back();
                 admin->comment = "from cities";
-                it["uri"].to(admin->uri);
+                admin->uri = uri;
                 it["name"].to(admin->name);
                 it["insee"].to(admin->insee);
                 it["level"].to(admin->level);
@@ -122,7 +120,6 @@ struct FindAdminWithCities {
                 admin->coord.set_lat(it["lat"].as<double>());
                 admin->idx = georef.admins.size() - 1;
                 admin->from_original_dataset = false;
-                ++nb_admin_added;
             }
             res.push_back(admin);
         }
@@ -193,8 +190,7 @@ int main(int argc, char * argv[])
     ed::EdReader reader(connection_string);
 
     if (!cities_connection_string.empty()) {
-        data.find_admins = FindAdminWithCities(
-            cities_connection_string, *data.geo_ref, reader.admin_by_insee_code);
+        data.find_admins = FindAdminWithCities(cities_connection_string, *data.geo_ref);
     }
 
     try {
@@ -216,7 +212,7 @@ int main(int argc, char * argv[])
     LOG4CPLUS_INFO(logger, "stoparea: " << data.pt_data->stop_areas.size());
     LOG4CPLUS_INFO(logger, "stoppoint: " << data.pt_data->stop_points.size());
     LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.pt_data->vehicle_journeys.size());
-    LOG4CPLUS_INFO(logger, "stop: " << data.pt_data->stop_times.size());
+    LOG4CPLUS_INFO(logger, "stop: " << data.pt_data->nb_stop_times());
     LOG4CPLUS_INFO(logger, "connection: " << data.pt_data->stop_point_connections.size());
     LOG4CPLUS_INFO(logger, "journey_pattern points: " << data.pt_data->journey_pattern_points.size());
     LOG4CPLUS_INFO(logger, "modes: " << data.pt_data->physical_modes.size());

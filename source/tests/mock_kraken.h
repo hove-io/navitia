@@ -38,13 +38,18 @@ www.navitia.io
 #include "utils/zmq_compat.h"
 #include <boost/thread.hpp>
 #include "kraken/configuration.h"
+#include <boost/program_options.hpp>
+#include <boost/optional.hpp>
+
+namespace po = boost::program_options;
+
 
 /**
  * Pratically the same behavior as a real kraken, but with already loaded data
  */
 struct mock_kraken {
 
-    mock_kraken(ed::builder& d, const std::string& name) {
+    mock_kraken(ed::builder& d, const std::string& name, int argc, const char* const argv[]) {
         DataManager<navitia::type::Data> data_manager;
         data_manager.set_data(d.data.release());
 
@@ -60,12 +65,17 @@ struct mock_kraken {
         //we load the conf to have the default values
         navitia::kraken::Configuration conf;
         //we mock a command line load
-        int argc = 3;
-        const char* const argv[] = {"bob",
-                                    "--GENERAL.instance_name=default",
-                                    "--GENERAL.zmq_socket=42",
-                                   nullptr};
-        conf.load_from_command_line(argc, argv);
+        po::options_description desc = navitia::kraken::get_options_description(
+                    boost::optional<std::string>("default"),
+                    boost::optional<std::string>("42")); //not used
+        auto other_options = conf.load_from_command_line(desc, argc, argv);
+
+        //this option is not parsed by get_options_description because it is used only here
+        if (std::find(other_options.begin(), other_options.end(),
+                      "spawn_maintenance_worker") != other_options.end()) {
+            threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
+        }
+
 
         // Launch only one thread for the tests
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));

@@ -150,23 +150,17 @@ int main(int argc, char** argv) {
 
     error_count += check_relations(d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern, d.pt_data->journey_patterns);
     for(const VehicleJourney* vj: d.pt_data->vehicle_journeys){
-        for(const StopTime* stop_time : vj->stop_time_list){
-            if(stop_time == nullptr){
-                std::cout << "    stop_time vaut nullptr pour le vehicle journey(" << vj->idx << ")" << std::endl;
-                error_count++;
-            }
-        }
         for(size_t i = 1; i < vj->stop_time_list.size(); ++i){
-            const StopTime* st1 = vj->stop_time_list[i-1];
-            const StopTime* st2 = vj->stop_time_list[i];
-            const JourneyPatternPoint* jpp1 = st1->journey_pattern_point;
-            const JourneyPatternPoint* jpp2 = st2->journey_pattern_point;
+            const StopTime& st1 = vj->stop_time_list[i-1];
+            const StopTime& st2 = vj->stop_time_list[i];
+            const JourneyPatternPoint* jpp1 = st1.journey_pattern_point;
+            const JourneyPatternPoint* jpp2 = st2.journey_pattern_point;
             if(jpp1->order + 1!=  jpp2->order){
                 std::cout << "Problème de tri des stop_time du vj " << vj->idx << std::endl;
                 error_count++;
 
-                for(auto sterr : vj->stop_time_list) {
-                    std::cout << "Order : " << sterr->journey_pattern_point->order << std::endl;
+                for(const auto& sterr : vj->stop_time_list) {
+                    std::cout << "Order : " << sterr.journey_pattern_point->order << std::endl;
                 }
             }
         }

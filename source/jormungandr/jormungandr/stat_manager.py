@@ -29,17 +29,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from navitiacommon import response_pb2
-from flask_restful import reqparse, abort
-import flask_restful
 from flask import request, g
 from functools import wraps
 from navitiacommon import stat_pb2
-from navitiacommon import request_pb2
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from jormungandr import app
-from jormungandr.instance import Instance
 from jormungandr.authentication import get_user, get_token
 from jormungandr import utils
 
@@ -156,9 +151,16 @@ class StatManager(object):
             stat_parameter.value = item[1]
 
     def fill_coverages(self, stat_request):
-        stat_coverage = stat_request.coverages.add()
         if 'region' in request.view_args:
+            stat_coverage = stat_request.coverages.add()
             stat_coverage.region_id = request.view_args['region']
+        elif hasattr(g, 'regions_called'):
+            for region_id in g.regions_called:
+                stat_coverage = stat_request.coverages.add()
+                stat_coverage.region_id = g.regions_called[0]
+        else:
+            # We need an empty coverage.
+            stat_request.coverages.add()
 
     def fill_error(self, stat_request, error):
         stat_error = stat_request.error

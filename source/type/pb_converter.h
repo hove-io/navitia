@@ -159,7 +159,8 @@ void fill_street_sections(EnhancedResponse& response, const type::EntryPoint &or
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_message(const boost::shared_ptr<type::Message> message, const type::Data &data, pbnavitia::Message* pb_message, int max_depth = 0,
+template <typename T>
+void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact, const type::Data &data, T pb_object, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
@@ -291,10 +292,10 @@ void fill_pb_placemark(const T* value, const type::Data &data, pbnavitia::PtObje
     fill_pb_object(value, data, get_sub_object(value, pt_object), depth,
                    now, action_period, show_codes);
     pt_object->set_name(get_label(value));
-    std::cout << "name " << pt_object->name() << " for object: " << value->uri << std::endl;
     pt_object->set_uri(value->uri);
     pt_object->set_embedded_type(get_embedded_type(value));
 }
 
 pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode);
+
 }//namespace navitia

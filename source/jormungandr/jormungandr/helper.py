@@ -28,6 +28,8 @@
 # www.navitia.io
 
 import re
+from flask import Request
+import uuid
 
 
 class ReverseProxied(object):
@@ -53,3 +55,11 @@ class ReverseProxied(object):
             environ['wsgi.url_scheme'] = scheme
         return self.app(environ, start_response)
 
+
+class NavitiaRequest(Request):
+    """
+    override the request of flask to add an id on all request
+    """
+    def __init__(self, *args, **kwargs):
+        super(Request, self).__init__(*args, **kwargs)
+        self.id = str(uuid.uuid4())

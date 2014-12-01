@@ -69,7 +69,7 @@ std::string Way::get_label() const {
 /** Recherche des coordonnées les plus proches à un un numéro
     * les coordonnées par extrapolation
 */
-nt::GeographicalCoord Way::extrapol_geographical_coord(int number){
+nt::GeographicalCoord Way::extrapol_geographical_coord(int number) const {
     HouseNumber hn_upper, hn_lower;
     nt::GeographicalCoord to_return;
 
@@ -113,7 +113,7 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number){
     * Sinon, les coordonnées par extrapolation
 */
 
-nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber>& house_number_list, const int number){
+nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber>& house_number_list, const int number) const {
     if (!house_number_list.empty()){
 
         /// Dans le cas où le numéro recherché est plus grand que tous les numéros de liste
@@ -143,7 +143,7 @@ nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber
 /** Recherche des coordonnées les plus proches à un numéro
     * Si la rue n'a pas de numéro, on renvoie son barycentre
 */
-nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
+nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph) const {
     /// Attention la liste :
     /// "house_number_right" doit contenir les numéros pairs
     /// "house_number_left" doit contenir les numéros impairs
@@ -162,7 +162,7 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
 }
 
 // returns the centroid projected on the way
-nt::GeographicalCoord Way::projected_centroid(const Graph& graph){
+nt::GeographicalCoord Way::projected_centroid(const Graph& graph) const {
     std::vector<nt::GeographicalCoord> line;
     nt::GeographicalCoord centroid;
 
@@ -202,7 +202,7 @@ nt::GeographicalCoord Way::projected_centroid(const Graph& graph){
 /** Recherche du némuro le plus proche à des coordonnées
     * On récupère le numéro se trouvant à une distance la plus petite par rapport aux coordonnées passées en paramètre
 */
-int Way::nearest_number(const nt::GeographicalCoord& coord){
+std::pair<int, double> Way::nearest_number(const nt::GeographicalCoord& coord) const {
 
     int to_return = -1;
     double distance, distance_temp;
@@ -221,7 +221,7 @@ int Way::nearest_number(const nt::GeographicalCoord& coord){
             distance = distance_temp;
         }
     }
-    return to_return;
+    return {to_return, distance};
 }
 
 
@@ -378,40 +378,37 @@ void GeoRef::build_proximity_list(){
     poi_proximity_list.build();
 }
 
+static const Admin* find_city_admin(const std::vector<Admin*>& admins) {
+    for(Admin* admin : admins){
+        //Level 8: City
+        if (admin->level == 8) { return admin; }
+    }
+    return nullptr;
+}
+
 void GeoRef::build_autocomplete_list(){
-    int pos = 0;
+    int pos = -1;
     fl_way.clear();
-    for(Way* way : ways){
-        if (!way->name.empty()) {
-            std::string key="";
-            for(Admin* admin : way->admin_list){
-                //Level Admin 8  : City
-                if (admin->level == 8) {
-                    key+= " " + admin->name;
-                }
-                if ((!admin->post_code.empty()) && (admin->level == 8)) {
-                    key += " "+ admin->post_code;
-                }
-            }
-            fl_way.add_string(way->way_type +" "+ way->name + " " + key, pos, this->synonyms);
+    for (Way* way: ways) {
+        ++pos;
+        if (way->name.empty()) { continue; }
+        if (auto admin = find_city_admin(way->admin_list)) {
+            std::string key = way->way_type + " " + way->name + " " + admin->name;
+            if (!admin->post_code.empty()) { key += " " + admin->post_code; }
+            fl_way.add_string(key, pos, this->synonyms);
         }
-        pos++;
     }
     fl_way.build();
 
     fl_poi.clear();
     //Autocomplete poi list
     for(const POI* poi : pois){
-        if ((!poi->name.empty()) && (poi->visible)) {
-            std::string key="";
-            for(Admin* admin : poi->admin_list) {
-                //Level Admin 8  : City
-                if (admin->level == 8) {
-                    key += " " + admin->name;
-                }
-            }
-            fl_poi.add_string(poi->name + " " + key, poi->idx , this->synonyms);
+        if (poi->name.empty() || !poi->visible) { continue; }
+        std::string key = poi->name;
+        if (auto admin = find_city_admin(poi->admin_list)) {
+            key += " " + admin->name;
         }
+        fl_poi.add_string(key, poi->idx , this->synonyms);
     }
     fl_poi.build();
 
@@ -636,6 +633,41 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
     }
     if (res) { return *res; }
     throw proximitylist::NotFound();
+}
+
+std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& coord) const {
+    // first, we collect each ways with its distance to the coord
+    std::map<const Way*, double> way_dist;
+    for (const auto& pair_coord: pl.find_within(coord)) {
+        BOOST_FOREACH (edge_t e, boost::out_edges(pair_coord.first, graph)) {
+            const Way* w = ways[graph[e].way_idx];
+            if (w->name.empty()) { continue; }
+            if (way_dist.count(w) == 0) {
+                way_dist[w] = coord.distance_to(w->projected_centroid(graph));
+            }
+        }
+    }
+    if (way_dist.empty()) { throw proximitylist::NotFound(); }
+
+    // then, we search in each way the nearest number or way centroid
+    std::pair<int, const Way*> result = {0, way_dist.begin()->first};
+    float min_dist = way_dist.begin()->second;
+    for (const auto& w_d: way_dist) {
+        // way centroid
+        if (w_d.second < min_dist) {
+            result = {0, w_d.first};
+            min_dist = w_d.second;
+        }
+
+        // number
+        const auto &nb_dist = w_d.first->nearest_number(coord);
+        if (nb_dist.first <= 0) { continue; }
+        if (nb_dist.second <= min_dist) {
+            result = {nb_dist.first, w_d.first};
+            min_dist = nb_dist.second;
+        }
+    }
+    return result;
 }
 
 //get the minimum distance and the vertex to start from between 2 edges

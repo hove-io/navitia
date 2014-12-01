@@ -33,8 +33,15 @@ www.navitia.io
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
 #include "type/pt_data.h"
+#include "type/message.h"
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 namespace ng = navitia::georef;
+
+using navitia::type::new_disruption::Disruption;
+using navitia::type::new_disruption::Impact;
+using navitia::type::new_disruption::Tag;
 
 struct test_speed_provider {
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return test_default_speed; }
@@ -59,6 +66,7 @@ struct normal_speed_provider {
         return navitia::milliseconds(dist / get_default_speed()[mode] * 1000);
     }
 };
+
 
 template <typename speed_provider_trait>
 struct routing_api_data {
@@ -343,6 +351,12 @@ struct routing_api_data {
         poi_type->idx = 0;
         b.data->geo_ref->poitypes.push_back(poi_type);
 
+        navitia::georef::POIType* poi_type_parking = new navitia::georef::POIType();
+        poi_type_parking->uri = "poi_type:amenity:parking";
+        poi_type_parking->name = "parking";
+        poi_type_parking->idx = 1;
+        b.data->geo_ref->poitypes.push_back(poi_type_parking);
+
         navitia::georef::POI* poi_1 = new navitia::georef::POI();
         poi_1->uri = "station_1";
         poi_1->name = "first station";
@@ -355,33 +369,59 @@ struct routing_api_data {
         poi_2->coord = G;
         poi_2->poitype_idx = 0;
         poi_2->idx = 1;
+        navitia::georef::POI* poi_3 = new navitia::georef::POI();
+        poi_3->uri = "parking_1";
+        poi_3->name = "first parking";
+        poi_3->coord = D;
+        poi_3->poitype_idx = 1;
+        poi_3->idx = 2;
+        navitia::georef::POI* poi_4 = new navitia::georef::POI();
+        poi_4->uri = "parking_2";
+        poi_4->name = "second parking";
+        poi_4->coord = E;
+        poi_4->poitype_idx = 1;
+        poi_4->idx = 3;
+
         b.data->geo_ref->pois.push_back(poi_1);
         b.data->geo_ref->pois.push_back(poi_2);
+        b.data->geo_ref->pois.push_back(poi_3);
+        b.data->geo_ref->pois.push_back(poi_4);
 
+        b.generate_dummy_basis();
         b.sa("stopA", A.lon(), A.lat());
         b.sa("stopB", B.lon(), B.lat());
         //we add a very fast bus (2 seconds) to be faster than walking and biking
         b.vj("A")
             ("stop_point:stopB", 8*3600 + 1*60, 8*3600 + 1 * 60)
-            ("stop_point:stopA", 8*3600 + 1 * 60 + 2 ,8*3600 + 1*60 + 2)
+            ("stop_point:stopA", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
             .st_shape({B, I, A});
-        b.generate_dummy_basis();
+
+        //add another bus, much later. we'll use that one for disruptions
+        b.vj("B")
+            ("stop_point:stopB", 18*3600 + 1*60, 18*3600 + 1 * 60)
+            ("stop_point:stopA", 18*3600 + 1 * 60 + 2, 18*3600 + 1*60 + 2)
+            .st_shape({B, I, A});
+
+        b.vj("C")
+            ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
+            ("stop_point:stopB", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
+            .st_shape({A, I, B});
+        b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();
-        b.data->build_uri();
         b.data->build_proximity_list();
-        b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+        b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 7_days);
         b.data->compute_labels();
 
         //add bike sharing edges
-        b.data->geo_ref->default_time_bss_pickup = navitia::seconds(30);
-        b.data->geo_ref->default_time_bss_putback = navitia::seconds(45);
+        b.data->geo_ref->default_time_bss_pickup = 30_s;
+        b.data->geo_ref->default_time_bss_putback = 45_s;
         b.data->geo_ref->add_bss_edges(B);
         b.data->geo_ref->add_bss_edges(G);
 
         // add parkings
-        b.data->geo_ref->default_time_parking_park = navitia::seconds(1);
-        b.data->geo_ref->default_time_parking_leave = navitia::seconds(2);
+        b.data->geo_ref->default_time_parking_park = 1_s;
+        b.data->geo_ref->default_time_parking_leave = 2_s;
         b.data->geo_ref->add_parking_edges(D);
         b.data->geo_ref->add_parking_edges(E);
 
@@ -405,6 +445,8 @@ struct routing_api_data {
                   << ", " << R.lon() + 1e-3 << " " << S.lat() - 1e-3
                   << ", " << S.lon() - 1e-3 << " " << S.lat() - 1e-3 << "))";
         b.data->meta->shape = ss.str();
+
+        add_disruptions();
     }
 
     navitia::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
@@ -428,6 +470,57 @@ struct routing_api_data {
 
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return speed_trait.get_default_speed(); }
 
+
+    void add_disruptions() {
+        nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
+        auto now = boost::posix_time::microsec_clock::universal_time() - boost::posix_time::hours(10);
+        {
+            //we create one disruption on stop A
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_on_stop_A";
+            //Note: the take the current time because because we only get the current disruptions in the pt object api and we want those
+            disruption->publication_period = boost::posix_time::time_period(now, boost::posix_time::hours(1000));
+            auto tag = boost::make_shared<Tag>();
+            tag->uri = "tag";
+            tag->name = "tag name";
+            disruption->tags.push_back(tag);
+
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad";
+            impact->application_periods = {boost::posix_time::time_period(now, boost::posix_time::hours(1000))};
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "stopA", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"no luck", now, now});
+            impact->messages.push_back({"try again", now, now});
+
+            disruption->add_impact(impact);
+
+            holder.disruptions.push_back(std::move(disruption));
+        }
+
+        {
+            //we create one disruption on line A
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_on_line_A";
+            disruption->publication_period = boost::posix_time::time_period(now, boost::posix_time::hours(1000));
+
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "too_bad_again";
+            impact->application_periods = {boost::posix_time::time_period(now, boost::posix_time::hours(1000))};
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
+            //add another pt impacted object just to test with several
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"sad message", now, now});
+            impact->messages.push_back({"to sad message", now, now});
+
+            disruption->add_impact(impact);
+
+            holder.disruptions.push_back(std::move(disruption));
+        }
+    }
 
     int AA = 0;
     int GG = 1;

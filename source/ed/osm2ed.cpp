@@ -428,16 +428,16 @@ void OSMCache::build_way_map() {
             if (!node->is_defined()) {
                 continue;
             }
-            max_lon = max_lon == max_double ? node->lon() :
+            max_lon = max_lon >= max_double ? node->lon() :
                                              std::max(max_lon, node->lon());
-            max_lat = max_lat == max_double ? node->lat() :
+            max_lat = max_lat >= max_double ? node->lat() :
                                              std::max(max_lat, node->lat());
             min_lon = std::min(min_lon, node->lon());
             min_lat = std::min(min_lat, node->lat());
         }
         bg::simplify(way_it->ls, way_it->ls, 0.5);
-        if (max_lon == max_double || max_lat == max_double || min_lat == max_double
-            || min_lon == max_double) {
+        if (max_lon >= max_double || max_lat >= max_double || min_lat >= max_double
+            || min_lon >= max_double) {
             continue;
         }
         Rect r(min_lon, min_lat, max_lon, max_lat);
@@ -445,7 +445,7 @@ void OSMCache::build_way_map() {
     }
 }
 
-const OSMWay* get_way(const OSMWay* w) {
+static const OSMWay* get_way(const OSMWay* w) {
     while (w != nullptr && w->way_ref != nullptr && w->way_ref->osm_id != w->osm_id) {
         w = w->way_ref;
     }

@@ -214,8 +214,8 @@ class ReleaseManager:
 
         self.repo.create_tag(get_tag_name(self.version), message=tag_message)
 
-        #and we merge back the temporary branch to dev
-        self.git.merge(temp_branch, "dev", '--no-ff')
+        #and we merge back the release branch to dev (at least for the tag in release)
+        self.git.merge("release", "dev", '--no-ff')
 
         print "publishing the release"
 

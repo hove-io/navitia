@@ -200,16 +200,18 @@ class additional_informations_vj(fields.Raw):
     def output(self, key, obj):
         addinfo = obj.add_info_vehicle_journey
         result = []
-        if (addinfo.has_date_time_estimated):
+        if addinfo.has_date_time_estimated:
             result.append("has_date_time_estimated")
 
-        if (addinfo.stay_in):
+        if addinfo.stay_in:
             result.append('stay_in')
 
         descriptor = addinfo.DESCRIPTOR
         enum_t = descriptor.fields_by_name['vehicle_journey_type'].enum_type
         values = enum_t.values_by_name
         vj_type = addinfo.vehicle_journey_type
+        if not vj_type:
+            return result
         if vj_type == values['virtual_with_stop_time'].number:
             result.append("odt_with_stop_time")
         else:
@@ -230,6 +232,14 @@ class equipments(fields.Raw):
         enum = descriptor.enum_types_by_name["Equipment"]
         return [str.lower(enum.values_by_number[v].name) for v
                 in equipments.has_equipments]
+
+
+class disruption_status(fields.Raw):
+    def output(self, key, obj):
+        status = obj.status
+        enum = type_pb2._ACTIVESTATUS
+        return str.lower(enum.values_by_number[status].name)
+
 
 class notes(fields.Raw):
 
@@ -336,6 +346,11 @@ code = {
     "value": fields.String()
 }
 
+"""
+Note: the 'generic_messages' are the old 'disruptions'
+
+ For the moment we output both object, but we want to remove the generic_message as soon as possible
+"""
 generic_message = {
     "level": enum_type(attribute="message_status"),
     "value": fields.String(attribute="message"),
@@ -345,6 +360,28 @@ generic_message = {
     "end_application_daily_hour": fields.String(),
 }
 
+period = {
+    "begin": DateTime(),
+    "end": DateTime(),
+}
+
+disruption_message = {
+    "text": fields.String(),
+    "content_type": fields.String(),
+}
+disruption = {
+    "uri": fields.String(),
+    "impact_uri": fields.String(),
+    "title": fields.String(),
+    "application_periods": NonNullList(NonNullNested(period)),
+    "status": disruption_status,
+    "updated_at": DateTime(),
+    "tags": NonNullList(fields.String()),
+    "cause": fields.String(),
+    "messages": NonNullList(NonNullNested(disruption_message)),
+}
+
+
 display_informations_route = {
     "network": fields.String(attribute="network"),
     "direction": fields.String(attribute="direction"),
@@ -352,7 +389,8 @@ display_informations_route = {
     "label": get_label(attribute="display_information"),
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
-    "messages": NonNullList(NonNullNested(generic_message))
+    "messages": NonNullList(NonNullNested(generic_message)),
+    "disruptions": NonNullList(NonNullNested(disruption))
 }
 
 display_informations_vj = {
@@ -365,8 +403,9 @@ display_informations_vj = {
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
     "equipments": equipments(attribute="has_equipments"),
-    "headsign" : fields.String(attribute="headsign"),
-    "messages": NonNullList(NonNullNested(generic_message))
+    "headsign": fields.String(attribute="headsign"),
+    "messages": NonNullList(NonNullNested(generic_message)),
+    "disruptions": NonNullList(NonNullNested(disruption))
 }
 
 coord = {
@@ -392,11 +431,13 @@ generic_type_admin["administrative_regions"] = admins
 
 stop_point = deepcopy(generic_type_admin)
 stop_point["messages"] = NonNullList(NonNullNested(generic_message))
+stop_point["disruptions"] = NonNullList(NonNullNested(disruption))
 stop_point["comment"] = fields.String()
 stop_point["codes"] = NonNullList(NonNullNested(code))
 stop_point["label"] = fields.String()
 stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
+stop_area["disruptions"] = NonNullList(NonNullNested(disruption))
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
 stop_area["timezone"] = fields.String()
@@ -419,6 +460,7 @@ vehicle_journey = {
     "id": fields.String(attribute="uri"),
     "name": fields.String(),
     "messages": NonNullList(NonNullNested(generic_message)),
+    "disruptions": NonNullList(NonNullNested(disruption)),
     "journey_pattern": PbField(journey_pattern),
     "stop_times": NonNullList(NonNullNested(stop_time)),
     "comment": fields.String(),
@@ -428,6 +470,7 @@ vehicle_journey = {
 
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
+line["disruptions"] = NonNullList(NonNullNested(disruption))
 line["code"] = fields.String()
 line["color"] = fields.String()
 line["comment"] = fields.String()
@@ -436,6 +479,7 @@ line["geojson"] = MultiLineString(attribute="geojson")
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))
+route["disruptions"] = NonNullList(NonNullNested(disruption))
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
@@ -446,6 +490,7 @@ journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
 network["messages"] = NonNullList(NonNullNested(generic_message))
+network["disruptions"] = NonNullList(NonNullNested(disruption))
 network["lines"] = NonNullList(NonNullNested(line))
 network["codes"] = NonNullList(NonNullNested(code))
 line["network"] = PbField(network)
@@ -556,16 +601,39 @@ class UrisToLinks():
             response.append({"type": "note", "id": uris.note})
         return response
 
+
 instance_status = {
-        "data_version": fields.Integer(),
-        "end_production_date": fields.String(),
-        "is_connected_to_rabbitmq": fields.Boolean(),
-        "last_load_at": fields.String(),
-        "last_load_status": fields.Boolean(),
-        "kraken_version": fields.String(attribute="navitia_version"),
-        "nb_threads": fields.Integer(),
-        "publication_date": fields.String(),
-        "start_production_date": fields.String(),
-        "status": fields.String()
-    }
+    "data_version": fields.Integer(),
+    "end_production_date": fields.String(),
+    "is_connected_to_rabbitmq": fields.Boolean(),
+    "last_load_at": fields.String(),
+    "last_rt_data_loaded": fields.String(),
+    "last_load_status": fields.Boolean(),
+    "kraken_version": fields.String(attribute="navitia_version"),
+    "nb_threads": fields.Integer(),
+    "publication_date": fields.String(),
+    "start_production_date": fields.String(),
+    "status": fields.String(),
+}
+
+instance_parameters = {
+    'scenario': fields.Raw(attribute='_scenario_name'),
+    'journey_order': fields.Raw,
+    'max_walking_duration_to_pt': fields.Raw,
+    'max_bike_duration_to_pt': fields.Raw,
+    'max_bss_duration_to_pt': fields.Raw,
+    'max_car_duration_to_pt': fields.Raw,
+    'max_nb_transfers': fields.Raw,
+    'walking_speed': fields.Raw,
+    'bike_speed': fields.Raw,
+    'bss_speed': fields.Raw,
+    'car_speed': fields.Raw,
+    'destineo_min_bike': fields.Raw,
+    'destineo_min_car': fields.Raw,
+    'destineo_min_tc_with_bike': fields.Raw,
+    'destineo_min_tc_with_car': fields.Raw,
+}
+
+instance_status_with_parameters = deepcopy(instance_status)
+instance_status_with_parameters['parameters'] = fields.Nested(instance_parameters, allow_null=True)
 

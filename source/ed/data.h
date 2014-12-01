@@ -53,6 +53,27 @@ void normalize_uri(std::vector<T*>& vec){
 
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2);
 
+// Returns a LineString begining by "from" and finishing by "to",
+// following the given shape.
+//
+// First, we find the nearest segment or point (in the form of a
+// segment with the 2 points equals) to from and to.  If these 2
+// objects are the same, {from, to} is returned.
+//
+// Then, the smallest path in term of number of points
+// between:
+//  - from -> nearest(from).first ---> nearest(to).first -> to
+//  - from -> nearest(from).first ---> nearest(to).second -> to
+//  - from -> nearest(from).second ---> nearest(to).first -> to
+//  - from -> nearest(from).second ---> nearest(to).second -> to
+// is returned, ---> being the path between 2 points in the given
+// shape.
+nt::LineString
+create_shape(const nt::GeographicalCoord& from,
+             const nt::GeographicalCoord& to,
+             const nt::LineString& shape);
+
+
 /** Structure de donnée temporaire destinée à être remplie par un connecteur
       *
       * Les vecteurs contiennent des pointeurs vers un objet TC.
@@ -92,10 +113,10 @@ public:
         sort_vehicle_journey_list(const navitia::type::PT_Data & data) : data(data){}
         bool operator ()(const nt::VehicleJourney* vj1, const nt::VehicleJourney* vj2) const {
             if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
-                unsigned int dt1 = vj1->stop_time_list.front()->departure_time;
-                unsigned int dt2 = vj2->stop_time_list.front()->departure_time;
-                unsigned int at1 = vj1->stop_time_list.back()->arrival_time;
-                unsigned int at2 = vj2->stop_time_list.back()->arrival_time;
+                unsigned int dt1 = vj1->stop_time_list.front().departure_time;
+                unsigned int dt2 = vj2->stop_time_list.front().departure_time;
+                unsigned int at1 = vj1->stop_time_list.back().arrival_time;
+                unsigned int at2 = vj2->stop_time_list.back().arrival_time;
                 if(dt1 != dt2)
                     return dt1 < dt2;
                 else

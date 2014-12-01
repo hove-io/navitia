@@ -2,8 +2,8 @@
 
 namespace navitia { namespace routing {
 struct raptor_visitor {
-    inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime* st) const {
-        return a <= st->section_end_date(DateTimeUtils::date(current_dt), clockwise());
+    inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime& st) const {
+        return a <= st.section_end_date(DateTimeUtils::date(current_dt), clockwise());
     }
 
     inline
@@ -13,10 +13,10 @@ struct raptor_visitor {
                               journey_pattern->journey_pattern_point_list.end());
     }
 
-    typedef std::vector<type::StopTime*>::const_iterator stop_time_iterator;
-    inline stop_time_iterator first_stoptime(const type::StopTime* st) const {
-        const type::JourneyPatternPoint* jpp = st->journey_pattern_point;
-        const type::VehicleJourney* vj = st->vehicle_journey;
+    typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
+    inline stop_time_iterator first_stoptime(const type::StopTime& st) const {
+        const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
+        const type::VehicleJourney* vj = st.vehicle_journey;
         return vj->stop_time_list.begin() + jpp->order;
     }
 
@@ -43,7 +43,7 @@ struct raptor_visitor {
     }
 
     inline
-    std::pair<std::vector<type::StopTime*>::const_iterator, std::vector<type::StopTime*>::const_iterator>
+    std::pair<std::vector<type::StopTime>::const_iterator, std::vector<type::StopTime>::const_iterator>
     stop_time_list(const type::VehicleJourney* vj) const {
         return std::make_pair(vj->stop_time_list.begin(), vj->stop_time_list.end());
     }
@@ -55,8 +55,8 @@ struct raptor_visitor {
 
 
 struct raptor_reverse_visitor {
-    inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime* st) const {
-        return a >= st->section_end_date(DateTimeUtils::date(current_dt), clockwise());
+    inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime& st) const {
+        return a >= st.section_end_date(DateTimeUtils::date(current_dt), clockwise());
     }
 
     inline
@@ -68,10 +68,10 @@ struct raptor_reverse_visitor {
         return std::make_pair(begin, end);
     }
 
-    typedef std::vector<type::StopTime*>::const_reverse_iterator stop_time_iterator;
-    inline stop_time_iterator first_stoptime(const type::StopTime* st) const {
-        const type::JourneyPatternPoint* jpp = st->journey_pattern_point;
-        const type::VehicleJourney* vj = st->vehicle_journey;
+    typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
+    inline stop_time_iterator first_stoptime(const type::StopTime& st) const {
+        const type::JourneyPatternPoint* jpp = st.journey_pattern_point;
+        const type::VehicleJourney* vj = st.vehicle_journey;
         return vj->stop_time_list.rbegin() + vj->stop_time_list.size() - jpp->order - 1;
     }
 
@@ -98,7 +98,7 @@ struct raptor_reverse_visitor {
     }
 
     inline
-    std::pair<std::vector<type::StopTime*>::const_reverse_iterator, std::vector<type::StopTime*>::const_reverse_iterator>
+    std::pair<std::vector<type::StopTime>::const_reverse_iterator, std::vector<type::StopTime>::const_reverse_iterator>
     stop_time_list(const type::VehicleJourney* vj) const {
         return std::make_pair(vj->stop_time_list.rbegin(), vj->stop_time_list.rend());
     }

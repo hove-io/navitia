@@ -82,8 +82,8 @@ void dataRAPTOR::load(const type::PT_Data &data)
     
     arrival_times.clear();
     departure_times.clear();
-    st_idx_forward.clear(); // Nom a changer ce ne sont plus des idx mais des pointeurs
-    st_idx_backward.clear(); //
+    st_forward.clear();
+    st_backward.clear();
     first_stop_time.clear();
 
     for(int i=0; i<=365; ++i) {
@@ -100,13 +100,13 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
         // On regroupe ensemble tous les horaires de tous les journey_pattern_point
         for(unsigned int i=0; i < journey_pattern->journey_pattern_point_list.size(); ++i) {
-            std::vector<type::StopTime*> vec_st;
+            std::vector<const type::StopTime*> vec_st;
             for(const type::VehicleJourney* vj : journey_pattern->vehicle_journey_list) {
-                assert(vj->stop_time_list[i]->journey_pattern_point == journey_pattern->journey_pattern_point_list[i]);
-                vec_st.push_back(vj->stop_time_list[i]);
+                assert(vj->stop_time_list[i].journey_pattern_point == journey_pattern->journey_pattern_point_list[i]);
+                vec_st.push_back(&vj->stop_time_list[i]);
             }
             std::sort(vec_st.begin(), vec_st.end(),
-                      [&](type::StopTime* st1, type::StopTime* st2)->bool{
+                      [&](const type::StopTime* st1, const type::StopTime* st2)->bool{
                         uint32_t time1, time2;
                         if(!st1->is_frequency())
                             time1 = DateTimeUtils::hour(st1->departure_time);
@@ -117,16 +117,16 @@ void dataRAPTOR::load(const type::PT_Data &data)
                         else
                             time2 = DateTimeUtils::hour(st2->end_time(true));
                         if(time1 == time2) {
-                            auto st1_first = st1->vehicle_journey->stop_time_list.front();
-                            auto st2_first = st2->vehicle_journey->stop_time_list.front();
-                            if(st1_first->departure_time == st2_first->departure_time) {
-                                return st1_first->vehicle_journey->idx < st2_first->vehicle_journey->idx;
+                            const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
+                            const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
+                            if(st1_first.departure_time == st2_first.departure_time) {
+                                return st1_first.vehicle_journey->idx < st2_first.vehicle_journey->idx;
                             }
-                            return st1_first->departure_time < st2_first->departure_time;
+                            return st1_first.departure_time < st2_first.departure_time;
                         }
                         return time1 < time2;});
 
-            st_idx_forward.insert(st_idx_forward.end(), vec_st.begin(), vec_st.end());
+            st_forward.insert(st_forward.end(), vec_st.begin(), vec_st.end());
 
             for(auto st : vec_st) {
                 uint32_t time;
@@ -138,7 +138,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
             }
 
             std::sort(vec_st.begin(), vec_st.end(),
-                  [&](type::StopTime* st1, type::StopTime* st2)->bool{
+                  [&](const type::StopTime* st1, const type::StopTime* st2)->bool{
                       uint32_t time1, time2;
                       if(!st1->is_frequency())
                           time1 = DateTimeUtils::hour(st1->arrival_time);
@@ -149,16 +149,16 @@ void dataRAPTOR::load(const type::PT_Data &data)
                       else
                           time2 = DateTimeUtils::hour(st2->start_time(false));
                       if(time1 == time2) {
-                          auto st1_first = st1->vehicle_journey->stop_time_list.front();
-                          auto st2_first = st2->vehicle_journey->stop_time_list.front();
-                          if(st1_first->arrival_time == st2_first->arrival_time) {
-                              return st1_first->vehicle_journey->idx > st2_first->vehicle_journey->idx;
+                          const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
+                          const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
+                          if(st1_first.arrival_time == st2_first.arrival_time) {
+                              return st1_first.vehicle_journey->idx > st2_first.vehicle_journey->idx;
                           }
-                          return st1_first->arrival_time > st2_first->arrival_time;
+                          return st1_first.arrival_time > st2_first.arrival_time;
                       }
                       return time1 > time2;});
 
-            st_idx_backward.insert(st_idx_backward.end(), vec_st.begin(), vec_st.end());
+            st_backward.insert(st_backward.end(), vec_st.begin(), vec_st.end());
             for(auto st : vec_st) {
                 uint32_t time;
                 if(!st->is_frequency())

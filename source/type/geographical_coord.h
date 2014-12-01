@@ -120,7 +120,7 @@ private:
 
 std::ostream& operator<<(std::ostream&, const GeographicalCoord&);
 
-/** Deux points sont considérés comme étant égaux s'ils sont à moins de 0.1m */
+/** 2 points are considered equals if a.distance_to(b) < 0.1m */
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 // Used to modelize the shapes of the different objects

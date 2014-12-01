@@ -32,9 +32,11 @@ www.navitia.io
 #include <string>
 #include <map>
 #include "type/message.h"
+#include "ed/at_perturbation.h"
 
 namespace navitia{namespace type{
     class Data;
+    struct PT_Data;
 }}
 
 namespace ed{ namespace connectors{
@@ -46,13 +48,12 @@ struct RealtimeLoaderConfig{
     RealtimeLoaderConfig(const std::string& connectionstring, const uint32_t shiftdays) : connection_string(connectionstring), shift_days(shiftdays){}
 };
 
-std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
+void load_disruptions(
+        navitia::type::PT_Data& pt_data,
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time);
 
-void apply_messages(navitia::type::Data& data);
-
-std::vector<navitia::type::AtPerturbation> load_at_perturbations(
+std::vector<ed::AtPerturbation> load_at_perturbations(
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time);
 

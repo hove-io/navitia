@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #include "type/message.h"
-
+#include "type/pt_data.h"
 #include "utils/logger.h"
 
 #include <boost/format.hpp>
@@ -38,77 +38,63 @@ namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
 
-namespace navitia { namespace type {
+namespace navitia { namespace type { namespace new_disruption {
 
-bool Message::is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period) const{
-    if(now.is_not_a_date_time() && action_period.is_null()){
+bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
+
+    if(publication_date.is_not_a_date_time() && active_period.is_null()){
         return false;
     }
 
-    bool to_return = is_publishable(now);
-
-    if(!action_period.is_null()){
-        to_return = to_return && is_applicable(action_period);
-    }
-    return to_return;
-}
-
-bool Message::is_publishable(const boost::posix_time::ptime& time) const{
-    return publication_period.contains(time);
-}
-
-bool AtPerturbation::is_applicable(const boost::posix_time::time_period& period) const{
-    bool days_intersects = false;
-
-    //intersection de la period ou se déroule l'action et de la periode de validité de la perturbation
-    pt::time_period common_period = period.intersection(application_period);
-
-    //si la periode commune est null, l'impact n'est pas valide
-    if(common_period.is_null()){
+    // we check if we want to publish the impact
+    if (! disruption->publication_period.contains(publication_date)) {
         return false;
     }
 
-    //on doit travailler jour par jour
-    //
-    bg::date current_date = common_period.begin().date();
-
-    while(!days_intersects && current_date <= common_period.end().date()){
-        //on test uniquement le debut de la period, si la fin est valide, elle sera testé à la prochaine itération
-        days_intersects = valid_day_of_week(current_date);
-
-        //vérification des plages horaires journaliéres
-        pt::time_period current_period = common_period.intersection(pt::time_period(pt::ptime(current_date, pt::seconds(0)), pt::hours(24)));
-        days_intersects = days_intersects && valid_hour_perturbation(current_period);
-
-        current_date += bg::days(1);
+    //if we have a active_period, we check if the impact applies on this period
+    if (active_period.is_null()) {
+        return true;
     }
 
-
-    return days_intersects;
-
-}
-
-bool AtPerturbation::valid_hour_perturbation(const pt::time_period& period) const{
-    pt::time_period daily_period(pt::ptime(period.begin().date(), application_daily_start_hour),
-            pt::ptime(period.begin().date(), application_daily_end_hour));
-
-    return period.intersects(daily_period);
-
-}
-
-bool AtPerturbation::valid_day_of_week(const bg::date& date) const{
-
-    switch(date.day_of_week()){
-        case bg::Monday: return this->active_days[0];
-        case bg::Tuesday: return this->active_days[1];
-        case bg::Wednesday: return this->active_days[2];
-        case bg::Thursday: return this->active_days[3];
-        case bg::Friday: return this->active_days[4];
-        case bg::Saturday: return this->active_days[5];
-        case bg::Sunday: return this->active_days[6];
+    for (const auto& period: application_periods) {
+        if (! period.intersection(active_period).is_null()) {
+            return true;
+        }
     }
-    return false; // Ne devrait pas arriver
+    return false;
 }
 
+void Disruption::add_impact(const boost::shared_ptr<Impact>& impact){
+    impact->disruption = this;
+    impacts.push_back(impact);
+}
 
-}}//namespace
+namespace {
+template<typename T>
+PtObj transform_pt_object(const std::string& uri,
+                          const std::unordered_map<std::string, T*>& map,
+                          const boost::shared_ptr<Impact>& impact) {
+    if (auto o = find_or_default(uri, map)) {
+        if (impact) o->add_impact(impact);
+        return o;
+    } else {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Impossible to find pt object " << uri);
+        return UnknownPtObj();
+    }
+}
+}
+
+PtObj make_pt_obj(Type_e type,
+                  const std::string& uri,
+                  const PT_Data& pt_data,
+                  const boost::shared_ptr<Impact>& impact) {
+    switch (type) {
+    case Type_e::Network: return transform_pt_object(uri, pt_data.networks_map, impact);
+    case Type_e::StopArea: return transform_pt_object(uri, pt_data.stop_areas_map, impact);
+    case Type_e::Line: return transform_pt_object(uri, pt_data.lines_map, impact);
+    case Type_e::Route: return transform_pt_object(uri, pt_data.routes_map, impact);
+    default: return UnknownPtObj();
+    }
+}
+
+}}}//namespace

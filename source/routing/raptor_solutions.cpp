@@ -78,13 +78,38 @@ get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> >
     return result;
 }
 
+DateTime combine_dt_walking_time(bool clockwise, const DateTime & current, int walking_duration) {
+    return clockwise ? current - walking_duration : current + walking_duration;
+}
+
 // Does the current date improves compared to best_so_far – we must not forget to take the walking duration
 bool improves(const DateTime & best_so_far, bool clockwise, const DateTime & current, int walking_duration) {
-    if(clockwise) {
-        return (current - walking_duration) > best_so_far;
-    } else {
-        return (current + walking_duration) < best_so_far;
-    }
+    const auto dt = combine_dt_walking_time(clockwise, current, walking_duration);
+    return clockwise ? dt > best_so_far : dt < best_so_far;
+}
+
+bool is_equal(const DateTime & best_so_far, bool clockwise, const DateTime & current, int walking_duration) {
+    const auto dt = combine_dt_walking_time(clockwise, current, walking_duration);
+    return dt == best_so_far;
+}
+
+size_t nb_jpp_of_path(int count, type::idx_t jpp_idx, bool clockwise, bool disruption_active,
+                      const type::AccessibiliteParams & accessibilite_params, const RAPTOR& raptor) {
+    struct VisitorNbJPP : public BasePathVisitor {
+        size_t nb_jpp = 0;
+        void loop_vj(const type::StopTime*, boost::posix_time::ptime, boost::posix_time::ptime) {
+            ++nb_jpp;
+        }
+
+        void change_vj(const type::StopTime*, const type::StopTime*,
+                       boost::posix_time::ptime ,boost::posix_time::ptime,
+                       bool) {
+            ++nb_jpp;
+        }
+    };
+    VisitorNbJPP v;
+    read_path(v, jpp_idx, count, !clockwise, disruption_active, accessibilite_params, raptor);
+    return v.nb_jpp;
 }
 
 Solutions
@@ -105,30 +130,44 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
         // For every round with look for the best journey pattern point that belongs to one of the destination stop points
         // We must not forget to walking duration
         type::idx_t best_jpp = type::invalid_idx;
+        size_t best_nb_jpp_of_path = std::numeric_limits<size_t>::max();
         for(auto spid_dist : destinations) {
             for(auto journey_pattern_point : raptor.data.pt_data->stop_points[spid_dist.first]->journey_pattern_point_list) {
                 type::idx_t jppidx = journey_pattern_point->idx;
                 auto& l = raptor.labels[round][jppidx];
-                if(l.pt_is_initialized() &&
-                   improves(best_dt, clockwise, l.dt_pt, spid_dist.second.total_seconds()) ) {
-                    best_jpp = jppidx;
-                    best_dt_jpp = l.dt_pt;
-                    // Dans le sens horaire : lors du calcul on gardé que l’heure de départ, mais on veut l’arrivée
-                    // Il faut donc retrouver le stop_time qui nous intéresse avec best_stop_time
-                    const type::StopTime* st;
-                    DateTime dt = 0;
+                if (!l.pt_is_initialized()) {
+                    continue;
+                }
+                size_t nb_jpp = nb_jpp_of_path(round, jppidx, clockwise, disruption_active,
+                                               accessibilite_params, raptor);
+                if(!improves(best_dt, clockwise, l.dt_pt, spid_dist.second.total_seconds())) {
+                    if (!is_equal(best_dt, clockwise, l.dt_pt, spid_dist.second.total_seconds()) ||
+                             best_nb_jpp_of_path <= nb_jpp) {
+                        continue;
+                    }
+                }
+                best_jpp = jppidx;
+                best_dt_jpp = l.dt_pt;
+                best_nb_jpp_of_path = nb_jpp;
+                // When computing with clockwise, in the second pass we store deparutre time
+                // in labels, but we want arrival time, so we need to retrive the good stop_time
+                // with best_stop_time
+                const type::StopTime* st = nullptr;
+                DateTime dt = 0;
 
-                    std::tie(st, dt) = best_stop_time(journey_pattern_point, l.dt_pt, accessibilite_params.vehicle_properties,
-                                                      !clockwise, disruption_active, raptor.data, true);
-                    BOOST_ASSERT(st);
-                    if(st != nullptr) {
-                        if(clockwise) {
-                            auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(DateTimeUtils::hour(dt));
-                            DateTimeUtils::update(best_dt_jpp, arrival_time, false);
-                        } else {
-                            auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(DateTimeUtils::hour(dt));
-                            DateTimeUtils::update(best_dt_jpp, departure_time, true);
-                        }
+                std::tie(st, dt) = get_current_stidx_gap(round, jppidx, raptor.labels, accessibilite_params,
+                                                                      !clockwise, raptor.data, disruption_active);
+                if(st != nullptr) {
+                    if(clockwise) {
+                        auto arrival_time = !st->is_frequency() ? 
+                                st->arrival_time :
+                                st->f_arrival_time(DateTimeUtils::hour(dt));
+                        DateTimeUtils::update(best_dt_jpp, arrival_time, false);
+                    } else {
+                        auto departure_time = !st->is_frequency() ?
+                            st->departure_time :
+                            st->f_departure_time(DateTimeUtils::hour(dt));
+                        DateTimeUtils::update(best_dt_jpp, departure_time, true);
                     }
                     if(clockwise)
                         best_dt = l.dt_pt - spid_dist.second.total_seconds();

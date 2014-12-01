@@ -21,8 +21,8 @@ target_link_libraries(best_stoptime_test ed connectors data fare types routing
 ADD_BOOST_TEST(best_stoptime_test)
 
 add_executable(raptor_adapted_test raptor_adapted_test.cpp)
-target_link_libraries(raptor_adapted_test ed data types routing fare pb_lib thermometer georef
-    autocomplete utils ${BOOST_LIBS} log4cplus pthread protobuf)
+target_link_libraries(raptor_adapted_test adapted ed data types routing fare pb_lib thermometer georef
+    autocomplete utils ${BOOST_LIBS} log4cplus pthread protobuf SimpleAmqpClient)
 ADD_BOOST_TEST(raptor_adapted_test)
 
 add_executable(raptor_odt_test raptor_odt_test.cpp)

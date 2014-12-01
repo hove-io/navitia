@@ -519,6 +519,40 @@ def is_valid_journey(journey, tester, query):
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
 
 
+def can_have_disruptions(pt_obj):
+    if "disruptions" not in pt_obj:
+        #disruptions are not mandatory
+        return
+
+    disruptions = get_not_null(pt_obj, "disruptions")
+    for d in disruptions:
+        get_not_null(d, 'uri')
+        get_not_null(d, 'impact_uri')
+        get_valid_datetime(get_not_null(d, 'updated_at'))
+
+        status = get_not_null(d, 'status')
+        assert status in ['past', 'active', 'future']
+
+        periods = get_not_null(d, 'application_periods')
+        for p in periods:
+            b = get_valid_datetime(get_not_null(p, 'begin'))
+            e = get_valid_datetime(get_not_null(p, 'end'))
+
+            assert b <= e
+
+    # messages are the old school disruptions, will be refactored asap
+    msgs = get_not_null(pt_obj, "messages")
+    for m in msgs:
+        get_valid_time(get_not_null(m, 'end_application_daily_hour'))
+        get_valid_time(get_not_null(m, 'start_application_daily_hour'))
+
+        get_valid_datetime(get_not_null(m, 'start_application_date'))
+        get_valid_datetime(get_not_null(m, 'end_application_date'))
+        get_not_null(m, 'value')
+
+    eq_(len(disruptions), len(msgs))
+
+
 def is_valid_section(section, query):
     arrival = get_valid_datetime(section['arrival_date_time'])
     departure = get_valid_datetime(section['departure_date_time'])
@@ -571,15 +605,20 @@ def is_valid_stop_area(stop_area, depth_check=1):
     is_valid_label(get_not_null(stop_area, "label"))
     is_valid_coord(coord)
 
+    can_have_disruptions(stop_area)
+
 
 def is_valid_stop_point(stop_point, depth_check=1):
     """
     check the structure of a stop point
     """
+
     get_not_null(stop_point, "name")
     is_valid_label(get_not_null(stop_point, "label"))
     coord = get_not_null(stop_point, "coord")
     is_valid_coord(coord)
+
+    can_have_disruptions(stop_point)
 
     if depth_check > 0:
         is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
@@ -597,6 +636,8 @@ def is_valid_route(route, depth_check=1):
     assert get_not_null(direction, "embedded_type") == "stop_point"
     is_valid_stop_point(get_not_null(direction, "stop_point"), depth_check - 1)
 
+    can_have_disruptions(route)
+
     if depth_check > 0:
         is_valid_line(get_not_null(route, "line"), depth_check - 1)
     else:
@@ -610,6 +651,8 @@ def is_valid_route(route, depth_check=1):
 def is_valid_line(line, depth_check=1):
     get_not_null(line, "name")
     get_not_null(line, "id")
+
+    can_have_disruptions(line)
 
     if depth_check > 0:
         is_valid_network(get_not_null(line, 'network'), depth_check - 1)
@@ -682,12 +725,16 @@ def is_valid_network(network, depth_check=1):
     get_not_null(network, "id")
     get_not_null(network, "name")
 
+    can_have_disruptions(network)
+
 
 def is_valid_vehicle_journey(vj, depth_check=1):
     if depth_check < 0:
         return
     get_not_null(vj, "id")
     get_not_null(vj, "name")
+
+    can_have_disruptions(vj)
 
     if depth_check > 0:
         is_valid_journey_pattern(get_not_null(vj, 'journey_pattern'), depth_check=depth_check-1)

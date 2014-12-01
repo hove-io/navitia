@@ -30,15 +30,17 @@
 from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from fields import instance_status
+from fields import instance_status_with_parameters
 
 status = {
-    "status": fields.Nested(instance_status)
+    "status": fields.Nested(instance_status_with_parameters)
 }
 
 
 class Status(Resource):
     @marshal_with(status)
     def get(self, region):
-        response = i_manager.dispatch([], "status", instance_name=region)
-        return protobuf_to_dict(response, use_enum_labels=True), 200
+        response = protobuf_to_dict(i_manager.dispatch([], "status", instance_name=region), use_enum_labels=True)
+        instance = i_manager.instances[region]
+        response['status']['parameters'] = instance
+        return response, 200

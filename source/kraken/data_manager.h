@@ -29,25 +29,39 @@ www.navitia.io
 */
 
 #pragma once
-#include <memory>
-#include <iostream>
 
+#include "utils/timer.h"
+#include "utils/exception.h"
 #ifndef NO_FORCE_MEMORY_RELEASE
 //by default we force the release of the memory after the reload of the data
 #include "gperftools/malloc_extension.h"
 #endif
 
-#include "utils/timer.h"
+#include <memory>
+#include <iostream>
+#include <boost/make_shared.hpp>
+#include <boost/optional.hpp>
 
 template<typename Data>
 class DataManager{
-    std::shared_ptr<const Data> current_data;
+    boost::shared_ptr<const Data> current_data;
 public:
 
-    DataManager() : current_data(std::make_shared<const Data>()){}
+    DataManager() : current_data(boost::make_shared<const Data>()){}
 
-    inline void set_data(const Data *d) {current_data.reset(d);}
-    inline std::shared_ptr<const Data> get_data() const{return current_data;}
+    void set_data(const Data* d) { set_data(boost::shared_ptr<const Data>(d)); }
+    void set_data(boost::shared_ptr<const Data>&& data) {
+        if (!data) { throw navitia::exception("Giving a null Data to DataManager::set_data"); }
+        data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
+        current_data = std::move(data);
+        release_memory();
+    }
+    boost::shared_ptr<const Data> get_data() const { return current_data; }
+    boost::shared_ptr<Data> get_data_clone() const {
+        auto data = boost::make_shared<Data>();
+        time_it("Clone data: ", [&]() { data->clone_from(*current_data); });
+        return std::move(data);
+    }
 
     void release_memory(){
 #ifndef NO_FORCE_MEMORY_RELEASE
@@ -57,24 +71,16 @@ public:
 #endif
     }
 
-    bool load(const std::string& database){
+    bool load(const std::string& database, 
+              const boost::optional<std::string>& chaos_database = boost::none){
         bool success;
-        auto data = std::make_shared<Data>();
-        success = data->load(database);
-        if(success){
-            data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
-            current_data = std::move(data);
+        auto data = boost::make_shared<Data>();
+        success = data->load(database, chaos_database);
+        if (success) {
+            set_data(std::move(data));
+        } else {
+            release_memory();
         }
-        release_memory();
         return success;
-    }
-
-    template<typename Disruption>
-    void apply_disruptions(const Disruption& /*disruptions*/){
-        auto data = std::make_shared<Data>();
-        time_it("Clone data: ", [&](){data->clone_from(*current_data);});
-        //call the required method here
-        current_data = std::move(data);
-        release_memory();
     }
 };

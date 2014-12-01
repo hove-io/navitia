@@ -30,12 +30,13 @@ www.navitia.io
 
 #include "maintenance_worker.h"
 
+#include "fill_disruption_from_chaos.h"
+#include "type/task.pb.h"
+#include "type/pt_data.h"
+#include <boost/algorithm/string/join.hpp>
+#include <boost/optional.hpp>
 #include <sys/stat.h>
 #include <signal.h>
-#include "type/task.pb.h"
-#include "type/chaos.pb.h"
-#include "type/gtfs-realtime.pb.h"
-#include <boost/algorithm/string/join.hpp>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -46,11 +47,11 @@ namespace navitia {
 
 
 void MaintenanceWorker::load(){
-    std::string database = conf.databases_path();
+    const std::string database = conf.databases_path();
+    auto chaos_database = conf.chaos_database();
     LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
-    if(this->data_manager.load(database)){
+    if(this->data_manager.load(database, chaos_database)){
         auto data = data_manager.get_data();
-
     }
 }
 
@@ -94,15 +95,22 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
         LOG4CPLUS_WARN(logger, "protobuf not valid!");
         return;
     }
+    boost::shared_ptr<nt::Data> data;
     for(const auto& entity: feed_message.entity()){
         if(entity.HasExtension(chaos::disruption)){
             LOG4CPLUS_WARN(logger, "has_extension");
-            data_manager.apply_disruptions(0);
+            if (!data) {
+                data = data_manager.get_data_clone();
+                data->last_rt_data_loaded = pt::microsec_clock::universal_time();
+            }
+
+            add_disruption(*data->pt_data, entity.GetExtension(chaos::disruption));
             LOG4CPLUS_DEBUG(logger, "end");
         }else{
             LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
         }
     }
+    if (data) { data_manager.set_data(std::move(data)); }
 }
 
 void MaintenanceWorker::listen_rabbitmq(){

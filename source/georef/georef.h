@@ -31,7 +31,6 @@ www.navitia.io
 #pragma once
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
-#include "third_party/RTree/RTree.h"
 #include "adminref.h"
 #include "utils/exception.h"
 #include "utils/flat_enum_map.h"
@@ -143,17 +142,18 @@ public:
     std::vector< std::pair<vertex_t, vertex_t> > edges;
 
     void add_house_number(const HouseNumber&);
-    nt::GeographicalCoord nearest_coord(const int, const Graph&);
-    int nearest_number(const nt::GeographicalCoord& );
-    nt::GeographicalCoord projected_centroid(const Graph& );
+    nt::GeographicalCoord nearest_coord(const int, const Graph&) const;
+    // returns {house_number, distance}, return {-1, x} if not found
+    std::pair<int, double> nearest_number(const nt::GeographicalCoord&) const;
+    nt::GeographicalCoord projected_centroid(const Graph& ) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges;
     }
     std::string get_label() const;
 
 private:
-      nt::GeographicalCoord get_geographical_coord(const std::vector< HouseNumber>&, const int);
-      nt::GeographicalCoord extrapol_geographical_coord(int);
+      nt::GeographicalCoord get_geographical_coord(const std::vector<HouseNumber>&, const int) const;
+      nt::GeographicalCoord extrapol_geographical_coord(int) const;
 };
 
 
@@ -306,6 +306,7 @@ struct GeoRef {
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, type::Mode_e mode) const {
         return nearest_edge(coordinates, pl, offsets[mode]);
     }
+    std::pair<int, const Way*> nearest_addr(const type::GeographicalCoord&) const;
 
     void add_way(const Way& w);
 

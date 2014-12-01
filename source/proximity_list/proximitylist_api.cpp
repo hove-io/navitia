@@ -67,7 +67,7 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
             break;
         case nt::Type_e::Address:
             fill_pb_placemark(data.geo_ref->ways[idx], data, place,
-                              data.geo_ref->ways[idx]->nearest_number(coord),
+                              data.geo_ref->ways[idx]->nearest_number(coord).first,
                               coord , depth, current_date);
             place->set_distance(coord.distance_to(coord_item));
             break;
@@ -100,12 +100,12 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
     for(nt::Type_e type : types){
         if(type == nt::Type_e::Address) {
             //for addresses we use the street network
-           try {
-               georef::edge_t e = data.geo_ref->nearest_edge(coord, data.geo_ref->pl);
-               ++total_result;
-               georef::Way *way = data.geo_ref->ways[data.geo_ref->graph[e].way_idx];
-               result.push_back(t_result(way->idx, coord, type));
-           } catch(proximitylist::NotFound) {}
+            try {
+                auto nb_w = data.geo_ref->nearest_addr(coord);
+                // we'll regenerate the good number in create_pb
+                result.push_back(t_result(nb_w.second->idx, coord, type));
+                ++total_result;
+            } catch(proximitylist::NotFound) {}
             continue;
         }
 

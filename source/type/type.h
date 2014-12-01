@@ -40,8 +40,10 @@ www.navitia.io
 #include <vector>
 #include <bitset>
 
+#include <boost/weak_ptr.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -281,15 +283,14 @@ struct hasVehicleProperties {
 };
 
 struct HasMessages{
-    //on utilise des smart pointer boost car ils sont sérializable
-    //si les weak_ptr était géré, c'est eux qu'ils faudrait utiliser
-    std::vector<boost::shared_ptr<Message>> messages;
+protected:
+    mutable std::vector<boost::weak_ptr<new_disruption::Impact>> impacts;
+public:
+    void add_impact(const boost::shared_ptr<new_disruption::Impact>& i) {impacts.push_back(i);}
 
-    std::vector<std::weak_ptr<new_disruption::Impact>> impacts;
-
-    std::vector<boost::shared_ptr<Message>> get_applicable_messages(
+    std::vector<boost::weak_ptr<new_disruption::Impact>> get_applicable_messages(
             const boost::posix_time::ptime& current_time,
-            const boost::posix_time::time_period& action_period)const;
+            const boost::posix_time::time_period& action_period) const;
 
     bool has_applicable_message(
             const boost::posix_time::ptime& current_time,
@@ -389,7 +390,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & label & uri & name & coord & stop_point_list & admin_list
-        & _properties & wheelchair_boarding & messages & visible
+        & _properties & wheelchair_boarding & impacts & visible
                 & comment & codes & timezone;
     }
 
@@ -413,7 +414,7 @@ struct Network : public Header, Nameable, HasMessages, Codes{
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & address_name & address_number & address_type_name
-            & mail & website & fax & sort & line_list & messages & codes;
+            & mail & website & fax & sort & line_list & impacts & codes;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -509,7 +510,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & messages & calendar_list & codes & shape;
+                & impacts & calendar_list & codes & shape;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -541,7 +542,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     type::OdtLevel_e get_odt_level() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & journey_pattern_list & messages & codes & shape;
+        ar & idx & name & uri & line & journey_pattern_list & impacts & codes & shape;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -585,12 +586,85 @@ struct AssociatedCalendar {
 };
 struct MetaVehicleJourney;
 
+
+struct StopTime {
+    static const uint8_t PICK_UP = 0;
+    static const uint8_t DROP_OFF = 1;
+    static const uint8_t ODT = 2;
+    static const uint8_t IS_FREQUENCY = 3;
+    static const uint8_t WHEELCHAIR_BOARDING = 4;
+    static const uint8_t DATE_TIME_ESTIMATED = 5;
+
+    std::bitset<8> properties;
+    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
+    uint32_t arrival_time = 0; ///< En secondes depuis minuit
+    uint32_t departure_time = 0; ///< En secondes depuis minuit
+    VehicleJourney* vehicle_journey = nullptr;
+    JourneyPatternPoint* journey_pattern_point = nullptr;
+
+    bool pick_up_allowed() const {return properties[PICK_UP];}
+    bool drop_off_allowed() const {return properties[DROP_OFF];}
+    bool odt() const {return properties[ODT];}
+    bool is_frequency() const {return properties[IS_FREQUENCY];}
+    bool date_time_estimated() const {return properties[DATE_TIME_ESTIMATED];}
+
+    inline void set_pick_up_allowed(bool value) {properties[PICK_UP] = value;}
+    inline void set_drop_off_allowed(bool value) {properties[DROP_OFF] = value;}
+    inline void set_odt(bool value) {properties[ODT] = value;}
+    inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
+    inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
+
+
+
+    /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
+    bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
+
+    bool is_odt_and_date_time_estimated() const{ return (this->odt() && this->date_time_estimated());}
+    /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
+    uint32_t section_end_time(bool clockwise, const u_int32_t hour = 0) const {
+        if(this->is_frequency())
+            return clockwise ? this->f_arrival_time(hour) : this->f_departure_time(hour);
+        else
+            return clockwise ? arrival_time : departure_time;
+    }
+
+    uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const;
+
+    uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const;
+
+    uint32_t end_time(const bool is_departure) const;
+
+    uint32_t start_time(const bool is_departure) const;
+
+    DateTime section_end_date(int date, bool clockwise) const {
+        return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);
+    }
+
+
+    /** Is this hour valid : only concerns frequency data
+     * Does the hour falls inside of the validity period of the frequency
+     * The difficult part is when the validity period goes over midnight
+     */
+    bool valid_hour(uint hour, bool clockwise) const;
+
+    bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+            ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
+            & properties & local_traffic_zone;
+    }
+
+    bool operator<(const StopTime& other) const;
+
+};
+
+
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes{
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern = nullptr;
     Company* company = nullptr;
     ValidityPattern* validity_pattern = nullptr;
-    std::vector<StopTime*> stop_time_list;
+    std::vector<StopTime> stop_time_list;
 
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
@@ -610,7 +684,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
     // For example for departure board over a period (calendar)
     // thus we store the shit needed to convert all stop times of the vehicle journey to local
-    int16_t utc_to_local_offset = 0; //in minutes
+    int16_t utc_to_local_offset = 0; //in seconds
 
     bool is_adapted = false; //REMOVE (change to enum ?)
     ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
@@ -622,7 +696,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & messages
+            & odt_message & _vehicle_properties & impacts
             & codes & next_vj & prev_vj & start_time & end_time & headway_secs
             & meta_vj & utc_to_local_offset;
     }
@@ -633,6 +707,11 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {
+        if (this->journey_pattern->uri != other.journey_pattern->uri)
+            return this->journey_pattern->uri < other.journey_pattern->uri;
+        return this->uri < other.uri;
+
+        if (this == &other) return false;
         if(this->journey_pattern == other.journey_pattern){
             // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
             return this->stop_time_list.front() < other.stop_time_list.front();
@@ -699,7 +778,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages, Codes{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         journey_pattern_point_list.resize(0);
         ar & uri & label & name & stop_area & coord & fare_zone & idx & platform_code
-            & journey_pattern_point_list & admin_list & _properties & messages
+            & journey_pattern_point_list & admin_list & _properties & impacts
             & stop_point_connection_list & comment & codes;
     }
 
@@ -734,130 +813,6 @@ struct JourneyPatternPoint : public Header{
 
     bool operator<(const JourneyPatternPoint& jpp2) const {
         return this->journey_pattern < jpp2.journey_pattern  || (this->journey_pattern == jpp2.journey_pattern && this->order < jpp2.order);}
-
-};
-
-struct StopTime {
-    static const uint8_t PICK_UP = 0;
-    static const uint8_t DROP_OFF = 1;
-    static const uint8_t ODT = 2;
-    static const uint8_t IS_FREQUENCY = 3;
-    static const uint8_t WHEELCHAIR_BOARDING = 4;
-    static const uint8_t DATE_TIME_ESTIMATED = 5;
-
-    std::bitset<8> properties;
-    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
-    uint32_t arrival_time = 0; ///< En secondes depuis minuit
-    uint32_t departure_time = 0; ///< En secondes depuis minuit
-    VehicleJourney* vehicle_journey = nullptr;
-    JourneyPatternPoint* journey_pattern_point = nullptr;
-    std::string comment;
-
-    bool pick_up_allowed() const {return properties[PICK_UP];}
-    bool drop_off_allowed() const {return properties[DROP_OFF];}
-    bool odt() const {return properties[ODT];}
-    bool is_frequency() const {return properties[IS_FREQUENCY];}
-    bool date_time_estimated() const {return properties[DATE_TIME_ESTIMATED];}
-
-    inline void set_pick_up_allowed(bool value) {properties[PICK_UP] = value;}
-    inline void set_drop_off_allowed(bool value) {properties[DROP_OFF] = value;}
-    inline void set_odt(bool value) {properties[ODT] = value;}
-    inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
-    inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
-
-
-
-    /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
-    bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
-
-    bool is_odt_and_date_time_estimated() const{ return (this->odt() && this->date_time_estimated());}
-    /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
-    uint32_t section_end_time(bool clockwise, const u_int32_t hour = 0) const {
-        if(this->is_frequency())
-            return clockwise ? this->f_arrival_time(hour) : this->f_departure_time(hour);
-        else
-            return clockwise ? arrival_time : departure_time;
-    }
-
-    inline uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const {
-        if(clockwise) {
-            if (this == this->vehicle_journey->stop_time_list.front())
-                return hour;
-            auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-            return hour + this->arrival_time - prec_st->arrival_time;
-        } else {
-            if (this == this->vehicle_journey->stop_time_list.back())
-                return hour;
-            auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-            return hour - (next_st->arrival_time - this->arrival_time);
-        }
-    }
-
-    inline uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const {
-        if(clockwise) {
-            if (this == this->vehicle_journey->stop_time_list.front())
-                return hour;
-            auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-            return hour + this->departure_time - prec_st->departure_time;
-        } else {
-            if (this == this->vehicle_journey->stop_time_list.back())
-                return hour;
-            auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-            return hour - (next_st->departure_time - this->departure_time);
-        }
-    }
-
-    inline uint32_t end_time(const bool is_departure) const {
-        return vehicle_journey->end_time + (is_departure? departure_time : arrival_time);
-    }
-
-    inline uint32_t start_time(const bool is_departure) const {
-        return vehicle_journey->start_time + (is_departure? departure_time : arrival_time);
-    }
-
-    DateTime section_end_date(int date, bool clockwise) const {
-        return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);
-    }
-
-
-    /** Is this hour valid : only concerns frequency data
-     * Does the hour falls inside of the validity period of the frequency
-     * The difficult part is when the validity period goes over midnight
-    */
-    bool valid_hour(uint hour, bool clockwise) const {
-        if(!this->is_frequency())
-            return true;
-        else
-            return clockwise ? hour <= (this->end_time(true)) :
-                              (this->vehicle_journey->start_time+arrival_time) <= hour;
-    }
-
-    bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
-        if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
-                || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
-            if(day == 0)
-                return false;
-            --day;
-        }
-        if(!is_adapted) {
-            return vehicle_journey->validity_pattern->check(day);
-        } else {
-            return vehicle_journey->adapted_validity_pattern->check(day);
-        }
-    }
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey & journey_pattern_point
-            & properties & local_traffic_zone & comment;
-    }
-
-    bool operator<(const StopTime& other) const {
-        if(this->vehicle_journey == other.vehicle_journey){
-            return this->journey_pattern_point->order < other.journey_pattern_point->order;
-        } else {
-            return *this->vehicle_journey < *other.vehicle_journey;
-        }
-    }
 
 };
 

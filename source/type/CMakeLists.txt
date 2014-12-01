@@ -70,6 +70,13 @@ add_custom_command (TARGET pb_lib
     response.proto request.proto
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
+#for integration tests, we need chaos protobuf
+add_custom_command (TARGET pb_lib
+    PRE_BUILD
+    COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/jormungandr/tests" 
+    chaos.proto gtfs-realtime.proto
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/chaos-proto" VERBATIM)
+
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp)
 target_link_libraries(types utils pb_lib)
 add_dependencies(types protobuf_files)
@@ -80,13 +87,13 @@ SET(DATA_SRC
     pt_data.cpp
 )
 
-add_library(data ${DATA_SRC})
-target_link_libraries(data types)
-
 SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY})
+
+add_library(data ${DATA_SRC})
+target_link_libraries(data types fill_disruption_from_database fare routing autocomplete ${BOOST_LIBS})
 
 add_executable(main_destination_test tests/main_destination_test.cpp)
 target_link_libraries(main_destination_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
@@ -106,7 +113,7 @@ add_dependencies(type_test protobuf_files)
 ADD_BOOST_TEST(type_test)
 
 add_executable(datetime_test tests/datetime.cpp)
-target_link_libraries(datetime_test ${BOOST_LIBS} types log4cplus)
+target_link_libraries(datetime_test types ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(datetime_test)
 
 
@@ -114,3 +121,10 @@ add_executable(accessible_test tests/accessible.cpp)
 target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
 add_dependencies(accessible_test protobuf_files)
 ADD_BOOST_TEST(accessible_test)
+
+
+
+add_executable(fill_pb_object_tests tests/fill_pb_object_tests.cpp)
+target_link_libraries(fill_pb_object_tests pb_lib ed thermometer time_tables data types fare routing georef autocomplete ${BOOST_LIBS} log4cplus)
+add_dependencies(fill_pb_object_tests protobuf_files)
+ADD_BOOST_TEST(fill_pb_object_tests)

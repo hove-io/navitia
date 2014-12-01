@@ -38,12 +38,12 @@ www.navitia.io
  *
  * roughly the same tests as in departure_board_test.cpp but after jormungandr
  */
-int main() {
+int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     calendar_fixture data_set;
 
-    mock_kraken kraken(data_set.b, "departure_board_test");
+    mock_kraken kraken(data_set.b, "departure_board_test", argc, argv);
 
     return 0;
 }

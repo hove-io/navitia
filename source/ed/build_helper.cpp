@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "build_helper.h"
 #include "ed/connectors/gtfs_parser.h"
+#include <boost/range/algorithm/find_if.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -47,14 +48,13 @@ void VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
     vj->end_time = start_time + ( nb_trips * headway_secs );
     vj->headway_secs = headway_secs;
 
-    navitia::type::StopTime* first_st = vj->stop_time_list.front();
-    uint32_t begin = first_st->arrival_time;
-    for(navitia::type::StopTime* st : vj->stop_time_list) {
-        st->set_is_frequency(true);
+    uint32_t begin = vj->stop_time_list.front().arrival_time;
+    for(navitia::type::StopTime& st : vj->stop_time_list) {
+        st.set_is_frequency(true);
         //For frequency based trips, make arrival and departure time relative from the first stop.
         if (begin > 0){
-            st->arrival_time -= begin;
-            st->departure_time -= begin;
+            st.arrival_time -= begin;
+            st.departure_time -= begin;
         }
     }
 }
@@ -70,7 +70,26 @@ nt::MetaVehicleJourney* get_or_create_metavj(builder& b, const std::string name)
     return it->second;
 }
 
-VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri, std::string meta_vj_name) : b(b){
+nt::JourneyPattern* get_or_create_journey_pattern(builder& b, const std::string& uri) {
+    auto it = std::find_if(b.data->pt_data->journey_patterns.begin(),
+                        b.data->pt_data->journey_patterns.end(),
+                        [uri](nt::JourneyPattern* jp) {
+                            return jp->uri == uri;
+                        });
+    if (it == b.data->pt_data->journey_patterns.end()) {
+        auto jp = new nt::JourneyPattern;
+        jp->idx = b.data->pt_data->journey_patterns.size();
+        jp->uri = uri;
+        jp->name = uri;
+        b.data->pt_data->journey_patterns.push_back(jp);
+        return jp;
+    }
+    return *it;
+}
+
+VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
+       const std::string &/*block_id*/, bool wheelchair_boarding, const std::string& uri,
+       std::string meta_vj_name, std::string jp_uri) : b(b){
     vj = new navitia::type::VehicleJourney();
 
     //if we have a meta_vj, we add it in that
@@ -88,6 +107,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     b.data->pt_data->vehicle_journeys.push_back(vj);
 
     auto it = b.lines.find(line_name);
+    nt::Route* route = nullptr;
     if(it == b.lines.end()){
 
         navitia::type::Line* line = new navitia::type::Line();
@@ -96,39 +116,36 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         b.lines[line_name] = line;
         line->name = line_name;
         b.data->pt_data->lines.push_back(line);
-        navitia::type::Route* route = new navitia::type::Route();
+        route = new navitia::type::Route();
         route->idx = b.data->pt_data->routes.size();
         route->name = line->name;
         route->uri = line_name + ":" + std::to_string(b.data->pt_data->routes.size());
         b.data->pt_data->routes.push_back(route);
         line->route_list.push_back(route);
-        route->line = line;
-        navitia::type::JourneyPattern* jp = new navitia::type::JourneyPattern();
-        jp->idx = b.data->pt_data->journey_patterns.size();
-        jp->uri = route->uri + ":0";
-        jp->name = route->uri + " 0";
-        b.data->pt_data->journey_patterns.push_back(jp);
-        route->journey_pattern_list.push_back(jp);
-        jp->route = route;
-        //add physical mode
-        if (! b.data->pt_data->physical_modes.empty()) {
-            auto mode = b.data->pt_data->physical_modes.front();
-            jp->physical_mode = mode;
-        }
-        else {
-            jp->physical_mode = new navitia::type::PhysicalMode();
-            jp->physical_mode->idx = b.data->pt_data->physical_modes.size();
-            jp->physical_mode->uri = "physical_mode:0";
-            b.data->pt_data->physical_modes.push_back(jp->physical_mode);
-        }
-        jp->physical_mode->journey_pattern_list.push_back(jp);
-
-        vj->journey_pattern = jp;
+        route->line = line;   
     } else {
-        //@TODO va surement falloir créer un nouveau journeypattern
-        //vj-> = it->second;
-        vj->journey_pattern = it->second->route_list.front()->journey_pattern_list.front();
+        route = it->second->route_list.front();
     }
+    if (jp_uri.empty()) {
+        jp_uri = route->uri + ":0";
+    }
+    auto jp = get_or_create_journey_pattern(b, jp_uri);
+    route->journey_pattern_list.push_back(jp);
+    jp->route = route;
+    //add physical mode
+    if (! b.data->pt_data->physical_modes.empty()) {
+        auto mode = b.data->pt_data->physical_modes.front();
+        jp->physical_mode = mode;
+    }
+    else {
+        jp->physical_mode = new navitia::type::PhysicalMode();
+        jp->physical_mode->idx = b.data->pt_data->physical_modes.size();
+        jp->physical_mode->uri = "physical_mode:0";
+        b.data->pt_data->physical_modes.push_back(jp->physical_mode);
+    }
+    jp->physical_mode->journey_pattern_list.push_back(jp);
+
+    vj->journey_pattern = jp;
     vj->journey_pattern->vehicle_journey_list.push_back(vj);
 
     nt::ValidityPattern* vp = new nt::ValidityPattern(b.begin, validity_pattern);
@@ -161,10 +178,10 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
 VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     assert(shape.size() >= 2);
     assert(vj->stop_time_list.size() >= 2);
-    assert(vj->stop_time_list.back()->journey_pattern_point->stop_point->coord == shape.back());
-    assert(vj->stop_time_list.at(vj->stop_time_list.size() - 2)->journey_pattern_point->stop_point->coord
+    assert(vj->stop_time_list.back().journey_pattern_point->stop_point->coord == shape.back());
+    assert(vj->stop_time_list.at(vj->stop_time_list.size() - 2).journey_pattern_point->stop_point->coord
            == shape.front());
-    vj->stop_time_list.back()->journey_pattern_point->shape_from_prev = shape;
+    vj->stop_time_list.back().journey_pattern_point->shape_from_prev = shape;
     return *this;
 }
 
@@ -177,7 +194,6 @@ VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee, cons
 
 VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone,
                     bool drop_off_allowed, bool pick_up_allowed){
-    navitia::type::StopTime* st = new navitia::type::StopTime();
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;
     navitia::type::JourneyPatternPoint* jpp = nullptr;
@@ -227,25 +243,26 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
         jpp->journey_pattern = vj->journey_pattern;
         jpp->uri = "stop:" + sp->uri + "::jp:" + vj->journey_pattern->uri;
         if (!vj->stop_time_list.empty()) {
-            jpp->shape_from_prev.push_back(vj->stop_time_list.back()->journey_pattern_point->stop_point->coord);
+            jpp->shape_from_prev.push_back(vj->stop_time_list.back().journey_pattern_point->stop_point->coord);
             jpp->shape_from_prev.push_back(jpp->stop_point->coord);
         }
         b.data->pt_data->journey_pattern_points.push_back(jpp);
     }
+
     //on construit un nouveau journey pattern point à chaque fois
-    st->journey_pattern_point = jpp;
+    navitia::type::StopTime st;
+    st.journey_pattern_point = jpp;
 
     if(depart == -1) depart = arrivee;
-    st->arrival_time = arrivee;
-    st->departure_time = depart;
-    st->vehicle_journey = vj;
+    st.arrival_time = arrivee;
+    st.departure_time = depart;
+    st.vehicle_journey = vj;
     jpp->order = vj->stop_time_list.size();
-    st->local_traffic_zone = local_trafic_zone;
-    st->set_drop_off_allowed(drop_off_allowed);
-    st->set_pick_up_allowed(pick_up_allowed);
+    st.local_traffic_zone = local_trafic_zone;
+    st.set_drop_off_allowed(drop_off_allowed);
+    st.set_pick_up_allowed(pick_up_allowed);
 
     vj->stop_time_list.push_back(st);
-    b.data->pt_data->stop_times.push_back(st);
     return *this;
 }
 
@@ -298,8 +315,9 @@ VJ builder::vj(const std::string& line_name,
                const std::string& block_id,
                const bool wheelchair_boarding,
                const std::string& uri,
-               const std::string& meta_vj){
-    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj);
+               const std::string& meta_vj,
+               const std::string& jp_uri){
+    return vj("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri);
 }
 
 VJ builder::vj(const std::string& network_name,
@@ -308,8 +326,9 @@ VJ builder::vj(const std::string& network_name,
                const std::string& block_id,
                const bool wheelchair_boarding,
                const std::string& uri,
-               const std::string& meta_vj){
-    auto res = VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj);
+               const std::string& meta_vj,
+               const std::string& jp_uri){
+    auto res = VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, jp_uri);
     auto vj = this->data->pt_data->vehicle_journeys.back();
     auto it = this->nts.find(network_name);
     if(it == this->nts.end()){
@@ -320,8 +339,15 @@ VJ builder::vj(const std::string& network_name,
         this->nts[network_name] = network;
         this->data->pt_data->networks.push_back(network);
         vj->journey_pattern->route->line->network = network;
+        network->line_list.push_back(vj->journey_pattern->route->line);
     } else {
         vj->journey_pattern->route->line->network = it->second;
+
+        auto line = vj->journey_pattern->route->line;
+        if (boost::find_if(it->second->line_list, [line](navitia::type::Line* l) { return l->uri == line->uri;})
+                == it->second->line_list.end()) {
+            it->second->line_list.push_back(vj->journey_pattern->route->line);
+        }
     }
     if(block_id != "") {
         block_vjs.insert(std::make_pair(block_id, vj));
@@ -356,12 +382,15 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     company->uri = "base_company";
     this->data->pt_data->companies.push_back(company);
 
-    navitia::type::Network *network = new navitia::type::Network();
-    network->idx = this->data->pt_data->networks.size();
-    network->name = "base_network";
-    network->uri = "base_network";
-    this->data->pt_data->networks.push_back(network);
-    this->nts.insert({network->uri, network});
+    const std::string default_network_name = "base_network";
+    if (data->pt_data->networks_map.find(default_network_name) == data->pt_data->networks_map.end()) {
+        navitia::type::Network *network = new navitia::type::Network();
+        network->idx = this->data->pt_data->networks.size();
+        network->name = default_network_name;
+        network->uri = default_network_name;
+        this->data->pt_data->networks.push_back(network);
+        this->nts.insert({network->uri, network});
+    }
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
@@ -418,8 +447,8 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
      std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
              [](const navitia::type::VehicleJourney* vj1, const navitia::type::VehicleJourney* vj2) {
-             return vj1->stop_time_list.back()->arrival_time <=
-                         vj2->stop_time_list.front()->departure_time;
+             return vj1->stop_time_list.back().arrival_time <=
+                         vj2->stop_time_list.front().departure_time;
 
              }
       );
@@ -439,10 +468,10 @@ void builder::connection(const std::string & name1, const std::string & name2, f
      build_blocks();
      for(navitia::type::VehicleJourney* vj : this->data->pt_data->vehicle_journeys) {
          if(!vj->prev_vj) {
-             vj->stop_time_list.front()->set_drop_off_allowed(false);
+             vj->stop_time_list.front().set_drop_off_allowed(false);
          }
          if(!vj->next_vj) {
-            vj->stop_time_list.back()->set_pick_up_allowed(false);
+            vj->stop_time_list.back().set_pick_up_allowed(false);
          }
      }
  }
