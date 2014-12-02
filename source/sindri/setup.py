@@ -39,5 +39,6 @@ setup(name='sindri',
       author_email='alexandre.jacquin@canaltp.fr',
       url='www.navitia.io',
       packages=['sindri', 'sindri.saver'],
-      scripts=['sindri_service']
-      )
+      scripts=['sindri_service'],
+      data_files=[('/usr/share/sindri', ['requirements.txt'])]
+)
