@@ -42,5 +42,7 @@ setup(name='connectors',
         packages=find_packages(),
         requires=['sqlalchemy', 'ampq', 'anyjson', 'argparse', 'kombu',
                   'protobuf', 'pymssql', 'redis', 'wsgiref', 'configobj'],
-        scripts=['connector_at.py'])
+        scripts=['connector_at.py'],
+        data_files=[('/usr/share/connectors', ['requirements.txt'])]
+)
 

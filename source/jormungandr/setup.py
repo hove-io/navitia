@@ -37,5 +37,6 @@ setup(name='jormungandr',
       author='CanalTP',
       author_email='vincent.lara@canaltp.fr',
       url='www.navitia.io',
-      packages=find_packages()
+      packages=find_packages(),
+      data_files=[('/usr/share/jormungandr', ['requirements.txt'])]
 )
