@@ -275,6 +275,8 @@ class Scenario(default.Scenario):
                 best = min(mapping[key], key=attrgetter('duration'))
                 to_keep.append(indexOf(journeys, best))
 
+        logger = logging.getLogger(__name__)
+        logger.debug('from alternatives we keep: %s', [journeys[i].type for i in to_keep])
         to_delete = list(set(range(len(journeys))) - set(to_keep))
         to_delete.sort(reverse=True)
         for idx in to_delete:
@@ -314,7 +316,7 @@ class Scenario(default.Scenario):
             bss_dur = bss_duration(journey)
             if bike_dur and tc_dur < instance.destineo_min_tc_with_bike:
                 to_delete.append(idx)
-            if bss_dur and tc_dur < instance.destineo_min_tc_with_bss:
+            elif bss_dur and tc_dur < instance.destineo_min_tc_with_bss:
                 to_delete.append(idx)
             elif car_dur and tc_dur < instance.destineo_min_tc_with_car:
                 to_delete.append(idx)
