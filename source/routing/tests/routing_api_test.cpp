@@ -962,7 +962,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
 
     BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
-    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ef");
+    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ag");
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 5);
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Car);
     BOOST_CHECK_EQUAL(section.street_network().duration(), 18); // (20+50+20)/5
@@ -1041,7 +1041,7 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
 
     // section 2: goto B
     BOOST_CHECK_EQUAL(sections.Get(2).type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_CHECK_EQUAL(sections.Get(2).origin().address().name(), "rue bd");
+    BOOST_CHECK_EQUAL(sections.Get(2).origin().address().name(), "rue bs");
     BOOST_CHECK_EQUAL(sections.Get(2).destination().name(), "stop_point:stopB");
     BOOST_CHECK_EQUAL(sections.Get(2).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_CHECK_EQUAL(sections.Get(2).street_network().duration(), 10);
@@ -1059,7 +1059,7 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
     BOOST_CHECK_EQUAL(sections.Get(4).type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(sections.Get(4).origin().name(), "stop_point:stopA");
     //BOOST_CHECK_EQUAL(sections.Get(4).origin().address().name(), "rue bd");
-    BOOST_CHECK_EQUAL(sections.Get(4).destination().address().name(), "rue ar");
+    BOOST_CHECK_EQUAL(sections.Get(4).destination().address().name(), "rue ag");
     BOOST_CHECK_EQUAL(sections.Get(4).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_CHECK_EQUAL(sections.Get(4).street_network().duration(), 90);
     const auto pathitems4 = sections.Get(4).street_network().path_items();
@@ -1110,7 +1110,7 @@ BOOST_FIXTURE_TEST_CASE(bus_car_parking, streetnetworkmode_fixture<test_speed_pr
 
     // section 0: goto to the station
     BOOST_CHECK_EQUAL(sections.Get(0).type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_CHECK_EQUAL(sections.Get(0).origin().address().name(), "rue ar");
+    BOOST_CHECK_EQUAL(sections.Get(0).origin().address().name(), "rue ag");
     BOOST_CHECK_EQUAL(sections.Get(0).destination().stop_point().name(), "stop_point:stopA");
     BOOST_CHECK_EQUAL(sections.Get(0).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_CHECK_EQUAL(sections.Get(0).street_network().duration(), 90);
@@ -1261,7 +1261,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(prev_section.destination().uri(), section.origin().uri());
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue ag");
-    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ar");
+    BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ag");
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
 
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 2);

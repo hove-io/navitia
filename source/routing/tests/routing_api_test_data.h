@@ -179,6 +179,8 @@ struct routing_api_data {
         way->idx = 2;
         way->way_type = "rue";
         way->admin_list.push_back(admin);
+        way->add_house_number(navitia::georef::HouseNumber(E.lon(), E.lat(), 2));
+        way->add_house_number(navitia::georef::HouseNumber(F.lon(), F.lat(), 5));
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
@@ -200,6 +202,7 @@ struct routing_api_data {
         way->idx = 5;
         way->way_type = "rue";
         way->admin_list.push_back(admin);
+        way->add_house_number(navitia::georef::HouseNumber(R.lon(), R.lat(), 1));
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
@@ -257,6 +260,7 @@ struct routing_api_data {
         way->idx = 13;
         way->way_type = "rue";
         way->admin_list.push_back(admin);
+        way->add_house_number(navitia::georef::HouseNumber(D.lon(), D.lat(), 1));
         b.data->geo_ref->ways.push_back(way);
 
         // A->B
