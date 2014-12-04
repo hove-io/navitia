@@ -77,8 +77,15 @@ class Disruptions(ResourceUri):
                                 description="Period in days from datetime. DEPRECATED use duration parameter")
         parser_get.add_argument("duration", type=duration, default=timedelta(days=365),
                                 description="Duration from the period we want to display the disruption on")
-        parser_get.add_argument("datetime", type=date_time_format,
-                                description="The datetime from which you want the disruption")
+        parser_get.add_argument("datetime", type=date_time_format, default=datetime.now(),
+                                description="The datetime from which you want the disruption "
+                                            "(filter on the disruption application periods)")
+        parser_get.add_argument("publication_datetime", type=date_time_format, default=datetime.now(),
+                                description="The datetime we want to publish the disruptions from."
+                                            " Default is the current date."
+                                            " Note: it is not the same as 'datetime' which, combined with"
+                                            " duration form a period used to filter the disruption"
+                                            " application periods")
         parser_get.add_argument("forbidden_id[]", type=unicode,
                                 description="forbidden ids",
                                 dest="forbidden_uris[]",
@@ -90,10 +97,6 @@ class Disruptions(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
-
-        if not args["datetime"]:
-            args['datetime'] = datetime.now()
-            args['datetime'] = args['datetime'].replace(hour=13, minute=37)
 
         if uri:
             if uri[-1] == "/":

@@ -211,8 +211,9 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     std::vector<std::string> forbidden_uris;
+    auto dt = "20131220T125000"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20131220T125000"_dt_time_stamp, end_date, 1, 10, 0, "network.uri=network:R", forbidden_uris);
+            dt, end_date, dt, 1, 10, 0, "network.uri=network:R", forbidden_uris);
 
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
 
@@ -265,8 +266,9 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
 
 BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
     std::vector<std::string> forbidden_uris;
+    auto dt = "20131224T125000"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20131224T125000"_dt_time_stamp, end_date, 1, 10, 0, "network.uri=network:M", forbidden_uris);
+            dt, end_date, dt, 1, 10, 0, "network.uri=network:M", forbidden_uris);
 
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
 
@@ -284,8 +286,9 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
 
 BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     std::vector<std::string> forbidden_uris;
+    auto dt = "20131220T125000"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20131220T125000"_dt_time_stamp, end_date, 1 ,10 ,0 , "line.uri=line:S", forbidden_uris);
+            dt, end_date, dt, 1 ,10 ,0 , "line.uri=line:S", forbidden_uris);
 
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
 
@@ -307,15 +310,17 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
 
 BOOST_FIXTURE_TEST_CASE(Test1, Params) {
     std::vector<std::string> forbidden_uris;
+    auto dt = "20140101T0900"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20140101T0900"_dt_time_stamp, end_date, 1, 10, 0, "", forbidden_uris);
+            dt, end_date, dt, 1, 10, 0, "", forbidden_uris);
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
 
 BOOST_FIXTURE_TEST_CASE(Test2, Params) {
     std::vector<std::string> forbidden_uris;
+    auto dt = "20140103T0900"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20140103T0900"_dt_time_stamp, end_date, 1, 10, 0, "", forbidden_uris);
+            dt, end_date, dt, 1, 10, 0, "", forbidden_uris);
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
 
     pbnavitia::Disruptions disruptions = resp.disruptions(0);
@@ -340,8 +345,9 @@ BOOST_FIXTURE_TEST_CASE(Test2, Params) {
 
 BOOST_FIXTURE_TEST_CASE(Test3, Params) {
     std::vector<std::string> forbidden_uris;
+    auto dt = "20140113T0900"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20140113T0900"_dt_time_stamp, end_date, 1, 10, 0, "", forbidden_uris);
+           dt, end_date, dt, 1, 10, 0, "", forbidden_uris);
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
 
     pbnavitia::Disruptions disruptions = resp.disruptions(0);
@@ -364,23 +370,28 @@ BOOST_FIXTURE_TEST_CASE(Test3, Params) {
 }
 
 BOOST_FIXTURE_TEST_CASE(Test4, Params) {
+    std::cout << "bob 4?" << std::endl;
     std::vector<std::string> forbidden_uris;
+    auto dt = "20130203T0900"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20140203T0900"_dt_time_stamp, end_date, 1 , 10, 0, "", forbidden_uris);
+            dt, end_date, dt, 1 , 10, 0, "", forbidden_uris);
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
 
 BOOST_FIXTURE_TEST_CASE(Test5, Params) {
     std::vector<std::string> forbidden_uris;
+    auto dt = "20130212T0900"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20140212T0900"_dt_time_stamp, end_date, 1, 10, 0, "", forbidden_uris);
+            dt, end_date, dt, 1, 10, 0, "", forbidden_uris);
+
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
 
 BOOST_FIXTURE_TEST_CASE(Test7, Params) {
     std::vector<std::string> forbidden_uris;
+    auto dt = "20140113T1801"_dt_time_stamp;
     pbnavitia::Response resp = navitia::disruption::disruptions(*(b.data),
-            "20140113T1801"_dt_time_stamp, end_date, 1, 10, 0, "", forbidden_uris);
+            dt, end_date, dt, 1, 10, 0, "", forbidden_uris);
     BOOST_REQUIRE_EQUAL(resp.disruptions_size(), 1);
 
     pbnavitia::Disruptions disruptions = resp.disruptions(0);

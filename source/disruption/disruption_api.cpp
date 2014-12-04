@@ -37,20 +37,25 @@ namespace bt = boost::posix_time;
 
 namespace navitia { namespace disruption {
 
-pbnavitia::Response disruptions(const navitia::type::Data& d, const u_int64_t posix_period_begin,
-                                const u_int64_t posix_period_end,
+pbnavitia::Response disruptions(const navitia::type::Data& d,
+                                u_int64_t posix_application_period_begin,
+                                u_int64_t posix_application_period_end,
+                                u_int64_t posix_publication_dt,
                                 const size_t depth,
                                 size_t count,
-                                size_t start_page, const std::string &filter,
-                                const std::vector<std::string>& forbidden_uris){
+                                size_t start_page,
+                                const std::string &filter,
+                                const std::vector<std::string>& forbidden_uris) {
     pbnavitia::Response pb_response;
-    bt::ptime period_begin = bt::from_time_t(posix_period_end);
-    bt::ptime period_end = bt::from_time_t(posix_period_end);
-
+    bt::ptime period_begin = bt::from_time_t(posix_application_period_begin);
+    bt::ptime period_end = bt::from_time_t(posix_application_period_end);
     auto action_period = boost::posix_time::time_period(period_begin, period_end);
+
+    bt::ptime publication_date = bt::from_time_t(posix_publication_dt);
+
     Disruption result;
     try {
-        result.disruptions_list(filter, forbidden_uris, d, action_period, period_begin);
+        result.disruptions_list(filter, forbidden_uris, d, action_period, publication_date);
     } catch(const ptref::parsing_error& parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse,
                 "Unable to parse filter" + parse_error.more, pb_response.mutable_error());

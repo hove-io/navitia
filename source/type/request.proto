@@ -12,13 +12,14 @@ message CalendarsRequest {
 }
 
 message DisruptionsRequest {
-    optional uint64 period_begin    = 8;
-    optional uint64 period_end      = 9;
-    optional int32 depth            = 3;
-    optional int32 start_page       = 4;
-    optional int32 count            = 5;
-    optional string filter          = 6;
-    repeated string forbidden_uris  = 7;
+    optional uint64 application_period_begin    = 8;
+    optional uint64 application_period_end      = 9;
+    optional uint64 publication_datetime        = 10;
+    optional int32 depth                        = 3;
+    optional int32 start_page                   = 4;
+    optional int32 count                        = 5;
+    optional string filter                      = 6;
+    repeated string forbidden_uris              = 7;
 }
 
 message PlacesRequest {

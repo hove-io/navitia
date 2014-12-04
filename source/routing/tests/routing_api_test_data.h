@@ -473,13 +473,16 @@ struct routing_api_data {
 
     void add_disruptions() {
         nt::new_disruption::DisruptionHolder& holder = b.data->pt_data->disruption_holder;
-        auto now = boost::posix_time::microsec_clock::universal_time() - (10_h).to_posix();
+        auto default_date = "20140101T000000"_dt;
+        auto default_period = boost::posix_time::time_period(default_date, "20140201T120000"_dt);
+        std::cout << "disruption now " << default_date << std::endl;
         {
             //we create one disruption on stop A
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_stop_A";
             //Note: the take the current time because because we only get the current disruptions in the pt object api and we want those
-            disruption->publication_period = boost::posix_time::time_period(now, (1000_h).to_posix());
+            disruption->publication_period = default_period;
+            std::cout << "disruption publication periode " << disruption->publication_period << std::endl;
             auto tag = boost::make_shared<Tag>();
             tag->uri = "tag";
             tag->name = "tag name";
@@ -487,12 +490,12 @@ struct routing_api_data {
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "too_bad";
-            impact->application_periods = {boost::posix_time::time_period(now, (1000_h).to_posix())};
+            impact->application_periods = {default_period};
 
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::StopArea, "stopA", *b.data->pt_data, impact));
 
-            impact->messages.push_back({"no luck", now, now});
-            impact->messages.push_back({"try again", now, now});
+            impact->messages.push_back({"no luck", default_date, default_date});
+            impact->messages.push_back({"try again", default_date, default_date});
 
             disruption->add_impact(impact);
 
@@ -503,18 +506,43 @@ struct routing_api_data {
             //we create one disruption on line A
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_line_A";
-            disruption->publication_period = boost::posix_time::time_period(now, (1000_h).to_posix());
+            disruption->publication_period = default_period;
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "too_bad_again";
-            impact->application_periods = {boost::posix_time::time_period(now, boost::posix_time::hours(1000))};
+            impact->application_periods = {default_period};
 
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
             //add another pt impacted object just to test with several
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
 
-            impact->messages.push_back({"sad message", now, now});
-            impact->messages.push_back({"to sad message", now, now});
+            impact->messages.push_back({"sad message", default_date, default_date});
+            impact->messages.push_back({"too sad message", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            holder.disruptions.push_back(std::move(disruption));
+        }
+
+        {
+            //we create another disruption on line A, but with different date to test the period filtering
+            // publication period is june to july
+            // application period is split in 2, first half on june + first half of august
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_on_line_A_but_later";
+            disruption->publication_period = boost::posix_time::time_period("20140601T000000"_dt, "20140701T000000"_dt);
+
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "later_impact";
+            impact->application_periods = {boost::posix_time::time_period("20140601T000000"_dt, "20140615T120000"_dt),
+                                          boost::posix_time::time_period("20140801T000000"_dt, "20140815T120000"_dt)};
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
+            //add another pt impacted object just to test with several
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"sad message", default_date, default_date});
+            impact->messages.push_back({"too sad message", default_date, default_date});
 
             disruption->add_impact(impact);
 
