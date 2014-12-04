@@ -29,8 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from shapely import geometry, wkt
-from shapely.geos import ReadingError
+from shapely import geometry
 import ConfigParser
 import zmq
 from threading import Thread, Event
@@ -161,18 +160,11 @@ class InstanceManager(object):
         for key, instance in self.instances.iteritems():
             try:
                 resp = instance.send_and_receive(req, timeout=1000, quiet=True)
+                #the instance is automatically updated on a call
             except DeadSocketException:
+                #but if there is a error, we reset the geom manually
                 instance.geom = None
                 continue
-            if resp.HasField("metadatas"):
-                if resp.metadatas.shape and resp.metadatas.shape != "":
-                    try:
-                        instance.geom = wkt.loads(resp.metadatas.shape)
-                    except ReadingError:
-                        instance.geom = None
-                else:
-                    instance.geom = None
-                instance.timezone = resp.metadatas.timezone
 
     def thread_ping(self, timer=10):
         """
@@ -228,7 +220,7 @@ class InstanceManager(object):
             return True
         else:
             raise RegionNotFound(region=region_str)
-    
+
     def get_region(self, region_str=None, lon=None, lat=None, object_id=None,
             api='ALL'):
         return self.get_regions(region_str, lon, lat, object_id, api,
@@ -266,8 +258,7 @@ class InstanceManager(object):
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
             try:
-                resp = self.instances[key_region].send_and_receive(req,
-                                                               timeout=1000)
+                resp = self.instances[key_region].send_and_receive(req, timeout=1000)
                 resp_dict = protobuf_to_dict(resp.metadatas)
             except DeadSocketException:
                 resp_dict = {

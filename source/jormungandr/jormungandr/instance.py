@@ -40,6 +40,8 @@ from .exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
 from jormungandr import cache, app
+from shapely import wkt
+from shapely.geos import ReadingError
 
 type_to_pttype = {
       "stop_area" : request_pb2.PlaceCodeRequest.StopArea,
@@ -196,6 +198,7 @@ class Instance(object):
                 pb = socket.recv()
                 resp = response_pb2.Response()
                 resp.ParseFromString(pb)
+                self.update_property(resp)#we update the timezone and geom of the instances at each request
                 return resp
             else:
                 socket.setsockopt(zmq.LINGER, 0)
@@ -240,7 +243,22 @@ class Instance(object):
         Does this instance has the given id
         Returns None if it doesnt, the kraken uri otherwise
         """
-	res = self.get_external_codes(type_, id_)
-	if len(res.places) > 0:
-		return res.places[0].uri
-	return None
+        res = self.get_external_codes(type_, id_)
+        if len(res.places) > 0:
+            return res.places[0].uri
+        return None
+
+    def update_property(self, response):
+        """
+        update the property of an instance from a response if the metadatas field if present
+        """
+        if response.HasField("metadatas") and response.publication_date != self.publication_date:
+            with self.lock as lock:
+                if response.metadatas.shape and response.metadatas.shape != "":
+                    try:
+                        self.geom = wkt.loads(response.metadatas.shape)
+                    except ReadingError:
+                        self.geom = None
+                else:
+                    self.geom = None
+                self.timezone = response.metadatas.timezone
