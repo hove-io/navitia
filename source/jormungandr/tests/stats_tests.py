@@ -121,7 +121,7 @@ class MockWrapper:
         assert stat.journeys[1].sections[0].mode == "walking"
         assert stat.journeys[1].sections[0].to_embedded_type == "address"
         assert stat.journeys[1].sections[0].to_id == ""
-        assert stat.journeys[1].sections[0].to_name == "rue ar"
+        assert stat.journeys[1].sections[0].to_name == "rue ag"
         assert stat.journeys[1].sections[0].type == "street_network"
 
     def check_stat_places_to_publish(self, stat):
