@@ -64,7 +64,7 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.email
 
-    def add_key(self, valid_until=None):
+    def add_key(self, app_name, valid_until=None):
         """
         génére une nouvelle clé pour l'utilisateur
         et l'ajoute à sa liste de clé
@@ -73,6 +73,7 @@ class User(db.Model):
         """
         key = Key(valid_until=valid_until)
         key.token = str(uuid.uuid4())
+        key.app_name = app_name
         self.keys.append(key)
         db.session.add(key)
         return key
@@ -99,6 +100,7 @@ class Key(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                         nullable=False)
     token = db.Column(db.Text, unique=True, nullable=False)
+    app_name = db.Column(db.Text, nullable=True)
     valid_until = db.Column(db.Date)
 
     def __init__(self, token=None, user_id=None, valid_until=None):

@@ -51,7 +51,7 @@ class FieldDate(fields.Raw):
             return 'null'
 
 
-key_fields = {'id': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
+key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
 instance_fields = {'id': fields.Raw,
                    'name': fields.Raw,
@@ -319,10 +319,12 @@ class Key(flask_restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
                 case_sensitive=False, help='end validity date of the key')
+        parser.add_argument('app_name', type=str, required=True,
+                case_sensitive=False, help='app name associated to this key')
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
-            user.add_key(valid_until=args['valid_until'])
+            user.add_key(args['app_name'], valid_until=args['valid_until'])
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -346,15 +348,19 @@ class Key(flask_restful.Resource):
     @marshal_with(user_fields_full)
     def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('valid_until', type=types.date, required=True,
+        parser.add_argument('valid_until', type=types.date, required=False,
                 case_sensitive=False, help='end validity date of the key')
+        parser.add_argument('app_name', type=str, required=True,
+                case_sensitive=False, help='eapp name associated to this key')
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
             key = user.keys.filter_by(id=key_id).first()
             if not key:
                 abort(404)
-            key.valid_until = args['valid_until']
+            if args['valid_until']:
+                key.valid_until = args['valid_until']
+            key.app_name = args['app_name']
             db.session.commit()
         except Exception:
             logging.exception("fail")
