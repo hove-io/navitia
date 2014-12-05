@@ -184,18 +184,22 @@ class TestDisruptions(AbstractTestFixture):
         """
         period filter
 
+        we ask for the disruption on the 3 next days
+        => we get 2 impacts (too_bad and too_bad_again)
+
+        we ask for the disruption on the 3 next yers
+        => we get 3 impacts (we get later_impact too)
+
         """
 
-        response = self.query_region('disruptions?duration=P3D', display=True)
+        response = self.query_region('disruptions?duration=P3D&' + default_date_filter)
 
-        # assert 'disruptions' in response
-        # impacts = get_impacts(response)
-        # assert len(impacts) == 2
-        #
-        # response = self.query_region('disruptions?duration=P3Y', display=True)
-        #
-        # assert 'disruptions' in response
-        # impacts = get_impacts(response)
-        # assert len(impacts) == 3
+        assert 'disruptions' in response
+        impacts = get_impacts(response)
+        assert len(impacts) == 2
 
-#TODO, test on != dates
+        response = self.query_region('disruptions?duration=P3Y&' + default_date_filter)
+
+        assert 'disruptions' in response
+        impacts = get_impacts(response)
+        assert len(impacts) == 3

@@ -526,16 +526,16 @@ struct routing_api_data {
 
         {
             //we create another disruption on line A, but with different date to test the period filtering
-            // publication period is june to july
-            // application period is split in 2, first half on june + first half of august
+            // publication period is june to july 2015
+            // application period is split in 2, first half on june + first half of august 2015
             auto disruption = std::make_unique<Disruption>();
             disruption->uri = "disruption_on_line_A_but_later";
-            disruption->publication_period = boost::posix_time::time_period("20140601T000000"_dt, "20140701T000000"_dt);
+            disruption->publication_period = default_period;
 
             auto impact = boost::make_shared<Impact>();
             impact->uri = "later_impact";
-            impact->application_periods = {boost::posix_time::time_period("20140601T000000"_dt, "20140615T120000"_dt),
-                                          boost::posix_time::time_period("20140801T000000"_dt, "20140815T120000"_dt)};
+            impact->application_periods = {boost::posix_time::time_period("20150601T000000"_dt, "20150615T120000"_dt),
+                                          boost::posix_time::time_period("20150801T000000"_dt, "20150815T120000"_dt)};
 
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
             //add another pt impacted object just to test with several
