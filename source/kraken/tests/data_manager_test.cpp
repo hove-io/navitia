@@ -46,8 +46,11 @@ class Data{
         mutable std::atomic<bool> is_connected_to_rabbitmq;
         static bool load_status;
         static bool destructor_called;
+        size_t data_identifier;
 
-        Data(){is_connected_to_rabbitmq = false;}
+        Data(size_t data_identifier=0):
+            data_identifier(data_identifier)
+        {is_connected_to_rabbitmq = false;}
 
         ~Data(){Data::destructor_called = true;}
 };

@@ -49,7 +49,7 @@ namespace navitia {
 void MaintenanceWorker::load(){
     const std::string database = conf.databases_path();
     auto chaos_database = conf.chaos_database();
-    LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
+    LOG4CPLUS_INFO(logger, "Loading database from file: " + database);
     if(this->data_manager.load(database, chaos_database)){
         auto data = data_manager.get_data();
     }
@@ -57,7 +57,7 @@ void MaintenanceWorker::load(){
 
 
 void MaintenanceWorker::operator()(){
-    LOG4CPLUS_INFO(logger, "starting background thread");
+    LOG4CPLUS_INFO(logger, "Starting background thread");
     load();
 
     while(true){
@@ -65,7 +65,7 @@ void MaintenanceWorker::operator()(){
             this->init_rabbitmq();
             this->listen_rabbitmq();
         }catch(const std::runtime_error& ex){
-            LOG4CPLUS_ERROR(logger, std::string("connection to rabbitmq fail: ") << ex.what());
+            LOG4CPLUS_ERROR(logger, std::string("Connection to rabbitmq failed: ") << ex.what());
             data_manager.get_data()->is_connected_to_rabbitmq = false;
             sleep(10);
         }
@@ -73,18 +73,18 @@ void MaintenanceWorker::operator()(){
 }
 
 void MaintenanceWorker::handle_task(AmqpClient::Envelope::ptr_t envelope){
-    LOG4CPLUS_TRACE(logger, "task received");
+    LOG4CPLUS_TRACE(logger, "Task received");
     pbnavitia::Task task;
     bool result = task.ParseFromString(envelope->Message()->Body());
     if(!result){
-        LOG4CPLUS_WARN(logger, "protobuf not valid!");
+        LOG4CPLUS_WARN(logger, "Protobuf is not valid!");
         return;
     }
     switch(task.action()){
         case pbnavitia::RELOAD:
             load(); break;
         default:
-            LOG4CPLUS_TRACE(logger, "task ignored");
+            LOG4CPLUS_TRACE(logger, "Task ignored");
     }
 }
 

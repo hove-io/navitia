@@ -39,15 +39,19 @@ www.navitia.io
 
 #include <memory>
 #include <iostream>
+#include <atomic>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 
 template<typename Data>
 class DataManager{
     boost::shared_ptr<const Data> current_data;
+    std::atomic_size_t data_identifier;
 public:
 
-    DataManager() : current_data(boost::make_shared<const Data>()){}
+    DataManager() : current_data(boost::make_shared<const Data>()){
+        data_identifier = 0;
+    }
 
     void set_data(const Data* d) { set_data(boost::shared_ptr<const Data>(d)); }
     void set_data(boost::shared_ptr<const Data>&& data) {
@@ -57,8 +61,9 @@ public:
         release_memory();
     }
     boost::shared_ptr<const Data> get_data() const { return current_data; }
-    boost::shared_ptr<Data> get_data_clone() const {
-        auto data = boost::make_shared<Data>();
+    boost::shared_ptr<Data> get_data_clone() {
+        ++ data_identifier;
+        auto data = boost::make_shared<Data>(data_identifier.load());
         time_it("Clone data: ", [&]() { data->clone_from(*current_data); });
         return std::move(data);
     }
@@ -74,7 +79,8 @@ public:
     bool load(const std::string& database, 
               const boost::optional<std::string>& chaos_database = boost::none){
         bool success;
-        auto data = boost::make_shared<Data>();
+        ++ data_identifier;
+        auto data = boost::make_shared<Data>(data_identifier.load());
         success = data->load(database, chaos_database);
         if (success) {
             set_data(std::move(data));
