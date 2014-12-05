@@ -62,25 +62,21 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-Data::Data() :
+Data::Data(size_t data_identifier) :
+    data_identifier(data_identifier),
     meta(std::make_unique<MetaData>()),
     pt_data(std::make_unique<PT_Data>()),
     geo_ref(std::make_unique<navitia::georef::GeoRef>()),
     dataRaptor(std::make_unique<navitia::routing::dataRAPTOR>()),
     fare(std::make_unique<navitia::fare::Fare>()),
     find_admins(
-        [&](const GeographicalCoord &c){
+            [&](const GeographicalCoord &c){
             return geo_ref->find_admins(c);
-        })
+            })
 {
-        loaded = false;
-        is_connected_to_rabbitmq = false;
+    loaded = false;
+    is_connected_to_rabbitmq = false;
 }
-
-Data::Data(size_t data_identifier) :
-    data_identifier(data_identifier) {
-        Data();
-    }
 
 Data::~Data(){}
 
