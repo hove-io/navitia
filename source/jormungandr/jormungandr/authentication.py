@@ -38,7 +38,7 @@ from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 import datetime
 import base64
-from navitiacommon.models import User, Instance, db
+from navitiacommon.models import User, Instance, db, Key
 from jormungandr import cache, app as current_app
 
 
@@ -139,6 +139,10 @@ def cache_get_user(token):
     return User.get_from_token(token, datetime.datetime.now())
 
 
+@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
+def cache_get_key(token):
+    return Key.get_by_token(token)
+
 def get_user(token, abort_if_no_token=True):
     """
     return the current authenticated User or None
@@ -162,6 +166,16 @@ def get_user(token, abort_if_no_token=True):
         logging.debug('user %s', g.user)
 
         return g.user
+
+def get_app_name(token):
+    """
+    return the app_name for the token
+    """
+    if token:
+        key = cache_get_key(token)
+        if key:
+            return key.app_name
+    return None
 
 
 def abort_request(user=None):

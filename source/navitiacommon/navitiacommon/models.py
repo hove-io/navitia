@@ -111,6 +111,9 @@ class Key(db.Model):
     def __repr__(self):
         return '<Key %r>' % self.token
 
+    @classmethod
+    def get_by_token(cls, token):
+        return cls.query.filter_by(token=token).first()
 
 class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
