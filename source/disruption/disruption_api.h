@@ -36,9 +36,9 @@ www.navitia.io
 namespace navitia { namespace disruption {
 
 pbnavitia::Response disruptions(const navitia::type::Data& d,
-                                u_int64_t application_period_begin,
-                                u_int64_t application_period_end,
-                                u_int64_t publication_dt,
+                                uint64_t application_period_begin,
+                                uint64_t application_period_end,
+                                uint64_t publication_dt,
                                 const size_t depth,
                                 size_t count,
                                 size_t start_page, const std::string& filter,
