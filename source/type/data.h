@@ -80,6 +80,7 @@ public:
     std::atomic<bool> loading; //< Is the data being loaded
 
     std::unique_ptr<MetaData> meta;
+    size_t data_identifier = 0;
 
     // data referential
 
@@ -131,6 +132,7 @@ public:
     // before.
     mutable std::atomic<bool> is_connected_to_rabbitmq;
 
+    Data(size_t data_identifier);
     Data();
     ~Data();
 

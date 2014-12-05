@@ -68,11 +68,19 @@ Data::Data() :
     geo_ref(std::make_unique<navitia::georef::GeoRef>()),
     dataRaptor(std::make_unique<navitia::routing::dataRAPTOR>()),
     fare(std::make_unique<navitia::fare::Fare>()),
-    find_admins([&](const GeographicalCoord &c){return geo_ref->find_admins(c);})
+    find_admins(
+        [&](const GeographicalCoord &c){
+            return geo_ref->find_admins(c);
+        })
 {
-    this->is_connected_to_rabbitmq = false;
-    this->loaded = false;
+        loaded = false;
+        is_connected_to_rabbitmq = false;
 }
+
+Data::Data(size_t data_identifier) :
+    data_identifier(data_identifier) {
+        Data();
+    }
 
 Data::~Data(){}
 

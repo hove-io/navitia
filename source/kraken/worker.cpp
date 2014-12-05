@@ -168,12 +168,12 @@ pbnavitia::Response Worker::metadatas() {
 
 void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data){
     //@TODO should be done in data_manager
-    if(&*data != this->last_data || !planner){
+    if(data->data_identifier != this->last_data_identifier || !planner){
         planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*data));
         street_network_worker = std::unique_ptr<georef::StreetNetwork>(new georef::StreetNetwork(*data->geo_ref));
-        this->last_data = &*data;
+        this->last_data_identifier = data->data_identifier;
 
-        LOG4CPLUS_INFO(logger, "instanciation du planner");
+        LOG4CPLUS_INFO(logger, "Instanciate planner");
     }
 }
 
