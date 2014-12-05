@@ -37,7 +37,7 @@ def get_impacts(response):
         if name == 'disruptions':
             impacts_by_uri[val["impact_uri"]] = val
 
-    walk_dict(response['disruptions'], fill_dict)
+    walk_dict(get_not_null(response, 'disruptions'), fill_dict)
     return impacts_by_uri
 
 # for the tests we need custom datetime to display the disruptions
@@ -97,6 +97,7 @@ class TestDisruptions(AbstractTestFixture):
         """
         by querying directly the impacted object, we find the same results
         """
+        # TODO: we can't make those test for the moment since we need to add a datetime param to those APIs
         # networks = self.query_region('networks/base_network?' + default_date_filter)
         # network = get_not_null(networks, 'networks')[0]
         # is_valid_network(network)
@@ -126,6 +127,7 @@ class TestDisruptions(AbstractTestFixture):
         assert len(stops) == 1
         stop = stops[0]
 
+        #TODO: we can't make those test for the moment since we need to add a datetime param to those APIs
         #get_not_null(stop, 'disruptions')
 
     def test_direct_disruption_call(self):
@@ -139,6 +141,7 @@ class TestDisruptions(AbstractTestFixture):
         """
 
         """
+        TODO: we can't make those test for the moment since we need to add a datetime param to those APIs
         response = self.query_region('stop_areas/stopB/disruptions?' + default_date_filter, display=True)
 
         disruptions = get_not_null(response, 'disruptions')
@@ -194,12 +197,34 @@ class TestDisruptions(AbstractTestFixture):
 
         response = self.query_region('disruptions?duration=P3D&' + default_date_filter)
 
-        assert 'disruptions' in response
         impacts = get_impacts(response)
         assert len(impacts) == 2
+        assert 'later_impact' not in impacts
 
         response = self.query_region('disruptions?duration=P3Y&' + default_date_filter)
 
-        assert 'disruptions' in response
         impacts = get_impacts(response)
         assert len(impacts) == 3
+        assert 'later_impact' in impacts
+
+    def test_disruption_publication_date_filter(self):
+        """
+        test the publication date filter
+
+        'disruption_on_line_A_but_publish_later' is published from the 28th of january at 10
+
+        so at 9 it is not in the list, at 11, we get it
+        """
+        response = self.query_region('disruptions?datetime=20140101T000000'
+                                     '&publication_datetime=20140128T090000', display=True)
+
+        impacts = get_impacts(response)
+        assert len(impacts) == 2
+        assert 'impact_published_later' not in impacts
+
+        response = self.query_region('disruptions?datetime=20140101T000000'
+                                     '&publication_datetime=20140128T130000', display=True)
+
+        impacts = get_impacts(response)
+        assert len(impacts) == 3
+        assert 'impact_published_later' in impacts

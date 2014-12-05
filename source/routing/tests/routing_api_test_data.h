@@ -548,6 +548,28 @@ struct routing_api_data {
 
             holder.disruptions.push_back(std::move(disruption));
         }
+        {
+            //we create another disruption on line A, but not publish at the same date as the other ones
+            //this one is published from the 28th of january
+            auto disruption = std::make_unique<Disruption>();
+            disruption->uri = "disruption_on_line_A_but_publish_later";
+            disruption->publication_period = boost::posix_time::time_period("20140128T120000"_dt, "20140201T120000"_dt);;
+
+            auto impact = boost::make_shared<Impact>();
+            impact->uri = "impact_published_later";
+            impact->application_periods = {default_period};
+
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Line, "A", *b.data->pt_data, impact));
+            //add another pt impacted object just to test with several
+            impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, "base_network", *b.data->pt_data, impact));
+
+            impact->messages.push_back({"sad message", default_date, default_date});
+            impact->messages.push_back({"too sad message", default_date, default_date});
+
+            disruption->add_impact(impact);
+
+            holder.disruptions.push_back(std::move(disruption));
+        }
     }
 
     int AA = 0;
