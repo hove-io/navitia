@@ -109,19 +109,20 @@ struct RAPTOR
             int departure_hour, int departure_day, DateTime bound, bool disruption_active,
             bool allow_odt,
             bool clockwise = true,
-            /*const type::Properties &required_properties = 0*/
             const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
             max_transfers=std::numeric_limits<uint32_t>::max(),
             const std::vector<std::string>& forbidden_uris = {});
 
 
+    typedef std::pair<type::idx_t, navitia::time_duration> stop_point_duration;
+    typedef std::vector<stop_point_duration> vec_stop_point_duration;
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
     * stop points de départs, vers plusieurs stoppoints d'arrivée,
     * à une heure donnée.
     */
     std::vector<Path>
-    compute_all(const std::vector<std::pair<type::idx_t, navitia::time_duration>> &departs,
-                const std::vector<std::pair<type::idx_t, navitia::time_duration>> &destinations,
+    compute_all(const vec_stop_point_duration &departs,
+                const vec_stop_point_duration &destinations,
                 const DateTime &departure_datetime, bool disruption_active, bool allow_odt,
                 const DateTime &bound=DateTimeUtils::inf,
                 const uint32_t max_transfers=std::numeric_limits<int>::max(),
@@ -134,8 +135,8 @@ struct RAPTOR
      * à une heure donnée.
      */
     std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
-    compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &departures,
-                   const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > &arrivals,
+    compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration > > &departures,
+                   const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration > > &arrivals,
                    const DateTime &departure_datetime,
                    bool disruption_active, 
                    bool allow_odt,
@@ -152,7 +153,7 @@ struct RAPTOR
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
     void
-    isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duration>> &departures_,
+    isochrone(const vec_stop_point_duration &departures_,
               const DateTime &departure_datetime, const DateTime &bound = DateTimeUtils::min,
               uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
               const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
@@ -163,8 +164,9 @@ struct RAPTOR
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
     void set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> & forbidden,
-                                      bool disruption_active,
-                                      bool allow_odt);
+                              bool disruption_active, bool allow_odt,
+                              const vec_stop_point_duration &departs = {},
+                              const vec_stop_point_duration &destinations = {});
 
     ///Boucle principale, parcourt les journey_patterns,
     void boucleRAPTOR(const type::AccessibiliteParams & accessibilite_params, bool clockwise, bool disruption_active,
