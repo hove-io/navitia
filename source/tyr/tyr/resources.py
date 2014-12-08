@@ -34,6 +34,7 @@ import flask_restful
 from flask_restful import fields, marshal_with, marshal, reqparse, types
 import sqlalchemy
 from validate_email import validate_email
+from datetime import datetime
 
 import logging
 
@@ -233,16 +234,23 @@ class User(flask_restful.Resource):
                     case_sensitive=False, help='login')
             parser.add_argument('email', type=unicode, required=False,
                     case_sensitive=False, help='email')
+            parser.add_argument('key', type=unicode, required=False,
+                    case_sensitive=False, help='key')
             args = parser.parse_args()
 
-            # dict comprehension would be better, but it's not in python 2.6
-            filter_params = dict((k, v) for k, v in args.items() if v)
-
-            if filter_params:
-                users = models.User.query.filter_by(**filter_params).all()
+            if args['key']:
+                logging.debug(args['key'])
+                users = models.User.get_from_token(args['key'], datetime.now())
                 return marshal(users, user_fields)
             else:
-                return marshal(models.User.query.all(), user_fields)
+                # dict comprehension would be better, but it's not in python 2.6
+                filter_params = dict((k, v) for k, v in args.items() if v)
+
+                if filter_params:
+                    users = models.User.query.filter_by(**filter_params).all()
+                    return marshal(users, user_fields)
+                else:
+                    return marshal(models.User.query.all(), user_fields)
 
     def post(self):
         user = None
