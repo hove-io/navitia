@@ -29,14 +29,12 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import importlib
 from flask_restful.representations import json
 from flask import request
 from jormungandr import rest_api
 from jormungandr.index import index
-from jormungandr.modules.tisseo_routing.TisseoRouting import TisseoRouting
 from jormungandr.modules_loader import ModulesLoader
-
-from jormungandr.modules.v1_routing.v1_routing import V1Routing
 
 
 @rest_api.representation("text/jsonp")
@@ -49,15 +47,14 @@ def output_jsonp(data, code, headers=None):
     return resp
 
 
-rest_api.module_loader = ModulesLoader(rest_api)
+# If modules are configured, then load and run them
+if 'MODULES' in rest_api.app.config:
+    rest_api.module_loader = ModulesLoader(rest_api)
+    for prefix, module_info in rest_api.app.config['MODULES'].iteritems():
+        module_file = importlib.import_module(module_info['import_path'])
+        module = getattr(module_file, module_info['class_name'])
+        rest_api.module_loader.load(module(rest_api, prefix))
 
-rest_api.module_loader.load(V1Routing(rest_api, 'v1',
-                                      'Current version of navitia API',
-                                      status='current'))
-# Uncomment the following lines if you want to activate the test module
-#rest_api.module_loader.load(TisseoRouting(rest_api, 'tisseo/test',
-#                                          'Test module',
-#                                          status='testing'))
-rest_api.module_loader.run()
+    rest_api.module_loader.run()
 
 index(rest_api)

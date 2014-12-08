@@ -35,12 +35,12 @@ from jormungandr.modules_loader import ABlueprint
 
 
 class TisseoRouting(ABlueprint):
-    def __init__(self, api, name, description=None, status=None):
+    def __init__(self, api, name):
         super(TisseoRouting, self).__init__(api,
                                             name,
                                             __name__,
-                                            description,
-                                            status,
+                                            description='Test module',
+                                            status='testing',
                                             index_endpoint='index_json',
                                             static_folder='static',
                                             template_folder='templates')
@@ -58,6 +58,5 @@ class TisseoRouting(ABlueprint):
             abort(404)
 
     def index_json(self):
-        return make_response(json.dumps({'Raw': 'json',
-                                         'link': url_for(self.name + '.page')},
+        return make_response(json.dumps({'Raw': 'json', 'link': url_for(self.name + '.page')},
                                         sort_keys=True))

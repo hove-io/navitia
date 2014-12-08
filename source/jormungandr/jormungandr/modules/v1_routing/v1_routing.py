@@ -89,8 +89,10 @@ class IdConverter(BaseConverter):
 
 
 class V1Routing(AModule):
-    def __init__(self, api, name, description, status):
-        super(V1Routing, self).__init__(api, name, description, status,
+    def __init__(self, api, name):
+        super(V1Routing, self).__init__(api, name,
+                                        description='Current version of navitia API',
+                                        status='current',
                                         index_endpoint='index')
 
     def setup(self):
