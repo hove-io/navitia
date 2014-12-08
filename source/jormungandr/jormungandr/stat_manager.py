@@ -35,7 +35,7 @@ from navitiacommon import stat_pb2
 from datetime import datetime
 import logging
 from jormungandr import app
-from jormungandr.authentication import get_user, get_token
+from jormungandr.authentication import get_user, get_token, get_app_name
 from jormungandr import utils
 
 import time
@@ -133,7 +133,11 @@ class StatManager(object):
             stat_request.user_name = user.login
 
         stat_request.application_id = -1
-        stat_request.application_name = ''
+        app_name = get_app_name(get_token())
+        if app_name:
+            stat_request.application_name = app_name
+        else:
+            stat_request.application_name = ''
         stat_request.api = request.endpoint
         stat_request.host = request.host_url
         if request.remote_addr and \
