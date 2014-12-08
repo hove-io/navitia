@@ -57,8 +57,8 @@ def run_migrations_online():
     try:
         context.configure(
                 connection=connection,
-                target_metadata=None,
-                include_schemas=False,
+                target_metadata=target_metadata,
+                include_schemas=True,
                 include_object=include_object,
                 render_item=render_item
                 )
