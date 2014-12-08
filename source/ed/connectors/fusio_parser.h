@@ -283,7 +283,7 @@ struct CalendarLineFusioHandler : public GenericHandler {
 };
 }
 
-struct AdminStopAreaFusioHandler : public GenericHandler {
+struct  AdminStopAreaFusioHandler : public GenericHandler {
     AdminStopAreaFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int admin_c, stop_area_c;
 
@@ -294,7 +294,6 @@ struct AdminStopAreaFusioHandler : public GenericHandler {
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"admin_id", "station_id"}; }
-
 };
 
 /**

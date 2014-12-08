@@ -216,6 +216,7 @@ void Data::complete(){
     build_journey_pattern_points();
     build_block_id();
     finalize_frequency();
+
     ::ed::normalize_uri(journey_patterns);
     ::ed::normalize_uri(routes);
 
@@ -249,8 +250,7 @@ void Data::complete(){
                    stop_point_connections.size() - connections_size << " connections added");
 }
 
-
-void Data::clean(){
+void Data::clean() {
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::set<std::string> toErase;
