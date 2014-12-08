@@ -129,6 +129,7 @@ class Scenario(simple.Scenario):
         req.journeys.wheelchair = request["wheelchair"]
         req.journeys.disruption_active = request["disruption_active"]
         req.journeys.show_codes = request["show_codes"]
+        req.journeys.allow_odt = True
         if "details" in request and request["details"]:
             req.journeys.details = request["details"]
 
