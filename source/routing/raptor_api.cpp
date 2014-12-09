@@ -103,7 +103,12 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     }
 
     fill_pb_object(vj, d, stop_times, add_info_vehicle_journey, 0, now, action_period);
-    fill_shape(pb_section, stop_times);
+    if (!stop_times.front()->odt()) {
+        fill_shape(pb_section, stop_times);
+    } else {
+        add_coord(stop_times.front()->journey_pattern_point->stop_point->coord, pb_section);
+        add_coord(stop_times.back()->journey_pattern_point->stop_point->coord, pb_section);
+    }
 }
 
 void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::routing::Path>& paths,
@@ -194,6 +199,7 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
                 bt::ptime departure_ptime, arrival_ptime;
                 type::VehicleJourney const *const vj = item.get_vj();
                 int length = 0;
+
                 for(size_t i=0;i<item.stop_points.size();++i) {
                     if (vj->has_boarding() || vj->has_landing()) {
                         continue;

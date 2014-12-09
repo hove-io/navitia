@@ -195,7 +195,6 @@ makePath(type::idx_t destination_idx, size_t countb, bool clockwise, bool disrup
 
 
 void patch_datetimes(Path &path){
-
     for(auto &item : path.items) {
         //if the vehicle journeys of a public transport section isn't of type regular
         //We keep only the first and the last stop time
