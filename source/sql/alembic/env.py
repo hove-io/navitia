@@ -49,7 +49,9 @@ def run_migrations_online():
     # We need to create again the engine afterward since the alembic_version table is 
     # searched at the creation
     engine = make_engine()
-    engine.execute("set search_path to 'public'") 
+    r = engine.execute("set search_path to 'public'") 
+    r.close()
+    engine.dispose()
 
     engine = make_engine() # second creation with the right default schema
 
