@@ -290,12 +290,13 @@ void Data::complete(){
 
     build_grid_validity_pattern();
     build_associated_calendar();
-    aggregate_odt();
 
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building administrative regions");
     build_administrative_regions();
     admin = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    aggregate_odt();
 
     compute_labels();
 
@@ -416,7 +417,7 @@ void Data::aggregate_odt(){
 
     //for zone odt, we weed to fill the Admin structure
     for (const auto jp: pt_data->journey_patterns) {
-        if (jp->odt_level == type::OdtLevel_e::zonal) {
+        if (jp->odt_level != type::OdtLevel_e::zonal) {
             continue;
         }
 

@@ -509,31 +509,77 @@ static void add_isochrone_response(RAPTOR& raptor,
     }
 }
 
-static std::vector<std::pair<type::idx_t, navitia::time_duration> >
-get_stop_points( const type::EntryPoint& ep,
-                 const type::Data& data,
-                 georef::StreetNetwork& worker,
-                 bool use_second = false) {
+template <typename T>
+const std::vector<georef::Admin*>& get_admins(const std::string& uri, const std::unordered_map<std::string, T*>& obj_map) {
+    auto it = obj_map.find(uri);
+    if (it == obj_map.end()) {
+        static const std::vector<georef::Admin*> empty_list;
+        return empty_list;
+    }
+    return it->second->admin_list;
+}
+
+const std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::Data& data) {
+    if (ep.type == type::Type_e::StopArea) {
+        return get_admins<type::StopArea>(ep.uri, data.pt_data->stop_areas_map);
+    }
+    if (ep.type == type::Type_e::StopPoint) {
+        return get_admins<type::StopPoint>(ep.uri, data.pt_data->stop_points_map);
+    }
+    if (ep.type == type::Type_e::Admin) {
+        auto it_admin = data.geo_ref->admin_map.find(ep.uri);
+        if (it_admin == data.geo_ref->admin_map.end()) {
+            return {};
+        }
+        const auto admin = data.geo_ref->admins[it_admin->second];
+        return {admin};
+    }
+    if (ep.type == type::Type_e::POI) {
+        auto it_poi = data.geo_ref->poi_map.find(ep.uri);
+        if (it_poi == data.geo_ref->poi_map.end()) {
+            return {};
+        }
+        const auto poi = data.geo_ref->pois[it_poi->second];
+        return poi->admin_list;
+    }
+    //else we look for the coordinate's admin
+    return data.geo_ref->find_admins(ep.coordinates);
+}
+
+static
+std::vector<std::pair<type::idx_t, navitia::time_duration> >
+get_stop_points( const type::EntryPoint &ep, const type::Data& data,
+        georef::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, navitia::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
-    if(ep.type == type::Type_e::Address
+    if (ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord
                 || ep.type == type::Type_e::StopArea
-                || ep.type == type::Type_e::POI){
+                || ep.type == type::Type_e::POI) {
         std::set<type::idx_t> stop_points;
-        if(ep.type == type::Type_e::StopArea){
+
+        if (ep.type == type::Type_e::StopArea) {
             auto it = data.pt_data->stop_areas_map.find(ep.uri);
-            if(it!= data.pt_data->stop_areas_map.end()) {
-                for(auto stop_point : it->second->stop_point_list) {
-                    if(stop_points.find(stop_point->idx) == stop_points.end()) {
+            if (it!= data.pt_data->stop_areas_map.end()) {
+                for (auto stop_point : it->second->stop_point_list) {
+                    if (stop_points.find(stop_point->idx) == stop_points.end()) {
                         result.push_back({stop_point->idx, {}});
                         stop_points.insert(stop_point->idx);
                     }
                 }
             }
         }
+
+        //we need to check if the admin has zone odt
+        const auto& admins = find_admins(ep, data);
+        for (const auto* admin: admins) {
+            for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
+                stop_points.insert(odt_admin_stop_point->idx);
+            }
+        }
+
         auto tmp_sn = worker.find_nearest_stop_points(
                     ep.streetnetwork_params.max_duration,
                     data.pt_data->stop_point_proximity_list,
@@ -545,9 +591,9 @@ get_stop_points( const type::EntryPoint& ep,
                 result.push_back(idx_duration);
             }
         }
-    } else if(ep.type == type::Type_e::StopPoint) {
+    } else if (ep.type == type::Type_e::StopPoint) {
         auto it = data.pt_data->stop_points_map.find(ep.uri);
-        if(it != data.pt_data->stop_points_map.end()){
+        if (it != data.pt_data->stop_points_map.end()){
             result.push_back({it->second->idx, {}});
         }
     } else if(ep.type == type::Type_e::Admin) {
