@@ -108,7 +108,7 @@ enum class Type_e {
     Calendar                        = 24
 };
 
-enum class Mode_e{
+enum class Mode_e {
     Walking = 0,    // Marche à pied
     Bike = 1,       // Vélo
     Car = 2,        // Voiture
@@ -116,7 +116,7 @@ enum class Mode_e{
     //Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
 };
 
-enum class OdtLevel_e{
+enum class OdtLevel_e {
     none = 0,
     mixt = 1,
     zonal = 2,
