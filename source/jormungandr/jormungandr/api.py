@@ -46,7 +46,6 @@ def output_jsonp(data, code, headers=None):
         resp.data = str(callback) + '(' + resp.data + ')'
     return resp
 
-
 # If modules are configured, then load and run them
 if 'MODULES' in rest_api.app.config:
     rest_api.module_loader = ModulesLoader(rest_api)
@@ -54,7 +53,9 @@ if 'MODULES' in rest_api.app.config:
         module_file = importlib.import_module(module_info['import_path'])
         module = getattr(module_file, module_info['class_name'])
         rest_api.module_loader.load(module(rest_api, prefix))
-
     rest_api.module_loader.run()
+else:
+    rest_api.app.logger.warning('MODULES isn\'t defined in config. No module will be loaded, then no route '
+                                'will be defined.')
 
 index(rest_api)

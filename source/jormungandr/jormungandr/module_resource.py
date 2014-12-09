@@ -46,9 +46,7 @@ class ModuleResourcesManager(object):
                 of ModuleResource
         """
         if not isinstance(resource, ModuleResource):
-            raise TypeError('Expected type {0}, got {1} instead'
-                            .format('ModuleResource',
-                                    resource.__class__.__name__))
+            raise TypeError('Expected type ModuleResource, got %s instead' % resource.__class__.__name__)
         resource.associate_to(self.module)
         self.resources.append(resource)
 
