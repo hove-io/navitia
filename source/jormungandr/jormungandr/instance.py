@@ -174,6 +174,16 @@ class Instance(object):
         instance_db = self._get_models()
         return get_value_or_default('destineo_min_car', instance_db, self.name)
 
+    @property
+    def factor_too_long_journey(self):
+        instance_db = self._get_models()
+        return get_value_or_default('factor_too_long_journey', instance_db, self.name)
+
+    @property
+    def min_duration_too_long_journey(self):
+        instance_db = self._get_models()
+        return get_value_or_default('min_duration_too_long_journey', instance_db, self.name)
+
     @contextmanager
     def socket(self, context):
         socket = None

@@ -191,6 +191,13 @@ class Instance(flask_restful.Resource):
         parser.add_argument('destineo_min_car', type=int,
                 help='minimum duration of car fallback', location=('json', 'values'),
                 default=instance.destineo_min_car)
+        parser.add_argument('factor_too_long_journey', type=float,
+                help='if a journey is X time longer than the earliest one we remove it', location=('json', 'values'),
+                default=instance.factor_too_long_journey)
+        parser.add_argument('min_duration_too_long_journey', type=int,
+                help='all journeys with a duration fewer than this value will be kept no matter what even if they ' \
+                        'are 20 times slower than the earliest one', location=('json', 'values'),
+                default=instance.min_duration_too_long_journey)
 
         args = parser.parse_args()
 
@@ -212,6 +219,8 @@ class Instance(flask_restful.Resource):
             instance.destineo_min_bike = args['destineo_min_bike']
             instance.destineo_min_bss = args['destineo_min_bss']
             instance.destineo_min_car = args['destineo_min_car']
+            instance.min_duration_too_long_journey = args['min_duration_too_long_journey']
+            instance.factor_too_long_journey = args['factor_too_long_journey']
             db.session.commit()
         except Exception:
             logging.exception("fail")

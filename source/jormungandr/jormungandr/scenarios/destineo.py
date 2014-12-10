@@ -218,6 +218,10 @@ class Scenario(default.Scenario):
         request_alternative['max_nb_journeys'] = None
         logger.debug('journeys only on TC')
         response_tc = super(Scenario, self).journeys(request_tc, instance)
+        max_duration = self._find_max_duration(response_tc.journeys, instance, request['clockwise'])
+        if max_duration:
+            #we find the max_duration with the pure tc call, so we use it for the alternatives
+            request_alternative['max_duration'] =  int(max_duration)
 
         logger.debug('journeys with alternative mode')
         response_alternative = self._get_alternatives(request_alternative, instance)
@@ -366,3 +370,4 @@ class Scenario(default.Scenario):
         datetime_before = f_arrival - timedelta(minutes=1)
 
         return (datetime_before, datetime_after)
+

@@ -630,8 +630,12 @@ instance_parameters = {
     'car_speed': fields.Raw,
     'destineo_min_bike': fields.Raw,
     'destineo_min_car': fields.Raw,
+    'destineo_min_bss': fields.Raw,
     'destineo_min_tc_with_bike': fields.Raw,
     'destineo_min_tc_with_car': fields.Raw,
+    'destineo_min_tc_with_bss': fields.Raw,
+    'factor_too_long_journey': fields.Raw,
+    'min_duration_too_long_journey': fields.Raw,
 }
 
 instance_status_with_parameters = deepcopy(instance_status)

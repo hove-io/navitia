@@ -164,6 +164,11 @@ class Instance(db.Model):
 
     destineo_min_car = db.Column(db.Integer, default=default_values.destineo_min_car, nullable=False)
 
+    factor_too_long_journey = db.Column(db.Float, default=default_values.factor_too_long_journey, nullable=False)
+
+    min_duration_too_long_journey = db.Column(db.Integer, default=default_values.min_duration_too_long_journey, \
+            nullable=False)
+
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
