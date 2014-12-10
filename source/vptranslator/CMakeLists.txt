@@ -2,6 +2,7 @@ SET(vptranslator_src
     vptranslator.h
     vptranslator.cpp)
 add_library(vptranslator ${vptranslator_src})
+target_link_libraries(vptranslator types)
 
 
 add_executable (vptranslator_test test.cpp)
