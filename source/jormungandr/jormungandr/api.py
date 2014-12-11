@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -29,12 +29,12 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
+import importlib
 from flask_restful.representations import json
-from jormungandr.interfaces.v1_routing import v1_routing
 from flask import request
 from jormungandr import rest_api
 from jormungandr.index import index
+from jormungandr.modules_loader import ModulesLoader
 
 
 @rest_api.representation("text/jsonp")
@@ -46,5 +46,16 @@ def output_jsonp(data, code, headers=None):
         resp.data = str(callback) + '(' + resp.data + ')'
     return resp
 
+# If modules are configured, then load and run them
+if 'MODULES' in rest_api.app.config:
+    rest_api.module_loader = ModulesLoader(rest_api)
+    for prefix, module_info in rest_api.app.config['MODULES'].iteritems():
+        module_file = importlib.import_module(module_info['import_path'])
+        module = getattr(module_file, module_info['class_name'])
+        rest_api.module_loader.load(module(rest_api, prefix))
+    rest_api.module_loader.run()
+else:
+    rest_api.app.logger.warning('MODULES isn\'t defined in config. No module will be loaded, then no route '
+                                'will be defined.')
+
 index(rest_api)
-v1_routing(rest_api)

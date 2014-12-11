@@ -1,10 +1,10 @@
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-#     the software to build cool stuff with public transport.
+# the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+# powered by Canal TP (www.canaltp.fr).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -27,5 +27,4 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-__all__ = ['Uri', 'Coverage', 'Journeys', 'Places', 'ResourceUri',
-           'Schedules', 'Disruptions', 'Calendars', 'Ptobjects']
+__all__ = ['Index']

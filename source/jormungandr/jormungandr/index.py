@@ -1,7 +1,7 @@
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-#     the software to build cool stuff with public transport.
+# the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -28,30 +28,30 @@
 # www.navitia.io
 
 from flask.ext.restful import Resource
-from flask import url_for
+from jormungandr.modules_loader import ModulesLoader
+from jormungandr.interfaces.v1.make_links import create_external_link
+
 
 def index(api):
     api.add_resource(Index, '/')
 
 
 class Index(Resource):
-
     def get(self):
-        return {
-            "versions": [
-                {
-                    "value": "v1",
-                    "description": "Current version of the api",
-                    "status": "current",
-                    "links": [
-                        {
-                            "href": url_for('v1.index', _external=True),
-                            "templated": False,
-                            "rel": 'api',
-                            "type": 'api'
-                        }
-                    ]
-                }
-            ]
-        }
+        resp = {"versions": []}
+        for module_name, module in ModulesLoader.modules.iteritems():
+            mod = {
+                'value': module_name,
+                'description': module.description,
+                'status': module.status,
+                'links': [
+                    create_external_link(
+                        module_name + '.' + module.index_endpoint,
+                        rel='api',
+                        _type='api')
+                ]
+            }
+            resp['versions'].append(mod)
+        return resp
+
 

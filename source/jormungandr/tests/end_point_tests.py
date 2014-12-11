@@ -42,12 +42,12 @@ class TestEmptyEndPoint(AbstractTestFixture):
 
         versions = get_not_null(json_response, 'versions')
 
-        assert len(versions) == 1
+        assert len(versions) >= 1
 
         current_found = False
         for v in versions:
             status = v["status"]
-            assert status in ["deprecated", "current"]
+            assert status in ["deprecated", "current", "testing"]
 
             if v["status"] == "current":
                 #we want one and only one 'current' api version

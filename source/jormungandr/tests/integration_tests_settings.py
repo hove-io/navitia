@@ -36,5 +36,10 @@ CACHE_CONFIGURATION = {
     'CACHE_TYPE': 'null'
 }
 
-
-
+# List of enabled modules
+MODULES = {
+    'v1': {  # API v1 of Navitia
+        'import_path': 'jormungandr.modules.v1_routing.v1_routing',
+        'class_name': 'V1Routing'
+    }
+}
