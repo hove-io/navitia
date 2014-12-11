@@ -80,9 +80,9 @@ class Disruptions(ResourceUri):
         parser_get.add_argument("datetime", type=date_time_format, default=datetime.now(),
                                 description="The datetime from which you want the disruption "
                                             "(filter on the disruption application periods)")
-        parser_get.add_argument("publication_datetime", type=date_time_format, default=datetime.now(),
+        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.now(),
                                 description="The datetime we want to publish the disruptions from."
-                                            " Default is the current date."
+                                            " Default is the current date and it is mainly used for debug."
                                             " Note: it is not the same as 'datetime' which, combined with"
                                             " duration form a period used to filter the disruption"
                                             " application periods")

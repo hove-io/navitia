@@ -200,7 +200,7 @@ pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &req
     return navitia::disruption::disruptions(*data,
                                                 request.application_period_begin(),
                                                 request.application_period_end(),
-                                                request.publication_datetime(),
+                                                request._current_datetime(),
                                                 request.depth(),
                                                 request.count(),
                                                 request.start_page(),

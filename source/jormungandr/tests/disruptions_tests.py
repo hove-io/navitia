@@ -41,7 +41,7 @@ def get_impacts(response):
     return impacts_by_uri
 
 # for the tests we need custom datetime to display the disruptions
-default_date_filter = 'datetime=20140101T000000&publication_datetime=20140101T000000'
+default_date_filter = 'datetime=20140101T000000&_current_datetime=20140101T000000'
 
 
 @dataset(["main_routing_test"])
@@ -216,14 +216,14 @@ class TestDisruptions(AbstractTestFixture):
         so at 9 it is not in the list, at 11, we get it
         """
         response = self.query_region('disruptions?datetime=20140101T000000'
-                                     '&publication_datetime=20140128T090000', display=True)
+                                     '&_current_datetime=20140128T090000', display=True)
 
         impacts = get_impacts(response)
         assert len(impacts) == 2
         assert 'impact_published_later' not in impacts
 
         response = self.query_region('disruptions?datetime=20140101T000000'
-                                     '&publication_datetime=20140128T130000', display=True)
+                                     '&_current_datetime=20140128T130000', display=True)
 
         impacts = get_impacts(response)
         assert len(impacts) == 3

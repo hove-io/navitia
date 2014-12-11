@@ -14,7 +14,7 @@ message CalendarsRequest {
 message DisruptionsRequest {
     optional uint64 application_period_begin    = 8;
     optional uint64 application_period_end      = 9;
-    optional uint64 publication_datetime        = 10;
+    optional uint64 _current_datetime           = 10;
     optional int32 depth                        = 3;
     optional int32 start_page                   = 4;
     optional int32 count                        = 5;
