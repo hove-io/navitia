@@ -300,3 +300,51 @@ def find_max_duration__counterclockwise_test():
     eq_(len(response.journeys), 2)
     eq_(response.journeys[0], journey2)
     eq_(response.journeys[1], journey3)
+
+
+def find_max_duration_clockwise_test():
+    """
+    we don't have a journey with walking so max_duration is None, and we keep all journeys
+    """
+    response = response_pb2.Response()
+    journey1 = response.journeys.add()
+
+    journey1.type = "best"
+    section = journey1.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 240
+    section = journey1.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 300
+    section = journey1.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 120
+    journey1.duration = sum([section.duration for section in journey1.sections])
+    journey1.arrival_date_time = 1418222071
+    journey1.departure_date_time = journey1.arrival_date_time - journey1.duration
+
+    journey2 = response.journeys.add()
+    journey2.type = "rapid"
+    section = journey2.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 120
+    section = journey2.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 300
+    section = journey2.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 120
+    journey2.duration = sum([section.duration for section in journey2.sections])
+    journey2.arrival_date_time = 1418220071
+    journey2.departure_date_time = journey2.arrival_date_time - journey2.duration
+
+    scenario = default.Scenario()
+    eq_(scenario._find_max_duration(response.journeys, Instance(), True), None)
+    scenario._delete_too_long_journey(response.journeys, Instance(), True)
+    eq_(len(response.journeys), 2)
+    eq_(response.journeys[0], journey1)
+    eq_(response.journeys[1], journey2)

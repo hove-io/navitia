@@ -299,6 +299,8 @@ class Scenario(simple.Scenario):
         """
         logger = logging.getLogger(__name__)
         max_duration = self._find_max_duration(journeys, instance, clockwise)
+        if not max_duration:
+            return
         to_delete = set()
         for idx, journey in enumerate(journeys):
             if journey.duration > max_duration:
