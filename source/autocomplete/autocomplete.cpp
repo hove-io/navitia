@@ -32,7 +32,7 @@ www.navitia.io
 #include "type/pt_data.h"
 namespace navitia { namespace autocomplete {
 
-void compute_score_poi(type::PT_Data&, georef::GeoRef &georef) {
+static void compute_score_poi(type::PT_Data&, georef::GeoRef& georef) {
     for (auto it = georef.fl_poi.word_quality_list.begin(); it != georef.fl_poi.word_quality_list.end(); ++it){
         for (navitia::georef::Admin* admin : georef.pois[it->first]->admin_list){
             if(admin->level == 8){
@@ -43,7 +43,7 @@ void compute_score_poi(type::PT_Data&, georef::GeoRef &georef) {
 }
 
 
-void compute_score_way(type::PT_Data&, georef::GeoRef &georef) {
+static void compute_score_way(type::PT_Data&, georef::GeoRef& georef) {
     //The scocre of each admin(level 8) is attributed to all its ways
     for (auto it = georef.fl_way.word_quality_list.begin(); it != georef.fl_way.word_quality_list.end(); ++it){
         for (navitia::georef::Admin* admin : georef.ways[it->first]->admin_list){
@@ -55,7 +55,7 @@ void compute_score_way(type::PT_Data&, georef::GeoRef &georef) {
 }
 
 
-void compute_score_stop_point(type::PT_Data &pt_data, georef::GeoRef &georef) {
+static void compute_score_stop_point(type::PT_Data& pt_data, georef::GeoRef& georef) {
     //The scocre of each admin(level 8) is attributed to all its stop_points
     for (auto it = pt_data.stop_point_autocomplete.word_quality_list.begin(); it != pt_data.stop_point_autocomplete.word_quality_list.end(); ++it){
         for(navitia::georef::Admin* admin : pt_data.stop_points[it->first]->admin_list){
@@ -73,7 +73,7 @@ static size_t admin_score(const std::vector<navitia::georef::Admin*>& admins, co
     return 0;
 }
 
-void compute_score_stop_area(type::PT_Data & pt_data, const georef::GeoRef &georef){
+static void compute_score_stop_area(type::PT_Data& pt_data, const georef::GeoRef& georef){
     //The scocre of each admin(level 8) is attributed to all its stop_areas also
     //Find the stop-point count in all stop_areas and keep the highest;
     size_t max_score = 0;
@@ -102,7 +102,7 @@ void compute_score_stop_area(type::PT_Data & pt_data, const georef::GeoRef &geor
  Pouzioux   1                   11
  Pampa      0                   7
 */
-void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
+static void compute_score_admin(type::PT_Data& pt_data, georef::GeoRef& georef) {
     //For each stop_point increase the score of it's admin(level 8) by 1.
     for (navitia::georef::Way* way: georef.ways) {
         for (navitia::georef::Admin * admin : way->admin_list){

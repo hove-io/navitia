@@ -46,10 +46,14 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
 /** Which is the first valid stop_time in this range ?
  *  Returns invalid_idx is none is
  */
-const type::StopTime* next_valid_pick_up(type::idx_t idx, const type::idx_t end, const DateTime dt,
-        const type::Data &data, bool reconstructing_path,
-        const type::VehicleProperties &required_vehicle_properties,
-        bool disruption_active){
+static const type::StopTime*
+next_valid_pick_up(type::idx_t idx,
+                   const type::idx_t end,
+                   const DateTime dt,
+                   const type::Data& data,
+                   bool reconstructing_path,
+                   const type::VehicleProperties& required_vehicle_properties,
+                   bool disruption_active){
     const auto date = DateTimeUtils::date(dt);
     const auto hour = DateTimeUtils::hour(dt);
     for(; idx < end; ++idx) {
@@ -70,11 +74,15 @@ const type::StopTime* next_valid_pick_up(type::idx_t idx, const type::idx_t end,
  *      Note: if nothing found, we also look for a stop time the day after
  * - with a calendar and a hour => we look for the next valid stop time valid for the calendar and after the hour of the date time.
  */
-std::pair<const type::StopTime*, DateTime>
-valid_pick_up(const std::vector<uint32_t>::const_iterator begin, type::idx_t idx, const type::idx_t end, const DateTime dt,
-        const type::Data &data, bool reconstructing_path,
-        const type::VehicleProperties &vehicle_properties,
-        bool disruption_active) {
+static std::pair<const type::StopTime*, DateTime>
+valid_pick_up(const std::vector<uint32_t>::const_iterator begin,
+              type::idx_t idx,
+              const type::idx_t end,
+              const DateTime dt,
+              const type::Data& data,
+              bool reconstructing_path,
+              const type::VehicleProperties &vehicle_properties,
+              bool disruption_active) {
     const type::StopTime* first_st = next_valid_pick_up(idx, end,
             dt, data, reconstructing_path, vehicle_properties, disruption_active);
     // If no trip was found, we look for one the day after
@@ -89,9 +97,13 @@ valid_pick_up(const std::vector<uint32_t>::const_iterator begin, type::idx_t idx
     return {first_st, working_dt};
 }
 
-const type::StopTime* valid_drop_off(type::idx_t idx, const type::idx_t end, const DateTime dt,
-               const type::Data &data, bool reconstructing_path,
-               const type::VehicleProperties &required_vehicle_properties,
+static const type::StopTime*
+valid_drop_off(type::idx_t idx,
+               const type::idx_t end,
+               const DateTime dt,
+               const type::Data& data,
+               bool reconstructing_path,
+               const type::VehicleProperties& required_vehicle_properties,
                bool disruption_active){
     const auto date = DateTimeUtils::date(dt);
     const auto hour = DateTimeUtils::hour(dt);

@@ -58,8 +58,8 @@ nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
     return vp;
 }
 
-void update_adapted_validity_pattern(nt::VehicleJourney* vehicle_journey,
-        const AtPerturbation& pert) {
+static void update_adapted_validity_pattern(nt::VehicleJourney* vehicle_journey,
+                                            const AtPerturbation& pert) {
    vehicle_journey->adapted_validity_pattern = get_validity_pattern(vehicle_journey->adapted_validity_pattern,
                                                                      pert,
                                                                      vehicle_journey->stop_time_list.front().departure_time
@@ -87,7 +87,7 @@ pt::time_period build_stop_period(const nt::StopTime& stop,
     return pt::time_period(arrival, departure);
 }
 
-std::vector<nt::StopTime> get_stop_from_impact(
+static std::vector<nt::StopTime> get_stop_from_impact(
         const ed::AtPerturbation& perturbation,
         bg::date current_date,
         const std::vector<nt::StopTime>& stoplist){
@@ -111,14 +111,14 @@ std::vector<nt::StopTime> get_stop_from_impact(
     return result;
 }
 
-std::string make_adapted_uri(const nt::VehicleJourney* vj, nt::PT_Data&){
+static std::string make_adapted_uri(const nt::VehicleJourney* vj, nt::PT_Data&){
     return vj->uri + ":adapted:"
         + boost::lexical_cast<std::string>(
                 vj->adapted_vehicle_journey_list.size());
 }
 
 //duplique un VJ et tout ce qui lui est lié pour construire un VJ adapté
-nt::VehicleJourney* create_adapted_vj(
+static nt::VehicleJourney* create_adapted_vj(
         nt::VehicleJourney* current_vj, nt::VehicleJourney* theorical_vj,
         const std::vector<nt::StopTime>& impacted_st,
         nt::PT_Data& data){
@@ -178,7 +178,7 @@ nt::VehicleJourney* create_adapted_vj(
     return vj_adapted;
 }
 
-std::pair<bool, nt::VehicleJourney*> find_reference_vj(
+static std::pair<bool, nt::VehicleJourney*> find_reference_vj(
         nt::VehicleJourney* vehicle_journey, int day_index){
     bool found = true;
     nt::VehicleJourney* reference_vj = vehicle_journey;

@@ -68,9 +68,8 @@ struct computation_results {
     }
 };
 
-std::string get_name(int i, int j) { std::stringstream ss; ss << i << "_" << j; return ss.str(); }
-bool almost_equal(float a, float b) {
-    return fabs(a - b) < 0.00001;
+static std::string get_name(int i, int j) {
+    std::stringstream ss; ss << i << "_" << j; return ss.str();
 }
 
 /**

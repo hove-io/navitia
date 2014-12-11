@@ -40,7 +40,7 @@ namespace greg = boost::gregorian;
 
 namespace navitia { namespace fare {
 
-Label next_label(Label label, Ticket ticket, const SectionKey & section) {
+static Label next_label(Label label, Ticket ticket, const SectionKey & section) {
     // we save the informations about the last mod used
     label.line = section.line;
     label.mode = section.mode;
@@ -85,7 +85,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section) {
     return label;
 }
 
-bool valid(const State & state, SectionKey section){
+static bool valid(const State & state, SectionKey section){
     if((state.mode != "" && !boost::iequals(state.mode, section.mode)) ||
             (state.network != "" && !boost::iequals(state.network, section.network)) ||
             (state.line != "" && !boost::iequals(state.line, section.line)) )
@@ -93,7 +93,7 @@ bool valid(const State & state, SectionKey section){
     return true;
 }
 
-bool valid(const State & state, Label label){
+static bool valid(const State & state, Label label){
     if((state.mode != "" && !boost::iequals(state.mode, label.mode)) ||
             (state.network != "" && !boost::iequals(state.network, label.network)) ||
             (state.line != "" && !boost::iequals(state.line, label.line))  ||

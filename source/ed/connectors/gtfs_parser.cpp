@@ -670,7 +670,7 @@ void CalendarGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
     }
 }
 
-boost::gregorian::date_period compute_smallest_active_period(const nm::ValidityPattern& vp) {
+static boost::gregorian::date_period compute_smallest_active_period(const nm::ValidityPattern& vp) {
     size_t beg(std::numeric_limits<size_t>::max()), end(std::numeric_limits<size_t>::min());
 
     for (size_t i = 0; i < vp.days.size(); ++i) {
@@ -936,7 +936,7 @@ void StopTimeGtfsHandler::finish(Data& data) {
     LOG4CPLUS_INFO(logger, "Nb stop times: " << data.stops.size());
 }
 
-int to_utc(const std::string& local_time, int utc_offset) {
+static int to_utc(const std::string& local_time, int utc_offset) {
     return time_to_int(local_time) - utc_offset;
 }
 

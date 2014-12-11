@@ -59,7 +59,7 @@ void VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
     }
 }
 
-nt::MetaVehicleJourney* get_or_create_metavj(builder& b, const std::string name) {
+static nt::MetaVehicleJourney* get_or_create_metavj(builder& b, const std::string& name) {
     auto it = b.data->pt_data->meta_vj.find(name);
 
     if (it == b.data->pt_data->meta_vj.end()) {
@@ -70,7 +70,7 @@ nt::MetaVehicleJourney* get_or_create_metavj(builder& b, const std::string name)
     return it->second;
 }
 
-nt::JourneyPattern* get_or_create_journey_pattern(builder& b, const std::string& uri) {
+static nt::JourneyPattern* get_or_create_journey_pattern(builder& b, const std::string& uri) {
     auto it = std::find_if(b.data->pt_data->journey_patterns.begin(),
                         b.data->pt_data->journey_patterns.end(),
                         [uri](nt::JourneyPattern* jp) {

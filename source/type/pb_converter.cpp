@@ -47,8 +47,9 @@ namespace pt = boost::posix_time;
 
 namespace navitia{
 
-pbnavitia::ActiveStatus compute_disruption_status(const boost::shared_ptr<type::new_disruption::Impact>& impact,
-                         const boost::posix_time::ptime& dt) {
+static pbnavitia::ActiveStatus
+compute_disruption_status(const boost::shared_ptr<type::new_disruption::Impact>& impact,
+                          const boost::posix_time::ptime& dt) {
 
     auto disruption = impact->disruption;
 
@@ -540,7 +541,8 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
 }
 
 
-pbnavitia::VehicleJourneyType get_pb_odt_type(const navitia::type::VehicleJourneyType vehicle_journey_type){
+static pbnavitia::VehicleJourneyType
+get_pb_odt_type(const navitia::type::VehicleJourneyType vehicle_journey_type){
     pbnavitia::VehicleJourneyType result = pbnavitia::VehicleJourneyType::regular;
     switch(vehicle_journey_type){
         case type::VehicleJourneyType::virtual_with_stop_time:
@@ -800,8 +802,10 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
     pb_fare->set_found(! fare.not_found);
 }
 
-const navitia::georef::POI* get_nearest_poi(const navitia::type::Data& data, const nt::GeographicalCoord& coord,
-        const navitia::georef::POIType& poi_type) {
+static const navitia::georef::POI*
+get_nearest_poi(const navitia::type::Data& data,
+                const nt::GeographicalCoord& coord,
+                const navitia::georef::POIType& poi_type) {
     //we loop through all poi near the coord to find a poi of the required type
     for (const auto pair: data.geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
@@ -813,24 +817,28 @@ const navitia::georef::POI* get_nearest_poi(const navitia::type::Data& data, con
     return nullptr;
 }
 
-const navitia::georef::POI* get_nearest_parking(const navitia::type::Data& data,
-        const nt::GeographicalCoord& coord) {
+static const navitia::georef::POI*
+get_nearest_parking(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
     navitia::type::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:parking"];
     const navitia::georef::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
     return get_nearest_poi(data, coord, poi_type);
 }
 
-const navitia::georef::POI* get_nearest_bss_station(const navitia::type::Data& data,
-        const nt::GeographicalCoord& coord) {
+static const navitia::georef::POI*
+get_nearest_bss_station(const navitia::type::Data& data, const nt::GeographicalCoord& coord) {
     navitia::type::idx_t poi_type_idx = data.geo_ref->poitype_map["poi_type:amenity:bicycle_rental"];
     const navitia::georef::POIType poi_type = *data.geo_ref->poitypes[poi_type_idx];
     return get_nearest_poi(data, coord, poi_type);
 }
 
-void finalize_section(pbnavitia::Section* section, const navitia::georef::PathItem& last_item,
-        const navitia::georef::PathItem& item, const navitia::type::Data& data,
-        const boost::posix_time::ptime departure, int depth, const pt::ptime& now,
-        const pt::time_period& action_period) {
+static void finalize_section(pbnavitia::Section* section,
+                             const navitia::georef::PathItem& last_item,
+                             const navitia::georef::PathItem& item,
+                             const navitia::type::Data& data,
+                             const boost::posix_time::ptime departure,
+                             int depth,
+                             const pt::ptime& now,
+                             const pt::time_period& action_period) {
 
     double total_duration = 0;
     double total_length = 0;
@@ -909,9 +917,13 @@ void finalize_section(pbnavitia::Section* section, const navitia::georef::PathIt
     }
 }
 
-pbnavitia::Section* create_section(EnhancedResponse& response, pbnavitia::Journey* pb_journey,
-        const navitia::georef::PathItem& first_item, const navitia::type::Data& data,
-        int depth, const pt::ptime& now, const pt::time_period& action_period) {
+static pbnavitia::Section* create_section(EnhancedResponse& response,
+                                          pbnavitia::Journey* pb_journey,
+                                          const navitia::georef::PathItem& first_item,
+                                          const navitia::type::Data& data,
+                                          int depth,
+                                          const pt::ptime& now,
+                                          const pt::time_period& action_period) {
     pbnavitia::Section* prev_section = (pb_journey->sections_size() > 0) ?
             pb_journey->mutable_sections(pb_journey->sections_size()-1) : nullptr;
     auto section = pb_journey->add_sections();
@@ -1116,7 +1128,8 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
     }
 }
 
-pbnavitia::ExceptionType get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exception_type){
+static pbnavitia::ExceptionType
+get_pb_exception_type(const navitia::type::ExceptionDate::ExceptionType exception_type){
     switch (exception_type) {
     case nt::ExceptionDate::ExceptionType::add:
         return pbnavitia::Add;
