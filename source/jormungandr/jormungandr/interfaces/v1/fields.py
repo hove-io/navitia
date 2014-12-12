@@ -523,7 +523,9 @@ poi["address"] = PbField(address)
 connection = {
     "origin": PbField(stop_point),
     "destination": PbField(stop_point),
-    "duration": fields.Integer(attribute="seconds")
+    "duration": fields.Integer(),
+    "display_duration": fields.Integer(),
+    "max_duration": fields.Integer(),
 }
 
 stop_date_time = {

@@ -516,7 +516,9 @@ void fill_pb_object(const nt::StopPointConnection* c, const nt::Data& data,
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    connection->set_seconds(c->display_duration);
+    connection->set_duration(c->duration);
+    connection->set_display_duration(c->display_duration);
+    connection->set_max_duration(c->max_duration);
     if(c->departure != nullptr && c->destination != nullptr && depth > 0){
         fill_pb_object(c->departure, data, connection->mutable_origin(),
                        depth-1, now, action_period);

@@ -368,7 +368,9 @@ message CommercialMode {
 message Connection {
     optional StopPoint origin = 1;
     optional StopPoint destination = 2;
-    optional int32 seconds = 3;
+    optional int32 duration = 3;
+    optional int32 display_duration = 4;
+    optional int32 max_duration = 5;
 }
 
 message Company {
