@@ -143,8 +143,10 @@ int main(int argc, char** argv) {
     error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::route, d.pt_data->routes);
     error_count += check_relations(d.pt_data->routes, &Route::line, d.pt_data->lines);
     error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::journey_pattern_point_list, d.pt_data->journey_pattern_points);
-    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::vehicle_journey_list, d.pt_data->vehicle_journeys);
-    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
+
+    // TODO: comment this for the moment, wait to see how to do that after the DiscreteVJ/FrequencyVJ refacto
+//    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::vehicle_journey_list, d.pt_data->vehicle_journeys);
+//    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
 
     error_count += check_relations(d.pt_data->journey_pattern_points, &JourneyPatternPoint::stop_point, d.pt_data->stop_points);
 

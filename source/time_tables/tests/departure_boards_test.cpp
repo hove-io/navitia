@@ -243,10 +243,9 @@ struct small_cal_fixture {
     ed::builder b;
     small_cal_fixture(): b("20120614") {
         //vj1 has stoptimes all day from 00:10 every hour
-        b.vj("network:R", "line:A", "1111111", "", true, "vj1")
+        b.frequency_vj("line:A", 60*10, 24*60*60 + 60*10 - 1, 60*60, "network:R", "1111111", "", true, "vj1")
                 ("stop1", 0, 0)
-                ("stop2", 10, 20) //we need stop1 not to be the terminus
-                .frequency(60*10, 24*60*60 + 60*10 - 1, 60*60);
+                ("stop2", 10, 20); //we need stop1 not to be the terminus
 
         //we add a calendar that match the vj
         auto cal = new navitia::type::Calendar(b.data->meta->production_date.begin());

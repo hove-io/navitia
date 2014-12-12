@@ -46,6 +46,7 @@ www.navitia.io
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
 
@@ -629,8 +630,94 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     bool operator<(const Route & other) const { return this < &other; }
 
 };
+struct JourneyPattern;
+struct MetaVehicleJourney;
 
+struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes {
+    //TODO! remove Nameable, and put only a name
+    const static Type_e type = Type_e::VehicleJourney;
+    JourneyPattern* journey_pattern = nullptr;
+    Company* company = nullptr;
+    ValidityPattern* validity_pattern = nullptr;
+    std::vector<StopTime> stop_time_list;
+    virtual ~VehicleJourney() = 0;
 
+    // These variables are used in the case of an extension of service
+    // They indicate what's the vj you can take directly after or before this one
+    // They have the same block id
+    VehicleJourney* next_vj = nullptr;
+    VehicleJourney* prev_vj = nullptr;
+    //associated meta vj
+    const MetaVehicleJourney* meta_vj = nullptr;
+    std::string odt_message; //TODO! remove comment or put it in outside map
+
+    VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
+
+    // all times are stored in UTC
+    // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
+    // For example for departure board over a period (calendar)
+    // thus we store the shit needed to convert all stop times of the vehicle journey to local
+    int16_t utc_to_local_offset = 0; //in seconds
+
+    bool is_adapted = false; //REMOVE (change to enum ?)
+    ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
+    std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
+    VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
+
+    std::string get_direction() const;
+    bool has_date_time_estimated() const;
+    bool has_boarding() const;
+    bool has_landing() const;
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+
+    bool operator<(const VehicleJourney& other) const;
+
+    type::OdtLevel_e get_odt_level() const;
+    template<typename Archive>
+    void serialize(Archive &, unsigned int const) {
+        // nothing to do
+    }
+
+    bool is_odt()  const{
+        return vehicle_journey_type != VehicleJourneyType::regular;
+    }
+    bool is_none_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::regular);}
+    bool is_virtual_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::virtual_with_stop_time);}
+    bool is_zonal_odt() const {return (this->vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time);}
+
+    type::OdtLevel_e get_odt_level() const;
+};
+
+struct DiscreteVehicleJourney: public VehicleJourney {
+    //TODO lots of comment
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & uri & journey_pattern & company & validity_pattern
+            & idx & stop_time_list & is_adapted
+            & adapted_validity_pattern & adapted_vehicle_journey_list
+            & theoric_vehicle_journey & comment & vehicle_journey_type
+            & odt_message & _vehicle_properties & impacts
+            & codes & next_vj & prev_vj
+            & meta_vj & utc_to_local_offset;
+    }
+};
+
+struct FrequencyVehicleJourney: public VehicleJourney {
+    //TODO lots of comment
+    uint32_t start_time = std::numeric_limits<uint32_t>::max(); // first departure hour
+    uint32_t end_time = std::numeric_limits<uint32_t>::max(); // last departure hour
+    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); // Seconds between each departure.
+
+    bool is_valid(int day, const bool is_adapted) const;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & uri & journey_pattern & company & validity_pattern
+            & idx & stop_time_list & is_adapted
+            & adapted_validity_pattern & adapted_vehicle_journey_list
+            & theoric_vehicle_journey & comment & vehicle_journey_type
+            & odt_message & _vehicle_properties & impacts
+            & codes & next_vj & prev_vj & start_time & end_time & headway_secs
+            & meta_vj & utc_to_local_offset;
+    }
+};
 
 struct JourneyPattern : public Header, Nameable {
     const static Type_e type = Type_e::JourneyPattern;
@@ -640,12 +727,24 @@ struct JourneyPattern : public Header, Nameable {
     PhysicalMode* physical_mode = nullptr;
 
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
-    std::vector<VehicleJourney*> vehicle_journey_list;
     hasOdtProperties odt_properties;
+
+     std::vector<DiscreteVehicleJourney> discrete_vehicle_journey_list;
+    std::vector<FrequencyVehicleJourney> frequency_vehicle_journey_list;
+
+    std::vector<const VehicleJourney*> get_vehicle_journey_list() const {
+        //TODO, make this an iterator
+        std::vector<const VehicleJourney*> res;
+        for (const auto& vj: discrete_vehicle_journey_list) { res.push_back(&vj); }
+        for (const auto& vj: frequency_vehicle_journey_list) { res.push_back(&vj); }
+        return res;
+    }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & is_frequence & odt_properties &  route & commercial_mode
-                & physical_mode & journey_pattern_point_list & vehicle_journey_list;
+                & physical_mode & journey_pattern_point_list & discrete_vehicle_journey_list
+                & frequency_vehicle_journey_list;
+
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -681,7 +780,7 @@ struct StopTime {
     std::bitset<8> properties;
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
     uint32_t arrival_time = 0; ///< En secondes depuis minuit
-    uint32_t departure_time = 0; ///< En secondes depuis minuit
+    uint32_t departure_time = 0; ///< En secondes depuis minuit //TODO, comment that, with explanation for frequency VJ and non frequency VJ
     VehicleJourney* vehicle_journey = nullptr;
     JourneyPatternPoint* journey_pattern_point = nullptr;
 
@@ -741,77 +840,6 @@ struct StopTime {
 
 };
 
-
-struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes{
-    const static Type_e type = Type_e::VehicleJourney;
-    JourneyPattern* journey_pattern = nullptr;
-    Company* company = nullptr;
-    ValidityPattern* validity_pattern = nullptr;
-    std::vector<StopTime> stop_time_list;
-
-    // These variables are used in the case of an extension of service
-    // They indicate what's the vj you can take directly after or before this one
-    // They have the same block id
-    VehicleJourney* next_vj = nullptr;
-    VehicleJourney* prev_vj = nullptr;
-    //associated meta vj
-    const MetaVehicleJourney* meta_vj = nullptr;
-    std::string odt_message;
-
-    VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
-    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
-    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
-    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
-
-    // all times are stored in UTC
-    // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
-    // For example for departure board over a period (calendar)
-    // thus we store the shit needed to convert all stop times of the vehicle journey to local
-    int16_t utc_to_local_offset = 0; //in seconds
-
-    bool is_adapted = false; //REMOVE (change to enum ?)
-    ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
-    std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
-    VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern & company & validity_pattern
-            & idx & stop_time_list & is_adapted
-            & adapted_validity_pattern & adapted_vehicle_journey_list
-            & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & impacts
-            & codes & next_vj & prev_vj & start_time & end_time & headway_secs
-            & meta_vj & utc_to_local_offset;
-    }
-    std::string get_direction() const;
-    bool has_date_time_estimated() const;
-    bool has_boarding() const;
-    bool has_landing() const;
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-
-    bool operator<(const VehicleJourney& other) const {
-        if (this->journey_pattern->uri != other.journey_pattern->uri)
-            return this->journey_pattern->uri < other.journey_pattern->uri;
-        return this->uri < other.uri;
-
-        if (this == &other) return false;
-        if(this->journey_pattern == other.journey_pattern){
-            // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
-            return this->stop_time_list.front() < other.stop_time_list.front();
-        }else{
-            return this->journey_pattern->uri < other.journey_pattern->uri;
-        }
-    }
-
-    bool is_odt()  const{
-        return vehicle_journey_type != VehicleJourneyType::regular;
-    }
-    bool is_none_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::regular);}
-    bool is_virtual_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::virtual_with_stop_time);}
-    bool is_zonal_odt() const {return (this->vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time);}
-
-    type::OdtLevel_e get_odt_level() const;
-};
 
 struct ValidityPattern : public Header {
     const static Type_e type = Type_e::ValidityPattern;

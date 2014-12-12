@@ -107,19 +107,22 @@ uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
 }
 
 uint32_t StopTime::end_time(const bool is_departure) const {
-    return vehicle_journey->end_time + (is_departure? departure_time : arrival_time);
+    throw "stop time end to do";
+//    return vehicle_journey->end_time + (is_departure? departure_time : arrival_time);
 }
 
 uint32_t StopTime::start_time(const bool is_departure) const {
-    return vehicle_journey->start_time + (is_departure? departure_time : arrival_time);
+    throw "stop time start to do";
+//    return vehicle_journey->start_time + (is_departure? departure_time : arrival_time);
 }
 
 bool StopTime::valid_hour(uint hour, bool clockwise) const {
-    if(!this->is_frequency())
-        return true;
-    else
-        return clockwise ? hour <= (this->end_time(true)) :
-            (this->vehicle_journey->start_time+arrival_time) <= hour;
+    throw "valid hour to do";
+//    if(!this->is_frequency())
+//        return true;
+//    else
+//        return clockwise ? hour <= (this->end_time(true)) :
+//            (this->vehicle_journey->start_time+arrival_time) <= hour;
 }
 
 bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
@@ -158,7 +161,15 @@ uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const 
     }
 }
 
-
+bool FrequencyVehicleJourney::is_valid(int day, const bool is_adapted) const {
+    if (day < 0)
+        return false;
+    if (! is_adapted) {
+        return validity_pattern->check(day);
+    } else {
+        return adapted_validity_pattern->check(day);
+    }
+}
 
 bool VehicleJourney::has_date_time_estimated() const{
     for(const StopTime& st : this->stop_time_list){
@@ -347,8 +358,7 @@ Mode_e static_data::modeByCaption(const std::string & mode_str) {
     return instance->modes_string.right.at(mode_str);
 }
 
-
-template<typename T> std::vector<idx_t> indexes(std::vector<T*> elements){
+template<typename T> std::vector<idx_t> indexes(const std::vector<T*>& elements){
     std::vector<idx_t> result;
     for(T* element : elements){
         result.push_back(element->idx);
@@ -379,6 +389,19 @@ void Calendar::build_validity_pattern(boost::gregorian::date_period production_p
     }
 }
 
+bool VehicleJourney::operator<(const VehicleJourney& other) const {
+    if (this->journey_pattern->uri != other.journey_pattern->uri)
+        return this->journey_pattern->uri < other.journey_pattern->uri;
+    return this->uri < other.uri;
+
+    if (this == &other) return false;
+    if(this->journey_pattern == other.journey_pattern){
+        // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
+        return this->stop_time_list.front() < other.stop_time_list.front();
+    }else{
+        return this->journey_pattern->uri < other.journey_pattern->uri;
+    }
+}
 std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
     std::vector<idx_t> result;
     switch(type) {
@@ -487,7 +510,7 @@ idx_t Route::main_destination() const {
     std::map<idx_t, size_t> stop_point_map;
     std::pair<idx_t, size_t> best{invalid_idx, 0};
     for(const JourneyPattern* jp : this->journey_pattern_list) {
-        for(const VehicleJourney* vj : jp->vehicle_journey_list) {
+        for(const VehicleJourney* vj : jp->get_vehicle_journey_list()) {
             if((!vj->stop_time_list.empty())
                 && (vj->stop_time_list.back().journey_pattern_point != nullptr)
                     && (vj->stop_time_list.back().journey_pattern_point->stop_point != nullptr)){
@@ -533,7 +556,14 @@ std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
     case Type_e::Route: result.push_back(route->idx); break;
     case Type_e::CommercialMode: result.push_back(commercial_mode->idx); break;
     case Type_e::JourneyPatternPoint: return indexes(journey_pattern_point_list);
-    case Type_e::VehicleJourney: return indexes(vehicle_journey_list);
+    case Type_e::VehicleJourney:
+        for(const auto& f_vj: frequency_vehicle_journey_list) {
+            result.push_back(f_vj.idx);
+        }
+        for(const auto& d_vj: discrete_vehicle_journey_list) {
+            result.push_back(d_vj.idx);
+        }
+        break;
     default: break;
     }
     return result;
@@ -551,6 +581,8 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     }
     return result;
 }
+
+VehicleJourney::~VehicleJourney() { }
 
 std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;

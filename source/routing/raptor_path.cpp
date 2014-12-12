@@ -59,7 +59,7 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
         const auto date = DateTimeUtils::date(label.dt_pt);
         const auto hour = DateTimeUtils::hour(label.dt_pt);
         const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[journey_pattern_point];
-        for (type::VehicleJourney* vj : jpp->journey_pattern->vehicle_journey_list) {
+        for (const type::VehicleJourney* vj : jpp->journey_pattern->get_vehicle_journey_list()) {
             const type::StopTime& st = vj->stop_time_list[jpp->order];
             auto st_hour = clockwise ? st.arrival_time : st.departure_time;
             if (!st.is_frequency()) {

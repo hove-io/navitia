@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("A", "", "", true, "vehicle_journey:vj2")("stop1", 9000,9050)("stop2", 9200,9250).vj;
+    vj = b.vj("A", "", "", true, "vehicle_journey:vj2")("stop1", 9000,9050)("stop2", 9200,9250).vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011 (1er mars est un vendredi)
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("A", "", "", true, "vehicle_journey:vj2")("stop1", 9000,9050)("stop2", 9200,9250).vj;
+    vj = b.vj("A", "", "", true, "vehicle_journey:vj2")("stop1", 9000,9050)("stop2", 9200,9250).vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011 (1er mars est un vendredi)
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("A", "", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("A", "", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011 (1er mars est un vendredi)
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
-    VehicleJourney* vj = b.vj("line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
+    VehicleJourney* vj = b.vj("line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
+    vj = b.vj("line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj_key.get_vj();
     //construction du validityPattern du vj3: 1111111
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = true;
@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
-    VehicleJourney* vj = b.vj("line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
+    VehicleJourney* vj = b.vj("line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -679,7 +679,7 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj3: 1111111
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = true;
@@ -825,7 +825,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
     ed::builder b("201303011T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("network:A", "line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
+    VehicleJourney* vj = b.vj("network:A", "line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("network:A", "line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("network:A", "line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("network:B", "line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("network:B", "line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj3: 1111111
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = true;
@@ -1007,7 +1007,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
-    VehicleJourney* vj = b.vj("network:A", "line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
+    VehicleJourney* vj = b.vj("network:A", "line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("network:A", "line:A", "", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("network:A", "line:A", "", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -1032,7 +1032,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("network:B", "line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("network:B", "line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj3: 1111111
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = true;
@@ -1189,7 +1189,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
-    VehicleJourney* vj = b.vj("network:A", "line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
+    VehicleJourney* vj = b.vj("network:A", "line:A", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -1202,7 +1202,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("network:A", "line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("network:A", "line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -1214,7 +1214,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("network:B", "line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("network:B", "line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj3: 1111111
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = true;
@@ -1381,7 +1381,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
-    VehicleJourney* vj = b.vj("network:A", "lineA", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
+    VehicleJourney* vj = b.vj("network:A", "lineA", "1111111", "", true, "vehicle_journey:vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -1394,7 +1394,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("network:A", "line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("network:A", "line:A", "1110011", "", true, "vehicle_journey:vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj2: 1110011
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = false;
@@ -1406,7 +1406,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
-    vj = b.vj("network:B", "line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
+    vj = b.vj("network:B", "line:B", "1111111", "", true, "vehicle_journey:vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj_key.get_vj();
     //construction du validityPattern du vj3: 1111111
     validedays[navitia::Sunday] = true;
     validedays[navitia::Monday] = true;
@@ -1572,7 +1572,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", -1,8050)("stop_point:stop2", 8200)("stop_point:stop3", 8200,8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", -1,8050)("stop_point:stop2", 8200)("stop_point:stop3", 8200,8250).vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -1693,7 +1693,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", 8000,8050)("stop_point:stop2", 8200,8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", 8000,8050)("stop_point:stop2", 8200,8250).vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -1791,7 +1791,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", 8000,8050)("stop_point:stop2", 8200, 8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", 8000,8050)("stop_point:stop2", 8200, 8250).vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -1925,7 +1925,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", "23:30", "23:40")("stop_point:stop2", "25:00", "25:00")("stop_point:stop3", "26:00", "26:10").vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", "23:30", "23:40")("stop_point:stop2", "25:00", "25:00")("stop_point:stop3", "26:00", "26:10").vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -2038,7 +2038,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", 8000,8050)("stop_point:stop2", 8200,8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", 8000,8050)("stop_point:stop2", 8200,8250).vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;
@@ -2222,7 +2222,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130312T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", 8000,8050)("stop_point:stop2", 8200,8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vehicle_journey:vj1")("stop_point:stop1", 8000,8050)("stop_point:stop2", 8200,8250).vj_key.get_vj();
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[navitia::Sunday] = true;

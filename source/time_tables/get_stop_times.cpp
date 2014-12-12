@@ -64,15 +64,12 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
                                                   false,
                                                   accessibilite_params.vehicle_properties);
 
-            if(st.first != nullptr) {
+            if (st.first != nullptr) {
                 DateTime dt_temp = st.second;
-                if(dt_temp <= max_dt) {
+                if (dt_temp <= max_dt) {
                     result.push_back(std::make_pair(dt_temp, st.first));
                     test_add = true;
                     // The next stop time must be at least one second after
-                    if(st.first->is_frequency()) {
-                        DateTimeUtils::update(dt_temp, st.first->vehicle_journey->end_time+st.first->departure_time);
-                    }
                     next_requested_datetime[jpp_idx] = dt_temp + 1;
                 }
             }

@@ -123,59 +123,60 @@ static nt::VehicleJourney* create_adapted_vj(
         const std::vector<nt::StopTime>& impacted_st,
         nt::PT_Data& data){
     //on duplique le VJ
-    nt::VehicleJourney* vj_adapted = new nt::VehicleJourney(*current_vj);
-    vj_adapted->uri = make_adapted_uri(theorical_vj, data);
-    data.vehicle_journeys.push_back(vj_adapted);
-    data.vehicle_journeys_map[vj_adapted->uri] = vj_adapted;
-    //le nouveau VJ garde bien une référence vers le théorique, et non pas sur le VJ adapté dont il est issu.
-    vj_adapted->theoric_vehicle_journey = theorical_vj;
-    theorical_vj->adapted_vehicle_journey_list.push_back(vj_adapted);
+    throw "TODO!"; //check how to refacto this part
+//    nt::VehicleJourney* vj_adapted = new nt::VehicleJourney(*current_vj);
+//    vj_adapted->uri = make_adapted_uri(theorical_vj, data);
+//    data.vehicle_journeys.push_back(vj_adapted);
+//    data.vehicle_journeys_map[vj_adapted->uri] = vj_adapted;
+//    //le nouveau VJ garde bien une référence vers le théorique, et non pas sur le VJ adapté dont il est issu.
+//    vj_adapted->theoric_vehicle_journey = theorical_vj;
+//    theorical_vj->adapted_vehicle_journey_list.push_back(vj_adapted);
 
-    //si on pointe vers le meme validity pattern pour l'adapté et le théorique, on duplique
-    if(theorical_vj->adapted_validity_pattern == theorical_vj->validity_pattern){
-        theorical_vj->adapted_validity_pattern = new nt::ValidityPattern(*theorical_vj->validity_pattern);
-        data.validity_patterns.push_back(theorical_vj->adapted_validity_pattern);
-    }
+//    //si on pointe vers le meme validity pattern pour l'adapté et le théorique, on duplique
+//    if(theorical_vj->adapted_validity_pattern == theorical_vj->validity_pattern){
+//        theorical_vj->adapted_validity_pattern = new nt::ValidityPattern(*theorical_vj->validity_pattern);
+//        data.validity_patterns.push_back(theorical_vj->adapted_validity_pattern);
+//    }
 
-    vj_adapted->is_adapted = true;
-    vj_adapted->validity_pattern = new nt::ValidityPattern(current_vj->validity_pattern->beginning_date);
-    data.validity_patterns.push_back(vj_adapted->validity_pattern);
+//    vj_adapted->is_adapted = true;
+//    vj_adapted->validity_pattern = new nt::ValidityPattern(current_vj->validity_pattern->beginning_date);
+//    data.validity_patterns.push_back(vj_adapted->validity_pattern);
 
-    vj_adapted->adapted_validity_pattern = new nt::ValidityPattern(vj_adapted->validity_pattern->beginning_date);
-    data.validity_patterns.push_back(vj_adapted->adapted_validity_pattern);
+//    vj_adapted->adapted_validity_pattern = new nt::ValidityPattern(vj_adapted->validity_pattern->beginning_date);
+//    data.validity_patterns.push_back(vj_adapted->adapted_validity_pattern);
 
-    //On duplique le journey pattern
-    nt::JourneyPattern* jp = new nt::JourneyPattern(*vj_adapted->journey_pattern);
-    data.journey_patterns.push_back(jp);
-    vj_adapted->journey_pattern = jp;
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(vj_adapted);
-    jp->uri = vj_adapted->journey_pattern->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_patterns.size());
-    //@TODO changer l'uri
+//    //On duplique le journey pattern
+//    nt::JourneyPattern* jp = new nt::JourneyPattern(*vj_adapted->journey_pattern);
+//    data.journey_patterns.push_back(jp);
+//    vj_adapted->journey_pattern = jp;
+//    jp->vehicle_journey_list.clear();
+//    jp->vehicle_journey_list.push_back(vj_adapted);
+//    jp->uri = vj_adapted->journey_pattern->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_patterns.size());
+//    //@TODO changer l'uri
 
-    //on duplique les journey pattern point
-    jp->journey_pattern_point_list = std::vector<nt::JourneyPatternPoint*>();
-    //On duplique les StopTime
-    vj_adapted->stop_time_list.clear();
-    for(auto jpp : current_vj->journey_pattern->journey_pattern_point_list) {
-        auto it = std::find_if(impacted_st.begin(), impacted_st.end(),
-                               [&](const nt::StopTime& st) {return st.journey_pattern_point == jpp;});
-        if (it != impacted_st.end()) {
-            continue;
-        }
-        auto new_jpp = new nt::JourneyPatternPoint(*jpp);
-        new_jpp->order = jp->journey_pattern_point_list.size();
-        data.journey_pattern_points.push_back(new_jpp);
-        jp->journey_pattern_point_list.push_back(new_jpp);
-        new_jpp->journey_pattern = jp;
-        //@TODO changer l'uri
-        new_jpp->uri = jpp->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_pattern_points.size());
-        vj_adapted->stop_time_list.push_back(current_vj->stop_time_list[jpp->order]);
-        nt::StopTime& new_stop = vj_adapted->stop_time_list.back();
-        new_stop.vehicle_journey = vj_adapted;
-        new_stop.journey_pattern_point = new_jpp;
-    }
-    return vj_adapted;
+//    //on duplique les journey pattern point
+//    jp->journey_pattern_point_list = std::vector<nt::JourneyPatternPoint*>();
+//    //On duplique les StopTime
+//    vj_adapted->stop_time_list.clear();
+//    for(auto jpp : current_vj->journey_pattern->journey_pattern_point_list) {
+//        auto it = std::find_if(impacted_st.begin(), impacted_st.end(),
+//                               [&](const nt::StopTime& st) {return st.journey_pattern_point == jpp;});
+//        if (it != impacted_st.end()) {
+//            continue;
+//        }
+//        auto new_jpp = new nt::JourneyPatternPoint(*jpp);
+//        new_jpp->order = jp->journey_pattern_point_list.size();
+//        data.journey_pattern_points.push_back(new_jpp);
+//        jp->journey_pattern_point_list.push_back(new_jpp);
+//        new_jpp->journey_pattern = jp;
+//        //@TODO changer l'uri
+//        new_jpp->uri = jpp->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_pattern_points.size());
+//        vj_adapted->stop_time_list.push_back(current_vj->stop_time_list[jpp->order]);
+//        nt::StopTime& new_stop = vj_adapted->stop_time_list.back();
+//        new_stop.vehicle_journey = vj_adapted;
+//        new_stop.journey_pattern_point = new_jpp;
+//    }
+//    return vj_adapted;
 }
 
 static std::pair<bool, nt::VehicleJourney*> find_reference_vj(

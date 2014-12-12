@@ -1044,7 +1044,7 @@ BOOST_AUTO_TEST_CASE(multiples_vj) {
 
 BOOST_AUTO_TEST_CASE(freq_vj) {
     ed::builder b("20120614");
-    b.vj("A1")("stop1", 8*3600)("stop2", 8*3600+10*60).frequency(8*3600,18*3600,5*60);
+    b.frequency_vj("A1", 8*3600,18*3600,5*60)("stop1", 8*3600)("stop2", 8*3600+10*60);
 
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -1066,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(freq_vj) {
 
 BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     ed::builder b("20120614");
-    b.vj("A1")("stop1", 8*3600)("stop2", 8*3600+10*60).frequency(8*3600,26*3600,5*60);
+    b.frequency_vj("A1", 8*3600,26*3600,5*60)("stop1", 8*3600)("stop2", 8*3600+10*60);
 
     b.data->pt_data->index();
     b.data->build_raptor();

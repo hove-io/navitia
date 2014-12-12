@@ -623,6 +623,61 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
 }
 
 
+void EdReader::fill_vj(const pqxx::result::const_iterator& const_it, nt::VehicleJourney& vj,
+                       std::multimap<idx_t, std::string>& prev_vjs,
+                       std::multimap<idx_t, std::string>& next_vjs) {
+    const_it["uri"].to(vj.uri);
+    const_it["name"].to(vj.name);
+    const_it["comment"].to(vj.comment);
+    const_it["odt_message"].to(vj.odt_message);
+    const_it["utc_to_local_offset"].to(vj.utc_to_local_offset);
+    const_it["external_code"].to(vj.codes["external_code"]);
+    vj.vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
+
+    vj.company = company_map[const_it["company_id"].as<idx_t>()];
+
+    vj.adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
+
+    if(!const_it["validity_pattern_id"].is_null()){
+        vj.validity_pattern = validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
+    }
+
+    if(!const_it["theoric_vehicle_journey_id"].is_null()){
+        vj.theoric_vehicle_journey = vehicle_journey_map[const_it["theoric_vehicle_journey_id"].as<idx_t>()];
+    }
+
+    if (const_it["wheelchair_accessible"].as<bool>()){
+        vj.set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+    }
+    if (const_it["bike_accepted"].as<bool>()){
+        vj.set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+    }
+    if (const_it["air_conditioned"].as<bool>()){
+        vj.set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
+    }
+    if (const_it["visual_announcement"].as<bool>()){
+        vj.set_vehicle(navitia::type::hasVehicleProperties::VISUAL_ANNOUNCEMENT);
+    }
+    if (const_it["audible_announcement"].as<bool>()){
+        vj.set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNCEMENT);
+    }
+    if (const_it["appropriate_escort"].as<bool>()){
+        vj.set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_ESCORT);
+    }
+    if (const_it["appropriate_signage"].as<bool>()){
+        vj.set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_SIGNAGE);
+    }
+    if (const_it["school_vehicle"].as<bool>()){
+        vj.set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
+    }
+    if (!const_it["prev_vj_id"].is_null()) {
+        prev_vjs.insert(std::make_pair(const_it["prev_vj_id"].as<idx_t>(), vj.uri));
+    }
+    if (!const_it["next_vj_id"].is_null()) {
+        next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj.uri));
+    }
+}
+
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri,"
         "vj.comment as comment, vj.company_id as company_id, "
@@ -638,6 +693,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.end_time as end_time,"
         "vj.headway_sec as headway_sec,"
         "vj.utc_to_local_offset as utc_to_local_offset, "
+        "vj.is_frequency as is_frequency, " // TODO!!
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -650,75 +706,45 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "where vj.vehicle_properties_id = vp.id ";
 
     pqxx::result result = work.exec(request);
-    std::multimap<idx_t, nt::VehicleJourney*> prev_vjs, next_vjs;
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nt::VehicleJourney* vj = new nt::VehicleJourney();
+    std::multimap<idx_t, std::string> prev_vjs, next_vjs;
+    std::map<std::string, size_t> vj_id_map; //we need to store the vj db id, to fill vehicle_journey_map
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
 
-        const_it["uri"].to(vj->uri);
-        const_it["name"].to(vj->name);
-        const_it["comment"].to(vj->comment);
-        const_it["odt_message"].to(vj->odt_message);
-        const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
-        const_it["external_code"].to(vj->codes["external_code"]);
-        vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
+        auto journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
+        if (const_it["is_frequency"].as<bool>()) {
+            journey_pattern->frequency_vehicle_journey_list.emplace_back();
+            auto& vj = journey_pattern->frequency_vehicle_journey_list.back();
 
-        vj->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
-        vj->journey_pattern->vehicle_journey_list.push_back(vj);
+            fill_vj(const_it, vj, prev_vjs, next_vjs);
 
-        vj->company = company_map[const_it["company_id"].as<idx_t>()];
-
-        vj->adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
-
-        const_it["start_time"].to(vj->start_time);
-        const_it["end_time"].to(vj->end_time);
-        const_it["headway_sec"].to(vj->headway_secs);
-
-        if(!const_it["validity_pattern_id"].is_null()){
-            vj->validity_pattern = validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
+            const_it["start_time"].to(vj.start_time);
+            const_it["end_time"].to(vj.end_time);
+            const_it["headway_sec"].to(vj.headway_secs);
+        } else {
+            journey_pattern->discrete_vehicle_journey_list.emplace_back();
+            auto& vj = journey_pattern->discrete_vehicle_journey_list.back();
+            fill_vj(const_it, vj, prev_vjs, next_vjs);
         }
-
-        if(!const_it["theoric_vehicle_journey_id"].is_null()){
-            vj->theoric_vehicle_journey = vehicle_journey_map[const_it["theoric_vehicle_journey_id"].as<idx_t>()];
-        }
-
-        if (const_it["wheelchair_accessible"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
-        }
-        if (const_it["bike_accepted"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
-        }
-        if (const_it["air_conditioned"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
-        }
-        if (const_it["visual_announcement"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::VISUAL_ANNOUNCEMENT);
-        }
-        if (const_it["audible_announcement"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNCEMENT);
-        }
-        if (const_it["appropriate_escort"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_ESCORT);
-        }
-        if (const_it["appropriate_signage"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_SIGNAGE);
-        }
-        if (const_it["school_vehicle"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
-        }
-        if (!const_it["prev_vj_id"].is_null()) {
-            prev_vjs.insert(std::make_pair(const_it["prev_vj_id"].as<idx_t>(), vj));
-        }
-        if (!const_it["next_vj_id"].is_null()) {
-            next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj));
-        }
-        data.pt_data->vehicle_journeys.push_back(vj);
-        this->vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
     }
-    for(auto vjid_vj: prev_vjs) {
-       vjid_vj.second->prev_vj = vehicle_journey_map[vjid_vj.first];
+
+    //we need to wait for every jp to be filled to store the vj pointers is the global map
+    for (auto* jp: data.pt_data->journey_patterns) {
+        for (auto& vj: jp->discrete_vehicle_journey_list) {
+            data.pt_data->vehicle_journeys.push_back(&vj);
+            this->vehicle_journey_map[vj_id_map[vj.uri]] = &vj;
+        }
+        for (auto & vj: jp->frequency_vehicle_journey_list) {
+            data.pt_data->vehicle_journeys.push_back(&vj);
+            this->vehicle_journey_map[vj_id_map[vj.uri]] = &vj;
+        }
     }
-    for(auto vjid_vj: next_vjs) {
-       vjid_vj.second->next_vj = vehicle_journey_map[vjid_vj.first];
+    for(const auto& vjid_vj: prev_vjs) {
+        auto* vj = vehicle_journey_map[vj_id_map[vjid_vj.second]];
+        vj->prev_vj = vehicle_journey_map[vjid_vj.first];
+    }
+    for(const auto& vjid_vj: next_vjs) {
+        auto* vj = vehicle_journey_map[vj_id_map[vjid_vj.second]];
+        vj->next_vj = vehicle_journey_map[vjid_vj.first];
     }
 }
 
