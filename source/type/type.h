@@ -551,9 +551,13 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 };
 
 struct JourneyPattern : public Header, Nameable{
+    static const uint8_t NONE_ODT = 0;
+    static const uint8_t VIRTUAL_ODT = 1;
+    static const uint8_t ZONAL_ODT = 2;
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence = false;
     OdtLevel_e odt_level= OdtLevel_e::none; // Computed at serialization
+    std::bitset<3> odt_properties;
     Route* route = nullptr;
     CommercialMode* commercial_mode = nullptr;
     PhysicalMode* physical_mode = nullptr;
@@ -568,6 +572,15 @@ struct JourneyPattern : public Header, Nameable{
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const JourneyPattern & other) const { return this < &other; }
+
+    void build_odt_properties();
+    bool is_none_odt() const {return odt_properties[NONE_ODT];}
+    bool is_virtual_odt() const {return odt_properties[VIRTUAL_ODT];}
+    bool is_zonal_odt() const {return odt_properties[ZONAL_ODT];}
+
+    inline void set_none_odt(bool value) {odt_properties[NONE_ODT] = value;}
+    inline void set_virtual_odt(bool value){odt_properties[VIRTUAL_ODT] = value;}
+    inline void set_zonal_odt(bool value){odt_properties[ZONAL_ODT] = value;}
 
 };
 
@@ -723,6 +736,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool is_odt()  const{
         return vehicle_journey_type != VehicleJourneyType::regular;
     }
+    bool is_none_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::regular);}
+    bool is_virtual_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::virtual_with_stop_time);}
+    bool is_zonal_odt() const {return (this->vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time);}
 
     type::OdtLevel_e get_odt_level() const;
 };
