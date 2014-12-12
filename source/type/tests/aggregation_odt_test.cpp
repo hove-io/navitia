@@ -40,8 +40,39 @@ struct aggregate_odt_fixture {
     ed::builder b;
     navitia::type::JourneyPattern* jp ;
     navitia::type::VehicleJourney* vj;
+    navitia::type::Route* route;
+    navitia::type::Line* line;
     aggregate_odt_fixture() : b("20140210"){
         jp = new navitia::type::JourneyPattern();
+        b.data->pt_data->journey_patterns_map["jp1"] = jp;
+        b.data->pt_data->journey_patterns.push_back(jp);
+        route = new navitia::type::Route();
+        b.data->pt_data->routes_map["route1"] = route;
+        b.data->pt_data->routes.push_back(route);
+        line = new navitia::type::Line();
+
+        jp = new navitia::type::JourneyPattern();
+        jp->set_odt(navitia::type::hasOdtProperties::NONE_ODT, true);
+        jp->set_odt(navitia::type::hasOdtProperties::VIRTUAL_ODT, false);
+        jp->set_odt(navitia::type::hasOdtProperties::ZONAL_ODT, false);
+        b.data->pt_data->journey_patterns.push_back(jp);
+        b.data->pt_data->journey_patterns_map["none_odt"] = jp;
+
+        jp = new navitia::type::JourneyPattern();
+        jp->set_odt(navitia::type::hasOdtProperties::NONE_ODT, false);
+        jp->set_odt(navitia::type::hasOdtProperties::VIRTUAL_ODT, true);
+        jp->set_odt(navitia::type::hasOdtProperties::ZONAL_ODT, false);
+        b.data->pt_data->journey_patterns.push_back(jp);
+        b.data->pt_data->journey_patterns_map["virtual_odt"] = jp;
+
+        jp = new navitia::type::JourneyPattern();
+        jp->set_odt(navitia::type::hasOdtProperties::NONE_ODT, false);
+        jp->set_odt(navitia::type::hasOdtProperties::VIRTUAL_ODT, false);
+        jp->set_odt(navitia::type::hasOdtProperties::ZONAL_ODT, true);
+        b.data->pt_data->journey_patterns.push_back(jp);
+        b.data->pt_data->journey_patterns_map["zonal_odt"] = jp;
+
+
         vj = new navitia::type::VehicleJourney();
         vj->vehicle_journey_type = navitia::type::VehicleJourneyType::regular;
         b.data->pt_data->vehicle_journeys_map["regular"] = vj;
@@ -71,11 +102,13 @@ struct aggregate_odt_fixture {
         vj->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
         b.data->pt_data->vehicle_journeys_map["odt_point_to_point"] = vj;
         b.data->pt_data->vehicle_journeys.push_back(vj);
+
     }
 
 
 };
 
+// Tests for VehicleJourney Object
 BOOST_FIXTURE_TEST_CASE(vj_none_odt_test, aggregate_odt_fixture) {
     vj = b.data->pt_data->vehicle_journeys_map["regular"];
     BOOST_CHECK_EQUAL(vj->is_none_odt(), true);
@@ -118,9 +151,19 @@ BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test4, aggregate_odt_fixture) {
     BOOST_CHECK_EQUAL(vj->is_zonal_odt(), true);
 }
 
+// Tests for JourneyPattern Object
+BOOST_FIXTURE_TEST_CASE(jp_without_vj, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
+    jp->build_odt_properties();
+
+    BOOST_CHECK_EQUAL(jp->none_odt(), true);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), false);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), false);
+}
 
 BOOST_FIXTURE_TEST_CASE(jp_none_odt_test, aggregate_odt_fixture) {
     vj = b.data->pt_data->vehicle_journeys_map["regular"];
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.push_back(vj);
     jp->build_odt_properties();
 
@@ -130,6 +173,7 @@ BOOST_FIXTURE_TEST_CASE(jp_none_odt_test, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_odt_test, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
@@ -141,6 +185,7 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_odt_test, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test1, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
@@ -153,6 +198,7 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test1, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test2, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
@@ -166,6 +212,7 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test2, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test3, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
@@ -180,6 +227,7 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test3, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test4, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
@@ -196,6 +244,7 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test4, aggregate_odt_fixture) {
 
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test1, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"]);
     jp->build_odt_properties();
@@ -206,6 +255,7 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test1, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test2, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"]);
     jp->build_odt_properties();
@@ -216,6 +266,7 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test2, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test3, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["address_to_stop_point"]);
     jp->build_odt_properties();
@@ -226,6 +277,7 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test3, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test4, aggregate_odt_fixture) {
+    jp = b.data->pt_data->journey_patterns_map["jp1"];
     jp->vehicle_journey_list.clear();
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["odt_point_to_point"]);
     jp->build_odt_properties();
@@ -233,4 +285,120 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test4, aggregate_odt_fixture) {
     BOOST_CHECK_EQUAL(jp->none_odt(), false);
     BOOST_CHECK_EQUAL(jp->virtual_odt(), false);
     BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
+}
+
+// Tests for Route Object
+BOOST_FIXTURE_TEST_CASE(route_without_journey_pattern , aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    navitia::type::hasOdtProperties odt = route->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), true);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), false);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(route_none_odt, aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    route->journey_pattern_list.clear();
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["none_odt"]);
+    route->get_odt_properties();
+    navitia::type::hasOdtProperties odt = route->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), true);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), false);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(route_virtual_odt, aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    route->journey_pattern_list.clear();
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["none_odt"]);
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["virtual_odt"]);
+    route->get_odt_properties();
+    navitia::type::hasOdtProperties odt = route->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), false);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), true);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), false);
+}
+
+
+BOOST_FIXTURE_TEST_CASE(route_virtual_and_zonal_odt, aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    route->journey_pattern_list.clear();
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["none_odt"]);
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["virtual_odt"]);
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["zonal_odt"]);
+    route->get_odt_properties();
+    navitia::type::hasOdtProperties odt = route->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), false);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), true);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), true);
+}
+
+BOOST_FIXTURE_TEST_CASE(route_zonal_odt, aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    route->journey_pattern_list.clear();
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["zonal_odt"]);
+    route->get_odt_properties();
+    navitia::type::hasOdtProperties odt = route->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), false);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), false);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), true);
+}
+
+// tests for Line Object
+BOOST_FIXTURE_TEST_CASE(line_without_route , aggregate_odt_fixture) {
+    navitia::type::hasOdtProperties odt = line->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), true);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), false);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(line_none_odt , aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    route->journey_pattern_list.clear();
+    line->route_list.clear();
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["none_odt"]);
+    line->route_list.push_back(route);
+    navitia::type::hasOdtProperties odt = line->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), true);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), false);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(line_virtual_odt , aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    route->journey_pattern_list.clear();
+    line->route_list.clear();
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["none_odt"]);
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["virtual_odt"]);
+    line->route_list.push_back(route);
+    navitia::type::hasOdtProperties odt = line->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), false);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), true);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(line_virtual_and_zonal_odt , aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    route->journey_pattern_list.clear();
+    line->route_list.clear();
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["none_odt"]);
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["virtual_odt"]);
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["zonal_odt"]);
+    line->route_list.push_back(route);
+    navitia::type::hasOdtProperties odt = line->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), false);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), true);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), true);
+}
+
+BOOST_FIXTURE_TEST_CASE(line_zonal_odt , aggregate_odt_fixture) {
+    route = b.data->pt_data->routes_map["route1"];
+    route->journey_pattern_list.clear();
+    line->route_list.clear();
+    route->journey_pattern_list.push_back(b.data->pt_data->journey_patterns_map["zonal_odt"]);
+    line->route_list.push_back(route);
+    navitia::type::hasOdtProperties odt = line->get_odt_properties();
+    BOOST_CHECK_EQUAL(odt.none_odt(), false);
+    BOOST_CHECK_EQUAL(odt.virtual_odt(), false);
+    BOOST_CHECK_EQUAL(odt.zonal_odt(), true);
 }

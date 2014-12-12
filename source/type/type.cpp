@@ -482,6 +482,30 @@ type::OdtLevel_e Line::get_odt_level() const{
     return result;
 }
 
+type::hasOdtProperties Line::get_odt_properties() const{
+    type::hasOdtProperties result;
+    if (this->route_list.empty()){
+        result.set_odt(type::hasOdtProperties::NONE_ODT, true);
+        result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, false);
+        result.set_odt(type::hasOdtProperties::ZONAL_ODT, false);
+    }else{
+        const type::Route* rt = this->route_list.front();
+        type::hasOdtProperties tmp = rt->get_odt_properties();
+        result.set_odt(type::hasOdtProperties::NONE_ODT, tmp.none_odt());
+        result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, tmp.virtual_odt());
+        result.set_odt(type::hasOdtProperties::ZONAL_ODT, tmp.zonal_odt());
+
+        for(idx_t idx = 1; idx < this->route_list.size(); idx++){
+            rt = this->route_list[idx];
+            tmp = rt->get_odt_properties();
+            result.set_odt(type::hasOdtProperties::NONE_ODT, tmp.none_odt() && result.none_odt());
+            result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, tmp.virtual_odt() || result.virtual_odt());
+            result.set_odt(type::hasOdtProperties::ZONAL_ODT, tmp.zonal_odt() || result.zonal_odt());
+        }
+    }
+    return result;
+}
+
 std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
@@ -527,6 +551,28 @@ type::OdtLevel_e Route::get_odt_level() const{
         if (jp->odt_level != result){
             result = type::OdtLevel_e::mixt;
             break;
+        }
+    }
+    return result;
+}
+
+type::hasOdtProperties Route::get_odt_properties() const{
+    type::hasOdtProperties result;
+    if (this->journey_pattern_list.empty()){
+        result.set_odt(type::hasOdtProperties::NONE_ODT, true);
+        result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, false);
+        result.set_odt(type::hasOdtProperties::ZONAL_ODT, false);
+    }else{
+        const type::JourneyPattern* jp = this->journey_pattern_list.front();
+        result.set_odt(type::hasOdtProperties::NONE_ODT, jp->none_odt());
+        result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, jp->virtual_odt());
+        result.set_odt(type::hasOdtProperties::ZONAL_ODT, jp->zonal_odt());
+
+        for(idx_t idx = 1; idx < this->journey_pattern_list.size(); idx++){
+            jp = this->journey_pattern_list[idx];
+            result.set_odt(type::hasOdtProperties::NONE_ODT, jp->none_odt() && result.none_odt());
+            result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, jp->virtual_odt() || result.virtual_odt());
+            result.set_odt(type::hasOdtProperties::ZONAL_ODT, jp->zonal_odt() || result.zonal_odt());
         }
     }
     return result;
