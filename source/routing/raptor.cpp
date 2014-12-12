@@ -462,8 +462,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     if (!allow_odt) {
         for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
-            //if (journey_pattern->odt_level == type::OdtLevel_e::zonal) {
-            if(journey_pattern->zonal_odt()){
+            if(journey_pattern->zonal_odt() && (!journey_pattern->virtual_odt())){
                     valid_journey_patterns.set(journey_pattern->idx, false);
                     continue;
             }
@@ -486,8 +485,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
         }
 
         for (const auto journey_pattern : data.pt_data->journey_patterns) {
-            if(journey_pattern->zonal_odt()){
-            //if (journey_pattern->odt_level != type::OdtLevel_e::zonal) {
+            if(!(journey_pattern->zonal_odt() && (!journey_pattern->virtual_odt()))){
                 continue;
             }
             valid_journey_patterns.set(journey_pattern->idx, allowed_jp.count(journey_pattern) > 0);

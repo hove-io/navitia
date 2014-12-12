@@ -545,7 +545,6 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         }
         return this < &other;
     }
-    type::OdtLevel_e get_odt_level() const;
     type::hasOdtProperties get_odt_properties() const;
 };
 
@@ -556,7 +555,6 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     idx_t main_destination() const;
-    type::OdtLevel_e get_odt_level() const;
     type::hasOdtProperties get_odt_properties() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
