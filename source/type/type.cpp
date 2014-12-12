@@ -542,7 +542,7 @@ type::OdtLevel_e Route::get_odt_level() const{
     if (this->journey_pattern_list.empty()){
         return result;
     }
-
+/*
     const JourneyPattern* jp = this->journey_pattern_list.front();
     result = jp->odt_level;
 
@@ -552,7 +552,7 @@ type::OdtLevel_e Route::get_odt_level() const{
             result = type::OdtLevel_e::mixt;
             break;
         }
-    }
+    }*/
     return result;
 }
 

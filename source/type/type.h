@@ -573,7 +573,6 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 struct JourneyPattern : public Header, Nameable, hasOdtProperties{
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence = false;
-    OdtLevel_e odt_level= OdtLevel_e::none; // Computed at serialization
     Route* route = nullptr;
     CommercialMode* commercial_mode = nullptr;
     PhysicalMode* physical_mode = nullptr;
@@ -582,7 +581,7 @@ struct JourneyPattern : public Header, Nameable, hasOdtProperties{
     std::vector<VehicleJourney*> vehicle_journey_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & is_frequence & odt_level &  route & commercial_mode
+        ar & idx & name & uri & is_frequence & odt_properties &  route & commercial_mode
                 & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 

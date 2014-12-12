@@ -104,7 +104,9 @@ public:
     }
     void unset_odt_jp(){
         for(navitia::type::JourneyPattern* jp : b.data->pt_data->journey_patterns){
-            jp->odt_level = navitia::type::OdtLevel_e::none;
+            jp->set_odt(navitia::type::hasOdtProperties::NONE_ODT, true);
+            jp->set_odt(navitia::type::hasOdtProperties::VIRTUAL_ODT, false);
+            jp->set_odt(navitia::type::hasOdtProperties::ZONAL_ODT, false);
         }
     }
 };
@@ -146,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test1){
 */
 BOOST_AUTO_TEST_CASE(test2){
     vj1->stop_time_list.front().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -179,7 +181,7 @@ BOOST_AUTO_TEST_CASE(test2){
 BOOST_AUTO_TEST_CASE(test3){
     vj1->stop_time_list.front().set_odt(true);
     vj1->stop_time_list.front().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -213,7 +215,7 @@ BOOST_AUTO_TEST_CASE(test4){
     vj1->stop_time_list.front().set_odt(true);
     vj1->stop_time_list.front().set_date_time_estimated(true);
     vj1->stop_time_list.back().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -248,7 +250,7 @@ BOOST_AUTO_TEST_CASE(test5){
     vj1->stop_time_list.front().set_date_time_estimated(true);
     vj1->stop_time_list.back().set_odt(true);
     vj1->stop_time_list.back().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -284,7 +286,7 @@ BOOST_AUTO_TEST_CASE(test5){
 */
 BOOST_AUTO_TEST_CASE(test6){
     vj2->stop_time_list.front().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -317,7 +319,7 @@ BOOST_AUTO_TEST_CASE(test6){
 BOOST_AUTO_TEST_CASE(test7){
     vj2->stop_time_list.front().set_odt(true);
     vj2->stop_time_list.front().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -351,7 +353,7 @@ BOOST_AUTO_TEST_CASE(test8){
     vj2->stop_time_list.front().set_odt(true);
     vj2->stop_time_list.front().set_date_time_estimated(true);
     vj2->stop_time_list.back().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -386,7 +388,7 @@ BOOST_AUTO_TEST_CASE(test9){
     vj2->stop_time_list.front().set_date_time_estimated(true);
     vj2->stop_time_list.back().set_odt(true);
     vj2->stop_time_list.back().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -419,7 +421,7 @@ BOOST_AUTO_TEST_CASE(test9){
 BOOST_AUTO_TEST_CASE(test10){
     vj1->stop_time_list.front().set_odt(true);
     vj2->stop_time_list.front().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -454,7 +456,7 @@ BOOST_AUTO_TEST_CASE(test11){
     vj1->stop_time_list.front().set_date_time_estimated(true);
     vj2->stop_time_list.front().set_odt(true);
     vj2->stop_time_list.front().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -491,7 +493,7 @@ BOOST_AUTO_TEST_CASE(test12){
     vj2->stop_time_list.front().set_odt(true);
     vj2->stop_time_list.front().set_date_time_estimated(true);
     vj2->stop_time_list.back().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -532,7 +534,7 @@ BOOST_AUTO_TEST_CASE(test13){
     vj2->stop_time_list.back().set_odt(true);
     vj2->stop_time_list.back().set_date_time_estimated(true);
 
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true);
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -557,7 +559,7 @@ BOOST_AUTO_TEST_CASE(test13){
 
 BOOST_AUTO_TEST_CASE(test14){
     vj1->stop_time_list.front().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::none), true);
     unset_odt_jp();
 }
@@ -571,7 +573,7 @@ BOOST_AUTO_TEST_CASE(test14){
 BOOST_AUTO_TEST_CASE(test15){
     vj1->stop_time_list.front().set_odt(true);
     vj1->stop_time_list.front().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
 }
@@ -586,7 +588,7 @@ BOOST_AUTO_TEST_CASE(test16){
     vj1->stop_time_list.front().set_odt(true);
     vj1->stop_time_list.front().set_date_time_estimated(true);
     vj1->stop_time_list.back().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
 }
@@ -602,7 +604,7 @@ BOOST_AUTO_TEST_CASE(test17){
     vj1->stop_time_list.front().set_date_time_estimated(true);
     vj1->stop_time_list.back().set_odt(true);
     vj1->stop_time_list.back().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::zonal), true);
     unset_odt_jp();
 }
@@ -615,7 +617,7 @@ BOOST_AUTO_TEST_CASE(test17){
 
 BOOST_AUTO_TEST_CASE(test18){
     vj1->stop_time_list.back().set_odt(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::none), true);
     unset_odt_jp();
 }
@@ -629,7 +631,7 @@ BOOST_AUTO_TEST_CASE(test18){
 BOOST_AUTO_TEST_CASE(test19){
     vj1->stop_time_list.back().set_odt(true);
     vj1->stop_time_list.back().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
 }
@@ -644,7 +646,7 @@ BOOST_AUTO_TEST_CASE(test20){
     vj1->stop_time_list.front().set_odt(true);
     vj1->stop_time_list.back().set_odt(true);
     vj1->stop_time_list.back().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
 }
@@ -659,14 +661,14 @@ BOOST_AUTO_TEST_CASE(test21){
     vj1->stop_time_list.front().set_date_time_estimated(true);
     vj1->stop_time_list.back().set_odt(true);
     vj1->stop_time_list.back().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     BOOST_CHECK_EQUAL((vj1->get_odt_level() == navitia::type::OdtLevel_e::mixt), true);
     unset_odt_jp();
 }
 BOOST_AUTO_TEST_CASE(waiting_after){
     vj2->stop_time_list.front().set_odt(true);
     vj2->stop_time_list.front().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true, navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop1"),
             navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop3"));
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -685,7 +687,7 @@ BOOST_AUTO_TEST_CASE(waiting_after){
 BOOST_AUTO_TEST_CASE(waiting_before){
     vj1->stop_time_list.front().set_odt(true);
     vj1->stop_time_list.front().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true, navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop4"),
             navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop2"));
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -704,7 +706,7 @@ BOOST_AUTO_TEST_CASE(waiting_before){
 BOOST_AUTO_TEST_CASE(waiting_after_with_transfer){
     vj2->stop_time_list.front().set_odt(true);
     vj2->stop_time_list.front().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true, navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop1"),
             navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop6"));
     BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -723,7 +725,7 @@ BOOST_AUTO_TEST_CASE(waiting_after_with_transfer){
 BOOST_AUTO_TEST_CASE(waiting_before_with_transfer){
     vj1->stop_time_list.front().set_odt(true);
     vj1->stop_time_list.front().set_date_time_estimated(true);
-    b.data->build_odt();
+    b.data->aggregate_odt();
     resp = make_response(true, navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop7"),
             navitia::type::EntryPoint(navitia::type::Type_e::StopPoint, "stop_area:stop2"));
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
