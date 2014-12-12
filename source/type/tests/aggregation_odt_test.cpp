@@ -124,9 +124,9 @@ BOOST_FIXTURE_TEST_CASE(jp_none_odt_test, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(vj);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), true);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), false);
+    BOOST_CHECK_EQUAL(jp->none_odt(), true);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), false);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_odt_test, aggregate_odt_fixture) {
@@ -135,9 +135,9 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_odt_test, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), true);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), false);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), true);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test1, aggregate_odt_fixture) {
@@ -147,9 +147,9 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test1, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), true);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), true);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test2, aggregate_odt_fixture) {
@@ -160,9 +160,9 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test2, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), true);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), true);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test3, aggregate_odt_fixture) {
@@ -174,9 +174,9 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test3, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["address_to_stop_point"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), true);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), true);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test4, aggregate_odt_fixture) {
@@ -189,9 +189,9 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test4, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["odt_point_to_point"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), true);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), true);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
 }
 
 
@@ -200,9 +200,9 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test1, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), false);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test2, aggregate_odt_fixture) {
@@ -210,9 +210,9 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test2, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), false);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test3, aggregate_odt_fixture) {
@@ -220,9 +220,9 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test3, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["address_to_stop_point"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), false);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test4, aggregate_odt_fixture) {
@@ -230,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test4, aggregate_odt_fixture) {
     jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["odt_point_to_point"]);
     jp->build_odt_properties();
 
-    BOOST_CHECK_EQUAL(jp->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(jp->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(jp->none_odt(), false);
+    BOOST_CHECK_EQUAL(jp->virtual_odt(), false);
+    BOOST_CHECK_EQUAL(jp->zonal_odt(), true);
 }

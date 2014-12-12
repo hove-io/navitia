@@ -486,6 +486,22 @@ struct PhysicalMode : public Header, Nameable{
 
 struct Calendar;
 
+typedef std::bitset<3> OdtProperties;
+struct hasOdtProperties {
+    static const uint8_t NONE_ODT = 0;
+    static const uint8_t VIRTUAL_ODT = 1;
+    static const uint8_t ZONAL_ODT = 2;
+    OdtProperties odt_properties;
+
+
+    void set_odt(uint8_t property, bool value){
+        odt_properties.set(property, value);
+    }
+    bool none_odt() const {return odt_properties[NONE_ODT];}
+    bool virtual_odt() const {return odt_properties[VIRTUAL_ODT];}
+    bool zonal_odt() const {return odt_properties[ZONAL_ODT];}
+};
+
 struct Line : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Line;
     std::string code;
@@ -550,14 +566,12 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 
 };
 
-struct JourneyPattern : public Header, Nameable{
-    static const uint8_t NONE_ODT = 0;
-    static const uint8_t VIRTUAL_ODT = 1;
-    static const uint8_t ZONAL_ODT = 2;
+
+
+struct JourneyPattern : public Header, Nameable, hasOdtProperties{
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence = false;
     OdtLevel_e odt_level= OdtLevel_e::none; // Computed at serialization
-    std::bitset<3> odt_properties;
     Route* route = nullptr;
     CommercialMode* commercial_mode = nullptr;
     PhysicalMode* physical_mode = nullptr;
@@ -574,14 +588,6 @@ struct JourneyPattern : public Header, Nameable{
     bool operator<(const JourneyPattern & other) const { return this < &other; }
 
     void build_odt_properties();
-    bool is_none_odt() const {return odt_properties[NONE_ODT];}
-    bool is_virtual_odt() const {return odt_properties[VIRTUAL_ODT];}
-    bool is_zonal_odt() const {return odt_properties[ZONAL_ODT];}
-
-    inline void set_none_odt(bool value) {odt_properties[NONE_ODT] = value;}
-    inline void set_virtual_odt(bool value){odt_properties[VIRTUAL_ODT] = value;}
-    inline void set_zonal_odt(bool value){odt_properties[ZONAL_ODT] = value;}
-
 };
 
 struct AssociatedCalendar {
