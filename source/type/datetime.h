@@ -216,7 +216,7 @@ inline boost::gregorian::days operator"" _days(unsigned long long v) {
 /*
  * enable simple duration construction (in seconds)
  *
- * build it like 12_s => creates a boost::time_duration of 12 seconds
+ * build it like 12_s => creates a navitia::time_duration of 12 seconds
  */
 inline navitia::time_duration operator"" _s(unsigned long long v) {
     return navitia::seconds(v);
@@ -225,7 +225,7 @@ inline navitia::time_duration operator"" _s(unsigned long long v) {
 /*
  * enable simple duration construction (in minutes)
  *
- * build it like 12_min => creates a boost::time_duration of 12 minutes
+ * build it like 12_min => creates a navitia::time_duration of 12 minutes
  */
 inline navitia::time_duration operator"" _min(unsigned long long v) {
     return navitia::minutes(v);
@@ -234,7 +234,7 @@ inline navitia::time_duration operator"" _min(unsigned long long v) {
 /*
  * enable simple duration construction (in hours)
  *
- * build it like 12_h => creates a boost::time_duration of 12 hours
+ * build it like 12_h => creates a navitia::time_duration of 12 hours
  */
 inline navitia::time_duration operator"" _h(unsigned long long v) {
     return navitia::hours(v);
