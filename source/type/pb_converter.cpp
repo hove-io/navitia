@@ -72,7 +72,7 @@ void fill_address(const T* obj, const nt::Data& data,
     int depth = (max_depth <= 3) ? max_depth : 3;
     address->set_name(address_name);
     std::string label;
-    if(house_number >= 0){
+    if(house_number >= 1){
         address->set_house_number(house_number);
         label += std::to_string(house_number) + " ";
     }
@@ -516,7 +516,9 @@ void fill_pb_object(const nt::StopPointConnection* c, const nt::Data& data,
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
 
-    connection->set_seconds(c->display_duration);
+    connection->set_duration(c->duration);
+    connection->set_display_duration(c->display_duration);
+    connection->set_max_duration(c->max_duration);
     if(c->departure != nullptr && c->destination != nullptr && depth > 0){
         fill_pb_object(c->departure, data, connection->mutable_origin(),
                        depth-1, now, action_period);
@@ -725,7 +727,7 @@ void fill_pb_placemark(const navitia::georef::Admin* admin, const type::Data &da
 void fill_pb_placemark(const navitia::georef::Way* way,
                        const type::Data &data, pbnavitia::PtObject* place,
                        int house_number,
-                       type::GeographicalCoord& coord,
+                       const type::GeographicalCoord& coord,
                        int max_depth, const pt::ptime& now,
                        const pt::time_period& action_period,
                        const bool){
@@ -963,6 +965,13 @@ void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
         if (it != data.geo_ref->admin_map.end()) {
             fill_pb_placemark(data.geo_ref->admins[it->second], data, place, max_depth, now, action_period);
         }
+    } else if (point.type == type::Type_e::Coord){
+        try{
+            auto address = data.geo_ref->nearest_addr(point.coordinates);
+            fill_pb_placemark(address.second, data, place, address.first, point.coordinates, max_depth, now,
+                    action_period);
+        }catch(proximitylist::NotFound){}
+
     }
 }
 

@@ -222,7 +222,8 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, navitia::time_durat
                     bool clockwise) {
 
     std::vector<Path> result;
-    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri, disruption_active, allow_odt);
+    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), forbidden_uri,
+                         disruption_active, allow_odt, departures_, destinations);
 
     auto calc_dep = clockwise ? departures_ : destinations;
     auto calc_dest = clockwise ? destinations : departures_;
@@ -374,8 +375,10 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, navitia::time_duratio
 
 
 void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> & forbidden,
-                                          bool disruption_active,
-                                          bool allow_odt) {
+                  bool disruption_active, bool allow_odt,
+                  const vec_stop_point_duration &departures_,
+                  const vec_stop_point_duration &destinations
+                  ) {
 
     if(disruption_active){
         valid_journey_patterns = data.dataRaptor->jp_adapted_validity_pattern[date];
@@ -456,6 +459,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
             continue;
         }
     }
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     if (!allow_odt) {
         for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
             if (journey_pattern->odt_level == type::OdtLevel_e::zonal) {
@@ -463,7 +467,33 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
                     continue;
             }
         }
+    } else {
+        // We want to be able to take zonal odt only to leave (or arrive) the 
+        // the departure (to the destination).
+        // Thus, we can forbid all journey patterns without any stop point
+        // in the set of departures or destinations.
+
+        //Let's build the set of allowed journey patterns
+        std::set<const type::JourneyPattern*> allowed_jp;
+        for (const vec_stop_point_duration& vec_sp_duration : {departures_, destinations}) {
+            for (const stop_point_duration & sp_duration : vec_sp_duration) {
+                const auto sp = data.pt_data->stop_points[sp_duration.first];
+                for (const auto jp : sp->journey_pattern_point_list) {
+                    allowed_jp.insert(jp->journey_pattern);
+                }
+            }
+        }
+
+        for (const auto journey_pattern : data.pt_data->journey_patterns) {
+            if (journey_pattern->odt_level != type::OdtLevel_e::zonal) {
+                continue;
+            }
+            valid_journey_patterns.set(journey_pattern->idx, allowed_jp.count(journey_pattern) > 0);
+        }
+        LOG4CPLUS_INFO(logger, "Number of allowed journey patterns: " << allowed_jp.size());
     }
+    LOG4CPLUS_INFO(logger, "Odt allowed? " << (allow_odt));
+
 }
 
 template<typename Visitor>

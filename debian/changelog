@@ -1,3 +1,25 @@
+navitia2 (1.7.0) unstable; urgency=low
+
+  * Jormungandr: add the display_duration in the connection api  <https://github.com/CanalTP/navitia/pull/788>
+  * jormungandr: some journey were deleted for no reason  <https://github.com/CanalTP/navitia/pull/787>
+  * jormungandr: remove journey who are a lot longer that the asap journey  <https://github.com/CanalTP/navitia/pull/784>
+  * Kraken: fix goejson of ODT section  <https://github.com/CanalTP/navitia/pull/783>
+  * Sql: fix leak on first alembic call  <https://github.com/CanalTP/navitia/pull/780>
+  * Optimization jp virtual  <https://github.com/CanalTP/navitia/pull/779>
+  * SQL: fix target_metadata call  <https://github.com/CanalTP/navitia/pull/778>
+  * Jormungandr: improvement of the pagination for journeys  <https://github.com/CanalTP/navitia/pull/777>
+  * add an app_name on the token  <https://github.com/CanalTP/navitia/pull/775>
+  * Disruption: Add param disruption  <https://github.com/CanalTP/navitia/pull/773>
+  * Fix swap data  <https://github.com/CanalTP/navitia/pull/772>
+  * better reverve geocoding in journey   <https://github.com/CanalTP/navitia/pull/771>
+  * add metadatas on each kraken response, and update jormun instance each time  <https://github.com/CanalTP/navitia/pull/770>
+  * destineo: sometime a journey was deleted two time in the scenario  <https://github.com/CanalTP/navitia/pull/769>
+  * build: add requirement.txt in deb  <https://github.com/CanalTP/navitia/pull/768>
+  * geopal2ed: in geopal, a "number" at 0 ou -1 is invalid  <https://github.com/CanalTP/navitia/pull/767>
+  * Tyr: change instance logger handling  <https://github.com/CanalTP/navitia/pull/766>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 15 Dec 2014 08:12:46 +0100
+
 navitia2 (1.6.3) unstable; urgency=low
 
   * Kraken: fix data swapping

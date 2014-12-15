@@ -117,7 +117,6 @@ std::string get_string_status(const boost::shared_ptr<const nt::Data>& data) {
 
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
-
     auto status = result.mutable_status();
     const auto d = data_manager.get_data();
     status->set_data_version(d->version);
@@ -144,9 +143,8 @@ pbnavitia::Response Worker::status() {
     return result;
 }
 
-pbnavitia::Response Worker::metadatas() {
-    pbnavitia::Response result;
-    auto metadatas = result.mutable_metadatas();
+void Worker::metadatas(pbnavitia::Response& response) {
+    auto metadatas = response.mutable_metadatas();
     const auto d = data_manager.get_data();
     if (d->loaded) {
         metadatas->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
@@ -163,7 +161,6 @@ pbnavitia::Response Worker::metadatas() {
         metadatas->set_timezone("");
     }
     metadatas->set_status(get_string_status(d));
-    return result;
 }
 
 void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data){
@@ -198,8 +195,9 @@ pbnavitia::Response Worker::disruptions(const pbnavitia::DisruptionsRequest &req
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
     return navitia::disruption::disruptions(*data,
-                                                request.datetime(),
-                                                request.period(),
+                                                request.application_period_begin(),
+                                                request.application_period_end(),
+                                                request._current_datetime(),
                                                 request.depth(),
                                                 request.count(),
                                                 request.start_page(),
@@ -593,43 +591,44 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
 
 
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
-    pbnavitia::Response result ;
+    pbnavitia::Response response ;
     // These api can respond even if the data isn't loaded
     if (request.requested_api() == pbnavitia::STATUS) {
         return status();
     }
     if (request.requested_api() ==  pbnavitia::METADATAS) {
-        return metadatas();
+        metadatas(response);
+        return response;
     }
     if (! data_manager.get_data()->loaded){
-        fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data", result.mutable_error());
-        return result;
+        fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data", response.mutable_error());
+        return response;
     }
     switch(request.requested_api()){
-        case pbnavitia::places: return autocomplete(request.places());
-        case pbnavitia::pt_objects: return pt_object(request.pt_objects());
-        case pbnavitia::place_uri: return place_uri(request.place_uri());
+        case pbnavitia::places: response = autocomplete(request.places()); break;
+        case pbnavitia::pt_objects: response = pt_object(request.pt_objects()); break;
+        case pbnavitia::place_uri: response = place_uri(request.place_uri()); break;
         case pbnavitia::ROUTE_SCHEDULES:
         case pbnavitia::NEXT_DEPARTURES:
         case pbnavitia::NEXT_ARRIVALS:
         case pbnavitia::STOPS_SCHEDULES:
         case pbnavitia::DEPARTURE_BOARDS:
-            return next_stop_times(request.next_stop_times(), request.requested_api());
+            response = next_stop_times(request.next_stop_times(), request.requested_api()); break;
         case pbnavitia::ISOCHRONE:
         case pbnavitia::NMPLANNER:
-        case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api());
-        case pbnavitia::places_nearby: return proximity_list(request.places_nearby());
-        case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref());
-        case pbnavitia::disruptions : return disruptions(request.disruptions());
-        case pbnavitia::calendars : return calendars(request.calendars());
-        case pbnavitia::place_code : return place_code(request.place_code());
+        case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api()); break;
+        case pbnavitia::places_nearby: response = proximity_list(request.places_nearby()); break;
+        case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref()); break;
+        case pbnavitia::disruptions : response = disruptions(request.disruptions()); break;
+        case pbnavitia::calendars : response = calendars(request.calendars()); break;
+        case pbnavitia::place_code : response = place_code(request.place_code()); break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
-            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", result.mutable_error());
+            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
             break;
     }
-
-    return result;
+    metadatas(response);//we add the metadatas for each response
+    return response;
 }
 
 }

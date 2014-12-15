@@ -43,6 +43,7 @@ setup(name='tyr',
         data_files=[
             ('/usr/share/tyr/migrations', ['migrations/alembic.ini', 'migrations/env.py', 'migrations/script.py.mako']),
             ('/usr/share/tyr/migrations/versions', glob.glob('migrations/versions/*.py')),
-            ('/etc/init.d', ['tyr_beat', 'tyr_worker'])
+            ('/etc/init.d', ['tyr_beat', 'tyr_worker']),
+            ('/usr/share/tyr', ['requirements.txt'])
         ],
 )

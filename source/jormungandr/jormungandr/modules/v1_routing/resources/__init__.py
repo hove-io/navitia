@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-#     the software to build cool stuff with public transport.
+# the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+# powered by Canal TP (www.canaltp.fr).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -30,15 +27,4 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from distutils.core import setup
-
-setup(name='sindri',
-      version='0.40.0',
-      description="responsable de l'enregistrement du temps réel dans ED ",
-      author='CanalTP',
-      author_email='alexandre.jacquin@canaltp.fr',
-      url='www.navitia.io',
-      packages=['sindri', 'sindri.saver'],
-      scripts=['sindri_service'],
-      data_files=[('/usr/share/sindri', ['requirements.txt'])]
-)
+__all__ = ['Index']

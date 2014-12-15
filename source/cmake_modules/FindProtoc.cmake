@@ -10,7 +10,7 @@ find_program(PROTOC_EXECUTABLE
 
 if(PROTOC_EXECUTABLE)
     set(PROTOC_FOUND TRUE)
-    if(NOT LOG4CPLUS_FIND_QUIETLY)
+    if(NOT PROTOC_FIND_QUIETLY)
         message(STATUS "Found protoc: ${PROTOC_EXECUTABLE}")
     endif()
 else()

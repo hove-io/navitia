@@ -1,3 +1,4 @@
 usr/lib/python*/dist-packages/connectors
 usr/lib/python*/dist-packages/connectors/at
 /usr/bin/connector_at.py
+usr/share/connectors

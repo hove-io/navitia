@@ -345,26 +345,24 @@ class add_journey_pagination(object):
     def extremes(self, resp):
         datetime_before = None
         datetime_after = None
+        if 'journeys' not in resp:
+            return (None, None)
         section_is_pt = lambda section: section['type'] == "public_transport"\
                            or section['type'] == "on_demand_transport"
         filter_journey = lambda journey: 'arrival_date_time' in journey and\
                              journey['arrival_date_time'] != '' and\
                              "sections" in journey and\
                              any(section_is_pt(section) for section in journey['sections'])
-        try:
-            list_journeys = filter(filter_journey, resp['journeys'])
-            asap_journey = min(list_journeys,
-                               key=itemgetter('arrival_date_time'))
-        except:
+        list_journeys = filter(filter_journey, resp['journeys'])
+        if not list_journeys:
             return (None, None)
-        if asap_journey['arrival_date_time'] \
-                and asap_journey['departure_date_time']:
-            s_departure = asap_journey['departure_date_time']
-            f_departure = datetime.strptime(s_departure, f_datetime)
-            s_arrival = asap_journey['arrival_date_time']
-            f_arrival = datetime.strptime(s_arrival, f_datetime)
-            datetime_after = f_departure + timedelta(minutes=1)
-            datetime_before = f_arrival - timedelta(minutes=1)
+        prev_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
+        next_journey = max(list_journeys, key=itemgetter('departure_date_time'))
+        f_datetime = "%Y%m%dT%H%M%S"
+        f_departure = datetime.strptime(next_journey['departure_date_time'], f_datetime)
+        f_arrival = datetime.strptime(prev_journey['arrival_date_time'], f_datetime)
+        datetime_after = f_departure + timedelta(minutes=1)
+        datetime_before = f_arrival - timedelta(minutes=1)
 
         return (datetime_before, datetime_after)
 

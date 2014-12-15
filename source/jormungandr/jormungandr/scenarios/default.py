@@ -42,6 +42,7 @@ from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, cou
 from jormungandr.scenarios import simple
 import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration
+from operator import attrgetter
 
 
 class Scenario(simple.Scenario):
@@ -129,6 +130,7 @@ class Scenario(simple.Scenario):
         req.journeys.wheelchair = request["wheelchair"]
         req.journeys.disruption_active = request["disruption_active"]
         req.journeys.show_codes = request["show_codes"]
+        req.journeys.allow_odt = True
         if "details" in request and request["details"]:
             req.journeys.details = request["details"]
 
@@ -279,6 +281,7 @@ class Scenario(simple.Scenario):
 
         if not request['debug']:
             self._delete_non_optimal_journey(resp.journeys)
+            self._delete_too_long_journey(resp.journeys, instance, request['clockwise'])
         self.sort_journeys(resp, instance.journey_order, request['clockwise'])
         self.choose_best(resp)
         self.delete_journeys(resp, request, final_filter=True)  # filter one last time to remove similar journeys
@@ -289,6 +292,42 @@ class Scenario(simple.Scenario):
             error.message = "No journey found, all were filtered"
 
         return resp
+
+    def _delete_too_long_journey(self, journeys, instance, clockwise):
+        """
+        remove journey a lot longer than the asap journey
+        """
+        logger = logging.getLogger(__name__)
+        max_duration = self._find_max_duration(journeys, instance, clockwise)
+        if not max_duration:
+            return
+        to_delete = set()
+        for idx, journey in enumerate(journeys):
+            if journey.duration > max_duration:
+                to_delete.add(idx)
+                logger.debug('delete journey %s because it is longer than %s', journey.type, max_duration)
+        for idx in sorted(list(to_delete), reverse=True):
+            del journeys[idx]
+
+
+    def _find_max_duration(self, journeys, instance, clockwise):
+        """
+        calculate the max duration of a journey from a pool of journey
+        we search the earliest one who doesn't use car, bike or bss
+        """
+        section_is_walking_or_pt = lambda section: section.type not in \
+                (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
+                           or section.street_network.mode == response_pb2.Walking
+        filter_journey = lambda journey: all(section_is_walking_or_pt(section) for section in journey.sections)
+
+        list_journeys = filter(filter_journey, journeys)
+        if not list_journeys:
+            return None
+        if clockwise:
+            asap_journey = min(list_journeys, key=attrgetter('arrival_date_time'))
+        else:
+            asap_journey = max(list_journeys, key=attrgetter('departure_date_time'))
+        return (asap_journey.duration * instance.factor_too_long_journey) + instance.min_duration_too_long_journey
 
     def _delete_non_optimal_journey(self, journeys):
         """

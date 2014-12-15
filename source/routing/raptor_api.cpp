@@ -103,7 +103,12 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     }
 
     fill_pb_object(vj, d, stop_times, add_info_vehicle_journey, 0, now, action_period);
-    fill_shape(pb_section, stop_times);
+    if (!stop_times.front()->odt()) {
+        fill_shape(pb_section, stop_times);
+    } else {
+        add_coord(stop_times.front()->journey_pattern_point->stop_point->coord, pb_section);
+        add_coord(stop_times.back()->journey_pattern_point->stop_point->coord, pb_section);
+    }
 }
 
 void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::routing::Path>& paths,
@@ -194,6 +199,7 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
                 bt::ptime departure_ptime, arrival_ptime;
                 type::VehicleJourney const *const vj = item.get_vj();
                 int length = 0;
+
                 for(size_t i=0;i<item.stop_points.size();++i) {
                     if (vj->has_boarding() || vj->has_landing()) {
                         continue;
@@ -390,17 +396,13 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
             pb_journey->set_departure_date_time(str_departure);
             pb_journey->set_arrival_date_time(str_arrival);
             // We add coherence with the origin of the request
-            if (origin.type != nt::Type_e::Address && origin.type != nt::Type_e::Coord && origin.type != nt::Type_e::Way) {
-                auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
-                origin_pb->Clear();
-                fill_pb_placemark(origin, d, origin_pb, 2);
-            }
+            auto origin_pb = pb_journey->mutable_sections(0)->mutable_origin();
+            origin_pb->Clear();
+            fill_pb_placemark(origin, d, origin_pb, 2);
             //We add coherence with the destination object of the request
-            if (destination.type != nt::Type_e::Address && destination.type != nt::Type_e::Coord && destination.type != nt::Type_e::Way) {
-                auto destination_pb = pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
-                destination_pb->Clear();
-                fill_pb_placemark(destination, d, destination_pb, 2);
-            }
+            auto destination_pb = pb_journey->mutable_sections(pb_journey->sections_size()-1)->mutable_destination();
+            destination_pb->Clear();
+            fill_pb_placemark(destination, d, destination_pb, 2);
         }
     }
 }
@@ -437,7 +439,8 @@ void add_isochrone_response(RAPTOR &raptor, pbnavitia::Response& response,
         type::idx_t best_jpp = type::invalid_idx;
         int best_round = -1;
         for(auto jpp : sp->journey_pattern_point_list) {
-            if(raptor.best_labels[jpp->idx] < best) {
+            if((clockwise && raptor.best_labels[jpp->idx] < best) ||
+                (!clockwise && raptor.best_labels[jpp->idx] > best)){
                 int round = raptor.best_round(jpp->idx);
                 if(round != -1 && raptor.labels[round][jpp->idx].pt_is_initialized()) {
                     best = raptor.best_labels[jpp->idx];
@@ -697,7 +700,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         worker.init(dst);
         auto dst_stop_points = get_stop_points(dst, raptor.data, worker);
         for (std::pair<type::idx_t, navitia::time_duration>& dst_stop_point : dst_stop_points) {
-            dst_stop_point.second += navitia::seconds(dst.access_duration);
+            dst_stop_point.second -= navitia::seconds(dst.access_duration);
         }
         arrivals.push_back(std::make_pair(dst, dst_stop_points));
     }
@@ -776,7 +779,8 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
 
                 std::vector<type::StopPoint*> stop_points;
                 for(auto& path : paths) {
-                    const type::StopPoint* sp = path.items[0].stop_points[0];
+                    const type::StopPoint* sp = clockwise ? path.items.front().stop_points.front() :
+                                                             path.items.back().stop_points.back();
                     stop_points.push_back(const_cast<type::StopPoint*>(sp));
                 }
 

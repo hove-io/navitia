@@ -34,6 +34,7 @@ import flask_restful
 from flask_restful import fields, marshal_with, marshal, reqparse, types
 import sqlalchemy
 from validate_email import validate_email
+from datetime import datetime
 
 import logging
 
@@ -51,7 +52,7 @@ class FieldDate(fields.Raw):
             return 'null'
 
 
-key_fields = {'id': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
+key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
 instance_fields = {'id': fields.Raw,
                    'name': fields.Raw,
@@ -190,6 +191,13 @@ class Instance(flask_restful.Resource):
         parser.add_argument('destineo_min_car', type=int,
                 help='minimum duration of car fallback', location=('json', 'values'),
                 default=instance.destineo_min_car)
+        parser.add_argument('factor_too_long_journey', type=float,
+                help='if a journey is X time longer than the earliest one we remove it', location=('json', 'values'),
+                default=instance.factor_too_long_journey)
+        parser.add_argument('min_duration_too_long_journey', type=int,
+                help='all journeys with a duration fewer than this value will be kept no matter what even if they ' \
+                        'are 20 times slower than the earliest one', location=('json', 'values'),
+                default=instance.min_duration_too_long_journey)
 
         args = parser.parse_args()
 
@@ -211,6 +219,8 @@ class Instance(flask_restful.Resource):
             instance.destineo_min_bike = args['destineo_min_bike']
             instance.destineo_min_bss = args['destineo_min_bss']
             instance.destineo_min_car = args['destineo_min_car']
+            instance.min_duration_too_long_journey = args['min_duration_too_long_journey']
+            instance.factor_too_long_journey = args['factor_too_long_journey']
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -233,16 +243,23 @@ class User(flask_restful.Resource):
                     case_sensitive=False, help='login')
             parser.add_argument('email', type=unicode, required=False,
                     case_sensitive=False, help='email')
+            parser.add_argument('key', type=unicode, required=False,
+                    case_sensitive=False, help='key')
             args = parser.parse_args()
 
-            # dict comprehension would be better, but it's not in python 2.6
-            filter_params = dict((k, v) for k, v in args.items() if v)
-
-            if filter_params:
-                users = models.User.query.filter_by(**filter_params).all()
+            if args['key']:
+                logging.debug(args['key'])
+                users = models.User.get_from_token(args['key'], datetime.now())
                 return marshal(users, user_fields)
             else:
-                return marshal(models.User.query.all(), user_fields)
+                # dict comprehension would be better, but it's not in python 2.6
+                filter_params = dict((k, v) for k, v in args.items() if v)
+
+                if filter_params:
+                    users = models.User.query.filter_by(**filter_params).all()
+                    return marshal(users, user_fields)
+                else:
+                    return marshal(models.User.query.all(), user_fields)
 
     def post(self):
         user = None
@@ -319,10 +336,12 @@ class Key(flask_restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
                 case_sensitive=False, help='end validity date of the key')
+        parser.add_argument('app_name', type=str, required=True,
+                case_sensitive=False, help='app name associated to this key')
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
-            user.add_key(valid_until=args['valid_until'])
+            user.add_key(args['app_name'], valid_until=args['valid_until'])
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -346,15 +365,19 @@ class Key(flask_restful.Resource):
     @marshal_with(user_fields_full)
     def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('valid_until', type=types.date, required=True,
+        parser.add_argument('valid_until', type=types.date, required=False,
                 case_sensitive=False, help='end validity date of the key')
+        parser.add_argument('app_name', type=str, required=True,
+                case_sensitive=False, help='eapp name associated to this key')
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
             key = user.keys.filter_by(id=key_id).first()
             if not key:
                 abort(404)
-            key.valid_until = args['valid_until']
+            if args['valid_until']:
+                key.valid_until = args['valid_until']
+            key.app_name = args['app_name']
             db.session.commit()
         except Exception:
             logging.exception("fail")

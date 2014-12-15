@@ -66,3 +66,11 @@ CACHE_CONFIGURATION = {
     'TIMEOUT_AUTHENTICATION': 600,
     'TIMEOUT_PARAMS': 600,
 }
+
+# List of enabled modules
+MODULES = {
+    'v1': {  # API v1 of Navitia
+        'import_path': 'jormungandr.modules.v1_routing.v1_routing',
+        'class_name': 'V1Routing'
+    }
+}

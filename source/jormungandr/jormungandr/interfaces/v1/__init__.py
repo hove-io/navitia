@@ -27,5 +27,5 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-__all__ = ['Index', 'Uri', 'Coverage', 'Journeys', 'Places', 'ResourceUri',
+__all__ = ['Uri', 'Coverage', 'Journeys', 'Places', 'ResourceUri',
            'Schedules', 'Disruptions', 'Calendars', 'Ptobjects']

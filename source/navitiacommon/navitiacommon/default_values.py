@@ -64,9 +64,15 @@ destineo_min_tc_with_bss = 5*60
 
 destineo_min_bike = 4*60
 
-destineo_min_bss = 4*60 + 3*60 #we want 4minute on the bike, so we add the time to pick et put back the bss
+destineo_min_bss = 4*60 + 3*60 #we want 4minute on the bike, so we add the time to pick and put back the bss
 
 destineo_min_car = 5*60
+
+#if a journey is X time longer than the earliest one we remove it
+factor_too_long_journey = 4
+
+#all journeys with a duration fewer than this value will be kept no matter what even if they are 20 times slower than the earliest one
+min_duration_too_long_journey = 15*60
 
 
 def get_value_or_default(attr, instance, instance_name):
