@@ -1,3 +1,9 @@
+navitia2 (1.7.1) unstable; urgency=low
+
+  * need a new version number after corrupted package
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 15 Dec 2014 13:12:47 +0100
+
 navitia2 (1.7.0) unstable; urgency=low
 
   * Jormungandr: add the display_duration in the connection api  <https://github.com/CanalTP/navitia/pull/788>
