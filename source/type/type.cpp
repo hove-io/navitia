@@ -464,23 +464,9 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
 
 type::hasOdtProperties Line::get_odt_properties() const{
     type::hasOdtProperties result;
-    if (this->route_list.empty()){
-        result.set_odt(type::hasOdtProperties::NONE_ODT, true);
-        result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, false);
-        result.set_odt(type::hasOdtProperties::ZONAL_ODT, false);
-    }else{
-        const type::Route* rt = this->route_list.front();
-        type::hasOdtProperties tmp = rt->get_odt_properties();
-        result.set_odt(type::hasOdtProperties::NONE_ODT, tmp.none_odt());
-        result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, tmp.virtual_odt());
-        result.set_odt(type::hasOdtProperties::ZONAL_ODT, tmp.zonal_odt());
-
-        for(idx_t idx = 1; idx < this->route_list.size(); idx++){
-            rt = this->route_list[idx];
-            tmp = rt->get_odt_properties();
-            result.set_odt(type::hasOdtProperties::NONE_ODT, tmp.none_odt() && result.none_odt());
-            result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, tmp.virtual_odt() || result.virtual_odt());
-            result.set_odt(type::hasOdtProperties::ZONAL_ODT, tmp.zonal_odt() || result.zonal_odt());
+    if (!this->route_list.empty()){
+        for (const auto route : this->route_list) {
+            result |= route->get_odt_properties();
         }
     }
     return result;
@@ -520,42 +506,23 @@ idx_t Route::main_destination() const {
 
 type::hasOdtProperties Route::get_odt_properties() const{
     type::hasOdtProperties result;
-    if (this->journey_pattern_list.empty()){
-        result.set_odt(type::hasOdtProperties::NONE_ODT, true);
-        result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, false);
-        result.set_odt(type::hasOdtProperties::ZONAL_ODT, false);
-    }else{
-        const type::JourneyPattern* jp = this->journey_pattern_list.front();
-        result.set_odt(type::hasOdtProperties::NONE_ODT, jp->none_odt());
-        result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, jp->virtual_odt());
-        result.set_odt(type::hasOdtProperties::ZONAL_ODT, jp->zonal_odt());
-
-        for(idx_t idx = 1; idx < this->journey_pattern_list.size(); idx++){
-            jp = this->journey_pattern_list[idx];
-            result.set_odt(type::hasOdtProperties::NONE_ODT, jp->none_odt() && result.none_odt());
-            result.set_odt(type::hasOdtProperties::VIRTUAL_ODT, jp->virtual_odt() || result.virtual_odt());
-            result.set_odt(type::hasOdtProperties::ZONAL_ODT, jp->zonal_odt() || result.zonal_odt());
+    if (!this->journey_pattern_list.empty()){
+        for (const auto jp : this->journey_pattern_list) {
+            result.odt_properties |= jp->odt_properties;
         }
     }
     return result;
 }
 
 void JourneyPattern::build_odt_properties(){
-    if (this->vehicle_journey_list.empty()){
-        this->set_odt(type::hasOdtProperties::NONE_ODT, true);
-        this->set_odt(type::hasOdtProperties::VIRTUAL_ODT, false);
-        this->set_odt(type::hasOdtProperties::ZONAL_ODT, false);
-    }else{
-        const type::VehicleJourney* vj = this->vehicle_journey_list.front();
-        this->set_odt(type::hasOdtProperties::NONE_ODT, vj->is_none_odt());
-        this->set_odt(type::hasOdtProperties::VIRTUAL_ODT, vj->is_virtual_odt());
-        this->set_odt(type::hasOdtProperties::ZONAL_ODT, vj->is_zonal_odt());
-
-        for(idx_t idx = 1; idx < this->vehicle_journey_list.size(); idx++){
-            vj = this->vehicle_journey_list[idx];            
-            this->set_odt(type::hasOdtProperties::NONE_ODT, vj->is_none_odt() && this->none_odt());
-            this->set_odt(type::hasOdtProperties::VIRTUAL_ODT, vj->is_virtual_odt() || this->virtual_odt());
-            this->set_odt(type::hasOdtProperties::ZONAL_ODT, vj->is_zonal_odt() || this->zonal_odt());
+    if (!this->vehicle_journey_list.empty()){
+        for (const auto vj : vehicle_journey_list) {
+            if (vj->is_virtual_odt()) {
+                this->set_virtual_odt();
+            }
+            if (vj->is_zonal_odt()) {
+                this->set_zonal_odt();
+            }
         }
     }
 }

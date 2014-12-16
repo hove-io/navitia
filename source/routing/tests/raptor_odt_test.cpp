@@ -104,9 +104,7 @@ public:
     }
     void unset_odt_jp_and_vj(){
         for(navitia::type::JourneyPattern* jp : b.data->pt_data->journey_patterns){
-            jp->set_odt(navitia::type::hasOdtProperties::NONE_ODT, true);
-            jp->set_odt(navitia::type::hasOdtProperties::VIRTUAL_ODT, false);
-            jp->set_odt(navitia::type::hasOdtProperties::ZONAL_ODT, false);
+            jp->reset_odt();
         }
         for (navitia::type::VehicleJourney* vj : b.data->pt_data->vehicle_journeys){
             vj->vehicle_journey_type = navitia::type::VehicleJourneyType::regular;
