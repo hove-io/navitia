@@ -265,8 +265,8 @@ def build_data(instance):
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
-    chain(ed2nav.si(instance_config, job.id),
-                        nav2rt.si(instance_config, job.id), finish_job.si(job.id)).delay()
+    chain(ed2nav.si(instance_config, job.id, None),
+                        nav2rt.si(instance_config, job.id, None), finish_job.si(job.id)).delay()
     current_app.logger.info("Job build data of : %s queued"%instance.name)
 
 
