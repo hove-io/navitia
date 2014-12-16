@@ -36,8 +36,7 @@ www.navitia.io
 namespace ed{
 
 nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
-                          const AtPerturbation& pert,
-                          nt::PT_Data& data, uint32_t time);
+                          const AtPerturbation& pert, uint32_t time);
 nt::ValidityPattern* get_validity_pattern(nt::ValidityPattern* validity_pattern,
                           nt::PT_Data& data, boost::gregorian::date day, bool add);
 void update_stop_times(nt::VehicleJourney* vehicle_journey, const AtPerturbation& pert, nt::PT_Data& data);
@@ -65,7 +64,7 @@ private:
 
     void init_map(const nt::PT_Data& data);
     std::vector<nt::VehicleJourney*> reconcile_impact_with_vj(const AtPerturbation& perturbations, const nt::PT_Data& data);
-    void apply_deletion_on_vj(nt::VehicleJourney* vehicle_journey, const std::set<AtPerturbation>& perturbations, nt::PT_Data& data);
+    void apply_deletion_on_vj(nt::VehicleJourney* vehicle_journey, const std::set<AtPerturbation>& perturbations);
     void apply_update_on_vj(nt::VehicleJourney* vehicle_journey, const std::set<AtPerturbation>& perturbations, nt::PT_Data& data);
 
     std::vector<nt::VehicleJourney*> get_vj_from_stop_area(const std::string& stop_area_uri);
