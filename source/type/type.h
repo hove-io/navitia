@@ -486,20 +486,44 @@ struct PhysicalMode : public Header, Nameable{
 
 struct Calendar;
 
-typedef std::bitset<3> OdtProperties;
+typedef std::bitset<2> OdtProperties;
 struct hasOdtProperties {
-    static const uint8_t NONE_ODT = 0;
-    static const uint8_t VIRTUAL_ODT = 1;
-    static const uint8_t ZONAL_ODT = 2;
+    static const uint8_t VIRTUAL_ODT = 0;
+    static const uint8_t ZONAL_ODT = 1;
     OdtProperties odt_properties;
 
-
-    void set_odt(uint8_t property, bool value){
-        odt_properties.set(property, value);
+    hasOdtProperties() {
+        odt_properties.reset();
     }
-    bool none_odt() const {return odt_properties[NONE_ODT];}
-    bool virtual_odt() const {return odt_properties[VIRTUAL_ODT];}
-    bool zonal_odt() const {return odt_properties[ZONAL_ODT];}
+
+    void set_virtual_odt() {
+        odt_properties.set(VIRTUAL_ODT, true);
+    }
+    void unset_virtual_odt() {
+        odt_properties.set(VIRTUAL_ODT, false);
+    }
+
+    void set_zonal_odt() {
+        odt_properties.set(ZONAL_ODT, true);
+    }
+    void unset_zonal_odt() {
+        odt_properties.set(ZONAL_ODT, false);
+    }
+
+    bool is_regular() const {
+        return odt_properties.none();
+    }
+
+    bool is_mixed() const {
+        return odt_properties.all();
+    }
+
+    bool is_virtual_odt() const {
+        return odt_properties[VIRTUAL_ODT];
+    }
+    bool is_zonal_odt() const {
+        return odt_properties[ZONAL_ODT];
+    }
 };
 
 struct Line : public Header, Nameable, HasMessages, Codes{
