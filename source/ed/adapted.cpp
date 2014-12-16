@@ -210,9 +210,6 @@ void duplicate_vj(nt::VehicleJourney* vehicle_journey,
     //ceci permet de ne pas recréer un vj adapté à chaque fois que l'on change de vj de référence
     std::map<nt::VehicleJourney*, nt::VehicleJourney*> prec_vjs;
     //on teste le validitypattern adapté car si le VJ est déjà supprimé le traitement n'est pas nécessaire
-    if (vehicle_journey->uri.find("SAR:2607-17364") != std::string::npos) {
-        std::cout << "pouet "<< std::endl;
-    }
     for(size_t i=0; i < vehicle_journey->validity_pattern->days.size(); ++i){
         nt::VehicleJourney* vj_adapted = NULL;
         if(!vehicle_journey->validity_pattern->check(i)){
