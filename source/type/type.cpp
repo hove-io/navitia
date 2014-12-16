@@ -195,25 +195,8 @@ bool VehicleJourney::has_landing() const{
 
 type::OdtLevel_e VehicleJourney::get_odt_level() const{
     type::OdtLevel_e result = type::OdtLevel_e::none;
-    if (this->stop_time_list.empty()){
-        return result;
-    }
-
-    if (stop_time_list.front().is_odt_and_date_time_estimated()){
+    if (this->vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time){
         result = type::OdtLevel_e::zonal;
-    }
-    for(const auto& st: stop_time_list){
-        if (st.is_odt_and_date_time_estimated()){
-            if (result != type::OdtLevel_e::zonal){
-                result = type::OdtLevel_e::mixt;
-                break;
-            }
-        }else{
-            if(result == type::OdtLevel_e::zonal){
-                result = type::OdtLevel_e::mixt;
-                break;
-            }
-        }
     }
     return result;
 }
