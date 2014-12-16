@@ -334,7 +334,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
 
 @celery.task(bind=True)
 @Lock(10*60)
-def nav2rt(self, instance_config, job_id, custom_output_dir):
+def nav2rt(self, instance_config, job_id, custom_output_dir=None):
     """ Launch nav2rt"""
     job = models.Job.query.get(job_id)
     instance = job.instance
