@@ -496,9 +496,26 @@ struct hasOdtProperties {
         odt_properties.reset();
     }
 
+    void operator=(const type::hasOdtProperties& other) {
+        odt_properties = other.odt_properties;
+    }
+
+    void operator|=(const type::hasOdtProperties& other) {
+        odt_properties |= other.odt_properties;
+    }
+
+    void reset_odt() {
+        odt_properties.reset();
+    }
+
+    void set_regular() {
+        odt_properties.reset();
+    }
+
     void set_virtual_odt() {
         odt_properties.set(VIRTUAL_ODT, true);
     }
+
     void unset_virtual_odt() {
         odt_properties.set(VIRTUAL_ODT, false);
     }
@@ -512,6 +529,10 @@ struct hasOdtProperties {
 
     bool is_regular() const {
         return odt_properties.none();
+    }
+
+    bool is_odt() const {
+        return odt_properties.any();
     }
 
     bool is_mixed() const {

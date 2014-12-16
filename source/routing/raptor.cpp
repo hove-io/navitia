@@ -462,7 +462,8 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     if (!allow_odt) {
         for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
-            if(journey_pattern->zonal_odt() && (!journey_pattern->virtual_odt())){
+            if(journey_pattern->is_zonal_odt()){
+            //We want to display to the user he has to call when it's virtual
                     valid_journey_patterns.set(journey_pattern->idx, false);
                     continue;
             }
@@ -470,7 +471,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
     } else {
         // We want to be able to take zonal odt only to leave (or arrive) the 
         // the departure (to the destination).
-        // Thus, we can forbid all journey patterns without any stop point
+        // Thus, we can forbid all odt journey patterns without any stop point
         // in the set of departures or destinations.
 
         //Let's build the set of allowed journey patterns
@@ -478,14 +479,17 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
         for (const vec_stop_point_duration& vec_sp_duration : {departures_, destinations}) {
             for (const stop_point_duration & sp_duration : vec_sp_duration) {
                 const auto sp = data.pt_data->stop_points[sp_duration.first];
-                for (const auto jp : sp->journey_pattern_point_list) {
-                    allowed_jp.insert(jp->journey_pattern);
+                for (const auto jpp : sp->journey_pattern_point_list) {
+                    if (!jpp->journey_pattern->is_zonal_odt()) {
+                        continue;
+                    }
+                    allowed_jp.insert(jpp->journey_pattern);
                 }
             }
         }
 
         for (const auto journey_pattern : data.pt_data->journey_patterns) {
-            if(!(journey_pattern->zonal_odt() && (!journey_pattern->virtual_odt()))){
+            if(!journey_pattern->is_zonal_odt()){
                 continue;
             }
             valid_journey_patterns.set(journey_pattern->idx, allowed_jp.count(journey_pattern) > 0);
