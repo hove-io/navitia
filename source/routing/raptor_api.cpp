@@ -700,7 +700,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         worker.init(dst);
         auto dst_stop_points = get_stop_points(dst, raptor.data, worker);
         for (std::pair<type::idx_t, navitia::time_duration>& dst_stop_point : dst_stop_points) {
-            dst_stop_point.second -= navitia::seconds(dst.access_duration);
+            dst_stop_point.second += navitia::seconds(dst.access_duration);
         }
         arrivals.push_back(std::make_pair(dst, dst_stop_points));
     }
