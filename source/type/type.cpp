@@ -462,21 +462,11 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     return result;
 }
 
-type::OdtLevel_e Line::get_odt_level() const{
-    type::OdtLevel_e result = type::OdtLevel_e::none;
-    if (this->route_list.empty()){
-        return result;
-    }
-
-    const Route* route = this->route_list.front();
-    result = route->get_odt_level();
-
-    for(idx_t idx = 1; idx < this->route_list.size(); idx++){
-        route = this->route_list[idx];
-        type::OdtLevel_e tmp = route->get_odt_level();
-        if (tmp != result){
-            result = type::OdtLevel_e::mixt;
-            break;
+type::hasOdtProperties Line::get_odt_properties() const{
+    type::hasOdtProperties result;
+    if (!this->route_list.empty()){
+        for (const auto route : this->route_list) {
+            result |= route->get_odt_properties();
         }
     }
     return result;
@@ -513,23 +503,28 @@ idx_t Route::main_destination() const {
     return best.first;
 }
 
-type::OdtLevel_e Route::get_odt_level() const{
-    type::OdtLevel_e result = type::OdtLevel_e::none;
-    if (this->journey_pattern_list.empty()){
-        return result;
-    }
 
-    const JourneyPattern* jp = this->journey_pattern_list.front();
-    result = jp->odt_level;
-
-    for(idx_t idx = 1; idx < this->journey_pattern_list.size(); idx++){
-        jp = this->journey_pattern_list[idx];
-        if (jp->odt_level != result){
-            result = type::OdtLevel_e::mixt;
-            break;
+type::hasOdtProperties Route::get_odt_properties() const{
+    type::hasOdtProperties result;
+    if (!this->journey_pattern_list.empty()){
+        for (const auto jp : this->journey_pattern_list) {
+            result.odt_properties |= jp->odt_properties.odt_properties;
         }
     }
     return result;
+}
+
+void JourneyPattern::build_odt_properties(){
+    if (!this->vehicle_journey_list.empty()){
+        for (const auto vj : vehicle_journey_list) {
+            if (vj->is_virtual_odt()) {
+                this->odt_properties.set_virtual_odt();
+            }
+            if (vj->is_zonal_odt()) {
+                this->odt_properties.set_zonal_odt();
+            }
+        }
+    }
 }
 
 std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {

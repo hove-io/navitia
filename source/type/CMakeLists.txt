@@ -128,3 +128,8 @@ add_executable(fill_pb_object_tests tests/fill_pb_object_tests.cpp)
 target_link_libraries(fill_pb_object_tests pb_lib ed thermometer time_tables data types fare routing georef autocomplete ${BOOST_LIBS} log4cplus)
 add_dependencies(fill_pb_object_tests protobuf_files)
 ADD_BOOST_TEST(fill_pb_object_tests)
+
+
+add_executable(aggregation_odt_test tests/aggregation_odt_test.cpp)
+target_link_libraries(aggregation_odt_test ed data types georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+ADD_BOOST_TEST(aggregation_odt_test)

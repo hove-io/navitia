@@ -486,6 +486,71 @@ struct PhysicalMode : public Header, Nameable{
 
 struct Calendar;
 
+typedef std::bitset<2> OdtProperties;
+struct hasOdtProperties {
+    static const uint8_t VIRTUAL_ODT = 0;
+    static const uint8_t ZONAL_ODT = 1;
+    OdtProperties odt_properties;
+
+    hasOdtProperties() {
+        odt_properties.reset();
+    }
+
+    void operator=(const type::hasOdtProperties& other) {
+        odt_properties = other.odt_properties;
+    }
+
+    void operator|=(const type::hasOdtProperties& other) {
+        odt_properties |= other.odt_properties;
+    }
+
+    void reset_odt() {
+        odt_properties.reset();
+    }
+
+    void set_regular() {
+        odt_properties.reset();
+    }
+
+    void set_virtual_odt() {
+        odt_properties.set(VIRTUAL_ODT, true);
+    }
+
+    void unset_virtual_odt() {
+        odt_properties.set(VIRTUAL_ODT, false);
+    }
+
+    void set_zonal_odt() {
+        odt_properties.set(ZONAL_ODT, true);
+    }
+    void unset_zonal_odt() {
+        odt_properties.set(ZONAL_ODT, false);
+    }
+
+    bool is_regular() const {
+        return odt_properties.none();
+    }
+
+    bool is_odt() const {
+        return odt_properties.any();
+    }
+
+    bool is_mixed() const {
+        return odt_properties.all();
+    }
+
+    bool is_virtual_odt() const {
+        return odt_properties[VIRTUAL_ODT];
+    }
+    bool is_zonal_odt() const {
+        return odt_properties[ZONAL_ODT];
+    }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & odt_properties;
+    }
+};
+
 struct Line : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Line;
     std::string code;
@@ -529,7 +594,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         }
         return this < &other;
     }
-    type::OdtLevel_e get_odt_level() const;
+    type::hasOdtProperties get_odt_properties() const;
 };
 
 struct Route : public Header, Nameable, HasMessages, Codes{
@@ -539,7 +604,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     idx_t main_destination() const;
-    type::OdtLevel_e get_odt_level() const;
+    type::hasOdtProperties get_odt_properties() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & line & journey_pattern_list & impacts & codes & shape;
@@ -550,25 +615,28 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 
 };
 
-struct JourneyPattern : public Header, Nameable{
+
+
+struct JourneyPattern : public Header, Nameable {
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence = false;
-    OdtLevel_e odt_level= OdtLevel_e::none; // Computed at serialization
     Route* route = nullptr;
     CommercialMode* commercial_mode = nullptr;
     PhysicalMode* physical_mode = nullptr;
 
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
+    hasOdtProperties odt_properties;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & is_frequence & odt_level &  route & commercial_mode
+        ar & idx & name & uri & is_frequence & odt_properties &  route & commercial_mode
                 & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const JourneyPattern & other) const { return this < &other; }
 
+    void build_odt_properties();
 };
 
 struct AssociatedCalendar {
@@ -723,6 +791,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool is_odt()  const{
         return vehicle_journey_type != VehicleJourneyType::regular;
     }
+    bool is_none_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::regular);}
+    bool is_virtual_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::virtual_with_stop_time);}
+    bool is_zonal_odt() const {return (this->vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time);}
 
     type::OdtLevel_e get_odt_level() const;
 };
