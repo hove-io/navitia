@@ -159,14 +159,15 @@ namespace {
 // We have in input something like that:
 //
 // 1                       9
-// +-----------------------+
+// +----------------------->
 // 2                       8
 //
-// and we generate something like that:
+// 1 and 9 are at the left of the way, 2 and 8 at the right.  We
+// generate something like that:
 //
 //    1     3     6     9
 //    +     +     +     +
-// +-----------------------+
+// +----------------------->
 //     +       +       +
 //     2       4       8
 struct HouseNumberFromEdgesFiller {
@@ -198,16 +199,16 @@ struct HouseNumberFromEdgesFiller {
         */
         if (const auto numbers = get_numbers(left1, left2, row)) {
             if (numbers->first <= numbers->second) {
-                add_left(from, to, numbers->first, numbers->second, way);
+                add_left_house_number(from, to, numbers->first, numbers->second, way);
             } else {
-                add_right(to, from, numbers->second, numbers->first, way);
+                add_right_house_number(to, from, numbers->second, numbers->first, way);
             }
         }
         if (const auto numbers = get_numbers(right1, right2, row)) {
             if (numbers->first <= numbers->second) {
-                add_right(from, to, numbers->first, numbers->second, way);
+                add_right_house_number(from, to, numbers->first, numbers->second, way);
             } else {
-                add_left(to, from, numbers->second, numbers->first, way);
+                add_left_house_number(to, from, numbers->second, numbers->first, way);
             }
         }
     }
@@ -227,40 +228,60 @@ private:
         } catch (boost::bad_lexical_cast&) { return boost::none; }
     }
     // return an orthogonal vector in trigonomic sense of approx 3m, null vector if from == to
-    static Coord get_trigo_ortho(const Coord& from, const Coord& to) {
+    static Coord get_orthogonal_vec(const Coord& from, const Coord& to) {
         if (from == to) { return Coord(0, 0); }
         const Coord vec(to.lon() - from.lon(), to.lat() - from.lat());
         const double norm = sqrt(vec.lon() * vec.lon() + vec.lat() * vec.lat());
         return Coord(-vec.lat() / norm * 0.00003, vec.lon() / norm * 0.00003);
     }
+    // make a geometric translation (add the components)
     static Coord translate(const Coord& u, const Coord& v) {
         return Coord(u.lon() + v.lon(), u.lat() + v.lat());
     }
-    void add_left(const Coord& from,
-                  const Coord& to,
-                  const int begin_num,
-                  const int last_num,
-                  Way* way) {
-        const auto vec = get_trigo_ortho(from, to);
-        add_middle(translate(from, vec), translate(to, vec), begin_num, last_num, way);
+    void add_left_house_number(const Coord& from,
+                               const Coord& to,
+                               const int begin_num,
+                               const int last_num,
+                               Way* way) {
+        // we translate from and to to the left, and then we just have
+        // to add the house number on the segment [from, to]
+        const auto vec = get_orthogonal_vec(from, to);
+        add_middle_house_number(translate(from, vec), translate(to, vec), begin_num, last_num, way);
     }
-    void add_right(const Coord& from,
-                   const Coord& to,
-                   const int begin_num,
-                   const int last_num,
-                   Way* way) {
-        const auto vec = get_trigo_ortho(to, from);
-        add_middle(translate(from, vec), translate(to, vec), begin_num, last_num, way);
+    void add_right_house_number(const Coord& from,
+                                const Coord& to,
+                                const int begin_num,
+                                const int last_num,
+                                Way* way) {
+        // we translate from and to to the right, and then we just have
+        // to add the house number on the segment [from, to]
+        const auto vec = get_orthogonal_vec(to, from);
+        add_middle_house_number(translate(from, vec), translate(to, vec), begin_num, last_num, way);
     }
-    void add_middle(const Coord& from,
-                    const Coord& to,
-                    const int begin_num,
-                    const int last_num,
-                    Way* way) {
+    void add_middle_house_number(const Coord& from,
+                                 const Coord& to,
+                                 const int begin_num,
+                                 const int last_num,
+                                 Way* way) {
+        // We have that:
+        //
+        // 1                       9
+        // +----------------------->
+        // from                    to
+        //
+        // and we want to generate the house numbers like that:
+        //
+        //    1     3     6     9
+        // +--+-----+-----+-----+-->
+        // from                    to
+        //    +----->
+        //      vec
+        //
+        // We translate our current position using the vector vec to
+        // go from point to point.
         const double nb = double((last_num - begin_num) / 2 + 1);
-        Coord vec((to.lon() - from.lon()) / nb / 2, (to.lat() - from.lat()) / nb / 2);
-        Coord coord = translate(from, vec);
-        vec = Coord(vec.lon() * 2, vec.lat() * 2);
+        const Coord vec((to.lon() - from.lon()) / nb, (to.lat() - from.lat()) / nb);
+        Coord coord = translate(from, Coord(vec.lon() / 2, vec.lat() / 2));
         for (int house_nb = begin_num; house_nb <= last_num; house_nb += 2) {
             add_house_number(coord, house_nb, way);
             coord = translate(coord, vec);
