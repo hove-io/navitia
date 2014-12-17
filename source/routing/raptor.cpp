@@ -133,7 +133,7 @@ bool RAPTOR::foot_path(const Visitor & v) {
                  previous = working_labels[best_jpp_idx].dt_pt;
         it += index.first - last;
         const auto end_it = it + index.second;
-        const auto best_is_odt = data.pt_data->journey_pattern_points[best_jpp_idx]->journey_pattern->odt_level != type::OdtLevel_e::none;
+        const auto best_is_odt = data.pt_data->journey_pattern_points[best_jpp_idx]->journey_pattern->odt_properties.is_zonal_odt();
         for(; it != end_it; ++it) {
             const type::StopPointConnection* spc = *it;
             const auto destination = v.clockwise() ? spc->destination : spc->departure;
@@ -141,7 +141,7 @@ bool RAPTOR::foot_path(const Visitor & v) {
             for(auto jpp : destination->journey_pattern_point_list) {
                 type::idx_t jpp_idx = jpp->idx;
                 if(jpp_idx != best_jpp_idx && v.comp(next, best_labels[jpp_idx]) &&
-                        (!best_is_odt || jpp->journey_pattern->odt_level != type::OdtLevel_e::none)) {
+                        (!best_is_odt || !jpp->journey_pattern->odt_properties.is_zonal_odt())) {
                    working_labels[jpp_idx].dt_transfer = next;
                    working_labels[jpp_idx].boarding_jpp_transfer = best_jpp_idx;
                    best_labels[jpp_idx] = next;
