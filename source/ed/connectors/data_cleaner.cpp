@@ -64,36 +64,36 @@ void data_cleaner::fusion_ways() {
 
         way_vector.insert(way_vector.begin(), way.second->edges.begin(),  way.second->edges.end());
     }
-    std::map<types::Way*, types::Way*> traduction;
+    std::map<types::Way*, types::Way*> translations;
     for(auto wayname_ways_it : admin_wayname_way){
         for(auto edges_it : wayname_ways_it.second){
-            this->fusion_ways_list(edges_it.second, traduction);
+            this->fusion_ways_list(edges_it.second, translations);
         }
     }
-    this->update_house_number(traduction);
+    this->update_house_number(translations);
 }
 
 //we affect the first way for every edges of a component
-void data_cleaner::fusion_ways_list(const std::vector<ed::types::Edge*>& edges, std::map<types::Way*, types::Way*>& traduction) {
+void data_cleaner::fusion_ways_list(const std::vector<ed::types::Edge*>& edges, std::map<types::Way*, types::Way*>& translations) {
     auto begin = edges.begin();
     ed::types::Way* way_ref = (*begin)->way;
     this->data.fusion_ways[way_ref->uri] = way_ref;
-    traduction[way_ref] = way_ref;
+    translations[way_ref] = way_ref;
     ++begin;
     for(auto it=begin; it != edges.end(); ++it) {
         ed::types::Way* way = (*it)->way;
         way->is_used = false;
         this->data.fusion_ways[way->uri] = way_ref;
-        traduction[way] = way_ref;
+        translations[way] = way_ref;
         (*it)->way = way_ref;
         this->ways_fusionned++;
     }
 }
 
 //we update the house numbers according to the fusion
-void data_cleaner::update_house_number(const std::map<types::Way*, types::Way*>& traduction) {
+void data_cleaner::update_house_number(const std::map<types::Way*, types::Way*>& translations) {
     for (auto& house_number: data.house_numbers) {
-        house_number.second.way = find_or_default(house_number.second.way, traduction);
+        house_number.second.way = find_or_default(house_number.second.way, translations);
     }
 }
 
