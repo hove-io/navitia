@@ -462,7 +462,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     if (!allow_odt) {
         for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
-            if(journey_pattern->is_zonal_odt()){
+            if(journey_pattern->odt_properties.is_zonal_odt()){
             //We want to display to the user he has to call when it's virtual
                     valid_journey_patterns.set(journey_pattern->idx, false);
                     continue;
@@ -480,7 +480,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
             for (const stop_point_duration & sp_duration : vec_sp_duration) {
                 const auto sp = data.pt_data->stop_points[sp_duration.first];
                 for (const auto jpp : sp->journey_pattern_point_list) {
-                    if (!jpp->journey_pattern->is_zonal_odt()) {
+                    if (!jpp->journey_pattern->odt_properties.is_zonal_odt()) {
                         continue;
                     }
                     allowed_jp.insert(jpp->journey_pattern);
@@ -489,7 +489,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
         }
 
         for (const auto journey_pattern : data.pt_data->journey_patterns) {
-            if(!journey_pattern->is_zonal_odt()){
+            if(!journey_pattern->odt_properties.is_zonal_odt()){
                 continue;
             }
             valid_journey_patterns.set(journey_pattern->idx, allowed_jp.count(journey_pattern) > 0);

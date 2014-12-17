@@ -545,6 +545,10 @@ struct hasOdtProperties {
     bool is_zonal_odt() const {
         return odt_properties[ZONAL_ODT];
     }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & odt_properties;
+    }
 };
 
 struct Line : public Header, Nameable, HasMessages, Codes{
@@ -613,7 +617,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 
 
 
-struct JourneyPattern : public Header, Nameable, hasOdtProperties{
+struct JourneyPattern : public Header, Nameable {
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence = false;
     Route* route = nullptr;
@@ -622,6 +626,7 @@ struct JourneyPattern : public Header, Nameable, hasOdtProperties{
 
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
+    hasOdtProperties odt_properties;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & is_frequence & odt_properties &  route & commercial_mode
