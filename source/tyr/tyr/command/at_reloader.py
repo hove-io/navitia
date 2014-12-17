@@ -39,8 +39,22 @@ from tyr.helper import load_instance_config
 from flask import current_app
 from navitiacommon import task_pb2
 from datetime import datetime, timedelta
+from functools import wraps
 
 logger = logging.getLogger(__name__)
+
+def terminate_session(func):
+    """
+    since we need to termine the sqlalchemy session before the end of the command, since it's used as a daemon
+    else a we will had a "idle in transaction" transaction on postgres
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        finally:
+            models.db.session.remove()
+    return wrapper
 
 class AtReloader(ConsumerMixin, Command):
     """run a process who listen to incomming realtime messages from connectors
@@ -52,10 +66,10 @@ class AtReloader(ConsumerMixin, Command):
         self.queues = []
         self.last_reload = {}
 
+    @terminate_session
     def _init(self):
         instances = models.Instance.query.all()
-        self.connection = kombu.Connection(
-                            current_app.config['CELERY_BROKER_URL'])
+        self.connection = kombu.Connection(current_app.config['CELERY_BROKER_URL'])
         for instance in instances:
             #initialize the last relaod at the minimum date possible
             self.last_reload[instance.id] = datetime(1, 1, 1)
@@ -63,8 +77,7 @@ class AtReloader(ConsumerMixin, Command):
             exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
             for topic in config.rt_topics:
                 self.topics_to_instances[topic].append(instance)
-                queue = kombu.Queue(exchange=exchange, durable=True,
-                                    routing_key=topic)
+                queue = kombu.Queue(exchange=exchange, durable=True, routing_key=topic)
                 self.queues.append(queue)
 
     def run(self):
@@ -74,11 +87,11 @@ class AtReloader(ConsumerMixin, Command):
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=self.queues, callbacks=[self.handle_task])]
 
+    @terminate_session
     def handle_task(self, body, task):
         topic = task.delivery_info['routing_key']
         for instance in self.topics_to_instances[topic]:
-            if self.last_reload[instance.id] + timedelta(seconds=10) \
-                    < datetime.now():
+            if self.last_reload[instance.id] + timedelta(seconds=10) < datetime.now():
                 logger.info('launch reload AT on {}'.format(instance.name))
                 self.last_reload[instance.id] = datetime.now()
                 #we wait 10 second before loading at
