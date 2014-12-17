@@ -50,19 +50,15 @@ private:
     std::string path;///< Path files
     log4cplus::Logger logger;
     std::vector<std::string> files;
-    ed::connectors::ConvCoord conv_coord;
 
     ed::types::Node* add_node(const navitia::type::GeographicalCoord& coord, const std::string& uri);
     void fill_admins();
     void fill_nodes();
     void fill_ways_edges();
-    void fill_house_numbers();
     bool starts_with(std::string filename, const std::string& prefex);
-    void fusion_ways();
-    void fusion_ways_by_graph(const std::vector<types::Edge*>& edges);
-    void fusion_ways_list(const std::vector<types::Edge*>& edges);
 
 public:
+    ed::connectors::ConvCoord conv_coord;
     ed::Georef data;
 
     GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord);

@@ -71,7 +71,6 @@ void GeopalParser::fill(){
     cleaner.clean();
     LOG4CPLUS_INFO(logger, "End: data cleaning");
 
-    this->fill_house_numbers();
     LOG4CPLUS_INFO(logger, "House number count: " << this->data.house_numbers.size());
 }
 
@@ -156,6 +155,146 @@ void GeopalParser::fill_admins(){
     }
 }
 
+namespace {
+// We have in input something like that:
+//
+// 1                       9
+// +-----------------------+
+// 2                       8
+//
+// and we generate something like that:
+//
+//    1     3     6     9
+//    +     +     +     +
+// +-----------------------+
+//     +       +       +
+//     2       4       8
+struct HouseNumberFromEdgesFiller {
+    typedef navitia::type::GeographicalCoord Coord;
+    typedef const std::vector<std::string>& Row;
+    typedef ed::types::Way Way;
+
+    HouseNumberFromEdgesFiller(const CsvReader &r, GeopalParser &p)
+        : reader(r),
+          parser(p),
+          x1(r.get_pos_col("x_debut")),
+          y1(r.get_pos_col("y_debut")),
+          x2(r.get_pos_col("x_fin")),
+          y2(r.get_pos_col("y_fin")),
+          left1(r.get_pos_col("bornedeb_g")),
+          left2(r.get_pos_col("bornefin_g")),
+          right1(r.get_pos_col("bornedeb_d")),
+          right2(r.get_pos_col("bornefin_d")) {
+    }
+    void fill(Row row, Way* way) {
+        const auto from = coord(row[x1], row[y1]);
+        const auto to = coord(row[x2], row[y2]);
+        /*
+        std::cout << std::setprecision(10)
+                  << "{\"type\": \"Feature\", \"properties\": {}, \"geometry\": {"
+                  << "\"type\": \"LineString\", \"coordinates\": ["
+                  << "[" << from.lon() << ", " << from.lat() << "], "
+                  << "[" << to.lon() << ", " << to.lat() << "] ] } }," << std::endl;
+        */
+        if (const auto numbers = get_numbers(left1, left2, row)) {
+            if (numbers->first <= numbers->second) {
+                add_left(from, to, numbers->first, numbers->second, way);
+            } else {
+                add_right(to, from, numbers->second, numbers->first, way);
+            }
+        }
+        if (const auto numbers = get_numbers(right1, right2, row)) {
+            if (numbers->first <= numbers->second) {
+                add_right(from, to, numbers->first, numbers->second, way);
+            } else {
+                add_left(to, from, numbers->second, numbers->first, way);
+            }
+        }
+    }
+
+private:
+    Coord coord(const std::string& x, const std::string& y) const {
+        return parser.conv_coord.convert_to(Coord(str_to_double(x), str_to_double(y)));
+    }
+    boost::optional< std::pair<int, int> >
+    get_numbers(const int idx1, const int idx2, Row row) const {
+        if (!reader.is_valid(left1, row) || !reader.is_valid(left2, row)) { return boost::none; }
+        try {
+            const int nb1 = boost::lexical_cast<int>(row.at(idx1));
+            const int nb2 = boost::lexical_cast<int>(row.at(idx2));
+            if (nb1 <= 0 || nb2 <= 0 || nb1 % 2 != nb2 % 2) { return boost::none; }
+            return std::make_pair(nb1, nb2);
+        } catch (boost::bad_lexical_cast&) { return boost::none; }
+    }
+    // return an orthogonal vector in trigonomic sense of approx 3m, null vector if from == to
+    static Coord get_trigo_ortho(const Coord& from, const Coord& to) {
+        if (from == to) { return Coord(0, 0); }
+        const Coord vec(to.lon() - from.lon(), to.lat() - from.lat());
+        const double norm = sqrt(vec.lon() * vec.lon() + vec.lat() * vec.lat());
+        return Coord(-vec.lat() / norm * 0.00003, vec.lon() / norm * 0.00003);
+    }
+    static Coord translate(const Coord& u, const Coord& v) {
+        return Coord(u.lon() + v.lon(), u.lat() + v.lat());
+    }
+    void add_left(const Coord& from,
+                  const Coord& to,
+                  const int begin_num,
+                  const int last_num,
+                  Way* way) {
+        const auto vec = get_trigo_ortho(from, to);
+        add_middle(translate(from, vec), translate(to, vec), begin_num, last_num, way);
+    }
+    void add_right(const Coord& from,
+                   const Coord& to,
+                   const int begin_num,
+                   const int last_num,
+                   Way* way) {
+        const auto vec = get_trigo_ortho(to, from);
+        add_middle(translate(from, vec), translate(to, vec), begin_num, last_num, way);
+    }
+    void add_middle(const Coord& from,
+                    const Coord& to,
+                    const int begin_num,
+                    const int last_num,
+                    Way* way) {
+        const double nb = double((last_num - begin_num) / 2 + 1);
+        Coord vec((to.lon() - from.lon()) / nb / 2, (to.lat() - from.lat()) / nb / 2);
+        Coord coord = translate(from, vec);
+        vec = Coord(vec.lon() * 2, vec.lat() * 2);
+        for (int house_nb = begin_num; house_nb <= last_num; house_nb += 2) {
+            add_house_number(coord, house_nb, way);
+            coord = translate(coord, vec);
+        }
+    }
+    void add_house_number(const Coord& coord, const int house_number, Way* way) {
+        const std::string hn_uri = way->uri + std::to_string(house_number);
+        if (parser.data.house_numbers.count(hn_uri) == 0){
+            ed::types::HouseNumber& current_hn = parser.data.house_numbers[hn_uri];
+            current_hn.coord = coord;
+            current_hn.number = std::to_string(house_number);
+            current_hn.way = way;
+        }
+        /*
+        std::cout << std::setprecision(10)
+                  << "{\"type\": \"Feature\", \"properties\": { \"house_number\": "
+                  << house_number << "}, \"geometry\": { \"type\": \"Point\", \"coordinates\": "
+                  << "[" << coord.lon() << ", " << coord.lat() << "] } }," << std::endl;
+        */
+    }
+
+    const CsvReader &reader;
+    GeopalParser& parser;
+    const int x1;
+    const int y1;
+    const int x2;
+    const int y2;
+    const int left1;
+    const int left2;
+    const int right1;
+    const int right2;
+};
+}
+
 void GeopalParser::fill_ways_edges(){
     for(const std::string file_name : this->files){
         if (! this->starts_with(file_name, "route_a")){
@@ -170,6 +309,7 @@ void GeopalParser::fill_ways_edges(){
         if(!reader.validate(mandatory_headers)) {
             throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
         }
+        auto house_number_filler = HouseNumberFromEdgesFiller(reader, *this);
         int nom_voie_d = reader.get_pos_col("nom_voie_d");
         int x1 = reader.get_pos_col("x_debut");
         int y1 = reader.get_pos_col("y_debut");
@@ -240,55 +380,11 @@ void GeopalParser::fill_ways_edges(){
                     this->data.edges[wayd_uri]= edg;
                     current_way->edges.push_back(edg);
                 }
+                house_number_filler.fill(row, current_way);
             }
         }
     }
 }
 
-void GeopalParser::fill_house_numbers(){
-    for(const std::string file_name : this->files){
-        if (! this->starts_with(file_name, "adresse")){
-            continue;
-        }
-        CsvReader reader(this->path + "/" + file_name, ';', true, true);
-        if(!reader.is_open()) {
-            throw GeopalParserException("Error on open file " + reader.filename);
-        }
-        std::vector<std::string> mandatory_headers = {"id_tr", "numero", "nom_voie", "code_insee", "x_adresse", "y_adresse"};
-        if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
-        }
-        int insee_c = reader.get_pos_col("code_insee");
-        int nom_voie_c = reader.get_pos_col("nom_voie");
-        int numero_c = reader.get_pos_col("numero");
-        int x_c = reader.get_pos_col("x_adresse");
-        int y_c = reader.get_pos_col("y_adresse");
-        int id_tr = reader.get_pos_col("id_tr");
-        while(!reader.eof()){
-            std::vector<std::string> row = reader.next();
-            if (reader.is_valid(x_c, row) && reader.is_valid(y_c, row)
-                && reader.is_valid(insee_c, row) && reader.is_valid(numero_c, row)
-                && reader.is_valid(nom_voie_c, row)
-                && reader.is_valid(id_tr, row)
-                && row[numero_c] != "0"
-                && row[numero_c] != "-1"){
-                //we want to ignore house number at 0 or -1
-                std::string way_uri = row[id_tr];
-                auto it = this->data.fusion_ways.find(way_uri);
-                if(it != this->data.fusion_ways.end()){
-                    std::string hn_uri = row[x_c] + row[y_c] + row[numero_c];
-                    auto hn = this->data.house_numbers.find(hn_uri);
-                    if (hn == this-> data.house_numbers.end()){
-                        ed::types::HouseNumber current_hn;
-                        current_hn.coord = this->conv_coord.convert_to(navitia::type::GeographicalCoord(str_to_double(row[x_c]), str_to_double(row[y_c])));
-                        current_hn.number = row[numero_c];
-                        current_hn.way = it->second;
-                        this->data.house_numbers[hn_uri] = current_hn;
-                    }
-                }
-            }
-        }
-    }
-}
 }
 }//namespace

@@ -47,8 +47,8 @@ struct data_cleaner {
 
     void clean();
     void fusion_ways();
-    void fusion_ways_list(const std::vector<ed::types::Edge*>& edges);
-    void fusion_ways_by_graph(const std::vector<types::Edge*>& edges);
+    void fusion_ways_list(const std::vector<ed::types::Edge*>& edges, std::map<types::Way*, types::Way*>&);
+    void update_house_number(const std::map<types::Way*, types::Way*>&);
 
     size_t ways_fusionned = 0;
 };

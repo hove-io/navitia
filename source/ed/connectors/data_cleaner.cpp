@@ -64,61 +64,36 @@ void data_cleaner::fusion_ways() {
 
         way_vector.insert(way_vector.begin(), way.second->edges.begin(),  way.second->edges.end());
     }
+    std::map<types::Way*, types::Way*> traduction;
     for(auto wayname_ways_it : admin_wayname_way){
         for(auto edges_it : wayname_ways_it.second){
-            this->fusion_ways_list(edges_it.second);
+            this->fusion_ways_list(edges_it.second, traduction);
         }
     }
+    this->update_house_number(traduction);
 }
 
 //we affect the first way for every edges of a component
-void data_cleaner::fusion_ways_list(const std::vector<ed::types::Edge*>& edges) {
+void data_cleaner::fusion_ways_list(const std::vector<ed::types::Edge*>& edges, std::map<types::Way*, types::Way*>& traduction) {
     auto begin = edges.begin();
     ed::types::Way* way_ref = (*begin)->way;
     this->data.fusion_ways[way_ref->uri] = way_ref;
+    traduction[way_ref] = way_ref;
     ++begin;
     for(auto it=begin; it != edges.end(); ++it) {
         ed::types::Way* way = (*it)->way;
         way->is_used = false;
         this->data.fusion_ways[way->uri] = way_ref;
+        traduction[way] = way_ref;
         (*it)->way = way_ref;
         this->ways_fusionned++;
     }
 }
 
-
-//We make a graph out of each edge of every edges
-//We look for connected components in this graph
-void data_cleaner::fusion_ways_by_graph(const std::vector<types::Edge*>& edges) {
-    typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, size_t, ed::types::Edge*> Graph;
-    Graph graph;
-    std::unordered_map<uint64_t, idx_t> node_map_temp;
-    // Graph building
-    for(ed::types::Edge* edge : edges){
-        if(node_map_temp.find(edge->source->id) == node_map_temp.end()){
-            node_map_temp[edge->source->id] = boost::add_vertex(graph);
-        }
-        if(node_map_temp.find(edge->target->id) == node_map_temp.end()){
-            node_map_temp[edge->target->id] = boost::add_vertex(graph);
-        }
-        boost::add_edge(node_map_temp[edge->source->id], node_map_temp[edge->target->id], edge, graph);
-        boost::add_edge(node_map_temp[edge->target->id], node_map_temp[edge->source->id], edge, graph);
-    }
-    std::vector<size_t> vertex_component(boost::num_vertices(graph));
-    boost::connected_components(graph, &vertex_component[0]);
-    std::map<size_t, std::vector<ed::types::Edge*>> component_edges;
-    for(size_t i = 0; i<vertex_component.size(); ++i) {
-        auto component = vertex_component[i];
-        if(component_edges.find(component) != component_edges.end()) {
-            component_edges[component] = std::vector<ed::types::Edge*>();
-        }
-        auto begin_end = boost::out_edges(i, graph);
-        for(auto it = begin_end.first; it != begin_end.second; ++it) {
-            component_edges[component].push_back(graph[*it]);
-        }
-    }
-    for(auto component_edges_ : component_edges) {
-        this->fusion_ways_list(component_edges_.second);
+//we update the house numbers according to the fusion
+void data_cleaner::update_house_number(const std::map<types::Way*, types::Way*>& traduction) {
+    for (auto& house_number: data.house_numbers) {
+        house_number.second.way = find_or_default(house_number.second.way, traduction);
     }
 }
 
