@@ -1415,3 +1415,25 @@ BOOST_AUTO_TEST_CASE(stay_in_unnecessary2) {
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items.size(), 3);
 }
+
+BOOST_AUTO_TEST_CASE(forbid_transfer_between_2_odt){
+    ed::builder b("20120614");
+    b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
+    b.vj("B")("stop4", 8000, 8050)("stop2", 8300, 8350)("stop5", 8400, 8450);
+    b.connection("stop1", "stop1", 120);
+    b.connection("stop2", "stop2", 120);
+    b.connection("stop3", "stop3", 120);
+    b.connection("stop4", "stop4", 120);
+    b.connection("stop5", "stop5", 120);
+    for (auto vj : b.data->pt_data->vehicle_journeys) {
+        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
+    }
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->aggregate_odt();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data & d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas[0], d.stop_areas[4], 7900, 0, DateTimeUtils::inf, false, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
+}
