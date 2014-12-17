@@ -508,7 +508,7 @@ type::hasOdtProperties Route::get_odt_properties() const{
     type::hasOdtProperties result;
     if (!this->journey_pattern_list.empty()){
         for (const auto jp : this->journey_pattern_list) {
-            result.odt_properties |= jp->odt_properties;
+            result.odt_properties |= jp->odt_properties.odt_properties;
         }
     }
     return result;
@@ -518,10 +518,10 @@ void JourneyPattern::build_odt_properties(){
     if (!this->vehicle_journey_list.empty()){
         for (const auto vj : vehicle_journey_list) {
             if (vj->is_virtual_odt()) {
-                this->set_virtual_odt();
+                this->odt_properties.set_virtual_odt();
             }
             if (vj->is_zonal_odt()) {
-                this->set_zonal_odt();
+                this->odt_properties.set_zonal_odt();
             }
         }
     }
