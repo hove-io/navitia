@@ -98,24 +98,18 @@ void dataRAPTOR::load(const type::PT_Data &data)
         first_stop_time.push_back(arrival_times.size());
         nb_trips.push_back(journey_pattern->get_vehicle_journey_list().size());
 
-        // On regroupe ensemble tous les horaires de tous les journey_pattern_point
+        //we group all descrete stop times from all journey_pattern_point
+        //we frequency stop times are not considered here, they are search for a different way in best stop time
         for(unsigned int i=0; i < journey_pattern->journey_pattern_point_list.size(); ++i) {
             std::vector<const type::StopTime*> vec_st;
-            for(const type::VehicleJourney* vj : journey_pattern->get_vehicle_journey_list()) {
-                assert(vj->stop_time_list[i].journey_pattern_point == journey_pattern->journey_pattern_point_list[i]);
-                vec_st.push_back(&vj->stop_time_list[i]);
+            for(const auto& vj : journey_pattern->discrete_vehicle_journey_list) {
+                assert(vj.stop_time_list[i].journey_pattern_point == journey_pattern->journey_pattern_point_list[i]);
+                vec_st.push_back(&vj.stop_time_list[i]);
             }
             std::sort(vec_st.begin(), vec_st.end(),
                       [&](const type::StopTime* st1, const type::StopTime* st2)->bool{
-                        uint32_t time1, time2;
-                        if(!st1->is_frequency())
-                            time1 = DateTimeUtils::hour(st1->departure_time);
-                        else
-                            time1 = DateTimeUtils::hour(st1->end_time(true));
-                        if(!st2->is_frequency())
-                            time2 = DateTimeUtils::hour(st2->departure_time);
-                        else
-                            time2 = DateTimeUtils::hour(st2->end_time(true));
+                        uint32_t time1 = DateTimeUtils::hour(st1->departure_time);
+                        uint32_t time2 = DateTimeUtils::hour(st2->departure_time);
                         if(time1 == time2) {
                             const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
                             const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
@@ -129,23 +123,13 @@ void dataRAPTOR::load(const type::PT_Data &data)
             st_forward.insert(st_forward.end(), vec_st.begin(), vec_st.end());
 
             for(auto st : vec_st) {
-                //we only add the non frequency stop time, the rest are not search for in this structure
-                if (! st->is_frequency()) {
-                    departure_times.push_back(DateTimeUtils::hour(st->departure_time));
-                }
+                departure_times.push_back(DateTimeUtils::hour(st->departure_time));
             }
 
             std::sort(vec_st.begin(), vec_st.end(),
                   [&](const type::StopTime* st1, const type::StopTime* st2)->bool{
-                      uint32_t time1, time2;
-                      if(!st1->is_frequency())
-                          time1 = DateTimeUtils::hour(st1->arrival_time);
-                      else
-                          time1 = DateTimeUtils::hour(st1->start_time(false));
-                      if(!st2->is_frequency())
-                          time2 = DateTimeUtils::hour(st2->arrival_time);
-                      else
-                          time2 = DateTimeUtils::hour(st2->start_time(false));
+                      uint32_t time1 = DateTimeUtils::hour(st1->arrival_time);
+                      uint32_t time2 = DateTimeUtils::hour(st2->arrival_time);
                       if(time1 == time2) {
                           const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
                           const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
@@ -158,10 +142,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
             st_backward.insert(st_backward.end(), vec_st.begin(), vec_st.end());
             for(auto st : vec_st) {
-                //we add only the non frequency stop time, the frequency one are search for a different way in best stop time
-                if (! st->is_frequency()) {
-                    arrival_times.push_back(DateTimeUtils::hour(st->arrival_time));
-                }
+                arrival_times.push_back(DateTimeUtils::hour(st->arrival_time));
             }
         }
 

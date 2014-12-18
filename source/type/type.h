@@ -708,7 +708,7 @@ struct FrequencyVehicleJourney: public VehicleJourney {
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); // Seconds between each departure.
 
     bool is_valid(int day, const bool is_adapted) const;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & name & uri & journey_pattern & company & validity_pattern
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
@@ -821,13 +821,6 @@ struct StopTime {
     DateTime section_end_date(int date, bool clockwise) const {
         return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);
     }
-
-
-    /** Is this hour valid : only concerns frequency data
-     * Does the hour falls inside of the validity period of the frequency
-     * The difficult part is when the validity period goes over midnight
-     */
-    bool valid_hour(uint hour, bool clockwise) const;
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const;
 

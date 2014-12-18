@@ -272,7 +272,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
     if(depart == -1) depart = arrivee;
     st.arrival_time = arrivee;
     st.departure_time = depart;
-    st.vehicle_journey = vj;
+    st.vehicle_journey = nullptr; // we cannot get a pointer to the vj yet, it will be done in the finish()
     jpp->order = vj->stop_time_list.size();
     st.local_traffic_zone = local_trafic_zone;
     st.set_drop_off_allowed(drop_off_allowed);
@@ -395,15 +395,6 @@ VJ builder::frequency_vj(const std::string& line_name,
     vj.end_time = start_time + ( nb_trips * headway_secs );
     vj.headway_secs = headway_secs;
 
-    uint32_t begin = vj.stop_time_list.front().arrival_time;
-    for(navitia::type::StopTime& st : vj.stop_time_list) {
-        st.set_is_frequency(true);
-        //For frequency based trips, make arrival and departure time relative from the first stop.
-        if (begin > 0){
-            st.arrival_time -= begin;
-            st.departure_time -= begin;
-        }
-    }
     return res;
 }
 
@@ -531,10 +522,15 @@ void builder::connection(const std::string & name1, const std::string & name2, f
         vj->idx = data->pt_data->vehicle_journeys.size();
         vj->name = "vehicle_journey " + std::to_string(vj->idx);
         data->pt_data->vehicle_journeys.push_back(vj);
+
      }
 
-     build_blocks();
      for(navitia::type::VehicleJourney* vj : this->data->pt_data->vehicle_journeys) {
+         //we need to put the vj ptr on each stop time
+         for (auto& st: vj->stop_time_list) {
+             st.vehicle_journey = vj;
+         }
+
          if(!vj->prev_vj) {
              vj->stop_time_list.front().set_drop_off_allowed(false);
          }
@@ -542,6 +538,19 @@ void builder::connection(const std::string & name1, const std::string & name2, f
             vj->stop_time_list.back().set_pick_up_allowed(false);
          }
      }
+
+     for (auto* jp: data->pt_data->journey_patterns) {
+         for (auto& freq_vj: jp->frequency_vehicle_journey_list) {
+
+             const auto start = freq_vj.stop_time_list.front().arrival_time;
+             for (auto& st: freq_vj.stop_time_list) {
+                 st.set_is_frequency(true); //we need to tag the stop time as a frequency stop time
+                 st.arrival_time -= start;
+                 st.departure_time -= start;
+             }
+         }
+     }
+     build_blocks();
  }
 
 /*

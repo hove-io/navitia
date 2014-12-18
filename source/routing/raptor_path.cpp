@@ -59,47 +59,57 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
         const auto date = DateTimeUtils::date(label.dt_pt);
         const auto hour = DateTimeUtils::hour(label.dt_pt);
         const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[journey_pattern_point];
-        for (const type::VehicleJourney* vj : jpp->journey_pattern->get_vehicle_journey_list()) {
-            const type::StopTime& st = vj->stop_time_list[jpp->order];
+        for (const type::DiscreteVehicleJourney& vj : jpp->journey_pattern->discrete_vehicle_journey_list) {
+            const type::StopTime& st = vj.stop_time_list[jpp->order];
             auto st_hour = clockwise ? st.arrival_time : st.departure_time;
-            if (!st.is_frequency()) {
-                if ((st_hour%DateTimeUtils::SECONDS_PER_DAY) != hour) {
-                    continue;
-                }
-            } else {
-                auto start_time = st.start_time(!clockwise),
-                     end_time = st.end_time(!clockwise) % DateTimeUtils::SECONDS_PER_DAY;
-                // Here we check if hour is out of the period of the frequency.
-                // In normal case we have something like:
-                // 0-------------------------------------86400(midnight)
-                //     start_time-------end_time
-                // So hour is out of the period if (hour < start_time || hour > end_time)
-                // If end_time, is after midnight, so end_time%86400 will be < start_time
-                // So we will have something like:
-                // 0-------------------------------------86400(midnight)
-                //     end_time-------start_time
-                // So hour will be out of the period if (hour <= start_time && hour >= end_time)
-                // We can think of a case where even with the modulo, end_time is superior
-                // to start_time, so the vehicle always runs, therefore the dataset should have
-                // start_time=0, end_time=86400, if this happens, we should handle it in
-                // the ed part
-                if ((start_time < end_time && (hour < start_time || hour > end_time)) ||
+            if ((st_hour % DateTimeUtils::SECONDS_PER_DAY) != hour) {
+                continue;
+            }
+
+            if (st.is_valid_day(date, clockwise, disruption_active)
+                    && st.valid_end(clockwise)
+                    && st.vehicle_journey->accessible(accessibilite_params.vehicle_properties)) {
+                DateTime result_hour = !clockwise ? st.arrival_time : st.departure_time;
+                auto result = label.dt_pt;
+                DateTimeUtils::update(result, result_hour, clockwise);
+                return std::make_pair(&st, result);
+            }
+        }
+        // if we haven't found it in the discrete vj, we look into the frequency ones
+        for (const type::FrequencyVehicleJourney& vj : jpp->journey_pattern->frequency_vehicle_journey_list) {
+            const type::StopTime& st = vj.stop_time_list[jpp->order];
+            auto start_time = vj.start_time + (clockwise? st.departure_time : st.arrival_time) % DateTimeUtils::SECONDS_PER_DAY;
+
+            auto end_time = vj.end_time + (clockwise? st.departure_time : st.arrival_time) % DateTimeUtils::SECONDS_PER_DAY;
+            // Here we check if hour is out of the period of the frequency.
+            // In normal case we have something like:
+            // 0-------------------------------------86400(midnight)
+            //     start_time-------end_time
+            // So hour is out of the period if (hour < start_time || hour > end_time)
+            // If end_time, is after midnight, so end_time%86400 will be < start_time
+            // So we will have something like:
+            // 0-------------------------------------86400(midnight)
+            //     end_time-------start_time
+            // So hour will be out of the period if (hour <= start_time && hour >= end_time)
+            // We can think of a case where even with the modulo, end_time is superior
+            // to start_time, so the vehicle always runs, therefore the dataset should have
+            // start_time=0, end_time=86400, if this happens, we should handle it in
+            // the ed part
+            if ((start_time < end_time && (hour < start_time || hour > end_time)) ||
                     (start_time > end_time && (hour <= start_time && hour >= end_time)) ||
                     start_time == end_time) {
-                    continue;
-                }
+                continue;
             }
             if (st.is_valid_day(date, clockwise, disruption_active)
-                    && st.valid_end(clockwise) && st.vehicle_journey->accessible(accessibilite_params.vehicle_properties)) {
-                DateTime result_hour = !clockwise ? st.arrival_time : st.departure_time;
-                if (st.is_frequency()) {
-                    if (!clockwise) {
-                        result_hour = st.f_arrival_time(hour, !clockwise);
-                    } else {
-                        result_hour = st.f_departure_time(hour, !clockwise);
-                    }
-                }
+                    && st.valid_end(clockwise)
+                    && st.vehicle_journey->accessible(accessibilite_params.vehicle_properties)) {
                 auto result = label.dt_pt;
+                DateTime result_hour;
+                if (!clockwise) {
+                    result_hour = hour + st.arrival_time - st.departure_time;
+                } else {
+                    result_hour = hour + st.departure_time - st.arrival_time;
+                }
                 DateTimeUtils::update(result, result_hour, clockwise);
                 return std::make_pair(&st, result);
             }

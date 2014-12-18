@@ -72,7 +72,8 @@ get_all_stop_times(const vector_idx& journey_patterns,
             if(!stop_time.is_frequency()) {
                 DateTimeUtils::update(dt, stop_time.departure_time);
             } else {
-                DateTimeUtils::update(dt, routing::f_departure_time(dt, stop_time));
+                // for frequencies, we only need to add the stoptime offset to the first stoptime
+                dt = ho.first + stop_time.departure_time;
             }
             result.back().push_back(std::make_pair(dt, &stop_time));
         }

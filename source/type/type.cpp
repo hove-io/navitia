@@ -106,25 +106,6 @@ uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
     }
 }
 
-uint32_t StopTime::end_time(const bool is_departure) const {
-    throw "stop time end to do";
-//    return vehicle_journey->end_time + (is_departure? departure_time : arrival_time);
-}
-
-uint32_t StopTime::start_time(const bool is_departure) const {
-    throw "stop time start to do";
-//    return vehicle_journey->start_time + (is_departure? departure_time : arrival_time);
-}
-
-bool StopTime::valid_hour(uint hour, bool clockwise) const {
-    throw "valid hour to do";
-//    if(!this->is_frequency())
-//        return true;
-//    else
-//        return clockwise ? hour <= (this->end_time(true)) :
-//            (this->vehicle_journey->start_time+arrival_time) <= hour;
-}
-
 bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
     if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
        || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
