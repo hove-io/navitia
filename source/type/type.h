@@ -362,7 +362,22 @@ struct ExceptionDate {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & type & date;
     }
+    inline bool operator<(const ExceptionDate& that) const {
+        if (this->type < that.type) return true;
+        if (that.type < this->type) return false;
+        return this->date < that.date;
+    }
+    inline bool operator==(const ExceptionDate& that) const {
+        return this->type == that.type && this->date == that.date;
+    }
 };
+inline std::ostream& operator<<(std::ostream& os, const ExceptionDate& ed) {
+    switch (ed.type) {
+    case ExceptionDate::ExceptionType::add: os << "excl "; break;
+    case ExceptionDate::ExceptionType::sub: os << "incl "; break;
+    }
+    return os << ed.date;
+}
 
 std::string to_string(ExceptionDate::ExceptionType t);
 

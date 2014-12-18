@@ -57,6 +57,7 @@ namespace vptranslator {
 
 using navitia::type::ValidityPattern;
 typedef navitia::type::Calendar::Week Week;
+using navitia::type::ExceptionDate;
 using boost::gregorian::date;
 using boost::gregorian::date_duration;
 using boost::gregorian::date_period;
@@ -126,7 +127,7 @@ unsigned BlockPattern::nb_weeks() const {
 }
 
 void BlockPattern::add_from(const BlockPattern& other) {
-    if (!other.excluding.empty() || !other.excluding.empty()) {
+    if (!other.exceptions.empty()) {
         throw std::invalid_argument("add_from takes only no exception block patterns");
     }
     const Week diff = week ^ other.week;
@@ -136,8 +137,8 @@ void BlockPattern::add_from(const BlockPattern& other) {
         validity_periods.insert(period);
         for (day_iterator day_it = period.begin(); day_it != period.end(); ++day_it) {
             const auto week_idx = to_week_index(*day_it);
-            if (to_exclude[week_idx]) excluding.insert(*day_it);
-            if (to_include[week_idx]) including.insert(*day_it);
+            if (to_exclude[week_idx]) exceptions.insert({ExceptionDate::ExceptionType::sub, *day_it});
+            if (to_include[week_idx]) exceptions.insert({ExceptionDate::ExceptionType::add, *day_it});
         }
     }
 }
@@ -152,8 +153,7 @@ std::ostream& operator<<(std::ostream& os, const BlockPattern& bp) {
     if (bp.week[6]) os << "Su";
     if (bp.week.none()) os << "none";
     os << " for " << bp.validity_periods;
-    if (!bp.excluding.empty()) os << " excl " << bp.excluding;
-    if (!bp.including.empty()) os << " incl " << bp.including;
+    if (!bp.exceptions.empty()) os << " except " << bp.exceptions;
     return os;
 }
 

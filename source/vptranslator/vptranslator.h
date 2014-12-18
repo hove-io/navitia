@@ -38,8 +38,7 @@ namespace vptranslator {
 struct BlockPattern {
     navitia::type::Calendar::Week week;
     std::set<boost::gregorian::date_period> validity_periods;
-    std::set<boost::gregorian::date> excluding;
-    std::set<boost::gregorian::date> including;
+    std::set<navitia::type::ExceptionDate> exceptions;
 
     // Simplifies validity_period by concatenating adjacent date_period
     void canonize_validity_periods();
