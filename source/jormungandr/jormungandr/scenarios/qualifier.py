@@ -47,6 +47,14 @@ def get_nontransport_duration(journey):
             current_duration += section.duration
     return current_duration
 
+def get_fallback_duration(journey):
+    sections = journey.sections
+    current_duration = 0
+    for section in sections:
+        if section.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.WAITING,
+                response_pb2.boarding, response_pb2.landing):
+            current_duration += section.duration
+    return current_duration
 
 def has_fall_back_mode(journey, mode):
     return any(s.type in [response_pb2.STREET_NETWORK, response_pb2.CROW_FLY] and
@@ -195,8 +203,8 @@ def departure_crit(j_1, j_2):
 
 
 def nonTC_crit(j_1, j_2):
-    duration1 = get_nontransport_duration(j_1)
-    duration2 = get_nontransport_duration(j_2)
+    duration1 = get_fallback_duration(j_1)
+    duration2 = get_fallback_duration(j_2)
     return compare_minus(duration1, duration2)
 
 
