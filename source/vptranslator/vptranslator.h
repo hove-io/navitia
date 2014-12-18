@@ -63,5 +63,9 @@ BlockPattern translate_one_block(const navitia::type::ValidityPattern&);
 // have empty including and excluding.
 std::vector<BlockPattern> translate_no_exception(const navitia::type::ValidityPattern&);
 
+// Returns a vector of block patterns sorted by begining of the
+// validity_period describing the given ValidityPattern.
+std::vector<BlockPattern> translate(const navitia::type::ValidityPattern&);
+
 } // namespace vptranslator
 } // namespace navitia

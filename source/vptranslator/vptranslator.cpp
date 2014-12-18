@@ -274,5 +274,14 @@ std::vector<BlockPattern> translate_no_exception(const ValidityPattern& vp) {
     return res;
 }
 
+std::vector<BlockPattern> translate(const navitia::type::ValidityPattern& vp) {
+    auto res = translate_one_block(vp);
+    if (res.validity_periods.empty()) {
+        return {};
+    } else {
+        return {res};
+    }
+}
+
 } // namespace vptranslator
 } // namespace navitia

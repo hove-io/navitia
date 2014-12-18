@@ -38,7 +38,7 @@ set_source_files_properties(${PROTO_HDRS} ${PROTO_SRCS} PROPERTIES GENERATED TRU
 
 
 add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
-target_link_libraries(pb_lib pthread ${PROTOBUF_LIBRARY})
+target_link_libraries(pb_lib vptranslator pthread ${PROTOBUF_LIBRARY})
 add_custom_command (TARGET pb_lib
     PRE_BUILD
     COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/navitiacommon/navitiacommon" type.proto
