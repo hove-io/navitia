@@ -147,6 +147,7 @@ public:
         b.vj("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
                 ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.generate_dummy_basis();
+        b.finish();
         b.data->pt_data->index();
         b.data->build_uri();
         for(navitia::type::Line *line : b.data->pt_data->lines){

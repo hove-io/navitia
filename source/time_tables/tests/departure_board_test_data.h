@@ -31,6 +31,7 @@ struct calendar_fixture {
         // and wednesday that will not be matched to any cal
         b.vj("network:R", "line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
 
+        b.finish();
         b.data->build_uri();
         beg = b.data->meta->production_date.begin();
         end_of_year = beg + boost::gregorian::years(1) + boost::gregorian::days(1);

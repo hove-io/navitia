@@ -410,6 +410,8 @@ struct routing_api_data {
             ("stop_point:stopA", 8*3600 + 1*60, 8*3600 + 1 * 60)
             ("stop_point:stopB", 8*3600 + 1 * 60 + 2, 8*3600 + 1*60 + 2)
             .st_shape({A, I, B});
+
+        b.finish();
         b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();

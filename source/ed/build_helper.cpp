@@ -522,9 +522,9 @@ void builder::connection(const std::string & name1, const std::string & name2, f
         vj->idx = data->pt_data->vehicle_journeys.size();
         vj->name = "vehicle_journey " + std::to_string(vj->idx);
         data->pt_data->vehicle_journeys.push_back(vj);
-
      }
 
+     build_blocks();
      for(navitia::type::VehicleJourney* vj : this->data->pt_data->vehicle_journeys) {
          //we need to put the vj ptr on each stop time
          for (auto& st: vj->stop_time_list) {
@@ -550,7 +550,6 @@ void builder::connection(const std::string & name1, const std::string & name2, f
              }
          }
      }
-     build_blocks();
  }
 
 /*

@@ -89,6 +89,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     navitia::type::Data data;
     b.generate_dummy_basis();
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -605,6 +606,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     b.vj("A")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2",  9*3600 + 20 * 60 ,9*3600 + 21*60);
     navitia::type::Data data;
+    b.finish();
     b.generate_dummy_basis();
     b.data->pt_data->index();
     b.data->build_raptor();

@@ -61,6 +61,7 @@ BOOST_AUTO_TEST_CASE(test1) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 36000, 36100)("stop2", 36150,362000);
     b.vj("B")("stop1", 36000, 36100)("stop2", 36150,36200)("stop3", 36250,36300);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
 
@@ -206,6 +207,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     b.lines["line:A"]->calendar_list.push_back(nearly_cal);
 
     //call all the init again
+    b.finish();
     b.data->build_uri();
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -268,6 +270,7 @@ struct small_cal_fixture {
         b.lines["line:A"]->calendar_list.push_back(empty_cal);
 
         //call all the init again
+        b.finish();
         b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();
