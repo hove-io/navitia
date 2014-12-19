@@ -651,3 +651,6 @@ void StreetNetworkParams::set_filter(const std::string &param_uri){
 }
 
 }} //namespace navitia::type
+
+BOOST_CLASS_EXPORT_GUID(navitia::type::DiscreteVehicleJourney, "DiscreteVehicleJourney")
+BOOST_CLASS_EXPORT_GUID(navitia::type::FrequencyVehicleJourney, "FrequencyVehicleJourney")

@@ -49,6 +49,7 @@ www.navitia.io
 #include <boost/serialization/export.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
+#include <boost/serialization/export.hpp>
 
 namespace navitia { namespace georef {
  struct Admin;
@@ -672,7 +673,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 
     bool operator<(const VehicleJourney& other) const;
 
-    type::OdtLevel_e get_odt_level() const;
     template<typename Archive>
     void serialize(Archive &, unsigned int const) {
         // nothing to do
@@ -1083,3 +1083,4 @@ struct enum_size_trait<type::Mode_e> {
 };
 
 } //namespace navitia
+
