@@ -172,7 +172,6 @@ namespace {
 //     2       4       8
 struct HouseNumberFromEdgesFiller {
     typedef navitia::type::GeographicalCoord Coord;
-    typedef const std::vector<std::string>& Row;
     typedef ed::types::Way Way;
 
     HouseNumberFromEdgesFiller(const CsvReader &r, GeopalParser &p)
@@ -187,7 +186,7 @@ struct HouseNumberFromEdgesFiller {
           right1(r.get_pos_col("bornedeb_d")),
           right2(r.get_pos_col("bornefin_d")) {
     }
-    void fill(Row row, Way* way) {
+    void fill(const std::vector<std::string>& row, Way* way) {
         const auto from = coord(row[x1], row[y1]);
         const auto to = coord(row[x2], row[y2]);
         /*
@@ -218,7 +217,7 @@ private:
         return parser.conv_coord.convert_to(Coord(str_to_double(x), str_to_double(y)));
     }
     boost::optional< std::pair<int, int> >
-    get_numbers(const int idx1, const int idx2, Row row) const {
+    get_numbers(const int idx1, const int idx2, const std::vector<std::string>& row) const {
         if (!reader.is_valid(left1, row) || !reader.is_valid(left2, row)) { return boost::none; }
         try {
             const int nb1 = boost::lexical_cast<int>(row.at(idx1));
