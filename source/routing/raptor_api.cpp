@@ -38,6 +38,7 @@ www.navitia.io
 #include <chrono>
 #include "type/meta_data.h"
 #include "fare/fare.h"
+#include "vptranslator/block_pattern_to_pb.h"
 
 
 
@@ -193,6 +194,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
 
         size_t item_idx(0);
         // La partie TC et correspondances
+        boost::optional<navitia::type::ValidityPattern> vp;
         for(auto path_i = path.items.begin(); path_i < path.items.end(); ++path_i) {
             const auto item = *path_i;
 
@@ -204,6 +206,13 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 bt::ptime departure_ptime, arrival_ptime;
                 type::VehicleJourney const *const vj = item.get_vj();
                 int length = 0;
+
+                if (!vp) {
+                    vp = vj->validity_pattern;
+                } else {
+                    assert(vp->beginning_date == vj->validity_pattern->beginning_date);
+                    vp->days &= vj->validity_pattern->days;
+                }
 
                 for(size_t i=0;i<item.stop_points.size();++i) {
                     if (vj->has_boarding() || vj->has_landing()) {
@@ -318,6 +327,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 departure_time = item.departure;
             arrival_time = item.arrival;
             pb_section->set_duration(arr_time - dep_time);
+        }
+
+        if (vp) {
+            vptranslator::fill_pb_object(vptranslator::translate(*vp), d, pb_journey, 1);
         }
 
         if (!path.items.back().stop_points.empty()

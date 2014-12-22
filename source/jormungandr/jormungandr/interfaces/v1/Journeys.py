@@ -65,6 +65,8 @@ from jormungandr.utils import date_to_timestamp, ResourceUtc
 from copy import deepcopy
 from jormungandr.travelers_profile import travelers_profile
 from jormungandr.interfaces.v1.transform_id import transform_id
+from jormungandr.interfaces.v1.Calendars import calendar
+
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -197,7 +199,8 @@ journey = {
     'type': fields.String(),
     'fare': NonNullNested(fare),
     'tags': fields.List(fields.String),
-    "status": enum_type(attribute="message_status")
+    "status": enum_type(attribute="message_status"),
+    "calendars": NonNullList(NonNullNested(calendar)),
 }
 
 ticket = {
