@@ -601,6 +601,9 @@ class UrisToLinks():
             response.append({"type": "network", "id": uris.network})
         if uris.note != '':
             response.append({"type": "note", "id": uris.note})
+
+        for value in display_info.notes:
+            response.append({"type": 'notes', "id": value.uri, 'value': value.note})
         return response
 
 
