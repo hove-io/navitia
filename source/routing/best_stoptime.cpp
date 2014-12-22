@@ -46,7 +46,7 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
 /** Which is the first valid stop_time in this range ?
  *  Returns invalid_idx is none is
  */
-static std::pair<const type::StopTime*, DateTime>
+std::pair<const type::StopTime*, DateTime>
 next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime dt,
         const type::Data &data, bool reconstructing_path,
         const type::VehicleProperties &required_vehicle_properties,
@@ -242,7 +242,7 @@ previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const Dat
  *
  *      Note: if nothing found, we do the same lookup the day after
  */
-static std::pair<const type::StopTime*, uint32_t>
+std::pair<const type::StopTime*, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
                    const DateTime dt, const type::Data &data,
                    bool disruption_active,

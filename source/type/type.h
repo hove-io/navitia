@@ -668,11 +668,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::string get_direction() const;
     bool has_date_time_estimated() const;
 
-    template<typename Archive>
-    void serialize(Archive &, unsigned int const) {
-        // nothing to do
-    }
-
     bool is_odt()  const{
         return vehicle_journey_type != VehicleJourneyType::regular;
     }
@@ -691,7 +686,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts
-            & codes //& next_vj & prev_vj
+            & codes & next_vj & prev_vj
             & meta_vj & utc_to_local_offset;
     }
 
