@@ -77,6 +77,7 @@ message PtDisplayInfo {
     optional string name = 12;
     repeated Message messages = 13;
     repeated Disruption disruptions = 14;
+    repeated Note notes = 15;
 }
 
 message Uris {
@@ -363,7 +364,7 @@ message Response{
     optional Load load = 46;
     optional Metadatas metadatas = 48;
     optional Pagination pagination = 49;
-    
+
     //Disruptions
     repeated Disruptions disruptions = 60;
 

@@ -590,7 +590,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & impacts & calendar_list & codes & shape;
+                & impacts & calendar_list & codes & shape & comment;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -622,7 +622,7 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     type::hasOdtProperties get_odt_properties() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & journey_pattern_list & impacts & codes & shape;
+        ar & idx & name & uri & line & journey_pattern_list & impacts & codes & shape & comment;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;

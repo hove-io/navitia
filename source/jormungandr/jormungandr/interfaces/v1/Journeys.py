@@ -80,6 +80,10 @@ class SectionLinks(fields.Raw):
         if links:
             for type_, value in links:
                 response.append({"type": type_.name, "id": value})
+
+        if obj.HasField('pt_display_informations'):
+            for value in obj.pt_display_informations.notes:
+                response.append({"type": 'notes', "id": value.uri, 'value': value.note})
         return response
 
 
@@ -211,7 +215,7 @@ ticket = {
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),
     "error": PbField(error, attribute='error'),
-    "tickets": NonNullList(NonNullNested(ticket))
+    "tickets": NonNullList(NonNullNested(ticket)),
 }
 
 

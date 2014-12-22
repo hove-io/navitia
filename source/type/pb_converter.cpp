@@ -1224,6 +1224,9 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         return ;
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_route(r->uri);
+    if(!r->comment.empty()){
+        fill_pb_object(r->comment, data, pt_display_info->add_notes(), max_depth, now, action_period);
+    }
     for(auto message : r->get_applicable_messages(now, action_period)){
         fill_message(message, data, pt_display_info, max_depth-1, now, action_period);
     }
@@ -1250,6 +1253,9 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         pt_display_info->set_color(r->line->color);
         pt_display_info->set_code(r->line->code);
         pt_display_info->set_name(r->line->name);
+        if(!r->line->comment.empty()){
+            fill_pb_object(r->line->comment, data, pt_display_info->add_notes(), max_depth, now, action_period);
+        }
         for(auto message : r->line->get_applicable_messages(now, action_period)){
             fill_message(message, data, pt_display_info, max_depth-1, now, action_period);
         }
@@ -1303,6 +1309,9 @@ void fill_pb_object(const nt::VehicleJourney* vj,
         fill_pb_object(vj, data, has_equipments, origin, destination,  max_depth-1, now, action_period);
     }else{
         fill_pb_object(vj, data, has_equipments, max_depth-1, now, action_period);
+    }
+    if(!vj->comment.empty()){
+        fill_pb_object(vj->comment, data, pt_display_info->add_notes(), max_depth, now, action_period);
     }
 }
 
