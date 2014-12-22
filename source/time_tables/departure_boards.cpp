@@ -40,40 +40,15 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
-std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
-    std::vector<vector_datetime> result;
-    DateTime prev_date = DateTimeUtils::inf;
-
-    for(auto & item : stop_times) {
-        if(prev_date == DateTimeUtils::inf ||
-                (DateTimeUtils::hour(prev_date)/3600) != (DateTimeUtils::hour(item.first)/3600)) {
-            //On supprime les doublons
-            if(result.size() > 0) {
-                auto last = result.back();
-                auto it = std::unique(last.begin(), last.end());
-                last.resize(std::distance(last.begin(), it));
-            }
-            result.push_back(vector_datetime());
-        }
-
-        result.back().push_back(item.first);
-        prev_date = item.first;
-    }
-
-    if(result.size() > 0) {
-        auto it = std::unique(result.back().begin(), result.back().end());
-        result.back().resize(std::distance(result.back().begin(), it));
-    }
-
-    return result;
-}
-
-pbnavitia::Response
+static pbnavitia::Response
 render_v1(const std::map<uint32_t, pbnavitia::ResponseStatus>& response_status,
-          const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
-          DateTime datetime, DateTime max_datetime,
+          const std::map<stop_point_line, vector_dt_st>& map_route_stop_point,
+          DateTime datetime,
+          DateTime max_datetime,
           boost::optional<const std::string> calendar_id,
-          uint32_t depth, const bool show_codes, const type::Data &data) {
+          uint32_t depth,
+          const bool show_codes,
+          const type::Data& data) {
     pbnavitia::Response response;
     auto current_time = pt::second_clock::local_time();
     auto now = pt::second_clock::local_time();

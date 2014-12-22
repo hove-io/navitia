@@ -35,7 +35,23 @@ from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from errors import ManageError
 from fields import fields, enum_type, NonNullList,\
-    NonNullNested, PbField, error, pagination, code
+    NonNullNested, NonNullProtobufNested, PbField, error, pagination, code
+
+
+class NonNullString(fields.Raw):
+    """
+    Print a string if it is not null
+    """
+    def __init__(self, *args, **kwargs):
+        super(NonNullString, self).__init__(*args, **kwargs)
+
+    def output(self, key, obj):
+        k = key if self.attribute is None else self.attribute
+        if not obj or not obj.HasField(k):
+            return None
+        else:
+            return fields.get_value(k, obj)
+
 
 week_pattern = {
     "monday": fields.Boolean(),
@@ -61,12 +77,12 @@ validity_pattern = {
     'days': fields.String(),
 }
 calendar = {
-    "id": fields.String(attribute="uri"),
-    "name": fields.String(),
+    "id": NonNullString(attribute="uri"),
+    "name": NonNullString(),
     "week_pattern": NonNullNested(week_pattern),
     "active_periods": NonNullList(NonNullNested(calendar_period)),
     "exceptions": NonNullList(NonNullNested(calendar_exception)),
-    "validity_pattern": NonNullNested(validity_pattern)
+    "validity_pattern": NonNullProtobufNested(validity_pattern)
 }
 
 calendars = {

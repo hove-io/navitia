@@ -50,7 +50,7 @@ calA        1***************5---------------10**************14
 calB                            7*******9------------12**************16-------21*******25
 */
 
-boost::gregorian::date date(std::string str) {
+static boost::gregorian::date date(std::string str) {
     return boost::gregorian::from_undelimited_string(str);
 }
 

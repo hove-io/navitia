@@ -59,7 +59,7 @@ namespace bg = boost::gregorian;
 namespace bt = boost::date_time;
 namespace navitia{ namespace type{
 
-    std::ostream& operator<<(std::ostream& cout, const ValidityPattern& vp){
+    static std::ostream& operator<<(std::ostream& cout, const ValidityPattern& vp){
         cout << "[" << vp.beginning_date << " / " << vp.days << "]";
         return cout;
     }

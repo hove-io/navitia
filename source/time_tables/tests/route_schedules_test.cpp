@@ -36,7 +36,7 @@ www.navitia.io
 #include "tests/utils_test.h"
 #include "time_tables/route_schedules.h"
 //for more concice test
-pt::ptime d(std::string str) {
+static pt::ptime d(std::string str) {
     return boost::posix_time::from_iso_string(str);
 }
 /*

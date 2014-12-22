@@ -49,7 +49,7 @@ namespace bt = boost::posix_time;
 namespace po = boost::program_options ;
 namespace pb = pbnavitia;
 
-void completion(const char *buf, linenoiseCompletions *lc) {
+static void completion(const char *buf, linenoiseCompletions *lc) {
     if (buf[0] == 'j' || buf[0] == '\0') {
         linenoiseAddCompletion(lc,"journey");
     }

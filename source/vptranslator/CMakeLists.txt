@@ -1,7 +1,10 @@
 SET(vptranslator_src
     vptranslator.h
-    vptranslator.cpp)
+    vptranslator.cpp
+    block_pattern_to_pb.h
+    block_pattern_to_pb.cpp)
 add_library(vptranslator ${vptranslator_src})
+target_link_libraries(vptranslator types)
 
 
 add_executable (vptranslator_test test.cpp)

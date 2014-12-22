@@ -42,8 +42,8 @@ namespace navitia { namespace proximitylist {
  */
 typedef std::tuple<nt::idx_t, nt::GeographicalCoord, nt::Type_e> t_result;
 typedef std::pair<nt::idx_t, nt::GeographicalCoord> idx_coord;
-void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Data& data,
-               pbnavitia::Response& pb_response, type::GeographicalCoord coord){
+static void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Data& data,
+                      pbnavitia::Response& pb_response, type::GeographicalCoord coord){
 
     for(auto result_item : result){
         pbnavitia::PtObject* place = pb_response.add_places_nearby();

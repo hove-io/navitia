@@ -42,10 +42,12 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
-std::vector<std::vector<datetime_stop_time> >
-get_all_stop_times(const vector_idx &journey_patterns,
-                   const DateTime &dateTime,
-                   const DateTime &max_datetime, const type::Data &d, bool disruption_active) {
+static std::vector<std::vector<datetime_stop_time> >
+get_all_stop_times(const vector_idx& journey_patterns,
+                   const DateTime& dateTime,
+                   const DateTime& max_datetime,
+                   const type::Data& d,
+                   bool disruption_active) {
     std::vector<std::vector<datetime_stop_time> > result;
 
     //On cherche les premiers journey_pattern_points
@@ -78,8 +80,8 @@ get_all_stop_times(const vector_idx &journey_patterns,
     return result;
 }
 
-std::vector<datetime_stop_time>::const_iterator get_first_dt_st_after(
-        const std::vector<datetime_stop_time>& v, size_t order) {
+static std::vector<datetime_stop_time>::const_iterator
+get_first_dt_st_after(const std::vector<datetime_stop_time>& v, size_t order) {
     if (order < v.size()) {
         return std::find_if(v.begin() + order, v.end(),
                             [](datetime_stop_time dt_st) {
@@ -89,8 +91,8 @@ std::vector<datetime_stop_time>::const_iterator get_first_dt_st_after(
     return v.end();
 }
 
-std::vector<datetime_stop_time>::const_iterator get_first_dt_st_before(
-        const std::vector<datetime_stop_time>& v, size_t order) {
+static std::vector<datetime_stop_time>::const_iterator
+get_first_dt_st_before(const std::vector<datetime_stop_time>& v, size_t order) {
     if (order < v.size()) {
         for (auto it = v.rbegin()+order; it != v.rend(); ++ it) {
             if (it->second != nullptr) {
@@ -108,8 +110,8 @@ std::vector<datetime_stop_time>::const_iterator get_first_dt_st_before(
  *  dt_st in v2.
  *  We want to compare v2, with the first st in v1 before o2.
  */
-bool compare(const std::vector<datetime_stop_time>& v1,
-        const std::vector<datetime_stop_time>& v2) {
+static bool compare(const std::vector<datetime_stop_time>& v1,
+                    const std::vector<datetime_stop_time>& v2) {
     if (v1.empty()) {
         return false;
     }
@@ -140,9 +142,10 @@ bool compare(const std::vector<datetime_stop_time>& v1,
 }
 
 
-std::vector<std::vector<datetime_stop_time> >
+static std::vector<std::vector<datetime_stop_time> >
 make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
-             const Thermometer &thermometer, const type::Data &) {
+             const Thermometer& thermometer,
+             const type::Data&) {
     // result group stop_times by stop_point, tmp by vj.
     const size_t thermometer_size = thermometer.get_thermometer().size();
     std::vector<std::vector<datetime_stop_time> > 

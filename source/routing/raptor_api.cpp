@@ -43,7 +43,7 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
-navitia::type::Mode_e get_crowfly_mode(const georef::Path& path){
+static navitia::type::Mode_e get_crowfly_mode(const georef::Path& path) {
     for(const auto& item: path.path_items){
         switch(item.transportation){
             case georef::PathItem::TransportCaracteristic::Car:
@@ -111,10 +111,15 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     }
 }
 
-void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::routing::Path>& paths,
-        const nt::Data& d, georef::StreetNetwork& worker,
-        const type::EntryPoint& origin, const type::EntryPoint& destination,
-        const std::vector<bt::ptime>& datetimes, const bool clockwise, const bool show_codes) {
+static void add_pathes(EnhancedResponse& enhanced_response,
+                       const std::vector<navitia::routing::Path>& paths,
+                       const nt::Data& d,
+                       georef::StreetNetwork& worker,
+                       const type::EntryPoint& origin,
+                       const type::EntryPoint& destination,
+                       const std::vector<bt::ptime>& datetimes,
+                       const bool clockwise,
+                       const bool show_codes) {
     pbnavitia::Response& pb_response = enhanced_response.response;
 
     bt::ptime now = bt::second_clock::local_time();
@@ -407,10 +412,15 @@ void add_pathes(EnhancedResponse &enhanced_response, const std::vector<navitia::
     }
 }
 
-pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths,
-        const nt::Data& d, georef::StreetNetwork& worker,
-        const type::EntryPoint& origin, const type::EntryPoint& destination,
-        const std::vector<bt::ptime>& datetimes, const bool clockwise, const bool show_codes) {
+static pbnavitia::Response
+make_pathes(const std::vector<navitia::routing::Path>& paths,
+            const nt::Data& d,
+            georef::StreetNetwork& worker,
+            const type::EntryPoint& origin,
+            const type::EntryPoint& destination,
+            const std::vector<bt::ptime>& datetimes,
+            const bool clockwise,
+            const bool show_codes) {
     EnhancedResponse enhanced_response; //wrapper around raw protobuff response to handle ids
     pbnavitia::Response& pb_response = enhanced_response.response;
 
@@ -426,13 +436,17 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
     return pb_response;
 }
 
-void add_isochrone_response(RAPTOR &raptor, pbnavitia::Response& response,
-                            const std::vector<type::StopPoint*> stop_points,
-                            bool clockwise,
-                            const type::AccessibiliteParams & accessibilite_params,
-                            bool disruption_active,
-                            DateTime init_dt , DateTime bound, int max_duration,
-                            bool show_codes, bool show_stop_area) {
+static void add_isochrone_response(RAPTOR& raptor,
+                                   pbnavitia::Response& response,
+                                   const std::vector<type::StopPoint*> stop_points,
+                                   bool clockwise,
+                                   const type::AccessibiliteParams& accessibilite_params,
+                                   bool disruption_active,
+                                   DateTime init_dt,
+                                   DateTime bound,
+                                   int max_duration,
+                                   bool show_codes,
+                                   bool show_stop_area) {
     bt::ptime now = bt::second_clock::local_time();
     for(const type::StopPoint* sp : stop_points) {
         DateTime best = bound;
@@ -482,9 +496,11 @@ void add_isochrone_response(RAPTOR &raptor, pbnavitia::Response& response,
     }
 }
 
-std::vector<std::pair<type::idx_t, navitia::time_duration> >
-get_stop_points( const type::EntryPoint &ep, const type::Data& data,
-        georef::StreetNetwork & worker, bool use_second = false){
+static std::vector<std::pair<type::idx_t, navitia::time_duration> >
+get_stop_points( const type::EntryPoint& ep,
+                 const type::Data& data,
+                 georef::StreetNetwork& worker,
+                 bool use_second = false) {
     std::vector<std::pair<type::idx_t, navitia::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
@@ -549,9 +565,11 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
     return result;
 }
 
-std::vector<bt::ptime>
-parse_datetimes(RAPTOR &raptor,const std::vector<uint64_t>& timestamps,
-                pbnavitia::Response &response, bool clockwise) {
+static std::vector<bt::ptime>
+parse_datetimes(RAPTOR& raptor,
+                const std::vector<uint64_t>& timestamps,
+                pbnavitia::Response& response,
+                bool clockwise) {
     std::vector<bt::ptime> datetimes;
 
     for(uint32_t datetime: timestamps){

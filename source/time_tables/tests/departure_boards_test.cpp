@@ -41,19 +41,19 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
-int32_t time_to_int(int h, int m, int s) {
+static int32_t time_to_int(int h, int m, int s) {
     auto dur = navitia::time_duration(h, m, s);
     return dur.total_seconds(); //time are always number of seconds from midnight
 }
 
 using namespace navitia::timetables;
 
-boost::gregorian::date date(std::string str) {
+static boost::gregorian::date date(std::string str) {
     return boost::gregorian::from_undelimited_string(str);
 }
 
 //for more concice test
-pt::ptime d(std::string str) {
+static pt::ptime d(std::string str) {
     return boost::posix_time::from_iso_string(str);
 }
 

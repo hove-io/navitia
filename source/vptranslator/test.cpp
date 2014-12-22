@@ -34,453 +34,283 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include "vptranslator/vptranslator.h"
 
-/*using namespace navitia::type;*/
+using namespace navitia::vptranslator;
+using navitia::type::ValidityPattern;
+using navitia::type::ExceptionDate;
+typedef navitia::type::Calendar::Week Week;
+using boost::gregorian::date;
+using boost::gregorian::date_period;
 
-BOOST_AUTO_TEST_CASE(decoupage_borne) {
-    boost::gregorian::date testdate;
-    std::string testCS;
-    bool response;
-    int dayofweek;
-    MakeTranslation testtranslation;
-    testCS="0001011100";
-    testdate= boost::gregorian::date(2012,7,16);
-    response = testtranslation.initcs(testdate, testCS);
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "10111");
-
-    testdate = boost::gregorian::date(2012,7,19);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-
-    testdate = boost::gregorian::date(2012,7,23);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    testCS="000001000";
-    testdate= boost::gregorian::date(2012,7,16);
-    response = testtranslation.initcs(testdate, testCS);
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "1");
-
-    testdate = boost::gregorian::date(2012,7,21);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-
-    testdate = boost::gregorian::date(2012,7,21);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    testdate = boost::gregorian::date(2012,7,23); //lundi
-    dayofweek = testtranslation.getnextmonday(testdate, 1);
-    BOOST_CHECK_EQUAL(dayofweek, 7);
-
-    testdate = boost::gregorian::date(2012,7,24); //mardi
-    dayofweek = testtranslation.getnextmonday(testdate, 1);
-    BOOST_CHECK_EQUAL(dayofweek, 6);
-
-    testdate = boost::gregorian::date(2012,7,25); //mercredi
-    dayofweek = testtranslation.getnextmonday(testdate, 1);
-    BOOST_CHECK_EQUAL(dayofweek, 5);
-
-    testdate = boost::gregorian::date(2012,7,26); //jeudi
-    dayofweek = testtranslation.getnextmonday(testdate, 1);
-    BOOST_CHECK_EQUAL(dayofweek, 4);
-
-    testdate = boost::gregorian::date(2012,7,27); //vendredi
-    dayofweek = testtranslation.getnextmonday(testdate, 1);
-    BOOST_CHECK_EQUAL(dayofweek, 3);
-
-    testdate = boost::gregorian::date(2012,7,28); //samedi
-    dayofweek = testtranslation.getnextmonday(testdate, 1);
-    BOOST_CHECK_EQUAL(dayofweek, 2);
-
-    testdate = boost::gregorian::date(2012,7,29); //dimanche
-    dayofweek = testtranslation.getnextmonday(testdate, 1);
-    BOOST_CHECK_EQUAL(dayofweek, 1);
-
-    testdate = boost::gregorian::date(2012,7,23); //lundi
-    dayofweek = testtranslation.getnextmonday(testdate, -1);
-    BOOST_CHECK_EQUAL(dayofweek, -7);
-
-    testdate = boost::gregorian::date(2012,7,24); //mardi
-    dayofweek = testtranslation.getnextmonday(testdate, -1);
-    BOOST_CHECK_EQUAL(dayofweek, -1);
-
-    testdate = boost::gregorian::date(2012,7,25); //mercredi
-    dayofweek = testtranslation.getnextmonday(testdate, -1);
-    BOOST_CHECK_EQUAL(dayofweek, -2);
-
-    testdate = boost::gregorian::date(2012,7,26); //jeudi
-    dayofweek = testtranslation.getnextmonday(testdate, -1);
-    BOOST_CHECK_EQUAL(dayofweek, -3);
-
-    testdate = boost::gregorian::date(2012,7,27); //vendredi
-    dayofweek = testtranslation.getnextmonday(testdate, -1);
-    BOOST_CHECK_EQUAL(dayofweek, -4);
-
-    testdate = boost::gregorian::date(2012,7,28); //samedi
-    dayofweek = testtranslation.getnextmonday(testdate, -1);
-    BOOST_CHECK_EQUAL(dayofweek, -5);
-
-    testdate = boost::gregorian::date(2012,7,29); //dimanche
-    dayofweek = testtranslation.getnextmonday(testdate, -1);
-    BOOST_CHECK_EQUAL(dayofweek, -6);
+namespace std {
+template<typename T>
+static std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
+    os << "{";
+    auto it = s.cbegin(), end = s.cend();
+    if (it != end) os << *it++;
+    for (; it != end; ++it) os << ", " << *it;
+    return os << "}";
+}
+template<typename T>
+static std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
+    os << "[";
+    auto it = v.cbegin(), end = v.cend();
+    if (it != end) { os << *it++; }
+    for (; it != end; ++it) { os << ", " << *it; }
+    return os << "]";
+}
 }
 
-BOOST_AUTO_TEST_CASE(default_test) {
-    boost::gregorian::date testdate;
-    std::string testCS;
-    bool response;
-    MakeTranslation testtranslation;
+//       July 2012              
+// Mo Tu We Th Fr Sa Su
+//                    1
+//  2  3  4  5  6  7  8
+//  9 10 11 12 13 14 15
+// 16 17 18 19 20 21 22
+// 23 24 25 26 27 28 29
+// 30 31
 
-    testCS ="0000000000";
-    testdate = boost::gregorian::date(2012,7,16);
-    response = testtranslation.initcs(testdate, testCS);
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    BOOST_CHECK_EQUAL(response, false);
+// /!\ the 0-1 strings used in these tests are bitset strings.  Thus,
+// they should be readed right to left to match chronological order.
 
-    testCS="000000000010000";
-    testdate= boost::gregorian::date(2012,7,2);
-    response = testtranslation.initcs(testdate, testCS);
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
+BOOST_AUTO_TEST_CASE(nb_weeks) {
+    BlockPattern block;
 
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "1");
-    testdate = boost::gregorian::date(2012,7,12);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+    // one week
+    block.validity_periods = {date_period(date(2012,7,2), date(2012,7,9))};
+    BOOST_CHECK_EQUAL(block.nb_weeks(), 1);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0001000");
-    testdate = boost::gregorian::date(2012,7,12);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
+    // partial + one week
+    block.validity_periods = {date_period(date(2012,7,4), date(2012,7,16))};
+    BOOST_CHECK_EQUAL(block.nb_weeks(), 2);
 
-    //test au limite : lundi
-    testCS="000000010000";
-    testdate= boost::gregorian::date(2012,7,2);
-    response = testtranslation.initcs(testdate, testCS);
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    testtranslation.targetdrawdown();
+    // one week + partial
+    block.validity_periods = {date_period(date(2012,7,2), date(2012,7,13))};
+    BOOST_CHECK_EQUAL(block.nb_weeks(), 2);
 
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "1");
-    testdate = boost::gregorian::date(2012,7,9);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+    // partial + one week + partial with nb partial = 6
+    block.validity_periods = {date_period(date(2012,7,4), date(2012,7,17))};
+    BOOST_CHECK_EQUAL(block.nb_weeks(), 3);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "1000000");
-    testdate = boost::gregorian::date(2012,7,9);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
+    // partial + one week + partial with nb partial = 7
+    block.validity_periods = {date_period(date(2012,7,4), date(2012,7,18))};
+    BOOST_CHECK_EQUAL(block.nb_weeks(), 3);
 
-    //test au limite : dimanche
-    testCS="000000100000";
-    testdate= boost::gregorian::date(2012,7,2);
-    response = testtranslation.initcs(testdate, testCS);
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    testtranslation.targetdrawdown();
-
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "1");
-    testdate = boost::gregorian::date(2012,7,8);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0000001");
-    testdate = boost::gregorian::date(2012,7,8);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
-
-
-    testCS="000000000011110";
-    testdate= boost::gregorian::date(2012,7,2);
-    response = testtranslation.initcs(testdate, testCS);
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    testtranslation.targetdrawdown();
-
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "1111");
-    testdate = boost::gregorian::date(2012,7,12);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-    testdate = boost::gregorian::date(2012,7,15);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0001111");
-    testdate = boost::gregorian::date(2012,7,12);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
-
-    testCS="00010111001111001100";
-    testdate= boost::gregorian::date(2012,7,16);
-    response = testtranslation.initcs(testdate, testCS);
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    testtranslation.targetdrawdown();
-
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "101110011110011");
-    testdate = boost::gregorian::date(2012,7,19);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-
-    testdate = boost::gregorian::date(2012,8,2);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0001011");
-    testdate = boost::gregorian::date(2012,7,19);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "1001111");
-    testdate = boost::gregorian::date(2012,7,23);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "0011000");
-    testdate = boost::gregorian::date(2012,7,30);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
-
-    testCS="111111111111111111111";
-    testdate= boost::gregorian::date(2012,7,2);
-    response = testtranslation.initcs(testdate, testCS);
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "111111111111111111111");
-    testdate = boost::gregorian::date(2012,7,2);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-
-    testdate = boost::gregorian::date(2012,7,22);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    testtranslation.targetdrawdown();
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "1111111");
-    testdate = boost::gregorian::date(2012,7,2);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "1111111");
-    testdate = boost::gregorian::date(2012,7,9);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "1111111");
-    testdate = boost::gregorian::date(2012,7,16);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
-
-
-    MakeTranslation::target targetresponse;
-//    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
-//        targetresponse = it->second;
-//        std::cout << targetresponse.week_bs.to_string()<<std::endl;
-//        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
-//            std::cout << *it2 <<std::endl;;
-//        }
-//    }
-
-    testCS="011111100000001111111";
-    testdate= boost::gregorian::date(2012,7,2);
-    response = testtranslation.initcs(testdate, testCS);
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    testtranslation.targetdrawdown();
-
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "11111100000001111111");
-    testdate = boost::gregorian::date(2012,7,3);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-    testdate = boost::gregorian::date(2012,7,22);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0111111");
-    testdate = boost::gregorian::date(2012,7,3);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "0000000");
-    testdate = boost::gregorian::date(2012,7,9);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "1111111");
-    testdate = boost::gregorian::date(2012,7,16);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
-
-
-//    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
-//        targetresponse = it->second;
-//        std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
-//        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
-//            std::cout << *it2 <<std::endl;
-//        }
-//    }
-//    testtranslation.bounddrawdown();
-
-
-
-    testCS="0011011101110111011000";
-    testdate= boost::gregorian::date(2012,7,2);
-    response = testtranslation.initcs(testdate, testCS);
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();//0011011  1011101  101100  0
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    testtranslation.targetdrawdown();
-
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "11011101110111011");
-    testdate = boost::gregorian::date(2012,7,4);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-
-    testdate = boost::gregorian::date(2012,7,20);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0011011");
-    testdate = boost::gregorian::date(2012,7,4);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "1011101");
-    testdate = boost::gregorian::date(2012,7,9);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "1101100");
-    testdate = boost::gregorian::date(2012,7,16);
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
-
-//    std::cout <<std::endl<< "debut test : ";
-
-//et le 07/jul
-//et le 17/jul
-//sauf  06/jul
-//sauf  18/jul
-    BOOST_CHECK_EQUAL(testtranslation.target_map.size(), 1);
-    std::bitset<7> test_bitset("1011101");
-    std::map<int, MakeTranslation::target>::iterator it= testtranslation.target_map.find(test_bitset.to_ulong());
-    BOOST_CHECK_MESSAGE(it != testtranslation.target_map.end(), "Erreur MAP 1011101 non trouve");
-    //test periode
-    BOOST_CHECK_EQUAL(it->second.periodlist.size(), 2);
-    testdate = boost::gregorian::date(2012,7,4);
-    std::vector<boost::gregorian::date>::iterator itdst=find(it->second.periodlist.begin(), it->second.periodlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.periodlist.end(), "periode ne debute pas le 04/07/2012");
-
-    testdate = boost::gregorian::date(2012,7,20);
-    itdst=find(it->second.periodlist.begin(), it->second.periodlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.periodlist.end(), "periode ne finit pas le 20/07/2012");
-
-    //test exception ET
-    BOOST_CHECK_EQUAL(it->second.andlist.size(), 2);
-    testdate = boost::gregorian::date(2012,7,7);
-    itdst=find(it->second.andlist.begin(), it->second.andlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.andlist.end(), "l'exception ET le 07/07/2012 non presente");
-
-    testdate = boost::gregorian::date(2012,7,17);
-    itdst=find(it->second.andlist.begin(), it->second.andlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.andlist.end(), "l'exception ET le 17/07/2012 non presente");
-
-    //test exception SAUF
-    BOOST_CHECK_EQUAL(it->second.exceptlist.size(), 2);
-    testdate = boost::gregorian::date(2012,7,6);
-    itdst=find(it->second.exceptlist.begin(), it->second.exceptlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.exceptlist.end(), "l'exception SAUF le 06/07/2012 non presente");
-
-    testdate = boost::gregorian::date(2012,7,18);
-    itdst=find(it->second.exceptlist.begin(), it->second.exceptlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.exceptlist.end(), "l'exception SAUF le 18/07/2012 non presente");
-
-    //test console
-
-//    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
-//        targetresponse = it->second;
-//        std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
-//        std::cout << "liste des periodes : " <<std::endl;
-//        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
-//            std::cout << *it2 <<std::endl;
-//        }
-//        std::cout << "liste des ET : " <<std::endl;
-//        for(std::vector<boost::gregorian::date>::iterator it3 = targetresponse.andlist.begin(); it3!= targetresponse.andlist.end(); it3++) {
-//            std::cout << *it3 <<std::endl;
-//        }
-//        std::cout << "liste des SAUF: " <<std::endl;
-//        for(std::vector<boost::gregorian::date>::iterator it4 = targetresponse.exceptlist.begin(); it4!= targetresponse.exceptlist.end(); it4++) {
-//            std::cout << *it4 <<std::endl;
-//        }
-//    }
-//    std::cout << "fin test : " <<std::endl;
-
-    //0001100
-    //1101100   //lundi 02/07/2012
-    //1100100
-    //1101100
-    //1111100
-    //1100000
-
-    //000110011011001100100110110011111001100000
-    testCS="000110011011001100100110110011111001100000";
-    testdate= boost::gregorian::date(2012,6,25);
-
-    response = testtranslation.initcs(testdate, testCS);
-    testtranslation.splitcs();
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
-    testtranslation.targetdrawdown();
-
-    BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "1100110110011001001101100111110011");
-    testdate = boost::gregorian::date(2012,6,28);
-    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-
-    testdate = boost::gregorian::date(2012,7,31);
-    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-
-    BOOST_CHECK_EQUAL(testtranslation.target_map.size(), 1);
-    std::bitset<7> test_bitset2("1101100");
-    it= testtranslation.target_map.find(test_bitset2.to_ulong());
-    BOOST_CHECK_MESSAGE(it != testtranslation.target_map.end(), "Erreur MAP 1101100 non trouve");
-    //test periode
-    BOOST_CHECK_EQUAL(it->second.periodlist.size(), 2);
-    testdate = boost::gregorian::date(2012,6,28);
-    itdst=find(it->second.periodlist.begin(), it->second.periodlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.periodlist.end(), "periode ne debute pas le 28/06/2012");
-
-    testdate = boost::gregorian::date(2012,7,31);
-    itdst=find(it->second.periodlist.begin(), it->second.periodlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.periodlist.end(), "periode ne finit pas le 31/07/2012");
-
-    //test exception ET
-    BOOST_CHECK_EQUAL(it->second.andlist.size(), 1);
-    testdate = boost::gregorian::date(2012,7,25);
-    itdst=find(it->second.andlist.begin(), it->second.andlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.andlist.end(), "l'exception ET le 25/07/2012 non presente");
-
-    //test exception SAUF
-    BOOST_CHECK_EQUAL(it->second.exceptlist.size(), 1);
-    testdate = boost::gregorian::date(2012,7,12);
-    itdst=find(it->second.exceptlist.begin(), it->second.exceptlist.end(), testdate);
-    BOOST_CHECK_MESSAGE(itdst != it->second.exceptlist.end(), "l'exception SAUF le 12/07/2012 non presente");
-
-    //test console
-//    std::cout <<std::endl<< "debut test : ";
-//    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
-//        targetresponse = it->second;
-//        std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
-//        std::cout << "liste des periodes : " <<std::endl;
-//        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
-//            std::cout << *it2 <<std::endl;
-//        }
-//        std::cout << "liste des ET : " <<std::endl;
-//        for(std::vector<boost::gregorian::date>::iterator it3 = targetresponse.andlist.begin(); it3!= targetresponse.andlist.end(); it3++) {
-//            std::cout << *it3 <<std::endl;
-//        }
-//        std::cout << "liste des SAUF: " <<std::endl;
-//        for(std::vector<boost::gregorian::date>::iterator it4 = targetresponse.exceptlist.begin(); it4!= targetresponse.exceptlist.end(); it4++) {
-//            std::cout << *it4 <<std::endl;
-//        }
-//    }
-//    std::cout << "fin test : " <<std::endl;
+    // partial + one week + partial with nb partial = 8
+    block.validity_periods = {date_period(date(2012,7,4), date(2012,7,19))};
+    BOOST_CHECK_EQUAL(block.nb_weeks(), 3);
 }
+
+BOOST_AUTO_TEST_CASE(only_first_day) {
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), "1"));
+    BOOST_CHECK_EQUAL(response.week, Week("0000001"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,2), date(2012,7,3))
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(bound_cut) {
+    BlockPattern response;
+
+    response = translate_one_block(ValidityPattern(date(2012,7,16), "000" "1011100"));
+    BOOST_CHECK_EQUAL(response.week, Week("1011100"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,18), date(2012,7,23))
+    }));
+
+    response = translate_one_block(ValidityPattern(date(2012,7,16), "00" "0100000"));
+    BOOST_CHECK_EQUAL(response.week, Week("0100000"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,21), date(2012,7,22))
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(empty_vp) {
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,16), "0000000"));
+    BOOST_CHECK_EQUAL(response.week, Week("0"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK(response.validity_periods.empty());
+}
+
+BOOST_AUTO_TEST_CASE(only_one_thursday) {
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), "0001000" "0000000"));
+    BOOST_CHECK_EQUAL(response.week, Week("0001000"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,12), date(2012,7,13))
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(only_one_monday) {
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), "00001" "0000000"));
+    BOOST_CHECK_EQUAL(response.week, Week("0000001"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,9), date(2012,7,10))
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(only_one_sunday) {
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), "000000" "1000000"));
+    BOOST_CHECK_EQUAL(response.week, Week("1000000"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods,
+                      std::set<date_period>{date_period(date(2012,7,8), date(2012,7,9))});
+}
+
+// only one friday saturday sunday
+BOOST_AUTO_TEST_CASE(only_one_fss) {
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), "1111000" "0000000"));
+    BOOST_CHECK_EQUAL(response.week, Week("1111000"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,12), date(2012,7,16))
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(three_complete_weeks) {
+    const auto days = "1111111" "1111111" "1111111";
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), days));
+    BOOST_CHECK_EQUAL(response.week, Week("1111111"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,2), date(2012,7,23))
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(MoTuThFrX3_MoTuWeThFrX2_MoTuThFrX1_SaSuX2) {
+    const std::string mttf = "0011011", mtwtf = "0011111", ss = "1100000";
+    const std::string pattern = ss + ss + mttf + mtwtf + mtwtf + mttf + mttf + mttf;
+    const auto response = translate_no_exception(ValidityPattern(date(2012,7,2), pattern));
+    for (const auto& bp: response) { BOOST_CHECK(bp.exceptions.empty()); }
+    BOOST_REQUIRE_EQUAL(response.size(), 3);
+    BOOST_CHECK_EQUAL(response.at(0).week, Week(mttf));
+    BOOST_CHECK_EQUAL(response.at(0).validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,2), date(2012,7,23)),
+        date_period(date(2012,8,6), date(2012,8,13))
+    }));    
+    BOOST_CHECK_EQUAL(response.at(1).week, Week(mtwtf));
+    BOOST_CHECK_EQUAL(response.at(1).validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,23), date(2012,8,6))
+    }));    
+    BOOST_CHECK_EQUAL(response.at(2).week, Week(ss));
+    BOOST_CHECK_EQUAL(response.at(2).validity_periods, (std::set<date_period>{
+        date_period(date(2012,8,13), date(2012,8,27))
+    }));    
+}
+
+BOOST_AUTO_TEST_CASE(three_mtwss_excluding_one_day) {
+    const auto days = "1110011" "1100011" "1110011";
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), days));
+    BOOST_CHECK_EQUAL(response.week, Week("1110011"));
+    BOOST_CHECK_EQUAL(response.exceptions, (std::set<ExceptionDate>{
+        {ExceptionDate::ExceptionType::sub, date(2012,07,13)}
+    }));
+    BOOST_CHECK_EQUAL(response.validity_periods, std::set<date_period>{
+        date_period(date(2012,7,2), date(2012,7,23))
+    });
+}
+
+BOOST_AUTO_TEST_CASE(three_mtwss_including_one_day) {
+    const auto days = "1110011" "1111011" "1110011";
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), days));
+    BOOST_CHECK_EQUAL(response.week, Week("1110011"));
+    BOOST_CHECK_EQUAL(response.exceptions, (std::set<ExceptionDate>{
+        {ExceptionDate::ExceptionType::add, date(2012,07,12)}
+    }));
+    BOOST_CHECK_EQUAL(response.validity_periods, std::set<date_period>{
+        date_period(date(2012,7,2), date(2012,7,23))
+    });
+}
+
+BOOST_AUTO_TEST_CASE(mwtfss_mttfss_mtwfss) {
+    const auto days = "1110111" "1111011" "1111101";
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), days));
+    BOOST_CHECK_EQUAL(response.week, Week("1111111"));
+    BOOST_CHECK_EQUAL(response.exceptions, (std::set<ExceptionDate>{
+        {ExceptionDate::ExceptionType::sub, date(2012,7,3)},
+        {ExceptionDate::ExceptionType::sub, date(2012,7,11)},
+        {ExceptionDate::ExceptionType::sub, date(2012,7,19)}
+    }));
+    BOOST_CHECK_EQUAL(response.validity_periods, std::set<date_period>{
+        date_period(date(2012,7,2), date(2012,7,23))
+    });
+}
+
+BOOST_AUTO_TEST_CASE(t_w_t) {
+    const auto days = "0001000" "0000100" "0000010";
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), days));
+    BOOST_CHECK_EQUAL(response.week, Week("0000000"));
+    BOOST_CHECK_EQUAL(response.exceptions, (std::set<ExceptionDate>{
+        {ExceptionDate::ExceptionType::add, date(2012,7,3)},
+        {ExceptionDate::ExceptionType::add, date(2012,7,11)},
+        {ExceptionDate::ExceptionType::add, date(2012,7,19)}
+    }));
+    BOOST_CHECK_EQUAL(response.validity_periods, std::set<date_period>{
+        date_period(date(2012,7,3), date(2012,7,20))
+    });
+}
+
+BOOST_AUTO_TEST_CASE(one_full_week_except_monday_black_week_two_full_week) {
+    const auto days = "1111111" "1111111" "0000000" "1111110";
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), days));
+    BOOST_CHECK_EQUAL(response.week, Week("1111111"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,3), date(2012,7,9)),
+        date_period(date(2012,7,16), date(2012,7,30))
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(bound_compression) {
+    const auto days = "0111000" "1111000" "1110000";
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,2), days));
+    BOOST_CHECK_EQUAL(response.week, Week("1111000"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,6), date(2012,7,22))
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(SaSu_blank_week_MoTuWeThFr) {
+    const auto days = "1111100" "0000011";
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,7), days));
+    BOOST_CHECK_EQUAL(response.week, Week("1111111"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,7), date(2012,7,9)),
+        date_period(date(2012,7,16), date(2012,7,21))
+    }));
+}
+
+// ROADEF 2015 example
+BOOST_AUTO_TEST_CASE(may2015) {
+    const auto dates = "0111110" "0011111" "0010111" "0001111" "0001111";
+    const auto response = translate_one_block(ValidityPattern(date(2015,4,27), dates));
+    BOOST_CHECK_EQUAL(response.week, Week("0011111"));
+    BOOST_CHECK_EQUAL(response.exceptions, (std::set<ExceptionDate>{
+        {ExceptionDate::ExceptionType::sub, date(2015,5,1)},
+        {ExceptionDate::ExceptionType::sub, date(2015,5,8)},
+        {ExceptionDate::ExceptionType::sub, date(2015,5,14)},
+        {ExceptionDate::ExceptionType::sub, date(2015,5,25)},
+        {ExceptionDate::ExceptionType::add, date(2015,5,30)},
+    }));
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2015,4,27), date(2015,5,31))
+    }));
+}
+
+// TODO: with real bound compression, this must work.
+/*
+BOOST_AUTO_TEST_CASE(Su_MoWeSu_Mo) {
+    const auto response = translate_one_block(ValidityPattern(date(2012,7,1), "1" "1000101" "1"));
+    std::cout << response << std::endl;
+    BOOST_CHECK_EQUAL(response.week, Week("1000101"));
+    BOOST_CHECK(response.exceptions.empty());
+    BOOST_CHECK_EQUAL(response.validity_periods, (std::set<date_period>{
+        date_period(date(2012,7,1), date(2012,7,10))
+    }));
+}
+*/

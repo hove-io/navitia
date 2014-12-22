@@ -456,18 +456,6 @@ stop_time = {
     "journey_pattern_point": NonNullProtobufNested(journey_pattern_point)
 }
 
-vehicle_journey = {
-    "id": fields.String(attribute="uri"),
-    "name": fields.String(),
-    "messages": NonNullList(NonNullNested(generic_message)),
-    "disruptions": NonNullList(NonNullNested(disruption)),
-    "journey_pattern": PbField(journey_pattern),
-    "stop_times": NonNullList(NonNullNested(stop_time)),
-    "comment": fields.String(),
-    "codes": NonNullList(NonNullNested(code)),
-    "validity_pattern": NonNullProtobufNested(validity_pattern),
-}
-
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
 line["disruptions"] = NonNullList(NonNullNested(disruption))

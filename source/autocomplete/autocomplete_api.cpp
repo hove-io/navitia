@@ -55,9 +55,11 @@ void fill_pb_pt_object(T* nav_object, pbnavitia::PtObject* place,
     place->set_embedded_type(pb_type);
 }
 
-void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
-               const nt::Type_e type, uint32_t depth, const nt::Data& data,
-               pbnavitia::Response & pb_response){
+static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
+                            const nt::Type_e type,
+                            uint32_t depth,
+                            const nt::Data& data,
+                            pbnavitia::Response& pb_response){
     for(auto result_item : result){
         pbnavitia::PtObject* place = pb_response.add_places();
         switch(type){
@@ -122,7 +124,7 @@ void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& res
     }
 }
 
-int get_embedded_type_order(pbnavitia::NavitiaType type){
+static int get_embedded_type_order(pbnavitia::NavitiaType type){
     switch(type){
     case pbnavitia::NETWORK:
         return 1;
@@ -177,8 +179,9 @@ ValidAdminPtr<T> valid_admin_ptr (const std::vector<T*> & objects,
 }
 
 
-std::vector<const georef::Admin*> admin_uris_to_admin_ptr(const std::vector<std::string> &admin_uris,
-        const nt::Data &d){
+static std::vector<const georef::Admin*>
+admin_uris_to_admin_ptr(const std::vector<std::string>& admin_uris,
+                        const nt::Data& d){
     std::vector<const georef::Admin*> admins;
     for(auto admin_uri : admin_uris){
         for(const navitia::georef::Admin* admin : d.geo_ref->admins){
@@ -193,8 +196,8 @@ std::vector<const georef::Admin*> admin_uris_to_admin_ptr(const std::vector<std:
 
 //Penalty = (word count difference * 10)
 //quality = quality (100) - penalty
-void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
-                    const int query_word_count) {
+static void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
+                           const int query_word_count) {
     for (auto &item: ac_result) {
         item.quality -= (item.nb_found - query_word_count) * 10;
     }

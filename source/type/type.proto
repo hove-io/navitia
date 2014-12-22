@@ -311,6 +311,7 @@ message VehicleJourney {
     optional bool school_vehicle = 23;
     optional string comment = 24;
     repeated Code codes = 25;
+    repeated Calendar calendars = 26;
 }
 
 message JourneyPatternPoint{

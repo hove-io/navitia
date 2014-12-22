@@ -45,7 +45,7 @@ using nt::new_disruption::Impact;
 using nt::new_disruption::Effect;
 using nt::new_disruption::DisruptionHolder;
 
-boost::shared_ptr<Severity>
+static boost::shared_ptr<Severity>
 get_or_create_severity(DisruptionHolder& disruptions, int id) {
     std::string name;
     if (id == 0) {

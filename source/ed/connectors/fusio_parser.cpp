@@ -789,7 +789,7 @@ void TripPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
     }
 }
 
-boost::gregorian::date parse_date(const std::string& str) {
+static boost::gregorian::date parse_date(const std::string& str) {
     auto logger = log4cplus::Logger::getInstance("log");
     if (str.empty()) {
         LOG4CPLUS_ERROR(logger, "impossible to parse date, date is empty");

@@ -36,7 +36,8 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode, \
     commercial_mode, company, network, pagination,\
     journey_pattern_point, NonNullList, poi, poi_type,\
-    journey_pattern, vehicle_journey, connection, error, PbField
+    journey_pattern, connection, error, PbField
+from VehicleJourney import vehicle_journey
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc

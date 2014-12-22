@@ -49,7 +49,7 @@ namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 namespace ng = navitia::georef;
 
-void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
+static void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
     if (! debug_info)
         return;
     if (resp.journeys_size() == 0) {
@@ -60,7 +60,7 @@ void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_i
     std::cout << test_name << ": " << std::endl;
     for (int idx_section = 0; idx_section < journey.sections().size(); ++idx_section) {
         auto& section = journey.sections(idx_section);
-        std::cout << "section type=" << (int)(section.type())
+        std::cout << "section type=" << int(section.type())
                   << " " << section.origin().name() << " -> " << section.destination().name()
                   << std::endl;
         if (section.street_network().coordinates_size()) {

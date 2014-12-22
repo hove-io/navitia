@@ -199,9 +199,10 @@ std::vector<Filter> parse(std::string request){
     return filters;
 }
 
-std::vector<type::idx_t>::iterator sort_and_ge_new_end(std::vector<type::idx_t>& list_idx){
-  std::sort(list_idx.begin(), list_idx.end());
-  return std::unique(list_idx.begin(), list_idx.end());
+static std::vector<type::idx_t>::iterator
+sort_and_ge_new_end(std::vector<type::idx_t>& list_idx){
+    std::sort(list_idx.begin(), list_idx.end());
+    return std::unique(list_idx.begin(), list_idx.end());
 }
 
 std::vector<idx_t> get_difference(std::vector<type::idx_t>& list_idx1,

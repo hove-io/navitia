@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "ptreferential.h"
+#include "ptreferential_api.h"
 #include "type/pb_converter.h"
 #include "type/data.h"
 #include "type/pt_data.h"
@@ -37,10 +38,10 @@ namespace pt = boost::posix_time;
 
 namespace navitia{ namespace ptref{
 
-pbnavitia::Response extract_data(const type::Data & data,
-                                 type::Type_e requested_type,
-                                 std::vector<type::idx_t> & rows,
-                                 const int depth, const bool show_codes) {
+static pbnavitia::Response extract_data(const type::Data & data,
+                                        type::Type_e requested_type,
+                                        std::vector<type::idx_t> & rows,
+                                        const int depth, const bool show_codes) {
     pbnavitia::Response result;
     //on utilise la date courante pour choisir si on doit afficher les  messages de perturbation
     pt::ptime today = pt::second_clock::local_time();
@@ -117,12 +118,15 @@ pbnavitia::Response extract_data(const type::Data & data,
 }
 
 
-pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
+pbnavitia::Response query_pb(type::Type_e requested_type,
+                             const std::string& request,
                              const std::vector<std::string>& forbidden_uris,
                              const type::OdtLevel_e odt_level,
-                             const int depth, const bool show_codes,
+                             const int depth,
+                             const bool show_codes,
                              const int startPage,
-                             const int count, const type::Data &data){
+                             const int count,
+                             const type::Data& data){
     std::vector<type::idx_t> final_indexes;
     pbnavitia::Response pb_response;
     int total_result;

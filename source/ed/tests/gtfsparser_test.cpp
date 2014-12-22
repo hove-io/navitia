@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst){
     data.complete();
 }
 
-void check_gtfs_google_example(const ed::Data& data, const ed::connectors::GtfsParser& parser) {
+static void check_gtfs_google_example(const ed::Data& data, const ed::connectors::GtfsParser& parser) {
     //Agency and stop areas should not have changed compared to parse_gtfs_no_dst
     BOOST_REQUIRE_EQUAL(data.networks.size(), 1);
     BOOST_CHECK_EQUAL(data.networks[0]->name, "Demo Transit Authority");

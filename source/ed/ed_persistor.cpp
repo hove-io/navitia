@@ -148,7 +148,7 @@ void EdPersistor::insert_house_numbers(const ed::Georef& data){
     lotus.finish_bulk_insert();
 }
 
-std::string coord_to_string(const navitia::type::GeographicalCoord& coord){
+static std::string coord_to_string(const navitia::type::GeographicalCoord& coord){
     std::stringstream geog;
     geog << std::setprecision(10) << coord.lon() << " " << coord.lat();
     return geog.str();
