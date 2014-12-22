@@ -371,6 +371,10 @@ class Scenario(simple.Scenario):
         if len(new_response.journeys) == 0:
             return
 
+        #if the initial response was an error we remove the error since we have result now
+        if initial_response.HasField('error'):
+            initial_response.ClearField('error')
+
         #we don't want to add a journey already there
         tickets_to_add = set()
         for new_j in new_response.journeys:
