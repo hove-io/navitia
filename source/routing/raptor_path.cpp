@@ -59,8 +59,8 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
         const auto date = DateTimeUtils::date(label.dt_pt);
         const auto hour = DateTimeUtils::hour(label.dt_pt);
         const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[journey_pattern_point];
-        for (const type::DiscreteVehicleJourney& vj : jpp->journey_pattern->discrete_vehicle_journey_list) {
-            const type::StopTime& st = vj.stop_time_list[jpp->order];
+        for (const auto& vj : jpp->journey_pattern->discrete_vehicle_journey_list) {
+            const type::StopTime& st = vj->stop_time_list[jpp->order];
             auto st_hour = clockwise ? st.arrival_time : st.departure_time;
             if ((st_hour % DateTimeUtils::SECONDS_PER_DAY) != hour) {
                 continue;
@@ -76,11 +76,11 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
             }
         }
         // if we haven't found it in the discrete vj, we look into the frequency ones
-        for (const type::FrequencyVehicleJourney& vj : jpp->journey_pattern->frequency_vehicle_journey_list) {
-            const type::StopTime& st = vj.stop_time_list[jpp->order];
-            auto start_time = (vj.start_time + (clockwise? st.departure_time : st.arrival_time)) % DateTimeUtils::SECONDS_PER_DAY;
+        for (const auto& vj : jpp->journey_pattern->frequency_vehicle_journey_list) {
+            const type::StopTime& st = vj->stop_time_list[jpp->order];
+            auto start_time = (vj->start_time + (clockwise? st.departure_time : st.arrival_time)) % DateTimeUtils::SECONDS_PER_DAY;
 
-            auto end_time = (vj.end_time + (clockwise? st.departure_time : st.arrival_time)) % DateTimeUtils::SECONDS_PER_DAY;
+            auto end_time = (vj->end_time + (clockwise? st.departure_time : st.arrival_time)) % DateTimeUtils::SECONDS_PER_DAY;
             // Here we check if hour is out of the period of the frequency.
             // In normal case we have something like:
             // 0-------------------------------------86400(midnight)

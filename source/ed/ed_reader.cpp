@@ -712,30 +712,30 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
         auto journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
         if (const_it["is_frequency"].as<bool>()) {
-            journey_pattern->frequency_vehicle_journey_list.emplace_back();
+            journey_pattern->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
             auto& vj = journey_pattern->frequency_vehicle_journey_list.back();
 
-            fill_vj(const_it, vj, prev_vjs, next_vjs);
+            fill_vj(const_it, *vj, prev_vjs, next_vjs);
 
-            const_it["start_time"].to(vj.start_time);
-            const_it["end_time"].to(vj.end_time);
-            const_it["headway_sec"].to(vj.headway_secs);
+            const_it["start_time"].to(vj->start_time);
+            const_it["end_time"].to(vj->end_time);
+            const_it["headway_sec"].to(vj->headway_secs);
         } else {
-            journey_pattern->discrete_vehicle_journey_list.emplace_back();
+            journey_pattern->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
             auto& vj = journey_pattern->discrete_vehicle_journey_list.back();
-            fill_vj(const_it, vj, prev_vjs, next_vjs);
+            fill_vj(const_it, *vj, prev_vjs, next_vjs);
         }
     }
 
     //we need to wait for every jp to be filled to store the vj pointers is the global map
     for (auto* jp: data.pt_data->journey_patterns) {
         for (auto& vj: jp->discrete_vehicle_journey_list) {
-            data.pt_data->vehicle_journeys.push_back(&vj);
-            this->vehicle_journey_map[vj_id_map[vj.uri]] = &vj;
+            data.pt_data->vehicle_journeys.push_back(vj.get());
+            this->vehicle_journey_map[vj_id_map[vj->uri]] = vj.get();
         }
         for (auto & vj: jp->frequency_vehicle_journey_list) {
-            data.pt_data->vehicle_journeys.push_back(&vj);
-            this->vehicle_journey_map[vj_id_map[vj.uri]] = &vj;
+            data.pt_data->vehicle_journeys.push_back(vj.get());
+            this->vehicle_journey_map[vj_id_map[vj->uri]] = vj.get();
         }
     }
     for(const auto& vjid_vj: prev_vjs) {

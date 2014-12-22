@@ -667,11 +667,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 
     std::string get_direction() const;
     bool has_date_time_estimated() const;
-    bool has_boarding() const;
-    bool has_landing() const;
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-
-    bool operator<(const VehicleJourney& other) const;
 
     template<typename Archive>
     void serialize(Archive &, unsigned int const) {
@@ -685,19 +680,28 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     bool is_virtual_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::virtual_with_stop_time);}
     bool is_zonal_odt() const {return (this->vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time);}
 
-    type::OdtLevel_e get_odt_level() const;
-};
+    bool has_boarding() const;
+    bool has_landing() const;
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-struct DiscreteVehicleJourney: public VehicleJourney {
-    //TODO lots of comment
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+    bool operator<(const VehicleJourney& other) const;
+    template<class Archive> void serialize(Archive& ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern
             & idx & stop_time_list & is_adapted
             & adapted_validity_pattern & adapted_vehicle_journey_list
             & theoric_vehicle_journey & comment & vehicle_journey_type
             & odt_message & _vehicle_properties & impacts
-            & codes & next_vj & prev_vj
+            & codes //& next_vj & prev_vj
             & meta_vj & utc_to_local_offset;
+    }
+
+    type::OdtLevel_e get_odt_level() const;
+};
+
+struct DiscreteVehicleJourney: public VehicleJourney {
+    //TODO lots of comment
+    template<class Archive> void serialize(Archive& ar, const unsigned int ) {
+        ar & boost::serialization::base_object<VehicleJourney>(*this);
     }
 };
 
@@ -708,14 +712,10 @@ struct FrequencyVehicleJourney: public VehicleJourney {
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); // Seconds between each departure.
 
     bool is_valid(int day, const bool is_adapted) const;
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & name & uri & journey_pattern & company & validity_pattern
-            & idx & stop_time_list & is_adapted
-            & adapted_validity_pattern & adapted_vehicle_journey_list
-            & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & impacts
-            & codes & next_vj & prev_vj & start_time & end_time & headway_secs
-            & meta_vj & utc_to_local_offset;
+    template<class Archive> void serialize(Archive& ar, const unsigned int) {
+        ar & boost::serialization::base_object<VehicleJourney>(*this);
+
+        ar & start_time & end_time & headway_secs;
     }
 };
 
@@ -729,14 +729,14 @@ struct JourneyPattern : public Header, Nameable {
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     hasOdtProperties odt_properties;
 
-     std::vector<DiscreteVehicleJourney> discrete_vehicle_journey_list;
-    std::vector<FrequencyVehicleJourney> frequency_vehicle_journey_list;
+    std::vector<std::unique_ptr<DiscreteVehicleJourney>> discrete_vehicle_journey_list;
+    std::vector<std::unique_ptr<FrequencyVehicleJourney>> frequency_vehicle_journey_list;
 
     std::vector<const VehicleJourney*> get_vehicle_journey_list() const {
         //TODO, make this an iterator
         std::vector<const VehicleJourney*> res;
-        for (const auto& vj: discrete_vehicle_journey_list) { res.push_back(&vj); }
-        for (const auto& vj: frequency_vehicle_journey_list) { res.push_back(&vj); }
+        for (const auto& vj: discrete_vehicle_journey_list) { res.push_back(vj.get()); }
+        for (const auto& vj: frequency_vehicle_journey_list) { res.push_back(vj.get()); }
         return res;
     }
 

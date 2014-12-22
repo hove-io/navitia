@@ -104,14 +104,14 @@ next_valid_frequency_pick_up(const type::JourneyPatternPoint* jpp, const DateTim
     for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
         //we get stop time corresponding to the jpp
 
-        const auto& st = freq_vj.stop_time_list[jpp->order];
+        const auto& st = freq_vj->stop_time_list[jpp->order];
 
         if (! st.valid_end(reconstructing_path) ||
-            ! freq_vj.accessible(vehicle_properties)) {
+            ! freq_vj->accessible(vehicle_properties)) {
             continue;
         }
 
-        const auto next_dt = get_next_departure(dt, freq_vj, st, disruption_active);
+        const auto next_dt = get_next_departure(dt, *freq_vj, st, disruption_active);
 
         if (next_dt < best.second) {
             best = {&st, next_dt};
@@ -123,14 +123,14 @@ next_valid_frequency_pick_up(const type::JourneyPatternPoint* jpp, const DateTim
         for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
             //we get stop time corresponding to the jpp
 
-            const auto& st = freq_vj.stop_time_list[jpp->order];
+            const auto& st = freq_vj->stop_time_list[jpp->order];
 
             if (! st.valid_end(reconstructing_path) ||
-                ! freq_vj.accessible(vehicle_properties)) {
+                ! freq_vj->accessible(vehicle_properties)) {
                 continue;
             }
 
-            const auto next_dt = get_next_departure(next_date, freq_vj, st, disruption_active);
+            const auto next_dt = get_next_departure(next_date, *freq_vj, st, disruption_active);
 
             if (next_dt < best.second) {
                 best = {&st, next_dt};
@@ -148,14 +148,14 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
     std::pair<const type::StopTime*, DateTime> best = {nullptr, std::numeric_limits<DateTime>::max()};
     for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
         //we get stop time corresponding to the jpp
-        const auto& st = freq_vj.stop_time_list[jpp->order];
+        const auto& st = freq_vj->stop_time_list[jpp->order];
 
         if (! st.valid_end(!reconstructing_path) ||
-            ! freq_vj.accessible(vehicle_properties)) {
+            ! freq_vj->accessible(vehicle_properties)) {
             continue;
         }
 
-        const auto previous_dt = get_previous_arrival(dt, freq_vj, st, disruption_active);
+        const auto previous_dt = get_previous_arrival(dt, *freq_vj, st, disruption_active);
 
         if (best.second == DateTimeUtils::inf || previous_dt > best.second) {
             best = {&st, previous_dt};
@@ -166,14 +166,14 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
         const auto previous_date = DateTimeUtils::set(DateTimeUtils::date(dt) - 1, DateTimeUtils::SECONDS_PER_DAY - 1);
         for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
             //we get stop time corresponding to the jpp
-            const auto& st = freq_vj.stop_time_list[jpp->order];
+            const auto& st = freq_vj->stop_time_list[jpp->order];
 
             if (! st.valid_end(!reconstructing_path) ||
-                ! freq_vj.accessible(vehicle_properties)) {
+                ! freq_vj->accessible(vehicle_properties)) {
                 continue;
             }
 
-            const auto previous_dt = get_previous_arrival(previous_date, freq_vj, st, disruption_active);
+            const auto previous_dt = get_previous_arrival(previous_date, *freq_vj, st, disruption_active);
 
             if (best.second == DateTimeUtils::inf || previous_dt > best.second) {
                 best = {&st, previous_dt};

@@ -45,17 +45,11 @@ namespace ed {
 
 struct builder;
 
-struct VJKey {
-    navitia::type::JourneyPattern* jp;
-    size_t vj_idx;
-    bool is_frequency;
-    navitia::type::VehicleJourney* get_vj() const;
-};
 
 /// Structure retournée à la construction d'un VehicleJourney
 struct VJ {
     builder & b;
-    VJKey vj_key;
+    nt::VehicleJourney* vj;
 
     /// Construit un nouveau vehicle journey
     VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
@@ -99,10 +93,6 @@ struct builder{
 
     std::unique_ptr<navitia::type::Data> data = std::make_unique<navitia::type::Data>();
     navitia::georef::GeoRef street_network;
-
-    //we need to store all meta vj key, because they can be created only at the end (by the finish())
-    std::vector<std::pair<std::string, VJKey>> meta_vj_keys;
-
 
     /// Il faut préciser là date de début des différents validity patterns
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
@@ -156,7 +146,6 @@ struct builder{
     void manage_admin();
     void build_autocomplete();
 
-private:
     nt::MetaVehicleJourney* get_or_create_metavj(const std::string name);
 };
 

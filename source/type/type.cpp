@@ -35,6 +35,12 @@ www.navitia.io
 #include "utils/functions.h"
 #include "utils/logger.h"
 
+//they need to be included for the BOOST_CLASS_EXPORT_GUID macro
+#include "third_party/eos_portable_archive/portable_iarchive.hpp"
+#include "third_party/eos_portable_archive/portable_oarchive.hpp"
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+
 namespace navitia { namespace type {
 
 std::string VehicleJourney::get_direction() const {
@@ -443,9 +449,16 @@ std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
         case Type_e::VehicleJourney:
-            for(auto vj : data.vehicle_journeys) {
-                if(vj->journey_pattern->physical_mode == this)
+            for (auto jp: data.journey_patterns) {
+                if (jp->physical_mode != this) {
+                    continue;
+                }
+                for (const auto& vj: jp->discrete_vehicle_journey_list) {
                     result.push_back(vj->idx);
+                }
+                for (const auto& vj: jp->frequency_vehicle_journey_list) {
+                    result.push_back(vj->idx);
+                }
             }
             break;
     default: break;
@@ -539,10 +552,10 @@ std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
     case Type_e::JourneyPatternPoint: return indexes(journey_pattern_point_list);
     case Type_e::VehicleJourney:
         for(const auto& f_vj: frequency_vehicle_journey_list) {
-            result.push_back(f_vj.idx);
+            result.push_back(f_vj->idx);
         }
         for(const auto& d_vj: discrete_vehicle_journey_list) {
-            result.push_back(d_vj.idx);
+            result.push_back(d_vj->idx);
         }
         break;
     default: break;

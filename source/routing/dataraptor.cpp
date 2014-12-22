@@ -99,12 +99,12 @@ void dataRAPTOR::load(const type::PT_Data &data)
         nb_trips.push_back(journey_pattern->get_vehicle_journey_list().size());
 
         //we group all descrete stop times from all journey_pattern_point
-        //we frequency stop times are not considered here, they are search for a different way in best stop time
+        //the frequency stop times are not considered here, they are search for a different way in best_stop_time
         for(unsigned int i=0; i < journey_pattern->journey_pattern_point_list.size(); ++i) {
             std::vector<const type::StopTime*> vec_st;
             for(const auto& vj : journey_pattern->discrete_vehicle_journey_list) {
-                assert(vj.stop_time_list[i].journey_pattern_point == journey_pattern->journey_pattern_point_list[i]);
-                vec_st.push_back(&vj.stop_time_list[i]);
+                assert(vj->stop_time_list[i].journey_pattern_point == journey_pattern->journey_pattern_point_list[i]);
+                vec_st.push_back(&vj->stop_time_list[i]);
             }
             std::sort(vec_st.begin(), vec_st.end(),
                       [&](const type::StopTime* st1, const type::StopTime* st2)->bool{
