@@ -96,7 +96,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
     for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
         first_stop_time.push_back(arrival_times.size());
-        nb_trips.push_back(journey_pattern->get_vehicle_journey_list().size());
+        nb_trips.push_back(journey_pattern->discrete_vehicle_journey_list.size());
 
         //we group all descrete stop times from all journey_pattern_point
         //the frequency stop times are not considered here, they are search for a different way in best_stop_time

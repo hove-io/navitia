@@ -70,6 +70,7 @@ next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime
     auto date = DateTimeUtils::date(dt);
     for(; idx < end; ++idx) {
         const type::StopTime* st = data.dataRaptor->st_forward[idx];
+        BOOST_ASSERT(st->journey_pattern_point == jpp);
         if (st->valid_end(reconstructing_path) &&
             st->is_valid_day(date, false, disruption_active)
             && st->vehicle_journey->accessible(required_vehicle_properties) ){

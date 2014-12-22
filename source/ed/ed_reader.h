@@ -147,9 +147,6 @@ private:
 
     /// coherence check for logging purpose
     void check_coherence(navitia::type::Data& data) const;
-    void fill_vj(const pqxx::result::const_iterator& const_it, nt::VehicleJourney& vj,
-                 std::multimap<idx_t, std::string>& prev_vjs,
-                 std::multimap<idx_t, std::string>& next_vjs);
     log4cplus::Logger log = log4cplus::Logger::getInstance("log");
 };
 
