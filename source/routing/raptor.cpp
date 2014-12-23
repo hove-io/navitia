@@ -120,28 +120,30 @@ bool RAPTOR::foot_path(const Visitor & v) {
     auto &working_labels = labels[count];
     // Since we don't stop on a journey_pattern_point we don't really care about
     // accessibility here, it'll be check in the public transport part
-    for(const auto best_jpp : best_jpp_by_sp) {
-        if(best_jpp == type::invalid_idx) {
+    for(const auto best_jpp_idx : best_jpp_by_sp) {
+        if(best_jpp_idx == type::invalid_idx) {
             continue;
         }
-        const type::StopPoint* stop_point = data.pt_data->journey_pattern_points[best_jpp]->stop_point;
+        const type::StopPoint* stop_point = data.pt_data->journey_pattern_points[best_jpp_idx]->stop_point;
 
         // Now we apply all the connections
         const pair_int & index = (v.clockwise()) ? data.dataRaptor->footpath_index_forward[stop_point->idx] :
                                                  data.dataRaptor->footpath_index_backward[stop_point->idx];
         DateTime next = v.worst_datetime(),
-                 previous = working_labels[best_jpp].dt_pt;
+                 previous = working_labels[best_jpp_idx].dt_pt;
         it += index.first - last;
         const auto end_it = it + index.second;
+        const auto best_is_odt = data.pt_data->journey_pattern_points[best_jpp_idx]->journey_pattern->odt_properties.is_zonal_odt();
         for(; it != end_it; ++it) {
             const type::StopPointConnection* spc = *it;
             const auto destination = v.clockwise() ? spc->destination : spc->departure;
             next = v.combine(previous, spc->duration); // ludo
             for(auto jpp : destination->journey_pattern_point_list) {
                 type::idx_t jpp_idx = jpp->idx;
-                if(jpp_idx != best_jpp && v.comp(next, best_labels[jpp_idx])) {
+                if(jpp_idx != best_jpp_idx && v.comp(next, best_labels[jpp_idx]) &&
+                        (!best_is_odt || !jpp->journey_pattern->odt_properties.is_zonal_odt())) {
                    working_labels[jpp_idx].dt_transfer = next;
-                   working_labels[jpp_idx].boarding_jpp_transfer = best_jpp;
+                   working_labels[jpp_idx].boarding_jpp_transfer = best_jpp_idx;
                    best_labels[jpp_idx] = next;
                    if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
                        Q[jpp->journey_pattern->idx] = jpp->order;
