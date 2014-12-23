@@ -694,6 +694,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
 };
 
 struct DiscreteVehicleJourney: public VehicleJourney {
+    DiscreteVehicleJourney() {}
+    DiscreteVehicleJourney(const DiscreteVehicleJourney&) = default;
+    virtual ~DiscreteVehicleJourney();
     //TODO lots of comment
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
         ar & boost::serialization::base_object<VehicleJourney>(*this);
@@ -701,6 +704,9 @@ struct DiscreteVehicleJourney: public VehicleJourney {
 };
 
 struct FrequencyVehicleJourney: public VehicleJourney {
+    FrequencyVehicleJourney() {}
+    FrequencyVehicleJourney(const FrequencyVehicleJourney&) = default;
+    virtual ~FrequencyVehicleJourney();
     //TODO lots of comment
     uint32_t start_time = std::numeric_limits<uint32_t>::max(); // first departure hour
     uint32_t end_time = std::numeric_limits<uint32_t>::max(); // last departure hour
@@ -726,6 +732,10 @@ struct JourneyPattern : public Header, Nameable {
 
     std::vector<std::unique_ptr<DiscreteVehicleJourney>> discrete_vehicle_journey_list;
     std::vector<std::unique_ptr<FrequencyVehicleJourney>> frequency_vehicle_journey_list;
+
+    JourneyPattern() {}
+    ~JourneyPattern();
+    JourneyPattern(const JourneyPattern&);
 
     std::vector<const VehicleJourney*> get_vehicle_journey_list() const {
         //TODO, make this an iterator

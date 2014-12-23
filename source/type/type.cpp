@@ -575,6 +575,25 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
 }
 
 VehicleJourney::~VehicleJourney() { }
+FrequencyVehicleJourney::~FrequencyVehicleJourney() { }
+DiscreteVehicleJourney::~DiscreteVehicleJourney() { }
+
+
+JourneyPattern::~JourneyPattern(){}
+
+//we need to define the copy constructor because we don't want to copy the vjs
+//(idx can be spiped too)
+JourneyPattern::JourneyPattern(const JourneyPattern& other):
+    is_frequence(other.is_frequence),
+    route(other.route),
+    commercial_mode(other.commercial_mode),
+    physical_mode(other.physical_mode),
+    journey_pattern_point_list(other.journey_pattern_point_list),
+    odt_properties(other.odt_properties)
+{
+    name = other.name;
+    uri = other.uri;
+}
 
 std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
