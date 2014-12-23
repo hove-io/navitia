@@ -36,6 +36,7 @@ www.navitia.io
 #include <random>
 #include <fstream>
 #include "utils/init.h"
+#include "utils/csv.h"
 
 using namespace navitia;
 using namespace routing;
@@ -63,7 +64,7 @@ struct Result {
 int main(int argc, char** argv){
     navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
-    std::string file, output;
+    std::string file, output, stop_input_file;
     int iterations, start, target, date, hour;
 
     desc.add_options()
@@ -81,6 +82,7 @@ int main(int argc, char** argv){
             ("hour,h", po::value<int>(&hour)->default_value(-1),
                     "Begginning hour of a particular journey")
             ("verbose,v", "Verbose debugging output")
+            ("stop_files", po::value<std::string>(&stop_input_file), "File with list of start and target")
             ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"),
                      "Output file");
     po::variables_map vm;
@@ -101,7 +103,38 @@ int main(int argc, char** argv){
     }
     std::vector<PathDemand> demands;
 
-    if(start != -1 && target != -1 && date != -1 && hour != -1) {
+    if (! stop_input_file.empty()) {
+        //csv file should be the same as the output one
+        CsvReader csv(stop_input_file, ',');
+        csv.next();
+        size_t cpt_not_found = 0;
+        for (auto it = csv.next(); ! csv.eof(); it = csv.next()) {
+            const auto it_start = data.pt_data->stop_areas_map.find(it[0]);
+            if (it_start == data.pt_data->stop_areas_map.end()) {
+                std::cout << "impossible to find " << it[0] << std::endl;
+                cpt_not_found++;
+                continue;
+            }
+            const auto start = it_start->second;
+
+            const auto it_end = data.pt_data->stop_areas_map.find(it[2]);
+            if (it_end == data.pt_data->stop_areas_map.end()) {
+                std::cout << "impossible to find " << it[2] << std::endl;
+                cpt_not_found++;
+                continue;
+            }
+            const auto end = it_end->second;
+
+            PathDemand demand;
+            demand.start = start->idx;
+            demand.target = end->idx;
+            demand.hour = boost::lexical_cast<unsigned int>(it[5]);
+            demand.date = boost::lexical_cast<unsigned int>(it[4]);
+            demands.push_back(demand);
+        }
+        std::cout << "nb start not found " << cpt_not_found << std::endl;
+    }
+    else if(start != -1 && target != -1 && date != -1 && hour != -1) {
         PathDemand demand;
         demand.start = start;
         demand.target = target;
