@@ -634,8 +634,18 @@ struct Route : public Header, Nameable, HasMessages, Codes{
 struct JourneyPattern;
 struct MetaVehicleJourney;
 
+/**
+ * A VehicleJourney is an abstract class with 2 subclasses
+ *
+ *  - DiscreteVehicleJourney
+ * The 'classic' VJ, with expanded stop times
+ *
+ *  - FrequencyVehicleJourney
+ * A frequency VJ, with a start, an end and frequency (headway)
+ *
+ * The JourneyPattern owns 2 differents list for the VJs, and both are treated differently in the algorithm (in best_stop_times)
+ */
 struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes {
-    //TODO! remove Nameable, and put only a name
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern = nullptr;
     Company* company = nullptr;
@@ -650,7 +660,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     VehicleJourney* prev_vj = nullptr;
     //associated meta vj
     const MetaVehicleJourney* meta_vj = nullptr;
-    std::string odt_message; //TODO! remove comment or put it in outside map
+    std::string odt_message; //TODO It seems a VJ can have either a comment or an odt_message but never both, so we could use only the 'comment' to store the odt_message
 
     VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
 
@@ -697,17 +707,18 @@ struct DiscreteVehicleJourney: public VehicleJourney {
     DiscreteVehicleJourney() {}
     DiscreteVehicleJourney(const DiscreteVehicleJourney&) = default;
     virtual ~DiscreteVehicleJourney();
-    //TODO lots of comment
+
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
         ar & boost::serialization::base_object<VehicleJourney>(*this);
     }
 };
 
+
 struct FrequencyVehicleJourney: public VehicleJourney {
     FrequencyVehicleJourney() {}
     FrequencyVehicleJourney(const FrequencyVehicleJourney&) = default;
     virtual ~FrequencyVehicleJourney();
-    //TODO lots of comment
+
     uint32_t start_time = std::numeric_limits<uint32_t>::max(); // first departure hour
     uint32_t end_time = std::numeric_limits<uint32_t>::max(); // last departure hour
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); // Seconds between each departure.

@@ -638,7 +638,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.end_time as end_time,"
         "vj.headway_sec as headway_sec,"
         "vj.utc_to_local_offset as utc_to_local_offset, "
-        "vj.is_frequency as is_frequency, " // TODO!!
+        "vj.is_frequency as is_frequency, "
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"

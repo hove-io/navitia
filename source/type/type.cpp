@@ -574,12 +574,11 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-VehicleJourney::~VehicleJourney() { }
-FrequencyVehicleJourney::~FrequencyVehicleJourney() { }
-DiscreteVehicleJourney::~DiscreteVehicleJourney() { }
+VehicleJourney::~VehicleJourney() {}
+FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
+DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
 
-
-JourneyPattern::~JourneyPattern(){}
+JourneyPattern::~JourneyPattern() {}
 
 //we need to define the copy constructor because we don't want to copy the vjs
 //(idx can be spiped too)

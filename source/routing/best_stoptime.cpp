@@ -53,7 +53,7 @@ next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime
         bool disruption_active){
 
     if (data.dataRaptor->departure_times.empty()) {
-        return {nullptr, DateTimeUtils::max};
+        return {nullptr, DateTimeUtils::inf};
     }
     const auto begin = data.dataRaptor->departure_times.begin() +
             data.dataRaptor->first_stop_time[jpp->journey_pattern->idx] +
@@ -71,27 +71,23 @@ next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime
     for(; idx < end; ++idx) {
         const type::StopTime* st = data.dataRaptor->st_forward[idx];
         BOOST_ASSERT(st->journey_pattern_point == jpp);
-        if (st->valid_end(reconstructing_path) &&
-            st->is_valid_day(date, false, disruption_active)
-            && st->vehicle_journey->accessible(required_vehicle_properties) ){
+        if (is_valid(st, date, false, disruption_active, reconstructing_path, required_vehicle_properties)) {
                 return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
-    //if non was found, we try again the next day
+    //if none was found, we try again the next day
     idx = begin - data.dataRaptor->departure_times.begin();
     date++;
     for(; idx < end; ++idx) {
         const type::StopTime* st = data.dataRaptor->st_forward[idx];
-        if (st->valid_end(reconstructing_path) &&
-            st->is_valid_day(date, false, disruption_active)
-            && st->vehicle_journey->accessible(required_vehicle_properties) ){
+        if (is_valid(st, date, false, disruption_active, reconstructing_path, required_vehicle_properties)) {
                 return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
     // if nothing found, return max
-    return {nullptr, std::numeric_limits<DateTime>::max()};
+    return {nullptr, DateTimeUtils::inf};
 }
 
 std::pair<const type::StopTime*, DateTime>
@@ -101,7 +97,7 @@ next_valid_frequency_pick_up(const type::JourneyPatternPoint* jpp, const DateTim
                              bool disruption_active) {
     // to find the next frequency VJ, for the moment we loop through all frequency VJ of the JP
     // and for each jp, get compute the datetime on the jpp
-    std::pair<const type::StopTime*, DateTime> best = {nullptr, std::numeric_limits<DateTime>::max()};
+    std::pair<const type::StopTime*, DateTime> best = {nullptr, DateTimeUtils::inf};
     for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
         //we get stop time corresponding to the jpp
 
@@ -146,7 +142,7 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
                              bool reconstructing_path,
                              const type::VehicleProperties &vehicle_properties,
                              bool disruption_active) {
-    std::pair<const type::StopTime*, DateTime> best = {nullptr, std::numeric_limits<DateTime>::max()};
+    std::pair<const type::StopTime*, DateTime> best = {nullptr, DateTimeUtils::inf};
     for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
         //we get stop time corresponding to the jpp
         const auto& st = freq_vj->stop_time_list[jpp->order];
@@ -206,29 +202,25 @@ previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const Dat
     auto date = DateTimeUtils::date(dt);
     for(; idx < end; ++idx) {
         const type::StopTime* st = data.dataRaptor->st_backward[idx];
-        if (st->valid_end(!reconstructing_path) &&
-            st->is_valid_day(date, true, disruption_active)
-            && st->vehicle_journey->accessible(required_vehicle_properties) ){
+        if (is_valid(st, date, true, disruption_active, !reconstructing_path, required_vehicle_properties)) {
                 return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
     if (date == 0) {
-        return {nullptr, std::numeric_limits<DateTime>::max()};
+        return {nullptr, DateTimeUtils::inf};
     }
     idx = begin - data.dataRaptor->arrival_times.begin();
 
     --date;
     for(; idx < end; ++idx) {
         const type::StopTime* st = data.dataRaptor->st_backward[idx];
-        if (st->valid_end(!reconstructing_path) &&
-            st->is_valid_day(date, true, disruption_active)
-            && st->vehicle_journey->accessible(required_vehicle_properties) ){
+        if (is_valid(st, date, true, disruption_active, !reconstructing_path, required_vehicle_properties)) {
             return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
-    return {nullptr, std::numeric_limits<DateTime>::max()};
+    return {nullptr, DateTimeUtils::inf};
 }
 
 
@@ -269,7 +261,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
         return first_frequency_st_pair;
     }
 
-    return {nullptr, std::numeric_limits<DateTime>::max()};
+    return {nullptr, DateTimeUtils::inf};
 }
 
 
@@ -294,7 +286,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
         }
         return first_frequency_st_pair;
     }
-    return {nullptr, std::numeric_limits<DateTime>::max()};
+    return {nullptr, DateTimeUtils::inf};
 }
 
 /** get all stop times for a given jpp and a given calendar
@@ -367,7 +359,7 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
 
 /**
 * Here we want the next dt in the period of the frequency.
-* If none is found, we return std::numeric_limits<DateTime>::max()
+* If none is found, we return DateTimeUtils::inf
 *
 *  In normal case we have something like:
 * 0-------------------------------------86400(midnight)
@@ -405,11 +397,11 @@ DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& fr
             if (freq_vj.is_valid(date, adapted)) {
                 return DateTimeUtils::set(date, lower_bound);
             }
-            return std::numeric_limits<DateTime>::max();
+            return DateTimeUtils::inf;
         }
         if (hour > upper_bound) {
             //no solution on the day
-            return std::numeric_limits<DateTime>::max();
+            return DateTimeUtils::inf;
         }
     }
 
@@ -417,7 +409,7 @@ DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& fr
             (! classic_case && within(hour, {lower_bound, DateTimeUtils::SECONDS_PER_DAY}))) {
         //we need to check if the vj is valid for our day
         if (! freq_vj.is_valid(date, adapted)) {
-            return std::numeric_limits<DateTime>::max();
+            return DateTimeUtils::inf;
         }
 
          double diff = hour - lower_bound;
@@ -430,7 +422,7 @@ DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& fr
         if (freq_vj.is_valid(date, adapted)) {
             return DateTimeUtils::set(date, lower_bound);
         }
-        return std::numeric_limits<DateTime>::max();
+        return DateTimeUtils::inf;
     }
     //we need to see if the vj was valid the day before
     if (! freq_vj.is_valid(date - 1, adapted)) {
@@ -463,11 +455,11 @@ DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& 
             if (freq_vj.is_valid(date, adapted)) {
                 return DateTimeUtils::set(date, upper_bound);
             }
-            return std::numeric_limits<DateTime>::max();
+            return DateTimeUtils::inf;
         }
         if (hour < lower_bound) {
             //no solution on the day
-            return std::numeric_limits<DateTime>::max();
+            return DateTimeUtils::inf;
         }
     }
 
@@ -475,7 +467,7 @@ DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& 
             (! classic_case && within(hour, {lower_bound, DateTimeUtils::SECONDS_PER_DAY}))) {
         //we need to check if the vj is valid for our day
         if (! freq_vj.is_valid(date, adapted)) {
-            return std::numeric_limits<DateTime>::max();
+            return DateTimeUtils::inf;
         }
 
          double diff = hour - lower_bound;
@@ -489,12 +481,12 @@ DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& 
         if (freq_vj.is_valid(date, adapted)) {
             return DateTimeUtils::set(date, upper_bound);
         }
-        return std::numeric_limits<DateTime>::max();
+        return DateTimeUtils::inf;
     }
     //we need to see if the vj was valid the day before
     if (! freq_vj.is_valid(date - 1, adapted)) {
         //the vj was not valid, next departure is lower
-        return std::numeric_limits<DateTime>::max();
+        return DateTimeUtils::inf;
     }
 
     const double diff = hour - lower_bound + DateTimeUtils::SECONDS_PER_DAY;

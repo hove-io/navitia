@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     {
         std::tie(st1, dt1) = earliest_stop_time(jpp1, sp1_departure - 1, *(b.data), false, false);
         std::tie(st2, dt2) = tardiest_stop_time(jpp1, sp1_departure - 1, *(b.data), false, false);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::max);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     {
         std::tie(st1, dt1) = earliest_stop_time(jpp1, sp1_departure, *(b.data), false, false);
         std::tie(st2, dt2) = tardiest_stop_time(jpp1, sp1_departure, *(b.data), false, false);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::max);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     {
         std::tie(st1, dt1) = earliest_stop_time(jpp1, sp1_departure + 1, *(b.data), false, false);
         std::tie(st2, dt2) = tardiest_stop_time(jpp1, sp1_departure + 1, *(b.data), false, false);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::max);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     {
         std::tie(st1, dt1) = earliest_stop_time(jpp2, sp2_departure - 1, *(b.data), false, false);
         std::tie(st2, dt2) = tardiest_stop_time(jpp2, sp2_departure - 1, *(b.data), false, false);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::max);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     {
         std::tie(st1, dt1) = earliest_stop_time(jpp2, sp2_departure, *(b.data), false, false);
         std::tie(st2, dt2) = tardiest_stop_time(jpp2, sp2_departure, *(b.data), false, false);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::max);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     {
         std::tie(st1, dt1) = earliest_stop_time(jpp2, sp2_arrival + 1, *(b.data), false, false);
         std::tie(st2, dt2) = tardiest_stop_time(jpp2, sp2_arrival + 1, *(b.data), false, false);
-        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::max);
+        BOOST_CHECK_EQUAL(dt1, DateTimeUtils::inf);
         BOOST_CHECK_EQUAL(dt2, DateTimeUtils::inf);
         BOOST_REQUIRE(st1 == nullptr);
         BOOST_CHECK(st2 == nullptr);
@@ -2152,7 +2152,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_classic_case_after_period, classic_fre
 
     auto next_dt = get_next_departure(dt, vj, st);
 
-    BOOST_REQUIRE_EQUAL(next_dt, std::numeric_limits<DateTime>::max());
+    BOOST_REQUIRE_EQUAL(next_dt, DateTimeUtils::inf);
 }
 
 BOOST_FIXTURE_TEST_CASE(test_get_next_dep_classic_case_in_period, classic_freq_dataset) {

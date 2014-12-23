@@ -71,6 +71,12 @@ inline bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) {
     return val >= bound.first && val <= bound.second;
 }
 
+inline bool is_valid(const nt::StopTime* st, uint32_t date, bool is_arrival, bool disruption_active, bool reconstructing_path, const type::VehicleProperties & vehicle_properties) {
+    return st->valid_end(reconstructing_path) &&
+        st->is_valid_day(date, is_arrival, disruption_active)
+        && st->vehicle_journey->accessible(vehicle_properties);
+}
+
 DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted = false);
 DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted = false);
 
