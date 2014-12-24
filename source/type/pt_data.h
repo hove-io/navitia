@@ -135,10 +135,11 @@ struct PT_Data : boost::noncopyable{
     size_t nb_stop_times() const {
         size_t nb = 0;
         for (const auto jp:journey_patterns) {
-            for (const auto* vj: jp->get_vehicle_journey_list()) {
-                nb += vj->stop_time_list.size();
-            }
-        }
+            jp->for_each_vehicle_journey([&](const nt::VehicleJourney& vj){
+                nb += vj.stop_time_list.size();
+                return true;
+            });
+        };
         return nb;
     }
 

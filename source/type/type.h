@@ -748,12 +748,12 @@ struct JourneyPattern : public Header, Nameable {
     ~JourneyPattern();
     JourneyPattern(const JourneyPattern&);
 
-    std::vector<const VehicleJourney*> get_vehicle_journey_list() const {
-        //TODO, make this an iterator
-        std::vector<const VehicleJourney*> res;
-        for (const auto& vj: discrete_vehicle_journey_list) { res.push_back(vj.get()); }
-        for (const auto& vj: frequency_vehicle_journey_list) { res.push_back(vj.get()); }
-        return res;
+    template <typename T>
+    void for_each_vehicle_journey(const T func) const {
+        //call the functor for each vj.
+        // if func return false, we stop
+        for (const auto& vj: discrete_vehicle_journey_list) { if (! func(*vj)) {return;} }
+        for (const auto& vj: frequency_vehicle_journey_list) { if (! func(*vj)) {return;} }
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {

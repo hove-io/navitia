@@ -504,18 +504,20 @@ idx_t Route::main_destination() const {
     std::map<idx_t, size_t> stop_point_map;
     std::pair<idx_t, size_t> best{invalid_idx, 0};
     for(const JourneyPattern* jp : this->journey_pattern_list) {
-        for(const VehicleJourney* vj : jp->get_vehicle_journey_list()) {
-            if((!vj->stop_time_list.empty())
-                && (vj->stop_time_list.back().journey_pattern_point != nullptr)
-                    && (vj->stop_time_list.back().journey_pattern_point->stop_point != nullptr)){
-                const StopPoint* sp = vj->stop_time_list.back().journey_pattern_point->stop_point;
+
+        jp->for_each_vehicle_journey([&](const VehicleJourney& vj) {
+            if((!vj.stop_time_list.empty())
+                && (vj.stop_time_list.back().journey_pattern_point != nullptr)
+                    && (vj.stop_time_list.back().journey_pattern_point->stop_point != nullptr)){
+                const StopPoint* sp = vj.stop_time_list.back().journey_pattern_point->stop_point;
                 stop_point_map[sp->idx] += 1;
                 size_t val = stop_point_map[sp->idx];
                 if (( best.first == invalid_idx) || (best.second < val)){
                     best = {sp->idx, val};
                 }
             }
-        }
+            return true;
+        });
     }
     return best.first;
 }
@@ -532,14 +534,15 @@ type::hasOdtProperties Route::get_odt_properties() const{
 }
 
 void JourneyPattern::build_odt_properties(){
-    for (const auto vj : get_vehicle_journey_list()) {
-        if (vj->is_virtual_odt()) {
+    for_each_vehicle_journey([&](const VehicleJourney& vj) {
+        if (vj.is_virtual_odt()) {
             this->odt_properties.set_virtual_odt();
         }
-        if (vj->is_zonal_odt()) {
+        if (vj.is_zonal_odt()) {
             this->odt_properties.set_zonal_odt();
         }
-    }
+        return true;
+    });
 }
 
 std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {

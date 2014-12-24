@@ -302,12 +302,13 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
                    const type::VehicleProperties& vehicle_properties) {
 
     std::set<const type::MetaVehicleJourney*> meta_vjs;
-    for (auto vj: jpp->journey_pattern->get_vehicle_journey_list()) {
-        if (! vj->meta_vj) {
-            throw navitia::exception("vj " + vj->uri + " has been ill constructed, it has no meta vj");
+    jpp->journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj ) {
+        if (! vj.meta_vj) {
+            throw navitia::exception("vj " + vj.uri + " has been ill constructed, it has no meta vj");
         }
-        meta_vjs.insert(vj->meta_vj);
-    }
+        meta_vjs.insert(vj.meta_vj);
+        return true;
+    });
     std::vector<const type::VehicleJourney*> vjs;
     for (const auto meta_vj: meta_vjs) {
         if (meta_vj->associated_calendars.find(calendar_id) == meta_vj->associated_calendars.end()) {
