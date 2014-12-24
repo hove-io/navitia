@@ -114,6 +114,22 @@ template<typename A, typename B> int check_relations(const std::vector<A*> &as, 
     std::cout << "    Nombre d'erreurs : " << error_count << std::endl;
     return error_count;
 }
+
+template<typename A, typename B, typename C> int check_relations(const std::vector<A*> &as, std::vector<std::unique_ptr<B>> A::*b_list, const std::vector<C*> &, A* C::*to_a_ptr){
+    static_data * s = static_data::get();
+    int error_count = 0;
+    std::cout << "Vérification des relations de " << s->captionByType(A::type) << " vers N-" << s->captionByType(B::type) << " et retour" << std::endl;
+    for(const A* a : as){
+        for(const auto& b : a->*b_list){
+            if(b.get()->*to_a_ptr != a) {
+                std::cout << "    idx invalide : " << b->idx << " pour le " << s->captionByType(A::type) << "(" << a->idx << ")" << std::endl;
+                error_count++;
+            }
+        }
+    }
+    std::cout << "    Nombre d'erreurs : " << error_count << std::endl;
+    return error_count;
+}
 int main(int argc, char** argv) {
     navitia::init_app();
     if(argc != 2){
@@ -144,9 +160,8 @@ int main(int argc, char** argv) {
     error_count += check_relations(d.pt_data->routes, &Route::line, d.pt_data->lines);
     error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::journey_pattern_point_list, d.pt_data->journey_pattern_points);
 
-    // TODO: comment this for the moment, wait to see how to do that after the DiscreteVJ/FrequencyVJ refacto
-//    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::vehicle_journey_list, d.pt_data->vehicle_journeys);
-//    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
+    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::discrete_vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
+    error_count += check_relations(d.pt_data->journey_patterns, &JourneyPattern::frequency_vehicle_journey_list, d.pt_data->vehicle_journeys, &VehicleJourney::journey_pattern);
 
     error_count += check_relations(d.pt_data->journey_pattern_points, &JourneyPatternPoint::stop_point, d.pt_data->stop_points);
 

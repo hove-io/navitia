@@ -51,6 +51,9 @@ namespace DateTimeUtils{
 
     constexpr navitia::DateTime inf = std::numeric_limits<uint32_t>::max();
 
+    // sometimes we need a not valid datetime which is not semanticaly the max, so we use a different name
+    constexpr navitia::DateTime not_valid = std::numeric_limits<uint32_t>::max();
+
     constexpr navitia::DateTime min = 0;
 
     inline navitia::DateTime set(int date, int time_of_day) {

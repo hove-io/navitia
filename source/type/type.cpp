@@ -383,7 +383,6 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
 
     if (this == &other) return false;
     if(this->journey_pattern == other.journey_pattern){
-        // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
         return this->stop_time_list.front() < other.stop_time_list.front();
     }else{
         return this->journey_pattern->uri < other.journey_pattern->uri;
@@ -584,7 +583,7 @@ DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
 JourneyPattern::~JourneyPattern() {}
 
 //we need to define the copy constructor because we don't want to copy the vjs
-//(idx can be spiped too)
+//(idx can be skiped too)
 JourneyPattern::JourneyPattern(const JourneyPattern& other):
     is_frequence(other.is_frequence),
     route(other.route),

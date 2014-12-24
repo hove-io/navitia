@@ -651,7 +651,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     Company* company = nullptr;
     ValidityPattern* validity_pattern = nullptr;
     std::vector<StopTime> stop_time_list;
-    virtual ~VehicleJourney() = 0;
 
     // These variables are used in the case of an extension of service
     // They indicate what's the vj you can take directly after or before this one
@@ -701,13 +700,23 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     }
 
     type::OdtLevel_e get_odt_level() const;
+    virtual ~VehicleJourney();
+    //TODO remove the virtual there, but to do that we need to remove the prev/next_vj since boost::serialiaze needs to make a virtual call for those
+private:
+    /*
+     * Note: the destructor has not been defined as virtual because we don't need those classes to
+     * be virtual.
+     * the JP owns 2 differents lists so no virtual call must be made on destruction
+     */
+    VehicleJourney() = default;
+    VehicleJourney(const VehicleJourney&) = default;
+    friend class boost::serialization::access;
+    friend struct DiscreteVehicleJourney;
+    friend struct FrequencyVehicleJourney;
 };
 
 struct DiscreteVehicleJourney: public VehicleJourney {
-    DiscreteVehicleJourney() {}
-    DiscreteVehicleJourney(const DiscreteVehicleJourney&) = default;
     virtual ~DiscreteVehicleJourney();
-
     template<class Archive> void serialize(Archive& ar, const unsigned int ) {
         ar & boost::serialization::base_object<VehicleJourney>(*this);
     }
@@ -715,13 +724,11 @@ struct DiscreteVehicleJourney: public VehicleJourney {
 
 
 struct FrequencyVehicleJourney: public VehicleJourney {
-    FrequencyVehicleJourney() {}
-    FrequencyVehicleJourney(const FrequencyVehicleJourney&) = default;
-    virtual ~FrequencyVehicleJourney();
 
     uint32_t start_time = std::numeric_limits<uint32_t>::max(); // first departure hour
     uint32_t end_time = std::numeric_limits<uint32_t>::max(); // last departure hour
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); // Seconds between each departure.
+    virtual ~FrequencyVehicleJourney();
 
     bool is_valid(int day, const bool is_adapted) const;
     template<class Archive> void serialize(Archive& ar, const unsigned int) {
@@ -747,6 +754,7 @@ struct JourneyPattern : public Header, Nameable {
     JourneyPattern() {}
     ~JourneyPattern();
     JourneyPattern(const JourneyPattern&);
+    JourneyPattern operator=(const JourneyPattern&) = delete;
 
     template <typename T>
     void for_each_vehicle_journey(const T func) const {

@@ -920,7 +920,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(vj->odt_message);
         values.push_back(std::to_string(vj->utc_to_local_offset));
 
-        bool is_frequency = (vj->start_time != std::numeric_limits<int>::max() ? true : false);
+        bool is_frequency = vj->start_time != std::numeric_limits<int>::max();
         values.push_back(std::to_string(is_frequency));
 
         this->lotus.insert(values);

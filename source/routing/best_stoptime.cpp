@@ -137,7 +137,7 @@ next_valid_frequency_pick_up(const type::JourneyPatternPoint* jpp, const DateTim
     return best;
 }
 
-std::pair<const type::StopTime*, DateTime>
+static std::pair<const type::StopTime*, DateTime>
 previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const DateTime dt,
                              bool reconstructing_path,
                              const type::VehicleProperties &vehicle_properties,
@@ -154,7 +154,8 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
 
         const auto previous_dt = get_previous_arrival(dt, *freq_vj, st, disruption_active);
 
-        if (best.second == DateTimeUtils::inf || previous_dt > best.second) {
+        if (best.second == DateTimeUtils::not_valid && previous_dt != DateTimeUtils::not_valid
+                || previous_dt > best.second) {
             best = {&st, previous_dt};
         }
     }
@@ -172,7 +173,8 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
 
             const auto previous_dt = get_previous_arrival(previous_date, *freq_vj, st, disruption_active);
 
-            if (best.second == DateTimeUtils::inf || previous_dt > best.second) {
+            if (best.second == DateTimeUtils::not_valid && previous_dt != DateTimeUtils::not_valid
+                    || previous_dt > best.second) {
                 best = {&st, previous_dt};
             }
         }
@@ -180,7 +182,7 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
     return best;
 }
 
-std::pair<const type::StopTime*, DateTime>
+static std::pair<const type::StopTime*, DateTime>
 previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const DateTime dt,
                const type::Data &data, bool reconstructing_path,
                const type::VehicleProperties &required_vehicle_properties,
@@ -208,7 +210,7 @@ previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const Dat
     }
 
     if (date == 0) {
-        return {nullptr, DateTimeUtils::inf};
+        return {nullptr, DateTimeUtils::not_valid};
     }
     idx = begin - data.dataRaptor->arrival_times.begin();
 
@@ -220,7 +222,7 @@ previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const Dat
         }
     }
 
-    return {nullptr, DateTimeUtils::inf};
+    return {nullptr, DateTimeUtils::not_valid};
 }
 
 
@@ -234,7 +236,7 @@ previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const Dat
  *
  *      Note: if nothing found, we do the same lookup the day after
  */
-std::pair<const type::StopTime*, uint32_t>
+std::pair<const type::StopTime*, DateTime>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
                    const DateTime dt, const type::Data &data,
                    bool disruption_active,
@@ -243,7 +245,6 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
     //We look for the earliest stop time of the journey_pattern >= dt.hour()
 
     //Return the first valid trip
-
     const auto first_discrete_st_pair =
             next_valid_discrete_pick_up(jpp, dt, data, reconstructing_path, vehicle_properties, disruption_active);
 
@@ -251,21 +252,16 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
     const auto first_frequency_st_pair =
             next_valid_frequency_pick_up(jpp, dt, reconstructing_path, vehicle_properties, disruption_active);
 
-    // If no trip was found, we look for one the day after
-    if (first_discrete_st_pair.first || first_frequency_st_pair.first) {
-        //we need to find the best between the frequency one and the 'normal' one
-        if (first_discrete_st_pair.second <= first_frequency_st_pair.second) {
-            //discrete's better
-            return first_discrete_st_pair;
-        }
-        return first_frequency_st_pair;
+    //we need to find the earliest between the frequency one and the 'normal' one
+    if (first_discrete_st_pair.second <= first_frequency_st_pair.second) {
+        //discrete's better
+        return first_discrete_st_pair;
     }
-
-    return {nullptr, DateTimeUtils::inf};
+    return first_frequency_st_pair;
 }
 
 
-std::pair<const type::StopTime*, uint32_t>
+std::pair<const type::StopTime*, DateTime>
 tardiest_stop_time(const type::JourneyPatternPoint* jpp,
                    const DateTime dt, const type::Data &data, bool disruption_active,
                    bool reconstructing_path,
@@ -278,15 +274,19 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
     const auto first_frequency_st_pair =
             previous_valid_frequency_drop_off(jpp, dt, reconstructing_path, vehicle_properties, disruption_active);
 
-    if (first_discrete_st_pair.first || first_frequency_st_pair.first) {
-        //we need to find the best between the frequency one and the 'normal' one
-        if (first_discrete_st_pair.second <= first_frequency_st_pair.second) {
-            //discrete's better
-            return first_discrete_st_pair;
-        }
+    // since the default value is DateTimeUtils::not_valid (== DateTimeUtils::max)
+    // we need to check first that they are
+    if (first_discrete_st_pair.second == DateTimeUtils::not_valid) {
         return first_frequency_st_pair;
     }
-    return {nullptr, DateTimeUtils::inf};
+    if (first_frequency_st_pair.second == DateTimeUtils::not_valid) {
+        return first_discrete_st_pair;
+    }
+    //we need to find the tardiest between the frequency one and the 'normal' one
+    if (first_discrete_st_pair.second >= first_frequency_st_pair.second) {
+        return first_discrete_st_pair;
+    }
+    return first_frequency_st_pair;
 }
 
 /** get all stop times for a given jpp and a given calendar
@@ -303,9 +303,7 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
 
     std::set<const type::MetaVehicleJourney*> meta_vjs;
     jpp->journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj ) {
-        if (! vj.meta_vj) {
-            throw navitia::exception("vj " + vj.uri + " has been ill constructed, it has no meta vj");
-        }
+        assert(vj.meta_vj);
         meta_vjs.insert(vj.meta_vj);
         return true;
     });
@@ -389,11 +387,11 @@ DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& fr
     auto hour = DateTimeUtils::hour(dt);
     auto date = DateTimeUtils::date(dt);
 
-    const bool classic_case = lower_bound <= upper_bound;
+    const bool normal_case = lower_bound <= upper_bound;
 
-    //in the 'classic' case, hour should be in [lower, higher]
+    //in the 'normal' case, hour should be in [lower, higher]
     // but in case of midnight overrun, hour should be in [higher, lower]
-    if (classic_case) {
+    if (normal_case) {
         if (hour <= lower_bound) {
             if (freq_vj.is_valid(date, adapted)) {
                 return DateTimeUtils::set(date, lower_bound);
@@ -406,8 +404,8 @@ DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& fr
         }
     }
 
-    if (classic_case || //in classic case, we must be in [start, end]
-            (! classic_case && within(hour, {lower_bound, DateTimeUtils::SECONDS_PER_DAY}))) {
+    if (normal_case || //in classic case, we must be in [start, end]
+            (! normal_case && within(hour, {lower_bound, DateTimeUtils::SECONDS_PER_DAY}))) {
         //we need to check if the vj is valid for our day
         if (! freq_vj.is_valid(date, adapted)) {
             return DateTimeUtils::inf;
@@ -434,9 +432,6 @@ DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& fr
     double diff = hour - lower_bound + DateTimeUtils::SECONDS_PER_DAY;
     const int32_t x = std::ceil(diff / double(freq_vj.headway_secs));
 
-    std::cout << " next : " << str(lower_bound) << "," << str(upper_bound) << " diff= " << str(diff)
-              << " x = " << x << " res == " << DateTimeUtils::set(date, (lower_bound + x * freq_vj.headway_secs) % DateTimeUtils::SECONDS_PER_DAY) << std::endl;
-
     return DateTimeUtils::set(date, (lower_bound + x * freq_vj.headway_secs) % DateTimeUtils::SECONDS_PER_DAY);
 }
 
@@ -447,28 +442,28 @@ DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& 
     auto hour = DateTimeUtils::hour(dt);
     auto date = DateTimeUtils::date(dt);
 
-    const bool classic_case = lower_bound <= upper_bound;
+    const bool normal_case = lower_bound <= upper_bound;
 
-    //in the 'classic' case, hour should be in [lower, higher]
+    // in the 'normal' case, hour should be in [lower, higher]
     // but in case of midnight overrun, hour should be in [higher, lower]
-    if (classic_case) {
+    if (normal_case) {
         if (hour >= upper_bound) {
             if (freq_vj.is_valid(date, adapted)) {
                 return DateTimeUtils::set(date, upper_bound);
             }
-            return DateTimeUtils::inf;
+            return DateTimeUtils::not_valid;
         }
         if (hour < lower_bound) {
             //no solution on the day
-            return DateTimeUtils::inf;
+            return DateTimeUtils::not_valid;
         }
     }
 
-    if (classic_case || //in classic case, we must be in [start, end]
-            (! classic_case && within(hour, {lower_bound, DateTimeUtils::SECONDS_PER_DAY}))) {
+    if (normal_case || //in classic case, we must be in [start, end]
+            (! normal_case && within(hour, {lower_bound, DateTimeUtils::SECONDS_PER_DAY}))) {
         //we need to check if the vj is valid for our day
         if (! freq_vj.is_valid(date, adapted)) {
-            return DateTimeUtils::inf;
+            return DateTimeUtils::not_valid;
         }
 
          double diff = hour - lower_bound;
@@ -482,12 +477,12 @@ DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& 
         if (freq_vj.is_valid(date, adapted)) {
             return DateTimeUtils::set(date, upper_bound);
         }
-        return DateTimeUtils::inf;
+        return DateTimeUtils::not_valid;
     }
     //we need to see if the vj was valid the day before
     if (! freq_vj.is_valid(date - 1, adapted)) {
         //the vj was not valid, next departure is lower
-        return DateTimeUtils::inf;
+        return DateTimeUtils::not_valid;
     }
 
     const double diff = hour - lower_bound + DateTimeUtils::SECONDS_PER_DAY;

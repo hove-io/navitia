@@ -207,7 +207,7 @@ void PT_Data::index(){
 PT_Data::~PT_Data() {
     //big uggly hack :(
     // the vj are objects owned by the jp,
-    // change all pt object (but vj and st) to unique ptr!
+    // TODO change all pt object (but vj and st) to unique ptr!
     vehicle_journeys.clear();
 
 
