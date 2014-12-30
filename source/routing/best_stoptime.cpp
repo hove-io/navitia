@@ -142,7 +142,7 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
                              bool reconstructing_path,
                              const type::VehicleProperties &vehicle_properties,
                              bool disruption_active) {
-    std::pair<const type::StopTime*, DateTime> best = {nullptr, DateTimeUtils::inf};
+    std::pair<const type::StopTime*, DateTime> best = {nullptr, DateTimeUtils::not_valid};
     for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
         //we get stop time corresponding to the jpp
         const auto& st = freq_vj->stop_time_list[jpp->order];
