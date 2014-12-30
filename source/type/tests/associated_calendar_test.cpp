@@ -60,6 +60,7 @@ struct calendar_fixture {
         cal->active_periods.push_back({start, end});
         cal->week_pattern = std::bitset<7>("1111111");
         b.data->pt_data->calendars.push_back(cal);
+        b.finish();
     }
     ed::builder b;
     navitia::type::Calendar* cal;
@@ -195,6 +196,7 @@ struct associated_cal_fixture {
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
 
+        b.finish();
         b.lines["line:A"]->calendar_list.push_back(always_on_cal);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
         b.lines["line:A"]->calendar_list.push_back(monday_cal);

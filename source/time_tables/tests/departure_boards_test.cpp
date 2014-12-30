@@ -61,6 +61,7 @@ BOOST_AUTO_TEST_CASE(test1) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 36000, 36100)("stop2", 36150,362000);
     b.vj("B")("stop1", 36000, 36100)("stop2", 36150,36200)("stop3", 36250,36300);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
 
@@ -206,6 +207,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     b.lines["line:A"]->calendar_list.push_back(nearly_cal);
 
     //call all the init again
+    b.finish();
     b.data->build_uri();
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -243,10 +245,9 @@ struct small_cal_fixture {
     ed::builder b;
     small_cal_fixture(): b("20120614") {
         //vj1 has stoptimes all day from 00:10 every hour
-        b.vj("network:R", "line:A", "1111111", "", true, "vj1")
+        b.frequency_vj("line:A", 60*10, 24*60*60 + 60*10 - 1, 60*60, "network:R", "1111111", "", true, "vj1")
                 ("stop1", 0, 0)
-                ("stop2", 10, 20) //we need stop1 not to be the terminus
-                .frequency(60*10, 24*60*60 + 60*10 - 1, 60*60);
+                ("stop2", 10, 20); //we need stop1 not to be the terminus
 
         //we add a calendar that match the vj
         auto cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
@@ -269,6 +270,7 @@ struct small_cal_fixture {
         b.lines["line:A"]->calendar_list.push_back(empty_cal);
 
         //call all the init again
+        b.finish();
         b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();

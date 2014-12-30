@@ -74,7 +74,7 @@ struct dataRAPTOR {
     std::vector<boost::dynamic_bitset<> > jp_adapted_validity_pattern;
 
 
-    dataRAPTOR()  {}
+    dataRAPTOR() {}
     void load(const navitia::type::PT_Data &data);
 
 

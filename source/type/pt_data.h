@@ -98,16 +98,11 @@ struct PT_Data : boost::noncopyable{
         }
     }
 
-    /** Fonction qui permet de sérialiser (aka binariser la structure de données
-      *
-      * Elle est appelée par boost et pas directement
-      */
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
         #define SERIALIZE_ELEMENTS(type_name, collection_name) & collection_name & collection_name##_map
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
-                & ext_codes_map
-                & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
+                & ext_codes_map & stop_area_autocomplete & stop_point_autocomplete & line_autocomplete
                 & network_autocomplete & mode_autocomplete & route_autocomplete
                 & stop_area_proximity_list & stop_point_proximity_list
                 & stop_point_connections
@@ -139,7 +134,12 @@ struct PT_Data : boost::noncopyable{
 
     size_t nb_stop_times() const {
         size_t nb = 0;
-        for (const auto* vj: vehicle_journeys) { nb += vj->stop_time_list.size(); }
+        for (const auto jp:journey_patterns) {
+            jp->for_each_vehicle_journey([&](const nt::VehicleJourney& vj){
+                nb += vj.stop_time_list.size();
+                return true;
+            });
+        };
         return nb;
     }
 

@@ -182,7 +182,7 @@ BOOST_FIXTURE_TEST_CASE(message_is_applicable_simple, disruption_fixture) {
 
 
 BOOST_AUTO_TEST_CASE(vj_is_odt) {
-    navitia::type::VehicleJourney vj_odt, vj_regular;
+    navitia::type::DiscreteVehicleJourney vj_odt, vj_regular;
 
     vj_regular.vehicle_journey_type = VehicleJourneyType::regular;
     vj_regular.has_landing();

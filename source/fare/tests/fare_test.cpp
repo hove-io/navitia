@@ -109,7 +109,7 @@ static navitia::routing::Path string_to_path(const std::vector<std::string>& key
         last_sp->stop_area->uri = dest_stop_area;
 
         nt::StopTime* first_st = new nt::StopTime();
-        first_st->vehicle_journey = new nt::VehicleJourney();
+        first_st->vehicle_journey = new nt::DiscreteVehicleJourney();
         first_st->vehicle_journey->journey_pattern = new nt::JourneyPattern();
         first_st->vehicle_journey->journey_pattern->route = new nt::Route();
         first_st->vehicle_journey->journey_pattern->route->line = new nt::Line();

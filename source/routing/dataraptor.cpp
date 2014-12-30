@@ -96,26 +96,20 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
     for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
         first_stop_time.push_back(arrival_times.size());
-        nb_trips.push_back(journey_pattern->vehicle_journey_list.size());
+        nb_trips.push_back(journey_pattern->discrete_vehicle_journey_list.size());
 
-        // On regroupe ensemble tous les horaires de tous les journey_pattern_point
+        //we group all descrete stop times from all journey_pattern_point
+        //the frequency stop times are not considered here, they are search for a different way in best_stop_time
         for(unsigned int i=0; i < journey_pattern->journey_pattern_point_list.size(); ++i) {
             std::vector<const type::StopTime*> vec_st;
-            for(const type::VehicleJourney* vj : journey_pattern->vehicle_journey_list) {
+            for(const auto& vj : journey_pattern->discrete_vehicle_journey_list) {
                 assert(vj->stop_time_list[i].journey_pattern_point == journey_pattern->journey_pattern_point_list[i]);
                 vec_st.push_back(&vj->stop_time_list[i]);
             }
             std::sort(vec_st.begin(), vec_st.end(),
                       [&](const type::StopTime* st1, const type::StopTime* st2)->bool{
-                        uint32_t time1, time2;
-                        if(!st1->is_frequency())
-                            time1 = DateTimeUtils::hour(st1->departure_time);
-                        else
-                            time1 = DateTimeUtils::hour(st1->end_time(true));
-                        if(!st2->is_frequency())
-                            time2 = DateTimeUtils::hour(st2->departure_time);
-                        else
-                            time2 = DateTimeUtils::hour(st2->end_time(true));
+                        uint32_t time1 = DateTimeUtils::hour(st1->departure_time);
+                        uint32_t time2 = DateTimeUtils::hour(st2->departure_time);
                         if(time1 == time2) {
                             const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
                             const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
@@ -129,25 +123,13 @@ void dataRAPTOR::load(const type::PT_Data &data)
             st_forward.insert(st_forward.end(), vec_st.begin(), vec_st.end());
 
             for(auto st : vec_st) {
-                uint32_t time;
-                if(!st->is_frequency())
-                    time = DateTimeUtils::hour(st->departure_time);
-                else
-                    time = DateTimeUtils::hour(st->vehicle_journey->end_time+st->departure_time);
-                departure_times.push_back(time);
+                departure_times.push_back(DateTimeUtils::hour(st->departure_time));
             }
 
             std::sort(vec_st.begin(), vec_st.end(),
                   [&](const type::StopTime* st1, const type::StopTime* st2)->bool{
-                      uint32_t time1, time2;
-                      if(!st1->is_frequency())
-                          time1 = DateTimeUtils::hour(st1->arrival_time);
-                      else
-                          time1 = DateTimeUtils::hour(st1->start_time(false));
-                      if(!st2->is_frequency())
-                          time2 = DateTimeUtils::hour(st2->arrival_time);
-                      else
-                          time2 = DateTimeUtils::hour(st2->start_time(false));
+                      uint32_t time1 = DateTimeUtils::hour(st1->arrival_time);
+                      uint32_t time2 = DateTimeUtils::hour(st2->arrival_time);
                       if(time1 == time2) {
                           const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
                           const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
@@ -160,33 +142,31 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
             st_backward.insert(st_backward.end(), vec_st.begin(), vec_st.end());
             for(auto st : vec_st) {
-                uint32_t time;
-                if(!st->is_frequency())
-                    time = DateTimeUtils::hour(st->arrival_time);
-                else
-                    time = DateTimeUtils::hour(st->start_time(false));
-                arrival_times.push_back(time);
+                arrival_times.push_back(DateTimeUtils::hour(st->arrival_time));
             }
         }
 
         // On dit que le journey pattern est valide en date j s'il y a au moins une circulation à j-1/j+1
         for(int i=0; i<=365; ++i) {
-            for(auto vj : journey_pattern->vehicle_journey_list) {
-                if(vj->validity_pattern->check2(i)) {
+
+            journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+                if(vj.validity_pattern->check2(i)) {
                     jp_validity_patterns[i].set(journey_pattern->idx);
-                    break;
+                    return false;
                 }
-            }
+                return true;
+            });
         }
 
         // On dit que le journey pattern est valide en date j s'il y a au moins une circulation à j-1/j+1
         for(int i=0; i<=365; ++i) {
-            for(auto vj : journey_pattern->vehicle_journey_list) {
-                if(vj->adapted_validity_pattern->check2(i)) {
+            journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+                if(vj.adapted_validity_pattern->check2(i)) {
                     jp_adapted_validity_pattern[i].set(journey_pattern->idx);
-                    break;
+                    return false;
                 }
-            }
+                return true;
+            });
         }
     }
 

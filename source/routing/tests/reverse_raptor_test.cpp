@@ -44,6 +44,7 @@ BOOST_AUTO_TEST_CASE(direct){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 9100, 9150);
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -106,6 +107,7 @@ BOOST_AUTO_TEST_CASE(change){
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -180,6 +182,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     b.connection("stop2", "stop2", 120);
     b.connection("stop3", "stop3", 120);
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -239,6 +242,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -298,6 +302,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 30*60, 24*3600 + 30*60)("stop3", 24*3600 + 40*60);
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -349,6 +354,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit4){
     ed::builder b("20120614");
     b.vj("A", "0001000", "", true)("stop1", 23*3600+55*60, 24*3600)("stop2", 24*3600 + 15*60);
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -375,6 +381,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     b.vj("D", "00", "", true)("stop1", 8000)("stop2", 8200);
     b.vj("C", "10", "", true)("stop1", 9000)("stop2", 9200);
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -392,6 +399,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -435,6 +443,7 @@ BOOST_AUTO_TEST_CASE(sn_fin) {
     departs.push_back(std::make_pair(0, navitia::seconds(0)));
     destinations.push_back(std::make_pair(1, navitia::seconds(10 * 60)));
     b.data->pt_data->index();
+    b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -550,6 +559,7 @@ BOOST_AUTO_TEST_CASE(itl) {
     ed::builder b("20120614");
     b.vj("A")("stop1",8*3600+10*60, 8*3600 + 10*60,1)("stop2",8*3600+15*60,8*3600+15*60,1)("stop3", 8*3600+20*60);
     b.vj("B")("stop1",9*3600)("stop2",10*3600);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -573,6 +583,7 @@ BOOST_AUTO_TEST_CASE(mdi) {
 
     b.vj("B")("stop1",17*3600, 17*3600,std::numeric_limits<uint16_t>::max(), true, false)("stop2", 17*3600+15*60)("stop3",17*3600+30*60, 17*3600+30*60,std::numeric_limits<uint16_t>::max(), true, true);
     b.vj("C")("stop4",16*3600, 16*3600,std::numeric_limits<uint16_t>::max(), true, true)("stop5", 16*3600+15*60)("stop6",16*3600+30*60, 16*3600+30*60,std::numeric_limits<uint16_t>::max(), false, true);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -593,6 +604,7 @@ BOOST_AUTO_TEST_CASE(mdi) {
 BOOST_AUTO_TEST_CASE(max_duration){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
@@ -616,6 +628,7 @@ BOOST_AUTO_TEST_CASE(max_transfers){
     b.vj("C")("stop3",9000)("stop2",11000);
     b.vj("D")("stop3",9000)("stop4",9500);
     b.vj("E")("stop4",10000)("stop2",10500);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();

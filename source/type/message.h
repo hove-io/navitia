@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
+#include <boost/serialization/weak_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
@@ -40,6 +41,7 @@ www.navitia.io
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/variant.hpp>
+#include <boost/serialization/variant.hpp>
 
 #include <atomic>
 #include <map>

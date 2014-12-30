@@ -39,7 +39,6 @@ www.navitia.io
 struct aggregate_odt_fixture {
     ed::builder b;
     navitia::type::JourneyPattern* jp ;
-    navitia::type::VehicleJourney* vj;
     navitia::type::Route* route;
     navitia::type::Line* line;
     aggregate_odt_fixture() : b("20140210"){
@@ -65,83 +64,69 @@ struct aggregate_odt_fixture {
         b.data->pt_data->journey_patterns.push_back(jp);
         b.data->pt_data->journey_patterns_map["zonal_odt"] = jp;
 
+        regular_vj = std::make_unique<navitia::type::DiscreteVehicleJourney>();
+        regular_vj->vehicle_journey_type = navitia::type::VehicleJourneyType::regular;
 
-        vj = new navitia::type::VehicleJourney();
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::regular;
-        b.data->pt_data->vehicle_journeys_map["regular"] = vj;
-        b.data->pt_data->vehicle_journeys.push_back(vj);
+        virtual_with_stop_time_vj = std::make_unique<navitia::type::DiscreteVehicleJourney>();
+        virtual_with_stop_time_vj->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_with_stop_time;
 
-        vj = new navitia::type::VehicleJourney();
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_with_stop_time;
-        b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"] = vj;
-        b.data->pt_data->vehicle_journeys.push_back(vj);
+        virtual_without_stop_time_vj = std::make_unique<navitia::type::DiscreteVehicleJourney>();
+        virtual_without_stop_time_vj->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_without_stop_time;
 
-        vj = new navitia::type::VehicleJourney();
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::virtual_without_stop_time;
-        b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"] = vj;
-        b.data->pt_data->vehicle_journeys.push_back(vj);
+        stop_point_to_stop_point_vj = std::make_unique<navitia::type::DiscreteVehicleJourney>();
+        stop_point_to_stop_point_vj->vehicle_journey_type = navitia::type::VehicleJourneyType::stop_point_to_stop_point;
 
-        vj = new navitia::type::VehicleJourney();
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::stop_point_to_stop_point;
-        b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"] = vj;
-        b.data->pt_data->vehicle_journeys.push_back(vj);
+        address_to_stop_point_vj = std::make_unique<navitia::type::DiscreteVehicleJourney>();
+        address_to_stop_point_vj->vehicle_journey_type = navitia::type::VehicleJourneyType::adress_to_stop_point;
 
-        vj = new navitia::type::VehicleJourney();
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::adress_to_stop_point;
-        b.data->pt_data->vehicle_journeys_map["address_to_stop_point"] = vj;
-        b.data->pt_data->vehicle_journeys.push_back(vj);
-
-        vj = new navitia::type::VehicleJourney();
-        vj->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
-        b.data->pt_data->vehicle_journeys_map["odt_point_to_point"] = vj;
-        b.data->pt_data->vehicle_journeys.push_back(vj);
-
+        odt_point_to_point_vj = std::make_unique<navitia::type::DiscreteVehicleJourney>();
+        odt_point_to_point_vj->vehicle_journey_type = navitia::type::VehicleJourneyType::odt_point_to_point;
     }
 
+    std::unique_ptr<navitia::type::DiscreteVehicleJourney> regular_vj;
+    std::unique_ptr<navitia::type::DiscreteVehicleJourney> virtual_with_stop_time_vj;
+    std::unique_ptr<navitia::type::DiscreteVehicleJourney> virtual_without_stop_time_vj;
+    std::unique_ptr<navitia::type::DiscreteVehicleJourney> stop_point_to_stop_point_vj;
+    std::unique_ptr<navitia::type::DiscreteVehicleJourney> address_to_stop_point_vj;
+    std::unique_ptr<navitia::type::DiscreteVehicleJourney> odt_point_to_point_vj;
 
 };
 
 // Tests for VehicleJourney Object
 BOOST_FIXTURE_TEST_CASE(vj_none_odt_test, aggregate_odt_fixture) {
-    vj = b.data->pt_data->vehicle_journeys_map["regular"];
-    BOOST_CHECK_EQUAL(vj->is_none_odt(), true);
-    BOOST_CHECK_EQUAL(vj->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_zonal_odt(), false);
+    BOOST_CHECK_EQUAL(regular_vj->is_none_odt(), true);
+    BOOST_CHECK_EQUAL(regular_vj->is_virtual_odt(), false);
+    BOOST_CHECK_EQUAL(regular_vj->is_zonal_odt(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_virtual_odt_test, aggregate_odt_fixture) {
-    vj = b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"];
-    BOOST_CHECK_EQUAL(vj->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_virtual_odt(), true);
-    BOOST_CHECK_EQUAL(vj->is_zonal_odt(), false);
+    BOOST_CHECK_EQUAL(virtual_with_stop_time_vj->is_none_odt(), false);
+    BOOST_CHECK_EQUAL(virtual_with_stop_time_vj->is_virtual_odt(), true);
+    BOOST_CHECK_EQUAL(virtual_with_stop_time_vj->is_zonal_odt(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test1, aggregate_odt_fixture) {
-    vj = b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"];
-    BOOST_CHECK_EQUAL(vj->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(virtual_without_stop_time_vj->is_none_odt(), false);
+    BOOST_CHECK_EQUAL(virtual_without_stop_time_vj->is_virtual_odt(), false);
+    BOOST_CHECK_EQUAL(virtual_without_stop_time_vj->is_zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test2, aggregate_odt_fixture) {
-    vj = b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"];
-    BOOST_CHECK_EQUAL(vj->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(stop_point_to_stop_point_vj->is_none_odt(), false);
+    BOOST_CHECK_EQUAL(stop_point_to_stop_point_vj->is_virtual_odt(), false);
+    BOOST_CHECK_EQUAL(stop_point_to_stop_point_vj->is_zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test3, aggregate_odt_fixture) {
-    vj = b.data->pt_data->vehicle_journeys_map["address_to_stop_point"];
-    BOOST_CHECK_EQUAL(vj->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(address_to_stop_point_vj->is_none_odt(), false);
+    BOOST_CHECK_EQUAL(address_to_stop_point_vj->is_virtual_odt(), false);
+    BOOST_CHECK_EQUAL(address_to_stop_point_vj->is_zonal_odt(), true);
 }
 
 BOOST_FIXTURE_TEST_CASE(vj_zonal_odt_test4, aggregate_odt_fixture) {
-    vj = b.data->pt_data->vehicle_journeys_map["odt_point_to_point"];
-    BOOST_CHECK_EQUAL(vj->is_none_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_virtual_odt(), false);
-    BOOST_CHECK_EQUAL(vj->is_zonal_odt(), true);
+    BOOST_CHECK_EQUAL(odt_point_to_point_vj->is_none_odt(), false);
+    BOOST_CHECK_EQUAL(odt_point_to_point_vj->is_virtual_odt(), false);
+    BOOST_CHECK_EQUAL(odt_point_to_point_vj->is_zonal_odt(), true);
 }
 
 // Tests for JourneyPattern Object
@@ -155,9 +140,8 @@ BOOST_FIXTURE_TEST_CASE(jp_without_vj, aggregate_odt_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(jp_none_odt_test, aggregate_odt_fixture) {
-    vj = b.data->pt_data->vehicle_journeys_map["regular"];
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.push_back(vj);
+    jp->discrete_vehicle_journey_list.push_back(std::move(regular_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), true);
@@ -167,9 +151,9 @@ BOOST_FIXTURE_TEST_CASE(jp_none_odt_test, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_odt_test, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(regular_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_with_stop_time_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -179,10 +163,10 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_odt_test, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test1, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(regular_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_with_stop_time_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_without_stop_time_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -192,11 +176,11 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test1, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test2, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(regular_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_with_stop_time_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_without_stop_time_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(stop_point_to_stop_point_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -206,12 +190,12 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test2, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test3, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["address_to_stop_point"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(regular_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_with_stop_time_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_without_stop_time_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(stop_point_to_stop_point_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(address_to_stop_point_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -221,13 +205,13 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test3, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test4, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["regular"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_with_stop_time"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["address_to_stop_point"]);
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["odt_point_to_point"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(regular_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_with_stop_time_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_without_stop_time_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(stop_point_to_stop_point_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(address_to_stop_point_vj));
+    jp->discrete_vehicle_journey_list.push_back(std::move(odt_point_to_point_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -238,8 +222,8 @@ BOOST_FIXTURE_TEST_CASE(jp_virtual_and_zonal_odt_test4, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test1, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["virtual_without_stop_time"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(virtual_without_stop_time_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -249,8 +233,8 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test1, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test2, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["stop_point_to_stop_point"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(stop_point_to_stop_point_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -260,8 +244,8 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test2, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test3, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["address_to_stop_point"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(address_to_stop_point_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -271,8 +255,8 @@ BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test3, aggregate_odt_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(jp_zonal_odt_test4, aggregate_odt_fixture) {
     jp = b.data->pt_data->journey_patterns_map["jp1"];
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys_map["odt_point_to_point"]);
+    jp->discrete_vehicle_journey_list.clear();
+    jp->discrete_vehicle_journey_list.push_back(std::move(odt_point_to_point_vj));
     jp->build_odt_properties();
 
     BOOST_CHECK_EQUAL(jp->odt_properties.is_regular(), false);
@@ -311,7 +295,6 @@ BOOST_FIXTURE_TEST_CASE(route_virtual_odt, aggregate_odt_fixture) {
     BOOST_CHECK_EQUAL(odt.is_virtual_odt(), true);
     BOOST_CHECK_EQUAL(odt.is_zonal_odt(), false);
 }
-
 
 BOOST_FIXTURE_TEST_CASE(route_virtual_and_zonal_odt, aggregate_odt_fixture) {
     route = b.data->pt_data->routes_map["route1"];

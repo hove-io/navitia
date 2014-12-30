@@ -205,6 +205,12 @@ void PT_Data::index(){
 }
 
 PT_Data::~PT_Data() {
+    //big uggly hack :(
+    // the vj are objects owned by the jp,
+    // TODO change all pt object (but vj and st) to unique ptr!
+    vehicle_journeys.clear();
+
+
 #define DELETE_PTDATA(type_name, collection_name) \
         std::for_each(collection_name.begin(), collection_name.end(),\
                 [](type_name* obj){delete obj;});

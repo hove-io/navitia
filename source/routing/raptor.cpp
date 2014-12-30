@@ -496,9 +496,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
             }
             valid_journey_patterns.set(journey_pattern->idx, allowed_jp.count(journey_pattern) > 0);
         }
-        LOG4CPLUS_INFO(logger, "Number of allowed journey patterns: " << allowed_jp.size());
     }
-    LOG4CPLUS_INFO(logger, "Odt allowed? " << (allow_odt));
 
 }
 

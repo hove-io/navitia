@@ -123,7 +123,21 @@ static nt::VehicleJourney* create_adapted_vj(
         const std::vector<nt::StopTime>& impacted_st,
         nt::PT_Data& data){
     //on duplique le VJ
-    nt::VehicleJourney* vj_adapted = new nt::VehicleJourney(*current_vj);
+    nt::JourneyPattern* jp = new nt::JourneyPattern(*current_vj->journey_pattern);
+    data.journey_patterns.push_back(jp);
+
+    nt::VehicleJourney* vj_adapted = nullptr;
+
+    if (current_vj->stop_time_list.front().is_frequency()) {
+        auto freq_vj_adapted = std::make_unique<nt::FrequencyVehicleJourney>(*static_cast<nt::FrequencyVehicleJourney*>(current_vj));
+        vj_adapted = freq_vj_adapted.get();
+        jp->frequency_vehicle_journey_list.push_back(std::move(freq_vj_adapted));
+    } else {
+        auto discrete_vj_adapted = std::make_unique<nt::DiscreteVehicleJourney>(*static_cast<nt::DiscreteVehicleJourney*>(current_vj));
+        vj_adapted = discrete_vj_adapted.get();
+        jp->discrete_vehicle_journey_list.push_back(std::move(discrete_vj_adapted));
+    }
+
     vj_adapted->uri = make_adapted_uri(theorical_vj, data);
     data.vehicle_journeys.push_back(vj_adapted);
     data.vehicle_journeys_map[vj_adapted->uri] = vj_adapted;
@@ -145,12 +159,8 @@ static nt::VehicleJourney* create_adapted_vj(
     data.validity_patterns.push_back(vj_adapted->adapted_validity_pattern);
 
     //On duplique le journey pattern
-    nt::JourneyPattern* jp = new nt::JourneyPattern(*vj_adapted->journey_pattern);
-    data.journey_patterns.push_back(jp);
     vj_adapted->journey_pattern = jp;
-    jp->vehicle_journey_list.clear();
-    jp->vehicle_journey_list.push_back(vj_adapted);
-    jp->uri = vj_adapted->journey_pattern->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_patterns.size());
+    jp->uri = current_vj->journey_pattern->uri + ":adapted:"+boost::lexical_cast<std::string>(data.journey_patterns.size());
     //@TODO changer l'uri
 
     //on duplique les journey pattern point
@@ -185,7 +195,7 @@ static std::pair<bool, nt::VehicleJourney*> find_reference_vj(
 
     if(vehicle_journey->validity_pattern->check(day_index)
             && !vehicle_journey->adapted_validity_pattern->check(day_index)){
-        nt::VehicleJourney* tmp_vj = NULL;
+        nt::VehicleJourney* tmp_vj = nullptr;
         //le VJ théorique ne circule pas: on recherche le vj adapté qui circule ce jour:
         for(auto* vj: vehicle_journey->adapted_vehicle_journey_list){
             if(vj->adapted_validity_pattern->check(day_index)){
@@ -194,7 +204,7 @@ static std::pair<bool, nt::VehicleJourney*> find_reference_vj(
             }
         }
         //si on n'a pas trouvé de VJ adapté circulant, c'est qu'il a été supprimé
-        if(tmp_vj == NULL){
+        if(tmp_vj == nullptr){
             found = false;
         }else{
             //on a trouvé un VJ adapté qui cirule à cette date, c'est lui qui va servir de base
