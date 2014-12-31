@@ -461,7 +461,6 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
             continue;
         }
     }
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     if (!allow_odt) {
         for(const type::JourneyPattern* journey_pattern : data.pt_data->journey_patterns) {
             if(journey_pattern->odt_properties.is_zonal_odt()){

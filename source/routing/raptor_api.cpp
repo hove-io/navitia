@@ -142,8 +142,8 @@ static void add_pathes(EnhancedResponse& enhanced_response,
          * 1) We start from an area(stop_area or admin), we will add a crow fly section from the centroid of the area
          *    to the origin stop point of the first section only if the stop point belongs to this area.
          *
-         * 2) we start from an area but the chosen stop point don't belongs to this area, for example we want to start
-         * from an city, but the pt part of the journey start in another city, in this case
+         * 2) we start from an area but the chosen stop point doesn't belong to this area, for example we want to start
+         * from a city, but the pt part of the journey start in another city, in this case
          * we add a street network section from the centroid of this area to the departure of the first pt_section
          *
          * 3) We start from a ponctual place (everything but stop_area or admin)
@@ -576,6 +576,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         const auto& admins = find_admins(ep, data);
         for (const auto* admin: admins) {
             for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
+                result.push_back({odt_admin_stop_point->idx, {}});
                 stop_points.insert(odt_admin_stop_point->idx);
             }
         }

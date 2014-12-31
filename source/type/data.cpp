@@ -416,13 +416,14 @@ void Data::aggregate_odt(){
     }
 
     //for zone odt, we weed to fill the Admin structure
+    std::unordered_map<georef::Admin*, std::set<const nt::StopPoint*>> odt_stops_by_admin;
     for (const auto jp: pt_data->journey_patterns) {
-        if (jp->odt_level != type::OdtLevel_e::zonal) {
+        if (! jp->odt_properties.is_zonal_odt()) {
             continue;
         }
 
         if (jp->journey_pattern_point_list.size() != 2) {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "it's strange, a zone odt journey pattern ("
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "it's strange, a zone odt journey pattern ("
                            << jp->uri << ") has more than 2 stops, we skip it");
             continue;
         }
@@ -430,8 +431,15 @@ void Data::aggregate_odt(){
         for (const auto jpp: jp->journey_pattern_point_list) {
             const auto sp = jpp->stop_point;
             for (auto* admin: sp->admin_list) {
-                admin->odt_stop_points.push_back(sp);
+                odt_stops_by_admin[admin].insert(sp);
             }
+        }
+    }
+    //we first store the stops in a set not to have dupplicates
+    for (const auto& p: odt_stops_by_admin) {
+        for (const auto& sp: p.second) {
+            std::cout << "on rajoute: " << sp->uri << " a l'admin " << p.first->uri << std::endl;
+            p.first->odt_stop_points.push_back(sp);
         }
     }
 }
