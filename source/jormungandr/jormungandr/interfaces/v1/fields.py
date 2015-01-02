@@ -591,7 +591,10 @@ class UrisToLinks():
             response.append({"type": "note", "id": uris.note})
 
         for value in display_info.notes:
-            response.append({"type": 'notes', "id": value.uri, 'value': value.note})
+            response.append({"type": 'notes',
+                             "id": value.uri,
+                             'value': value.note,
+                             'internal': True})
         return response
 
 
