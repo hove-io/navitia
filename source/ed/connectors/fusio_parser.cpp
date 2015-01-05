@@ -654,10 +654,7 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         catch(boost::bad_lexical_cast) {
             LOG4CPLUS_WARN(logger, "Impossible to parse the co2_emission for "
                            + mode->uri + " " + mode->name);
-            mode->co2_emission = 0;
         }
-    }else{
-        mode->co2_emission = 0;
     }
     data.physical_modes.push_back(mode);
     gtfs_data.physical_mode_map[mode->uri] = mode;

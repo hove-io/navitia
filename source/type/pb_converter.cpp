@@ -1009,6 +1009,7 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     section->set_length(0);
     section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
+
     //we want to store the transportation mode used
     switch (mode) {
     case type::Mode_e::Walking:

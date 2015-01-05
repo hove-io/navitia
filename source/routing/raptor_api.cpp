@@ -261,7 +261,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 }
                 pb_section->set_length(length);
                 bt::time_period action_period(departure_ptime, arrival_ptime);
-                fill_section(pb_section, vj, item.stop_times, d, now, action_period);                
+                fill_section(pb_section, vj, item.stop_times, d, now, action_period);
                 // If this section has estimated stop times,
                 // if the previous section is a waiting section, we also
                 // want to set it to estimated.
