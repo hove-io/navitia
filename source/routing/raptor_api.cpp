@@ -110,6 +110,11 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
         add_coord(stop_times.front()->journey_pattern_point->stop_point->coord, pb_section);
         add_coord(stop_times.back()->journey_pattern_point->stop_point->coord, pb_section);
     }
+    if (vj && vj->journey_pattern && vj->journey_pattern->physical_mode){
+        fill_co2_emission(pb_section, vj->journey_pattern->physical_mode);
+    }else{
+        fill_co2_emission(pb_section, nullptr);
+    }
 }
 
 static void add_pathes(EnhancedResponse& enhanced_response,
@@ -238,7 +243,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     if(i > 0) {
                         const auto & previous_coord = item.stop_points[i-1]->coord;
                         const auto & current_coord = item.stop_points[i]->coord;
-                        length += previous_coord.distance_to(current_coord);
+                        length += previous_coord.distance_to(current_coord);                        
                     }
                 }
                 if (! item.stop_points.empty()) {
@@ -258,9 +263,10 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                                 action_period, show_codes);
 
                 }
+                std::cout<<"length: "<<length<<std::endl;
                 pb_section->set_length(length);
                 bt::time_period action_period(departure_ptime, arrival_ptime);
-                fill_section(pb_section, vj, item.stop_times, d, now, action_period);
+                fill_section(pb_section, vj, item.stop_times, d, now, action_period);                
                 // If this section has estimated stop times,
                 // if the previous section is a waiting section, we also
                 // want to set it to estimated.

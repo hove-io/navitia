@@ -113,6 +113,8 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data &data, p
 
 void fill_codes(const std::string& type, const std::string& value, pbnavitia::Code* code);
 
+void fill_co2_emission(pbnavitia::Section *pb_section, const type::PhysicalMode* vj);
+
 void fill_pb_placemark(const navitia::georef::Way* way, const type::Data &data, pbnavitia::PtObject* place, int house_number, const type::GeographicalCoord& coord, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period,

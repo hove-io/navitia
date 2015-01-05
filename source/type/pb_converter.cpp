@@ -863,7 +863,6 @@ static void finalize_section(pbnavitia::Section* section,
 
     section->set_begin_date_time(navitia::to_posix_timestamp(departure));
     section->set_end_date_time(navitia::to_posix_timestamp(departure + bt::seconds(total_duration)));
-
     //add the destination as a placemark
     pbnavitia::PtObject* dest_place = section->mutable_destination();
 
@@ -1010,7 +1009,6 @@ void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint
     section->set_length(0);
     section->set_end_date_time(navitia::to_posix_timestamp(time));
     section->set_type(pbnavitia::SectionType::CROW_FLY);
-
     //we want to store the transportation mode used
     switch (mode) {
     case type::Mode_e::Walking:
@@ -1485,6 +1483,16 @@ pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
     throw navitia::exception("Techinical Error, unable to convert mode " +
             std::to_string(static_cast<int>(mode)));
 
+}
+
+void fill_co2_emission(pbnavitia::Section *pb_section, const type::PhysicalMode* physical_mode){      
+    if((physical_mode)){
+        if (physical_mode->co2_emission>0.0){
+        pbnavitia::Co2Emission* pb_co2_emission = pb_section->mutable_co2_emission();
+        pb_co2_emission->set_unit("gEC");
+        pb_co2_emission->set_value((pb_section->length()/1000.0) * physical_mode->co2_emission);
+        }
+    }
 }
 
 }//namespace navitia
