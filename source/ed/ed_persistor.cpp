@@ -450,12 +450,13 @@ void EdPersistor::insert_commercial_modes(const std::vector<types::CommercialMod
 
 void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>& physical_modes){
     this->lotus.prepare_bulk_insert("navitia.physical_mode",
-            {"id", "uri", "name"});
+            {"id", "uri", "name", "co2_emission"});
     for(types::PhysicalMode* mode : physical_modes){
         std::vector<std::string> values;
         values.push_back(std::to_string(mode->idx));
         values.push_back(navitia::encode_uri(mode->uri));
         values.push_back(mode->name);
+        values.push_back(std::to_string(mode->co2_emission));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
