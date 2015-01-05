@@ -112,8 +112,6 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
     }
     if (vj && vj->journey_pattern && vj->journey_pattern->physical_mode){
         fill_co2_emission(pb_section, vj->journey_pattern->physical_mode);
-    }else{
-        fill_co2_emission(pb_section, nullptr);
     }
 }
 

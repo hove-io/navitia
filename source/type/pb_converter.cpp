@@ -1486,12 +1486,10 @@ pbnavitia::StreetNetworkMode convert(const navitia::type::Mode_e& mode) {
 }
 
 void fill_co2_emission(pbnavitia::Section *pb_section, const type::PhysicalMode* physical_mode){      
-    if((physical_mode)){
-        if (physical_mode->co2_emission>0.0){
+    if (physical_mode &&  (physical_mode->co2_emission > 0.0)){
         pbnavitia::Co2Emission* pb_co2_emission = pb_section->mutable_co2_emission();
         pb_co2_emission->set_unit("gEC");
         pb_co2_emission->set_value((pb_section->length()/1000.0) * physical_mode->co2_emission);
-        }
     }
 }
 
