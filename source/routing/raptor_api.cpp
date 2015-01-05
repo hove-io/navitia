@@ -138,7 +138,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             continue;
         }
         /*
-         * For the first section, we can distinguish 3 cases
+         * For the first section, we can distinguish 4 cases
          * 1) We start from an area(stop_area or admin), we will add a crow fly section from the centroid of the area
          *    to the origin stop point of the first section only if the stop point belongs to this area.
          *
@@ -151,9 +151,26 @@ static void add_pathes(EnhancedResponse& enhanced_response,
          *
          * If the uri of the origin point and the uri of the departure of the first section are the
          * same we do nothing
+         *
+         * 4) 'taxi like' odt. For some case, we don't want a walking section to the the odt stop point
+         *     (since the stop point has been artificially created on the data side)
+         *     we want a odt section from the departure asked by the user to the destination of the odt)
          **/
 
-        if (!path.items.front().stop_points.empty()
+        const nt::VehicleJourney* first_vj = path.items.front().get_vj();
+        const nt::VehicleJourney* last_vj = path.items.back().get_vj();
+        bool journey_begin_with_address_odt =
+                (first_vj && in(first_vj->vehicle_journey_type,
+        {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point}));
+
+        bool journey_end_with_address_odt =
+                (last_vj && in(last_vj->vehicle_journey_type,
+        {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point}));
+
+        if (journey_begin_with_address_odt) {
+            //first is zonal ODT, we do nothing, there is no walking nor crow fly section, but we'll have to update the start of the journey
+        }
+        else if (!path.items.front().stop_points.empty()
                 && use_crow_fly(origin, path.items.front().stop_points.front(), d)){
             const auto sp_dest = path.items.front().stop_points.front();
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
@@ -249,13 +266,27 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     auto dep_time = item.departures[0];
                     bt::time_period action_period(dep_time, arr_time);
 
-                    fill_pb_placemark(item.stop_points.front(), d,
-                                pb_section->mutable_origin(), 1, now, action_period,
-                                show_codes);
+                    // for 'taxi like' odt, we want to start from the address, not the 1 stop point
+                    if (item_idx == 1 && journey_begin_with_address_odt) {
+                        fill_pb_placemark(origin, d,
+                                    pb_section->mutable_origin(), 1, now, action_period,
+                                    show_codes);
+                    } else {
+                        fill_pb_placemark(item.stop_points.front(), d,
+                                    pb_section->mutable_origin(), 1, now, action_period,
+                                    show_codes);
+                    }
 
-                    fill_pb_placemark(item.stop_points.back(), d,
-                                pb_section->mutable_destination(), 1, now,
-                                action_period, show_codes);
+                    // same for the end
+                    if (item_idx == path.items.size() && journey_end_with_address_odt) {
+                        fill_pb_placemark(destination, d,
+                                    pb_section->mutable_destination(), 1, now,
+                                    action_period, show_codes);
+                    } else {
+                        fill_pb_placemark(item.stop_points.back(), d,
+                                    pb_section->mutable_destination(), 1, now,
+                                    action_period, show_codes);
+                    }
 
                 }
                 pb_section->set_length(length);
@@ -333,7 +364,11 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             vptranslator::fill_pb_object(vptranslator::translate(*vp), d, pb_journey, 1);
         }
 
-        if (!path.items.back().stop_points.empty()
+        if (journey_end_with_address_odt) {
+            // last is 'taxi like' ODT, we do nothing, there is no walking nor crow fly section,
+            // but we have to updated the end of the journey
+        }
+        else if (!path.items.back().stop_points.empty()
                 && use_crow_fly(destination, path.items.back().stop_points.back(), d)){
             const auto sp_orig = path.items.back().stop_points.back();
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);

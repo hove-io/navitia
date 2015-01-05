@@ -415,16 +415,30 @@ void Data::aggregate_odt(){
         jp->build_odt_properties();
     }
 
-    //for zone odt, we weed to fill the Admin structure
+    // cf http://confluence.canaltp.fr/pages/viewpage.action?pageId=3147700 (we really should put that public)
+    // for some ODT kind, we have to fill the Admin structure with the ODT stop points
     std::unordered_map<georef::Admin*, std::set<const nt::StopPoint*>> odt_stops_by_admin;
     for (const auto jp: pt_data->journey_patterns) {
         if (! jp->odt_properties.is_zonal_odt()) {
             continue;
         }
-
         if (jp->journey_pattern_point_list.size() != 2) {
             LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "it's strange, a zone odt journey pattern ("
                            << jp->uri << ") has more than 2 stops, we skip it");
+            continue;
+        }
+        bool add = false;
+        // we add it for the ODT type where the vehicle comes directly to the user
+        jp->for_each_vehicle_journey([&](const VehicleJourney& vj) {
+            if (in(vj.vehicle_journey_type, {VehicleJourneyType::adress_to_stop_point,
+                     VehicleJourneyType::odt_point_to_point} )) {
+                add = true;
+                return false; // we can stop
+            }
+            return true;
+        });
+
+        if (! add ) {
             continue;
         }
 
@@ -435,6 +449,7 @@ void Data::aggregate_odt(){
             }
         }
     }
+
     //we first store the stops in a set not to have dupplicates
     for (const auto& p: odt_stops_by_admin) {
         for (const auto& sp: p.second) {

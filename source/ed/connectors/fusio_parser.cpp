@@ -408,7 +408,7 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         return;
     }
 
-    //the vj might have been split over the dst, we we loop over all split vj
+    //the vj might have been split over the dst,thus we loop over all split vj
     for (auto vj: split_vj) {
         if (is_valid(ext_code_c, row)) {
             vj->external_code = row[ext_code_c];
