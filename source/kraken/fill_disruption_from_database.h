@@ -173,8 +173,8 @@ namespace navitia {
         template<typename T>
         void fill_pt_object(T const_it) {
             auto ptobject = impact->add_informed_entities();
-            FILL_REQUIRED(ptobject, updated_at, uint64_t)
-            FILL_NULLABLE(ptobject, created_at, uint64_t)
+            FILL_NULLABLE(ptobject, updated_at, uint64_t)
+            FILL_REQUIRED(ptobject, created_at, uint64_t)
             FILL_REQUIRED(ptobject, uri, std::string)
             if (!const_it["ptobject_type"].is_null()) {
                 const auto& type_ = const_it["ptobject_type"].template as<std::string>();
