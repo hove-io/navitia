@@ -863,6 +863,7 @@ static void finalize_section(pbnavitia::Section* section,
 
     section->set_begin_date_time(navitia::to_posix_timestamp(departure));
     section->set_end_date_time(navitia::to_posix_timestamp(departure + bt::seconds(total_duration)));
+
     //add the destination as a placemark
     pbnavitia::PtObject* dest_place = section->mutable_destination();
 
