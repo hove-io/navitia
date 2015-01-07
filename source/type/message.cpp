@@ -75,7 +75,9 @@ PtObj transform_pt_object(const std::string& uri,
                           const std::unordered_map<std::string, T*>& map,
                           const boost::shared_ptr<Impact>& impact) {
     if (auto o = find_or_default(uri, map)) {
-        if (impact) o->add_impact(impact);
+        if (impact){
+            o->add_impact(impact);
+        }
         return o;
     } else {
         LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Impossible to find pt object " << uri);
