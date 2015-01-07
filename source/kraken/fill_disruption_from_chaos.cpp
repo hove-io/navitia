@@ -108,10 +108,46 @@ make_severity(const chaos::Severity& chaos_severity, nt::new_disruption::Disrupt
     return std::move(severity);
 }
 
+static boost::optional<nt::new_disruption::LineSection>
+make_line_section(const chaos::PtObject& chaos_section,
+                  nt::PT_Data& pt_data,
+                  const boost::shared_ptr<nt::new_disruption::Impact>& impact) {
+    if (!chaos_section.has_pt_line_section()) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "fill_disruption_from_chaos: LineSection invalid!");
+        return boost::none;
+    }
+    const auto& pb_section = chaos_section.pt_line_section();
+    nt::new_disruption::LineSection line_section;
+    auto* line = find_or_default(pb_section.line().uri(), pt_data.lines_map);
+    if (line) {
+        line_section.line = line;
+    } else {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "fill_disruption_from_chaos: line id in LineSection invalid!");
+        return boost::none;
+    }
+    if (const auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
+        line_section.start_point = start;
+    } else {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "fill_disruption_from_chaos: start_point id in LineSection invalid!");
+        return boost::none;
+    }
+    if (const auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
+        line_section.end_point = end;
+    } else {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "fill_disruption_from_chaos: end_point id in LineSection invalid!");
+        return boost::none;
+    }
+    if (impact) line->add_impact(impact);
+    return line_section;
+}
 static std::vector<nt::new_disruption::PtObj>
 make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
                 nt::PT_Data& pt_data,
-                const boost::shared_ptr<nt::new_disruption::Impact> &impact = {}) {
+                const boost::shared_ptr<nt::new_disruption::Impact>& impact = {}) {
     using namespace nt::new_disruption;
 
     std::vector<PtObj> res;
@@ -124,7 +160,8 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
             res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data, impact));
             break;
         case chaos::PtObject_Type_line_section:
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: LineSection not yet supported");
+            if (auto line_section = make_line_section(chaos_pt_object, pt_data, impact))
+                res.push_back(*line_section);
             break;
         case chaos::PtObject_Type_line:
             res.push_back(make_pt_obj(nt::Type_e::Line, chaos_pt_object.uri(), pt_data, impact));
@@ -137,21 +174,6 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
             break;
         }
         // no created_at and updated_at?
-    }
-    return res;
-}
-
-// TODO: remove this when we remove EntitySelector in Chaos
-static std::vector<nt::new_disruption::PtObj>
-make_pt_objects(const google::protobuf::RepeatedPtrField<transit_realtime::EntitySelector>& chaos_pt_objects,
-                nt::PT_Data& pt_data) {
-    std::vector<nt::new_disruption::PtObj> res;
-    for (const auto& chaos_selector: chaos_pt_objects) {
-        if (chaos_selector.has_stop_id()) {
-            res.push_back(nt::new_disruption::make_pt_obj(nt::Type_e::StopArea, chaos_selector.stop_id(), pt_data));
-            continue;
-        }
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "EntitySelector contains not supported data");
     }
     return res;
 }

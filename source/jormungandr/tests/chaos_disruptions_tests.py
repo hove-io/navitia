@@ -63,8 +63,9 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
         #we need to release the amqp connection
         self.mock_chaos_connection.release()
 
-    def send_chaos_disruption(self, disruption_name, impacted_obj, impacted_obj_type):
-        item = make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type)
+    def send_chaos_disruption(self, disruption_name, impacted_obj, impacted_obj_type,
+                              start=None, end=None):
+        item = make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end)
         with self._get_producer() as producer:
             producer.publish(item, exchange=self._exchange, routing_key=chaos_rt_topic, declare=[self._exchange])
 
@@ -133,6 +134,48 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
+class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
+    """
+    def test_disruption_on_line_section(self):
+        """
+        when calling the pt object line:A, at first we have no disruptions,
+
+        then we mock a disruption sent from chaos, and we call again the pt object line:A
+        we then must have one disruption
+        """
+        self.wait_for_rabbitmq_cnx()
+        response = self.query_region('lines/A')
+
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        line = lines[0]
+        #at first no disruption
+        assert 'disruptions' not in line
+
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
+        self.send_chaos_disruption("bobette_the_disruption", "A", "line_section", start="stopA", end="stopB")
+
+        #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
+        #and we call again, we must have the disruption now
+        response = self.query_region('lines/A')
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        line = lines[0]
+
+        disruptions = get_not_null(line, 'disruptions')
+
+        #at first we got only one disruption
+        assert len(disruptions) == 1
+        assert any(d['uri'] == 'bobette_the_disruption' for d in disruptions)
+
+
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptions2(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
@@ -182,7 +225,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
 
 
-def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type):
+def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -233,6 +276,16 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type):
     ptobject = impact.informed_entities.add()
     ptobject.uri = impacted_obj
     ptobject.pt_object_type = type_col.get(impacted_obj_type, chaos_pb2.PtObject.unkown_type)
+    if ptobject.pt_object_type == chaos_pb2.PtObject.line_section:
+        line_section = ptobject.pt_line_section
+        line_section.line.uri = impacted_obj
+        line_section.line.pt_object_type = chaos_pb2.PtObject.line
+        pb_start = line_section.start_point
+        pb_start.uri = start
+        pb_start.pt_object_type = chaos_pb2.PtObject.stop_area
+        pb_end = line_section.end_point
+        pb_end.uri = end
+        pb_end.pt_object_type = chaos_pb2.PtObject.stop_area
 
     # Messages
     message = impact.messages.add()

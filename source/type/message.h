@@ -103,11 +103,12 @@ struct UnknownPtObj {
     void serialize(Archive&, const unsigned int) {}
 };
 struct LineSection {
-    const Line *line = nullptr;
-    std::vector<const StopArea *> stops;
+    const Line* line = nullptr;
+    const StopArea* start_point = nullptr;
+    const StopArea* end_point = nullptr;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & line & stops;
+        ar & line & start_point & end_point;
     }
 };
 typedef boost::variant<
