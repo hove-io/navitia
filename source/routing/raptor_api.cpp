@@ -139,12 +139,12 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             continue;
         }
         /*
-         * For the first section, we can distinguish 3 cases
+         * For the first section, we can distinguish 4 cases
          * 1) We start from an area(stop_area or admin), we will add a crow fly section from the centroid of the area
          *    to the origin stop point of the first section only if the stop point belongs to this area.
          *
-         * 2) we start from an area but the chosen stop point don't belongs to this area, for example we want to start
-         * from an city, but the pt part of the journey start in another city, in this case
+         * 2) we start from an area but the chosen stop point doesn't belong to this area, for example we want to start
+         * from a city, but the pt part of the journey start in another city, in this case
          * we add a street network section from the centroid of this area to the departure of the first pt_section
          *
          * 3) We start from a ponctual place (everything but stop_area or admin)
@@ -152,9 +152,27 @@ static void add_pathes(EnhancedResponse& enhanced_response,
          *
          * If the uri of the origin point and the uri of the departure of the first section are the
          * same we do nothing
+         *
+         * 4) 'taxi like' odt. For some case, we don't want a walking section to the the odt stop point
+         *     (since the stop point has been artificially created on the data side)
+         *     we want a odt section from the departure asked by the user to the destination of the odt)
          **/
 
-        if (!path.items.front().stop_points.empty()
+        const nt::VehicleJourney* first_vj = path.items.front().get_vj();
+        const nt::VehicleJourney* last_vj = path.items.back().get_vj();
+        bool journey_begin_with_address_odt = first_vj &&
+                in(first_vj->vehicle_journey_type,
+                 {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point});
+
+        bool journey_end_with_address_odt = last_vj &&
+                in(last_vj->vehicle_journey_type,
+                 {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point});
+
+        if (journey_begin_with_address_odt) {
+            // nor crow fly section, but we'll have to update the start of the journey
+            //first is zonal ODT, we do nothing, there is no walking
+        }
+        else if (!path.items.front().stop_points.empty()
                 && use_crow_fly(origin, path.items.front().stop_points.front(), d)){
             const auto sp_dest = path.items.front().stop_points.front();
             type::EntryPoint destination_tmp(type::Type_e::StopPoint, sp_dest->uri);
@@ -250,13 +268,27 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     auto dep_time = item.departures[0];
                     bt::time_period action_period(dep_time, arr_time);
 
-                    fill_pb_placemark(item.stop_points.front(), d,
-                                pb_section->mutable_origin(), 1, now, action_period,
-                                show_codes);
+                    // for 'taxi like' odt, we want to start from the address, not the 1 stop point
+                    if (item_idx == 1 && journey_begin_with_address_odt) {
+                        fill_pb_placemark(origin, d,
+                                    pb_section->mutable_origin(), 1, now, action_period,
+                                    show_codes);
+                    } else {
+                        fill_pb_placemark(item.stop_points.front(), d,
+                                    pb_section->mutable_origin(), 1, now, action_period,
+                                    show_codes);
+                    }
 
-                    fill_pb_placemark(item.stop_points.back(), d,
-                                pb_section->mutable_destination(), 1, now,
-                                action_period, show_codes);
+                    // same for the end
+                    if (item_idx == path.items.size() && journey_end_with_address_odt) {
+                        fill_pb_placemark(destination, d,
+                                    pb_section->mutable_destination(), 1, now,
+                                    action_period, show_codes);
+                    } else {
+                        fill_pb_placemark(item.stop_points.back(), d,
+                                    pb_section->mutable_destination(), 1, now,
+                                    action_period, show_codes);
+                    }
 
                 }
                 pb_section->set_length(length);
@@ -334,7 +366,11 @@ static void add_pathes(EnhancedResponse& enhanced_response,
             vptranslator::fill_pb_object(vptranslator::translate(*vp), d, pb_journey, 1);
         }
 
-        if (!path.items.back().stop_points.empty()
+        if (journey_end_with_address_odt) {
+            // last is 'taxi like' ODT, we do nothing, there is no walking nor crow fly section,
+            // but we have to updated the end of the journey
+        }
+        else if (!path.items.back().stop_points.empty()
                 && use_crow_fly(destination, path.items.back().stop_points.back(), d)){
             const auto sp_orig = path.items.back().stop_points.back();
             type::EntryPoint origin_tmp(type::Type_e::StopPoint, sp_orig->uri);
@@ -510,31 +546,80 @@ static void add_isochrone_response(RAPTOR& raptor,
     }
 }
 
-static std::vector<std::pair<type::idx_t, navitia::time_duration> >
-get_stop_points( const type::EntryPoint& ep,
-                 const type::Data& data,
-                 georef::StreetNetwork& worker,
-                 bool use_second = false) {
+namespace {
+template <typename T>
+const std::vector<georef::Admin*>& get_admins(const std::string& uri, const std::unordered_map<std::string, T*>& obj_map) {
+    if (auto obj = find_or_default(uri, obj_map)) {
+        return obj->admin_list;
+    }
+    static const std::vector<georef::Admin*> empty_list;
+    return empty_list;
+}
+}
+
+static
+std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::Data& data) {
+    if (ep.type == type::Type_e::StopArea) {
+        return get_admins(ep.uri, data.pt_data->stop_areas_map);
+    }
+    if (ep.type == type::Type_e::StopPoint) {
+        return get_admins(ep.uri, data.pt_data->stop_points_map);
+    }
+    if (ep.type == type::Type_e::Admin) {
+        auto it_admin = data.geo_ref->admin_map.find(ep.uri);
+        if (it_admin == data.geo_ref->admin_map.end()) {
+            return {};
+        }
+        const auto admin = data.geo_ref->admins[it_admin->second];
+        return {admin};
+    }
+    if (ep.type == type::Type_e::POI) {
+        auto it_poi = data.geo_ref->poi_map.find(ep.uri);
+        if (it_poi == data.geo_ref->poi_map.end()) {
+            return {};
+        }
+        const auto poi = data.geo_ref->pois[it_poi->second];
+        return poi->admin_list;
+    }
+    //else we look for the coordinate's admin
+    return data.geo_ref->find_admins(ep.coordinates);
+}
+
+static
+std::vector<std::pair<type::idx_t, navitia::time_duration> >
+get_stop_points( const type::EntryPoint &ep, const type::Data& data,
+        georef::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, navitia::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    LOG4CPLUS_DEBUG(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
+    LOG4CPLUS_TRACE(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
-    if(ep.type == type::Type_e::Address
+    if (ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord
                 || ep.type == type::Type_e::StopArea
-                || ep.type == type::Type_e::POI){
+                || ep.type == type::Type_e::POI) {
         std::set<type::idx_t> stop_points;
-        if(ep.type == type::Type_e::StopArea){
+
+        if (ep.type == type::Type_e::StopArea) {
             auto it = data.pt_data->stop_areas_map.find(ep.uri);
-            if(it!= data.pt_data->stop_areas_map.end()) {
-                for(auto stop_point : it->second->stop_point_list) {
-                    if(stop_points.find(stop_point->idx) == stop_points.end()) {
+            if (it!= data.pt_data->stop_areas_map.end()) {
+                for (auto stop_point : it->second->stop_point_list) {
+                    if (stop_points.find(stop_point->idx) == stop_points.end()) {
                         result.push_back({stop_point->idx, {}});
                         stop_points.insert(stop_point->idx);
                     }
                 }
             }
         }
+
+        //we need to check if the admin has zone odt
+        const auto& admins = find_admins(ep, data);
+        for (const auto* admin: admins) {
+            for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
+                result.push_back({odt_admin_stop_point->idx, {}});
+                stop_points.insert(odt_admin_stop_point->idx);
+            }
+        }
+
         auto tmp_sn = worker.find_nearest_stop_points(
                     ep.streetnetwork_params.max_duration,
                     data.pt_data->stop_point_proximity_list,
@@ -546,9 +631,9 @@ get_stop_points( const type::EntryPoint& ep,
                 result.push_back(idx_duration);
             }
         }
-    } else if(ep.type == type::Type_e::StopPoint) {
+    } else if (ep.type == type::Type_e::StopPoint) {
         auto it = data.pt_data->stop_points_map.find(ep.uri);
-        if(it != data.pt_data->stop_points_map.end()){
+        if (it != data.pt_data->stop_points_map.end()){
             result.push_back({it->second->idx, {}});
         }
     } else if(ep.type == type::Type_e::Admin) {

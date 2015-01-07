@@ -294,7 +294,6 @@ struct AdminStopAreaFusioHandler : public GenericHandler {
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"admin_id", "station_id"}; }
-
 };
 
 /**

@@ -114,7 +114,7 @@ next_valid_frequency_pick_up(const type::JourneyPatternPoint* jpp, const DateTim
             best = {&st, next_dt};
         }
     }
-    //TODO look for the next day
+    //TODO we could do the next day checkup in only one round if needed (but with an even more complicated code :/)
     if (best.first == nullptr) {
         const auto next_date = DateTimeUtils::set(DateTimeUtils::date(dt) + 1, 0);
         for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
@@ -154,8 +154,10 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
 
         const auto previous_dt = get_previous_arrival(dt, *freq_vj, st, disruption_active);
 
-        if (best.second == DateTimeUtils::not_valid && previous_dt != DateTimeUtils::not_valid
-                || previous_dt > best.second) {
+        if (previous_dt == DateTimeUtils::not_valid) {
+            continue;
+        }
+        if (best.second == DateTimeUtils::not_valid || previous_dt > best.second) {
             best = {&st, previous_dt};
         }
     }
@@ -173,8 +175,10 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
 
             const auto previous_dt = get_previous_arrival(previous_date, *freq_vj, st, disruption_active);
 
-            if (best.second == DateTimeUtils::not_valid && previous_dt != DateTimeUtils::not_valid
-                    || previous_dt > best.second) {
+            if (previous_dt == DateTimeUtils::not_valid) {
+                continue;
+            }
+            if (best.second == DateTimeUtils::not_valid || previous_dt > best.second) {
                 best = {&st, previous_dt};
             }
         }
