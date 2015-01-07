@@ -180,7 +180,7 @@ struct CompanyFusioHandler : public GenericHandler {
 
 struct PhysicalModeFusioHandler : public GenericHandler {
     PhysicalModeFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, name_c;
+    int id_c, name_c, co2_emission_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"physical_mode_id", "physical_mode_name"}; }

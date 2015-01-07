@@ -489,10 +489,11 @@ struct CommercialMode : public Header, Nameable{
 
 struct PhysicalMode : public Header, Nameable{
     const static Type_e type = Type_e::PhysicalMode;
+    double co2_emission = 0.;
     std::vector<JourneyPattern*> journey_pattern_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & journey_pattern_list;
+        ar & idx & name & uri & co2_emission & journey_pattern_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 

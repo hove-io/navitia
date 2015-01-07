@@ -35,3 +35,9 @@ target_link_libraries(disruptions_test ed data types routing fare pb_lib thermom
   autocomplete utils workers
   ${BOOST_LIBS} log4cplus pthread protobuf)
 ADD_BOOST_TEST(disruptions_test)
+
+add_executable(co2_emission_test co2_emission_test.cpp)
+target_link_libraries(co2_emission_test ed data types routing fare pb_lib thermometer georef
+  autocomplete utils workers
+  ${BOOST_LIBS} log4cplus pthread protobuf)
+ADD_BOOST_TEST(co2_emission_test)

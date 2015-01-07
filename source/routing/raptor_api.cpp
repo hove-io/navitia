@@ -110,6 +110,7 @@ static void fill_section(pbnavitia::Section *pb_section, const type::VehicleJour
         add_coord(stop_times.front()->journey_pattern_point->stop_point->coord, pb_section);
         add_coord(stop_times.back()->journey_pattern_point->stop_point->coord, pb_section);
     }
+    fill_co2_emission(pb_section, vj);
 }
 
 static void add_pathes(EnhancedResponse& enhanced_response,

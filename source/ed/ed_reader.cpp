@@ -243,13 +243,14 @@ void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.physical_mode";
+    std::string request = "SELECT id, name, uri, co2_emission FROM navitia.physical_mode";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::PhysicalMode* mode = new nt::PhysicalMode();
         const_it["uri"].to(mode->uri);
         const_it["name"].to(mode->name);
+        const_it["co2_emission"].to(mode->co2_emission);
 
         mode->idx = data.pt_data->physical_modes.size();
 

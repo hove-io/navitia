@@ -635,6 +635,7 @@ void CompanyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
 void PhysicalModeFusioHandler::init(Data&) {
     id_c = csv.get_pos_col("physical_mode_id");
     name_c = csv.get_pos_col("physical_mode_name");
+    co2_emission_c = csv.get_pos_col("co2_emission");
 }
 
 void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -646,6 +647,15 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
     ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
     mode->name = row[name_c];
     mode->uri = row[id_c];
+    if(has_col(co2_emission_c, row)) {
+        try{
+            mode->co2_emission = boost::lexical_cast<double>(row[co2_emission_c]);
+        }
+        catch(boost::bad_lexical_cast) {
+            LOG4CPLUS_WARN(logger, "Impossible to parse the co2_emission for "
+                           + mode->uri + " " + mode->name);
+        }
+    }
     data.physical_modes.push_back(mode);
     gtfs_data.physical_mode_map[mode->uri] = mode;
 }
