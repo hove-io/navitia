@@ -213,6 +213,7 @@ struct Disruption {
     const std::vector<boost::shared_ptr<Impact>>& get_impacts() const {
         return impacts;
     }
+
 private:
     //Disruption have the ownership of the Impacts.  Impacts are
     //shared_ptr and not unique_ptr because there are weak_ptr

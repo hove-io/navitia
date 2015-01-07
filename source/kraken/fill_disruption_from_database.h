@@ -80,7 +80,7 @@ namespace navitia {
                 impact = nullptr;
             }
 
-            if (disruption && (!tag ||
+            if (disruption && !const_it["tag_id"].is_null() && (!tag ||
                     tag->id() != const_it["tag_id"].template as<std::string>())) {
                 fill_tag(const_it);
             }
@@ -173,9 +173,9 @@ namespace navitia {
         template<typename T>
         void fill_pt_object(T const_it) {
             auto ptobject = impact->add_informed_entities();
-            FILL_REQUIRED(ptobject, updated_at, uint64_t)
-            FILL_NULLABLE(ptobject, created_at, uint64_t)
-            FILL_REQUIRED(ptobject, uri, std::string)
+            FILL_NULLABLE(ptobject, updated_at, uint64_t)
+            FILL_REQUIRED(ptobject, created_at, uint64_t)
+            FILL_NULLABLE(ptobject, uri, std::string)
             if (!const_it["ptobject_type"].is_null()) {
                 const auto& type_ = const_it["ptobject_type"].template as<std::string>();
                 if (type_ == "line") {

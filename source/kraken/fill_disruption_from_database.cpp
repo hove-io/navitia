@@ -52,24 +52,11 @@ void fill_disruption_from_database(const std::string& connection_string,
     }
     pqxx::work work(*conn, "loading disruptions");
 
-    // Get the size of disruptions table
-    std::string request_count = "SELECT COUNT(*) as count FROM disruption;";
-
-    pqxx::result result_count = work.exec(request_count);
-    auto result_it = result_count.begin();
-    if (result_it == result_count.end()) {
-        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
-                "There is no disruption table in the database");
-        return;
-    }
-    size_t total_count = result_it["count"].as<size_t>(),
-           offset = 0,
+    size_t offset = 0,
            items_per_request = 100;
-    if (total_count == 0) {
-        return;
-    }
     DisruptionDatabaseReader reader(pt_data);
-    while(offset < total_count) {
+    pqxx::result result;
+    do{
         std::string request = (boost::format(
                "SELECT "
                // Disruptions field
@@ -117,8 +104,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     extract(epoch from ch.updated_at) :: bigint as channel_updated_at"
                "     FROM disruption AS d"
                "     JOIN cause AS c ON (c.id = d.cause_id)"
-               "     JOIN associate_disruption_tag ON associate_disruption_tag.disruption_id = d.id"
-               "     JOIN tag AS t ON associate_disruption_tag.tag_id = t.id"
+               "     LEFT JOIN associate_disruption_tag ON associate_disruption_tag.disruption_id = d.id"
+               "     LEFT JOIN tag AS t ON associate_disruption_tag.tag_id = t.id"
                "     JOIN impact AS i ON i.disruption_id = d.id"
                "     JOIN application_periods AS a ON a.impact_id = i.id"
                "     JOIN severity AS s ON s.id = i.severity_id"
@@ -130,13 +117,13 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     LIMIT %i OFFSET %i"
                " ;") % items_per_request % offset).str();
 
-        pqxx::result result = work.exec(request);
+        result = work.exec(request);
         for (auto res : result) {
             reader(res);
         }
 
-        offset += items_per_request;
-    }
+        offset += result.size();
+    }while(result.size() > 0);
     reader.finalize();
 }
 
