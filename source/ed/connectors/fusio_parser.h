@@ -283,7 +283,7 @@ struct CalendarLineFusioHandler : public GenericHandler {
 };
 }
 
-struct  AdminStopAreaFusioHandler : public GenericHandler {
+struct AdminStopAreaFusioHandler : public GenericHandler {
     AdminStopAreaFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int admin_c, stop_area_c;
 

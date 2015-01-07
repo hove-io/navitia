@@ -159,16 +159,17 @@ static void add_pathes(EnhancedResponse& enhanced_response,
 
         const nt::VehicleJourney* first_vj = path.items.front().get_vj();
         const nt::VehicleJourney* last_vj = path.items.back().get_vj();
-        bool journey_begin_with_address_odt =
-                (first_vj && in(first_vj->vehicle_journey_type,
-        {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point}));
+        bool journey_begin_with_address_odt = first_vj &&
+                in(first_vj->vehicle_journey_type,
+                 {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point});
 
-        bool journey_end_with_address_odt =
-                (last_vj && in(last_vj->vehicle_journey_type,
-        {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point}));
+        bool journey_end_with_address_odt = last_vj &&
+                in(last_vj->vehicle_journey_type,
+                 {nt::VehicleJourneyType::adress_to_stop_point, nt::VehicleJourneyType::odt_point_to_point});
 
         if (journey_begin_with_address_odt) {
-            //first is zonal ODT, we do nothing, there is no walking nor crow fly section, but we'll have to update the start of the journey
+            // nor crow fly section, but we'll have to update the start of the journey
+            //first is zonal ODT, we do nothing, there is no walking
         }
         else if (!path.items.front().stop_points.empty()
                 && use_crow_fly(origin, path.items.front().stop_points.front(), d)){
@@ -544,22 +545,24 @@ static void add_isochrone_response(RAPTOR& raptor,
     }
 }
 
+namespace {
 template <typename T>
 const std::vector<georef::Admin*>& get_admins(const std::string& uri, const std::unordered_map<std::string, T*>& obj_map) {
-    auto it = obj_map.find(uri);
-    if (it == obj_map.end()) {
-        static const std::vector<georef::Admin*> empty_list;
-        return empty_list;
+    if (auto obj = find_or_default(uri, obj_map)) {
+        return obj->admin_list;
     }
-    return it->second->admin_list;
+    static const std::vector<georef::Admin*> empty_list;
+    return empty_list;
+}
 }
 
-const std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::Data& data) {
+static
+std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::Data& data) {
     if (ep.type == type::Type_e::StopArea) {
-        return get_admins<type::StopArea>(ep.uri, data.pt_data->stop_areas_map);
+        return get_admins(ep.uri, data.pt_data->stop_areas_map);
     }
     if (ep.type == type::Type_e::StopPoint) {
-        return get_admins<type::StopPoint>(ep.uri, data.pt_data->stop_points_map);
+        return get_admins(ep.uri, data.pt_data->stop_points_map);
     }
     if (ep.type == type::Type_e::Admin) {
         auto it_admin = data.geo_ref->admin_map.find(ep.uri);
