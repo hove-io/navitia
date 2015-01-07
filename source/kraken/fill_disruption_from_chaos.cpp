@@ -186,6 +186,15 @@ void add_disruption(nt::PT_Data& pt_data,
     auto from_posix = navitia::from_posix_timestamp;
     nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
 
+    auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
+            [&chaos_disruption](const std::unique_ptr<nt::new_disruption::Disruption>& disruption){
+                return disruption->uri == chaos_disruption.id();
+            });
+    if(it != holder.disruptions.end()){
+        //the disruption already exist we delete the previous one before
+        holder.disruptions.erase(it);
+    }
+
     auto disruption = std::make_unique<nt::new_disruption::Disruption>();
     disruption->uri = chaos_disruption.id();
     disruption->reference = chaos_disruption.reference();
