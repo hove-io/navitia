@@ -63,9 +63,9 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
         #we need to release the amqp connection
         self.mock_chaos_connection.release()
 
-    def send_chaos_disruption(self, disruption_name, impacted_obj, impacted_obj_type,
-                              start=None, end=None):
-        item = make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end)
+    def send_chaos_disruption(self, disruption_name, impacted_obj, impacted_obj_type, start=None, end=None,
+                              message='default_message', is_deleted=False):
+        item = make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message, is_deleted)
         with self._get_producer() as producer:
             producer.publish(item, exchange=self._exchange, routing_key=chaos_rt_topic, declare=[self._exchange])
 
@@ -225,15 +225,82 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
 
 
-def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end):
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
+class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
+    """
+    def test_disruption(self):
+        """
+        test /disruptions and check that an update of a disruption is correctly done
+        """
+        self.wait_for_rabbitmq_cnx()
+        query = 'disruptions?datetime=20140101T000000&_current_datetime=20140101T000000'
+        response = self.query_region(query)
+
+        assert response['disruptions'][0]['network']['disruptions']
+        eq_(len(response['disruptions'][0]['network']['disruptions']), 1)
+
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
+        #we create a disruption on the network
+        self.send_chaos_disruption("test_disruption", "base_network", "network", message='message')
+
+        #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(query)
+
+        assert 'disruptions' in response
+        eq_(len(response['disruptions']), 1)
+        assert response['disruptions'][0]['network']['disruptions']
+        eq_(len(response['disruptions'][0]['network']['disruptions']), 2)
+        for disruption in response['disruptions'][0]['network']['disruptions']:
+            if disruption['uri'] == 'test_disruption':
+                eq_(disruption['messages'][0]['text'], 'message')
+
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
+        #we update the previous disruption
+        self.send_chaos_disruption("test_disruption", "base_network", "network", message='update')
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(query)
+
+        assert 'disruptions' in response
+        eq_(len(response['disruptions']), 1)
+        assert response['disruptions'][0]['network']['disruptions']
+        eq_(len(response['disruptions'][0]['network']['disruptions']), 2)
+        for disruption in response['disruptions'][0]['network']['disruptions']:
+            if disruption['uri'] == 'test_disruption':
+                eq_(disruption['messages'][0]['text'], 'update')
+
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
+        #we delete the disruption
+        self.send_chaos_disruption("test_disruption", "base_network", "network", is_deleted=True)
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(query)
+        assert response['disruptions'][0]['network']['disruptions']
+        eq_(len(response['disruptions'][0]['network']['disruptions']), 1)
+        for disruption in response['disruptions'][0]['network']['disruptions']:
+                assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
+
+
+def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
+                         message_text='default_message', is_deleted=False):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
     feed_message.header.timestamp = 0
 
     feed_entity = feed_message.entity.add()
-    feed_entity.id = "toto"
-    feed_entity.is_deleted = False
+    feed_entity.id = disruption_name
+    feed_entity.is_deleted = is_deleted
 
     disruption = feed_entity.Extensions[chaos_pb2.disruption]
 
@@ -289,14 +356,14 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
 
     # Messages
     message = impact.messages.add()
-    message.text = "Meassage1 test"
+    message.text = message_text
     message.channel.id = "sms"
     message.channel.name = "sms"
     message.channel.max_size = 60
     message.channel.content_type = "text"
 
     message = impact.messages.add()
-    message.text = "Meassage2 test"
+    message.text = message_text
     message.channel.name = "email"
     message.channel.id = "email"
     message.channel.max_size = 250

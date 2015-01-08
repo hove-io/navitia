@@ -40,4 +40,5 @@ namespace navitia {
 void add_disruption(navitia::type::PT_Data& pt_data,
                     const chaos::Disruption& chaos_disruption);
 
+void delete_disruption(nt::PT_Data& pt_data, const std::string& disruption_id);
 } // namespace navitia
