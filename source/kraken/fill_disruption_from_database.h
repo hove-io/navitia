@@ -188,6 +188,22 @@ namespace navitia {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_stop_area);
                 } else if (type_ == "line_section") {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_line_section);
+                    auto* ls = ptobject->mutable_pt_line_section();
+                    auto* ls_line = ls->mutable_line();
+                    ls_line->set_pt_object_type(chaos::PtObject_Type_line);
+                    FILL_NULLABLE(ls_line, updated_at, uint64_t)
+                    FILL_REQUIRED(ls_line, created_at, uint64_t)
+                    FILL_NULLABLE(ls_line, uri, std::string)
+                    auto* ls_start = ls->mutable_start_point();
+                    ls_start->set_pt_object_type(chaos::PtObject_Type_stop_area);
+                    FILL_NULLABLE(ls_start, updated_at, uint64_t)
+                    FILL_REQUIRED(ls_start, created_at, uint64_t)
+                    FILL_NULLABLE(ls_start, uri, std::string)
+                    auto* ls_end = ls->mutable_end_point();
+                    ls_end->set_pt_object_type(chaos::PtObject_Type_stop_area);
+                    FILL_NULLABLE(ls_end, updated_at, uint64_t)
+                    FILL_REQUIRED(ls_end, created_at, uint64_t)
+                    FILL_NULLABLE(ls_end, uri, std::string)
                 } else {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
                 }
