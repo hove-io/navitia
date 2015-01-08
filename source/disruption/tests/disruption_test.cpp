@@ -70,6 +70,7 @@ namespace pt = boost::posix_time;
 using navitia::type::new_disruption::Impact;
 using navitia::type::new_disruption::PtObj;
 using navitia::type::new_disruption::Disruption;
+using navitia::type::new_disruption::Severity;
 
 inline u_int64_t operator"" _dt_time_stamp(const char* str, size_t s) {
     return navitia::to_posix_timestamp(boost::posix_time::from_iso_string(std::string(str, s)));
@@ -109,6 +110,11 @@ public:
         auto impact = boost::make_shared<Impact>();
         impact->uri = disrupt.uri;
         impact->application_periods = disrupt.get_application_periods();
+
+        auto info_severity = boost::make_shared<Severity>();
+        info_severity->uri = "info";
+        info_severity->wording = "information severity";
+        impact->severity = info_severity;
 
         switch (disrupt.object_type) {
         case chaos::PtObject::Type::PtObject_Type_network:

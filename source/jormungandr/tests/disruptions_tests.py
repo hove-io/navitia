@@ -74,14 +74,19 @@ class TestDisruptions(AbstractTestFixture):
 
         lines_disrupt = get_not_null(impacted_lines[0], 'disruptions')
         assert len(lines_disrupt) == 1
+        for d in lines_disrupt:
+            is_valid_disruption(d)
         assert lines_disrupt[0]['uri'] == 'disruption_on_line_A'
         assert lines_disrupt[0]['impact_uri'] == 'too_bad_again'
+        assert lines_disrupt[0]['severity'] == 'bad severity'
 
         impacted_network = get_not_null(disruptions[0], 'network')
         is_valid_network(impacted_network, depth_check=0)
         assert impacted_network['id'] == 'base_network'
         network_disrupt = get_not_null(impacted_network, 'disruptions')
         assert len(network_disrupt) == 1
+        for d in network_disrupt:
+            is_valid_disruption(d)
         assert network_disrupt[0]['uri'] == 'disruption_on_line_A'
         assert network_disrupt[0]['impact_uri'] == 'too_bad_again'
 
@@ -91,6 +96,8 @@ class TestDisruptions(AbstractTestFixture):
         assert impacted_stop_areas[0]['id'] == 'stopA'
         stop_disrupt = get_not_null(impacted_stop_areas[0], 'disruptions')
         assert len(stop_disrupt) == 1
+        for d in stop_disrupt:
+            is_valid_disruption(d)
         assert stop_disrupt[0]['uri'] == 'disruption_on_stop_A'
         assert stop_disrupt[0]['impact_uri'] == 'too_bad'
 

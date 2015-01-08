@@ -129,6 +129,9 @@ struct Disruption;
 
 struct Message {
     std::string text;
+    std::string channel_id;
+    std::string channel_name;
+    std::string channel_content_type;
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;

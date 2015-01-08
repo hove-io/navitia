@@ -796,6 +796,18 @@ def is_valid_label(label):
     return m is not None
 
 
+def is_valid_disruption(disruption):
+    get_not_null(disruption, 'uri')
+    get_not_null(disruption, 'impact_uri')
+    get_not_null(disruption, 'severity')
+    msg = get_not_null(disruption, 'messages')
+    assert len(msg) > 0
+    for m in msg:
+        get_not_null(m, "text")
+        get_not_null(m, "content_type")
+        get_not_null(m, "channel_id")
+        get_not_null(m, "channel_name")
+
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
 r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
 

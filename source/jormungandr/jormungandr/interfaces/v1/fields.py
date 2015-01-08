@@ -368,6 +368,8 @@ period = {
 disruption_message = {
     "text": fields.String(),
     "content_type": fields.String(),
+    "channel_id": fields.String(),
+    "channel_name": fields.String(),
 }
 disruption = {
     "uri": fields.String(),
@@ -378,6 +380,7 @@ disruption = {
     "updated_at": DateTime(),
     "tags": NonNullList(fields.String()),
     "cause": fields.String(),
+    "severity": fields.String(),
     "messages": NonNullList(NonNullNested(disruption_message)),
 }
 

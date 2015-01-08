@@ -116,6 +116,9 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     //TODO: updated at must be computed with the max of all computed values (from disruption, impact, ...)
     pb_disrution->set_updated_at(navitia::to_posix_timestamp(impact->updated_at));
 
+    pb_disrution->set_severity(impact->severity->wording);
+    pb_disrution->set_severity_color(impact->severity->color);
+
     for (const auto& t: impact->disruption->tags) {
         pb_disrution->add_tags(t->name);
     }
@@ -126,7 +129,9 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     for (const auto& m: impact->messages) {
         auto pb_m = pb_disrution->add_messages();
         pb_m->set_text(m.text);
-        pb_m->set_content_type(""); //what do we want ?
+        pb_m->set_content_type(m.channel_content_type);
+        pb_m->set_channel_id(m.channel_id);
+        pb_m->set_channel_name(m.channel_name);
     }
 
     //we need to compute the active status

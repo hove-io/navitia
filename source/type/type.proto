@@ -89,6 +89,8 @@ enum ActiveStatus {
 message MessageContent {
     optional string text = 1;
     optional string content_type = 2;
+    optional string channel_id = 3;
+    optional string channel_name = 4;
 }
 
 //message are the old disruption, remove as soon as possible
@@ -117,7 +119,9 @@ message Disruption {
     optional uint64 updated_at                      = 12;
     repeated string tags                            = 13;
     optional string cause                           = 14;
-    repeated MessageContent messages                = 15; 
+    repeated MessageContent messages                = 15;
+    optional string severity                        = 16;
+    optional string severity_color                  = 17;
 }
 
 message GeographicalCoord {
