@@ -101,6 +101,8 @@ public:
 
     navitia::type::MetaData meta;
 
+    std::set<types::VehicleJourney*> vj_to_erase; //badly formated vj, to erase
+
     /**
          * trie les différentes donnée et affecte l'idx
          *

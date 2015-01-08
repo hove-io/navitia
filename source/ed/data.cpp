@@ -261,17 +261,21 @@ void Data::clean() {
         journey_pattern_vj[(*it)->journey_pattern->uri].push_back((*it));
     }
 
-    int erase_overlap = 0, erase_emptiness = 0, erase_no_circulation = 0;
+    int erase_overlap = 0, erase_emptiness = 0, erase_no_circulation = 0, erase_invalid_stoptimes = 0;
 
     for(auto it1 = journey_pattern_vj.begin(); it1 != journey_pattern_vj.end(); ++it1) {
 
         for(auto vj1 = it1->second.begin(); vj1 != it1->second.end(); ++vj1) {
+            if (vj_to_erase.find(*vj1) != vj_to_erase.end()) {
+                toErase.insert((*vj1)->uri);
+                continue;
+            }
             if((*vj1)->stop_time_list.empty()) {
                 toErase.insert((*vj1)->uri);
                 ++erase_emptiness;
                 continue;
             }
-            if((*vj1)->validity_pattern->days.none() && (*vj1)->adapted_validity_pattern->days.none()){
+            if((*vj1)->validity_pattern->days.none() && (*vj1)->adapted_validity_pattern->days.none()) {
                 toErase.insert((*vj1)->uri);
                 ++erase_no_circulation;
                 continue;
@@ -297,6 +301,14 @@ void Data::clean() {
                             break;
                         }
                     }
+                }
+            }
+            // we check that no stop times are negatives
+            for (const auto st: (*vj1)->stop_time_list) {
+                if (st->departure_time < 0 || st->arrival_time < 0) {
+                    toErase.insert((*vj1)->uri);
+                    ++erase_invalid_stoptimes;
+                    break;
                 }
             }
         }
@@ -365,8 +377,9 @@ void Data::clean() {
     vehicle_journeys.resize(num_elements);
 
     LOG4CPLUS_INFO(logger, "Data::clean(): " << erase_overlap <<  " vehicle_journeys have been deleted because they overlap, "
-                   << erase_emptiness << " because they do not contain any clean stop_times, and "
-                   << erase_no_circulation << " because they are never valid");
+                   << erase_emptiness << " because they do not contain any clean stop_times, "
+                   << erase_no_circulation << " because they are never valid "
+                   << " and " << erase_invalid_stoptimes << " because the stop times were negatives");
 
     // Delete duplicate connections
     // Connections are sorted by departure,destination
@@ -392,7 +405,7 @@ static void affect_shape(nt::LineString& to, const nt::MultiLineString& from) {
 
 // TODO : For now we construct one route per journey pattern
 // We should factorise the routes.
-void Data::build_journey_patterns(){
+void Data::build_journey_patterns() {
     auto logger = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_INFO(logger, "building journey patterns...");
 
