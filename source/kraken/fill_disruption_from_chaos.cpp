@@ -207,19 +207,27 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     return std::move(impact);
 }
 
+void delete_disruption(nt::PT_Data& pt_data,
+                    const std::string& disruption_id) {
+    nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
+
+    auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
+            [&disruption_id](const std::unique_ptr<nt::new_disruption::Disruption>& disruption){
+                return disruption->uri == disruption_id;
+            });
+    if(it != holder.disruptions.end()){
+        holder.disruptions.erase(it);
+        //the disruption has ownership over the impacts so all items a deleted in cascade
+    }
+}
+
 void add_disruption(nt::PT_Data& pt_data,
                     const chaos::Disruption& chaos_disruption) {
     auto from_posix = navitia::from_posix_timestamp;
     nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
 
-    auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
-            [&chaos_disruption](const std::unique_ptr<nt::new_disruption::Disruption>& disruption){
-                return disruption->uri == chaos_disruption.id();
-            });
-    if(it != holder.disruptions.end()){
-        //the disruption already exist we delete the previous one before
-        holder.disruptions.erase(it);
-    }
+    //we delete the disrupion before adding the new one
+    delete_disruption(pt_data, chaos_disruption.id());
 
     auto disruption = std::make_unique<nt::new_disruption::Disruption>();
     disruption->uri = chaos_disruption.id();

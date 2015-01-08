@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -89,28 +89,29 @@ void MaintenanceWorker::handle_task(AmqpClient::Envelope::ptr_t envelope){
 }
 
 void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
-    LOG4CPLUS_TRACE(logger, "realtime info received!");
+    LOG4CPLUS_DEBUG(logger, "realtime info received!");
     transit_realtime::FeedMessage feed_message;
     if(! feed_message.ParseFromString(envelope->Message()->Body())){
         LOG4CPLUS_WARN(logger, "protobuf not valid!");
         return;
     }
     boost::shared_ptr<nt::Data> data;
+    LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
     for(const auto& entity: feed_message.entity()){
-        if(entity.HasExtension(chaos::disruption)){
-            LOG4CPLUS_WARN(logger, "has_extension");
-            if (!data) {
-                data = data_manager.get_data_clone();
-                data->last_rt_data_loaded = pt::microsec_clock::universal_time();
-            }
-
+        if (!data) {
+            data = data_manager.get_data_clone();
+            data->last_rt_data_loaded = pt::microsec_clock::universal_time();
+        }
+        if(entity.is_deleted()){
+            delete_disruption(*data->pt_data, entity.id());
+        }else if(entity.HasExtension(chaos::disruption)){
             add_disruption(*data->pt_data, entity.GetExtension(chaos::disruption));
-            LOG4CPLUS_DEBUG(logger, "end");
         }else{
             LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
         }
     }
     if (data) { data_manager.set_data(std::move(data)); }
+    LOG4CPLUS_DEBUG(logger, "data updated");
 }
 
 void MaintenanceWorker::listen_rabbitmq(){
