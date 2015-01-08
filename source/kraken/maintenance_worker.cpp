@@ -103,8 +103,10 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
             data->last_rt_data_loaded = pt::microsec_clock::universal_time();
         }
         if(entity.is_deleted()){
+            LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
             delete_disruption(*data->pt_data, entity.id());
         }else if(entity.HasExtension(chaos::disruption)){
+            LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
             add_disruption(*data->pt_data, entity.GetExtension(chaos::disruption));
         }else{
             LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
