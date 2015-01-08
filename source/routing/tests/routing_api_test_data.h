@@ -486,11 +486,13 @@ struct routing_api_data {
         auto info_severity = boost::make_shared<Severity>();
         info_severity->uri = "info";
         info_severity->wording = "information severity";
+        info_severity->color = "#FFFF00";
         holder.severities[info_severity->uri] = info_severity;
 
         auto bad_severity = boost::make_shared<Severity>();
         bad_severity->uri = "disruption";
         bad_severity->wording = "bad severity";
+        bad_severity->color = "#FFFFF0";
         holder.severities[bad_severity->uri] = bad_severity;
 
         {

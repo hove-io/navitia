@@ -381,6 +381,7 @@ disruption = {
     "tags": NonNullList(fields.String()),
     "cause": fields.String(),
     "severity": fields.String(),
+    "severity_color": fields.String(),
     "messages": NonNullList(NonNullNested(disruption_message)),
 }
 

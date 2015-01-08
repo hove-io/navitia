@@ -111,10 +111,10 @@ public:
         impact->uri = disrupt.uri;
         impact->application_periods = disrupt.get_application_periods();
 
-        auto info_severity = boost::make_shared<Severity>();
-        info_severity->uri = "info";
-        info_severity->wording = "information severity";
-        impact->severity = info_severity;
+        auto severity = boost::make_shared<Severity>();
+        severity->uri = "info";
+        severity->wording = "information severity";
+        impact->severity = severity;
 
         switch (disrupt.object_type) {
         case chaos::PtObject::Type::PtObject_Type_network:

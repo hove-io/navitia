@@ -800,6 +800,7 @@ def is_valid_disruption(disruption):
     get_not_null(disruption, 'uri')
     get_not_null(disruption, 'impact_uri')
     get_not_null(disruption, 'severity')
+    get_not_null(disruption, 'severity_color')
     msg = get_not_null(disruption, 'messages')
     assert len(msg) > 0
     for m in msg:
