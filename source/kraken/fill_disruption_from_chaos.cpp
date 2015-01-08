@@ -124,21 +124,24 @@ make_line_section(const chaos::PtObject& chaos_section,
         line_section.line = line;
     } else {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                       "fill_disruption_from_chaos: line id in LineSection invalid!");
+                       "fill_disruption_from_chaos: line id "
+                       << pb_section.line().uri() << " in LineSection invalid!");
         return boost::none;
     }
     if (const auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
         line_section.start_point = start;
     } else {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                       "fill_disruption_from_chaos: start_point id in LineSection invalid!");
+                       "fill_disruption_from_chaos: start_point id "
+                       << pb_section.start_point().uri() << " in LineSection invalid!");
         return boost::none;
     }
     if (const auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
         line_section.end_point = end;
     } else {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                       "fill_disruption_from_chaos: end_point id in LineSection invalid!");
+                       "fill_disruption_from_chaos: end_point id "
+                       << pb_section.end_point().uri() << " in LineSection invalid!");
         return boost::none;
     }
     if (impact) line->add_impact(impact);
@@ -160,8 +163,9 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
             res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data, impact));
             break;
         case chaos::PtObject_Type_line_section:
-            if (auto line_section = make_line_section(chaos_pt_object, pt_data, impact))
+            if (auto line_section = make_line_section(chaos_pt_object, pt_data, impact)) {
                 res.push_back(*line_section);
+            }
             break;
         case chaos::PtObject_Type_line:
             res.push_back(make_pt_obj(nt::Type_e::Line, chaos_pt_object.uri(), pt_data, impact));
