@@ -266,7 +266,7 @@ void Data::clean() {
     for(auto it1 = journey_pattern_vj.begin(); it1 != journey_pattern_vj.end(); ++it1) {
 
         for(auto vj1 = it1->second.begin(); vj1 != it1->second.end(); ++vj1) {
-            if (vj_to_erase.find(*vj1) != vj_to_erase.end()) {
+            if (vj_to_erase.count(*vj1)) {
                 toErase.insert((*vj1)->uri);
                 continue;
             }

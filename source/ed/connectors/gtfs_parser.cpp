@@ -936,12 +936,14 @@ void StopTimeGtfsHandler::finish(Data& data) {
         if (vj->stop_time_list.size() < 2) {
             continue;
         }
-        //we check that the vj, once ordered by order are worreclty sorted on the departure times
+        //we check that the vj, once ordered by order are correctly sorted on the departure times
         auto it_st = vj->stop_time_list.begin();
         for (auto it_next = it_st + 1; it_next != vj->stop_time_list.end(); it_next++, it_st ++) {
-            const auto st1 = *it_st;
-            const auto st2 = *it_next;
-            if (st1->departure_time > st2->departure_time || st1->arrival_time > st2->arrival_time) {
+            const auto* st1 = *it_st;
+            const auto* st2 = *it_next;
+            if (! (st1->arrival_time <= st1->departure_time &&
+                  st1->departure_time <= st2->arrival_time &&
+                  st2->arrival_time <= st2->departure_time)) {
                 LOG4CPLUS_INFO(logger, "invalid vj " << vj->uri << ", the stop times "
                                         "are not correcly ordered "
                                << "stop time " << st1->order << " [" << st1->arrival_time
