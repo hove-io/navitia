@@ -224,6 +224,7 @@ namespace navitia {
         template<typename T>
         void fill_channel(T const_it, chaos::Channel* channel) {
             FILL_TIMESTAMPMIXIN(channel)
+            FILL_REQUIRED(channel, id, std::string)
             FILL_REQUIRED(channel, name, std::string)
             FILL_NULLABLE(channel, content_type, std::string)
             FILL_NULLABLE(channel, max_size, uint32_t)

@@ -365,10 +365,22 @@ period = {
     "end": DateTime(),
 }
 
+channel = {
+    "content_type": fields.String(),
+    "id": fields.String(),
+    "name": fields.String(),
+}
 disruption_message = {
     "text": fields.String(),
-    "content_type": fields.String(),
+    "channel": NonNullNested(channel)
 }
+
+disruption_severity = {
+    "name": fields.String(),
+    "effect": fields.String(),
+    "color": fields.String()
+}
+
 disruption = {
     "uri": fields.String(),
     "impact_uri": fields.String(),
@@ -378,6 +390,7 @@ disruption = {
     "updated_at": DateTime(),
     "tags": NonNullList(fields.String()),
     "cause": fields.String(),
+    "severity": NonNullNested(disruption_severity),
     "messages": NonNullList(NonNullNested(disruption_message)),
 }
 
