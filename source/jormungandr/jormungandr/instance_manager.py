@@ -132,6 +132,11 @@ class InstanceManager(object):
         if self.start_ping:
             self.thread.start()
 
+    def _clear_cache(self):
+        logging.info('clear cache')
+        cache.delete_memoized(self._all_keys_of_id)
+
+
     def dispatch(self, arguments, api, instance_obj=None, instance_name=None,
                  request=None):
         if instance_obj:
@@ -143,7 +148,7 @@ class InstanceManager(object):
                 resp = api_func(arguments, instance)
                 if resp.HasField("publication_date") and\
                   instance.publication_date != resp.publication_date:
-                    cache.delete_memoized(self._all_keys_of_id)
+                    self._clear_cache()
                     instance.publication_date = resp.publication_date
                 return resp
             else:
@@ -161,9 +166,16 @@ class InstanceManager(object):
             try:
                 resp = instance.send_and_receive(req, timeout=1000, quiet=True)
                 #the instance is automatically updated on a call
+                if resp.HasField('publication_date') and\
+                  instance.publication_date != resp.publication_date:
+                    self._clear_cache()
+                    instance.publication_date = resp.publication_date
             except DeadSocketException:
                 #but if there is a error, we reset the geom manually
                 instance.geom = None
+                if instance.publication_date != -1:
+                    self._clear_cache()
+                    instance.publication_date = -1
                 continue
 
     def thread_ping(self, timer=10):

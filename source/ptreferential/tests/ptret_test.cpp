@@ -155,6 +155,7 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
+    b.finish();
 
     auto indexes = make_query(navitia::type::Type_e::Line, "", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 2);
@@ -198,6 +199,7 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
+    b.finish();
     b.data->pt_data->index();
 
     // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
@@ -228,6 +230,7 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
+    b.finish();
 
     auto indexes = make_query(navitia::type::Type_e::Line, "line.uri=A", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
@@ -268,6 +271,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri) {
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
+    b.finish();
     b.data->pt_data->build_uri();
 
     BOOST_CHECK_THROW(make_query(navitia::type::Type_e::Line, "stop_point.uri=stop1", {"A"}, *(b.data)), ptref_error);

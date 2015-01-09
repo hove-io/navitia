@@ -48,10 +48,10 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.Text, unique=True, nullable=False)
     email = db.Column(db.Text, unique=True, nullable=False)
-    keys = db.relationship('Key', backref='user', lazy='dynamic')
+    keys = db.relationship('Key', backref='user', lazy='dynamic', cascade='save-update, merge, delete')
 
     authorizations = db.relationship('Authorization', backref='user',
-                                     lazy='joined')
+                                     lazy='joined', cascade='save-update, merge, delete')
 
     def __init__(self, login=None, email=None, keys=None, authorizations=None):
         self.login = login
@@ -121,9 +121,9 @@ class Instance(db.Model):
     is_free = db.Column(db.Boolean, default=False, nullable=False)
 
     authorizations = db.relationship('Authorization', backref=backref('instance', lazy='joined'),
-            lazy='dynamic')
+            lazy='dynamic', cascade='save-update, merge, delete')
 
-    jobs = db.relationship('Job', backref='instance', lazy='dynamic')
+    jobs = db.relationship('Job', backref='instance', lazy='dynamic', cascade='save-update, merge, delete')
     # ============================================================
     # params for jormungandr
     # ============================================================

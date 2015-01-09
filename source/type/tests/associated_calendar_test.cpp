@@ -41,11 +41,11 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 //helper for lazyness
-boost::gregorian::date date(std::string str) {
+static boost::gregorian::date date(std::string str) {
     return boost::gregorian::from_undelimited_string(str);
 }
 
-boost::gregorian::date_period period(std::string beg, std::string end) {
+static boost::gregorian::date_period period(std::string beg, std::string end) {
     boost::gregorian::date start_date = boost::gregorian::from_undelimited_string(beg);
     boost::gregorian::date end_date = boost::gregorian::from_undelimited_string(end); //end is not in the period
     return {start_date, end_date};
@@ -60,6 +60,7 @@ struct calendar_fixture {
         cal->active_periods.push_back({start, end});
         cal->week_pattern = std::bitset<7>("1111111");
         b.data->pt_data->calendars.push_back(cal);
+        b.finish();
     }
     ed::builder b;
     navitia::type::Calendar* cal;
@@ -195,6 +196,7 @@ struct associated_cal_fixture {
                 ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
 
+        b.finish();
         b.lines["line:A"]->calendar_list.push_back(always_on_cal);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
         b.lines["line:A"]->calendar_list.push_back(monday_cal);

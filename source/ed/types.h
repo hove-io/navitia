@@ -146,7 +146,8 @@ struct CommercialMode : public Header, Nameable{
 
 struct PhysicalMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::PhysicalMode;
-    PhysicalMode() {}
+    double co2_emission = 0.;
+    PhysicalMode(){}
 
     bool operator<(const PhysicalMode& other) const;
 };

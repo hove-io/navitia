@@ -44,6 +44,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     b.vj("A")("stop1", 8000, 8050);
     b.vj("A")("stop1", 8000, 8050);
     b.vj("V")("stop2", 8000, 8050);
+    b.finish();
     b.data->build_uri();
     b.data->pt_data->index();
     b.data->build_raptor();

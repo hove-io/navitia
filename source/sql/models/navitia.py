@@ -73,7 +73,8 @@ company = Table('company', metadata,*[
 physical_mode = Table('physical_mode', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('name', TEXT(), primary_key=False, nullable=False),],
+    Column('name', TEXT(), primary_key=False, nullable=False),
+    Column('co2_emission', FLOAT(), primary_key=False, nullable=False, default=0)],
     schema='navitia')
 
 
@@ -233,6 +234,7 @@ vehicle_journey = Table('vehicle_journey', metadata,*[
     Column('end_time', INTEGER(), primary_key=False),
     Column('headway_sec', INTEGER(), primary_key=False),
     Column('utc_to_local_offset', INTEGER(), primary_key=False),
+    Column('is_frequency', BOOLEAN(), primary_key=False),
     ForeignKeyConstraint(['vehicle_properties_id'], [u'navitia.vehicle_properties.id'], name=u'vehicle_journey_vehicle_properties_id_fkey'),
     ForeignKeyConstraint(['validity_pattern_id'], [u'navitia.validity_pattern.id'], name=u'vehicle_journey_validity_pattern_id_fkey'),
     ForeignKeyConstraint(['previous_vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'vehicle_journey_previous_vehicle_journey_id_fkey'),

@@ -49,19 +49,7 @@ using namespace navitia::fare;
 namespace qi = boost::spirit::qi;
 namespace ph = boost::phoenix;
 
-void print_res(const results& res) {
-    std::cout << "found : " << !res.not_found << std::endl;
-
-    for (const auto& ticket : res.tickets) {
-        std::cout << ticket.key << " : " << ticket.value << " (" << ticket.comment << ")" << std::endl;
-        for (const auto& s : ticket.sections) {
-            std::cout << " -- " << s.path_item_idx << std::endl;
-        }
-    }
-
-}
-
-boost::posix_time::time_duration parse_time(const std::string & time_str){
+static boost::posix_time::time_duration parse_time(const std::string& time_str) {
     // Règle permettant de parser une heure au format HH|MM
     qi::rule<std::string::const_iterator, int()> time_r = (qi::int_ >> '|' >> qi::int_)[qi::_val = qi::_1 * 3600 + qi::_2 * 60];
     int time;
@@ -73,7 +61,7 @@ boost::posix_time::time_duration parse_time(const std::string & time_str){
     return boost::posix_time::seconds(time);
 }
 
-boost::gregorian::date parse_nav_date(const std::string & date_str){
+static boost::gregorian::date parse_nav_date(const std::string& date_str){
      std::vector< std::string > res;
    boost::algorithm::split(res, date_str, boost::algorithm::is_any_of("|"));
    if(res.size() != 3)
@@ -89,7 +77,7 @@ boost::gregorian::date parse_nav_date(const std::string & date_str){
    return date;
 }
 
-const navitia::routing::Path string_to_path(const std::vector<std::string>& keys) {
+static navitia::routing::Path string_to_path(const std::vector<std::string>& keys) {
     navitia::routing::Path p;
     for (const auto& key : keys) {
         std::string lower_key = boost::algorithm::to_lower_copy(key);
@@ -121,7 +109,7 @@ const navitia::routing::Path string_to_path(const std::vector<std::string>& keys
         last_sp->stop_area->uri = dest_stop_area;
 
         nt::StopTime* first_st = new nt::StopTime();
-        first_st->vehicle_journey = new nt::VehicleJourney();
+        first_st->vehicle_journey = new nt::DiscreteVehicleJourney();
         first_st->vehicle_journey->journey_pattern = new nt::JourneyPattern();
         first_st->vehicle_journey->journey_pattern->route = new nt::Route();
         first_st->vehicle_journey->journey_pattern->route->line = new nt::Line();
@@ -147,7 +135,7 @@ const navitia::routing::Path string_to_path(const std::vector<std::string>& keys
     return p;
 }
 
-Fare load_fare_from_ed(const ed::Data& ed_data) {
+static Fare load_fare_from_ed(const ed::Data& ed_data) {
     Fare fare;
     //for od and price, easy
     fare.od_tickets = ed_data.od_tickets;

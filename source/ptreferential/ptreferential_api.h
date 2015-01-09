@@ -40,10 +40,13 @@ pbnavitia::Response extract_data(const type::Data & data,
                                  const int depth);
 
 /// Construit la réponse proto buf, une fois que l'on trouvé les indices
-pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
+pbnavitia::Response query_pb(type::Type_e requested_type,
+                             const std::string& request,
                              const std::vector<std::string>& forbidden_uris,
                              const type::OdtLevel_e odt_level,
-                             const int depth, const bool show_codes,
+                             const int depth,
+                             const bool show_codes,
                              const int startPage,
-                             const int count, const type::Data &data);
+                             const int count,
+                             const type::Data& data);
 }}

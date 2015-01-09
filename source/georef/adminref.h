@@ -64,11 +64,13 @@ namespace navitia {
             polygon_type boundary;
             std::vector<const Admin*> admin_list;
             std::vector<const nt::StopArea*> main_stop_areas;
+            std::vector<const nt::StopPoint*> odt_stop_points; // zone odt stop points for the admin
 
             Admin():level(-1){}
             Admin(int lev):level(lev){}
             template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-                ar & idx & level & from_original_dataset & post_code & insee & name & uri & coord & admin_list & main_stop_areas & label;
+                ar & idx & level & from_original_dataset & post_code & insee
+                        & name & uri & coord & admin_list & main_stop_areas & label & odt_stop_points;
             }
         };
     }

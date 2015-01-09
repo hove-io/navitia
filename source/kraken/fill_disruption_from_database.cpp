@@ -52,24 +52,11 @@ void fill_disruption_from_database(const std::string& connection_string,
     }
     pqxx::work work(*conn, "loading disruptions");
 
-    // Get the size of disruptions table
-    std::string request_count = "SELECT COUNT(*) as count FROM disruption;";
-
-    pqxx::result result_count = work.exec(request_count);
-    auto result_it = result_count.begin();
-    if (result_it == result_count.end()) {
-        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
-                "There is no disruption table in the database");
-        return;
-    }
-    size_t total_count = result_it["count"].as<size_t>(),
-           offset = 0,
+    size_t offset = 0,
            items_per_request = 100;
-    if (total_count == 0) {
-        return;
-    }
     DisruptionDatabaseReader reader(pt_data);
-    while(offset < total_count) {
+    pqxx::result result;
+    do{
         std::string request = (boost::format(
                "SELECT "
                // Disruptions field
@@ -106,6 +93,16 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     p.id as ptobject_id, p.type as ptobject_type, p.uri as ptobject_uri,"
                "     extract(epoch from p.created_at) :: bigint as ptobject_created_at,"
                "     extract(epoch from p.updated_at) :: bigint as ptobject_updated_at,"
+               // Ptobject line_section optional fields
+               "     ls_line.uri as ls_line_uri,"
+               "     extract(epoch from ls_line.created_at) :: bigint as ls_line_created_at,"
+               "     extract(epoch from ls_line.updated_at) :: bigint as ls_line_updated_at,"
+               "     ls_start.uri as ls_start_uri,"
+               "     extract(epoch from ls_start.created_at) :: bigint as ls_start_created_at,"
+               "     extract(epoch from ls_start.updated_at) :: bigint as ls_start_updated_at,"
+               "     ls_end.uri as ls_end_uri,"
+               "     extract(epoch from ls_end.created_at) :: bigint as ls_end_created_at,"
+               "     extract(epoch from ls_end.updated_at) :: bigint as ls_end_updated_at,"
                // Message fields
                "     m.id as message_id, m.text as message_text,"
                "     extract(epoch from m.created_at) :: bigint as message_created_at,"
@@ -117,26 +114,30 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     extract(epoch from ch.updated_at) :: bigint as channel_updated_at"
                "     FROM disruption AS d"
                "     JOIN cause AS c ON (c.id = d.cause_id)"
-               "     JOIN associate_disruption_tag ON associate_disruption_tag.disruption_id = d.id"
-               "     JOIN tag AS t ON associate_disruption_tag.tag_id = t.id"
+               "     LEFT JOIN associate_disruption_tag ON associate_disruption_tag.disruption_id = d.id"
+               "     LEFT JOIN tag AS t ON associate_disruption_tag.tag_id = t.id"
                "     JOIN impact AS i ON i.disruption_id = d.id"
                "     JOIN application_periods AS a ON a.impact_id = i.id"
                "     JOIN severity AS s ON s.id = i.severity_id"
                "     JOIN associate_impact_pt_object ON associate_impact_pt_object.impact_id = i.id"
                "     JOIN pt_object AS p ON associate_impact_pt_object.pt_object_id = p.id"
+               "     LEFT JOIN line_section ON p.id = line_section.object_id"
+               "     LEFT JOIN pt_object AS ls_line ON line_section.line_object_id = ls_line.id"
+               "     LEFT JOIN pt_object AS ls_start ON line_section.start_object_id = ls_start.id"
+               "     LEFT JOIN pt_object AS ls_end ON line_section.end_object_id = ls_end.id"
                "     JOIN message AS m ON m.impact_id = i.id"
                "     JOIN channel AS ch ON m.channel_id = ch.id"
                "     ORDER BY d.id, c.id, t.id, i.id, a.id, p.id, m.id, ch.id"
                "     LIMIT %i OFFSET %i"
                " ;") % items_per_request % offset).str();
 
-        pqxx::result result = work.exec(request);
+        result = work.exec(request);
         for (auto res : result) {
             reader(res);
         }
 
-        offset += items_per_request;
-    }
+        offset += result.size();
+    }while(result.size() > 0);
     reader.finalize();
 }
 

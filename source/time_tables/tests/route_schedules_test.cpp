@@ -36,7 +36,7 @@ www.navitia.io
 #include "tests/utils_test.h"
 #include "time_tables/route_schedules.h"
 //for more concice test
-pt::ptime d(std::string str) {
+static pt::ptime d(std::string str) {
     return boost::posix_time::from_iso_string(str);
 }
 /*
@@ -73,6 +73,7 @@ BOOST_AUTO_TEST_CASE(test1) {
     b.vj("A", "1111111", "", true, "2", "2", "JP2")(a_name, 8*3600)(b_name, 8*3600 + 10*60);
     b.vj("A", "1111111", "", true, "3", "3", "JP2")(a_name, 8*3600 + 5*60)(b_name, 8*3600 + 20*60);
     b.vj("A", "1111111", "", true, "4", "4", "JP3")(b_name, 8*3600+25*60)(d_name, 9*3600 + 35*60);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
 

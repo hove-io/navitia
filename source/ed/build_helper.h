@@ -45,13 +45,15 @@ namespace ed {
 
 struct builder;
 
+
 /// Structure retournée à la construction d'un VehicleJourney
 struct VJ {
     builder & b;
-    navitia::type::VehicleJourney * vj;
+    nt::VehicleJourney* vj;
 
     /// Construit un nouveau vehicle journey
     VJ(builder & b, const std::string &line_name, const std::string &validity_pattern,
+       bool is_frequency,
        const std::string & block_id, bool is_adapted = true, const std::string& uri="",
        std::string meta_vj_name = "", std::string jp_uri = "");
 
@@ -64,16 +66,13 @@ struct VJ {
     VJ& operator()(const std::string &stopPoint, const std::string& arrivee, const std::string& depart,
             uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(), bool drop_off_allowed = true, bool pick_up_allowed = true);
 
-    /// Transforme les horaires en horaire entre start_time et end_time, toutes les headways secs
-    void frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs);
-
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);
 };
 
 struct SA {
-    builder & b;
-    navitia::type::StopArea * sa;
+    builder& b;
+    navitia::type::StopArea* sa;
 
     /// Construit un nouveau stopArea
     SA(builder & b, const std::string & sa_name, double x, double y, bool is_adapted = true);
@@ -95,7 +94,6 @@ struct builder{
     std::unique_ptr<navitia::type::Data> data = std::make_unique<navitia::type::Data>();
     navitia::georef::GeoRef street_network;
 
-
     /// Il faut préciser là date de début des différents validity patterns
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {
         data->meta->production_date = {begin, begin + boost::gregorian::years(1)};
@@ -103,14 +101,15 @@ struct builder{
 		data->loaded = true;
     }
 
-    /// Crée un vehicle journey
+    /// Create a discrete vehicle journey (no frequency, explicit stop times)
     VJ vj(const std::string& line_name,
           const std::string& validity_pattern = "11111111",
           const std::string& block_id="",
           const bool wheelchair_boarding = true,
           const std::string& uri="",
           const std::string& meta_vj="",
-          const std::string &jp_uri = "");
+          const std::string& jp_uri = "");
+
     VJ vj(const std::string& network_name,
           const std::string& line_name,
           const std::string& validity_pattern = "11111111",
@@ -118,7 +117,20 @@ struct builder{
           const bool wheelchair_boarding = true,
           const std::string& uri="",
           const std::string& meta_vj="",
-          const std::string &jp_uri="");
+          const std::string &jp_uri="",
+          bool is_frequency=false);
+
+    VJ frequency_vj(const std::string& line_name,
+                    uint32_t start_time,
+                    uint32_t end_time,
+                    uint32_t headway_secs,
+                    const std::string& network_name = "default_network",
+                    const std::string& validity_pattern = "11111111",
+                    const std::string& block_id="",
+                    const bool wheelchair_boarding = true,
+                    const std::string& uri="",
+                    const std::string& meta_vj="",
+                    const std::string &jp_uri="");
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0, const bool is_adapted = true);
@@ -133,6 +145,8 @@ struct builder{
     void generate_dummy_basis();
     void manage_admin();
     void build_autocomplete();
+
+    nt::MetaVehicleJourney* get_or_create_metavj(const std::string name);
 };
 
 }

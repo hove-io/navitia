@@ -572,9 +572,8 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
 
 const std::vector<Admin*> &GeoRef::find_admins(const type::GeographicalCoord& coord) const {
     try {
-        edge_t edge = this->nearest_edge(coord);
-        georef::Way *way = this->ways[this->graph[edge].way_idx];
-        return way->admin_list;
+        auto res = this->nearest_addr(coord);
+        return res.second->admin_list;
     } catch (const proximitylist::NotFound&) {
         static const std::vector<Admin*> empty;
         return empty;

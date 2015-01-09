@@ -35,7 +35,7 @@ www.navitia.io
 namespace navitia { namespace timetables {
 
 
-uint32_t /*Thermometer::*/get_lower_bound(std::vector<vector_size> &pre_computed_lb, type::idx_t max_sp) {
+static uint32_t get_lower_bound(std::vector<vector_size>& pre_computed_lb, type::idx_t max_sp) {
     uint32_t result = 0;
     for(unsigned int sp = 0; sp < (max_sp +1); ++sp) {
         result += std::max(pre_computed_lb[0][sp], pre_computed_lb[1][sp]);
@@ -43,7 +43,8 @@ uint32_t /*Thermometer::*/get_lower_bound(std::vector<vector_size> &pre_computed
     return result;
 }
 
-std::vector<vector_size> pre_compute_lower_bound(const std::vector<vector_idx> &journey_patterns, type::idx_t max_sp) {
+static std::vector<vector_size>
+pre_compute_lower_bound(const std::vector<vector_idx>& journey_patterns, type::idx_t max_sp) {
     std::vector<vector_size> lower_bounds;
     for(auto journey_pattern : journey_patterns) {
         lower_bounds.push_back(vector_size());
@@ -102,7 +103,7 @@ std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &journey_p
     return std::make_pair(result, res_bool);
 }
 
-uint32_t get_max_sp(const std::vector<vector_idx> &journey_patterns) {
+static uint32_t get_max_sp(const std::vector<vector_idx>& journey_patterns) {
 
     uint32_t max_sp = std::numeric_limits<uint32_t>::min();
 

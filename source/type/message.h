@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
+#include <boost/serialization/weak_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
@@ -40,6 +41,7 @@ www.navitia.io
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/variant.hpp>
+#include <boost/serialization/variant.hpp>
 
 #include <atomic>
 #include <map>
@@ -65,6 +67,22 @@ enum class Effect {
   UNKNOWN_EFFECT,
   STOP_MOVED
 };
+
+inline std::string to_string(Effect effect) {
+    switch (effect) {
+    case Effect::NO_SERVICE: return "NO_SERVICE";
+    case Effect::REDUCED_SERVICE: return "REDUCED_SERVICE";
+    case Effect::SIGNIFICANT_DELAYS: return "SIGNIFICANT_DELAYS";
+    case Effect::DETOUR: return "DETOUR";
+    case Effect::ADDITIONAL_SERVICE: return "ADDITIONAL_SERVICE";
+    case Effect::MODIFIED_SERVICE: return "MODIFIED_SERVICE";
+    case Effect::OTHER_EFFECT: return "OTHER_EFFECT";
+    case Effect::UNKNOWN_EFFECT: return "UNKNOWN_EFFECT";
+    case Effect::STOP_MOVED: return "STOP_MOVED";
+    default:
+        throw navitia::exception("unhandled effect case");
+    }
+}
 
 
 struct Cause {
@@ -101,11 +119,12 @@ struct UnknownPtObj {
     void serialize(Archive&, const unsigned int) {}
 };
 struct LineSection {
-    const Line *line = nullptr;
-    std::vector<const StopArea *> stops;
+    const Line* line = nullptr;
+    const StopArea* start_point = nullptr;
+    const StopArea* end_point = nullptr;
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & line & stops;
+        ar & line & start_point & end_point;
     }
 };
 typedef boost::variant<
@@ -126,6 +145,9 @@ struct Disruption;
 
 struct Message {
     std::string text;
+    std::string channel_id;
+    std::string channel_name;
+    std::string channel_content_type;
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -211,6 +233,7 @@ struct Disruption {
     const std::vector<boost::shared_ptr<Impact>>& get_impacts() const {
         return impacts;
     }
+
 private:
     //Disruption have the ownership of the Impacts.  Impacts are
     //shared_ptr and not unique_ptr because there are weak_ptr

@@ -113,6 +113,8 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data &data, p
 
 void fill_codes(const std::string& type, const std::string& value, pbnavitia::Code* code);
 
+void fill_co2_emission(pbnavitia::Section *pb_section, const type::VehicleJourney* vehicle_journey);
+
 void fill_pb_placemark(const navitia::georef::Way* way, const type::Data &data, pbnavitia::PtObject* place, int house_number, const type::GeographicalCoord& coord, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period,
@@ -198,31 +200,54 @@ void fill_pb_object(const type::Route* r, const type::Data& data,
                     const boost::posix_time::time_period& action_period = null_time_period,
                     const navitia::type::StopPoint* destination = nullptr);
 
-void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
+
+void fill_pb_object(const nt::VehicleJourney* vj,
+                    const nt::Data& data,
+                    pbnavitia::VehicleJourney * vehicle_journey,
+                    int max_depth,
+                    const pt::ptime& now,
+                    const pt::time_period& action_period,
+                    const bool show_codes);
+
+void fill_pb_object(const type::VehicleJourney* vj,
+                    const type::Data& data,
+                    pbnavitia::PtDisplayInfo* pt_display_info,
+                    const type::StopPoint* origin,
+                    const type::StopPoint* destination,
+                    int max_depth,
+                    const boost::posix_time::ptime& now,
+                    const boost::posix_time::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj,
+                    const type::Data&,
+                    pbnavitia::hasEquipments* has_equipments,
+                    const type::StopPoint* origin,
+                    const type::StopPoint* destination,
+                    int,
+                    const pt::ptime&,
+                    const pt::time_period&);
+
+void fill_pb_object(const type::VehicleJourney* vj,
+                    const type::Data& data,
+                    pbnavitia::hasEquipments* has_equipments,
+                    int max_depth,
+                    const pt::ptime& now,
+                    const pt::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj,
+                    const type::Data& data,
+                    pbnavitia::PtDisplayInfo* pt_display_info,
+                    int max_depth,
+                    const boost::posix_time::ptime& now,
+                    const boost::posix_time::time_period& action_period);
+
+void fill_pb_object(const type::VehicleJourney* vj,
+                    const type::Data& data,
                     const std::vector<const type::StopTime*>& stop_times,
                     pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey,
-                    int max_depth, const boost::posix_time::ptime& now,
+                    int max_depth,
+                    const boost::posix_time::ptime& now,
                     const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
-                    pbnavitia::PtDisplayInfo* pt_display_info, const type::StopPoint* origin,
-                    const type::StopPoint* destination, int max_depth,
-                    const boost::posix_time::ptime& now,
-                    const boost::posix_time::time_period& action_period);
-
-void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
-                    pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
-                    const boost::posix_time::ptime& now,
-                    const boost::posix_time::time_period& action_period);
-
-void fill_pb_object(const type::VehicleJourney* vj, const type::Data& data,
-                    pbnavitia::hasEquipments* has_equipments, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period);
-
-void fill_pb_object(const type::VehicleJourney* vj, const type::Data&,
-                    pbnavitia::hasEquipments* has_equipments, const type::StopPoint* origin,
-                    const type::StopPoint* destination, int,
-                    const pt::ptime&, const pt::time_period&);
 
 
 void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comment,

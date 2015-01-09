@@ -243,13 +243,14 @@ void EdReader::fill_commercial_modes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri FROM navitia.physical_mode";
+    std::string request = "SELECT id, name, uri, co2_emission FROM navitia.physical_mode";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::PhysicalMode* mode = new nt::PhysicalMode();
         const_it["uri"].to(mode->uri);
         const_it["name"].to(mode->name);
+        const_it["co2_emission"].to(mode->co2_emission);
 
         mode->idx = data.pt_data->physical_modes.size();
 
@@ -638,6 +639,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         "vj.end_time as end_time,"
         "vj.headway_sec as headway_sec,"
         "vj.utc_to_local_offset as utc_to_local_offset, "
+        "vj.is_frequency as is_frequency, "
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -651,9 +653,22 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
     pqxx::result result = work.exec(request);
     std::multimap<idx_t, nt::VehicleJourney*> prev_vjs, next_vjs;
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nt::VehicleJourney* vj = new nt::VehicleJourney();
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
 
+        auto journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
+        navitia::type::VehicleJourney* vj = nullptr;
+        if (const_it["is_frequency"].as<bool>()) {
+            journey_pattern->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
+            auto& freq_vj = journey_pattern->frequency_vehicle_journey_list.back();
+
+            const_it["start_time"].to(freq_vj->start_time);
+            const_it["end_time"].to(freq_vj->end_time);
+            const_it["headway_sec"].to(freq_vj->headway_secs);
+            vj = freq_vj.get();
+        } else {
+            journey_pattern->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
+            vj = journey_pattern->discrete_vehicle_journey_list.back().get();
+        }
         const_it["uri"].to(vj->uri);
         const_it["name"].to(vj->name);
         const_it["comment"].to(vj->comment);
@@ -661,17 +676,11 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["utc_to_local_offset"].to(vj->utc_to_local_offset);
         const_it["external_code"].to(vj->codes["external_code"]);
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
-
-        vj->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
-        vj->journey_pattern->vehicle_journey_list.push_back(vj);
+        vj->journey_pattern = journey_pattern;
 
         vj->company = company_map[const_it["company_id"].as<idx_t>()];
 
         vj->adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
-
-        const_it["start_time"].to(vj->start_time);
-        const_it["end_time"].to(vj->end_time);
-        const_it["headway_sec"].to(vj->headway_secs);
 
         if(!const_it["validity_pattern_id"].is_null()){
             vj->validity_pattern = validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
@@ -705,20 +714,22 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         if (const_it["school_vehicle"].as<bool>()){
             vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
         }
-        if (!const_it["prev_vj_id"].is_null()) {
+        if (! const_it["prev_vj_id"].is_null()) {
             prev_vjs.insert(std::make_pair(const_it["prev_vj_id"].as<idx_t>(), vj));
         }
-        if (!const_it["next_vj_id"].is_null()) {
+        if (! const_it["next_vj_id"].is_null()) {
             next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj));
         }
+
         data.pt_data->vehicle_journeys.push_back(vj);
-        this->vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
+        vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
     }
+
     for(auto vjid_vj: prev_vjs) {
-       vjid_vj.second->prev_vj = vehicle_journey_map[vjid_vj.first];
+        vjid_vj.second->prev_vj = vehicle_journey_map[vjid_vj.first];
     }
     for(auto vjid_vj: next_vjs) {
-       vjid_vj.second->next_vj = vehicle_journey_map[vjid_vj.first];
+        vjid_vj.second->next_vj = vehicle_journey_map[vjid_vj.first];
     }
 }
 
@@ -773,8 +784,15 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work) {
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        auto vj = vehicle_journey_map[const_it["vehicle_journey_id"].as<idx_t>()];
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        auto it = vehicle_journey_map.find(const_it["vehicle_journey_id"].as<idx_t>());
+        if (it == vehicle_journey_map.end()) {
+            throw navitia::exception("impossible to find vj "
+                                     + std::to_string(const_it["vehicle_journey_id"].as<idx_t>())
+                    + " for a stop time, we skip the stoptime ");
+        }
+
+        auto vj = it->second;
         vj->stop_time_list.emplace_back();
         nt::StopTime& stop = vj->stop_time_list.back();
 

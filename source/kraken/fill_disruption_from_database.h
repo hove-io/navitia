@@ -80,7 +80,7 @@ namespace navitia {
                 impact = nullptr;
             }
 
-            if (disruption && (!tag ||
+            if (disruption && !const_it["tag_id"].is_null() && (!tag ||
                     tag->id() != const_it["tag_id"].template as<std::string>())) {
                 fill_tag(const_it);
             }
@@ -173,9 +173,9 @@ namespace navitia {
         template<typename T>
         void fill_pt_object(T const_it) {
             auto ptobject = impact->add_informed_entities();
-            FILL_REQUIRED(ptobject, updated_at, uint64_t)
-            FILL_NULLABLE(ptobject, created_at, uint64_t)
-            FILL_REQUIRED(ptobject, uri, std::string)
+            FILL_NULLABLE(ptobject, updated_at, uint64_t)
+            FILL_REQUIRED(ptobject, created_at, uint64_t)
+            FILL_NULLABLE(ptobject, uri, std::string)
             if (!const_it["ptobject_type"].is_null()) {
                 const auto& type_ = const_it["ptobject_type"].template as<std::string>();
                 if (type_ == "line") {
@@ -188,6 +188,22 @@ namespace navitia {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_stop_area);
                 } else if (type_ == "line_section") {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_line_section);
+                    auto* ls = ptobject->mutable_pt_line_section();
+                    auto* ls_line = ls->mutable_line();
+                    ls_line->set_pt_object_type(chaos::PtObject_Type_line);
+                    FILL_NULLABLE(ls_line, updated_at, uint64_t)
+                    FILL_REQUIRED(ls_line, created_at, uint64_t)
+                    FILL_NULLABLE(ls_line, uri, std::string)
+                    auto* ls_start = ls->mutable_start_point();
+                    ls_start->set_pt_object_type(chaos::PtObject_Type_stop_area);
+                    FILL_NULLABLE(ls_start, updated_at, uint64_t)
+                    FILL_REQUIRED(ls_start, created_at, uint64_t)
+                    FILL_NULLABLE(ls_start, uri, std::string)
+                    auto* ls_end = ls->mutable_end_point();
+                    ls_end->set_pt_object_type(chaos::PtObject_Type_stop_area);
+                    FILL_NULLABLE(ls_end, updated_at, uint64_t)
+                    FILL_REQUIRED(ls_end, created_at, uint64_t)
+                    FILL_NULLABLE(ls_end, uri, std::string)
                 } else {
                     ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
                 }
@@ -208,6 +224,7 @@ namespace navitia {
         template<typename T>
         void fill_channel(T const_it, chaos::Channel* channel) {
             FILL_TIMESTAMPMIXIN(channel)
+            FILL_REQUIRED(channel, id, std::string)
             FILL_REQUIRED(channel, name, std::string)
             FILL_NULLABLE(channel, content_type, std::string)
             FILL_NULLABLE(channel, max_size, uint32_t)

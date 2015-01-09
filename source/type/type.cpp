@@ -35,6 +35,12 @@ www.navitia.io
 #include "utils/functions.h"
 #include "utils/logger.h"
 
+//they need to be included for the BOOST_CLASS_EXPORT_GUID macro
+#include "third_party/eos_portable_archive/portable_iarchive.hpp"
+#include "third_party/eos_portable_archive/portable_oarchive.hpp"
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+
 namespace navitia { namespace type {
 
 std::string VehicleJourney::get_direction() const {
@@ -106,22 +112,6 @@ uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
     }
 }
 
-uint32_t StopTime::end_time(const bool is_departure) const {
-    return vehicle_journey->end_time + (is_departure? departure_time : arrival_time);
-}
-
-uint32_t StopTime::start_time(const bool is_departure) const {
-    return vehicle_journey->start_time + (is_departure? departure_time : arrival_time);
-}
-
-bool StopTime::valid_hour(uint hour, bool clockwise) const {
-    if(!this->is_frequency())
-        return true;
-    else
-        return clockwise ? hour <= (this->end_time(true)) :
-            (this->vehicle_journey->start_time+arrival_time) <= hour;
-}
-
 bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const{
     if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
        || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
@@ -158,7 +148,15 @@ uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const 
     }
 }
 
-
+bool FrequencyVehicleJourney::is_valid(int day, const bool is_adapted) const {
+    if (day < 0)
+        return false;
+    if (! is_adapted) {
+        return validity_pattern->check(day);
+    } else {
+        return adapted_validity_pattern->check(day);
+    }
+}
 
 bool VehicleJourney::has_date_time_estimated() const{
     for(const StopTime& st : this->stop_time_list){
@@ -347,8 +345,7 @@ Mode_e static_data::modeByCaption(const std::string & mode_str) {
     return instance->modes_string.right.at(mode_str);
 }
 
-
-template<typename T> std::vector<idx_t> indexes(std::vector<T*> elements){
+template<typename T> std::vector<idx_t> indexes(const std::vector<T*>& elements){
     std::vector<idx_t> result;
     for(T* element : elements){
         result.push_back(element->idx);
@@ -379,6 +376,18 @@ void Calendar::build_validity_pattern(boost::gregorian::date_period production_p
     }
 }
 
+bool VehicleJourney::operator<(const VehicleJourney& other) const {
+    if (this->journey_pattern->uri != other.journey_pattern->uri)
+        return this->journey_pattern->uri < other.journey_pattern->uri;
+    return this->uri < other.uri;
+
+    if (this == &other) return false;
+    if(this->journey_pattern == other.journey_pattern){
+        return this->stop_time_list.front() < other.stop_time_list.front();
+    }else{
+        return this->journey_pattern->uri < other.journey_pattern->uri;
+    }
+}
 std::vector<idx_t> Calendar::get(Type_e type, const PT_Data & data) const{
     std::vector<idx_t> result;
     switch(type) {
@@ -439,9 +448,16 @@ std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
         case Type_e::VehicleJourney:
-            for(auto vj : data.vehicle_journeys) {
-                if(vj->journey_pattern->physical_mode == this)
+            for (auto jp: data.journey_patterns) {
+                if (jp->physical_mode != this) {
+                    continue;
+                }
+                for (const auto& vj: jp->discrete_vehicle_journey_list) {
                     result.push_back(vj->idx);
+                }
+                for (const auto& vj: jp->frequency_vehicle_journey_list) {
+                    result.push_back(vj->idx);
+                }
             }
             break;
     default: break;
@@ -462,21 +478,11 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     return result;
 }
 
-type::OdtLevel_e Line::get_odt_level() const{
-    type::OdtLevel_e result = type::OdtLevel_e::none;
-    if (this->route_list.empty()){
-        return result;
-    }
-
-    const Route* route = this->route_list.front();
-    result = route->get_odt_level();
-
-    for(idx_t idx = 1; idx < this->route_list.size(); idx++){
-        route = this->route_list[idx];
-        type::OdtLevel_e tmp = route->get_odt_level();
-        if (tmp != result){
-            result = type::OdtLevel_e::mixt;
-            break;
+type::hasOdtProperties Line::get_odt_properties() const{
+    type::hasOdtProperties result;
+    if (!this->route_list.empty()){
+        for (const auto route : this->route_list) {
+            result |= route->get_odt_properties();
         }
     }
     return result;
@@ -497,39 +503,45 @@ idx_t Route::main_destination() const {
     std::map<idx_t, size_t> stop_point_map;
     std::pair<idx_t, size_t> best{invalid_idx, 0};
     for(const JourneyPattern* jp : this->journey_pattern_list) {
-        for(const VehicleJourney* vj : jp->vehicle_journey_list) {
-            if((!vj->stop_time_list.empty())
-                && (vj->stop_time_list.back().journey_pattern_point != nullptr)
-                    && (vj->stop_time_list.back().journey_pattern_point->stop_point != nullptr)){
-                const StopPoint* sp = vj->stop_time_list.back().journey_pattern_point->stop_point;
+
+        jp->for_each_vehicle_journey([&](const VehicleJourney& vj) {
+            if((!vj.stop_time_list.empty())
+                && (vj.stop_time_list.back().journey_pattern_point != nullptr)
+                    && (vj.stop_time_list.back().journey_pattern_point->stop_point != nullptr)){
+                const StopPoint* sp = vj.stop_time_list.back().journey_pattern_point->stop_point;
                 stop_point_map[sp->idx] += 1;
                 size_t val = stop_point_map[sp->idx];
                 if (( best.first == invalid_idx) || (best.second < val)){
                     best = {sp->idx, val};
                 }
             }
-        }
+            return true;
+        });
     }
     return best.first;
 }
 
-type::OdtLevel_e Route::get_odt_level() const{
-    type::OdtLevel_e result = type::OdtLevel_e::none;
-    if (this->journey_pattern_list.empty()){
-        return result;
-    }
 
-    const JourneyPattern* jp = this->journey_pattern_list.front();
-    result = jp->odt_level;
-
-    for(idx_t idx = 1; idx < this->journey_pattern_list.size(); idx++){
-        jp = this->journey_pattern_list[idx];
-        if (jp->odt_level != result){
-            result = type::OdtLevel_e::mixt;
-            break;
+type::hasOdtProperties Route::get_odt_properties() const{
+    type::hasOdtProperties result;
+    if (!this->journey_pattern_list.empty()){
+        for (const auto jp : this->journey_pattern_list) {
+            result.odt_properties |= jp->odt_properties.odt_properties;
         }
     }
     return result;
+}
+
+void JourneyPattern::build_odt_properties(){
+    for_each_vehicle_journey([&](const VehicleJourney& vj) {
+        if (vj.is_virtual_odt()) {
+            this->odt_properties.set_virtual_odt();
+        }
+        if (vj.is_zonal_odt()) {
+            this->odt_properties.set_zonal_odt();
+        }
+        return true;
+    });
 }
 
 std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
@@ -538,7 +550,14 @@ std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
     case Type_e::Route: result.push_back(route->idx); break;
     case Type_e::CommercialMode: result.push_back(commercial_mode->idx); break;
     case Type_e::JourneyPatternPoint: return indexes(journey_pattern_point_list);
-    case Type_e::VehicleJourney: return indexes(vehicle_journey_list);
+    case Type_e::VehicleJourney:
+        for(const auto& f_vj: frequency_vehicle_journey_list) {
+            result.push_back(f_vj->idx);
+        }
+        for(const auto& d_vj: discrete_vehicle_journey_list) {
+            result.push_back(d_vj->idx);
+        }
+        break;
     default: break;
     }
     return result;
@@ -555,6 +574,26 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     default: break;
     }
     return result;
+}
+
+VehicleJourney::~VehicleJourney() {}
+FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
+DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
+
+JourneyPattern::~JourneyPattern() {}
+
+//we need to define the copy constructor because we don't want to copy the vjs
+//(idx can be skiped too)
+JourneyPattern::JourneyPattern(const JourneyPattern& other):
+    is_frequence(other.is_frequence),
+    route(other.route),
+    commercial_mode(other.commercial_mode),
+    physical_mode(other.physical_mode),
+    journey_pattern_point_list(other.journey_pattern_point_list),
+    odt_properties(other.odt_properties)
+{
+    name = other.name;
+    uri = other.uri;
 }
 
 std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data &) const {
@@ -643,3 +682,6 @@ void StreetNetworkParams::set_filter(const std::string &param_uri){
 }
 
 }} //namespace navitia::type
+
+BOOST_CLASS_EXPORT_GUID(navitia::type::DiscreteVehicleJourney, "DiscreteVehicleJourney")
+BOOST_CLASS_EXPORT_GUID(navitia::type::FrequencyVehicleJourney, "FrequencyVehicleJourney")

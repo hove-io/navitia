@@ -365,10 +365,22 @@ period = {
     "end": DateTime(),
 }
 
+channel = {
+    "content_type": fields.String(),
+    "id": fields.String(),
+    "name": fields.String(),
+}
 disruption_message = {
     "text": fields.String(),
-    "content_type": fields.String(),
+    "channel": NonNullNested(channel)
 }
+
+disruption_severity = {
+    "name": fields.String(),
+    "effect": fields.String(),
+    "color": fields.String()
+}
+
 disruption = {
     "uri": fields.String(),
     "impact_uri": fields.String(),
@@ -378,6 +390,7 @@ disruption = {
     "updated_at": DateTime(),
     "tags": NonNullList(fields.String()),
     "cause": fields.String(),
+    "severity": NonNullNested(disruption_severity),
     "messages": NonNullList(NonNullNested(disruption_message)),
 }
 
@@ -454,18 +467,6 @@ stop_time = {
     "arrival_time": SplitDateTime(date=None, time='arrival_time'),
     "departure_time": SplitDateTime(date=None, time='departure_time'),
     "journey_pattern_point": NonNullProtobufNested(journey_pattern_point)
-}
-
-vehicle_journey = {
-    "id": fields.String(attribute="uri"),
-    "name": fields.String(),
-    "messages": NonNullList(NonNullNested(generic_message)),
-    "disruptions": NonNullList(NonNullNested(disruption)),
-    "journey_pattern": PbField(journey_pattern),
-    "stop_times": NonNullList(NonNullNested(stop_time)),
-    "comment": fields.String(),
-    "codes": NonNullList(NonNullNested(code)),
-    "validity_pattern": NonNullProtobufNested(validity_pattern),
 }
 
 line = deepcopy(generic_type)
@@ -601,6 +602,12 @@ class UrisToLinks():
             response.append({"type": "network", "id": uris.network})
         if uris.note != '':
             response.append({"type": "note", "id": uris.note})
+
+        for value in display_info.notes:
+            response.append({"type": 'notes',
+                             "id": value.uri,
+                             'value': value.note,
+                             'internal': True})
         return response
 
 

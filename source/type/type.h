@@ -46,8 +46,10 @@ www.navitia.io
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
+#include <boost/serialization/export.hpp>
 
 namespace navitia { namespace georef {
  struct Admin;
@@ -362,7 +364,22 @@ struct ExceptionDate {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & type & date;
     }
+    inline bool operator<(const ExceptionDate& that) const {
+        if (this->type < that.type) return true;
+        if (that.type < this->type) return false;
+        return this->date < that.date;
+    }
+    inline bool operator==(const ExceptionDate& that) const {
+        return this->type == that.type && this->date == that.date;
+    }
 };
+inline std::ostream& operator<<(std::ostream& os, const ExceptionDate& ed) {
+    switch (ed.type) {
+    case ExceptionDate::ExceptionType::add: os << "excl "; break;
+    case ExceptionDate::ExceptionType::sub: os << "incl "; break;
+    }
+    return os << ed.date;
+}
 
 std::string to_string(ExceptionDate::ExceptionType t);
 
@@ -472,10 +489,11 @@ struct CommercialMode : public Header, Nameable{
 
 struct PhysicalMode : public Header, Nameable{
     const static Type_e type = Type_e::PhysicalMode;
+    double co2_emission = 0.;
     std::vector<JourneyPattern*> journey_pattern_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & journey_pattern_list;
+        ar & idx & name & uri & co2_emission & journey_pattern_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -485,6 +503,71 @@ struct PhysicalMode : public Header, Nameable{
 };
 
 struct Calendar;
+
+typedef std::bitset<2> OdtProperties;
+struct hasOdtProperties {
+    static const uint8_t VIRTUAL_ODT = 0;
+    static const uint8_t ZONAL_ODT = 1;
+    OdtProperties odt_properties;
+
+    hasOdtProperties() {
+        odt_properties.reset();
+    }
+
+    void operator=(const type::hasOdtProperties& other) {
+        odt_properties = other.odt_properties;
+    }
+
+    void operator|=(const type::hasOdtProperties& other) {
+        odt_properties |= other.odt_properties;
+    }
+
+    void reset_odt() {
+        odt_properties.reset();
+    }
+
+    void set_regular() {
+        odt_properties.reset();
+    }
+
+    void set_virtual_odt() {
+        odt_properties.set(VIRTUAL_ODT, true);
+    }
+
+    void unset_virtual_odt() {
+        odt_properties.set(VIRTUAL_ODT, false);
+    }
+
+    void set_zonal_odt() {
+        odt_properties.set(ZONAL_ODT, true);
+    }
+    void unset_zonal_odt() {
+        odt_properties.set(ZONAL_ODT, false);
+    }
+
+    bool is_regular() const {
+        return odt_properties.none();
+    }
+
+    bool is_odt() const {
+        return odt_properties.any();
+    }
+
+    bool is_mixed() const {
+        return odt_properties.all();
+    }
+
+    bool is_virtual_odt() const {
+        return odt_properties[VIRTUAL_ODT];
+    }
+    bool is_zonal_odt() const {
+        return odt_properties[ZONAL_ODT];
+    }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & odt_properties;
+    }
+};
 
 struct Line : public Header, Nameable, HasMessages, Codes{
     const static Type_e type = Type_e::Line;
@@ -510,7 +593,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         ar & idx & name & uri & code & forward_name & backward_name
                 & additional_data & color & sort & commercial_mode
                 & company_list & network & route_list & physical_mode_list
-                & impacts & calendar_list & codes & shape;
+                & impacts & calendar_list & codes & shape & comment;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -529,7 +612,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
         }
         return this < &other;
     }
-    type::OdtLevel_e get_odt_level() const;
+    type::hasOdtProperties get_odt_properties() const;
 };
 
 struct Route : public Header, Nameable, HasMessages, Codes{
@@ -539,36 +622,160 @@ struct Route : public Header, Nameable, HasMessages, Codes{
     std::vector<JourneyPattern*> journey_pattern_list;
 
     idx_t main_destination() const;
-    type::OdtLevel_e get_odt_level() const;
+    type::hasOdtProperties get_odt_properties() const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & line & journey_pattern_list & impacts & codes & shape;
+        ar & idx & name & uri & line & journey_pattern_list & impacts & codes & shape & comment;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Route & other) const { return this < &other; }
 
 };
+struct JourneyPattern;
+struct MetaVehicleJourney;
 
-struct JourneyPattern : public Header, Nameable{
+/**
+ * A VehicleJourney is an abstract class with 2 subclasses
+ *
+ *  - DiscreteVehicleJourney
+ * The 'classic' VJ, with expanded stop times
+ *
+ *  - FrequencyVehicleJourney
+ * A frequency VJ, with a start, an end and frequency (headway)
+ *
+ * The JourneyPattern owns 2 differents list for the VJs, and both are treated differently in the algorithm (in best_stop_times)
+ */
+struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes {
+    const static Type_e type = Type_e::VehicleJourney;
+    JourneyPattern* journey_pattern = nullptr;
+    Company* company = nullptr;
+    ValidityPattern* validity_pattern = nullptr;
+    std::vector<StopTime> stop_time_list;
+
+    // These variables are used in the case of an extension of service
+    // They indicate what's the vj you can take directly after or before this one
+    // They have the same block id
+    VehicleJourney* next_vj = nullptr;
+    VehicleJourney* prev_vj = nullptr;
+    //associated meta vj
+    const MetaVehicleJourney* meta_vj = nullptr;
+    std::string odt_message; //TODO It seems a VJ can have either a comment or an odt_message but never both, so we could use only the 'comment' to store the odt_message
+
+    VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
+
+    // all times are stored in UTC
+    // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
+    // For example for departure board over a period (calendar)
+    // thus we store the shit needed to convert all stop times of the vehicle journey to local
+    int16_t utc_to_local_offset = 0; //in seconds
+
+    bool is_adapted = false; //REMOVE (change to enum ?)
+    ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
+    std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
+    VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
+
+    std::string get_direction() const;
+    bool has_date_time_estimated() const;
+
+    bool is_odt()  const{
+        return vehicle_journey_type != VehicleJourneyType::regular;
+    }
+    bool is_none_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::regular);}
+    bool is_virtual_odt() const {return (this->vehicle_journey_type == VehicleJourneyType::virtual_with_stop_time);}
+    bool is_zonal_odt() const {return (this->vehicle_journey_type > VehicleJourneyType::virtual_with_stop_time);}
+
+    bool has_boarding() const;
+    bool has_landing() const;
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+
+    bool operator<(const VehicleJourney& other) const;
+    template<class Archive> void serialize(Archive& ar, const unsigned int ) {
+        ar & name & uri & journey_pattern & company & validity_pattern
+            & idx & stop_time_list & is_adapted
+            & adapted_validity_pattern & adapted_vehicle_journey_list
+            & theoric_vehicle_journey & comment & vehicle_journey_type
+            & odt_message & _vehicle_properties & impacts
+            & codes & next_vj & prev_vj
+            & meta_vj & utc_to_local_offset;
+    }
+
+    type::OdtLevel_e get_odt_level() const;
+    virtual ~VehicleJourney();
+    //TODO remove the virtual there, but to do that we need to remove the prev/next_vj since boost::serialiaze needs to make a virtual call for those
+private:
+    /*
+     * Note: the destructor has not been defined as virtual because we don't need those classes to
+     * be virtual.
+     * the JP owns 2 differents lists so no virtual call must be made on destruction
+     */
+    VehicleJourney() = default;
+    VehicleJourney(const VehicleJourney&) = default;
+    friend class boost::serialization::access;
+    friend struct DiscreteVehicleJourney;
+    friend struct FrequencyVehicleJourney;
+};
+
+struct DiscreteVehicleJourney: public VehicleJourney {
+    virtual ~DiscreteVehicleJourney();
+    template<class Archive> void serialize(Archive& ar, const unsigned int ) {
+        ar & boost::serialization::base_object<VehicleJourney>(*this);
+    }
+};
+
+
+struct FrequencyVehicleJourney: public VehicleJourney {
+
+    uint32_t start_time = std::numeric_limits<uint32_t>::max(); // first departure hour
+    uint32_t end_time = std::numeric_limits<uint32_t>::max(); // last departure hour
+    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); // Seconds between each departure.
+    virtual ~FrequencyVehicleJourney();
+
+    bool is_valid(int day, const bool is_adapted) const;
+    template<class Archive> void serialize(Archive& ar, const unsigned int) {
+        ar & boost::serialization::base_object<VehicleJourney>(*this);
+
+        ar & start_time & end_time & headway_secs;
+    }
+};
+
+struct JourneyPattern : public Header, Nameable {
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence = false;
-    OdtLevel_e odt_level= OdtLevel_e::none; // Computed at serialization
     Route* route = nullptr;
     CommercialMode* commercial_mode = nullptr;
     PhysicalMode* physical_mode = nullptr;
 
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
-    std::vector<VehicleJourney*> vehicle_journey_list;
+    hasOdtProperties odt_properties;
+
+    std::vector<std::unique_ptr<DiscreteVehicleJourney>> discrete_vehicle_journey_list;
+    std::vector<std::unique_ptr<FrequencyVehicleJourney>> frequency_vehicle_journey_list;
+
+    JourneyPattern() {}
+    ~JourneyPattern();
+    JourneyPattern(const JourneyPattern&);
+    JourneyPattern operator=(const JourneyPattern&) = delete;
+
+    template <typename T>
+    void for_each_vehicle_journey(const T func) const {
+        //call the functor for each vj.
+        // if func return false, we stop
+        for (const auto& vj: discrete_vehicle_journey_list) { if (! func(*vj)) {return;} }
+        for (const auto& vj: frequency_vehicle_journey_list) { if (! func(*vj)) {return;} }
+    }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & name & uri & is_frequence & odt_level &  route & commercial_mode
-                & physical_mode & journey_pattern_point_list & vehicle_journey_list;
+        ar & idx & name & uri & is_frequence & odt_properties &  route & commercial_mode
+                & physical_mode & journey_pattern_point_list & discrete_vehicle_journey_list
+                & frequency_vehicle_journey_list;
+
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const JourneyPattern & other) const { return this < &other; }
 
+    void build_odt_properties();
 };
 
 struct AssociatedCalendar {
@@ -598,7 +805,7 @@ struct StopTime {
     std::bitset<8> properties;
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
     uint32_t arrival_time = 0; ///< En secondes depuis minuit
-    uint32_t departure_time = 0; ///< En secondes depuis minuit
+    uint32_t departure_time = 0; ///< En secondes depuis minuit //TODO, comment that, with explanation for frequency VJ and non frequency VJ
     VehicleJourney* vehicle_journey = nullptr;
     JourneyPatternPoint* journey_pattern_point = nullptr;
 
@@ -640,13 +847,6 @@ struct StopTime {
         return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);
     }
 
-
-    /** Is this hour valid : only concerns frequency data
-     * Does the hour falls inside of the validity period of the frequency
-     * The difficult part is when the validity period goes over midnight
-     */
-    bool valid_hour(uint hour, bool clockwise) const;
-
     bool is_valid_day(u_int32_t day, const bool is_arrival, const bool is_adapted) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -658,74 +858,6 @@ struct StopTime {
 
 };
 
-
-struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages, Codes{
-    const static Type_e type = Type_e::VehicleJourney;
-    JourneyPattern* journey_pattern = nullptr;
-    Company* company = nullptr;
-    ValidityPattern* validity_pattern = nullptr;
-    std::vector<StopTime> stop_time_list;
-
-    // These variables are used in the case of an extension of service
-    // They indicate what's the vj you can take directly after or before this one
-    // They have the same block id
-    VehicleJourney* next_vj = nullptr;
-    VehicleJourney* prev_vj = nullptr;
-    //associated meta vj
-    const MetaVehicleJourney* meta_vj = nullptr;
-    std::string odt_message;
-
-    VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
-    uint32_t start_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, first departure
-    uint32_t end_time = std::numeric_limits<uint32_t>::max(); ///< If frequency-modeled, last departure
-    uint32_t headway_secs = std::numeric_limits<uint32_t>::max(); ///< Seconds between each departure.
-
-    // all times are stored in UTC
-    // however, sometime we do not have a date to convert the time to a local value (in jormungandr)
-    // For example for departure board over a period (calendar)
-    // thus we store the shit needed to convert all stop times of the vehicle journey to local
-    int16_t utc_to_local_offset = 0; //in seconds
-
-    bool is_adapted = false; //REMOVE (change to enum ?)
-    ValidityPattern* adapted_validity_pattern = nullptr; //REMOVE
-    std::vector<VehicleJourney*> adapted_vehicle_journey_list; //REMOVE
-    VehicleJourney* theoric_vehicle_journey = nullptr; //REMOVE
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern & company & validity_pattern
-            & idx & stop_time_list & is_adapted
-            & adapted_validity_pattern & adapted_vehicle_journey_list
-            & theoric_vehicle_journey & comment & vehicle_journey_type
-            & odt_message & _vehicle_properties & impacts
-            & codes & next_vj & prev_vj & start_time & end_time & headway_secs
-            & meta_vj & utc_to_local_offset;
-    }
-    std::string get_direction() const;
-    bool has_date_time_estimated() const;
-    bool has_boarding() const;
-    bool has_landing() const;
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-
-    bool operator<(const VehicleJourney& other) const {
-        if (this->journey_pattern->uri != other.journey_pattern->uri)
-            return this->journey_pattern->uri < other.journey_pattern->uri;
-        return this->uri < other.uri;
-
-        if (this == &other) return false;
-        if(this->journey_pattern == other.journey_pattern){
-            // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
-            return this->stop_time_list.front() < other.stop_time_list.front();
-        }else{
-            return this->journey_pattern->uri < other.journey_pattern->uri;
-        }
-    }
-
-    bool is_odt()  const{
-        return vehicle_journey_type != VehicleJourneyType::regular;
-    }
-
-    type::OdtLevel_e get_odt_level() const;
-};
 
 struct ValidityPattern : public Header {
     const static Type_e type = Type_e::ValidityPattern;
@@ -976,3 +1108,4 @@ struct enum_size_trait<type::Mode_e> {
 };
 
 } //namespace navitia
+

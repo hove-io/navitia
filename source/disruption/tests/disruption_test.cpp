@@ -70,6 +70,7 @@ namespace pt = boost::posix_time;
 using navitia::type::new_disruption::Impact;
 using navitia::type::new_disruption::PtObj;
 using navitia::type::new_disruption::Disruption;
+using navitia::type::new_disruption::Severity;
 
 inline u_int64_t operator"" _dt_time_stamp(const char* str, size_t s) {
     return navitia::to_posix_timestamp(boost::posix_time::from_iso_string(std::string(str, s)));
@@ -110,6 +111,11 @@ public:
         impact->uri = disrupt.uri;
         impact->application_periods = disrupt.get_application_periods();
 
+        auto severity = boost::make_shared<Severity>();
+        severity->uri = "info";
+        severity->wording = "information severity";
+        impact->severity = severity;
+
         switch (disrupt.object_type) {
         case chaos::PtObject::Type::PtObject_Type_network:
             impact->informed_entities.push_back(make_pt_obj(nt::Type_e::Network, disrupt.object_uri, pt_data, impact));
@@ -147,6 +153,7 @@ public:
         b.vj("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
                 ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.generate_dummy_basis();
+        b.finish();
         b.data->pt_data->index();
         b.data->build_uri();
         for(navitia::type::Line *line : b.data->pt_data->lines){

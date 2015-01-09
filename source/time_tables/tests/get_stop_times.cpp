@@ -38,6 +38,7 @@ using namespace navitia::timetables;
 BOOST_AUTO_TEST_CASE(test1){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
+    b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
 

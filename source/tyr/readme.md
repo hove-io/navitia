@@ -221,7 +221,7 @@ The API handle the user's token
 
 To add a token, call:
 
-    POST /v0/users/$USERID/keys  
+    POST /v0/users/$USERID/keys?app_name=foo
 
 ```json
 {
@@ -232,7 +232,8 @@ To add a token, call:
         {
             "id": 1,
             "token": "05fd3dd6-3b27-4470-ad85-60d80cdce487",
-            "valid_until": null
+            "valid_until": null,
+            "app_name": "foo"
         }
     ],
     "login": "alex"

@@ -670,7 +670,7 @@ void CalendarGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
     }
 }
 
-boost::gregorian::date_period compute_smallest_active_period(const nm::ValidityPattern& vp) {
+static boost::gregorian::date_period compute_smallest_active_period(const nm::ValidityPattern& vp) {
     size_t beg(std::numeric_limits<size_t>::max()), end(std::numeric_limits<size_t>::min());
 
     for (size_t i = 0; i < vp.days.size(); ++i) {
@@ -932,11 +932,34 @@ void StopTimeGtfsHandler::finish(Data& data) {
                 }
                 return st1->order < st2->order;
             });
+
+        if (vj->stop_time_list.size() < 2) {
+            continue;
+        }
+        //we check that the vj, once ordered by order are correctly sorted on the departure times
+        auto it_st = vj->stop_time_list.begin();
+        for (auto it_next = it_st + 1; it_next != vj->stop_time_list.end(); it_next++, it_st ++) {
+            const auto* st1 = *it_st;
+            const auto* st2 = *it_next;
+            if (! (st1->arrival_time <= st1->departure_time &&
+                  st1->departure_time <= st2->arrival_time &&
+                  st2->arrival_time <= st2->departure_time)) {
+                LOG4CPLUS_INFO(logger, "invalid vj " << vj->uri << ", the stop times "
+                                        "are not correcly ordered "
+                               << "stop time " << st1->order << " [" << st1->arrival_time
+                               << ", " << st1->departure_time <<"]"
+                               << " stop time " << st2->order << " [" << st2->arrival_time
+                               << ", " << st2->departure_time << "]"
+                               << " we erase the VJ");
+                data.vj_to_erase.insert(vj);
+                break;
+            }
+        }
     }
     LOG4CPLUS_INFO(logger, "Nb stop times: " << data.stops.size());
 }
 
-int to_utc(const std::string& local_time, int utc_offset) {
+static int to_utc(const std::string& local_time, int utc_offset) {
     return time_to_int(local_time) - utc_offset;
 }
 

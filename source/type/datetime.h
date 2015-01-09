@@ -49,8 +49,12 @@ namespace DateTimeUtils{
 
     const uint32_t SECONDS_PER_DAY = 86400;
 
-    const navitia::DateTime inf = std::numeric_limits<uint32_t>::max();
-    const navitia::DateTime min = 0;
+    constexpr navitia::DateTime inf = std::numeric_limits<uint32_t>::max();
+
+    // sometimes we need a not valid datetime which is not semanticaly the max, so we use a different name
+    constexpr navitia::DateTime not_valid = std::numeric_limits<uint32_t>::max();
+
+    constexpr navitia::DateTime min = 0;
 
     inline navitia::DateTime set(int date, int time_of_day) {
         return date * SECONDS_PER_DAY + time_of_day;

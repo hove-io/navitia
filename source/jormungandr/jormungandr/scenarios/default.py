@@ -107,8 +107,6 @@ class Scenario(simple.Scenario):
                 req.journeys.datetimes.append(dte)
         req.journeys.clockwise = request["clockwise"]
         sn_params = req.journeys.streetnetwork_params
-#we keep this field for compatibily with kraken 1.2, to be removed after the release of the 1.3
-        sn_params.max_duration_to_pt = request["max_walking_duration_to_pt"]
         sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
         sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
         sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
@@ -370,6 +368,10 @@ class Scenario(simple.Scenario):
         self.change_ids(new_response, len(initial_response.journeys))
         if len(new_response.journeys) == 0:
             return
+
+        #if the initial response was an error we remove the error since we have result now
+        if initial_response.HasField('error'):
+            initial_response.ClearField('error')
 
         #we don't want to add a journey already there
         tickets_to_add = set()

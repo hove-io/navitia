@@ -49,7 +49,7 @@ namespace bg = boost::gregorian;
 
 namespace navitia {
 
-nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
+static nt::Type_e get_type(pbnavitia::NavitiaType pb_type) {
     switch(pb_type){
     case pbnavitia::ADDRESS: return nt::Type_e::Address;
     case pbnavitia::STOP_AREA: return nt::Type_e::StopArea;
@@ -72,7 +72,7 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     }
 }
 
-nt::OdtLevel_e get_odt_level(pbnavitia::OdtLevel pb_odt_level) {
+static nt::OdtLevel_e get_odt_level(pbnavitia::OdtLevel pb_odt_level) {
     switch(pb_odt_level){
         case pbnavitia::OdtLevel::mixt: return nt::OdtLevel_e::mixt;
         case pbnavitia::OdtLevel::zonal: return nt::OdtLevel_e::zonal;
@@ -105,7 +105,7 @@ Worker::Worker(DataManager<navitia::type::Data>& data_manager, kraken::Configura
 
 Worker::~Worker(){}
 
-std::string get_string_status(const boost::shared_ptr<const nt::Data>& data) {
+static std::string get_string_status(const boost::shared_ptr<const nt::Data>& data) {
     if (data->loaded) {
         return "running";
     }
@@ -349,42 +349,22 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
         case type::Mode_e::Bike:
             result.offset = data->geo_ref->offsets[type::Mode_e::Bike];
             result.speed_factor = request.bike_speed() / georef::default_speed[type::Mode_e::Bike];
-            if(request.has_max_bike_duration_to_pt()){
-                max_non_pt = request.max_bike_duration_to_pt();
-            }else{
-                //we keep this field for compatibily with kraken 1.2, to be removed after the release of the 1.3
-                max_non_pt = request.max_duration_to_pt();
-            }
+            max_non_pt = request.max_bike_duration_to_pt();
             break;
         case type::Mode_e::Car:
             result.offset = data->geo_ref->offsets[type::Mode_e::Car];
             result.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
-            if(request.has_max_car_duration_to_pt()){
-                max_non_pt = request.max_car_duration_to_pt();
-            }else{
-                //we keep this field for compatibily with kraken 1.2, to be removed after the release of the 1.3
-                max_non_pt = request.max_duration_to_pt();
-            }
+            max_non_pt = request.max_car_duration_to_pt();
             break;
         case type::Mode_e::Bss:
             result.offset = data->geo_ref->offsets[type::Mode_e::Bss];
             result.speed_factor = request.bss_speed() / georef::default_speed[type::Mode_e::Bss];
-            if(request.has_max_bss_duration_to_pt()){
-                max_non_pt = request.max_bss_duration_to_pt();
-            }else{
-                //we keep this field for compatibily with kraken 1.2, to be removed after the release of the 1.3
-                max_non_pt = request.max_duration_to_pt();
-            }
+            max_non_pt = request.max_bss_duration_to_pt();
             break;
         default:
             result.offset = data->geo_ref->offsets[type::Mode_e::Walking];
             result.speed_factor = request.walking_speed() / georef::default_speed[type::Mode_e::Walking];
-            if(request.has_max_walking_duration_to_pt()){
-                max_non_pt = request.max_walking_duration_to_pt();
-            }else{
-                //we keep this field for compatibily with kraken 1.2, to be removed after the release of the 1.3
-                max_non_pt = request.max_duration_to_pt();
-            }
+            max_non_pt = request.max_walking_duration_to_pt();
             break;
     }
     result.max_duration = navitia::seconds(max_non_pt);

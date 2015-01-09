@@ -29,321 +29,259 @@ www.navitia.io
 */
 
 #include "vptranslator/vptranslator.h"
+#include <boost/range/algorithm/sort.hpp>
+#include <boost/range/algorithm_ext/for_each.hpp>
+#include <unordered_map>
 
-bool MakeTranslation::week::operator==(week i2){
-    return (i2.weeknumber == weeknumber);
+namespace std {
+template<typename T>
+static std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
+    os << "{";
+    auto it = s.cbegin(), end = s.cend();
+    if (it != end) { os << *it++; }
+    for (;it != end; ++it) { os << ", " << *it; }
+    return os << "}";
+}
+template<typename T>
+static std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
+    os << "[";
+    auto it = v.cbegin(), end = v.cend();
+    if (it != end) { os << *it++; }
+    for (; it != end; ++it) { os << ", " << *it; }
+    return os << "]";
+}
 }
 
-bool MakeTranslation::week::operator!=(week i2){
-    return (i2.weeknumber != weeknumber);
+namespace navitia {
+namespace vptranslator {
+
+using navitia::type::ValidityPattern;
+typedef navitia::type::Calendar::Week Week;
+using navitia::type::ExceptionDate;
+using boost::gregorian::date;
+using boost::gregorian::date_duration;
+using boost::gregorian::date_period;
+using boost::gregorian::day_iterator;
+
+// a week index is 0 for Monday, 1 for Tuesday, ..., 6 for Sunday
+static unsigned to_week_index(const date& d) {
+    return navitia::get_weekday(d);
+}
+// returns the index after the last valid day, 0 if none
+static unsigned end_active(const ValidityPattern& vp) {
+    if (vp.days.size() == 0) { return 0; }
+    unsigned i = vp.days.size() - 1;
+    do {
+        if (vp.check(i)) { return i + 1; }
+    } while (i-- != 0);
+    return 0;
 }
 
-bool MakeTranslation::target::operator<(target i2) const {
-    return (i2.count < count);
+void BlockPattern::canonize_validity_periods() {
+    // As std::set is ordered and the periods in validity_periods must
+    // not overlap, we can simply merge 2 consecutive period if the
+    // end day of the first period is the same as the begin day of the
+    // second period
+    if (validity_periods.empty()) return;
+    std::set<boost::gregorian::date_period> res;
+    auto it = validity_periods.cbegin(), end = validity_periods.cend();
+    auto cur_period = *it;
+    for (++it; it != end; ++it) {
+        if (cur_period.end() == it->begin()) {
+            cur_period = date_period(cur_period.begin(), it->end());
+        } else {
+            res.insert(cur_period);
+            cur_period = *it;
+        }
+    }
+    res.insert(cur_period);
+    validity_periods = res;
 }
 
-bool MakeTranslation::target::operator!=(target i2) const {
-    return (i2.week_ulong != week_ulong);
+unsigned BlockPattern::nb_weeks() const {
+    unsigned res = 0;
+    for (const auto& p: validity_periods) {
+        res += p.length().days() / 7;
+        const auto idx_begin = to_week_index(p.begin());
+        const auto idx_end = to_week_index(p.end());
+        if (idx_begin == 0) {
+            // adding the partial week at the end
+            if (idx_end != 0) res += 1;
+        } else if (idx_end == 0) {
+            // adding the partial week at the begining
+            if (idx_begin != 0) res += 1;
+        } else if (idx_begin > idx_end) {
+            // we have 2 partial weeks (at the begining and at the
+            // end), and the number of days in the two partial weeks
+            // are less than a week, thus, we should add 2
+            res += 2;
+        } else {
+            // we have 2 partial weeks and the number of days in the
+            // two partial weeks are greater or equal to one week,
+            // thus, one week is already added by the division, we
+            // just have to add one week.
+            res += 1;
+        }
+    }
+    return res;
 }
 
-MakeTranslation::MakeTranslation(){
+void BlockPattern::add_from(const BlockPattern& other) {
+    if (!other.exceptions.empty()) {
+        throw std::invalid_argument("add_from takes only no exception block patterns");
+    }
+    const Week diff = week ^ other.week;
+    const Week to_exclude = ~other.week & diff;
+    const Week to_include = other.week & diff;
+    for (const auto& period: other.validity_periods) {
+        validity_periods.insert(period);
+        for (day_iterator day_it = period.begin(); day_it != period.end(); ++day_it) {
+            const auto week_idx = to_week_index(*day_it);
+            if (to_exclude[week_idx]) exceptions.insert({ExceptionDate::ExceptionType::sub, *day_it});
+            if (to_include[week_idx]) exceptions.insert({ExceptionDate::ExceptionType::add, *day_it});
+        }
+    }
 }
 
-bool MakeTranslation::initcs(boost::gregorian::date beginningday, std::string requestedcs){
-  std::size_t found;
-
-  found = requestedcs.find_last_of('1');
-  //on recherche le dernier jour de validité de la condition de service
-  if(found==std::string::npos){
-      startdate = beginningday;
-      enddate = beginningday;
-      return false;
-  } else {
-      enddate = beginningday + boost::gregorian::date_duration(found);
-      //on recherche le premier jour de validité
-      found = requestedcs.find('1');
-      startdate = beginningday + boost::gregorian::date_duration(found);
-      CS = requestedcs.substr(found, (enddate - startdate).days() + 1);
-      return true;
- }
+std::ostream& operator<<(std::ostream& os, const BlockPattern& bp) {
+    if (bp.week[0]) os << "Mo";
+    if (bp.week[1]) os << "Tu";
+    if (bp.week[2]) os << "We";
+    if (bp.week[3]) os << "Th";
+    if (bp.week[4]) os << "Fr";
+    if (bp.week[5]) os << "Sa";
+    if (bp.week[6]) os << "Su";
+    if (bp.week.none()) os << "none";
+    os << " for " << bp.validity_periods;
+    if (!bp.exceptions.empty()) os << " except " << bp.exceptions;
+    return os;
 }
 
-int MakeTranslation::getnextmonday(boost::gregorian::date datetocompare, short sens){
-    if (sens == 1){
-        boost::gregorian::first_day_of_the_week_after fdaf(boost::gregorian::Monday);
-        boost::gregorian::date d = fdaf.get_date(datetocompare);
-        return (d - datetocompare).days();
+namespace {
+struct DistanceMatrix: boost::noncopyable {
+    // we have 2^7 days in a week (bit shift as we need a constexpr)
+    static const unsigned size = 1 << 7;
+    typedef std::array<unsigned, size> Line;
+    typedef std::array<Line, size> Matrix;
+    Matrix array;
+    friend const DistanceMatrix& distance_matrix();
+    unsigned score(unsigned i, const Line& l) const {
+        unsigned res = 0;
+        boost::for_each(array[i], l, [&](unsigned i, unsigned j) {res += i * j;});
+        return res;
+    }
+private:
+    DistanceMatrix() {
+        for (unsigned i = 0; i < size; ++i) {
+            Week w1(i);
+            for (unsigned j = 0; j < size; ++j) {
+                Week w2(j);
+                array[i][j] = (w1 ^ w2).count();
+            }
+        }
+    }
+};
+const DistanceMatrix& distance_matrix() {
+    // With private constructor, noncopyable and this friend function,
+    // we are sure to only compute the DistanceMatrix once.
+    static const DistanceMatrix d;
+    return d;
+}
+DistanceMatrix::Line make_line(const std::vector<BlockPattern>& bps) {
+    DistanceMatrix::Line line;
+    line.fill(0);
+    for (const auto& bp: bps)
+        line[bp.week.to_ulong()] += bp.nb_weeks();
+    return line;
+}
+Week get_min_week_pattern(const std::vector<BlockPattern>& bps) {
+    const auto line = make_line(bps);
+    const auto& matrix = distance_matrix();
+    unsigned best = 0;
+    unsigned best_score = matrix.score(0, line);
+    for (unsigned i = 1; i < DistanceMatrix::size; ++i) {
+        const unsigned cur_score = matrix.score(i, line);
+        if (cur_score < best_score ||
+            // in case of equality, we prefere more setted bits as it
+            // may be better for partial week bounds
+            (cur_score == best_score && Week(i).count() > Week(best).count()))
+        {
+            best = i;
+            best_score = cur_score;
+        }
+    }
+    return Week(best);
+}
+}
 
+BlockPattern translate_one_block(const navitia::type::ValidityPattern& vp) {
+    const std::vector<BlockPattern> no_except = translate_no_exception(vp);
+    switch(no_except.size()) {
+    case 0: return BlockPattern();
+    case 1: return no_except.front();
+    default: break;// done after
+    }
+    BlockPattern res;
+    res.week = get_min_week_pattern(no_except);
+    for (const auto& bp: no_except) res.add_from(bp);
+    res.canonize_validity_periods();
+    return res;
+}
+
+std::vector<BlockPattern> translate_no_exception(const ValidityPattern& vp) {
+    unsigned offset = 0, end = end_active(vp);
+    std::unordered_map<Week, BlockPattern> patterns;
+    
+    // skipping zeros at the beginning
+    for (offset = 0; offset < end && !vp.check(offset); ++offset) {}
+
+    date begin_period = vp.beginning_date + date_duration(offset);
+    Week cur_week_pattern;
+    for (; offset < end; ++offset) {
+        const auto cur_day = vp.beginning_date + date_duration(offset);
+        if (vp.check(offset)) {
+            cur_week_pattern.set(to_week_index(cur_day));
+        }
+        if (to_week_index(cur_day) == 6) {
+            if (cur_week_pattern.any()) {
+                auto& pat = patterns[cur_week_pattern];
+                pat.week = cur_week_pattern;
+                pat.validity_periods.insert(date_period(begin_period, cur_day + date_duration(1)));
+            }
+            begin_period = cur_day + date_duration(1);
+            cur_week_pattern.reset();
+        }
+    }
+
+    // last incomplete period
+    if (cur_week_pattern.any()) {
+        const auto end_day = vp.beginning_date + date_duration(offset);
+        auto& pat = patterns[cur_week_pattern];
+        pat.week = cur_week_pattern;
+        pat.validity_periods.insert(date_period(begin_period, end_day));
+    }
+
+    std::vector<BlockPattern> res;
+    for (const auto& p: patterns) {
+        res.emplace_back(p.second);
+        res.back().canonize_validity_periods();
+    }
+    typedef BlockPattern BP;
+    boost::sort(res, [](const BP& a, const BP& b) {
+        assert(!a.validity_periods.empty()); assert(!b.validity_periods.empty());
+        return a.validity_periods.begin()->begin() < b.validity_periods.begin()->begin();
+    });
+    return res;
+}
+
+std::vector<BlockPattern> translate(const navitia::type::ValidityPattern& vp) {
+    auto res = translate_one_block(vp);
+    if (res.validity_periods.empty()) {
+        return {};
     } else {
-        boost::gregorian::first_day_of_the_week_before fdbf(boost::gregorian::Monday);
-        boost::gregorian::date d = fdbf.get_date(datetocompare);
-        return (d - datetocompare).days();
+        return {res};
     }
 }
 
-void MakeTranslation::splitcs(){
-    target_map.clear();
-    week_vector.clear();
-    week_vector.reserve((CS.length() / 7) + 1);
-//    on recherche la position du premier lundi dans la chaine
-    std::string substr;
-    short int weeknumber = 0;
-    //pos represente la position au sein de la condition de service
-    size_t pos = getnextmonday(startdate, 1);
-    size_t precpos = 0;
-    boost::gregorian::date weekstartdate = startdate;
-    week currentweek;
-
-    while (precpos < CS.length()){
-    //tant que le prochain lundi est inférieur à enddate, on découpe le régime
-        if(pos < CS.length()){
-            substr = CS.substr(precpos, pos - precpos);
-        } else {
-            //gestion de la fin de la cs lorsqu'elle n'est pas une semaine complète
-            substr = "0000000";
-            if(precpos != 0){
-                substr.replace(0, CS.length() - precpos, CS.substr(precpos, CS.length() - precpos));
-            //gestion de la cs lorsqu'elle n'est pas une semaine complète
-            } else {
-                substr.replace(7 - pos, CS.length() - precpos, CS.substr(precpos, CS.length() - precpos));
-            }
-        };
-        currentweek.weeknumber = weeknumber;
-        currentweek.startdate = weekstartdate;
-        //initialisation du bitset
-        currentweek.week_bs = std::bitset<7>(std::string(substr));
-        week_vector.push_back(currentweek);
-
-        std::map<int, target>::iterator it = target_map.find(currentweek.week_bs.to_ulong());
-        if (it != target_map.end()){
-            ++it->second.count;
-            it->second.lastweeknumber = weeknumber;
-        } else {
-            target& response = target_map[currentweek.week_bs.to_ulong()];
-            response.week_bs = week_vector[weeknumber].week_bs;
-            response.week_ulong = response.week_bs.to_ulong();
-            response.firstweeknumber = weeknumber;
-            response.count = 1;
-        };
-
-        weekstartdate = weekstartdate + boost::gregorian::date_duration(pos - precpos);
-        ++weeknumber;
-        precpos = pos;
-        pos = pos + 7;
-    }
-}
-
-
-//calcul des exception ET
-//on essaye d'inserer le bitset b2 dans b1
-std::bitset<7> MakeTranslation::getandpattern(std::bitset<7> &b1, std::bitset<7> &b2){
-    std::bitset<7> dest = b1;
-//    std::bitset<7> src = b2;
-    std::bitset<7> result = dest.flip() &= b2;
-    return result;
-}
-
-
-//calcul des exception OU
-//on essaye d'inserer le bitset b2 dans b1
-std::bitset<7> MakeTranslation::getexceptpattern(std::bitset<7> &b1, std::bitset<7> &b2){
-    std::bitset<7> dest = b1;
-    std::bitset<7> result;
-    result = (dest ^= b2 ) &= b1;
-    return result;
-}
-
-
-void MakeTranslation::bounddrawdown(){
-    if(week_vector.size() > 1){
-        // la condition de service ne débute pas un lundi, on va rabattre la borne inférieure sur la semaine consécutive
-        week startweek = week_vector.front();
-        long int startweekkey = startweek.week_bs.to_ulong();
-        if (startweek.startdate.day_of_week() != boost::date_time::Monday){
-        //on récupere la première semaine complète afin d'inclure la borne basse à cette semaine
-            week firstweek = week_vector[1];
-           //on ne garde que la partie commune aux 2 semaines
-            int weeklength = getnextmonday(startweek.startdate, 1);
-            target& responsefw = target_map[firstweek.week_bs.to_ulong()];
-            //gestion des ET
-            std::bitset<7> exception =getandpattern(firstweek.week_bs, startweek.week_bs);
-
-            if(exception.any()){
-                for(int it=0; it!= weeklength; ++it) {
-                    if(exception[it]){
-                        responsefw.andlist.push_back(startweek.startdate + boost::gregorian::date_duration(weeklength - it -1));
-                    }
-                }
-            }
-            //gestion des SAUF
-            exception = getexceptpattern(firstweek.week_bs, startweek.week_bs);
-
-            if(exception.any()){
-                for(int it=0; it!= weeklength; ++it) {
-                    if(exception[it]){
-                        responsefw.exceptlist.push_back(startweek.startdate + boost::gregorian::date_duration(weeklength - it -1));
-                    }
-                }
-            }
-            //gestion des periodes
-            target& responsesw = target_map[startweekkey];
-            responsefw.periodlist.front() = responsesw.periodlist.front();
-            target_map.erase(startweekkey);
-        }
-        // la condition de service ne termine pas un dimanche, on va rabattre la borne supérieure sur la semaine précédente
-        if((week_vector.size() > 2) && enddate.day_of_week() != boost::date_time::Sunday){
-            week endweek = week_vector.back();
-            long int endweekkey = endweek.week_bs.to_ulong();
-            week lastweek = week_vector[week_vector.size() - 2];
-            //on ne garde que la partie commune aux 2 semaines
-            int weeklength = getnextmonday(enddate, -1);
-            target& responselw = target_map[lastweek.week_bs.to_ulong()];
-            //gestion des ET
-            std::bitset<7> exception =getandpattern(lastweek.week_bs, endweek.week_bs);
-            if(exception.any()){
-                for(int it=6; it!= 6 + weeklength; it--) {
-                    if(exception[it]){
-                        responselw.andlist.push_back(endweek.startdate + boost::gregorian::date_duration(7 - it -1));
-                    }
-                }
-            }
-            //gestion des SAUF
-            exception = getexceptpattern(lastweek.week_bs, endweek.week_bs);
-
-            if(exception.any()){
-                for(int it=6; it!= 6 + weeklength; it--) {
-                    if(exception[it]){
-                        responselw.exceptlist.push_back(endweek.startdate + boost::gregorian::date_duration(7 - it -1));
-                    }
-                }
-            }
-            //gestion des periodes
-            target& responseew = target_map[endweekkey];
-            responselw.periodlist.back() = responseew.periodlist.back();
-            target_map.erase(endweekkey);
-        }
-    }
-}
-
-std::vector<MakeTranslation::target>::iterator MakeTranslation::getbesthost(std::vector<target> &targetvector, const target &targetsrc){
-    unsigned int distance = UINT_MAX;
-    std::vector<target>::iterator result = targetvector.end();
-    for(std::vector<target>::iterator it=targetvector.begin(); it!= targetvector.end(); ++it) {
-        target targetdst= *it;
-        unsigned int currentdistance = levenshtein_distance(targetdst.week_bs, targetsrc.week_bs);
-        if ((targetdst != targetsrc) && (currentdistance < distance)){
-            result = it;
-            distance= currentdistance;
-        }
-    }
-    return result;
-}
-
-bool sortTargetbyCountAsc (MakeTranslation::target i,MakeTranslation::target j){
-    return (i.count < j.count);
-}
-
-void MakeTranslation::mergetarget(MakeTranslation::target &targetsrc, MakeTranslation::target &targetdst){
-    //gestion des ET  last = dest
-    std::bitset<7> andpattern =getandpattern(targetdst.week_bs, targetsrc.week_bs);
-    std::bitset<7> exceptpattern = getexceptpattern(targetdst.week_bs, targetsrc.week_bs);
-
-    target &mapdst= target_map[targetdst.week_ulong];
-    //gestion des periodes
-    boost::gregorian::date_duration shift(1);
-    target &mapsrc= target_map[targetsrc.week_ulong];
-    for(std::vector<boost::gregorian::date>::iterator itsrc=mapsrc.periodlist.begin(); itsrc!= mapsrc.periodlist.end(); ++itsrc) {
-        //si la date est pair on est un lundi
-        if ((itsrc - mapsrc.periodlist.begin()) % 2 ==0){
-            if(andpattern.any() || exceptpattern.any()){
-                for(int it=6; it!=0; --it) {
-                    //gestion des ET
-                    if(andpattern[it]){
-                        mapdst.andlist.push_back(*itsrc + boost::gregorian::date_duration(7 - it -1));
-                    }
-                    //gestion des SAUF
-                    if(exceptpattern[it]){
-                        mapdst.exceptlist.push_back(*itsrc + boost::gregorian::date_duration(7 - it -1));
-                    }
-                }
-            }
-            //gestion début de semaine
-            std::vector<boost::gregorian::date>::iterator itdst=find(mapdst.periodlist.begin(), mapdst.periodlist.end(), *itsrc - shift);
-            if ( itdst== mapdst.periodlist.end()){
-                mapdst.periodlist.push_back(*itsrc);
-            } else {
-                mapdst.periodlist.erase(itdst);
-            }
-
-        } else {
-        //si la date est impair on est un dimanche
-            //gestion fin de semaine
-            std::vector<boost::gregorian::date>::iterator itdst=find(mapdst.periodlist.begin(), mapdst.periodlist.end(), *itsrc + shift);
-            if ( itdst== mapdst.periodlist.end()){
-                mapdst.periodlist.push_back(*itsrc);
-            } else {
-                mapdst.periodlist.erase(itdst);
-            }
-        }
-
-    }
-    target_map.erase(targetsrc.week_ulong);
-}
-
-void MakeTranslation::targetdrawdown(){
-//ISO Navitia1
-    if (target_map.size() > 2){
-//    if (target_map.size() > 4){
-        //on va essayer de fusionner les cibles entre elles
-        //on cree un vector de pointeur sur une copie des elements du target_map
-        std::vector<target> targetvector;
-        for(std::map<int, target>::iterator it=target_map.begin(); it!= target_map.end(); ++it) {
-            targetvector.push_back(it->second);
-        }
-        std::sort(targetvector.begin(), targetvector.end(), sortTargetbyCountAsc);
-        //parcours de la liste du count le + petit au plus grand
-//        for(std::vector<target>::iterator itsrc=targetvector.begin(); itsrc!= targetvector.end(); ++itsrc) {
-//          target targetsrc = *itsrc;
-        for(unsigned i =0; i < targetvector.size() - 1; ++i) {
-            target targetsrc = targetvector[i];
-            //on cherche la target la plus proche via un levenshtein et on les fusionne
-            std::vector<target>::iterator itdst= getbesthost(targetvector, targetsrc);
-            if(itdst != targetvector.end()){
-                target targetdst = *itdst;
-                mergetarget(targetsrc, targetdst);
-            }
-        }
-    }
-}
-
-
-void MakeTranslation::translate(){
-    int weekindice = -1;
-    boost::gregorian::date_duration shift(6);
-    for(std::vector<week>::iterator it=week_vector.begin(); it!= week_vector.end(); ++it) {
-        week weekit = *it;
-        for(std::map<int, target>::iterator it=target_map.begin(); it!= target_map.end(); ++it) {
-            target& response = it->second;
-            if (weekit.week_bs == response.week_bs){
-                if (weekindice != -1){
-                    if (weekit != week_vector.back()){
-                        response.periodlist.back() = weekit.startdate + shift;
-                    } else {
-                        response.periodlist.back() = enddate;
-                    }
-                } else {
-                    response.periodlist.push_back(weekit.startdate);
-                    if (weekit != week_vector.back()){
-                        response.periodlist.push_back(weekit.startdate + shift);
-                    } else {
-                        response.periodlist.push_back(enddate);
-                    }
-                }
-                weekindice = 1;
-            } else {
-                weekindice = -1;
-            }
-        }
-        weekindice = -1;
-    }
-}
+} // namespace vptranslator
+} // namespace navitia

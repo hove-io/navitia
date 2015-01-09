@@ -74,7 +74,7 @@ struct wrong_version : public navitia::exception {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 30; //< Data version number. *INCREMENT* every time serialized data are modified
+    static const unsigned int data_version = 33; //< Data version number. *INCREMENT* every time serialized data are modified
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
     std::atomic<bool> loading; //< Is the data being loaded
@@ -174,7 +174,7 @@ public:
 
     void build_associated_calendar();
 
-    void build_odt();
+    void aggregate_odt();
 
     void build_grid_validity_pattern();
 

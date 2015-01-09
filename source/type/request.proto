@@ -50,7 +50,6 @@ message NextStopTimeRequest {
 message StreetNetworkParams{
     optional string origin_mode                 = 1;
     optional string destination_mode            = 2;
-    optional int32 max_duration_to_pt           = 4;//keep for compatibily issues, to be removed after the 1.3 release
     optional double walking_speed               = 3;
     optional double bike_speed                  = 5;
     optional double car_speed                   = 7;

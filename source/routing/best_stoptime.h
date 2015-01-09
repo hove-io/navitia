@@ -67,62 +67,19 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
           const bool clockwise, bool disruption_active, const type::Data &data, bool reconstructing_path = false);
 
 /// For timetables in frequency-model
-inline u_int32_t f_arrival_time(uint32_t hour, const type::StopTime& st) {
-    const u_int32_t lower_bound = st.start_time(false);
-    const u_int32_t higher_bound = st.end_time(false);
-    // If higher bound is overmidnight the hour can be either in [lower_bound;midnight] or in
-    // [midnight;higher_bound]
-    if((higher_bound < DateTimeUtils::SECONDS_PER_DAY && hour>=lower_bound && hour<=higher_bound) ||
-            (higher_bound > DateTimeUtils::SECONDS_PER_DAY && (
-                (hour>=lower_bound && hour <= DateTimeUtils::SECONDS_PER_DAY)
-                 || (hour + DateTimeUtils::SECONDS_PER_DAY) <= higher_bound) )) {
-        if(hour < lower_bound)
-            hour += DateTimeUtils::SECONDS_PER_DAY;
-        const uint32_t x = std::floor(double(hour - lower_bound) / double(st.vehicle_journey->headway_secs));
-        BOOST_ASSERT(x*st.vehicle_journey->headway_secs+lower_bound <= hour);
-        BOOST_ASSERT(((hour - (x*st.vehicle_journey->headway_secs+lower_bound))%DateTimeUtils::SECONDS_PER_DAY) <= st.vehicle_journey->headway_secs);
-        return lower_bound + x * st.vehicle_journey->headway_secs;
-    } else {
-        return higher_bound;
-    }
+inline bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) {
+    return val >= bound.first && val <= bound.second;
 }
 
-
-inline u_int32_t f_departure_time(uint32_t hour, const type::StopTime& st) {
-    const u_int32_t lower_bound = st.start_time(true);
-    const u_int32_t higher_bound = st.end_time(true);
-    // If higher bound is overmidnight the hour can be either in [lower_bound;midnight] or in
-    // [midnight;higher_bound]
-    if((higher_bound < DateTimeUtils::SECONDS_PER_DAY && hour>=lower_bound && hour<=higher_bound) ||
-            (higher_bound > DateTimeUtils::SECONDS_PER_DAY && (
-                (hour>=lower_bound && hour <= DateTimeUtils::SECONDS_PER_DAY)
-                 || (hour + DateTimeUtils::SECONDS_PER_DAY) <= higher_bound) )) {
-        if(hour < lower_bound)
-            hour += DateTimeUtils::SECONDS_PER_DAY;
-        const uint32_t x = std::ceil(double(hour - lower_bound) / double(st.vehicle_journey->headway_secs));
-        BOOST_ASSERT((x*st.vehicle_journey->headway_secs+lower_bound) >= hour);
-        BOOST_ASSERT((((x*st.vehicle_journey->headway_secs+lower_bound) - hour)%DateTimeUtils::SECONDS_PER_DAY) <= st.vehicle_journey->headway_secs);
-        return lower_bound + x * st.vehicle_journey->headway_secs;
-    } else {
-        return lower_bound;
-    }
+inline bool is_valid(const nt::StopTime* st, uint32_t date, bool is_arrival, bool disruption_active, bool reconstructing_path, const type::VehicleProperties & vehicle_properties) {
+    return st->valid_end(reconstructing_path) &&
+        st->is_valid_day(date, is_arrival, disruption_active)
+        && st->vehicle_journey->accessible(vehicle_properties);
 }
 
-inline uint32_t compute_gap(const uint32_t hour, const uint32_t start_time,
-        const uint32_t end_time, const  uint32_t headway_secs, const bool clockwise) {
-    if((hour>=start_time && hour <= end_time)
-            || (end_time>DateTimeUtils::SECONDS_PER_DAY && ((end_time-DateTimeUtils::SECONDS_PER_DAY)>=hour))) {
-        const double tmp = double(hour - start_time) / double(headway_secs);
-        const uint32_t x = (clockwise ? std::ceil(tmp) : std::floor(tmp));
-        BOOST_ASSERT((clockwise && (x*headway_secs+start_time >= hour)) ||
-                     (!clockwise && (x*headway_secs+start_time <= hour)));
-        BOOST_ASSERT((clockwise && (((x*headway_secs+start_time) - hour)%DateTimeUtils::SECONDS_PER_DAY) <= headway_secs) ||
-                     (!clockwise && ((hour - (x*headway_secs+start_time))%DateTimeUtils::SECONDS_PER_DAY) <= headway_secs));
-        return x * headway_secs;
-    } else {
-        return 0;
-    }
-}
+DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted = false);
+DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted = false);
+
 inline bool bound_predicate_earliest(const uint32_t departure_time, const uint32_t hour) {
     return departure_time < hour;
 }

@@ -148,7 +148,7 @@ void EdPersistor::insert_house_numbers(const ed::Georef& data){
     lotus.finish_bulk_insert();
 }
 
-std::string coord_to_string(const navitia::type::GeographicalCoord& coord){
+static std::string coord_to_string(const navitia::type::GeographicalCoord& coord){
     std::stringstream geog;
     geog << std::setprecision(10) << coord.lon() << " " << coord.lat();
     return geog.str();
@@ -450,12 +450,13 @@ void EdPersistor::insert_commercial_modes(const std::vector<types::CommercialMod
 
 void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>& physical_modes){
     this->lotus.prepare_bulk_insert("navitia.physical_mode",
-            {"id", "uri", "name"});
+            {"id", "uri", "name", "co2_emission"});
     for(types::PhysicalMode* mode : physical_modes){
         std::vector<std::string> values;
         values.push_back(std::to_string(mode->idx));
         values.push_back(navitia::encode_uri(mode->uri));
         values.push_back(mode->name);
+        values.push_back(std::to_string(mode->co2_emission));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
@@ -874,7 +875,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
              "start_time", "end_time", "headway_sec",
              "adapted_validity_pattern_id", "company_id", "journey_pattern_id",
              "theoric_vehicle_journey_id", "vehicle_properties_id",
-             "odt_type_id", "odt_message", "utc_to_local_offset"});
+             "odt_type_id", "odt_message", "utc_to_local_offset", "is_frequency"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -919,6 +920,10 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));
         values.push_back(vj->odt_message);
         values.push_back(std::to_string(vj->utc_to_local_offset));
+
+        bool is_frequency = vj->start_time != std::numeric_limits<int>::max();
+        values.push_back(std::to_string(is_frequency));
+
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();

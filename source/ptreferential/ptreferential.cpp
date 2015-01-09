@@ -199,9 +199,10 @@ std::vector<Filter> parse(std::string request){
     return filters;
 }
 
-std::vector<type::idx_t>::iterator sort_and_ge_new_end(std::vector<type::idx_t>& list_idx){
-  std::sort(list_idx.begin(), list_idx.end());
-  return std::unique(list_idx.begin(), list_idx.end());
+static std::vector<type::idx_t>::iterator
+sort_and_ge_new_end(std::vector<type::idx_t>& list_idx){
+    std::sort(list_idx.begin(), list_idx.end());
+    return std::unique(list_idx.begin(), list_idx.end());
 }
 
 std::vector<idx_t> get_difference(std::vector<type::idx_t>& list_idx1,
@@ -236,19 +237,20 @@ std::vector<idx_t> manage_odt_level(const std::vector<type::idx_t>& final_indexe
         std::vector<idx_t> odt_level_idx;
         for(const idx_t idx : final_indexes){
             const navitia::type::Line* line = data.pt_data->lines[idx];
+            navitia::type::hasOdtProperties odt_property = line->get_odt_properties();
             switch(odt_level){
                 case navitia::type::OdtLevel_e::none:
-                    if (line->get_odt_level() == OdtLevel_e::none){
+                    if (odt_property.is_regular()){
                         odt_level_idx.push_back(idx);
                     };
                     break;
                 case navitia::type::OdtLevel_e::mixt:
-                    if (line->get_odt_level() == navitia::type::OdtLevel_e::mixt){
+                    if (odt_property.is_mixed()){
                         odt_level_idx.push_back(idx);
                     };
                     break;
                 case navitia::type::OdtLevel_e::zonal:
-                    if (line->get_odt_level() == navitia::type::OdtLevel_e::zonal){
+                    if (odt_property.is_zonal_odt()){
                         odt_level_idx.push_back(idx);
                     };
                     break;

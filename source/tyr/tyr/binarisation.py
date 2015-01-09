@@ -42,6 +42,7 @@ import kombu
 from navitiacommon import models
 import shutil
 from tyr.helper import get_instance_logger
+from functools import wraps
 
 
 def move_to_backupdirectory(filename, working_directory):
@@ -66,16 +67,43 @@ def make_connection_string(instance_config):
     connection_string += ' password=' + instance_config.pg_password
     return connection_string
 
+class Lock(object):
+    def __init__(self, timeout):
+        self.timeout = timeout
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            job_id = None
+            if 'job_id' in kwargs:
+                job_id = kwargs['job_id']
+            else:
+                job_id = args[func.func_code.co_varnames.index('job_id')]
+            logging.debug('args: %s -- kwargs: %s', args, kwargs)
+            job = models.Job.query.get(job_id)
+            logger = get_instance_logger(job.instance)
+            lock = redis.lock('tyr.lock|' + job.instance.name, timeout=self.timeout)
+            if not lock.acquire(blocking=False):
+                logger.info('lock on %s retry %s in 300sec', job.instance.name, func.__name__)
+                task = args[func.func_code.co_varnames.index('self')]
+                task.retry(countdown=60, max_retries=10)
+            else:
+                try:
+                    logger.debug('lock acquired on %s for %s', job.instance.name, func.__name__)
+                    return func(*args, **kwargs)
+                finally:
+                    logger.debug('release lock on %s for %s', job.instance.name, func.__name__)
+                    lock.release()
+        return wrapper
+
+
 #TODO bind task
-@celery.task()
-def fusio2ed(instance_config, filename, job_id):
+@celery.task(bind=True)
+@Lock(timeout=30*60)
+def fusio2ed(self, instance_config, filename, job_id):
     """ Unzip fusio file and launch fusio2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        fusio2ed.retry(countdown=300, max_retries=10)
 
     logger = get_instance_logger(instance)
     try:
@@ -104,19 +132,15 @@ def fusio2ed(instance_config, filename, job_id):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()
 
 
-@celery.task()
-def gtfs2ed(instance_config, gtfs_filename,  job_id):
+@celery.task(bind=True)
+@Lock(30*60)
+def gtfs2ed(self, instance_config, gtfs_filename, job_id):
     """ Unzip gtfs file launch gtfs2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        gtfs2ed.retry(countdown=300, max_retries=10)
 
     logger = get_instance_logger(instance)
     try:
@@ -145,19 +169,15 @@ def gtfs2ed(instance_config, gtfs_filename,  job_id):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()
 
 
-@celery.task()
-def osm2ed(instance_config, osm_filename, job_id):
+@celery.task(bind=True)
+@Lock(timeout=30*60)
+def osm2ed(self, instance_config, osm_filename, job_id):
     """ launch osm2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        osm2ed.retry(countdown=300, max_retries=10)
 
     logger = get_instance_logger(instance)
     try:
@@ -173,19 +193,14 @@ def osm2ed(instance_config, osm_filename, job_id):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()
 
-@celery.task()
-def geopal2ed(instance_config, filename, job_id):
+@celery.task(bind=True)
+@Lock(timeout=30*60)
+def geopal2ed(self, instance_config, filename, job_id):
     """ launch geopal2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        geopal2ed.retry(countdown=300, max_retries=10)
-
     logger = get_instance_logger(instance)
     try:
         working_directory = os.path.dirname(filename)
@@ -205,19 +220,14 @@ def geopal2ed(instance_config, filename, job_id):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()
 
-@celery.task()
-def poi2ed(instance_config, filename, job_id):
+@celery.task(bind=True)
+@Lock(timeout=10*60)
+def poi2ed(self, instance_config, filename, job_id):
     """ launch poi2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        poi2ed.retry(countdown=300, max_retries=10)
-
     logger = get_instance_logger(instance)
     try:
         working_directory = os.path.dirname(filename)
@@ -237,18 +247,14 @@ def poi2ed(instance_config, filename, job_id):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()
 
-@celery.task()
-def synonym2ed(instance_config, filename, job_id):
+@celery.task(bind=True)
+@Lock(timeout=10*60)
+def synonym2ed(self, instance_config, filename, job_id):
     """ launch synonym2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        synonym2ed.retry(countdown=300, max_retries=10)
 
     logger = get_instance_logger(instance)
     try:
@@ -264,11 +270,9 @@ def synonym2ed(instance_config, filename, job_id):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()
 
-@celery.task()
-def reload_data(instance_config, job_id):
+@celery.task(bind=True)
+def reload_data(self, instance_config, job_id):
     """ reload data on all kraken of this instance"""
     job = models.Job.query.get(job_id)
     instance = job.instance
@@ -294,17 +298,14 @@ def reload_data(instance_config, job_id):
         raise
 
 
-@celery.task()
-def ed2nav(instance_config, job_id, custom_output_dir):
+@celery.task(bind=True)
+@Lock(10*60)
+def ed2nav(self, instance_config, job_id, custom_output_dir):
     """ Launch ed2nav"""
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        ed2nav.retry(countdown=300, max_retries=10)
 
     logger = get_instance_logger(instance)
-
     try:
         output_file = instance_config.tmp_file
 
@@ -329,18 +330,14 @@ def ed2nav(instance_config, job_id, custom_output_dir):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()
 
 
-@celery.task()
-def nav2rt(instance_config, job_id, custom_output_dir=None):
+@celery.task(bind=True)
+@Lock(10*60)
+def nav2rt(self, instance_config, job_id, custom_output_dir=None):
     """ Launch nav2rt"""
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        nav2rt.retry(countdown=300, max_retries=10)
 
     logger = get_instance_logger(instance)
     try:
@@ -369,19 +366,15 @@ def nav2rt(instance_config, job_id, custom_output_dir=None):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()
 
 
-@celery.task()
-def fare2ed(instance_config, filename, job_id):
+@celery.task(bind=True)
+@Lock(timeout=10*60)
+def fare2ed(self, instance_config, filename, job_id):
     """ launch fare2ed """
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    lock = redis.lock('tyr.lock|' + instance.name)
-    if not lock.acquire(blocking=False):
-        fare2ed.retry(countdown=300, max_retries=10)
 
     logger = get_instance_logger(instance)
     try:
@@ -402,5 +395,3 @@ def fare2ed(instance_config, filename, job_id):
         job.state = 'failed'
         models.db.session.commit()
         raise
-    finally:
-        lock.release()

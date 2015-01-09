@@ -50,7 +50,7 @@ BOOST_GLOBAL_FIXTURE( logger_initialized )
 using namespace navitia::georef;
 using namespace boost;
 
-std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& path) {
+static std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& path) {
     std::vector<navitia::type::GeographicalCoord> res;
     for (const auto& item : path.path_items) {
         for (const auto coord : item.coordinates) {
@@ -60,7 +60,7 @@ std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& p
     return res;
 }
 
-void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
+static void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
     std::cout << " coord : " << std::endl;
     for (auto c : coord) {
         std::cout << " -- " << c.lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(real_nearest_edge){
 }
 
 /// Compute the path from the starting point to the the target geographical coord
-Path compute_path(PathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
+static Path compute_path(PathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
     ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
 
     auto best_pair = finder.update_path(dest);
@@ -998,6 +998,7 @@ BOOST_AUTO_TEST_CASE(geolocalization) {
     b.data->build_uri();
     b.data->build_proximity_list();
 
-    BOOST_CHECK_EQUAL(b.data->geo_ref->nearest_addr(D), std::make_pair(2, (const Way*)ab));
-    BOOST_CHECK_EQUAL(b.data->geo_ref->nearest_addr(E), std::make_pair(3, (const Way*)ac));
+    const Way *const_ab = ab, *const_ac = ac;
+    BOOST_CHECK_EQUAL(b.data->geo_ref->nearest_addr(D), std::make_pair(2, const_ab));
+    BOOST_CHECK_EQUAL(b.data->geo_ref->nearest_addr(E), std::make_pair(3, const_ac));
 }

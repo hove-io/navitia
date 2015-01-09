@@ -30,15 +30,35 @@ www.navitia.io
 
 #pragma once
 
-#include "type/pt_data.h"
-#include "type/message.h"
-#include "type/chaos.pb.h"
-#include "type/gtfs-realtime.pb.h"
+#include "vptranslator/vptranslator.h"
+
+#include "boost/date_time/posix_time/posix_time.hpp"
+
+namespace pbnavitia { class Calendar; }
 
 namespace navitia {
+namespace vptranslator {
 
-void add_disruption(navitia::type::PT_Data& pt_data,
-                    const chaos::Disruption& chaos_disruption);
+#define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
 
-void delete_disruption(nt::PT_Data& pt_data, const std::string& disruption_id);
+template<typename T>
+void fill_pb_object(const std::vector<BlockPattern>& bps,
+                    const type::Data& data,
+                    T* o,
+                    int max_depth = 0 ,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period  = null_time_period) {
+    for (const auto& bp: bps) {
+        fill_pb_object(bp, data, o->add_calendars(), max_depth, now, action_period);
+    }
+}
+
+void fill_pb_object(const BlockPattern&,
+                    const type::Data& data,
+                    pbnavitia::Calendar*,
+                    int max_depth = 0 ,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period  = null_time_period);
+
+} // namespace vptranslator
 } // namespace navitia

@@ -78,23 +78,34 @@ get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> >
     return result;
 }
 
-DateTime combine_dt_walking_time(bool clockwise, const DateTime & current, int walking_duration) {
+static DateTime
+combine_dt_walking_time(bool clockwise, const DateTime& current, int walking_duration) {
     return clockwise ? current - walking_duration : current + walking_duration;
 }
 
 // Does the current date improves compared to best_so_far – we must not forget to take the walking duration
-bool improves(const DateTime & best_so_far, bool clockwise, const DateTime & current, int walking_duration) {
+static bool improves(const DateTime& best_so_far,
+                     bool clockwise,
+                     const DateTime& current,
+                     int walking_duration) {
     const auto dt = combine_dt_walking_time(clockwise, current, walking_duration);
     return clockwise ? dt > best_so_far : dt < best_so_far;
 }
 
-bool is_equal(const DateTime & best_so_far, bool clockwise, const DateTime & current, int walking_duration) {
+static bool is_equal(const DateTime& best_so_far,
+                     bool clockwise,
+                     const DateTime& current,
+                     int walking_duration) {
     const auto dt = combine_dt_walking_time(clockwise, current, walking_duration);
     return dt == best_so_far;
 }
 
-size_t nb_jpp_of_path(int count, type::idx_t jpp_idx, bool clockwise, bool disruption_active,
-                      const type::AccessibiliteParams & accessibilite_params, const RAPTOR& raptor) {
+static size_t nb_jpp_of_path(int count,
+                             type::idx_t jpp_idx,
+                             bool clockwise,
+                             bool disruption_active,
+                             const type::AccessibiliteParams& accessibilite_params,
+                             const RAPTOR& raptor) {
     struct VisitorNbJPP : public BasePathVisitor {
         size_t nb_jpp = 0;
         void loop_vj(const type::StopTime*, boost::posix_time::ptime, boost::posix_time::ptime) {

@@ -408,8 +408,8 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         return;
     }
 
+    //the vj might have been split over the dst,thus we loop over all split vj
     for (auto vj: split_vj) {
-
         if (is_valid(ext_code_c, row)) {
             vj->external_code = row[ext_code_c];
         }
@@ -461,12 +461,12 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
             if(it_company == gtfs_data.company_map.end()){
                 LOG4CPLUS_WARN(logger, "TripsFusioHandler : Impossible to find the company " << row[company_id_c]
                                << " referenced by trip " << row[trip_c]);
-            }else{
+            } else {
                 vj->company = it_company->second;
             }
         }
 
-        if (vj->company == nullptr) {
+        if (! vj->company) {
             vj->company = gtfs_data.get_or_create_default_company(data);
         }
     }
@@ -635,6 +635,7 @@ void CompanyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
 void PhysicalModeFusioHandler::init(Data&) {
     id_c = csv.get_pos_col("physical_mode_id");
     name_c = csv.get_pos_col("physical_mode_name");
+    co2_emission_c = csv.get_pos_col("co2_emission");
 }
 
 void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -646,6 +647,15 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
     ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
     mode->name = row[name_c];
     mode->uri = row[id_c];
+    if(has_col(co2_emission_c, row)) {
+        try{
+            mode->co2_emission = boost::lexical_cast<double>(row[co2_emission_c]);
+        }
+        catch(boost::bad_lexical_cast) {
+            LOG4CPLUS_WARN(logger, "Impossible to parse the co2_emission for "
+                           + mode->uri + " " + mode->name);
+        }
+    }
     data.physical_modes.push_back(mode);
     gtfs_data.physical_mode_map[mode->uri] = mode;
 }
@@ -789,7 +799,7 @@ void TripPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
     }
 }
 
-boost::gregorian::date parse_date(const std::string& str) {
+static boost::gregorian::date parse_date(const std::string& str) {
     auto logger = log4cplus::Logger::getInstance("log");
     if (str.empty()) {
         LOG4CPLUS_ERROR(logger, "impossible to parse date, date is empty");

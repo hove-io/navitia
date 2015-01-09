@@ -290,12 +290,13 @@ void Data::complete(){
 
     build_grid_validity_pattern();
     build_associated_calendar();
-    build_odt();
 
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building administrative regions");
     build_administrative_regions();
     admin = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    aggregate_odt();
 
     compute_labels();
 
@@ -409,21 +410,50 @@ void Data::build_associated_calendar() {
     }
 }
 
-void Data::build_odt(){
+void Data::aggregate_odt(){
     for(JourneyPattern* jp : this->pt_data->journey_patterns){
-        jp->odt_level = type::OdtLevel_e::none;
-        VehicleJourney* vj;
-        if(jp->vehicle_journey_list.empty()){
+        jp->build_odt_properties();
+    }
+
+    // cf http://confluence.canaltp.fr/pages/viewpage.action?pageId=3147700 (we really should put that public)
+    // for some ODT kind, we have to fill the Admin structure with the ODT stop points
+    std::unordered_map<georef::Admin*, std::set<const nt::StopPoint*>> odt_stops_by_admin;
+    for (const auto jp: pt_data->journey_patterns) {
+        if (! jp->odt_properties.is_zonal_odt()) {
             continue;
         }
-        vj = jp->vehicle_journey_list.front();
-        jp->odt_level = vj->get_odt_level();
-        for(idx_t idx = 1; idx < jp->vehicle_journey_list.size(); idx++){
-            vj = jp->vehicle_journey_list[idx];
-            if (vj->get_odt_level() != jp->odt_level){
-                jp->odt_level = type::OdtLevel_e::mixt;
-                break;
+        if (jp->journey_pattern_point_list.size() != 2) {
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "it's strange, a zone odt journey pattern ("
+                           << jp->uri << ") has more than 2 stops, we skip it");
+            continue;
+        }
+        bool add = false;
+        // we add it for the ODT type where the vehicle comes directly to the user
+        jp->for_each_vehicle_journey([&](const VehicleJourney& vj) {
+            if (in(vj.vehicle_journey_type, {VehicleJourneyType::adress_to_stop_point,
+                     VehicleJourneyType::odt_point_to_point} )) {
+                add = true;
+                return false; // we can stop
             }
+            return true;
+        });
+
+        if (! add ) {
+            continue;
+        }
+
+        for (const auto jpp: jp->journey_pattern_point_list) {
+            const auto sp = jpp->stop_point;
+            for (auto* admin: sp->admin_list) {
+                odt_stops_by_admin[admin].insert(sp);
+            }
+        }
+    }
+
+    //we first store the stops in a set not to have dupplicates
+    for (const auto& p: odt_stops_by_admin) {
+        for (const auto& sp: p.second) {
+            p.first->odt_stop_points.push_back(sp);
         }
     }
 }
