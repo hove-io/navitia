@@ -68,6 +68,22 @@ enum class Effect {
   STOP_MOVED
 };
 
+inline std::string to_string(Effect effect) {
+    switch (effect) {
+    case Effect::NO_SERVICE: return "NO_SERVICE";
+    case Effect::REDUCED_SERVICE: return "REDUCED_SERVICE";
+    case Effect::SIGNIFICANT_DELAYS: return "SIGNIFICANT_DELAYS";
+    case Effect::DETOUR: return "DETOUR";
+    case Effect::ADDITIONAL_SERVICE: return "ADDITIONAL_SERVICE";
+    case Effect::MODIFIED_SERVICE: return "MODIFIED_SERVICE";
+    case Effect::OTHER_EFFECT: return "OTHER_EFFECT";
+    case Effect::UNKNOWN_EFFECT: return "UNKNOWN_EFFECT";
+    case Effect::STOP_MOVED: return "STOP_MOVED";
+    default:
+        throw navitia::exception("unhandled effect case");
+    }
+}
+
 
 struct Cause {
     std::string uri;

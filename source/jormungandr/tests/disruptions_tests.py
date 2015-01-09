@@ -78,7 +78,7 @@ class TestDisruptions(AbstractTestFixture):
             is_valid_disruption(d)
         assert lines_disrupt[0]['uri'] == 'disruption_on_line_A'
         assert lines_disrupt[0]['impact_uri'] == 'too_bad_again'
-        assert lines_disrupt[0]['severity'] == 'bad severity'
+        assert lines_disrupt[0]['severity']['name'] == 'bad severity'
 
         impacted_network = get_not_null(disruptions[0], 'network')
         is_valid_network(impacted_network, depth_check=0)
