@@ -493,7 +493,9 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> 
             if(!journey_pattern->odt_properties.is_zonal_odt()){
                 continue;
             }
-            valid_journey_patterns.set(journey_pattern->idx, allowed_jp.count(journey_pattern) > 0);
+            if (allowed_jp.count(journey_pattern) == 0) {
+                valid_journey_patterns.set(journey_pattern->idx, false);
+            }
         }
     }
 
