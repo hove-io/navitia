@@ -1,3 +1,9 @@
+navitia2 (1.8.1) unstable; urgency=low
+
+  * raptor: fix forbidden uris for ODT <https://github.com/CanalTP/navitia/pull/813>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Mon, 12 Jan 2015 14:01:32 +0100
+
 navitia2 (1.8.0) unstable; urgency=low
 
   * Disruption: add missing fields  <https://github.com/CanalTP/navitia/pull/811>
