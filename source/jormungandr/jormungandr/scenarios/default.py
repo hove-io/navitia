@@ -271,14 +271,17 @@ class Scenario(simple.Scenario):
                 for j in tmp_resp.journeys:
                     j.tags.append("next" if request['clockwise'] else "prev")
 
-            self.delete_journeys(tmp_resp, request, final_filter=False)
             self.merge_response(resp, tmp_resp)
+            #we delete after the merge, else we will have duplicate non_pt journey in the count
+            self.delete_journeys(resp, request, final_filter=False)
+
+            if not request['debug']:
+                self._delete_non_optimal_journey(resp.journeys)
 
             nb_typed_journeys = count_typed_journeys(resp.journeys)
             cpt_attempt += 1
 
         if not request['debug']:
-            self._delete_non_optimal_journey(resp.journeys)
             self._delete_too_long_journey(resp.journeys, instance, request['clockwise'])
         self.sort_journeys(resp, instance.journey_order, request['clockwise'])
         self.choose_best(resp)
