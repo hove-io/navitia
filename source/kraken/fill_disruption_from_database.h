@@ -55,7 +55,7 @@ namespace navitia {
         FILL_NULLABLE(table_name, updated_at, uint64_t)
 
     void fill_disruption_from_database(const std::string& connection_string,
-            navitia::type::PT_Data& pt_data);
+            navitia::type::PT_Data& pt_data, const std::vector<std::string>& contributors);
 
     struct DisruptionDatabaseReader {
         DisruptionDatabaseReader(type::PT_Data& pt_data) : pt_data(pt_data) {}

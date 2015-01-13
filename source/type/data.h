@@ -153,7 +153,8 @@ public:
 
     /** Charge les données et effectue les initialisations nécessaires */
     bool load(const std::string & filename,
-            const boost::optional<std::string>& chaos_database = {});
+            const boost::optional<std::string>& chaos_database = {},
+            const std::vector<std::string>& contributors = {});
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;

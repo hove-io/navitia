@@ -35,14 +35,15 @@ www.navitia.io
 #include "utils/logger.h"
 
 #include <boost/format.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 
 namespace navitia {
 
 
 
-void fill_disruption_from_database(const std::string& connection_string, 
-        navitia::type::PT_Data& pt_data) {
+void fill_disruption_from_database(const std::string& connection_string,
+        navitia::type::PT_Data& pt_data, const std::vector<std::string>& contributors) {
     std::unique_ptr<pqxx::connection> conn;
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
@@ -56,6 +57,7 @@ void fill_disruption_from_database(const std::string& connection_string,
            items_per_request = 100;
     DisruptionDatabaseReader reader(pt_data);
     pqxx::result result;
+    std::string contributors_array = boost::algorithm::join(contributors, ", ");
     do{
         std::string request = (boost::format(
                "SELECT "
@@ -66,6 +68,7 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     extract(epoch from d.end_publication_date) :: bigint as disruption_end_publication_date,"
                "     extract(epoch from d.created_at) :: bigint as disruption_created_at,"
                "     extract(epoch from d.updated_at) :: bigint as disruption_updated_at,"
+               "     co.contributor_code as contributor,"
                // Cause fields
                "     c.id as cause_id, c.wording as cause_wording,"
                "     c.is_visible as cause_visible,"
@@ -113,6 +116,7 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     extract(epoch from ch.created_at) :: bigint as channel_created_at,"
                "     extract(epoch from ch.updated_at) :: bigint as channel_updated_at"
                "     FROM disruption AS d"
+               "     JOIN contributor AS co ON d.contributor_id = co.id"
                "     JOIN cause AS c ON (c.id = d.cause_id)"
                "     LEFT JOIN associate_disruption_tag ON associate_disruption_tag.disruption_id = d.id"
                "     LEFT JOIN tag AS t ON associate_disruption_tag.tag_id = t.id"
@@ -127,9 +131,12 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     LEFT JOIN pt_object AS ls_end ON line_section.end_object_id = ls_end.id"
                "     JOIN message AS m ON m.impact_id = i.id"
                "     JOIN channel AS ch ON m.channel_id = ch.id"
+               "     WHERE co.contributor_code = ANY('{%s}')" // it's like a "IN" but won't crash if empty
+               "     AND d.status = 'published'"
+               "     AND i.status = 'published'"
                "     ORDER BY d.id, c.id, t.id, i.id, a.id, p.id, m.id, ch.id"
                "     LIMIT %i OFFSET %i"
-               " ;") % items_per_request % offset).str();
+               " ;") % contributors_array % items_per_request % offset).str();
 
         result = work.exec(request);
         for (auto res : result) {
@@ -142,7 +149,7 @@ void fill_disruption_from_database(const std::string& connection_string,
 }
 
 void DisruptionDatabaseReader::finalize() {
-    if (disruption->id() != "") {
+    if (disruption && disruption->id() != "") {
         add_disruption(pt_data, *disruption);
     }
 }

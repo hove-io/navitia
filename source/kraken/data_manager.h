@@ -76,12 +76,13 @@ public:
 #endif
     }
 
-    bool load(const std::string& database, 
-              const boost::optional<std::string>& chaos_database = boost::none){
+    bool load(const std::string& database,
+              const boost::optional<std::string>& chaos_database = boost::none,
+              const std::vector<std::string>& contributors = {}){
         bool success;
         ++ data_identifier;
         auto data = boost::make_shared<Data>(data_identifier.load());
-        success = data->load(database, chaos_database);
+        success = data->load(database, chaos_database, contributors);
         if (success) {
             set_data(std::move(data));
         } else {
