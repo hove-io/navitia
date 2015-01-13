@@ -396,15 +396,23 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     }
 
                     auto begin_section_time = arrival_time;
+                    int nb_section = pb_journey->mutable_sections()->size();
                     fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
                             begin_section_time);
                     arrival_time = arrival_time + temp.duration.to_posix();
+                    if(pb_journey->mutable_sections()->size() > nb_section){
+                        //We add coherence between the destination of the PT part of the journey
+                        //and the origin of the street network part
+                        auto section = pb_journey->mutable_sections(nb_section);
+                        bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
+                                              navitia::from_posix_timestamp(section->end_date_time()));
+                        fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
+                    }
 
+                    //We add coherence with the destination object of the request
                     auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
                     bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
                                               navitia::from_posix_timestamp(section->end_date_time()));
-                    fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
-                    //We add coherence with the destination object of the request
                     fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
                 }
             }
