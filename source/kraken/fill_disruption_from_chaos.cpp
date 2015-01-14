@@ -246,21 +246,29 @@ struct apply_impact_visitor : public boost::static_visitor<> {
 
     void deactivate_vp_of(const nt::Route* route) const {
         auto f = [&](nt::VehicleJourney& vj) {
-            auto vp = new nt::ValidityPattern(vj.adapted_validity_pattern);
+            nt::ValidityPattern vp(vj.adapted_validity_pattern);
             bool is_impacted = false;
             for (auto period : impact->application_periods) {
                 bt::time_iterator titr(period.begin(), bt::hours(24));
                 for(;titr<period.end(); ++titr) {
                     auto day = to_int_date(*titr);
-                    if (vp->check(day)) {
-                        vp->remove(day);
+                    if (vp.check(day)) {
+                        vp.remove(day);
                         is_impacted = true;
                     }
                 }
             }
             if (is_impacted) {
-                pt_data.validity_patterns.push_back(vp);
-                vj.adapted_validity_pattern = vp;
+                for (auto vp_ : pt_data.validity_patterns) {
+                    if (vp_->days == vp.days) {
+                        vj.adapted_validity_pattern = vp_;
+                        return true;
+                    }
+                }
+                // We haven't found this vp, so we need to create it
+                auto vp_ = new nt::ValidityPattern(vp);
+                pt_data.validity_patterns.push_back(vp_);
+                vj.adapted_validity_pattern = vp_;
             }
             return true;
         };
