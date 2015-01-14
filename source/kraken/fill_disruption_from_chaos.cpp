@@ -230,21 +230,20 @@ struct apply_impact_visitor : public boost::static_visitor<> {
 
     void operator()(const nt::Network * network) {
         for(auto line : network->line_list) {
-            deactivate_vp_of(line);
+            this->operator()(line);
         }
     }
     void operator()(const nt::StopArea * ) {
     }
-    void operator()(nt::new_disruption::LineSection & ) {
+    void operator()(nt::new_disruption::LineSection & ls) {
+        this->operator()(ls.line);
     }
     void operator()(const nt::Line *line) {
-        deactivate_vp_of(line);
+        for(auto route : line->route_list) {
+            this->operator()(route);
+        }
     }
     void operator()(const nt::Route * route) {
-        deactivate_vp_of(route);
-    }
-
-    void deactivate_vp_of(const nt::Route* route) const {
         auto f = [&](nt::VehicleJourney& vj) {
             nt::ValidityPattern vp(vj.adapted_validity_pattern);
             bool is_impacted = false;
@@ -277,13 +276,6 @@ struct apply_impact_visitor : public boost::static_visitor<> {
             journey_pattern->for_each_vehicle_journey(f);
         }
     }
-
-    void deactivate_vp_of(const nt::Line* line) {
-        for(auto route : line->route_list) {
-            deactivate_vp_of(route);
-        }
-    }
-
 };
 
 void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
