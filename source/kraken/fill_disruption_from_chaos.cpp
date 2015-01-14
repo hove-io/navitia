@@ -30,12 +30,18 @@ www.navitia.io
 
 #include "fill_disruption_from_chaos.h"
 #include "utils/logger.h"
+#include "type/datetime.h"
 
 #include <boost/make_shared.hpp>
+#include <boost/variant/static_visitor.hpp>
+#include <boost/variant/apply_visitor.hpp>
+#include <boost/range/algorithm/for_each.hpp>
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 namespace navitia {
 
 namespace nt = navitia::type;
+namespace bt = boost::posix_time;
 
 static boost::shared_ptr<nt::new_disruption::Tag>
 make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& holder) {
@@ -211,6 +217,76 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     return std::move(impact);
 }
 
+struct apply_impact_visitor : public boost::static_visitor<> {
+    boost::shared_ptr<nt::new_disruption::Impact> impact;
+    nt::PT_Data& pt_data;
+
+    apply_impact_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+            nt::PT_Data& pt_data) :
+     impact(impact), pt_data(pt_data) {}
+
+    void operator()(nt::new_disruption::UnknownPtObj&) {
+    }
+
+    void operator()(const nt::Network * network) {
+        for(auto line : network->line_list) {
+            deactivate_vp_of(line);
+        }
+    }
+    void operator()(const nt::StopArea * ) {
+    }
+    void operator()(nt::new_disruption::LineSection & ) {
+    }
+    void operator()(const nt::Line *line) {
+        deactivate_vp_of(line);
+    }
+    void operator()(const nt::Route * route) {
+        deactivate_vp_of(route);
+    }
+
+    void deactivate_vp_of(const nt::Route* route) const {
+        auto f = [&](nt::VehicleJourney& vj) {
+            auto vp = new nt::ValidityPattern(vj.adapted_validity_pattern);
+            bool is_impacted = false;
+            for (auto period : impact->application_periods) {
+                bt::time_iterator titr(period.begin(), bt::hours(24));
+                for(;titr<period.end(); ++titr) {
+                    auto day = to_int_date(*titr);
+                    if (vp->check(day)) {
+                        vp->remove(day);
+                        is_impacted = true;
+                    }
+                }
+            }
+            if (is_impacted) {
+                pt_data.validity_patterns.push_back(vp);
+                vj.adapted_validity_pattern = vp;
+            }
+            return true;
+        };
+
+        for (auto journey_pattern : route->journey_pattern_list) {
+            journey_pattern->for_each_vehicle_journey(f);
+        }
+    }
+
+    void deactivate_vp_of(const nt::Line* line) {
+        for(auto route : line->route_list) {
+            deactivate_vp_of(route);
+        }
+    }
+
+};
+
+void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
+        nt::PT_Data& pt_data) {
+    if (impact->severity->effect == nt::new_disruption::Effect::NO_SERVICE) {
+        apply_impact_visitor v(impact, pt_data);
+        boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+    }
+}
+
+
 void delete_disruption(nt::PT_Data& pt_data,
                     const std::string& disruption_id) {
     nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
@@ -244,7 +320,9 @@ void add_disruption(nt::PT_Data& pt_data,
     disruption->updated_at = from_posix(chaos_disruption.updated_at());
     disruption->cause = make_cause(chaos_disruption.cause(), holder);
     for (const auto& chaos_impact: chaos_disruption.impacts()) {
-        disruption->add_impact(make_impact(chaos_impact, pt_data));
+        auto impact = make_impact(chaos_impact, pt_data);
+        disruption->add_impact(impact);
+        apply_impact(impact, pt_data);
     }
     disruption->localization = make_pt_objects(chaos_disruption.localization(), pt_data);
     for (const auto& chaos_tag: chaos_disruption.tags()) {
