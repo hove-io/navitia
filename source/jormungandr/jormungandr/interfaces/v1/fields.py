@@ -354,8 +354,8 @@ Note: the 'generic_messages' are the old 'disruptions'
 generic_message = {
     "level": enum_type(attribute="message_status"),
     "value": fields.String(attribute="message"),
-    "start_application_date": fields.String(),
-    "end_application_date": fields.String(),
+    "start_application_date": DateTime(),
+    "end_application_date": DateTime(),
     "start_application_daily_hour": fields.String(),
     "end_application_daily_hour": fields.String(),
 }

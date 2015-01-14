@@ -152,10 +152,8 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     }
 
     if (! impact->application_periods.empty()) {
-        pb_message->set_start_application_date(
-                    navitia::to_iso_string_no_fractional(impact->application_periods.front().begin()));
-        pb_message->set_end_application_date(
-                    navitia::to_iso_string_no_fractional(impact->application_periods.back().last()));
+        pb_message->set_start_application_date(navitia::to_posix_timestamp(impact->application_periods.front().begin()));
+        pb_message->set_end_application_date(navitia::to_posix_timestamp(impact->application_periods.back().last()));
         //start/end daily hour are not relevent anymore
         pb_message->set_start_application_daily_hour("000000");
         pb_message->set_end_application_daily_hour("235959");
