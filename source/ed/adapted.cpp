@@ -77,7 +77,7 @@ pt::time_period build_stop_period(const nt::StopTime& stop,
 
     if(!stop.drop_off_allowed() || stop.arrival_time == stop.departure_time){
         //si l'heure d'arrivée et égal à l'heure de départ (typiquement donnée urbaine) on soustrait une seconde pour avoir une période non nulle
-        arrival = pt::ptime(date, pt::seconds(stop.departure_time - 1));
+        arrival = pt::ptime(date, pt::seconds(stop.arrival_time - 1));
     }else{
         arrival = pt::ptime(date, pt::seconds(stop.arrival_time));
     }
