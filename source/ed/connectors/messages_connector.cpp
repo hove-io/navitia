@@ -144,7 +144,6 @@ void load_disruptions(
                                                        daily_start_hour, daily_end_hour,
                                                        active_days);
             disruption->add_impact(impact);
-            disruptions.disruptions.push_back(std::move(disruption));
         }
         auto message = nt::new_disruption::Message();
         cursor["body"].to(message.text);
@@ -205,7 +204,7 @@ std::vector<ed::AtPerturbation> load_at_perturbations(
 
     std::vector<ed::AtPerturbation> perturbations;
     for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
-       ed::AtPerturbation perturbation;
+        ed::AtPerturbation perturbation;
         cursor["uri"].to(perturbation.uri);
         //on construit le message
         cursor["object_uri"].to(perturbation.object_uri);
