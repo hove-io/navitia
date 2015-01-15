@@ -506,7 +506,7 @@ static void add_isochrone_response(RAPTOR& raptor,
             if((clockwise && raptor.best_labels[jpp->idx] < best) ||
                 (!clockwise && raptor.best_labels[jpp->idx] > best)){
                 int round = raptor.best_round(jpp->idx);
-                if(round != -1 && raptor.labels[round][jpp->idx].pt_is_initialized()) {
+                if(round != -1 && raptor.labels[round].pt_is_initialized(jpp->idx)) {
                     best = raptor.best_labels[jpp->idx];
                     best_jpp = jpp->idx;
                     best_round = round;

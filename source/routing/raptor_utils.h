@@ -30,37 +30,76 @@ www.navitia.io
 
 #pragma once
 #include <unordered_map>
-//#include "type/data.h"
 #include "type/type.h"
 #include "type/datetime.h"
-//#include "best_stoptime.h"
 
 namespace navitia { namespace routing {
 
-struct Label {
-    DateTime dt_pt, // At what time can we reach this label with public transport
-             dt_transfer; // At what time wan we reach this label with a transfer
-    navitia::type::idx_t boarding_jpp_pt = type::invalid_idx,
-                         boarding_jpp_transfer = type::invalid_idx;
-
-    void init(bool clockwise) {
-        boarding_jpp_pt = type::invalid_idx;
-        boarding_jpp_transfer = type::invalid_idx;
-        dt_pt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
-        dt_transfer = dt_pt;
+struct Labels {
+    inline void assign_inf(size_t nb) {
+        init(nb, DateTimeUtils::inf);
+    }
+    inline void assign_min(size_t nb) {
+        init(nb, DateTimeUtils::min);
+    }
+    inline void clear(const Labels& clean) {
+        dt_pts = clean.dt_pts;
+        dt_transfers = clean.dt_transfers;
+        boarding_jpp_pts.resize(clean.boarding_jpp_pts.size());
+        boarding_jpp_transfers.resize(clean.boarding_jpp_transfers.size());
+    }
+    inline const navitia::type::idx_t&
+    boarding_jpp_transfer(navitia::type::idx_t idx) const {
+        return boarding_jpp_transfers[idx];
+    }
+    inline const navitia::type::idx_t&
+    boarding_jpp_pt(navitia::type::idx_t idx) const {
+        return boarding_jpp_pts[idx];
+    }
+    inline const DateTime& dt_transfer(navitia::type::idx_t idx) const {
+        return dt_transfers[idx];
+    }
+    inline const DateTime& dt_pt(navitia::type::idx_t idx) const {
+        return dt_pts[idx];
     }
 
-    inline bool pt_is_initialized() const {
-        return dt_pt != DateTimeUtils::inf && dt_pt != DateTimeUtils::min;
+    inline navitia::type::idx_t&
+    mut_boarding_jpp_transfer(navitia::type::idx_t idx) {
+        return boarding_jpp_transfers[idx];
+    }
+    inline navitia::type::idx_t&
+    mut_boarding_jpp_pt(navitia::type::idx_t idx) {
+        return boarding_jpp_pts[idx];
+    }
+    inline DateTime& mut_dt_transfer(navitia::type::idx_t idx) {
+        return dt_transfers[idx];
+    }
+    inline DateTime& mut_dt_pt(navitia::type::idx_t idx) {
+        return dt_pts[idx];
     }
 
-    inline bool transfer_is_initialized() const {
-        return dt_transfer != DateTimeUtils::inf && dt_transfer != DateTimeUtils::min;
+    inline bool pt_is_initialized(navitia::type::idx_t idx) const {
+        return dt_pt(idx) != DateTimeUtils::inf && dt_pt(idx) != DateTimeUtils::min;
     }
+    inline bool transfer_is_initialized(navitia::type::idx_t idx) const {
+        return dt_transfer(idx) != DateTimeUtils::inf && dt_transfer(idx) != DateTimeUtils::min;
+    }
+
+private:
+    inline void init(size_t nb, DateTime val) {
+        dt_pts.assign(nb, val);
+        dt_transfers.assign(nb, val);
+        boarding_jpp_pts.resize(nb);
+        boarding_jpp_transfers.resize(nb);
+    }
+
+    std::vector<DateTime> dt_pts;
+    std::vector<DateTime> dt_transfers;
+    std::vector<navitia::type::idx_t> boarding_jpp_pts;
+    std::vector<navitia::type::idx_t> boarding_jpp_transfers;
 };
 
 typedef std::pair<int, int> pair_int;
-typedef std::vector<Label> label_vector_t;
 typedef std::vector<navitia::type::idx_t> vector_idx;
 typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
 typedef std::vector<int> queue_t;

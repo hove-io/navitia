@@ -66,7 +66,7 @@ struct RAPTOR
     const navitia::type::Data & data;
 
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
-    std::vector<label_vector_t> labels;
+    std::vector<Labels> labels;
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
     std::vector<DateTime> best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination

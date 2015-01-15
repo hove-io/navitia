@@ -67,8 +67,8 @@ struct dataRAPTOR {
 
     std::vector<size_t> first_stop_time;
     std::vector<size_t> nb_trips;
-    label_vector_t labels_const;
-    label_vector_t labels_const_reverse;
+    Labels labels_const;
+    Labels labels_const_reverse;
     vector_idx boardings_const;
     std::vector<boost::dynamic_bitset<> > jp_validity_patterns;
     std::vector<boost::dynamic_bitset<> > jp_adapted_validity_pattern;
