@@ -52,13 +52,14 @@ makePathes(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &d
 }
 
 std::pair<const type::StopTime*, uint32_t>
-get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels,
+get_current_stidx_gap(size_t count, type::idx_t jpp_idx, const std::vector<Labels> &labels,
                       const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data, bool disruption_active) {
-    const auto& label = labels[count][journey_pattern_point];
-    if(label.pt_is_initialized()) {
-        const auto date = DateTimeUtils::date(label.dt_pt);
-        const auto hour = DateTimeUtils::hour(label.dt_pt);
-        const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[journey_pattern_point];
+    const auto& ls = labels[count];
+    if(ls.pt_is_initialized(jpp_idx)) {
+        const auto& dt_pt = ls.dt_pt(jpp_idx);
+        const auto date = DateTimeUtils::date(dt_pt);
+        const auto hour = DateTimeUtils::hour(dt_pt);
+        const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx];
         for (const auto& vj : jpp->journey_pattern->discrete_vehicle_journey_list) {
             const type::StopTime& st = vj->stop_time_list[jpp->order];
             auto st_hour = clockwise ? st.arrival_time : st.departure_time;
@@ -70,7 +71,7 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
                     && st.valid_end(clockwise)
                     && st.vehicle_journey->accessible(accessibilite_params.vehicle_properties)) {
                 DateTime result_hour = !clockwise ? st.arrival_time : st.departure_time;
-                auto result = label.dt_pt;
+                auto result = dt_pt;
                 DateTimeUtils::update(result, result_hour, clockwise);
                 return std::make_pair(&st, result);
             }
@@ -103,7 +104,7 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
             if (st.is_valid_day(date, clockwise, disruption_active)
                     && st.valid_end(clockwise)
                     && st.vehicle_journey->accessible(accessibilite_params.vehicle_properties)) {
-                auto result = label.dt_pt;
+                auto result = dt_pt;
                 DateTime result_hour;
                 if (!clockwise) {
                     result_hour = hour + st.arrival_time - st.departure_time;

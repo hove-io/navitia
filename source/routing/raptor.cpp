@@ -87,13 +87,13 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             if(!v.comp(workingDt, bound)) {
                 continue;
             }
-            working_labels[jpp->idx].dt_pt = workingDt;
-            working_labels[jpp->idx].boarding_jpp_pt = state.boarding_jpp_idx;
-            best_labels[jpp->idx] = working_labels[jpp->idx].dt_pt;
+            working_labels.mut_dt_pt(jpp->idx) = workingDt;
+            working_labels.mut_boarding_jpp_pt(jpp->idx) = state.boarding_jpp_idx;
+            best_labels[jpp->idx] = working_labels.dt_pt(jpp->idx);
             add_vj = true;
-            this->b_dest.add_best(v, jpp->idx, working_labels[jpp->idx].dt_pt, this->count);
+            this->b_dest.add_best(v, jpp->idx, working_labels.dt_pt(jpp->idx), this->count);
             auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
-            if(best_jpp == type::invalid_idx || v.comp(workingDt, working_labels[best_jpp].dt_pt)) {
+            if(best_jpp == type::invalid_idx || v.comp(workingDt, working_labels.dt_pt(best_jpp))) {
                 best_jpp = jpp->idx;
                 result = true;
             }
@@ -114,7 +114,7 @@ template<typename Visitor>
 bool RAPTOR::foot_path(const Visitor & v) {
     bool result = false;
     int last = 0;
-    const auto foot_path_list = v.clockwise() ? data.dataRaptor->foot_path_forward :
+    const auto& foot_path_list = v.clockwise() ? data.dataRaptor->foot_path_forward :
                                                 data.dataRaptor->foot_path_backward;
     auto it = foot_path_list.begin();
     auto &working_labels = labels[count];
@@ -129,26 +129,26 @@ bool RAPTOR::foot_path(const Visitor & v) {
         // Now we apply all the connections
         const pair_int & index = (v.clockwise()) ? data.dataRaptor->footpath_index_forward[stop_point->idx] :
                                                  data.dataRaptor->footpath_index_backward[stop_point->idx];
-        DateTime next = v.worst_datetime(),
-                 previous = working_labels[best_jpp_idx].dt_pt;
+        DateTime next = v.worst_datetime();
+        DateTime previous = working_labels.dt_pt(best_jpp_idx);
         it += index.first - last;
         const auto end_it = it + index.second;
         const auto best_is_odt = data.pt_data->journey_pattern_points[best_jpp_idx]->journey_pattern->odt_properties.is_zonal_odt();
         for(; it != end_it; ++it) {
             const type::StopPointConnection* spc = *it;
-            const auto destination = v.clockwise() ? spc->destination : spc->departure;
+            const auto& destination = v.clockwise() ? spc->destination : spc->departure;
             next = v.combine(previous, spc->duration); // ludo
             for(auto jpp : destination->journey_pattern_point_list) {
                 type::idx_t jpp_idx = jpp->idx;
                 if(jpp_idx != best_jpp_idx && v.comp(next, best_labels[jpp_idx]) &&
                         (!best_is_odt || !jpp->journey_pattern->odt_properties.is_zonal_odt())) {
-                   working_labels[jpp_idx].dt_transfer = next;
-                   working_labels[jpp_idx].boarding_jpp_transfer = best_jpp_idx;
-                   best_labels[jpp_idx] = next;
-                   if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
-                       Q[jpp->journey_pattern->idx] = jpp->order;
-                       result = true;
-                   }
+                    working_labels.mut_dt_transfer(jpp_idx) = next;
+                    working_labels.mut_boarding_jpp_transfer(jpp_idx) = best_jpp_idx;
+                    best_labels[jpp_idx] = next;
+                    if(v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
+                        Q[jpp->journey_pattern->idx] = jpp->order;
+                        result = true;
+                    }
                 }
             }
         }
@@ -164,11 +164,10 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     if (labels.empty()) {
         labels.resize(5);
     }
-    Label l;
-    l.dt_pt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
-    l.dt_transfer = l.dt_pt;
+    const Labels& clean_labels =
+        clockwise ? data.dataRaptor->labels_const : data.dataRaptor->labels_const_reverse;
     for(auto& lbl_list : labels) {
-        std::fill(lbl_list.begin(), lbl_list.end(), l);
+        lbl_list.clear(clean_labels);
     }
 
     const size_t journey_pattern_points_size = data.pt_data->journey_pattern_points.size();
@@ -190,7 +189,7 @@ void RAPTOR::init(Solutions departs,
         const type::StopPoint* stop_point = journey_pattern_point->stop_point;
         if(stop_point->accessible(required_properties) &&
                 ((clockwise && item.arrival <= bound) || (!clockwise && item.arrival >= bound))) {
-            labels[0][item.jpp_idx].dt_transfer = item.arrival;
+            labels[0].mut_dt_transfer(item.jpp_idx) = item.arrival;
 
             if(clockwise && Q[journey_pattern_point->journey_pattern->idx] > journey_pattern_point->order)
                 Q[journey_pattern_point->journey_pattern->idx] = journey_pattern_point->order;
@@ -564,11 +563,11 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             // Or if it's an destination point if it's equal and not unitialized before
                             const bool best_add_result = this->b_dest.add_best(visitor, jpp->idx, workingDt, this->count);
                             if(visitor.comp(workingDt, bound) || best_add_result ) {
-                                working_labels[jpp_idx].dt_pt = workingDt;
-                                working_labels[jpp_idx].boarding_jpp_pt = boarding->idx;
-                                best_labels[jpp_idx] = working_labels[jpp_idx].dt_pt;
+                                working_labels.mut_dt_pt(jpp_idx) = workingDt;
+                                working_labels.mut_boarding_jpp_pt(jpp_idx) = boarding->idx;
+                                best_labels[jpp_idx] = working_labels.dt_pt(jpp_idx);
                                 auto& best_jpp = best_jpp_by_sp[jpp->stop_point->idx];
-                                if(best_jpp == type::invalid_idx || visitor.comp(workingDt, working_labels[best_jpp].dt_pt)) {
+                                if(best_jpp == type::invalid_idx || visitor.comp(workingDt, working_labels.dt_pt(best_jpp))) {
                                     best_jpp = jpp->idx;
                                     end_algorithm = false;
                                 }
@@ -579,8 +578,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     // We try to get on a vehicle, if we were already on a vehicle, but we arrived
                     // before on the previous via a connection, we try to catch a vehicle leaving this
                     // journey pattern point before
-                    const DateTime previous_dt = prec_labels[jpp_idx].dt_transfer;
-                    if(prec_labels[jpp_idx].transfer_is_initialized() &&
+                    const DateTime previous_dt = prec_labels.dt_transfer(jpp_idx);
+                    if(prec_labels.transfer_is_initialized(jpp_idx) &&
                        (boarding == nullptr || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
                         const auto tmp_st_dt = best_stop_time(jpp, previous_dt,
                                                accessibilite_params.vehicle_properties,
@@ -644,7 +643,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
 
 int RAPTOR::best_round(type::idx_t journey_pattern_point_idx){
     for(size_t i = 0; i <= this->count; ++i){
-        if(labels[i][journey_pattern_point_idx].dt_pt == best_labels[journey_pattern_point_idx]){
+        if(labels[i].mut_dt_pt(journey_pattern_point_idx) == best_labels[journey_pattern_point_idx]){
             return i;
         }
     }

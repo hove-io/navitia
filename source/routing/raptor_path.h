@@ -57,7 +57,7 @@ namespace navitia { namespace routing {
     void patch_datetimes(Path &path);
 
     std::pair<const type::StopTime*, uint32_t>
-    get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels,
+    get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<Labels> &labels,
                           const type::AccessibiliteParams & accessibilite_params, bool clockwise,
                           const navitia::type::Data &data, bool disruption_active);
 
@@ -90,7 +90,7 @@ namespace navitia { namespace routing {
             return ;
         }
 
-        void final_step(type::idx_t /*current_jpp*/, size_t /*count*/, const std::vector<std::vector<Label>> &/*labels*/) {
+        void final_step(type::idx_t /*current_jpp*/, size_t /*count*/, const std::vector<Labels> &/*labels*/) {
             return ;
         }
     };

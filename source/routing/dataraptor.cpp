@@ -36,13 +36,8 @@ namespace navitia { namespace routing {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    Label label;
-    label.dt_pt = DateTimeUtils::inf;
-    label.dt_transfer = label.dt_pt;
-    labels_const.assign(data.journey_pattern_points.size(), label);
-    label.dt_pt = DateTimeUtils::min;
-    label.dt_transfer = label.dt_pt;
-    labels_const_reverse.assign(data.journey_pattern_points.size(), label);
+    labels_const.init_inf(data.journey_pattern_points.size());
+    labels_const_reverse.init_min(data.journey_pattern_points.size());
 
     foot_path_forward.clear();
     foot_path_backward.clear();
