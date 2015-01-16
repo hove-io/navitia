@@ -143,7 +143,11 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     // we also fill the old message for the customer using it.
     //will be removed as soon as possible
     auto pb_message = pb_object->add_messages();
-    pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
+    if(impact->severity->effect == type::new_disruption::Effect::NO_SERVICE){
+        pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
+    }else{
+        pb_message->set_message_status(pbnavitia::MessageStatus::warning);
+    }
     pb_message->set_uri(impact->uri);
     if (! impact->messages.empty()) {
         const auto& msg = impact->messages.front();
