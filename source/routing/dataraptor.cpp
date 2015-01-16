@@ -32,45 +32,48 @@ www.navitia.io
 #include "routing.h"
 #include "routing/raptor_utils.h"
 
+#include <boost/range/algorithm_ext.hpp>
+
 namespace navitia { namespace routing {
+
+void dataRAPTOR::Connections::load(const type::PT_Data &data) {
+    forward_connections.assign(data.stop_points.size(), {});
+    backward_connections.assign(data.stop_points.size(), {});
+    for (const auto* conn: data.stop_point_connections) {
+        forward_connections.at(conn->departure->idx).push_back(
+            {DateTime(conn->duration), conn->destination->idx});
+        backward_connections.at(conn->destination->idx).push_back(
+            {DateTime(conn->duration), conn->departure->idx});
+    }
+    for (auto& conns: forward_connections) { conns.shrink_to_fit(); }
+    for (auto& conns: backward_connections) { conns.shrink_to_fit(); }
+}
+
+void dataRAPTOR::JppsFromSp::load(const type::PT_Data &data) {
+    jpps_from_sp.assign(data.stop_points.size(), {});
+    for (const auto* sp: data.stop_points) {
+        for (const auto* jpp: sp->journey_pattern_point_list) {
+            jpps_from_sp.at(sp->idx).push_back({jpp->idx, jpp->journey_pattern->idx, jpp->order});
+        }
+    }
+    for (auto& jpps: jpps_from_sp) { jpps.shrink_to_fit(); }
+}
+
+void dataRAPTOR::JppsFromSp::filter_jpps(const boost::dynamic_bitset<>& valid_jpps) {
+    for (auto& jpps: jpps_from_sp) {
+        boost::remove_erase_if(jpps, [&](const JppIdxOrder& jpp) {
+            return !valid_jpps[jpp.idx];
+        });
+    }
+}
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
     labels_const.init_inf(data.journey_pattern_points.size());
     labels_const_reverse.init_min(data.journey_pattern_points.size());
 
-    foot_path_forward.clear();
-    foot_path_backward.clear();
-    footpath_index_backward.clear();
-    footpath_index_forward.clear();
-    std::vector<std::map<navitia::type::idx_t, const navitia::type::StopPointConnection*> > footpath_temp_forward, footpath_temp_backward;
-    footpath_temp_forward.resize(data.stop_points.size());
-    footpath_temp_backward.resize(data.stop_points.size());
-
-    // Build of a structure to look for connections
-    for(const type::StopPointConnection* connection : data.stop_point_connections) {
-        footpath_temp_forward[connection->departure->idx][connection->destination->idx] = connection;
-        footpath_temp_backward[connection->destination->idx][connection->departure->idx] = connection;
-    }
-
-    footpath_index_forward.resize(data.stop_points.size());
-    footpath_index_backward.resize(data.stop_points.size());
-    for(const type::StopPoint* sp : data.stop_points) {
-        footpath_index_forward[sp->idx].first = foot_path_forward.size();
-        footpath_index_backward[sp->idx].first = foot_path_backward.size();
-        int size_forward = 0, size_backward = 0;
-        for(auto conn : footpath_temp_forward[sp->idx]) {
-            foot_path_forward.push_back(conn.second);
-            ++size_forward;
-        }
-        for(auto conn : footpath_temp_backward[sp->idx]) {
-            foot_path_backward.push_back(conn.second);
-            ++size_backward;
-        }
-
-        footpath_index_forward[sp->idx].second = size_forward;
-        footpath_index_backward[sp->idx].second = size_backward;
-    }
+    connections.load(data);
+    jpps_from_sp.load(data);
 
     typedef std::unordered_map<navitia::type::idx_t, vector_idx> idx_vector_idx;
     idx_vector_idx ridx_journey_pattern;

@@ -79,6 +79,7 @@ struct RAPTOR
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> valid_journey_patterns;
     boost::dynamic_bitset<> valid_journey_pattern_points;
+    dataRAPTOR::JppsFromSp jpps_from_sp;
     ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
     queue_t Q;
 
@@ -163,8 +164,11 @@ struct RAPTOR
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
-    void set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> & forbidden,
-                              bool disruption_active, bool allow_odt,
+    void set_valid_jp_and_jpp(uint32_t date,
+                              const type::AccessibiliteParams & accessibilite_params,
+                              const std::vector<std::string> & forbidden,
+                              bool disruption_active,
+                              bool allow_odt,
                               const vec_stop_point_duration &departs = {},
                               const vec_stop_point_duration &destinations = {});
 

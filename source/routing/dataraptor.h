@@ -40,13 +40,41 @@ namespace navitia { namespace routing {
 /** Données statiques qui ne sont pas modifiées pendant le calcul */
 struct dataRAPTOR {
 
-    typedef std::pair<int, int> pair_int;
-    typedef std::vector<navitia::type::idx_t> vector_idx;
+    struct Connections {
+        struct Connection {
+            DateTime duration;
+            type::idx_t sp_idx;
+        };
+        inline const std::vector<Connection>& get_forward(type::idx_t sp) const {
+            return forward_connections[sp];
+        }
+        inline const std::vector<Connection>& get_backward(type::idx_t sp) const {
+            return backward_connections[sp];
+        }
+        void load(const navitia::type::PT_Data &data);
 
-    std::vector<const navitia::type::StopPointConnection*> foot_path_forward;
-    std::vector<pair_int> footpath_index_forward;
-    std::vector<const navitia::type::StopPointConnection*> foot_path_backward;
-    std::vector<pair_int> footpath_index_backward;
+    private:
+        std::vector<std::vector<Connection>> forward_connections;
+        std::vector<std::vector<Connection>> backward_connections;
+    };
+    Connections connections;
+
+    struct JppsFromSp {
+        struct JppIdxOrder {
+            type::idx_t idx;
+            type::idx_t jp_idx;
+            int order;
+        };
+        inline const std::vector<JppIdxOrder>& operator[](type::idx_t sp) const {
+            return jpps_from_sp[sp];
+        }
+        void load(const navitia::type::PT_Data &data);
+        void filter_jpps(const boost::dynamic_bitset<>& valid_jpps);
+
+    private:
+        std::vector<std::vector<JppIdxOrder>> jpps_from_sp;
+    };
+    JppsFromSp jpps_from_sp;
 
     // arrival_times (resp. departure_times) are the different arrival
     // (resp. departure) times of each stop time sorted by
@@ -76,38 +104,6 @@ struct dataRAPTOR {
 
     dataRAPTOR() {}
     void load(const navitia::type::PT_Data &data);
-
-
-    inline int get_stop_time_order(const type::JourneyPattern & journey_pattern, int orderVj, int order) const{
-        return first_stop_time[journey_pattern.idx] + (order * nb_trips[journey_pattern.idx]) + orderVj;
-    }
-
-    inline uint32_t get_arrival_time(const type::JourneyPattern & journey_pattern, int orderVj, int order) const{
-        if(orderVj < 0)
-            return std::numeric_limits<uint32_t>::max();
-        else
-            return arrival_times[get_stop_time_order(journey_pattern, orderVj, order)];
-    }
-
-    inline uint32_t get_departure_time(const type::JourneyPattern & journey_pattern, int orderVj, int order) const{
-        if(orderVj < 0)
-            return std::numeric_limits<uint32_t>::max();
-        else
-            return departure_times[get_stop_time_order(journey_pattern, orderVj, order)];
-    }
-
-    inline type::idx_t get_stop_point_connection_idx(type::idx_t stop_point_idx_origin, type::idx_t stop_point_idx_destination, bool clockwise,const navitia::type::PT_Data &/*data*/)  const {
-
-        const std::vector<const type::StopPointConnection*> &foot_path = clockwise ? foot_path_forward : foot_path_backward;
-        const std::vector<pair_int> &footpath_index = clockwise ? footpath_index_forward : footpath_index_backward;
-        for(int i = footpath_index[stop_point_idx_origin].first; i < footpath_index[stop_point_idx_origin].second; ++i) {
-            auto conn = foot_path[i];
-            if(conn->destination->idx == stop_point_idx_destination) {
-                return conn->idx;
-            }
-        }
-        return type::invalid_idx;
-    }
 };
 
 }}
