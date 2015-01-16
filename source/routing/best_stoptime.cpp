@@ -163,7 +163,11 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
     }
 
     if (best.first == nullptr) {
-        const auto previous_date = DateTimeUtils::set(DateTimeUtils::date(dt) - 1, DateTimeUtils::SECONDS_PER_DAY - 1);
+        auto date = DateTimeUtils::date(dt);
+        if (date == 0) {
+            return best;
+        }
+        const auto previous_date = DateTimeUtils::set(date - 1, DateTimeUtils::SECONDS_PER_DAY - 1);
         for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
             //we get stop time corresponding to the jpp
             const auto& st = freq_vj->stop_time_list[jpp->order];
