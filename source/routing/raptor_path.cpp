@@ -56,8 +56,9 @@ get_current_stidx_gap(size_t count, type::idx_t jpp_idx, const std::vector<Label
                       const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data, bool disruption_active) {
     const auto& ls = labels[count];
     if(ls.pt_is_initialized(jpp_idx)) {
-        const auto date = DateTimeUtils::date(ls.dt_pt(jpp_idx));
-        const auto hour = DateTimeUtils::hour(ls.dt_pt(jpp_idx));
+        const auto& dt_pt = ls.dt_pt(jpp_idx);
+        const auto date = DateTimeUtils::date(dt_pt);
+        const auto hour = DateTimeUtils::hour(dt_pt);
         const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx];
         for (const auto& vj : jpp->journey_pattern->discrete_vehicle_journey_list) {
             const type::StopTime& st = vj->stop_time_list[jpp->order];
@@ -70,7 +71,7 @@ get_current_stidx_gap(size_t count, type::idx_t jpp_idx, const std::vector<Label
                     && st.valid_end(clockwise)
                     && st.vehicle_journey->accessible(accessibilite_params.vehicle_properties)) {
                 DateTime result_hour = !clockwise ? st.arrival_time : st.departure_time;
-                auto result = ls.dt_pt(jpp_idx);
+                auto result = dt_pt;
                 DateTimeUtils::update(result, result_hour, clockwise);
                 return std::make_pair(&st, result);
             }
@@ -103,7 +104,7 @@ get_current_stidx_gap(size_t count, type::idx_t jpp_idx, const std::vector<Label
             if (st.is_valid_day(date, clockwise, disruption_active)
                     && st.valid_end(clockwise)
                     && st.vehicle_journey->accessible(accessibilite_params.vehicle_properties)) {
-                auto result = ls.dt_pt(jpp_idx);
+                auto result = dt_pt;
                 DateTime result_hour;
                 if (!clockwise) {
                     result_hour = hour + st.arrival_time - st.departure_time;

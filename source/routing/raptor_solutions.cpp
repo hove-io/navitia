@@ -151,14 +151,15 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                 }
                 size_t nb_jpp = nb_jpp_of_path(round, jppidx, clockwise, disruption_active,
                                                accessibilite_params, raptor);
-                if(!improves(best_dt, clockwise, ls.dt_pt(jppidx), spid_dist.second.total_seconds())) {
-                    if (!is_equal(best_dt, clockwise, ls.dt_pt(jppidx), spid_dist.second.total_seconds()) ||
+                const auto& dt_pt = ls.dt_pt(jppidx);
+                if(!improves(best_dt, clockwise, dt_pt, spid_dist.second.total_seconds())) {
+                    if (!is_equal(best_dt, clockwise, dt_pt, spid_dist.second.total_seconds()) ||
                              best_nb_jpp_of_path <= nb_jpp) {
                         continue;
                     }
                 }
                 best_jpp = jppidx;
-                best_dt_jpp = ls.dt_pt(jppidx);
+                best_dt_jpp = dt_pt;
                 best_nb_jpp_of_path = nb_jpp;
                 // When computing with clockwise, in the second pass we store deparutre time
                 // in labels, but we want arrival time, so we need to retrive the good stop_time
@@ -181,9 +182,9 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                         DateTimeUtils::update(best_dt_jpp, departure_time, true);
                     }
                     if(clockwise)
-                        best_dt = ls.dt_pt(jppidx) - spid_dist.second.total_seconds();
+                        best_dt = dt_pt - spid_dist.second.total_seconds();
                     else
-                        best_dt = ls.dt_pt(jppidx) + spid_dist.second.total_seconds();
+                        best_dt = dt_pt + spid_dist.second.total_seconds();
                 }
             }
         }
