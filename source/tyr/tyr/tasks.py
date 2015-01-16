@@ -271,9 +271,9 @@ def build_data(instance):
 
 
 @celery.task()
-def load_data(instance_id, data_path):
+def load_data(instance_id, data_dirs):
     instance = models.Instance.query.get(instance_id)
-    files = glob.glob(data_path + "/*")
+    files = [f for directory in data_dirs for f in glob.glob(directory + "/*")]
 
     import_data(files, instance, backup_file=False, async=False)
 
