@@ -39,7 +39,7 @@ class LoadDataCommand(Command):
     def get_options(self):
         return [
             Option(dest='instance_name', help="name of the instance"),
-            Option(dest='data_dir', help="path of the data to load")
+            Option(dest='data_dir', help="coma separated list of the path of the data to load")
         ]
 
     def run(self, instance_name, data_dir):
@@ -50,7 +50,10 @@ class LoadDataCommand(Command):
         if not instance:
             raise Exception("cannot find instance {}".format(instance_name))
 
-        futur_res = load_data.delay(instance.id, data_dir)
+        data_dirs = data_dir.split(',')
+        logging.info("loading data dir : {}".format(data_dirs))
+
+        futur_res = load_data.delay(instance.id, data_dirs)
 
         # this api is only used in artemis and artemis wants to know when this
         # task is finished, so the easiest way for the moment is to wait for
