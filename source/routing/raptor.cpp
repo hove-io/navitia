@@ -557,15 +557,17 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
          * We want to do it, to favoritize normal vj against stay_in vjs
          */
         std::vector<RoutingState> states_stay_in;
-        for(const auto & journey_pattern : data.pt_data->journey_patterns) {
-            if(Q[journey_pattern->idx] != visitor.init_queue_item()) {
+        const type::idx_t nb_jp = data.pt_data->journey_patterns.size();
+        for (type::idx_t jp_idx = 0; jp_idx < nb_jp; ++jp_idx) {
+            if(Q[jp_idx] != visitor.init_queue_item()) {
                 type::idx_t boarding_idx = type::invalid_idx; //< The boarding journey pattern point
                 DateTime workingDt = visitor.worst_datetime();
                 typename Visitor::stop_time_iterator it_st;
                 uint16_t l_zone = std::numeric_limits<uint16_t>::max();
+                const auto* journey_pattern = data.pt_data->journey_patterns[jp_idx];
                 const auto & jpp_to_explore = visitor.journey_pattern_points(
                                                 this->data.pt_data->journey_pattern_points,
-                                                journey_pattern,Q[journey_pattern->idx]);
+                                                journey_pattern,Q[jp_idx]);
 
                 BOOST_FOREACH(const type::JourneyPatternPoint* jpp, jpp_to_explore) {
                     type::idx_t jpp_idx = jpp->idx;
@@ -626,7 +628,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     }
                 }
             }
-            Q[journey_pattern->idx] = visitor.init_queue_item();
+            Q[jp_idx] = visitor.init_queue_item();
         }
         for (auto state : states_stay_in) {
             end_algorithm &= !apply_vj_extension(visitor, global_pruning, disruption_active, state);
