@@ -37,8 +37,8 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 void dataRAPTOR::Connections::load(const type::PT_Data &data) {
-    forward_connections.assign(data.stop_points.size(), {});
-    backward_connections.assign(data.stop_points.size(), {});
+    forward_connections.assign(data.stop_points.size(), std::vector<Connection>());
+    backward_connections.assign(data.stop_points.size(), std::vector<Connection>());
     for (const auto* conn: data.stop_point_connections) {
         forward_connections.at(conn->departure->idx).push_back(
             {DateTime(conn->duration), conn->destination->idx});
@@ -50,7 +50,7 @@ void dataRAPTOR::Connections::load(const type::PT_Data &data) {
 }
 
 void dataRAPTOR::JppsFromSp::load(const type::PT_Data &data) {
-    jpps_from_sp.assign(data.stop_points.size(), {});
+    jpps_from_sp.assign(data.stop_points.size(), std::vector<JppIdxOrder>());
     for (const auto* sp: data.stop_points) {
         for (const auto* jpp: sp->journey_pattern_point_list) {
             jpps_from_sp.at(sp->idx).push_back({jpp->idx, jpp->journey_pattern->idx, jpp->order});
