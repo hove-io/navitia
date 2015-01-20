@@ -325,6 +325,45 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
 
 
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
+class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
+    """
+    def test_disruption_on_journey(self):
+        """
+        same kind of test with a call on journeys
+
+        at first no disruptions, we add one and we should get it
+        """
+        self.wait_for_rabbitmq_cnx()
+        response = self.query_region(journey_basic_query)
+
+        assert "journeys" in response
+
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
+        self.send_chaos_disruption("blocking_line_disruption", "A", "line", blocking=True)
+        self.send_chaos_disruption("blocking_network_disruption", "base_network", "network", blocking=True)
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+
+        assert all(map(lambda j: len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0,
+                       response["journeys"]))
+
+        self.send_chaos_disruption("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
+
+
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+        links = []
+        def get_line_id(k, v):
+            if k != "links" or not "type" in v or not "id" in v or v["type"] != "line":
+                return
+            links.append(v["id"])
+        walk_dict(response, get_line_id)
+        assert all(map(lambda id_ : id_ != "A", links))
 
 
 
