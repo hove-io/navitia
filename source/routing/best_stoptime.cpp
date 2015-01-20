@@ -46,7 +46,7 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
 /** Which is the first valid stop_time in this range ?
  *  Returns invalid_idx is none is
  */
-std::pair<const type::StopTime*, DateTime>
+static std::pair<const type::StopTime*, DateTime>
 next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime dt,
         const type::Data &data, bool reconstructing_path,
         const type::VehicleProperties &required_vehicle_properties,
@@ -55,16 +55,17 @@ next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime
     if (data.dataRaptor->departure_times.empty()) {
         return {nullptr, DateTimeUtils::inf};
     }
+    const JpIdx jp_idx = JpIdx(*jpp->journey_pattern);
     const auto begin = data.dataRaptor->departure_times.begin() +
-            data.dataRaptor->first_stop_time[jpp->journey_pattern->idx] +
-            jpp->order * data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
-    const auto end_it = begin + data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
+        data.dataRaptor->first_stop_time[jp_idx] +
+        jpp->order * data.dataRaptor->nb_trips[jp_idx];
+    const auto end_it = begin + data.dataRaptor->nb_trips[jp_idx];
     const auto it = std::lower_bound(begin, end_it, DateTimeUtils::hour(dt),
                                bound_predicate_earliest);
 
     type::idx_t idx = it - data.dataRaptor->departure_times.begin();
     const type::idx_t end = (begin - data.dataRaptor->departure_times.begin()) +
-                           data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
+                           data.dataRaptor->nb_trips[jp_idx];
 
 
     auto date = DateTimeUtils::date(dt);
@@ -90,7 +91,7 @@ next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime
     return {nullptr, DateTimeUtils::inf};
 }
 
-std::pair<const type::StopTime*, DateTime>
+static std::pair<const type::StopTime*, DateTime>
 next_valid_frequency_pick_up(const type::JourneyPatternPoint* jpp, const DateTime dt,
                              bool reconstructing_path,
                              const type::VehicleProperties &vehicle_properties,
@@ -195,15 +196,16 @@ previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const Dat
     if (data.dataRaptor->arrival_times.empty()) {
         return {nullptr, DateTimeUtils::inf};
     }
+    const JpIdx jp_idx = JpIdx(*jpp->journey_pattern);
     const auto begin = data.dataRaptor->arrival_times.begin() +
-                       data.dataRaptor->first_stop_time[jpp->journey_pattern->idx] +
-                       jpp->order * data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
-    const auto end_it = begin + data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
+                       data.dataRaptor->first_stop_time[jp_idx] +
+                       jpp->order * data.dataRaptor->nb_trips[jp_idx];
+    const auto end_it = begin + data.dataRaptor->nb_trips[jp_idx];
     const auto it = std::lower_bound(begin, end_it, DateTimeUtils::hour(dt), bound_predicate_tardiest);
 
     type::idx_t idx = it - data.dataRaptor->arrival_times.begin();
     const type::idx_t end = (begin - data.dataRaptor->arrival_times.begin()) +
-                           data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
+                           data.dataRaptor->nb_trips[jp_idx];
 
     auto date = DateTimeUtils::date(dt);
     for(; idx < end; ++idx) {

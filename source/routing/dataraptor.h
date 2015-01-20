@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/datetime.h"
 #include "routing/raptor_utils.h"
+#include "routing/idx_map.h"
 
 #include <boost/foreach.hpp>
 #include <boost/dynamic_bitset.hpp>
@@ -40,39 +41,44 @@ namespace navitia { namespace routing {
 /** Données statiques qui ne sont pas modifiées pendant le calcul */
 struct dataRAPTOR {
 
+    // cache friendly access to the connections
     struct Connections {
         struct Connection {
             DateTime duration;
-            type::idx_t sp_idx;
+            SpIdx sp_idx;
         };
-        inline const std::vector<Connection>& get_forward(type::idx_t sp) const {
+        inline const std::vector<Connection>& get_forward(const SpIdx& sp) const {
             return forward_connections[sp];
         }
-        inline const std::vector<Connection>& get_backward(type::idx_t sp) const {
+        inline const std::vector<Connection>& get_backward(const SpIdx& sp) const {
             return backward_connections[sp];
         }
         void load(const navitia::type::PT_Data &data);
 
     private:
-        std::vector<std::vector<Connection>> forward_connections;
-        std::vector<std::vector<Connection>> backward_connections;
+        // for a stop point, get the corresponding forward connections
+        IdxMap<type::StopPoint, std::vector<Connection>> forward_connections;
+        // for a stop point, get the corresponding backward connections
+        IdxMap<type::StopPoint, std::vector<Connection>> backward_connections;
     };
     Connections connections;
 
+    // cache friendly access to JourneyPatternPoints from a StopPoint
     struct JppsFromSp {
-        struct JppIdxOrder {
-            type::idx_t idx;
-            type::idx_t jp_idx;
-            int order;
+        // compressed JourneyPatternPoint
+        struct Jpp {
+            JppIdx idx; // index
+            JpIdx jp_idx; // corresponding JourneyPattern index
+            int order; // order of the jpp in its jp
         };
-        inline const std::vector<JppIdxOrder>& operator[](type::idx_t sp) const {
+        inline const std::vector<Jpp>& operator[](const SpIdx& sp) const {
             return jpps_from_sp[sp];
         }
         void load(const navitia::type::PT_Data &data);
         void filter_jpps(const boost::dynamic_bitset<>& valid_jpps);
 
     private:
-        std::vector<std::vector<JppIdxOrder>> jpps_from_sp;
+        IdxMap<type::StopPoint, std::vector<Jpp>> jpps_from_sp;
     };
     JppsFromSp jpps_from_sp;
 
@@ -93,12 +99,20 @@ struct dataRAPTOR {
     std::vector<const type::StopTime*> st_forward;
     std::vector<const type::StopTime*> st_backward;
 
-    std::vector<size_t> first_stop_time;
-    std::vector<size_t> nb_trips;
+    // index of the first st of a jp in the previous vectors
+    IdxMap<type::JourneyPattern, size_t> first_stop_time;
+
+    // number of vj in an jp
+    IdxMap<type::JourneyPattern, size_t> nb_trips;
+
+    // blank labels, to fast init labels with a memcpy
     Labels labels_const;
     Labels labels_const_reverse;
-    vector_idx boardings_const;
+
+    // jp_validity_patterns[date][jp_idx] == any(vj.validity_pattern->check2(date) for vj in jp)
     std::vector<boost::dynamic_bitset<> > jp_validity_patterns;
+
+    // as jp_validity_patterns for the adapted ones
     std::vector<boost::dynamic_bitset<> > jp_adapted_validity_pattern;
 
 

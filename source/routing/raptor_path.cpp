@@ -38,8 +38,8 @@ namespace navitia { namespace routing {
 
 
 std::vector<Path>
-makePathes(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures,
-           const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
+makePathes(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departures,
+           const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations,
            const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_,
            bool clockwise, bool disruption_active) {
     std::vector<Path> result;
@@ -52,14 +52,14 @@ makePathes(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &d
 }
 
 std::pair<const type::StopTime*, uint32_t>
-get_current_stidx_gap(size_t count, type::idx_t jpp_idx, const std::vector<Labels> &labels,
+get_current_stidx_gap(size_t count, JppIdx jpp_idx, const std::vector<Labels> &labels,
                       const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data, bool disruption_active) {
     const auto& ls = labels[count];
     if(ls.pt_is_initialized(jpp_idx)) {
         const auto& dt_pt = ls.dt_pt(jpp_idx);
         const auto date = DateTimeUtils::date(dt_pt);
         const auto hour = DateTimeUtils::hour(dt_pt);
-        const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx];
+        const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx.val];
         for (const auto& vj : jpp->journey_pattern->discrete_vehicle_journey_list) {
             const type::StopTime& st = vj->stop_time_list[jpp->order];
             auto st_hour = clockwise ? st.arrival_time : st.departure_time;
@@ -120,7 +120,7 @@ get_current_stidx_gap(size_t count, type::idx_t jpp_idx, const std::vector<Label
 }
 
 Path
-makePath(type::idx_t destination_idx, size_t countb, bool clockwise, bool disruption_active,
+makePath(JppIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
          const type::AccessibiliteParams & accessibilite_params,
          const RAPTOR &raptor_) {
     struct Visitor: public BasePathVisitor {
@@ -282,7 +282,7 @@ void patch_datetimes(Path &path){
 
 
 Path
-makePathreverse(unsigned int destination_idx, unsigned int countb,
+makePathreverse(JppIdx destination_idx, unsigned int countb,
                 const type::AccessibiliteParams & accessibilite_params,
                 const RAPTOR &raptor_, bool disruption_active) {
     return makePath(destination_idx, countb, disruption_active, false, accessibilite_params, raptor_);

@@ -32,8 +32,13 @@ www.navitia.io
 #include <unordered_map>
 #include "type/type.h"
 #include "type/datetime.h"
+#include "routing/idx_map.h"
 
 namespace navitia { namespace routing {
+
+typedef Idx<type::JourneyPatternPoint> JppIdx;
+typedef Idx<type::JourneyPattern> JpIdx;
+typedef Idx<type::StopPoint> SpIdx;
 
 struct Labels {
     // initialize the structure according to the number of jpp
@@ -52,40 +57,40 @@ struct Labels {
         boarding_jpp_pts.resize(clean.boarding_jpp_pts.size());
         boarding_jpp_transfers.resize(clean.boarding_jpp_transfers.size());
     }
-    inline const navitia::type::idx_t&
-    boarding_jpp_transfer(navitia::type::idx_t jpp_idx) const {
+    inline const JppIdx&
+    boarding_jpp_transfer(JppIdx jpp_idx) const {
         return boarding_jpp_transfers[jpp_idx];
     }
-    inline const navitia::type::idx_t&
-    boarding_jpp_pt(navitia::type::idx_t jpp_idx) const {
+    inline const JppIdx&
+    boarding_jpp_pt(JppIdx jpp_idx) const {
         return boarding_jpp_pts[jpp_idx];
     }
-    inline const DateTime& dt_transfer(navitia::type::idx_t jpp_idx) const {
+    inline const DateTime& dt_transfer(JppIdx jpp_idx) const {
         return dt_transfers[jpp_idx];
     }
-    inline const DateTime& dt_pt(navitia::type::idx_t jpp_idx) const {
+    inline const DateTime& dt_pt(JppIdx jpp_idx) const {
         return dt_pts[jpp_idx];
     }
 
-    inline navitia::type::idx_t&
-    mut_boarding_jpp_transfer(navitia::type::idx_t jpp_idx) {
+    inline JppIdx&
+    mut_boarding_jpp_transfer(JppIdx jpp_idx) {
         return boarding_jpp_transfers[jpp_idx];
     }
-    inline navitia::type::idx_t&
-    mut_boarding_jpp_pt(navitia::type::idx_t jpp_idx) {
+    inline JppIdx&
+    mut_boarding_jpp_pt(JppIdx jpp_idx) {
         return boarding_jpp_pts[jpp_idx];
     }
-    inline DateTime& mut_dt_transfer(navitia::type::idx_t jpp_idx) {
+    inline DateTime& mut_dt_transfer(JppIdx jpp_idx) {
         return dt_transfers[jpp_idx];
     }
-    inline DateTime& mut_dt_pt(navitia::type::idx_t jpp_idx) {
+    inline DateTime& mut_dt_pt(JppIdx jpp_idx) {
         return dt_pts[jpp_idx];
     }
 
-    inline bool pt_is_initialized(navitia::type::idx_t jpp_idx) const {
+    inline bool pt_is_initialized(JppIdx jpp_idx) const {
         return dt_pt(jpp_idx) != DateTimeUtils::inf && dt_pt(jpp_idx) != DateTimeUtils::min;
     }
-    inline bool transfer_is_initialized(navitia::type::idx_t jpp_idx) const {
+    inline bool transfer_is_initialized(JppIdx jpp_idx) const {
         return dt_transfer(jpp_idx) != DateTimeUtils::inf && dt_transfer(jpp_idx) != DateTimeUtils::min;
     }
 
@@ -100,19 +105,20 @@ private:
     // All these vectors are indexed by jpp_idx
     //
     // At what time can we reach this label with public transport
-    std::vector<DateTime> dt_pts;
+    IdxMap<type::JourneyPatternPoint, DateTime> dt_pts;
     // At what time wan we reach this label with a transfer
-    std::vector<DateTime> dt_transfers;
+    IdxMap<type::JourneyPatternPoint, DateTime> dt_transfers;
     // jpp used to reach this label with public transport
-    std::vector<navitia::type::idx_t> boarding_jpp_pts;
+    IdxMap<type::JourneyPatternPoint, JppIdx> boarding_jpp_pts;
     // jpp used to reach this label with a transfer
-    std::vector<navitia::type::idx_t> boarding_jpp_transfers;
+    IdxMap<type::JourneyPatternPoint, JppIdx> boarding_jpp_transfers;
 };
 
+// TODO: cleanup
+/*
 typedef std::pair<int, int> pair_int;
 typedef std::vector<navitia::type::idx_t> vector_idx;
 typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
-typedef std::vector<int> queue_t;
 typedef std::vector<pair_int> vector_pairint;
 typedef std::pair<navitia::type::idx_t, DateTime> idx_label;
 typedef std::vector<idx_label> vector_idxlabel;
@@ -124,27 +130,27 @@ inline void memset32(T*buf, uint n, T c)
 {
     for(uint i = 0; i < n; i++) *buf++ = c;
 }
-
+*/
 
 
 struct best_dest {
-    std::vector<navitia::time_duration> jpp_idx_duration;
+    IdxMap<type::JourneyPatternPoint, navitia::time_duration> jpp_idx_duration;
     DateTime best_now;
-    type::idx_t best_now_jpp_idx;
+    JppIdx best_now_jpp_idx;
     size_t count;
 
-    void add_destination(const type::JourneyPatternPoint* jpp, const time_duration duration_to_dest) {
-        jpp_idx_duration[jpp->idx] = duration_to_dest; //AD, check if there are some rounding problems
+    void add_destination(const JppIdx jpp, const time_duration duration_to_dest) {
+        jpp_idx_duration[jpp] = duration_to_dest; //AD, check if there are some rounding problems
     }
 
 
-    inline bool is_eligible_solution(const type::idx_t jpp_idx) const {
+    inline bool is_eligible_solution(const JppIdx jpp_idx) const {
         return jpp_idx_duration[jpp_idx] != boost::posix_time::pos_infin;
     }
 
 
     template<typename Visitor>
-    inline bool add_best(const Visitor & v, type::idx_t jpp_idx, const DateTime &t, size_t cnt) {
+    inline bool add_best(const Visitor & v, JppIdx jpp_idx, const DateTime &t, size_t cnt) {
         if(is_eligible_solution(jpp_idx)) {
             if(v.clockwise())
                 return add_best_clockwise(jpp_idx, t, cnt);
@@ -155,7 +161,7 @@ struct best_dest {
     }
 
 
-    inline bool add_best_clockwise(type::idx_t jpp_idx, const DateTime &t, size_t cnt) {
+    inline bool add_best_clockwise(JppIdx jpp_idx, const DateTime &t, size_t cnt) {
         if(t != DateTimeUtils ::inf) {
             const auto tmp_dt = t + jpp_idx_duration[jpp_idx];
             if((tmp_dt < best_now) || ((tmp_dt == best_now) && (count > cnt))) {
@@ -169,7 +175,7 @@ struct best_dest {
         return false;
     }
 
-    inline bool add_best_unclockwise(type::idx_t jpp_idx, const DateTime &t, size_t cnt) {
+    inline bool add_best_unclockwise(JppIdx jpp_idx, const DateTime &t, size_t cnt) {
         if(t != DateTimeUtils::min) {
             const auto tmp_dt = t - jpp_idx_duration[jpp_idx];
             if((tmp_dt > best_now) || ((tmp_dt == best_now) && (count > cnt))) {
@@ -183,10 +189,9 @@ struct best_dest {
     }
 
     void reinit(const size_t nb_jpp_idx) {
-        jpp_idx_duration.resize(nb_jpp_idx);
-        memset32<navitia::time_duration>(&jpp_idx_duration[0], nb_jpp_idx, boost::posix_time::pos_infin);
+        jpp_idx_duration.assign(nb_jpp_idx, boost::posix_time::pos_infin);
         best_now = DateTimeUtils::inf;
-        best_now_jpp_idx = type::invalid_idx;
+        best_now_jpp_idx = JppIdx();
         count = std::numeric_limits<size_t>::max();
     }
 

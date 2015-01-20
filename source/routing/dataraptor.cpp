@@ -37,32 +37,32 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 void dataRAPTOR::Connections::load(const type::PT_Data &data) {
-    forward_connections.assign(data.stop_points.size(), std::vector<Connection>());
-    backward_connections.assign(data.stop_points.size(), std::vector<Connection>());
+    forward_connections.assign(data.stop_points.size());
+    backward_connections.assign(data.stop_points.size());
     for (const auto* conn: data.stop_point_connections) {
-        forward_connections.at(conn->departure->idx).push_back(
-            {DateTime(conn->duration), conn->destination->idx});
-        backward_connections.at(conn->destination->idx).push_back(
-            {DateTime(conn->duration), conn->departure->idx});
+        forward_connections[SpIdx(*conn->departure)].push_back(
+            {DateTime(conn->duration), SpIdx(*conn->destination)});
+        backward_connections[SpIdx(*conn->destination)].push_back(
+            {DateTime(conn->duration), SpIdx(*conn->departure)});
     }
-    for (auto& conns: forward_connections) { conns.shrink_to_fit(); }
-    for (auto& conns: backward_connections) { conns.shrink_to_fit(); }
+    for (auto& conns: forward_connections.values()) { conns.shrink_to_fit(); }
+    for (auto& conns: backward_connections.values()) { conns.shrink_to_fit(); }
 }
 
 void dataRAPTOR::JppsFromSp::load(const type::PT_Data &data) {
-    jpps_from_sp.assign(data.stop_points.size(), std::vector<JppIdxOrder>());
+    jpps_from_sp.assign(data.stop_points.size());
     for (const auto* sp: data.stop_points) {
         for (const auto* jpp: sp->journey_pattern_point_list) {
-            jpps_from_sp.at(sp->idx).push_back({jpp->idx, jpp->journey_pattern->idx, jpp->order});
+            jpps_from_sp[SpIdx(*sp)].push_back({JppIdx(*jpp), JpIdx(*jpp->journey_pattern), jpp->order});
         }
     }
-    for (auto& jpps: jpps_from_sp) { jpps.shrink_to_fit(); }
+    for (auto& jpps: jpps_from_sp.values()) { jpps.shrink_to_fit(); }
 }
 
 void dataRAPTOR::JppsFromSp::filter_jpps(const boost::dynamic_bitset<>& valid_jpps) {
-    for (auto& jpps: jpps_from_sp) {
-        boost::remove_erase_if(jpps, [&](const JppIdxOrder& jpp) {
-            return !valid_jpps[jpp.idx];
+    for (auto& jpps: jpps_from_sp.values()) {
+        boost::remove_erase_if(jpps, [&](const Jpp& jpp) {
+            return !valid_jpps[jpp.idx.val];
         });
     }
 }
@@ -75,14 +75,12 @@ void dataRAPTOR::load(const type::PT_Data &data)
     connections.load(data);
     jpps_from_sp.load(data);
 
-    typedef std::unordered_map<navitia::type::idx_t, vector_idx> idx_vector_idx;
-    idx_vector_idx ridx_journey_pattern;
-    
     arrival_times.clear();
     departure_times.clear();
     st_forward.clear();
     st_backward.clear();
-    first_stop_time.clear();
+    first_stop_time.assign(data.journey_patterns.size());
+    nb_trips.assign(data.journey_patterns.size());
 
     for(int i=0; i<=365; ++i) {
         jp_validity_patterns.push_back(boost::dynamic_bitset<>(data.journey_patterns.size()));
@@ -93,8 +91,9 @@ void dataRAPTOR::load(const type::PT_Data &data)
     }
 
     for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
-        first_stop_time.push_back(arrival_times.size());
-        nb_trips.push_back(journey_pattern->discrete_vehicle_journey_list.size());
+        const JpIdx jp_idx = JpIdx(*journey_pattern);
+        first_stop_time[jp_idx] = arrival_times.size();
+        nb_trips[jp_idx] = journey_pattern->discrete_vehicle_journey_list.size();
 
         //we group all descrete stop times from all journey_pattern_point
         //the frequency stop times are not considered here, they are search for a different way in best_stop_time
