@@ -64,8 +64,8 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
         self.mock_chaos_connection.release()
 
     def send_chaos_disruption(self, disruption_name, impacted_obj, impacted_obj_type, start=None, end=None,
-                              message='default_message', is_deleted=False):
-        item = make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message, is_deleted)
+                              message='default_message', is_deleted=False, blocking=False):
+        item = make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message, is_deleted, blocking)
         with self._get_producer() as producer:
             producer.publish(item, exchange=self._exchange, routing_key=chaos_rt_topic, declare=[self._exchange])
 
@@ -157,7 +157,7 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         status = self.query_region('status')
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
 
-        self.send_chaos_disruption("bobette_the_disruption", "A", "line_section", start="stopA", end="stopB")
+        self.send_chaos_disruption("bobette_the_disruption", "A", "line_section", start="stopA", end="stopB", blocking=True)
 
         #we sleep a bit to let kraken reload the data
         self.poll_until_reload(last_loaded_data)
@@ -173,6 +173,8 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         #at first we got only one disruption
         assert len(disruptions) == 1
         assert any(d['uri'] == 'bobette_the_disruption' for d in disruptions)
+
+
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -223,6 +225,61 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             assert len(disruptions) == 1
 
             assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
+
+@dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
+class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
+    """
+    def test_disruption_on_journey(self):
+        """
+        same kind of test with a call on journeys
+
+        at first no disruptions, we add one and we should get it
+        """
+        self.wait_for_rabbitmq_cnx()
+        response = self.query_region(journey_basic_query)
+
+        assert "journeys" in response
+
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+
+        #we create a list with every 'to' section to the stop B (the one we added the disruption on)
+        self.send_chaos_disruption("blocking_the_disruption", "A", "line", blocking=True)
+
+        #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+
+        links = []
+
+        def get_line_id(k, v):
+            if k != "links":
+                return
+            if not "type" in v or not "id" in v:
+                return
+            if v["type"] != "line":
+                return
+            links.append(v["id"])
+
+        walk_dict(response, get_line_id)
+        assert all(map(lambda id_ : id_ != "A", links))
+
+        self.send_chaos_disruption("blocking_the_disruption", "A", "line", blocking=True, is_deleted=True)
+         #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+        links = []
+        walk_dict(response, get_line_id)
+        assert any(map(lambda id_ : id_ == "A", links))
+
+
+
+
+
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -292,7 +349,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
-                         message_text='default_message', is_deleted=False):
+                         message_text='default_message', is_deleted=False, blocking=False):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -325,6 +382,8 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     impact.severity.id = "SeverityTest"
     impact.severity.wording = "SeverityTest"
     impact.severity.color = "#FFFF00"
+    enums_impact = gtfs_realtime_pb2.Alert.DESCRIPTOR.enum_values_by_name
+    impact.severity.effect = enums_impact["NO_SERVICE"].number if blocking else enums_impact["REDUCED_SERVICE"].number
 
     # ApplicationPeriods
     application_period = impact.application_periods.add()
