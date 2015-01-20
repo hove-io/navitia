@@ -97,7 +97,7 @@ bool Data::load(const std::string& filename,
                 % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
                 );
         if (chaos_database) {
-            fill_disruption_from_database(*chaos_database, *pt_data, contributors);
+            fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
         }
     } catch(const wrong_version& ex) {
         LOG4CPLUS_ERROR(logger, "Cannot laod data: " << ex.what());
@@ -108,7 +108,7 @@ bool Data::load(const std::string& filename,
     } catch(...) {
         LOG4CPLUS_ERROR(logger, "Data loading failed");
         last_load = false;
-    }
+	}
     loading = false;
     return this->last_load;
 }

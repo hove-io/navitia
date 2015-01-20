@@ -43,7 +43,7 @@ namespace navitia {
 
 
 void fill_disruption_from_database(const std::string& connection_string,
-        navitia::type::PT_Data& pt_data, const std::vector<std::string>& contributors) {
+        navitia::type::PT_Data& pt_data, type::MetaData &meta, const std::vector<std::string>& contributors) {
     std::unique_ptr<pqxx::connection> conn;
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
@@ -55,7 +55,7 @@ void fill_disruption_from_database(const std::string& connection_string,
 
     size_t offset = 0,
            items_per_request = 100;
-    DisruptionDatabaseReader reader(pt_data);
+    DisruptionDatabaseReader reader(pt_data, meta);
     pqxx::result result;
     std::string contributors_array = boost::algorithm::join(contributors, ", ");
     do{
@@ -150,7 +150,7 @@ void fill_disruption_from_database(const std::string& connection_string,
 
 void DisruptionDatabaseReader::finalize() {
     if (disruption && disruption->id() != "") {
-        add_disruption(pt_data, *disruption);
+        add_disruption(*disruption, pt_data, meta);
     }
 }
 
