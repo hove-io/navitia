@@ -195,6 +195,9 @@ public:
         for(ed::types::StopTime* stop : stops){
             delete stop;
         }
+        for (ed::types::AssociatedCalendar* cal: associated_calendars) {
+            delete cal;
+        }
     }
 
 };
