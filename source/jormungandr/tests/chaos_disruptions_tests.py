@@ -245,8 +245,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         status = self.query_region('status')
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
 
-        #we create a list with every 'to' section to the stop B (the one we added the disruption on)
-        self.send_chaos_disruption("blocking_the_disruption", "A", "line", blocking=True)
+        self.send_chaos_disruption("blocking_line_disruption", "A", "line", blocking=True)
 
         #we sleep a bit to let kraken reload the data
         self.poll_until_reload(last_loaded_data)
@@ -256,18 +255,14 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         links = []
 
         def get_line_id(k, v):
-            if k != "links":
-                return
-            if not "type" in v or not "id" in v:
-                return
-            if v["type"] != "line":
+            if k != "links" or not "type" in v or not "id" in v or v["type"] != "line":
                 return
             links.append(v["id"])
 
         walk_dict(response, get_line_id)
         assert all(map(lambda id_ : id_ != "A", links))
 
-        self.send_chaos_disruption("blocking_the_disruption", "A", "line", blocking=True, is_deleted=True)
+        self.send_chaos_disruption("blocking_line_disruption", "A", "line", blocking=True, is_deleted=True)
          #we sleep a bit to let kraken reload the data
         self.poll_until_reload(last_loaded_data)
 
@@ -275,6 +270,60 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         links = []
         walk_dict(response, get_line_id)
         assert any(map(lambda id_ : id_ == "A", links))
+
+        #We try to block the route
+        self.send_chaos_disruption("blocking_route_disruption", "A:0", "route", blocking=True)
+
+        #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+
+        links = []
+
+        def get_route_id(k, v):
+            if k != "links" or not "type" in v or not "id" in v or v["type"] != "route":
+                return
+            links.append(v["id"])
+
+        walk_dict(response, get_route_id)
+        assert all(map(lambda id_ : id_ != "A:0", links))
+
+        self.send_chaos_disruption("blocking_route_disruption", "A:0", "route", blocking=True, is_deleted=True)
+         #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+        links = []
+        walk_dict(response, get_route_id)
+        assert any(map(lambda id_ : id_ == "A:0", links))
+
+        #We try to block the network
+        self.send_chaos_disruption("blocking_network_disruption", "base_network", "network", blocking=True)
+
+        #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+
+        assert all(map(lambda j: len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0,
+                       response["journeys"]))
+
+        self.send_chaos_disruption("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
+         #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+        links = []
+        def get_network_id(k, v):
+            if k != "links" or not "type" in v or not "id" in v or v["type"] != "network":
+                return
+            links.append(v["id"])
+
+        walk_dict(response, get_network_id)
+        assert any(map(lambda id_ : id_ == "base_network", links))
+
+
 
 
 
