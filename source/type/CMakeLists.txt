@@ -103,9 +103,9 @@ add_executable(fill_pb_placemark_test tests/fill_pb_placemark_test.cpp)
 target_link_libraries(fill_pb_placemark_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib thermometer protobuf)
 ADD_BOOST_TEST(fill_pb_placemark_test)
 
-add_executable(associated_calendar_test tests/associated_calendar_test.cpp)
-target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
-ADD_BOOST_TEST(associated_calendar_test)
+#add_executable(associated_calendar_test tests/associated_calendar_test.cpp)
+#target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+#ADD_BOOST_TEST(associated_calendar_test)
 
 add_executable(type_test tests/test.cpp)
 target_link_libraries(type_test types data utils ${BOOST_LIBS} log4cplus)

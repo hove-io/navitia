@@ -140,9 +140,31 @@ bool JourneyPatternPoint::operator<(const JourneyPatternPoint& other) const {
     }else{
         return *(this->journey_pattern) < *(other.journey_pattern);
     }
-
 }
 
+Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
+
+void Calendar::build_validity_pattern(boost::gregorian::date_period production_period) {
+    //initialisation of the validity pattern from the active periods and the exceptions
+    for (boost::gregorian::date_period period : this->period_list) {
+        auto intersection_period = production_period.intersection(period);
+        if (intersection_period.is_null()) {
+            continue;
+        }
+        validity_pattern.add(intersection_period.begin(), intersection_period.end(), week_pattern);
+    }
+
+    for (navitia::type::ExceptionDate exd : this->exceptions) {
+        if (!production_period.contains(exd.date)) {
+            continue;
+        }
+        if (exd.type == navitia::type::ExceptionDate::ExceptionType::sub) {
+            validity_pattern.remove(exd.date);
+        } else if (exd.type == navitia::type::ExceptionDate::ExceptionType::add) {
+            validity_pattern.add(exd.date);
+        }
+    }
+}
 
 bool StopArea::operator<(const StopArea& other) const {
     BOOST_ASSERT(this->uri != other.uri);
