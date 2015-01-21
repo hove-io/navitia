@@ -236,7 +236,24 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
             this->operator()(line);
         }
     }
-    void operator()(const nt::StopArea* ) {
+    void operator()(const nt::StopArea* stop_area) {
+        for (auto stop_point : stop_area->stop_point_list) {
+            // We block all the journey pattern of the stop_area according to the impact
+            for (auto jpp : stop_point->journey_pattern_point_list) {
+                this->operator()(jpp->journey_pattern);
+            }
+            // We copy this journey_pattern
+
+            // We copy each journey_pattern_point but the ones which are linked
+            // to the impacted stop_area
+            
+            // We copy the vehicle_journeys of the journey_pattern_points
+            // The validity_pattern is only active on the period of the impact
+            // We skip the stop_time linked to impacted journey_pattern_point
+            
+            // The new journey_pattern is linked to the impact
+        }
+
         LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
                        "apply_impact_visitor on StopArea not implemented yet!");
     }
@@ -250,8 +267,12 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
     void operator()(const nt::Route* route) {
         for (auto journey_pattern : route->journey_pattern_list) {
-            journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {return func_on_vj(vj);});
+            this->operator()(journey_pattern);
         }
+    }
+
+    void operator()(const nt::JourneyPattern* journey_pattern) {
+        journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {return f(vj);});
     }
 
 };
