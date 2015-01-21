@@ -76,10 +76,6 @@ struct StopPointConnection: public Header, hasProperties {
 
 };
 
-struct Codes {
-    std::map<std::string, std::string> codes;
-};
-
 struct ValidityPattern: public Header {
     const static nt::Type_e type = nt::Type_e::ValidityPattern;
 private:
@@ -104,7 +100,7 @@ public:
     bool operator==(const ValidityPattern& other) const;
 };
 
-struct Calendar : public Nameable, public Header, public Codes {
+struct Calendar : public Nameable, public Header {
     const static nt::Type_e type = nt::Type_e::Calendar;
     typedef std::bitset<7> Week;
     Week week_pattern;
@@ -124,7 +120,7 @@ struct Calendar : public Nameable, public Header, public Codes {
     bool operator<(const Calendar & other) const { return this < &other; }
 };
 
-struct AssociatedCalendar {
+struct AssociatedCalendar : public Header {
     ///calendar matched
     const Calendar* calendar;
 
