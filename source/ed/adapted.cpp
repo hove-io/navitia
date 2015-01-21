@@ -71,14 +71,16 @@ pt::time_period build_stop_period(const nt::StopTime& stop,
     pt::ptime departure, arrival;
     if(!stop.pick_up_allowed()){
         departure = pt::ptime(date, pt::seconds(stop.arrival_time + 1));
-    }else{
+    } else {
         departure = pt::ptime(date, pt::seconds(stop.departure_time));
     }
 
-    if(!stop.drop_off_allowed() || stop.arrival_time == stop.departure_time){
+    if(!stop.drop_off_allowed()) {
+        arrival = pt::ptime(date, pt::seconds(stop.departure_time - 1);
+    } else if (stop.arrival_time == stop.departure_time){
         //si l'heure d'arrivée et égal à l'heure de départ (typiquement donnée urbaine) on soustrait une seconde pour avoir une période non nulle
         arrival = pt::ptime(date, pt::seconds(stop.arrival_time - 1));
-    }else{
+    } else {
         arrival = pt::ptime(date, pt::seconds(stop.arrival_time));
     }
 
