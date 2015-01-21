@@ -261,6 +261,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             nt::PT_Data& pt_data, nt::MetaData& meta) : 
         apply_impacts_visitor(impact, pt_data, meta) {}
 
+    // We set all the validity pattern to the theorical one, we will re-apply
+    // other disruptions after
     bool f(nt::VehicleJourney& vj) {
         nt::ValidityPattern vp(vj.adapted_validity_pattern);
         bool is_impacted = false;
@@ -290,7 +292,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             vj.adapted_validity_pattern = vp_;
         }
         return true;
-
     }
 };
 
@@ -311,36 +312,12 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
     std::vector<const nt::VehicleJourney*> impacted_vjs;
 
+    // We set all the validity pattern to the theorical one, we will re-apply
+    // other disruptions after
     bool f(nt::VehicleJourney& vj) {
-        nt::ValidityPattern vp(vj.adapted_validity_pattern);
-        bool is_impacted = false;
-        for (auto period : impact->application_periods) {
-            bt::time_iterator titr(period.begin(), bt::hours(24));
-            for(;titr<period.end(); ++titr) {
-                if (!meta.production_date.contains(titr->date())) {
-                    continue;
-                }
-                auto day = (titr->date() - meta.production_date.begin()).days();
-                if (!vp.check(day)) {
-                    vp.add(day);
-                    is_impacted = true;
-                }
-            }
-        }
-        if (is_impacted) {
-            impacted_vjs.push_back(&vj);
-            for (auto vp_ : pt_data.validity_patterns) {
-                if (vp_->days == vp.days) {
-                    vj.adapted_validity_pattern = vp_;
-                    return true;
-                }
-            }
-            // We haven't found this vp, so we need to create it
-            auto vp_ = new nt::ValidityPattern(vp);
-            pt_data.validity_patterns.push_back(vp_);
-            vj.adapted_validity_pattern = vp_;
-        }
+        vj.adapted_validity_pattern = vj.validity_pattern;
         return true;
+
     }
 };
 
@@ -402,7 +379,7 @@ struct get_related_impacts_visitor : public boost::static_visitor<> {
                 apply_impact(impact.lock(), pt_data, meta);
             }
         }
-        for (auto impact : line->network->get_impacts()) {
+        for (auto impact: line->network->get_impacts()) {
             if (!impact.expired()) {
                 apply_impact(impact.lock(), pt_data, meta);
             }
