@@ -236,6 +236,8 @@ struct apply_impact_visitor : public boost::static_visitor<> {
         }
     }
     void operator()(const nt::StopArea * ) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                       "apply_impact_visitor on StopArea not implemented yet!");
     }
     void operator()(nt::new_disruption::LineSection & ls) {
         this->operator()(ls.line);
