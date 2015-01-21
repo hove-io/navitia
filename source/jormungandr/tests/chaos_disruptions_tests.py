@@ -324,7 +324,6 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
                 "line", blocking=True)
         self.send_chaos_disruption_and_sleep("blocking_network_disruption",
                 "base_network", "network", blocking=True)
-        self.poll_until_reload(last_loaded_data)
 
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
 
