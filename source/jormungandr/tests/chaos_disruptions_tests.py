@@ -310,9 +310,10 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
     """
     def test_disruption_on_journey(self):
         """
-        same kind of test with a call on journeys
-
-        at first no disruptions, we add one and we should get it
+        We block the network and the line A, we test if there's no public_transport
+        journey.
+        We delete the network disruption and test if there's a journey using
+        the line B.
         """
         self.wait_for_rabbitmq_cnx()
         response = self.query_region(journey_basic_query)
