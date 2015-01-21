@@ -235,6 +235,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
         assert "journeys" in response
 
+        # We send a blocking disruption on line A
         self.send_chaos_disruption_and_sleep("blocking_line_disruption", "A",
                 "line", blocking=True)
 
@@ -250,7 +251,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         walk_dict(response, get_line_id)
         assert all(map(lambda id_ : id_ != "A", links))
 
-        # We send a blocking disruption on line A
+        #We delete the disruption
         self.send_chaos_disruption_and_sleep("blocking_line_disruption", "A",
                 "line", blocking=True, is_deleted=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
@@ -297,7 +298,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         response = self.query_region(journey_basic_query + "&disruption_active=false")
         walk_dict(response, get_network_id)
         assert any(map(lambda id_ : id_ == "base_network", links))
-        
+
         self.send_chaos_disruption_and_sleep("blocking_network_disruption",
                 "base_network", "network", blocking=True, is_deleted=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
