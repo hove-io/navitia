@@ -60,10 +60,10 @@ get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &depa
 
 Solutions
 get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
-              const DateTime &dep, bool clockwise, const type::Data & data, bool) {
+              const DateTime &dep, bool clockwise, const RAPTOR& raptor, bool) {
     Solutions result;
     for(auto dep_dist : departs) {
-        for(const auto* jpp: data.pt_data->stop_points[dep_dist.first.val]->journey_pattern_point_list) {
+        for(const auto* jpp: raptor.get_sp(dep_dist.first)->journey_pattern_point_list) {
             Solution d;
             d.count = 0;
             d.jpp_idx = JppIdx(*jpp);
@@ -143,7 +143,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
         JppIdx best_jpp = JppIdx();
         size_t best_nb_jpp_of_path = std::numeric_limits<size_t>::max();
         for(auto spid_dist : destinations) {
-            for(auto journey_pattern_point : raptor.data.pt_data->stop_points[spid_dist.first.val]->journey_pattern_point_list) {
+            for(auto journey_pattern_point : raptor.get_sp(spid_dist.first)->journey_pattern_point_list) {
                 const JppIdx jppidx = JppIdx(*journey_pattern_point);
                 const auto& ls = raptor.labels[round];
                 if (!ls.pt_is_initialized(jppidx)) {
@@ -167,8 +167,13 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
                 const type::StopTime* st = nullptr;
                 DateTime dt = 0;
 
-                std::tie(st, dt) = get_current_stidx_gap(round, jppidx, raptor.labels, accessibilite_params,
-                                                                      !clockwise, raptor.data, disruption_active);
+                std::tie(st, dt) = get_current_stidx_gap(round,
+                                                         jppidx,
+                                                         raptor.labels,
+                                                         accessibilite_params,
+                                                         !clockwise,
+                                                         raptor,
+                                                         disruption_active);
                 if(st != nullptr) {
                     if(clockwise) {
                         auto arrival_time = !st->is_frequency() ? 
@@ -201,7 +206,7 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::tim
             std::tie(final_jpp_idx, s.upper_bound) = get_final_jppidx_and_date(round, best_jpp, clockwise,
                                                                              disruption_active, accessibilite_params, raptor);
             for(auto spid_dep : departs) {
-                if(SpIdx(*raptor.data.pt_data->journey_pattern_points[final_jpp_idx.val]->stop_point) == spid_dep.first) {
+                if (SpIdx(*raptor.get_jpp(final_jpp_idx)->stop_point) == spid_dep.first) {
                     if(clockwise) {
                         s.upper_bound = s.upper_bound + spid_dep.second.total_seconds();
                     }else {
@@ -234,7 +239,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia
             Solution best_departure;
             best_departure.ratio = 2;
             best_departure.jpp_idx = JppIdx();
-            for(auto journey_pattern_point : raptor.data.pt_data->stop_points[spid_dist.first.val]->journey_pattern_point_list) {
+            for(auto journey_pattern_point: raptor.get_sp(spid_dist.first)->journey_pattern_point_list) {
                 JppIdx jppidx = JppIdx(*journey_pattern_point);
                 // We only want solution ending by a vehicle journey or a stay_in
                 if(raptor.labels[i].pt_is_initialized(jppidx)) {
@@ -269,7 +274,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia
                         DateTime last_time;
                         std::tie(final_jpp_idx, last_time) = get_final_jppidx_and_date(i, jppidx, clockwise,
                                             disruption_active, accessibilite_params, raptor);
-                        const SpIdx final_sp_idx = SpIdx(*raptor.data.pt_data->journey_pattern_points[final_jpp_idx.val]->stop_point);
+                        const SpIdx final_sp_idx = SpIdx(*raptor.get_jpp(final_jpp_idx)->stop_point);
 
                         if(clockwise) {
                             s.upper_bound = last_time;
@@ -356,7 +361,7 @@ navitia::time_duration getWalkingTime(int count, JppIdx jpp_idx, const std::vect
                      bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
                      const RAPTOR& raptor) {
 
-    const auto* current_jpp = raptor.data.pt_data->journey_pattern_points[jpp_idx.val];
+    const auto* current_jpp = raptor.get_jpp(jpp_idx);
     navitia::time_duration walking_time = {};
 
     //Marche à la fin
@@ -373,7 +378,7 @@ navitia::time_duration getWalkingTime(int count, JppIdx jpp_idx, const std::vect
     if (!v.departure_jpp_idx.is_valid()) {
         return walking_time;
     }
-    const auto* departure_jpp = raptor.data.pt_data->journey_pattern_points[v.departure_jpp_idx.val];
+    const auto* departure_jpp = raptor.get_jpp(v.departure_jpp_idx);
     //Marche au départ
     for(auto dep_dist : departs) {
         if (dep_dist.first == SpIdx(*departure_jpp->stop_point)) {

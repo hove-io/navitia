@@ -114,24 +114,6 @@ private:
     IdxMap<type::JourneyPatternPoint, JppIdx> boarding_jpp_transfers;
 };
 
-// TODO: cleanup
-/*
-typedef std::pair<int, int> pair_int;
-typedef std::vector<navitia::type::idx_t> vector_idx;
-typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
-typedef std::vector<pair_int> vector_pairint;
-typedef std::pair<navitia::type::idx_t, DateTime> idx_label;
-typedef std::vector<idx_label> vector_idxlabel;
-typedef std::pair<navitia::type::idx_t, double> idx_distance;
-typedef std::vector<idx_distance> vec_idx_distance;
-
-template<typename T>
-inline void memset32(T*buf, uint n, T c)
-{
-    for(uint i = 0; i < n; i++) *buf++ = c;
-}
-*/
-
 
 struct best_dest {
     IdxMap<type::JourneyPatternPoint, navitia::time_duration> jpp_idx_duration;
@@ -140,7 +122,7 @@ struct best_dest {
     size_t count;
 
     void add_destination(const JppIdx jpp, const time_duration duration_to_dest) {
-        jpp_idx_duration[jpp] = duration_to_dest; //AD, check if there are some rounding problems
+        jpp_idx_duration[jpp] = duration_to_dest;
     }
 
 

@@ -178,7 +178,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
 
 
 void RAPTOR::init(Solutions departs,
-                  const std::vector<std::pair<SpIdx, navitia::time_duration> >& destinations,
+                  const vec_stop_point_duration& destinations,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
     for(Solution item : departs) {
@@ -209,14 +209,15 @@ void RAPTOR::init(Solutions departs,
 }
 
 std::vector<Path>
-RAPTOR::compute_all(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departures_,
-                    const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations,
-                    const DateTime &departure_datetime,
-                    bool disruption_active, bool allow_odt,
-                    const DateTime &bound,
+RAPTOR::compute_all(const vec_stop_point_duration& departures_,
+                    const vec_stop_point_duration& destinations,
+                    const DateTime& departure_datetime,
+                    bool disruption_active,
+                    bool allow_odt,
+                    const DateTime& bound,
                     const uint32_t max_transfers,
-                    const type::AccessibiliteParams & accessibilite_params,
-                    const std::vector<std::string> & forbidden_uri,
+                    const type::AccessibiliteParams& accessibilite_params,
+                    const std::vector<std::string>& forbidden_uri,
                     bool clockwise) {
 
     std::vector<Path> result;
@@ -231,7 +232,7 @@ RAPTOR::compute_all(const std::vector<std::pair<SpIdx, navitia::time_duration> >
     auto calc_dep = clockwise ? departures_ : destinations;
     auto calc_dest = clockwise ? destinations : departures_;
 
-    auto departures = get_solutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
+    auto departures = get_solutions(calc_dep, departure_datetime, clockwise, *this, disruption_active);
     clear(clockwise, bound);
     init(departures, calc_dest, bound, clockwise);
 
@@ -266,8 +267,7 @@ RAPTOR::compute_all(const std::vector<std::pair<SpIdx, navitia::time_duration> >
             const auto& end_item = clockwise ? p.items.front() : p.items.back();
             const auto* stop_time = clockwise ? end_item.stop_times.front() : end_item.stop_times.back();
             SpIdx end_idx = SpIdx(*stop_time->journey_pattern_point->stop_point);
-            typedef std::pair<SpIdx, navitia::time_duration> idx_dur;
-            const auto walking_time_search = boost::find_if(calc_dep, [&](const idx_dur& elt) {
+            const auto walking_time_search = boost::find_if(calc_dep, [&](const stop_point_duration& elt) {
                 return elt.first == end_idx;
             });
             BOOST_ASSERT(walking_time_search != calc_dep.end());
@@ -284,15 +284,17 @@ RAPTOR::compute_all(const std::vector<std::pair<SpIdx, navitia::time_duration> >
 }
 
 std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
-RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<SpIdx, navitia::time_duration> > > > &departures,
-                       const std::vector<std::pair<type::EntryPoint, std::vector<std::pair<SpIdx, navitia::time_duration> > > > &arrivals,
-                       const DateTime &departure_datetime,
-                       bool disruption_active, bool allow_odt,
-                       const DateTime &bound,
+RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration>>& departures,
+                       const std::vector<std::pair<type::EntryPoint, vec_stop_point_duration>>& arrivals,
+                       const DateTime& departure_datetime,
+                       bool disruption_active,
+                       bool allow_odt,
+                       const DateTime& bound,
                        const uint32_t max_transfers,
-                       const type::AccessibiliteParams & accessibilite_params,
-                       const std::vector<std::string> & forbidden_uri,
-                       bool clockwise, bool details) {
+                       const type::AccessibiliteParams& accessibilite_params,
+                       const std::vector<std::string>& forbidden_uri,
+                       bool clockwise,
+                       bool details) {
     std::vector<std::pair<type::EntryPoint, std::vector<Path>>> result;
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
@@ -307,7 +309,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector
         for (const auto& n_stop_point : n_point.second)
             calc_dep.push_back(n_stop_point);
 
-    auto calc_dep_solutions = get_solutions(calc_dep, departure_datetime, clockwise, data, disruption_active);
+    auto calc_dep_solutions = get_solutions(calc_dep, departure_datetime, clockwise, *this, disruption_active);
     clear(clockwise, bound);
     init(calc_dep_solutions, {}, bound, clockwise); // no exit condition (should be improved)
 
@@ -367,7 +369,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, std::vector
 }
 
 void
-RAPTOR::isochrone(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departures_,
+RAPTOR::isochrone(const vec_stop_point_duration &departures_,
           const DateTime &departure_datetime, const DateTime &bound, uint32_t max_transfers,
           const type::AccessibiliteParams & accessibilite_params,
           const std::vector<std::string> & forbidden,
@@ -377,7 +379,7 @@ RAPTOR::isochrone(const std::vector<std::pair<SpIdx, navitia::time_duration> > &
                          forbidden,
                          disruption_active,
                          allow_odt);
-    auto departures = get_solutions(departures_, departure_datetime, true, data, disruption_active);
+    auto departures = get_solutions(departures_, departure_datetime, true, *this, disruption_active);
     clear(clockwise, bound);
     init(departures, {}, bound, true);
 
@@ -656,7 +658,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
         int departure_day, DateTime borne, bool disruption_active, bool allow_odt, bool clockwise,
         const type::AccessibiliteParams & accessibilite_params,
         uint32_t max_transfers, const std::vector<std::string>& forbidden_uri) {
-    std::vector<std::pair<SpIdx, navitia::time_duration> > departures, destinations;
+    vec_stop_point_duration departures, destinations;
 
     for(const type::StopPoint* sp : departure->stop_point_list) {
         departures.push_back({SpIdx(*sp), {}});

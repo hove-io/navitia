@@ -62,7 +62,7 @@ namespace navitia { namespace routing {
                           const std::vector<Labels> &labels,
                           const type::AccessibiliteParams & accessibilite_params,
                           bool clockwise,
-                          const navitia::type::Data &data,
+                          const RAPTOR &raptor,
                           bool disruption_active);
 
     template<typename Visitor>

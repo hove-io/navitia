@@ -545,10 +545,10 @@ static void add_isochrone_response(RAPTOR& raptor,
                 bt::time_period action_period(navitia::to_posix_time(label-duration, raptor.data),
                         navitia::to_posix_time(label, raptor.data));
                 if (show_stop_area)
-                    fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp.val]->stop_point->stop_area,
+                    fill_pb_placemark(raptor.get_jpp(best_jpp)->stop_point->stop_area,
                             raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
                else
-                    fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp.val]->stop_point,
+                   fill_pb_placemark(raptor.get_jpp(best_jpp)->stop_point,
                             raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
             }
         }

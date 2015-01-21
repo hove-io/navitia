@@ -9,9 +9,9 @@ namespace navitia { namespace routing {
 template<typename Visitor>
 void handle_connection(const size_t countb, const JppIdx current_jpp_idx, Visitor& v,
                        bool clockwise, const RAPTOR &raptor_) {
-    const auto& departure = raptor_.data.pt_data->journey_pattern_points[current_jpp_idx.val]->stop_point;
+    const auto& departure = raptor_.get_jpp(current_jpp_idx)->stop_point;
     const auto& boarding_jpp_idx = raptor_.labels[countb].boarding_jpp_transfer(current_jpp_idx);
-    const auto& destination_jpp = raptor_.data.pt_data->journey_pattern_points[boarding_jpp_idx.val];
+    const auto& destination_jpp = raptor_.get_jpp(boarding_jpp_idx);
     const auto& destination = destination_jpp->stop_point;
     const auto& connections = departure->stop_point_connection_list;
     const auto& l = raptor_.labels[countb].dt_transfer(current_jpp_idx);
@@ -101,7 +101,7 @@ void handle_vj(const size_t countb, JppIdx current_jpp_idx, Visitor& v,
     DateTime workingDate;
     std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_jpp_idx, raptor_.labels,
                                                               accessibilite_params, clockwise,
-                                                              raptor_.data, disruption_active);
+                                                              raptor_, disruption_active);
     while(boarding_jpp_idx != current_jpp_idx) {
         // There is a side effect on workingDate caused by workingDate
         auto departure_arrival = handle_st(current_st, workingDate, clockwise, raptor_.data);

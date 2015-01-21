@@ -84,7 +84,7 @@ struct RAPTOR
     IdxMap<type::JourneyPattern, int> Q;
 
     //Constructeur
-    RAPTOR(const navitia::type::Data &data) :
+    explicit RAPTOR(const navitia::type::Data &data) :
         data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
         best_jpp_by_sp(data.pt_data->stop_points.size()),
         valid_journey_patterns(data.pt_data->journey_patterns.size()),

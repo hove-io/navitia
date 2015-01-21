@@ -52,14 +52,19 @@ makePathes(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departu
 }
 
 std::pair<const type::StopTime*, uint32_t>
-get_current_stidx_gap(size_t count, JppIdx jpp_idx, const std::vector<Labels> &labels,
-                      const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data, bool disruption_active) {
+get_current_stidx_gap(size_t count,
+                      JppIdx jpp_idx,
+                      const std::vector<Labels>& labels,
+                      const type::AccessibiliteParams& accessibilite_params,
+                      bool clockwise,
+                      const RAPTOR &raptor,
+                      bool disruption_active) {
     const auto& ls = labels[count];
     if(ls.pt_is_initialized(jpp_idx)) {
         const auto& dt_pt = ls.dt_pt(jpp_idx);
         const auto date = DateTimeUtils::date(dt_pt);
         const auto hour = DateTimeUtils::hour(dt_pt);
-        const type::JourneyPatternPoint* jpp = data.pt_data->journey_pattern_points[jpp_idx.val];
+        const type::JourneyPatternPoint* jpp = raptor.get_jpp(jpp_idx);
         for (const auto& vj : jpp->journey_pattern->discrete_vehicle_journey_list) {
             const type::StopTime& st = vj->stop_time_list[jpp->order];
             auto st_hour = clockwise ? st.arrival_time : st.departure_time;

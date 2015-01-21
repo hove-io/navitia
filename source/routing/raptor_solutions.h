@@ -48,7 +48,7 @@ struct Solution {
     float ratio;
     navitia::time_duration walking_time = {};
 
-    Solution() : jpp_idx(type::invalid_idx), count(0),
+    Solution() : jpp_idx(), count(0),
                        arrival(DateTimeUtils::inf), upper_bound(DateTimeUtils::inf),
                        ratio(std::numeric_limits<float>::min()) {}
 
@@ -60,7 +60,7 @@ struct Solution {
             return this->count < s.count;
         }
         if (this->jpp_idx != s.jpp_idx) {
-            return this->jpp_idx.val < s.jpp_idx.val;
+            return this->jpp_idx < s.jpp_idx;
         }
         if(this->upper_bound != s.upper_bound) {
             return this->upper_bound < s.upper_bound;
@@ -83,7 +83,7 @@ get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &depa
 //This one is hacky, it's used to retrieve the departures.
 Solutions
 get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
-             const DateTime &dep, bool clockwise, const type::Data & data, bool disruption_active);
+             const DateTime &dep, bool clockwise, const RAPTOR& raptor, bool disruption_active);
 
 Solutions
 get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
