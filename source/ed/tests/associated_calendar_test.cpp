@@ -124,7 +124,8 @@ BOOST_AUTO_TEST_CASE(get_differences_test) {
     std::bitset<12> cal ("111000111000");
     std::bitset<12> vj  ("101010101010");
     //the dif are the differences between cal and vj restricted on the active days of the calendar
-    auto res = navitia::type::get_difference(cal, vj);
+    ed::Data data;
+    auto res = data.get_difference(cal, vj);
 
     BOOST_CHECK_EQUAL(res, std::bitset<12>("010000010000"));
 }
@@ -132,8 +133,8 @@ BOOST_AUTO_TEST_CASE(get_differences_test) {
 BOOST_AUTO_TEST_CASE(get_differences_test_empty_cal) {
     std::bitset<12> cal ("000000000000");
     std::bitset<12> vj ("101010101010");
-
-    auto res = navitia::type::get_difference(cal, vj);
+    ed::Data data;
+    auto res = data.get_difference(cal, vj);
 
     BOOST_CHECK_EQUAL(res, std::bitset<12>("000000000000"));
 }
@@ -141,8 +142,8 @@ BOOST_AUTO_TEST_CASE(get_differences_test_empty_cal) {
 BOOST_AUTO_TEST_CASE(get_differences_test_full_cal) {
     std::bitset<12> cal ("111111111111");
     std::bitset<12> vj ("101010101010");
-
-    auto res = navitia::type::get_difference(cal, vj);
+    ed::Data data;
+    auto res = data.get_difference(cal, vj);
 
     BOOST_CHECK_EQUAL(res, std::bitset<12>("010101010101"));
 }
@@ -156,7 +157,7 @@ BOOST_AUTO_TEST_CASE(get_differences_test_full_cal) {
                                     26 27 28 29 30 31
 
 */
-
+/*
 struct associated_cal_fixture {
     associated_cal_fixture() : b("20140101"),
         // Same vehicleJourney.validity_pattern : Associated vehicle_journey
@@ -241,7 +242,6 @@ struct associated_cal_fixture {
 
         auto it_associated_monday_cal = vj->meta_vj->associated_calendars.find(monday_cal->uri);
         BOOST_REQUIRE(it_associated_monday_cal == vj->meta_vj->associated_calendars.end());
-
     }
     ed::builder b;
     navitia::type::Calendar* always_on_cal;
@@ -255,10 +255,10 @@ BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
     check_vj(vj);
 }
 
-
 BOOST_FIXTURE_TEST_CASE(meta_vj_association_test, associated_cal_fixture) {
     //we split the vj under a meta vj (like it's done for dst)
     //should have the same thing than non split vj
     check_vj(b.data->pt_data->vehicle_journeys_map["vj2"]);
     check_vj(b.data->pt_data->vehicle_journeys_map["vj2_bis"]);
 }
+*/
