@@ -69,6 +69,16 @@ class ChaosDisruptionsFixture(AbstractTestFixture):
         with self._get_producer() as producer:
             producer.publish(item, exchange=self._exchange, routing_key=chaos_rt_topic, declare=[self._exchange])
 
+
+    def send_chaos_disruption_and_sleep(self, disruption_name, impacted_obj, impacted_obj_type, start=None, end=None,
+                              message='default_message', is_deleted=False, blocking=False):
+        status = self.query_region('status')
+        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
+        self.send_chaos_disruption(disruption_name, impacted_obj, impacted_obj_type,
+                start, end, message, is_deleted, blocking)
+        #we sleep a bit to let kraken reload the data
+        self.poll_until_reload(last_loaded_data)
+
     def poll_until_reload(self, previous_val):
         """
         poll until the kraken have reloaded its data
@@ -111,13 +121,8 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         #at first no disruption
         assert 'disruptions' not in stop
 
-        status = self.query_region('status')
-        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
-
-        self.send_chaos_disruption("bob_the_disruption", "stopB", "stop_area")
-
-        #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
+        self.send_chaos_disruption_and_sleep("bob_the_disruption", "stopB",
+                "stop_area")
 
         #and we call again, we must have the disruption now
         response = self.query_region('stop_areas/stopB')
@@ -154,13 +159,8 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         #at first no disruption
         assert 'disruptions' not in line
 
-        status = self.query_region('status')
-        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
-
-        self.send_chaos_disruption("bobette_the_disruption", "A", "line_section", start="stopA", end="stopB", blocking=True)
-
-        #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
+        self.send_chaos_disruption_and_sleep("bobette_the_disruption", "A",
+                "line_section", start="stopA", end="stopB", blocking=True)
 
         #and we call again, we must have the disruption now
         response = self.query_region('lines/A')
@@ -198,15 +198,8 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         for b in stops_b_to:
             assert 'disruptions' not in b['stop_area']
-
-        status = self.query_region('status')
-        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
-
         #we create a list with every 'to' section to the stop B (the one we added the disruption on)
-        self.send_chaos_disruption("bob_the_disruption", "stopB", "stop_area")
-
-        #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
+        self.send_chaos_disruption_and_sleep("bob_the_disruption", "stopB", "stop_area")
 
         response = self.query_region(journey_basic_query)
 
@@ -233,22 +226,17 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
     """
     def test_disruption_on_journey(self):
         """
-        same kind of test with a call on journeys
-
-        at first no disruptions, we add one and we should get it
+        We send blocking disruptions and test if the blocked object is not used
+        by the journey.
+        Then we delete it and test if use the blocked object
         """
         self.wait_for_rabbitmq_cnx()
         response = self.query_region(journey_basic_query)
 
         assert "journeys" in response
 
-        status = self.query_region('status')
-        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
-
-        self.send_chaos_disruption("blocking_line_disruption", "A", "line", blocking=True)
-
-        #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
+        self.send_chaos_disruption_and_sleep("blocking_line_disruption", "A",
+                "line", blocking=True)
 
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
 
@@ -262,25 +250,20 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         walk_dict(response, get_line_id)
         assert all(map(lambda id_ : id_ != "A", links))
 
-        self.send_chaos_disruption("blocking_line_disruption", "A", "line", blocking=True, is_deleted=True)
-         #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
-
+        # We send a blocking disruption on line A
+        self.send_chaos_disruption_and_sleep("blocking_line_disruption", "A",
+                "line", blocking=True, is_deleted=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
         links = []
         walk_dict(response, get_line_id)
         assert any(map(lambda id_ : id_ == "A", links))
 
         #We try to block the route
-        self.send_chaos_disruption("blocking_route_disruption", "A:0", "route", blocking=True)
-
-        #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
-
+        self.send_chaos_disruption_and_sleep("blocking_route_disruption",
+                "A:0", "route", blocking=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
 
         links = []
-
         def get_route_id(k, v):
             if k != "links" or not "type" in v or not "id" in v or v["type"] != "route":
                 return
@@ -289,30 +272,25 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         walk_dict(response, get_route_id)
         assert all(map(lambda id_ : id_ != "A:0", links))
 
-        self.send_chaos_disruption("blocking_route_disruption", "A:0", "route", blocking=True, is_deleted=True)
-         #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
-
+        self.send_chaos_disruption_and_sleep("blocking_route_disruption",
+                "A:0", "route", blocking=True, is_deleted=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
+
         links = []
         walk_dict(response, get_route_id)
         assert any(map(lambda id_ : id_ == "A:0", links))
 
         #We try to block the network
-        self.send_chaos_disruption("blocking_network_disruption", "base_network", "network", blocking=True)
-
-        #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
+        self.send_chaos_disruption_and_sleep("blocking_network_disruption",
+                "base_network", "network", blocking=True)
 
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
 
         assert all(map(lambda j: len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0,
                        response["journeys"]))
 
-        self.send_chaos_disruption("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
-         #we sleep a bit to let kraken reload the data
-        self.poll_until_reload(last_loaded_data)
-
+        self.send_chaos_disruption_and_sleep("blocking_network_disruption",
+                "base_network", "network", blocking=True, is_deleted=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
         links = []
         def get_network_id(k, v):
@@ -341,11 +319,10 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         assert "journeys" in response
 
-        status = self.query_region('status')
-        last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
-
-        self.send_chaos_disruption("blocking_line_disruption", "A", "line", blocking=True)
-        self.send_chaos_disruption("blocking_network_disruption", "base_network", "network", blocking=True)
+        self.send_chaos_disruption_and_sleep("blocking_line_disruption", "A",
+                "line", blocking=True)
+        self.send_chaos_disruption_and_sleep("blocking_network_disruption",
+                "base_network", "network", blocking=True)
         self.poll_until_reload(last_loaded_data)
 
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
@@ -353,9 +330,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         assert all(map(lambda j: len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0,
                        response["journeys"]))
 
-        self.send_chaos_disruption("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
-
-
+        self.send_chaos_disruption_and_sleep("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
         links = []
         def get_line_id(k, v):
