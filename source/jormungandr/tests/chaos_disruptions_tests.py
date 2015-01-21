@@ -451,7 +451,7 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     impact.severity.wording = "SeverityTest"
     impact.severity.color = "#FFFF00"
     enums_impact = gtfs_realtime_pb2.Alert.DESCRIPTOR.enum_values_by_name
-    impact.severity.effect = enums_impact["NO_SERVICE"].number if blocking else enums_impact["REDUCED_SERVICE"].number
+    impact.severity.effect = enums_impact["NO_SERVICE"].number if blocking else enums_impact["UNKNOWN_EFFECT"].number
 
     # ApplicationPeriods
     application_period = impact.application_periods.add()

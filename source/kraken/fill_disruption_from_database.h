@@ -68,7 +68,7 @@ namespace navitia {
                     last_ptobject_id = "",
                     last_period_id = "";
         type::PT_Data& pt_data;
-        type::MetaData& meta;
+        const type::MetaData& meta;
 
         // This function and all others below are templated so they can be tested
         template<typename T>

@@ -226,7 +226,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
             nt::PT_Data& pt_data, nt::MetaData& meta) :
         impact(impact), pt_data(pt_data), meta(meta){}
 
-    virtual bool f(nt::VehicleJourney&) = 0;
+    virtual bool func_on_vj(nt::VehicleJourney&) = 0;
 
     void operator()(nt::new_disruption::UnknownPtObj&) {
     }
@@ -261,9 +261,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             nt::PT_Data& pt_data, nt::MetaData& meta) : 
         apply_impacts_visitor(impact, pt_data, meta) {}
 
-    // We set all the validity pattern to the theorical one, we will re-apply
-    // other disruptions after
-    bool f(nt::VehicleJourney& vj) {
+    bool func_on_vj(nt::VehicleJourney& vj) {
         nt::ValidityPattern vp(vj.adapted_validity_pattern);
         bool is_impacted = false;
         for (auto period : impact->application_periods) {
@@ -314,7 +312,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
-    bool f(nt::VehicleJourney& vj) {
+    bool func_on_vj(nt::VehicleJourney& vj) {
         vj.adapted_validity_pattern = vj.validity_pattern;
         return true;
 
