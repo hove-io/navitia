@@ -172,6 +172,10 @@ struct Impact {
 
     std::vector<Message> messages;
 
+    // Used when an informed entity is a stop_area
+    // We need to store it, to be able to delete it afterward
+    std::vector<const JourneyPattern*> impacted_journey_patterns;
+
     //link to the parent disruption
     //Note: it is a raw pointer because an Impact is owned by it's disruption
     //(even if the impact is stored as a share_ptr in the disruption to allow for weak_ptr towards it)
