@@ -230,24 +230,24 @@ struct apply_impact_visitor : public boost::static_visitor<> {
     void operator()(nt::new_disruption::UnknownPtObj&) {
     }
 
-    void operator()(const nt::Network * network) {
+    void operator()(const nt::Network* network) {
         for(auto line : network->line_list) {
             this->operator()(line);
         }
     }
-    void operator()(const nt::StopArea * ) {
+    void operator()(const nt::StopArea* ) {
         LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
                        "apply_impact_visitor on StopArea not implemented yet!");
     }
     void operator()(nt::new_disruption::LineSection & ls) {
         this->operator()(ls.line);
     }
-    void operator()(const nt::Line *line) {
+    void operator()(const nt::Line* line) {
         for(auto route : line->route_list) {
             this->operator()(route);
         }
     }
-    void operator()(const nt::Route * route) {
+    void operator()(const nt::Route* route) {
         for (auto journey_pattern : route->journey_pattern_list) {
             journey_pattern->for_each_vehicle_journey(f);
         }
@@ -345,7 +345,7 @@ struct get_related_impacts_visitor : public boost::static_visitor<> {
     void operator()(nt::new_disruption::UnknownPtObj&) {
     }
 
-    void operator()(const nt::Network * network) {
+    void operator()(const nt::Network* network) {
         if (network == nullptr) {
             return;
         }
@@ -370,12 +370,12 @@ struct get_related_impacts_visitor : public boost::static_visitor<> {
         }
     }
 
-    void operator()(const nt::StopArea * ) {
+    void operator()(const nt::StopArea* ) {
     }
     void operator()(nt::new_disruption::LineSection & ls) {
         this->operator()(ls.line);
     }
-    void operator()(const nt::Line *line) {
+    void operator()(const nt::Line* line) {
         if (line == nullptr) {
             return;
         }
@@ -398,7 +398,7 @@ struct get_related_impacts_visitor : public boost::static_visitor<> {
         }
 
     }
-    void operator()(const nt::Route * route) {
+    void operator()(const nt::Route* route) {
         if (route == nullptr) {
             return;
         }
@@ -420,6 +420,8 @@ struct get_related_impacts_visitor : public boost::static_visitor<> {
         }
     }
 };
+
+
 void delete_disruption(const std::string& disruption_id,
                        nt::PT_Data& pt_data,
                        nt::MetaData& meta) {
