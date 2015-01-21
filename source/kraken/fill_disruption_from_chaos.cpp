@@ -217,15 +217,16 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     return std::move(impact);
 }
 
-struct apply_impact_visitor : public boost::static_visitor<> {
+struct apply_impacts_visitor : public boost::static_visitor<> {
     boost::shared_ptr<nt::new_disruption::Impact> impact;
     nt::PT_Data& pt_data;
-    std::function<bool(nt::VehicleJourney&)> f;
+    nt::MetaData& meta;
 
-    apply_impact_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
-            nt::PT_Data& pt_data, std::function<bool(nt::VehicleJourney&)> f) :
-     impact(impact), pt_data(pt_data), f(f){
-     }
+    apply_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+            nt::PT_Data& pt_data, nt::MetaData& meta) :
+        impact(impact), pt_data(pt_data), meta(meta){}
+
+    virtual bool f(nt::VehicleJourney&) = 0;
 
     void operator()(nt::new_disruption::UnknownPtObj&) {
     }
@@ -249,17 +250,18 @@ struct apply_impact_visitor : public boost::static_visitor<> {
     }
     void operator()(const nt::Route* route) {
         for (auto journey_pattern : route->journey_pattern_list) {
-            journey_pattern->for_each_vehicle_journey(f);
+            journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {return f(vj);});
         }
     }
+
 };
 
-void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
-        nt::PT_Data& pt_data, nt::MetaData& meta) {
-    if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
-        return;
-    }
-    auto f = [&](nt::VehicleJourney& vj) {
+struct add_impacts_visitor : public apply_impacts_visitor {
+    add_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+            nt::PT_Data& pt_data, nt::MetaData& meta) : 
+        apply_impacts_visitor(impact, pt_data, meta) {}
+
+    bool f(nt::VehicleJourney& vj) {
         nt::ValidityPattern vp(vj.adapted_validity_pattern);
         bool is_impacted = false;
         for (auto period : impact->application_periods) {
@@ -288,19 +290,28 @@ void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
             vj.adapted_validity_pattern = vp_;
         }
         return true;
-    };
 
-    apply_impact_visitor v(impact, pt_data, f);
-    boost::for_each(impact->informed_entities, boost::apply_visitor(v));
-}
+    }
+};
 
-void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
+void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
         nt::PT_Data& pt_data, nt::MetaData& meta) {
     if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
         return;
     }
+
+    add_impacts_visitor v(impact, pt_data, meta);
+    boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+}
+
+struct delete_impacts_visitor : public apply_impacts_visitor {
+    delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+            nt::PT_Data& pt_data, nt::MetaData& meta) : 
+        apply_impacts_visitor(impact, pt_data, meta) {}
+
     std::vector<const nt::VehicleJourney*> impacted_vjs;
-    auto f = [&](nt::VehicleJourney& vj) {
+
+    bool f(nt::VehicleJourney& vj) {
         nt::ValidityPattern vp(vj.adapted_validity_pattern);
         bool is_impacted = false;
         for (auto period : impact->application_periods) {
@@ -330,8 +341,15 @@ void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
             vj.adapted_validity_pattern = vp_;
         }
         return true;
-    };
-    apply_impact_visitor v(impact, pt_data, f);
+    }
+};
+
+void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
+        nt::PT_Data& pt_data, nt::MetaData& meta) {
+    if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
+        return;
+    }
+    delete_impacts_visitor v(impact, pt_data, meta);
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
 }
 
