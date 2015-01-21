@@ -960,7 +960,7 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
     }
     this->lotus.finish_bulk_insert();
 
-    //then the links
+    //then the links between meta vj and vj
     this->lotus.prepare_bulk_insert("navitia.rel_metavj_vj", {"meta_vj", "vehicle_journey", "vj_class"});
     cpt = 0;
     for (const auto& meta_vj_pair: meta_vjs) {
@@ -983,6 +983,59 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
         cpt++;
     }
     this->lotus.finish_bulk_insert();
+
+    //then we insert the associated calendar
+    this->lotus.prepare_bulk_insert("navitia.associated_calendar", {"id", "calendar_id", "name"});
+    cpt = 0;
+    for (const auto& meta_vj_pair: meta_vjs) {
+        const types::MetaVehicleJourney& meta_vj = meta_vj_pair.second;
+        for (auto map : meta_vj.associated_calendars) {
+            std::string calendar_name = map.first;
+            types::AssociatedCalendar* associated_calendar = map.second;
+            this->lotus.insert({std::to_string(associated_calendar->idx),
+                                std::to_string(associated_calendar->calendar->idx),
+                                calendar_name
+                               });
+        }
+        cpt++;
+    }
+    this->lotus.finish_bulk_insert();
+
+    //then the exception_date relatives to associated calendar
+    this->lotus.prepare_bulk_insert("navitia.associated_exception_date", {"id", "datetime", "type_ex", "associated_calendar_id"});
+    cpt = 0;
+    int id = 0;
+    for (const auto& meta_vj_pair: meta_vjs) {
+        const types::MetaVehicleJourney& meta_vj = meta_vj_pair.second;
+        for (auto map : meta_vj.associated_calendars) {
+            types::AssociatedCalendar* associated_calendar = map.second;
+            for(const auto except : associated_calendar->exceptions){
+                this->lotus.insert({std::to_string(id++),
+                                    bg::to_iso_extended_string(except.date),
+                                    navitia::type::to_string(except.type),
+                                    std::to_string(associated_calendar->idx)
+                                   });
+            }
+        }
+        cpt++;
+    }
+    this->lotus.finish_bulk_insert();
+
+    //then the links between meta vj and associated calendar
+    this->lotus.prepare_bulk_insert("navitia.rel_metavj_associated_calendar", {"meta_vj_id", "associated_calendar_id"});
+    cpt = 0;
+    for (const auto& meta_vj_pair: meta_vjs) {
+        const types::MetaVehicleJourney& meta_vj = meta_vj_pair.second;
+        for (auto map : meta_vj.associated_calendars) {
+            types::AssociatedCalendar* associated_calendar = map.second;
+            this->lotus.insert({std::to_string(cpt),
+                                std::to_string(associated_calendar->idx),
+                               });
+        }
+        cpt++;
+    }
+    this->lotus.finish_bulk_insert();
+
 }
 
 void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas) {
