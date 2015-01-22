@@ -515,10 +515,12 @@ void RAPTOR::set_valid_jp_and_jpp(
     }
 
     // filter accessibility
-    for (const auto* sp: data.pt_data->stop_points) {
-        if (sp->accessible(accessibilite_params.properties)) { continue; }
-        for (const auto* jpp: sp->journey_pattern_point_list) {
-            valid_journey_pattern_points.set(jpp->idx, false);
+    if (accessibilite_params.properties.any()) {
+        for (const auto* sp: data.pt_data->stop_points) {
+            if (sp->accessible(accessibilite_params.properties)) { continue; }
+            for (const auto* jpp: sp->journey_pattern_point_list) {
+                valid_journey_pattern_points.set(jpp->idx, false);
+            }
         }
     }
 
