@@ -308,14 +308,12 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             nt::PT_Data& pt_data, const nt::MetaData& meta) : 
         apply_impacts_visitor(impact, pt_data, meta) {}
 
-    std::vector<const nt::VehicleJourney*> impacted_vjs;
 
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     bool func_on_vj(nt::VehicleJourney& vj) {
         vj.adapted_validity_pattern = vj.validity_pattern;
         return true;
-
     }
 };
 
