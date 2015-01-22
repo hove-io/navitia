@@ -227,15 +227,15 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
     def __init__(self):
         ChaosDisruptionsFixture.__init__(self)
-        self.nb_disruptions_map = {}
 
     def get_nb_disruptions(self):
+        nb_disruptions_map = {}
         def set_nb_disruptions(l):
             for i in l:
                 if not "disruptions" in i:
-                    self.nb_disruptions_map[i['id']] = 0
+                    nb_disruptions_map[i['id']] = 0
                     continue
-                self.nb_disruptions_map[i['id']] = len(i['disruptions'])
+                nb_disruptions_map[i['id']] = len(i['disruptions'])
 
         response = self.query_region("routes")
         set_nb_disruptions(response['routes'])
@@ -243,14 +243,16 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         set_nb_disruptions(response['lines'])
         response = self.query_region('networks')
         set_nb_disruptions(response['networks'])
+        return nb_disruptions_map
 
-    def run_t_(self, object_id, type_):
+    def run_check(self, object_id, type_):
         disruption_uri = "blocking_{}_disruption".format(type_)
-        nb_disruptions = self.nb_disruptions_map[object_id]
+        nb_disruptions_map = self.get_nb_disruptions()
+        nb_disruptions = nb_disruptions_map[object_id]
         # We send a blocking disruption on line A
         self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_, blocking=True)
-        self.get_nb_disruptions()
-        assert (self.nb_disruptions_map[object_id] - nb_disruptions) == 1
+        nb_disruptions_map = self.get_nb_disruptions()
+        assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
 
         links = []
@@ -263,15 +265,16 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         assert all(map(lambda id_ : id_ != object_id, links))
 
         #We delete the disruption
-        nb_disruptions = self.nb_disruptions_map[object_id]
-        self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_, blocking=True, is_deleted=True)
-        self.get_nb_disruptions()
-        assert (nb_disruptions - self.nb_disruptions_map[object_id]) == 1
+        nb_disruptions_map = self.get_nb_disruptions()
+        nb_disruptions = nb_disruptions_map[object_id]
+        self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_,
+                blocking=True, is_deleted=True)
+        nb_disruptions_map = self.get_nb_disruptions()
+        assert (nb_disruptions - nb_disruptions_map[object_id]) == 1
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
         links = []
         walk_dict(response, get_type_id)
         assert any(map(lambda id_ : id_ == object_id, links))
-
 
 
     def test_disruption_on_journey(self):
@@ -286,9 +289,9 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
         assert "journeys" in response
 
-        self.run_t_('A', 'line')
-        self.run_t_('A:0', 'route')
-        self.run_t_('base_network', 'network')
+        self.run_check('A', 'line')
+        self.run_check('A:0', 'route')
+        self.run_check('base_network', 'network')
 
 
 
