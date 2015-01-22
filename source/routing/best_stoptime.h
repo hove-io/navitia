@@ -61,10 +61,24 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
 /// either a vehicle that leaves or that arrives depending on clockwise
 std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const type::JourneyPatternPoint* jpp,
-          const DateTime dt,
-          /*const type::Properties &required_properties*/
-          const type::VehicleProperties & vehicle_properties,
-          const bool clockwise, bool disruption_active, const type::Data &data, bool reconstructing_path = false);
+               const DateTime dt,
+               const type::VehicleProperties & vehicle_properties,
+               const bool clockwise,
+               bool disruption_active,
+               const type::Data &data,
+               bool reconstructing_path = false);
+
+std::pair<const type::StopTime*, uint32_t>
+best_stop_time(const JpIdx jp_idx,
+               const uint16_t jpp_order,
+               const DateTime dt,
+               const type::VehicleProperties& vehicle_properties,
+               const bool clockwise,
+               bool disruption_active,
+               const type::Data &data,
+               bool reconstructing_path = false,
+               bool check_freq = true);
+
 
 /// For timetables in frequency-model
 inline bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) {

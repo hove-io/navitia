@@ -82,6 +82,24 @@ struct dataRAPTOR {
     };
     JppsFromSp jpps_from_sp;
 
+    // cache friendly access to in order JourneyPatternPoints from a JourneyPattern
+    struct JppsFromJp {
+        // compressed JourneyPatternPoint
+        struct Jpp {
+            JppIdx idx;
+            SpIdx sp_idx;
+            uint16_t order;
+            bool has_freq;
+        };
+        inline const std::vector<Jpp>& operator[](const JpIdx& jp) const {
+            return jpps_from_jp[jp];
+        }
+        void load(const navitia::type::PT_Data &data);
+    private:
+        IdxMap<type::JourneyPattern, std::vector<Jpp>> jpps_from_jp;
+    };
+    JppsFromJp jpps_from_jp;
+
     // arrival_times (resp. departure_times) are the different arrival
     // (resp. departure) times of each stop time sorted by
     //     lex(jp, jpp, arrival_time (resp. departure_time)).

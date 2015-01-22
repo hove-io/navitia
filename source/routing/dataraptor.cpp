@@ -67,6 +67,18 @@ void dataRAPTOR::JppsFromSp::filter_jpps(const boost::dynamic_bitset<>& valid_jp
     }
 }
 
+void dataRAPTOR::JppsFromJp::load(const type::PT_Data &data) {
+    jpps_from_jp.assign(data.journey_patterns.size());
+    for (const auto* jp: data.journey_patterns) {
+        const bool has_freq = !jp->frequency_vehicle_journey_list.empty();
+        for (const auto* jpp: jp->journey_pattern_point_list) {
+            jpps_from_jp[JpIdx(*jp)].push_back(
+                {JppIdx(*jpp), SpIdx(*jpp->stop_point), jpp->order, has_freq});
+        }
+    }
+    for (auto& jpps: jpps_from_jp.values()) { jpps.shrink_to_fit(); }
+}
+
 void dataRAPTOR::load(const type::PT_Data &data)
 {
     labels_const.init_inf(data.journey_pattern_points.size());
@@ -74,6 +86,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
     connections.load(data);
     jpps_from_sp.load(data);
+    jpps_from_jp.load(data);
 
     arrival_times.clear();
     departure_times.clear();
