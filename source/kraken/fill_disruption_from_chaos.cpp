@@ -251,7 +251,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
 
     void operator()(const nt::StopArea* stop_area) {
-        for (auto stop_point : stop_area->stop_point_list) {
+        for (const auto stop_point : stop_area->stop_point_list) {
             // We block all the journey pattern of the stop_area according to the impact
             for (auto jpp : stop_point->journey_pattern_point_list) {
                 this->operator()(jpp->journey_pattern);
@@ -261,29 +261,39 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
                 continue;
             }
             // We copy this journey_pattern
-            auto jp_ref = stop_point->journey_pattern_point_list.front()->journey_pattern;
+            const auto jp_ref = stop_point->journey_pattern_point_list.front()->journey_pattern;
             auto jp = new nt::JourneyPattern(*jp_ref);
             jp->uri = make_uri(jp->uri, pt_data.journey_patterns_map);
+            jp->idx = pt_data.journey_patterns.size();
+            pt_data.journey_patterns.push_back(jp);
             if (jp->uri == jp_ref->uri) {
                 delete jp;
                 continue;
             }
             // We copy each journey_pattern_point but the ones which are linked
-            for (auto jpp_ref : jp_ref->journey_pattern_point_list) {
+            // to the impacted stop_area
+            for (const auto jpp_ref : jp_ref->journey_pattern_point_list) {
                 if (jpp_ref->stop_point->stop_area == stop_area) {
                     continue;
                 }
                 auto jpp = new nt::JourneyPatternPoint(*jpp_ref);
+                jpp->idx = pt_data.journey_pattern_points.size();
+                pt_data.journey_pattern_points.push_back(jpp);
                 jpp->journey_pattern = jp;
                 jpp->uri = make_uri(jpp->uri, pt_data.journey_pattern_points_map);
-
             }
-            // to the impacted stop_area
 
             // We copy the vehicle_journeys of the journey_pattern_points
-            // The validity_pattern is only active on the period of the impact
             // We skip the stop_time linked to impacted journey_pattern_point
-            
+            for (const auto& vj_ref : jp_ref->discrete_vehicle_journey_list) {
+                auto vj = new nt::DiscreteVehicleJourney(*vj_ref);
+                vj->idx = pt_data.vehicle_journeys.size();
+                pt_data.vehicle_journeys.push_back(vj);
+                vj->uri = make_uri(vj->uri, pt_data.vehicle_journeys_map.size());
+                // The validity_pattern is only active on the period of the impact
+                auto vp = new nt::ValidityPattern();
+            }
+
             // The new journey_pattern is linked to the impact
         }
 
