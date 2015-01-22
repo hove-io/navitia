@@ -58,7 +58,7 @@ namespace navitia {
             navitia::type::PT_Data& pt_data, navitia::type::MetaData &meta, const std::vector<std::string>& contributors);
 
     struct DisruptionDatabaseReader {
-        DisruptionDatabaseReader(type::PT_Data& pt_data, type::MetaData& meta) : pt_data(pt_data), meta(meta) {}
+        DisruptionDatabaseReader(type::PT_Data& pt_data, const type::MetaData& meta) : pt_data(pt_data), meta(meta) {}
 
         std::unique_ptr<chaos::Disruption> disruption = nullptr;
         chaos::Impact* impact = nullptr;

@@ -220,10 +220,10 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
 struct apply_impacts_visitor : public boost::static_visitor<> {
     boost::shared_ptr<nt::new_disruption::Impact> impact;
     nt::PT_Data& pt_data;
-    nt::MetaData& meta;
+    const nt::MetaData& meta;
 
     apply_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
-            nt::PT_Data& pt_data, nt::MetaData& meta) :
+            nt::PT_Data& pt_data, const nt::MetaData& meta) :
         impact(impact), pt_data(pt_data), meta(meta){}
 
     virtual bool func_on_vj(nt::VehicleJourney&) = 0;
@@ -250,7 +250,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
     void operator()(const nt::Route* route) {
         for (auto journey_pattern : route->journey_pattern_list) {
-            journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {return f(vj);});
+            journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {return func_on_vj(vj);});
         }
     }
 
@@ -258,7 +258,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
-            nt::PT_Data& pt_data, nt::MetaData& meta) : 
+            nt::PT_Data& pt_data, const nt::MetaData& meta) : 
         apply_impacts_visitor(impact, pt_data, meta) {}
 
     bool func_on_vj(nt::VehicleJourney& vj) {
@@ -294,7 +294,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 };
 
 void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
-        nt::PT_Data& pt_data, nt::MetaData& meta) {
+        nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
         return;
     }
@@ -305,7 +305,7 @@ void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
 
 struct delete_impacts_visitor : public apply_impacts_visitor {
     delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
-            nt::PT_Data& pt_data, nt::MetaData& meta) : 
+            nt::PT_Data& pt_data, const nt::MetaData& meta) : 
         apply_impacts_visitor(impact, pt_data, meta) {}
 
     std::vector<const nt::VehicleJourney*> impacted_vjs;
@@ -320,7 +320,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 };
 
 void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
-        nt::PT_Data& pt_data, nt::MetaData& meta) {
+        nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
         return;
     }
@@ -331,8 +331,8 @@ void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
 struct get_related_impacts_visitor : public boost::static_visitor<> {
     const std::string disruption_uri;
     nt::PT_Data& pt_data;
-    nt::MetaData& meta;
-    get_related_impacts_visitor(nt::PT_Data& pt_data, nt::MetaData& meta) :
+    const nt::MetaData& meta;
+    get_related_impacts_visitor(nt::PT_Data& pt_data, const nt::MetaData& meta) :
          pt_data(pt_data), meta(meta) {}
 
     void operator()(nt::new_disruption::UnknownPtObj&) {
@@ -417,7 +417,7 @@ struct get_related_impacts_visitor : public boost::static_visitor<> {
 
 void delete_disruption(const std::string& disruption_id,
                        nt::PT_Data& pt_data,
-                       nt::MetaData& meta) {
+                       const nt::MetaData& meta) {
     nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
 
     auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
@@ -442,7 +442,7 @@ void delete_disruption(const std::string& disruption_id,
 }
 
 void add_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
-                    navitia::type::MetaData &meta) {
+                    const navitia::type::MetaData &meta) {
     auto from_posix = navitia::from_posix_timestamp;
     nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
 
