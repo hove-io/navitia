@@ -727,9 +727,9 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     b.vj("A","11111111", "", true)("stop1", 8*3600)("stop2", 8*3600 + 20*60);
     b.vj("B","11111111", "", true)("stop1", 9*3600)("stop2", 9*3600 + 20*60);
 
-    std::vector<std::pair<navitia::type::idx_t, navitia::time_duration>> departs, destinations;
-    departs.push_back(std::make_pair(0, navitia::seconds(10 * 60)));
-    destinations.push_back(std::make_pair(1,navitia::seconds(0)));
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departs, destinations;
+    departs.push_back(std::make_pair(SpIdx(0), 10_min));
+    destinations.push_back(std::make_pair(SpIdx(1), 0_s));
 
     b.data->pt_data->index();
     b.finish();
@@ -1293,10 +1293,10 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
 
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> departures =
-    {{b.sps["stop1"]->idx, navitia::seconds(1500)}};
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> arrivals =
-    {{b.sps["stop5"]->idx, navitia::seconds(0)}};
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departures =
+        {{SpIdx(*b.sps["stop1"]), 1500_s}};
+    std::vector<std::pair<SpIdx, navitia::time_duration>> arrivals =
+        {{SpIdx(*b.sps["stop5"]), 0_s}};
 
     auto results = raptor.compute_all(departures, arrivals, 6000, false, true);
 
@@ -1333,13 +1333,14 @@ BOOST_AUTO_TEST_CASE(less_fallback) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> departs = {
-        {d.stop_areas_map["stop1"]->stop_point_list.front()->journey_pattern_point_list.front()->idx, navitia::seconds(0)}
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departs = {
+        {SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 0_s}
     };
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> destinations =
-    {{d.stop_areas_map["stop1"]->stop_point_list.front()->idx, navitia::seconds(560)},
-     {d.stop_areas_map["stop2"]->stop_point_list.front()->idx, navitia::seconds(320)},
-     {d.stop_areas_map["stop3"]->stop_point_list.front()->idx, navitia::seconds(0)}};
+    std::vector<std::pair<SpIdx, navitia::time_duration>> destinations = {
+        {SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 560_s},
+        {SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front()), 320_s},
+        {SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front()), 0_s}
+    };
     auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);
@@ -1388,13 +1389,14 @@ BOOST_AUTO_TEST_CASE(pareto_front) {
     RAPTOR raptor(*(b.data));
     type::PT_Data & d = *b.data->pt_data;
 
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> departs = {
-        {d.stop_areas_map["stop1"]->stop_point_list.front()->idx, navitia::seconds(0)}
+    std::vector<std::pair<SpIdx, navitia::time_duration>> departs = {
+        {SpIdx(*d.stop_areas_map["stop1"]->stop_point_list.front()), 0_s}
     };
     // We are going to J point, so we add the walking times
-    std::vector<std::pair<type::idx_t, navitia::time_duration>> destinations =
-    {{d.stop_areas_map["stop2"]->stop_point_list.front()->idx, navitia::seconds(15*60)},
-     {d.stop_areas_map["stop3"]->stop_point_list.front()->idx, navitia::seconds(0)}};
+    std::vector<std::pair<SpIdx, navitia::time_duration>> destinations = {
+        {SpIdx(*d.stop_areas_map["stop2"]->stop_point_list.front()), 15_min},
+        {SpIdx(*d.stop_areas_map["stop3"]->stop_point_list.front()), 0_s}
+    };
     auto res1 = raptor.compute_all(departs, destinations, DateTimeUtils::set(0, 8*3600), false, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 2);

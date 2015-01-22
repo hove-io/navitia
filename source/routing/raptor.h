@@ -52,11 +52,11 @@ namespace navitia { namespace routing {
  */
 struct RoutingState {
     const type::VehicleJourney* vj = nullptr;
-    type::idx_t boarding_jpp_idx = type::invalid_idx;
+    JppIdx boarding_jpp_idx = JppIdx();
     uint16_t l_zone = std::numeric_limits<uint16_t>::max();
     DateTime workingDate = DateTimeUtils::inf;
 
-    RoutingState(const type::VehicleJourney* vj, type::idx_t boarding_jpp_idx, uint16_t l_zone, DateTime workingDate) :
+    RoutingState(const type::VehicleJourney* vj, JppIdx boarding_jpp_idx, uint16_t l_zone, DateTime workingDate) :
         vj(vj), boarding_jpp_idx(boarding_jpp_idx), l_zone(l_zone), workingDate(workingDate) {}
 };
 
@@ -68,22 +68,23 @@ struct RAPTOR
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
     std::vector<Labels> labels;
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
-    std::vector<DateTime> best_labels;
+    IdxMap<type::JourneyPatternPoint, DateTime> best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
     best_dest b_dest;
     ///Nombre de correspondances effectuées jusqu'à présent
     unsigned int count;
     /// The best jpp reached for every stop point during a round of raptor algorithm
     /// Used by footpath()
-    std::vector<type::idx_t> best_jpp_by_sp;
+    IdxMap<type::StopPoint, JppIdx> best_jpp_by_sp;
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> valid_journey_patterns;
     boost::dynamic_bitset<> valid_journey_pattern_points;
+    dataRAPTOR::JppsFromSp jpps_from_sp;
     ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
-    queue_t Q;
+    IdxMap<type::JourneyPattern, int> Q;
 
     //Constructeur
-    RAPTOR(const navitia::type::Data &data) :
+    explicit RAPTOR(const navitia::type::Data &data) :
         data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
         best_jpp_by_sp(data.pt_data->stop_points.size()),
         valid_journey_patterns(data.pt_data->journey_patterns.size()),
@@ -98,9 +99,20 @@ struct RAPTOR
 
     ///Initialise les structure retour et b_dest
     void init(Solutions departures,
-              const std::vector<std::pair<type::idx_t, navitia::time_duration> >& destinations,
+              const std::vector<std::pair<SpIdx, navitia::time_duration> >& destinations,
               navitia::DateTime bound, const bool clockwise,
               const type::Properties &properties = 0);
+
+    // pt_data object getters by typed idx
+    const type::JourneyPattern* get_jp(JpIdx idx) const {
+        return data.pt_data->journey_patterns[idx.val];
+    }
+    const type::JourneyPatternPoint* get_jpp(JppIdx idx) const {
+        return data.pt_data->journey_pattern_points[idx.val];
+    }
+    const type::StopPoint* get_sp(SpIdx idx) const {
+        return data.pt_data->stop_points[idx.val];
+    }
 
 
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
@@ -114,7 +126,7 @@ struct RAPTOR
             const std::vector<std::string>& forbidden_uris = {});
 
 
-    typedef std::pair<type::idx_t, navitia::time_duration> stop_point_duration;
+    typedef std::pair<SpIdx, navitia::time_duration> stop_point_duration;
     typedef std::vector<stop_point_duration> vec_stop_point_duration;
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
     * stop points de départs, vers plusieurs stoppoints d'arrivée,
@@ -163,8 +175,11 @@ struct RAPTOR
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
-    void set_valid_jp_and_jpp(uint32_t date, const std::vector<std::string> & forbidden,
-                              bool disruption_active, bool allow_odt,
+    void set_valid_jp_and_jpp(uint32_t date,
+                              const type::AccessibiliteParams & accessibilite_params,
+                              const std::vector<std::string> & forbidden,
+                              bool disruption_active,
+                              bool allow_odt,
                               const vec_stop_point_duration &departs = {},
                               const vec_stop_point_duration &destinations = {});
 
@@ -192,7 +207,7 @@ struct RAPTOR
 
     /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint
     /// Retourne -1 s'il n'existe pas de meilleure solution
-    int best_round(type::idx_t journey_pattern_point_idx);
+    int best_round(JppIdx journey_pattern_point_idx);
 
     ~RAPTOR() {}
 };

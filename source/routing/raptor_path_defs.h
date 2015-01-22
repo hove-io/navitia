@@ -7,11 +7,11 @@
 namespace navitia { namespace routing {
 
 template<typename Visitor>
-void handle_connection(const size_t countb, const navitia::type::idx_t current_jpp_idx, Visitor& v,
+void handle_connection(const size_t countb, const JppIdx current_jpp_idx, Visitor& v,
                        bool clockwise, const RAPTOR &raptor_) {
-    const auto& departure = raptor_.data.pt_data->journey_pattern_points[current_jpp_idx]->stop_point;
+    const auto& departure = raptor_.get_jpp(current_jpp_idx)->stop_point;
     const auto& boarding_jpp_idx = raptor_.labels[countb].boarding_jpp_transfer(current_jpp_idx);
-    const auto& destination_jpp = raptor_.data.pt_data->journey_pattern_points[boarding_jpp_idx];
+    const auto& destination_jpp = raptor_.get_jpp(boarding_jpp_idx);
     const auto& destination = destination_jpp->stop_point;
     const auto& connections = departure->stop_point_connection_list;
     const auto& l = raptor_.labels[countb].dt_transfer(current_jpp_idx);
@@ -92,7 +92,7 @@ handle_st(const type::StopTime* st, DateTime& workingDate, bool clockwise, const
 
 
 template<typename Visitor>
-void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visitor& v,
+void handle_vj(const size_t countb, JppIdx current_jpp_idx, Visitor& v,
                bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
                const RAPTOR &raptor_) {
     v.init_vj();
@@ -101,7 +101,7 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
     DateTime workingDate;
     std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_jpp_idx, raptor_.labels,
                                                               accessibilite_params, clockwise,
-                                                              raptor_.data, disruption_active);
+                                                              raptor_, disruption_active);
     while(boarding_jpp_idx != current_jpp_idx) {
         // There is a side effect on workingDate caused by workingDate
         auto departure_arrival = handle_st(current_st, workingDate, clockwise, raptor_.data);
@@ -140,7 +140,7 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
             v.change_vj(prev_st, current_st, to_posix_time(prev_time, raptor_.data),
                         to_posix_time(current_time, raptor_.data), clockwise);
         }
-        current_jpp_idx = current_st->journey_pattern_point->idx;
+        current_jpp_idx = JppIdx(*current_st->journey_pattern_point);
     }
     // There is a side effect on workingDate caused by workingDate
     auto departure_arrival = handle_st(current_st, workingDate, clockwise, raptor_.data);
@@ -155,9 +155,9 @@ void handle_vj(const size_t countb, navitia::type::idx_t current_jpp_idx, Visito
  *
  * */
 template<typename Visitor>
-void read_path(Visitor& v, type::idx_t destination_idx, size_t countb, bool clockwise, bool disruption_active,
+void read_path(Visitor& v, JppIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
           const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_) {
-    type::idx_t current_jpp_idx = destination_idx;
+    JppIdx current_jpp_idx = destination_idx;
     while (countb>0) {
         handle_vj(countb, current_jpp_idx, v, clockwise, disruption_active, accessibilite_params, raptor_);
         current_jpp_idx = raptor_.labels[countb].boarding_jpp_pt(current_jpp_idx);

@@ -36,20 +36,20 @@ www.navitia.io
 namespace navitia { namespace routing {
     struct RAPTOR;
      ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
-    Path makePathreverse(unsigned int destination_idx, unsigned int countb,
+    Path makePathreverse(JppIdx destination_idx, unsigned int countb,
             const type::AccessibiliteParams & accessibilite_params,
             const RAPTOR &raptor_, bool disruption_active);
 
     ///Construit un chemin
-    Path makePath(type::idx_t destination_idx, size_t countb, bool clockwise,
+    Path makePath(JppIdx destination_idx, size_t countb, bool clockwise,
             bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
             const RAPTOR &raptor_);
 
 
     ///Construit tous chemins trouvés
     std::vector<Path> 
-    makePathes(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departures,
-            const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
+    makePathes(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departures,
+            const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations,
             const type::AccessibiliteParams & accessibilite_params,
             const RAPTOR &raptor_, bool clockwise, bool disruption_active);
 
@@ -57,12 +57,16 @@ namespace navitia { namespace routing {
     void patch_datetimes(Path &path);
 
     std::pair<const type::StopTime*, uint32_t>
-    get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<Labels> &labels,
-                          const type::AccessibiliteParams & accessibilite_params, bool clockwise,
-                          const navitia::type::Data &data, bool disruption_active);
+    get_current_stidx_gap(size_t count,
+                          JppIdx journey_pattern_point,
+                          const std::vector<Labels> &labels,
+                          const type::AccessibiliteParams & accessibilite_params,
+                          bool clockwise,
+                          const RAPTOR &raptor,
+                          bool disruption_active);
 
     template<typename Visitor>
-    void read_path(Visitor& v, type::idx_t destination_idx, size_t countb, bool clockwise, bool disruption_active,
+    void read_path(Visitor& v, JppIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
               const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_);
 
     struct BasePathVisitor {
@@ -90,7 +94,7 @@ namespace navitia { namespace routing {
             return ;
         }
 
-        void final_step(type::idx_t /*current_jpp*/, size_t /*count*/, const std::vector<Labels> &/*labels*/) {
+        void final_step(JppIdx /*current_jpp*/, size_t /*count*/, const std::vector<Labels> &/*labels*/) {
             return ;
         }
     };

@@ -93,9 +93,10 @@ bool Data::load(const std::string& filename,
         last_load = true;
         loaded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-                % dataRaptor->arrival_times.size()
-                % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
-                );
+                       % dataRaptor->arrival_times.size()
+                       % pt_data->stop_point_connections.size()
+                       % pt_data->stop_points.size()
+            );
         if (chaos_database) {
             fill_disruption_from_database(*chaos_database, *pt_data, contributors);
         }

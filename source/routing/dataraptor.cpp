@@ -32,54 +32,55 @@ www.navitia.io
 #include "routing.h"
 #include "routing/raptor_utils.h"
 
+#include <boost/range/algorithm_ext.hpp>
+
 namespace navitia { namespace routing {
+
+void dataRAPTOR::Connections::load(const type::PT_Data &data) {
+    forward_connections.assign(data.stop_points.size());
+    backward_connections.assign(data.stop_points.size());
+    for (const auto* conn: data.stop_point_connections) {
+        forward_connections[SpIdx(*conn->departure)].push_back(
+            {DateTime(conn->duration), SpIdx(*conn->destination)});
+        backward_connections[SpIdx(*conn->destination)].push_back(
+            {DateTime(conn->duration), SpIdx(*conn->departure)});
+    }
+    for (auto& conns: forward_connections.values()) { conns.shrink_to_fit(); }
+    for (auto& conns: backward_connections.values()) { conns.shrink_to_fit(); }
+}
+
+void dataRAPTOR::JppsFromSp::load(const type::PT_Data &data) {
+    jpps_from_sp.assign(data.stop_points.size());
+    for (const auto* sp: data.stop_points) {
+        for (const auto* jpp: sp->journey_pattern_point_list) {
+            jpps_from_sp[SpIdx(*sp)].push_back({JppIdx(*jpp), JpIdx(*jpp->journey_pattern), jpp->order});
+        }
+    }
+    for (auto& jpps: jpps_from_sp.values()) { jpps.shrink_to_fit(); }
+}
+
+void dataRAPTOR::JppsFromSp::filter_jpps(const boost::dynamic_bitset<>& valid_jpps) {
+    for (auto& jpps: jpps_from_sp.values()) {
+        boost::remove_erase_if(jpps, [&](const Jpp& jpp) {
+            return !valid_jpps[jpp.idx.val];
+        });
+    }
+}
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
     labels_const.init_inf(data.journey_pattern_points.size());
     labels_const_reverse.init_min(data.journey_pattern_points.size());
 
-    foot_path_forward.clear();
-    foot_path_backward.clear();
-    footpath_index_backward.clear();
-    footpath_index_forward.clear();
-    std::vector<std::map<navitia::type::idx_t, const navitia::type::StopPointConnection*> > footpath_temp_forward, footpath_temp_backward;
-    footpath_temp_forward.resize(data.stop_points.size());
-    footpath_temp_backward.resize(data.stop_points.size());
+    connections.load(data);
+    jpps_from_sp.load(data);
 
-    // Build of a structure to look for connections
-    for(const type::StopPointConnection* connection : data.stop_point_connections) {
-        footpath_temp_forward[connection->departure->idx][connection->destination->idx] = connection;
-        footpath_temp_backward[connection->destination->idx][connection->departure->idx] = connection;
-    }
-
-    footpath_index_forward.resize(data.stop_points.size());
-    footpath_index_backward.resize(data.stop_points.size());
-    for(const type::StopPoint* sp : data.stop_points) {
-        footpath_index_forward[sp->idx].first = foot_path_forward.size();
-        footpath_index_backward[sp->idx].first = foot_path_backward.size();
-        int size_forward = 0, size_backward = 0;
-        for(auto conn : footpath_temp_forward[sp->idx]) {
-            foot_path_forward.push_back(conn.second);
-            ++size_forward;
-        }
-        for(auto conn : footpath_temp_backward[sp->idx]) {
-            foot_path_backward.push_back(conn.second);
-            ++size_backward;
-        }
-
-        footpath_index_forward[sp->idx].second = size_forward;
-        footpath_index_backward[sp->idx].second = size_backward;
-    }
-
-    typedef std::unordered_map<navitia::type::idx_t, vector_idx> idx_vector_idx;
-    idx_vector_idx ridx_journey_pattern;
-    
     arrival_times.clear();
     departure_times.clear();
     st_forward.clear();
     st_backward.clear();
-    first_stop_time.clear();
+    first_stop_time.assign(data.journey_patterns.size());
+    nb_trips.assign(data.journey_patterns.size());
 
     for(int i=0; i<=365; ++i) {
         jp_validity_patterns.push_back(boost::dynamic_bitset<>(data.journey_patterns.size()));
@@ -90,8 +91,9 @@ void dataRAPTOR::load(const type::PT_Data &data)
     }
 
     for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
-        first_stop_time.push_back(arrival_times.size());
-        nb_trips.push_back(journey_pattern->discrete_vehicle_journey_list.size());
+        const JpIdx jp_idx = JpIdx(*journey_pattern);
+        first_stop_time[jp_idx] = arrival_times.size();
+        nb_trips[jp_idx] = journey_pattern->discrete_vehicle_journey_list.size();
 
         //we group all descrete stop times from all journey_pattern_point
         //the frequency stop times are not considered here, they are search for a different way in best_stop_time
