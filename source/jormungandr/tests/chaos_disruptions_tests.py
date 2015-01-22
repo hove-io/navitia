@@ -224,6 +224,56 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
     """
+
+    def __init__(self):
+        ChaosDisruptionsFixture.__init__(self)
+        self.nb_disruptions_map = {}
+
+    def get_nb_disruptions(self):
+        def set_nb_disruptions(l):
+            for i in l:
+                if not "disruptions" in i:
+                    self.nb_disruptions_map[i['id']] = 0
+                    continue
+                self.nb_disruptions_map[i['id']] = len(i['disruptions'])
+
+        response = self.query_region("routes")
+        set_nb_disruptions(response['routes'])
+        response = self.query_region("lines")
+        set_nb_disruptions(response['lines'])
+        response = self.query_region('networks')
+        set_nb_disruptions(response['networks'])
+
+    def run_t_(self, object_id, type_):
+        disruption_uri = "blocking_{}_disruption".format(type_)
+        nb_disruptions = self.nb_disruptions_map[object_id]
+        # We send a blocking disruption on line A
+        self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_, blocking=True)
+        self.get_nb_disruptions()
+        assert (self.nb_disruptions_map[object_id] - nb_disruptions) == 1
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+
+        links = []
+        def get_type_id(k, v):
+            if k != "links" or not "type" in v or not "id" in v or v["type"] != type_:
+                return
+            links.append(v["id"])
+
+        walk_dict(response, get_type_id)
+        assert all(map(lambda id_ : id_ != object_id, links))
+
+        #We delete the disruption
+        nb_disruptions = self.nb_disruptions_map[object_id]
+        self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_, blocking=True, is_deleted=True)
+        self.get_nb_disruptions()
+        assert (nb_disruptions - self.nb_disruptions_map[object_id]) == 1
+        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+        links = []
+        walk_dict(response, get_type_id)
+        assert any(map(lambda id_ : id_ == object_id, links))
+
+
+
     def test_disruption_on_journey(self):
         """
         We send blocking disruptions and test if the blocked object is not used
@@ -231,80 +281,15 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         Then we delete it and test if use the blocked object
         """
         self.wait_for_rabbitmq_cnx()
+        self.get_nb_disruptions()
         response = self.query_region(journey_basic_query)
 
         assert "journeys" in response
 
-        # We send a blocking disruption on line A
-        self.send_chaos_disruption_and_sleep("blocking_line_disruption", "A",
-                "line", blocking=True)
+        self.run_t_('A', 'line')
+        self.run_t_('A:0', 'route')
+        self.run_t_('base_network', 'network')
 
-        response = self.query_region(journey_basic_query+ "&disruption_active=true")
-
-        links = []
-
-        def get_line_id(k, v):
-            if k != "links" or not "type" in v or not "id" in v or v["type"] != "line":
-                return
-            links.append(v["id"])
-
-        walk_dict(response, get_line_id)
-        assert all(map(lambda id_ : id_ != "A", links))
-
-        #We delete the disruption
-        self.send_chaos_disruption_and_sleep("blocking_line_disruption", "A",
-                "line", blocking=True, is_deleted=True)
-        response = self.query_region(journey_basic_query+ "&disruption_active=true")
-        links = []
-        walk_dict(response, get_line_id)
-        assert any(map(lambda id_ : id_ == "A", links))
-
-        #We try to block the route
-        self.send_chaos_disruption_and_sleep("blocking_route_disruption",
-                "A:0", "route", blocking=True)
-        response = self.query_region(journey_basic_query+ "&disruption_active=true")
-
-        links = []
-        def get_route_id(k, v):
-            if k != "links" or not "type" in v or not "id" in v or v["type"] != "route":
-                return
-            links.append(v["id"])
-
-        walk_dict(response, get_route_id)
-        assert all(map(lambda id_ : id_ != "A:0", links))
-
-        self.send_chaos_disruption_and_sleep("blocking_route_disruption",
-                "A:0", "route", blocking=True, is_deleted=True)
-        response = self.query_region(journey_basic_query+ "&disruption_active=true")
-
-        links = []
-        walk_dict(response, get_route_id)
-        assert any(map(lambda id_ : id_ == "A:0", links))
-
-        #We try to block the network
-        self.send_chaos_disruption_and_sleep("blocking_network_disruption",
-                "base_network", "network", blocking=True)
-
-        response = self.query_region(journey_basic_query + "&disruption_active=true")
-
-        assert all(map(lambda j: len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0,
-                       response["journeys"]))
-
-        links = []
-        def get_network_id(k, v):
-            if k != "links" or not "type" in v or not "id" in v or v["type"] != "network":
-                return
-            links.append(v["id"])
-        response = self.query_region(journey_basic_query + "&disruption_active=false")
-        walk_dict(response, get_network_id)
-        assert any(map(lambda id_ : id_ == "base_network", links))
-
-        self.send_chaos_disruption_and_sleep("blocking_network_disruption",
-                "base_network", "network", blocking=True, is_deleted=True)
-        response = self.query_region(journey_basic_query+ "&disruption_active=true")
-        links = []
-        walk_dict(response, get_network_id)
-        assert any(map(lambda id_ : id_ == "base_network", links))
 
 
 
