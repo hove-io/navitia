@@ -83,6 +83,8 @@ next_valid_discrete_pick_up(const JpIdx jp_idx,
     auto date = DateTimeUtils::date(dt);
     for(; idx < end; ++idx) {
         const type::StopTime* st = dataRaptor.st_forward[idx];
+        BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
+        BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, false, disruption_active, reconstructing_path, required_vehicle_properties)) {
                 return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
@@ -93,6 +95,8 @@ next_valid_discrete_pick_up(const JpIdx jp_idx,
     date++;
     for(; idx < end; ++idx) {
         const type::StopTime* st = dataRaptor.st_forward[idx];
+        BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
+        BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, false, disruption_active, reconstructing_path, required_vehicle_properties)) {
                 return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
@@ -222,6 +226,8 @@ previous_valid_discrete_drop_off(const JpIdx jp_idx,
     auto date = DateTimeUtils::date(dt);
     for(; idx < end; ++idx) {
         const type::StopTime* st = dataRaptor.st_backward[idx];
+        BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
+        BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, true, disruption_active, !reconstructing_path, required_vehicle_properties)) {
                 return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
@@ -235,6 +241,8 @@ previous_valid_discrete_drop_off(const JpIdx jp_idx,
     --date;
     for(; idx < end; ++idx) {
         const type::StopTime* st = dataRaptor.st_backward[idx];
+        BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
+        BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, true, disruption_active, !reconstructing_path, required_vehicle_properties)) {
             return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
         }

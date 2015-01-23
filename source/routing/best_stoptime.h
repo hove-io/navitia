@@ -68,6 +68,11 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
                const type::Data &data,
                bool reconstructing_path = false);
 
+// As the other best_stop_time, but cache friendly and less
+// comfortable to use.  The last parametter, check_freq, allow to
+// forget to test frequency vehicle journey, a big improvement in
+// speed if you know your journey pattern don't have frequency vehicle
+// journeys.  This method is used by raptor.
 std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const JpIdx jp_idx,
                const uint16_t jpp_order,
