@@ -990,7 +990,7 @@ Here is the valid id list:
 * physical_mode:Train
 * physical_mode:Tramway
 
-You can use these ids in the forbidden_uris[]_ parameter for exemple.
+You can use these ids in the `forbidden_uris[]`_ parameter for exemple.
 
 .. _company:
 
