@@ -105,18 +105,24 @@ struct dataRAPTOR {
         bool empty() const { return departure_times.empty(); }
         size_t nb_stop_times() const { return departure_times.size(); }
 
+        // Returns the range of the stop times in increasing departure
+        // time order
         boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>
         stop_time_range_forward(const JpIdx jp_idx, const uint16_t jpp_order) const {
             const auto r = stop_time_idx_range(jp_idx, jpp_order);
             return boost::make_iterator_range(st_forward.begin() + r.first,
                                               st_forward.begin() + r.second);
         }
+        // Returns the range of the stop times in decreasing arrival
+        // time order
         boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>
         stop_time_range_backward(const JpIdx jp_idx, const uint16_t jpp_order) const {
             const auto r = stop_time_idx_range(jp_idx, jpp_order);
             return boost::make_iterator_range(st_backward.begin() + r.first,
                                               st_backward.begin() + r.second);
         }
+        // Returns the range of the stop times in increasing departure
+        // time order begining after hour(dt)
         boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>
         stop_time_range_after(const JpIdx jp_idx, const uint16_t jpp_order, const DateTime dt) const {
             const auto idx_range = stop_time_idx_range(jp_idx, jpp_order);
@@ -128,6 +134,8 @@ struct dataRAPTOR {
             const type::idx_t end = idx_range.second;
             return boost::make_iterator_range(st_forward.begin() + idx, st_forward.begin() + end);
         }
+        // Returns the range of the stop times in decreasing arrival
+        // time order ending before hour(dt)
         boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>
         stop_time_range_before(const JpIdx jp_idx, const uint16_t jpp_order, const DateTime dt) const {
             const auto idx_range = stop_time_idx_range(jp_idx, jpp_order);

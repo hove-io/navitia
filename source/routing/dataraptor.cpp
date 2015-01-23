@@ -153,13 +153,8 @@ void dataRAPTOR::load(const type::PT_Data &data)
     jpps_from_jp.load(data);
     best_stop_time_data.load(data);
 
-    for(int i=0; i<=365; ++i) {
-        jp_validity_patterns.push_back(boost::dynamic_bitset<>(data.journey_patterns.size()));
-    }
-
-    for(int i=0; i<=365; ++i) {
-        jp_adapted_validity_pattern.push_back(boost::dynamic_bitset<>(data.journey_patterns.size()));
-    }
+    jp_validity_patterns.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));
+    jp_adapted_validity_pattern.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));
 
     for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
         for(int i=0; i<=365; ++i) {
