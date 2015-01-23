@@ -1019,7 +1019,7 @@ Here is the valid id list:
 * physical_mode:Train
 * physical_mode:Tramway
 
-You can use these ids in the forbidden_uris[] parameter from journeys_parameters_ for exemple.
+You can use these ids in the forbidden_uris[] parameter from `journeys_parameters`_ for exemple.
 
 .. _company:
 
