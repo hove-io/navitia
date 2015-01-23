@@ -424,6 +424,7 @@ Parameters
 |          |                       |           | arriving before datetime.                 |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | .. _forbidden_uris[]: | id        | If you want to avoid lines, modes ...     |                 |
+|          |                       |           |                                           |                 |
 |          | forbidden_uris[]      |           |                                           |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | first_section_mode[]  | array of  | Force the first section mode if the first | walking         |
