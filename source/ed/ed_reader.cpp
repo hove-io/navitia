@@ -65,8 +65,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     this->fill_validity_patterns(data, work);
     this->fill_vehicle_journeys(data, work);
-    this->fill_associated_calendar(data, work);
-    this->fill_meta_vehicle_journeys(data, work);
 
     this->fill_stop_times(data, work);
 
@@ -105,6 +103,10 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_periods(data, work);
     this->fill_exception_dates(data, work);
     this->fill_rel_calendars_lines(data, work);
+
+    /// meta vj associated calendars
+    this->fill_associated_calendar(data, work);
+    this->fill_meta_vehicle_journeys(data, work);
 
     check_coherence(data);
 }
@@ -734,38 +736,47 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
-    //then we fill the links
-    std::string request = "SELECT l.datetime as datetime, l.type_ex as type_ex,"
-            " calendar.id as id, calendar.calendar_id as calendar_id"
-            " from navitia.associated_calendar as calendar, navitia.associated_exception_date as l"
-            " WHERE calendar.id = l.associated_calendar_id ORDER BY calendar.id";
+    //fill associated_calendar
+    std::string request = "SELECT id, calendar_id from associated_calendar";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         nt::AssociatedCalendar* associated_calendar;
         int associated_calendar_idx = const_it["id"].as<idx_t>();
 
+        int calendar_idx = const_it["calendar_id"].as<idx_t>();
+        const auto calendar_it = this->calendar_map.find(calendar_idx);
+        if (calendar_it == this->calendar_map.end()) {
+            LOG4CPLUS_ERROR(log, "Impossible to find the calendar " << calendar_idx << ", we won't add associated calendar");
+            continue;
+        }
+
+        associated_calendar = new nt::AssociatedCalendar();
+        associated_calendar->calendar = calendar_it->second;
+        data.pt_data->associated_calendars.push_back(associated_calendar);
+        this->associated_calendar_map[associated_calendar_idx] = associated_calendar;
+    }
+
+    //then we fill the links
+    request = "SELECT l.datetime as datetime, l.type_ex as type_ex,"
+            " calendar.id as id, calendar.calendar_id as calendar_id"
+            " from navitia.associated_calendar as calendar, navitia.associated_exception_date as l"
+            " WHERE calendar.id = l.associated_calendar_id ORDER BY calendar.id";
+    result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        int associated_calendar_idx = const_it["id"].as<idx_t>();
+
         const auto associated_calendar_it = this->associated_calendar_map.find(associated_calendar_idx);
 
         if (associated_calendar_it == this->associated_calendar_map.end()) {
-
-            int calendar_idx = const_it["calendar_id"].as<idx_t>();
-            const auto calendar_it = this->calendar_map.find(calendar_idx);
-            if (calendar_it == this->calendar_map.end()) {
-                LOG4CPLUS_ERROR(log, "Impossible to find the calendar " << calendar_idx << ", we won't add it in a metavj associated calendar");
-                continue;
-            }
-
-            associated_calendar = new nt::AssociatedCalendar();
-            associated_calendar->calendar = calendar_it->second;
-            data.pt_data->associated_calendars.push_back(associated_calendar);
-            this->associated_calendar_map[associated_calendar_idx] = associated_calendar;
+            LOG4CPLUS_ERROR(log, "Impossible to find the associated calendar " << associated_calendar_idx << ", we won't add exception date");
+            continue;
         }
-        else
-            associated_calendar = associated_calendar_it->second;
 
         nt::ExceptionDate exception_date;
         exception_date.date = bg::from_string(const_it["datetime"].as<std::string>());
         exception_date.type = navitia::type::to_exception_type(const_it["type_ex"].as<std::string>());
+
+        auto associated_calendar = associated_calendar_it->second;
         associated_calendar->exceptions.push_back(exception_date);
     }
 }
