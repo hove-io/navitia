@@ -297,9 +297,6 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert vehicle journeys");
     this->insert_vehicle_journeys(data.vehicle_journeys);
     LOG4CPLUS_INFO(logger, "End: insert vehicle journeys");
-    LOG4CPLUS_INFO(logger, "Begin: insert meta vehicle journeys");
-    this->insert_meta_vj(data.meta_vj_map);
-    LOG4CPLUS_INFO(logger, "End: insert meta vehicle journeys");
 
     LOG4CPLUS_INFO(logger, "Begin: insert journey pattern points");
     this->insert_journey_pattern_point(data.journey_pattern_points);
@@ -333,6 +330,11 @@ void EdPersistor::persist(const ed::Data& data){
     LOG4CPLUS_INFO(logger, "Begin: insert relation calendar line");
     this->insert_rel_calendar_line(data.calendars);
     LOG4CPLUS_INFO(logger, "End: insert relation calendar line");
+
+    LOG4CPLUS_INFO(logger, "Begin: insert meta vehicle journeys");
+    this->insert_meta_vj(data.meta_vj_map);
+    LOG4CPLUS_INFO(logger, "End: insert meta vehicle journeys");
+
     LOG4CPLUS_INFO(logger, "Begin: commit");
     this->lotus.commit();
     LOG4CPLUS_INFO(logger, "End: commit");
