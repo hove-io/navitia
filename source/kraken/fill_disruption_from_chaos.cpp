@@ -281,17 +281,46 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
                 pt_data.journey_pattern_points.push_back(jpp);
                 jpp->journey_pattern = jp;
                 jpp->uri = make_uri(jpp->uri, pt_data.journey_pattern_points_map);
+                jp->journey_pattern_point_list.push_back(jpp);
             }
 
             // We copy the vehicle_journeys of the journey_pattern_points
-            // We skip the stop_time linked to impacted journey_pattern_point
             for (const auto& vj_ref : jp_ref->discrete_vehicle_journey_list) {
                 auto vj = new nt::DiscreteVehicleJourney(*vj_ref);
                 vj->idx = pt_data.vehicle_journeys.size();
                 pt_data.vehicle_journeys.push_back(vj);
-                vj->uri = make_uri(vj->uri, pt_data.vehicle_journeys_map.size());
+                vj->uri = make_uri(vj->uri, pt_data.vehicle_journeys_map);
                 // The validity_pattern is only active on the period of the impact
                 auto vp = new nt::ValidityPattern();
+                vp->uri = make_uri(vp->uri, pt_data.validity_patterns_map);
+
+                for (auto period : impact->application_periods) {
+                    bt::time_iterator titr(period.begin(), bt::hours(24));
+                    for(;titr<period.end(); ++titr) {
+                        if (!meta.production_date.contains(titr->date())) {
+                            continue;
+                        }
+                        const auto day = (titr->date() - meta.production_date.begin()).days();
+                        vp->add(day);
+                    }
+                }
+                // We skip the stop_time linked to impacted journey_pattern_point
+                size_t nb_skipped = 0;
+                for (const auto st_ref : vj->stop_time_list) {
+                    if (st_ref.journey_pattern_point->stop_point->stop_area == stop_area) {
+                        ++nb_skipped;
+                        continue;
+                    }
+                    vj->stop_time_list.emplace_back();
+                    auto& st = vj->stop_time_list.back();
+                    st.vehicle_journey = vj;
+                    const size_t ref_order = st_ref.journey_pattern_point->order;
+                    st.journey_pattern_point = jp->journey_pattern_point_list[ref_order - nb_skipped];
+                    st.properties = st_ref.properties;
+                    st.local_traffic_zone = st_ref.local_traffic_zone;
+                    st.arrival_time = st_ref.arrival_time;
+                    st.departure_time = st_ref.departure_time;
+                }
             }
 
             // The new journey_pattern is linked to the impact
