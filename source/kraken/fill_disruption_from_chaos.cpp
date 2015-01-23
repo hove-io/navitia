@@ -30,12 +30,18 @@ www.navitia.io
 
 #include "fill_disruption_from_chaos.h"
 #include "utils/logger.h"
+#include "type/datetime.h"
 
 #include <boost/make_shared.hpp>
+#include <boost/variant/static_visitor.hpp>
+#include <boost/variant/apply_visitor.hpp>
+#include <boost/range/algorithm/for_each.hpp>
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 namespace navitia {
 
 namespace nt = navitia::type;
+namespace bt = boost::posix_time;
 
 static boost::shared_ptr<nt::new_disruption::Tag>
 make_tag(const chaos::Tag& chaos_tag, nt::new_disruption::DisruptionHolder& holder) {
@@ -211,27 +217,235 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     return std::move(impact);
 }
 
-void delete_disruption(nt::PT_Data& pt_data,
-                    const std::string& disruption_id) {
+struct apply_impacts_visitor : public boost::static_visitor<> {
+    boost::shared_ptr<nt::new_disruption::Impact> impact;
+    nt::PT_Data& pt_data;
+    const nt::MetaData& meta;
+
+    apply_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+            nt::PT_Data& pt_data, const nt::MetaData& meta) :
+        impact(impact), pt_data(pt_data), meta(meta){}
+
+    virtual bool func_on_vj(nt::VehicleJourney&) = 0;
+
+    void operator()(nt::new_disruption::UnknownPtObj&) {
+    }
+
+    void operator()(const nt::Network* network) {
+        for(auto line : network->line_list) {
+            this->operator()(line);
+        }
+    }
+    void operator()(const nt::StopArea* ) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                       "apply_impact_visitor on StopArea not implemented yet!");
+    }
+    void operator()(nt::new_disruption::LineSection & ls) {
+        this->operator()(ls.line);
+    }
+    void operator()(const nt::Line* line) {
+        for(auto route : line->route_list) {
+            this->operator()(route);
+        }
+    }
+    void operator()(const nt::Route* route) {
+        for (auto journey_pattern : route->journey_pattern_list) {
+            journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {return func_on_vj(vj);});
+        }
+    }
+
+};
+
+struct add_impacts_visitor : public apply_impacts_visitor {
+    add_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+            nt::PT_Data& pt_data, const nt::MetaData& meta) : 
+        apply_impacts_visitor(impact, pt_data, meta) {}
+
+    bool func_on_vj(nt::VehicleJourney& vj) {
+        nt::ValidityPattern vp(vj.adapted_validity_pattern);
+        bool is_impacted = false;
+        for (auto period : impact->application_periods) {
+            bt::time_iterator titr(period.begin(), bt::hours(24));
+            for(;titr<period.end(); ++titr) {
+                if (!meta.production_date.contains(titr->date())) {
+                    continue;
+                }
+                auto day = (titr->date() - meta.production_date.begin()).days();
+                if (vp.check(day)) {
+                    vp.remove(day);
+                    is_impacted = true;
+                }
+            }
+        }
+        if (is_impacted) {
+            for (auto vp_ : pt_data.validity_patterns) {
+                if (vp_->days == vp.days) {
+                    vj.adapted_validity_pattern = vp_;
+                    return true;
+                }
+            }
+            // We haven't found this vp, so we need to create it
+            auto vp_ = new nt::ValidityPattern(vp);
+            pt_data.validity_patterns.push_back(vp_);
+            vj.adapted_validity_pattern = vp_;
+        }
+        return true;
+    }
+};
+
+void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
+        nt::PT_Data& pt_data, const nt::MetaData& meta) {
+    if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
+        return;
+    }
+
+    add_impacts_visitor v(impact, pt_data, meta);
+    boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+}
+
+struct delete_impacts_visitor : public apply_impacts_visitor {
+    delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+            nt::PT_Data& pt_data, const nt::MetaData& meta) : 
+        apply_impacts_visitor(impact, pt_data, meta) {}
+
+
+    // We set all the validity pattern to the theorical one, we will re-apply
+    // other disruptions after
+    bool func_on_vj(nt::VehicleJourney& vj) {
+        vj.adapted_validity_pattern = vj.validity_pattern;
+        return true;
+    }
+};
+
+void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
+        nt::PT_Data& pt_data, const nt::MetaData& meta) {
+    if (impact->severity->effect != nt::new_disruption::Effect::NO_SERVICE) {
+        return;
+    }
+    delete_impacts_visitor v(impact, pt_data, meta);
+    boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+}
+
+struct get_related_impacts_visitor : public boost::static_visitor<> {
+    const std::string disruption_uri;
+    nt::PT_Data& pt_data;
+    const nt::MetaData& meta;
+    get_related_impacts_visitor(nt::PT_Data& pt_data, const nt::MetaData& meta) :
+         pt_data(pt_data), meta(meta) {}
+
+    void operator()(nt::new_disruption::UnknownPtObj&) {
+    }
+
+    void operator()(const nt::Network* network) {
+        if (network == nullptr) {
+            return;
+        }
+        for (auto impact : network->get_impacts()) {
+            if (!impact.expired()) {
+                apply_impact(impact.lock(), pt_data, meta);
+            }
+        }
+        for (auto line : network->line_list) {
+            for (auto impact : line->get_impacts()) {
+                if (!impact.expired()) {
+                    apply_impact(impact.lock(), pt_data, meta);
+                }
+            }
+            for (auto route : line->route_list) {
+                for (auto impact : route->get_impacts()) {
+                    if (!impact.expired()) {
+                        apply_impact(impact.lock(), pt_data, meta);
+                    }
+                }
+            }
+        }
+    }
+
+    void operator()(const nt::StopArea* ) {
+    }
+    void operator()(nt::new_disruption::LineSection & ls) {
+        this->operator()(ls.line);
+    }
+    void operator()(const nt::Line* line) {
+        if (line == nullptr) {
+            return;
+        }
+        for (auto impact : line->get_impacts()) {
+            if (!impact.expired()) {
+                apply_impact(impact.lock(), pt_data, meta);
+            }
+        }
+        for (auto impact: line->network->get_impacts()) {
+            if (!impact.expired()) {
+                apply_impact(impact.lock(), pt_data, meta);
+            }
+        }
+        for (auto route : line->route_list) {
+            for (auto impact : route->get_impacts()) {
+                if (!impact.expired()) {
+                    apply_impact(impact.lock(), pt_data, meta);
+                }
+            }
+        }
+
+    }
+    void operator()(const nt::Route* route) {
+        if (route == nullptr) {
+            return;
+        }
+        for (auto impact : route->get_impacts()) {
+            if (!impact.expired()) {
+                apply_impact(impact.lock(), pt_data, meta);
+            }
+        }
+
+        for (auto impact : route->line->get_impacts()) {
+            if (!impact.expired()) {
+                apply_impact(impact.lock(), pt_data, meta);
+            }
+        }
+        for (auto impact : route->line->network->get_impacts()) {
+            if (!impact.expired()) {
+                apply_impact(impact.lock(), pt_data, meta);
+            }
+        }
+    }
+};
+
+
+void delete_disruption(const std::string& disruption_id,
+                       nt::PT_Data& pt_data,
+                       const nt::MetaData& meta) {
     nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
 
     auto it = find_if(holder.disruptions.begin(), holder.disruptions.end(),
             [&disruption_id](const std::unique_ptr<nt::new_disruption::Disruption>& disruption){
                 return disruption->uri == disruption_id;
             });
-    if(it != holder.disruptions.end()){
+    if(it != holder.disruptions.end()) {
+        std::vector<nt::new_disruption::PtObj> informed_entities;
+        for (const auto& impact : (*it)->get_impacts()) {
+            informed_entities.insert(informed_entities.end(),
+                              impact->informed_entities.begin(),
+                              impact->informed_entities.end());
+            delete_impact(impact, pt_data, meta);
+        }
         holder.disruptions.erase(it);
         //the disruption has ownership over the impacts so all items a deleted in cascade
+        //Now ne need to re-apply all disruptions, other disruptions may disrupt
+        //vehicle journeys impacted by this disruption
+        get_related_impacts_visitor v(pt_data, meta);
+        boost::for_each(informed_entities, boost::apply_visitor(v));
     }
 }
 
-void add_disruption(nt::PT_Data& pt_data,
-                    const chaos::Disruption& chaos_disruption) {
+void add_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
+                    const navitia::type::MetaData &meta) {
     auto from_posix = navitia::from_posix_timestamp;
     nt::new_disruption::DisruptionHolder &holder = pt_data.disruption_holder;
 
     //we delete the disrupion before adding the new one
-    delete_disruption(pt_data, chaos_disruption.id());
+    delete_disruption(chaos_disruption.id(), pt_data, meta);
 
     auto disruption = std::make_unique<nt::new_disruption::Disruption>();
     disruption->uri = chaos_disruption.id();
@@ -244,7 +458,9 @@ void add_disruption(nt::PT_Data& pt_data,
     disruption->updated_at = from_posix(chaos_disruption.updated_at());
     disruption->cause = make_cause(chaos_disruption.cause(), holder);
     for (const auto& chaos_impact: chaos_disruption.impacts()) {
-        disruption->add_impact(make_impact(chaos_impact, pt_data));
+        auto impact = make_impact(chaos_impact, pt_data);
+        disruption->add_impact(impact);
+        apply_impact(impact, pt_data, meta);
     }
     disruption->localization = make_pt_objects(chaos_disruption.localization(), pt_data);
     for (const auto& chaos_tag: chaos_disruption.tags()) {

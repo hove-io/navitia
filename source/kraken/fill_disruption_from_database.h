@@ -55,10 +55,10 @@ namespace navitia {
         FILL_NULLABLE(table_name, updated_at, uint64_t)
 
     void fill_disruption_from_database(const std::string& connection_string,
-            navitia::type::PT_Data& pt_data, const std::vector<std::string>& contributors);
+            navitia::type::PT_Data& pt_data, navitia::type::MetaData &meta, const std::vector<std::string>& contributors);
 
     struct DisruptionDatabaseReader {
-        DisruptionDatabaseReader(type::PT_Data& pt_data) : pt_data(pt_data) {}
+        DisruptionDatabaseReader(type::PT_Data& pt_data, const type::MetaData& meta) : pt_data(pt_data), meta(meta) {}
 
         std::unique_ptr<chaos::Disruption> disruption = nullptr;
         chaos::Impact* impact = nullptr;
@@ -67,7 +67,8 @@ namespace navitia {
         std::string last_message_id = "",
                     last_ptobject_id = "",
                     last_period_id = "";
-        navitia::type::PT_Data& pt_data;
+        type::PT_Data& pt_data;
+        const type::MetaData& meta;
 
         // This function and all others below are templated so they can be tested
         template<typename T>
@@ -109,7 +110,7 @@ namespace navitia {
         template<typename T>
         void fill_disruption(T const_it) {
             if (disruption) {
-                add_disruption(pt_data, *disruption);
+                add_disruption(*disruption, pt_data, meta);
             }
             disruption = std::make_unique<chaos::Disruption>();
             FILL_TIMESTAMPMIXIN(disruption)
