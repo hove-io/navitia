@@ -11,9 +11,38 @@ Endpoint
 
 The only endpoint of this version of the api is : https://api.navitia.io/v1/
 
+Examples
+********
+
+Coverage of the service
+https://api.navitia.io/v1/coverage 
+
+I got WGS coord, where is it?
+https://api.navitia.io/v1/coord/2.376952;48.846706499999996
+on /fr-idf coverage, OK
+
+Which service available in this coverage?
+https://api.navitia.io/v1/coverage/fr-idf
+
+Networks available?
+https://api.navitia.io/v1/coverage/paris/networks 
+
+RATP lines?
+https://api.navitia.io/v1/coverage/paris/networks/network:RTP/lines 
+
+Too much lines, let's use mode filtering
+https://api.navitia.io/v1/coverage/paris/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
+
+By the way, what is close to me?
+https://api.navitia.io/v1/coverage/fr-idf/coords/2.376952;48.846706499999996/places_nearby
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.376952;48.846706499999996/stop_points
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.376952;48.846706499999996/lines
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.376952;48.846706499999996/stop_schedules
+or ...
 
 Resources
-#########
+*********
+
 All the resources return a response containing a links object, a paging object, and the requested object.
 
 * **Coverage** : List of the region covered by navitia
@@ -25,10 +54,6 @@ All the resources return a response containing a links object, a paging object, 
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/*region_id*/coords/*lon;lat*                | Information about a specific region |
 +---------------------------------------------------------------+-------------------------------------+
-
-Example
-*******
-https://api.navitia.io/v1/coverage/fr-idf/coords/2.6667;48.7667/places_nearby
 
 * **Public transportation objects** : List of the public transport objects of a region
 
@@ -87,6 +112,7 @@ https://api.navitia.io/v1/coverage/fr-idf/coords/2.6667;48.7667/places_nearby
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/*lon;lat*/places_nearby                     | List of objects near the resource   |
 +---------------------------------------------------------------+-------------------------------------+
+
 
 Authentication
 ================
@@ -397,12 +423,13 @@ The other one, the most used, is to access the 'journey' api endpoint: `<https:/
 | If only one is defined an isochrone is computed with every possible journeys from or to the point.                                                          |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+.. _journeys_parameters:
 
 Parameters
 ##########
 
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| Required | Name                  | Type        Description                               | Default value   |
+| Required | Name                  | Type      | Description                               | Default value   |
 +==========+=======================+===========+===========================================+=================+
 | nop      | from                  | id        | The id of the departure of your journey   |                 |
 |          |                       |           | If none are provided an isochrone is      |                 |
@@ -423,9 +450,8 @@ Parameters
 |          |                       |           | If ``arrival`` it will retrieve journeys  |                 |
 |          |                       |           | arriving before datetime.                 |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
-| nop      | .. _forbidden_uris[]: | id        | If you want to avoid lines, modes ...     |                 |
-|          |                       |           |                                           |                 |
-|          | forbidden_uris[]      |           |                                           |                 |
+| nop      | forbidden_uris[]      | id        | If you want to avoid lines, modes,        |                 |
+|          |                       |           | networks, etc.                            |                 |
 +----------+-----------------------+-----------+-------------------------------------------+-----------------+
 | nop      | first_section_mode[]  | array of  | Force the first section mode if the first | walking         |
 |          |                       | string    | section is not a public transport one.    |                 |
@@ -992,7 +1018,7 @@ Here is the valid id list:
 * physical_mode:Train
 * physical_mode:Tramway
 
-You can use these ids in the `forbidden_uris[]`_ parameter for exemple.
+You can use these ids in the forbidden_uris[] parameter from journeys_parameters_ for exemple.
 
 .. _company:
 
