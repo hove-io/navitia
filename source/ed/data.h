@@ -134,6 +134,7 @@ public:
     void build_journey_patterns();
 
     /// Construit les associated_calendar
+    void build_grid_validity_pattern();
     void build_associated_calendar();
 
     /// Shift stop_times, we want the first stop_time to have its

@@ -213,6 +213,7 @@ void Data::shift_stop_times() {
 void Data::complete(){
     shift_stop_times();
     build_journey_patterns();
+    build_grid_validity_pattern();
     build_associated_calendar();
     build_journey_pattern_points();
     build_block_id();
@@ -624,24 +625,31 @@ Data::find_matching_calendar(const Data&, const std::string& name, const types::
     return res;
 }
 
+void Data::build_grid_validity_pattern() {
+    for(types::Calendar* cal : this->calendars){
+        cal->build_validity_pattern(meta.production_date);
+    }
+}
+
 void Data::build_associated_calendar() {
     auto log = log4cplus::Logger::getInstance("kraken::type::Data");
     std::multimap<types::ValidityPattern, types::AssociatedCalendar*> associated_vp;
     size_t nb_not_matched_vj(0);
     size_t nb_matched(0);
-    for(auto meta_vj_pair : meta_vj_map) {
-        const auto meta_vj = &meta_vj_pair.second;
 
-        assert (! meta_vj->theoric_vj.empty());
+    for(auto meta_vj_pair : meta_vj_map) {
+        auto& meta_vj = meta_vj_map[meta_vj_pair.first]; //meta_vj_pair.second;
+
+        assert (! meta_vj.theoric_vj.empty());
 
         // we check the theoric vj of a meta vj
         // because we start from the postulate that the theoric VJs are the same VJ
         // split because of dst (day saving time)
         // because of that we try to match the calendar with the union of all theoric vj validity pattern
-       types::ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(meta_vj);
+       types::ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(&meta_vj);
 
         //some check can be done on any theoric vj, we do them on the first
-        auto* first_vj = meta_vj->theoric_vj.front();
+        auto* first_vj = meta_vj.theoric_vj.front();
 
         //some check can be done on any theoric vj, we do them on the first
         std::vector<types::Calendar*> calendar_list;
@@ -664,7 +672,7 @@ void Data::build_associated_calendar() {
         auto it = associated_vp.find(meta_vj_validity_pattern);
         if (it != associated_vp.end()) {
             for (; it->first == meta_vj_validity_pattern; ++it) {
-                meta_vj->associated_calendars.insert({it->second->calendar->uri, it->second});
+                meta_vj.associated_calendars.insert({it->second->calendar->uri, it->second});
             }
             continue;
         }
@@ -696,7 +704,7 @@ void Data::build_associated_calendar() {
                 associated_calendar->exceptions.push_back(ex);
             }
 
-            meta_vj->associated_calendars.insert({associated_calendar->calendar->uri, associated_calendar});
+            meta_vj.associated_calendars.insert({associated_calendar->calendar->uri, associated_calendar});
             associated_vp.insert({meta_vj_validity_pattern, associated_calendar});
             cal_uri << associated_calendar->calendar->uri << " ";
         }
