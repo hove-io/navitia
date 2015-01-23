@@ -17,9 +17,10 @@ Examples
 Coverage of the service
 https://api.navitia.io/v1/coverage 
 
-I got WGS coord, where is it?
-https://api.navitia.io/v1/coord/2.376952;48.846706499999996
-on /fr-idf coverage, OK
+Where am I? (WGS coordinates)
+https://api.navitia.io/v1/coord/2.377310;48.847002
+
+I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
 
 Which service available in this coverage?
 https://api.navitia.io/v1/coverage/fr-idf
@@ -34,10 +35,10 @@ Too much lines, let's use mode filtering
 https://api.navitia.io/v1/coverage/paris/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
 
 By the way, what is close to me?
-https://api.navitia.io/v1/coverage/fr-idf/coords/2.376952;48.846706499999996/places_nearby
-or https://api.navitia.io/v1/coverage/fr-idf/coords/2.376952;48.846706499999996/stop_points
-or https://api.navitia.io/v1/coverage/fr-idf/coords/2.376952;48.846706499999996/lines
-or https://api.navitia.io/v1/coverage/fr-idf/coords/2.376952;48.846706499999996/stop_schedules
+https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_points
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
 or ...
 
 Resources
