@@ -100,28 +100,77 @@ struct dataRAPTOR {
     };
     JppsFromJp jpps_from_jp;
 
-    // arrival_times (resp. departure_times) are the different arrival
-    // (resp. departure) times of each stop time sorted by
-    //     lex(jp, jpp, arrival_time (resp. departure_time)).
-    //
-    // Then, you have:
-    //     for all i, st_forward[i]->departure_time == departure_times[i]
-    //     for all i, st_backward[i]->arrival_time == arrival_times[i]
-    //
-    // st_forward and st_backward contains StopTime* from
-    // std::vector<StopTime> (in VehicleJourney).  This is safe as
-    // pt_data MUST be const for a given dataRAPTOR (else, you'll have
-    // much troubles, and not only from here).
-    std::vector<DateTime> arrival_times;
-    std::vector<DateTime> departure_times;
-    std::vector<const type::StopTime*> st_forward;
-    std::vector<const type::StopTime*> st_backward;
+    struct BestStopTimeData {
+        void load(const navitia::type::PT_Data &data);
+        bool empty() const { return departure_times.empty(); }
+        size_t nb_stop_times() const { return departure_times.size(); }
 
-    // index of the first st of a jp in the previous vectors
-    IdxMap<type::JourneyPattern, size_t> first_stop_time;
+        boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>
+        stop_time_range_forward(const JpIdx jp_idx, const uint16_t jpp_order) const {
+            const auto r = stop_time_idx_range(jp_idx, jpp_order);
+            return boost::make_iterator_range(st_forward.begin() + r.first,
+                                              st_forward.begin() + r.second);
+        }
+        boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>
+        stop_time_range_backward(const JpIdx jp_idx, const uint16_t jpp_order) const {
+            const auto r = stop_time_idx_range(jp_idx, jpp_order);
+            return boost::make_iterator_range(st_backward.begin() + r.first,
+                                              st_backward.begin() + r.second);
+        }
+        boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>
+        stop_time_range_after(const JpIdx jp_idx, const uint16_t jpp_order, const DateTime dt) const {
+            const auto idx_range = stop_time_idx_range(jp_idx, jpp_order);
+            const auto begin = departure_times.begin();
+            const auto it = std::lower_bound(begin + idx_range.first, begin + idx_range.second,
+                                             DateTimeUtils::hour(dt), std::less<DateTime>());
 
-    // number of vj in an jp
-    IdxMap<type::JourneyPattern, size_t> nb_trips;
+            const type::idx_t idx = it - begin;
+            const type::idx_t end = idx_range.second;
+            return boost::make_iterator_range(st_forward.begin() + idx, st_forward.begin() + end);
+        }
+        boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>
+        stop_time_range_before(const JpIdx jp_idx, const uint16_t jpp_order, const DateTime dt) const {
+            const auto idx_range = stop_time_idx_range(jp_idx, jpp_order);
+            const auto begin = arrival_times.begin();
+            const auto it = std::lower_bound(begin + idx_range.first, begin + idx_range.second,
+                                             DateTimeUtils::hour(dt), std::greater<DateTime>());
+
+            const type::idx_t idx = it - begin;
+            const type::idx_t end = idx_range.second;
+            return boost::make_iterator_range(st_backward.begin() + idx, st_backward.begin() + end);
+        }
+    private:
+        std::pair<type::idx_t, type::idx_t>
+        stop_time_idx_range(const JpIdx jp_idx, const uint16_t jpp_order) const {
+            const type::idx_t begin = first_stop_time[jp_idx] + jpp_order * nb_trips[jp_idx];
+            const type::idx_t end = begin + nb_trips[jp_idx];
+            return std::make_pair(begin, end);
+        }
+
+        // arrival_times (resp. departure_times) are the different arrival
+        // (resp. departure) times of each stop time sorted by
+        //     lex(jp, jpp, arrival_time (resp. departure_time)).
+        //
+        // Then, you have:
+        //     for all i, st_forward[i]->departure_time == departure_times[i]
+        //     for all i, st_backward[i]->arrival_time == arrival_times[i]
+        //
+        // st_forward and st_backward contains StopTime* from
+        // std::vector<StopTime> (in VehicleJourney).  This is safe as
+        // pt_data MUST be const for a given dataRAPTOR (else, you'll have
+        // much troubles, and not only from here).
+        std::vector<DateTime> arrival_times;
+        std::vector<DateTime> departure_times;
+        std::vector<const type::StopTime*> st_forward;
+        std::vector<const type::StopTime*> st_backward;
+
+        // index of the first st of a jp in the previous vectors
+        IdxMap<type::JourneyPattern, size_t> first_stop_time;
+
+        // number of vj in an jp
+        IdxMap<type::JourneyPattern, size_t> nb_trips;
+    };
+    BestStopTimeData best_stop_time_data;
 
     // blank labels, to fast init labels with a memcpy
     Labels labels_const;

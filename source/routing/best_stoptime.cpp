@@ -65,40 +65,26 @@ next_valid_discrete_pick_up(const JpIdx jp_idx,
                             const type::VehicleProperties& required_vehicle_properties,
                             bool disruption_active) {
 
-    if (dataRaptor.departure_times.empty()) {
+    if (dataRaptor.best_stop_time_data.empty()) {
         return {nullptr, DateTimeUtils::inf};
     }
-    const auto begin = dataRaptor.departure_times.begin() +
-        dataRaptor.first_stop_time[jp_idx] +
-        jpp_order * dataRaptor.nb_trips[jp_idx];
-    const auto end_it = begin + dataRaptor.nb_trips[jp_idx];
-    const auto it = std::lower_bound(begin, end_it, DateTimeUtils::hour(dt),
-                               bound_predicate_earliest);
-
-    type::idx_t idx = it - dataRaptor.departure_times.begin();
-    const type::idx_t end = (begin - dataRaptor.departure_times.begin()) +
-                           dataRaptor.nb_trips[jp_idx];
-
 
     auto date = DateTimeUtils::date(dt);
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = dataRaptor.st_forward[idx];
+    for (const auto* st: dataRaptor.best_stop_time_data.stop_time_range_after(jp_idx, jpp_order, dt)) {
         BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
         BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, false, disruption_active, reconstructing_path, required_vehicle_properties)) {
-                return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
     //if none was found, we try again the next day
-    idx = begin - dataRaptor.departure_times.begin();
     date++;
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = dataRaptor.st_forward[idx];
+    for (const auto* st: dataRaptor.best_stop_time_data.stop_time_range_forward(jp_idx, jpp_order)) {
         BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
         BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, false, disruption_active, reconstructing_path, required_vehicle_properties)) {
-                return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
@@ -211,36 +197,25 @@ previous_valid_discrete_drop_off(const JpIdx jp_idx,
                                  const type::VehicleProperties& required_vehicle_properties,
                                  bool disruption_active) {
     //On cherche le plus grand stop time de la journey_pattern <= dt.hour()
-    if (dataRaptor.arrival_times.empty()) {
+    if (dataRaptor.best_stop_time_data.empty()) {
         return {nullptr, DateTimeUtils::inf};
     }
-    const auto begin = dataRaptor.arrival_times.begin() +
-                       dataRaptor.first_stop_time[jp_idx] +
-                       jpp_order * dataRaptor.nb_trips[jp_idx];
-    const auto end_it = begin + dataRaptor.nb_trips[jp_idx];
-    const auto it = std::lower_bound(begin, end_it, DateTimeUtils::hour(dt), bound_predicate_tardiest);
-
-    type::idx_t idx = it - dataRaptor.arrival_times.begin();
-    const type::idx_t end = (begin - dataRaptor.arrival_times.begin()) + dataRaptor.nb_trips[jp_idx];
 
     auto date = DateTimeUtils::date(dt);
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = dataRaptor.st_backward[idx];
+    for (const auto* st: dataRaptor.best_stop_time_data.stop_time_range_before(jp_idx, jpp_order, dt)) {
         BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
         BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, true, disruption_active, !reconstructing_path, required_vehicle_properties)) {
-                return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
     if (date == 0) {
         return {nullptr, DateTimeUtils::not_valid};
     }
-    idx = begin - dataRaptor.arrival_times.begin();
 
     --date;
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = dataRaptor.st_backward[idx];
+    for (const auto* st: dataRaptor.best_stop_time_data.stop_time_range_backward(jp_idx, jpp_order)) {
         BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
         BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, true, disruption_active, !reconstructing_path, required_vehicle_properties)) {
