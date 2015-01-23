@@ -300,59 +300,6 @@ def check_links(object, tester):
     return links
 
 
-def walk_dict(tree, visitor):
-    """
-    depth first search on a dict.
-    call the visit(elem) method on the visitor for each node
-
-    >>> bob = {'tutu': 1,
-    ... 'tata': [1, 2],
-    ... 'toto': {'bob':12, 'bobette': 13, 'nested_bob': {'bob': 3}},
-    ... 'tete': ('tuple1', ['ltuple1', 'ltuple2']),
-    ... 'titi': [{'a':1}, {'b':1}]}
-
-    >>> def my_visitor(name, val):
-    ...     print "{}={}".format(name, val)
-
-    >>> walk_dict(bob, my_visitor)
-    titi={'b': 1}
-    b=1
-    titi={'a': 1}
-    a=1
-    tete=ltuple2
-    tete=ltuple1
-    tete=tuple1
-    tutu=1
-    toto={'bobette': 13, 'bob': 12, 'nested_bob': {'bob': 3}}
-    nested_bob={'bob': 3}
-    bob=3
-    bob=12
-    bobette=13
-    tata=2
-    tata=1
-    """
-    queue = deque()
-
-    def add_elt(name, elt, first=False):
-        if isinstance(elt, (list, tuple)):
-            for val in elt:
-                queue.append((name, val))
-        elif hasattr(elt, 'iteritems'):
-            for k, v in elt.iteritems():
-                queue.append((k, v))
-        elif first:  # for the first elt, we add it even if it is no collection
-            queue.append((name, elt))
-
-    add_elt("main", tree, first=True)
-    while queue:
-        elem = queue.pop()
-        #we don't want to visit the list, we'll visit each node separatly
-        if not isinstance(elem[1], (list, tuple)):
-            visitor(elem[0], elem[1])
-        #for list and tuple, the name is the parent's name
-        add_elt(elem[0], elem[1])
-
-
 def check_internal_links(response, tester):
     """
     We want to check that all 'internal' link are correctly linked to an element in the response

@@ -212,6 +212,11 @@ class V1Routing(AModule):
                           region + '<uri:uri>/disruptions',
                           endpoint='disruptions')
 
+        self.add_resource(Disruptions.TrafficReport,
+                          region + 'traffic_report',
+                          region + '<uri:uri>/traffic_report',
+                          endpoint='traffic_report')
+
         self.add_resource(Status.Status,
                           region + 'status',
                           endpoint='status')
