@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "raptor.h"
 #include "raptor_visitors.h"
+#include "best_stoptime.h"
 #include <boost/foreach.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/adaptor/filtered.hpp>
