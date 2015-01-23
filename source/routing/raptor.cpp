@@ -566,18 +566,17 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
          */
         std::vector<RoutingState> states_stay_in;
         for (auto q_elt: Q) {
+            const JpIdx jp_idx = q_elt.first;
             if(q_elt.second != visitor.init_queue_item()) {
                 JppIdx boarding_idx; //< The boarding journey pattern point
                 DateTime workingDt = visitor.worst_datetime();
                 typename Visitor::stop_time_iterator it_st;
                 uint16_t l_zone = std::numeric_limits<uint16_t>::max();
-                const auto* journey_pattern = get_jp(q_elt.first);
-                const auto & jpp_to_explore = visitor.journey_pattern_points(
-                                                this->data.pt_data->journey_pattern_points,
-                                                journey_pattern, q_elt.second);
+                const auto& jpps_to_explore = visitor.jpps_from_order(data.dataRaptor->jpps_from_jp,
+                                                                      jp_idx,
+                                                                      q_elt.second);
 
-                BOOST_FOREACH(const type::JourneyPatternPoint* jpp, jpp_to_explore) {
-                    const JppIdx jpp_idx = JppIdx(*jpp);
+                for (const auto& jpp: jpps_to_explore) {
                     if(boarding_idx.is_valid()) {
                         ++it_st;
                         // We update workingDt with the new arrival time
@@ -591,18 +590,18 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                         if(st.valid_end(visitor.clockwise())&&
                                 (l_zone == std::numeric_limits<uint16_t>::max() ||
                                  l_zone != st.local_traffic_zone)) {
-                            const DateTime bound = (visitor.comp(best_labels[jpp_idx], b_dest.best_now) || !global_pruning) ?
-                                                        best_labels[jpp_idx] : b_dest.best_now;
+                            const DateTime bound = (visitor.comp(best_labels[jpp.idx], b_dest.best_now) || !global_pruning) ?
+                                                        best_labels[jpp.idx] : b_dest.best_now;
                             // We want to update the labels, if it's better than the one computed before
                             // Or if it's an destination point if it's equal and not unitialized before
-                            const bool best_add_result = this->b_dest.add_best(visitor, jpp_idx, workingDt, this->count);
+                            const bool best_add_result = this->b_dest.add_best(visitor, jpp.idx, workingDt, this->count);
                             if(visitor.comp(workingDt, bound) || best_add_result ) {
-                                working_labels.mut_dt_pt(jpp_idx) = workingDt;
-                                working_labels.mut_boarding_jpp_pt(jpp_idx) = boarding_idx;
-                                best_labels[jpp_idx] = working_labels.dt_pt(jpp_idx);
-                                auto& best_jpp = best_jpp_by_sp[SpIdx(*jpp->stop_point)];
+                                working_labels.mut_dt_pt(jpp.idx) = workingDt;
+                                working_labels.mut_boarding_jpp_pt(jpp.idx) = boarding_idx;
+                                best_labels[jpp.idx] = working_labels.dt_pt(jpp.idx);
+                                auto& best_jpp = best_jpp_by_sp[jpp.sp_idx];
                                 if(!best_jpp.is_valid() || visitor.comp(workingDt, working_labels.dt_pt(best_jpp))) {
-                                    best_jpp = jpp_idx;
+                                    best_jpp = jpp.idx;
                                     end_algorithm = false;
                                 }
                             }
@@ -612,15 +611,17 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     // We try to get on a vehicle, if we were already on a vehicle, but we arrived
                     // before on the previous via a connection, we try to catch a vehicle leaving this
                     // journey pattern point before
-                    const DateTime previous_dt = prec_labels.dt_transfer(jpp_idx);
-                    if(prec_labels.transfer_is_initialized(jpp_idx) &&
+                    const DateTime previous_dt = prec_labels.dt_transfer(jpp.idx);
+                    if(prec_labels.transfer_is_initialized(jpp.idx) &&
                        (!boarding_idx.is_valid() || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
-                        const auto tmp_st_dt = best_stop_time(jpp, previous_dt,
-                                               accessibilite_params.vehicle_properties,
-                                               visitor.clockwise(), disruption_active, data);
+                        const auto tmp_st_dt =
+                            best_stop_time(jp_idx, jpp.order, previous_dt,
+                                           accessibilite_params.vehicle_properties,
+                                           visitor.clockwise(), disruption_active, data,
+                                           false, jpp.has_freq);
 
                         if(tmp_st_dt.first != nullptr && (!boarding_idx.is_valid() || tmp_st_dt.first != &*it_st || tmp_st_dt.second != workingDt)) {
-                            boarding_idx = jpp_idx;
+                            boarding_idx = jpp.idx;
                             it_st = visitor.first_stoptime(*tmp_st_dt.first);
                             workingDt = tmp_st_dt.second;
                             BOOST_ASSERT(visitor.comp(previous_dt, workingDt) || previous_dt == workingDt);
