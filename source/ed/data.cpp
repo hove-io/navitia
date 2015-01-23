@@ -211,12 +211,14 @@ void Data::shift_stop_times() {
 
 
 void Data::complete(){
-    shift_stop_times();
     build_journey_patterns();
-    build_grid_validity_pattern();
-    build_associated_calendar();
     build_journey_pattern_points();
     build_block_id();
+
+    build_grid_validity_pattern();
+    build_associated_calendar();
+
+    shift_stop_times();
     finalize_frequency();
 
     ::ed::normalize_uri(journey_patterns);
@@ -627,6 +629,7 @@ Data::find_matching_calendar(const Data&, const std::string& name, const types::
 
 void Data::build_grid_validity_pattern() {
     for(types::Calendar* cal : this->calendars){
+        cal->validity_pattern.beginning_date = meta.production_date.begin();
         cal->build_validity_pattern(meta.production_date);
     }
 }
@@ -689,6 +692,7 @@ void Data::build_associated_calendar() {
         std::stringstream cal_uri;
         for (auto cal_bit_set: close_cal) {
             auto associated_calendar = new types::AssociatedCalendar();
+            associated_calendar->idx = this->associated_calendars.size();
             this->associated_calendars.push_back(associated_calendar);
 
             associated_calendar->calendar = cal_bit_set.first;
