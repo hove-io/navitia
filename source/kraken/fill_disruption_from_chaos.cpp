@@ -327,6 +327,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             // We copy this journey_pattern
             const auto jp_ref = stop_point->journey_pattern_point_list.front()->journey_pattern;
             auto jp = new nt::JourneyPattern(*jp_ref);
+            jp->journey_pattern_point_list.clear();
+            jp->discrete_vehicle_journey_list.clear();
+            jp->frequency_vehicle_journey_list.clear();
             jp->uri = make_uri(jp->uri, pt_data.journey_patterns_map);
             jp->idx = pt_data.journey_patterns.size();
             pt_data.journey_patterns.push_back(jp);
@@ -353,6 +356,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             // We copy the vehicle_journeys of the journey_pattern_points
             for (const auto& vj_ref : jp_ref->discrete_vehicle_journey_list) {
                 auto vj = new nt::DiscreteVehicleJourney(*vj_ref);
+                vj->stop_time_list.clear();
+                vj->journey_pattern = jp;
                 vj->idx = pt_data.vehicle_journeys.size();
                 pt_data.vehicle_journeys.push_back(vj);
                 vj->uri = make_uri(vj->uri, pt_data.vehicle_journeys_map);
@@ -404,6 +409,13 @@ void apply_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
     boost::for_each(impact->informed_entities, boost::apply_visitor(v));
 }
 
+template<typename T>
+void reindex(std::vector<T> vec) {
+    for (size_t i=0; i<vec.size(); ++i) {
+        vec[i]->idx = i;
+    }
+}
+
 struct delete_impacts_visitor : public apply_impacts_visitor {
     delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta) : 
@@ -418,7 +430,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         return true;
     }
 
-    void operator()(const nt::StopArea*) override {
+    void operator()(const nt::StopArea* stop_area) override {
         for (auto journey_pattern : impact->impacted_journey_patterns) {
             for (auto& vehicle_journey : journey_pattern->discrete_vehicle_journey_list) {
                 const auto it_map = pt_data.vehicle_journeys_map.find(vehicle_journey->uri);
@@ -427,14 +439,20 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 }
                 const auto it_vec = pt_data.vehicle_journeys.begin() + vehicle_journey->idx;
                 pt_data.vehicle_journeys.erase(it_vec);
+                reindex(pt_data.vehicle_journeys);
             }
             for (auto journey_pattern_point : journey_pattern->journey_pattern_point_list) {
                 auto it_map = pt_data.journey_pattern_points_map.find(journey_pattern_point->uri);
                 if (it_map != pt_data.journey_pattern_points_map.end()) {
                     pt_data.journey_pattern_points_map.erase(it_map);
                 }
+                journey_pattern_point->stop_point->journey_pattern_point_list.erase(
+                            boost::remove_if(journey_pattern_point->stop_point->journey_pattern_point_list,
+                                             [&](nt::JourneyPatternPoint* jpp) {return journey_pattern_point == jpp;})
+                            );
                 const auto it_vec = pt_data.journey_pattern_points.begin() + journey_pattern_point->idx;
                 pt_data.journey_pattern_points.erase(it_vec);
+                reindex(pt_data.journey_pattern_points);
                 delete journey_pattern_point;
             }
             auto it_map = pt_data.journey_patterns_map.find(journey_pattern->uri);
@@ -443,10 +461,16 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             }
             const auto it_vec = pt_data.journey_patterns.begin() + journey_pattern->idx;
             pt_data.journey_patterns.erase(it_vec);
+            reindex(pt_data.journey_pattern_points);
             delete journey_pattern;
         }
-    }
 
+        for (auto stop_point : stop_area->stop_point_list) {
+            for (auto journey_pattern_point : stop_point->journey_pattern_point_list) {
+                apply_impacts_visitor::operator ()(journey_pattern_point->journey_pattern);
+            }
+        }
+    }
 };
 
 void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
