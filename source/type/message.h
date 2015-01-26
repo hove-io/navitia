@@ -183,7 +183,7 @@ struct Impact {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & created_at & updated_at & application_periods & severity & informed_entities & messages & disruption;
+        ar & uri & created_at & updated_at & application_periods & severity & informed_entities & messages & impacted_journey_patterns & disruption;
     }
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
