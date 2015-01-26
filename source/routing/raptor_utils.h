@@ -29,12 +29,20 @@ www.navitia.io
 */
 
 #pragma once
-#include <unordered_map>
-#include "type/type.h"
+
 #include "type/datetime.h"
 #include "routing/idx_map.h"
 
-namespace navitia { namespace routing {
+namespace navitia {
+
+namespace type {
+struct JourneyPatternPoint;
+struct JourneyPattern;
+struct StopPoint;
+struct StopTime;
+}
+
+namespace routing {
 
 typedef Idx<type::JourneyPatternPoint> JppIdx;
 typedef Idx<type::JourneyPattern> JpIdx;
@@ -186,4 +194,6 @@ struct best_dest {
         best_now = DateTimeUtils::min;
     }
 };
-}}
+
+} // namespace routing
+} // namespace navitia

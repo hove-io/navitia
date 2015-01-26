@@ -29,8 +29,9 @@ www.navitia.io
 */
 
 #include "get_stop_times.h"
-#include "routing/best_stoptime.h"
+#include "routing/next_stop_time.h"
 #include "type/pb_converter.h"
+
 namespace navitia { namespace timetables {
 
 std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& journey_pattern_points, 
@@ -42,6 +43,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
                                                const type::AccessibiliteParams& accessibilite_params) {
     std::vector<datetime_stop_time> result;
     auto test_add = true;
+    routing::NextStopTime next_st = routing::NextStopTime(data);
 
     // Next departure for the next stop: we use it not to have twice the same stop_time
     // We init it with the wanted date time
@@ -57,12 +59,11 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            auto st = routing::earliest_stop_time(jpp,
-                                                  next_requested_datetime[jpp_idx],
-                                                  data,
-                                                  disruption_active,
-                                                  false,
-                                                  accessibilite_params.vehicle_properties);
+            auto st = next_st.next_forward_stop_time(routing::JppIdx(*jpp),
+                                                     next_requested_datetime[jpp_idx],
+                                                     accessibilite_params.vehicle_properties,
+                                                     disruption_active,
+                                                     false);
 
             if (st.first != nullptr) {
                 DateTime dt_temp = st.second;
@@ -97,7 +98,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
         if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
             continue;
         }
-        auto st = routing::get_all_stop_times(jpp, calendar_id, accessibilite_params.vehicle_properties);
+        auto st = get_all_stop_times(jpp, calendar_id, accessibilite_params.vehicle_properties);
 
         //afterward we filter the datetime not in [dt, max_dt]
         //the difficult part comes from the fact that for calendar dt are max_dt are not really datetime,
@@ -119,6 +120,72 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
     }
 
     return result;
+}
+
+/** get all stop times for a given jpp and a given calendar
+ *
+ * earliest stop time for calendar is different than for a datetime
+ * we have to consider only the first theoric vj of all meta vj for the given jpp
+ * for all those vj, we select the one associated to the calendar,
+ * and we loop through all stop times for the jpp
+*/
+std::vector<std::pair<uint32_t, const type::StopTime*>>
+get_all_stop_times(const type::JourneyPatternPoint* jpp,
+                   const std::string calendar_id,
+                   const type::VehicleProperties& vehicle_properties) {
+
+    std::set<const type::MetaVehicleJourney*> meta_vjs;
+    jpp->journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj ) {
+        assert(vj.meta_vj);
+        meta_vjs.insert(vj.meta_vj);
+        return true;
+    });
+    std::vector<const type::VehicleJourney*> vjs;
+    for (const auto meta_vj: meta_vjs) {
+        if (meta_vj->associated_calendars.find(calendar_id) == meta_vj->associated_calendars.end()) {
+            //meta vj not associated with the calender, we skip
+            continue;
+        }
+        //we can get only the first theoric one, because BY CONSTRUCTION all theoric vj have the same local times
+        vjs.push_back(meta_vj->theoric_vj.front());
+    }
+    if (vjs.empty()) {
+        return {};
+    }
+
+    std::vector<std::pair<DateTime, const type::StopTime*>> res;
+    for (const auto vj: vjs) {
+        //loop through stop times for stop jpp->stop_point
+        const auto& st = *(vj->stop_time_list.begin() + jpp->order);
+        if (! st.vehicle_journey->accessible(vehicle_properties)) {
+            continue; //the stop time must be accessible
+        }
+        if (st.is_frequency()) {
+            //if it is a frequency, we got to expand the timetable
+
+            //Note: end can be lower than start, so we have to cycle through the day
+            const auto freq_vj = static_cast<const type::FrequencyVehicleJourney*>(vj);
+            bool is_looping = (freq_vj->start_time > freq_vj->end_time);
+            auto stop_loop = [freq_vj, is_looping](u_int32_t t) {
+                if (! is_looping)
+                    return t <= freq_vj->end_time;
+                return t > freq_vj->end_time;
+            };
+            for (auto time = freq_vj->start_time; stop_loop(time); time += freq_vj->headway_secs) {
+                if (is_looping && time > DateTimeUtils::SECONDS_PER_DAY) {
+                    time -= DateTimeUtils::SECONDS_PER_DAY;
+                }
+
+                //we need to convert this to local there since we do not have a precise date (just a period)
+                res.push_back({time + freq_vj->utc_to_local_offset, &st});
+            }
+        } else {
+            //same utc tranformation
+            res.push_back({st.departure_time + vj->utc_to_local_offset, &st});
+        }
+    }
+
+    return res;
 }
 
 }} // namespace navitia::timetables

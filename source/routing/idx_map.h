@@ -33,16 +33,18 @@ www.navitia.io
 #include <vector>
 #include <iterator>
 #include <boost/range/iterator_range_core.hpp>
-#include "type/type.h" // for type::idx_t
 
 namespace navitia { namespace routing {
 
+typedef uint32_t idx_t;
+const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
+
 // Strong typing of index with a phantom type!
 template<typename T> struct Idx {
-    inline explicit Idx(): val(type::invalid_idx) {}
-    inline explicit Idx(const type::idx_t& v): val(v) {}
+    inline explicit Idx(): val(invalid_idx) {}
+    inline explicit Idx(const idx_t& v): val(v) {}
     inline explicit Idx(const T& o): val(o.idx) {}
-    inline bool is_valid() const { return val != type::invalid_idx; }
+    inline bool is_valid() const { return val != invalid_idx; }
     inline bool operator==(const Idx& other) const { return val == other.val; }
     inline bool operator!=(const Idx& other) const { return val != other.val; }
     inline bool operator<(const Idx& other) const { return val < other.val; }
@@ -50,7 +52,7 @@ template<typename T> struct Idx {
         return os << idx.val;
     }
 
-    type::idx_t val; // the value of the index
+    idx_t val; // the value of the index
 };
 
 template<typename K, typename I>
@@ -65,7 +67,7 @@ public:
     typedef typename traits::difference_type difference_type;
     
     inline IdxMapIterator() {}
-    inline IdxMapIterator(const typename type::idx_t& i, I it): idx(i), iterator(it) {}
+    inline IdxMapIterator(const idx_t& i, I it): idx(i), iterator(it) {}
 
 private:
     friend class boost::iterator_core_access;
@@ -83,7 +85,7 @@ private:
         return {K(idx), *iterator};
     }
 
-    type::idx_t idx;
+    idx_t idx;
     I iterator;
 };
 

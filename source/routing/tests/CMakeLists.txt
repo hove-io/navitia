@@ -15,8 +15,8 @@ target_link_libraries(routing_api_test ed data types routing fare pb_lib thermom
     autocomplete utils  ${BOOST_LIBS} log4cplus pthread protobuf)
 ADD_BOOST_TEST(routing_api_test)
 
-add_executable(best_stoptime_test best_stoptime.cpp)
-target_link_libraries(best_stoptime_test ed connectors data fare types routing
+add_executable(next_stop_time_test next_stop_time_test.cpp)
+target_link_libraries(next_stop_time_test ed connectors data fare types routing
     autocomplete pb_lib thermometer autocomplete georef utils ${BOOST_LIBS} log4cplus protobuf)
 ADD_BOOST_TEST(best_stoptime_test)
 
