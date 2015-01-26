@@ -133,7 +133,7 @@ class Disruptions(ResourceUri):
 
 
 traffic = {
-    "traffic_report": NonNullList(NonNullNested(disruption), attribute='disruptions'),
+    "traffic_reports": NonNullList(NonNullNested(disruption), attribute='disruptions'),
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
     "disruptions": DisruptionsField,

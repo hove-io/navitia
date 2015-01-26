@@ -54,9 +54,9 @@ class TestDisruptions(AbstractTestFixture):
         one impacted stop_area
         """
 
-        response = self.query_region('traffic_report?' + default_date_filter, display=True)
+        response = self.query_region('traffic_reports?' + default_date_filter, display=True)
 
-        traffic_report = get_not_null(response, 'traffic_report')
+        traffic_report = get_not_null(response, 'traffic_reports')
 
         # the disruptions are grouped by network and we have only one network
         assert len(traffic_report) == 1
@@ -196,13 +196,13 @@ class TestDisruptions(AbstractTestFixture):
 
         """
 
-        response = self.query_region('traffic_report?duration=P3D&' + default_date_filter)
+        response = self.query_region('traffic_reports?duration=P3D&' + default_date_filter)
 
         impacts = get_impacts(response)
         assert len(impacts) == 2
         assert 'later_impact' not in impacts
 
-        response = self.query_region('traffic_report?duration=P3Y&' + default_date_filter)
+        response = self.query_region('traffic_reports?duration=P3Y&' + default_date_filter)
 
         impacts = get_impacts(response)
         assert len(impacts) == 3
@@ -216,14 +216,14 @@ class TestDisruptions(AbstractTestFixture):
 
         so at 9 it is not in the list, at 11, we get it
         """
-        response = self.query_region('traffic_report?datetime=20140101T000000'
+        response = self.query_region('traffic_reports?datetime=20140101T000000'
                                      '&_current_datetime=20140128T090000', display=True)
 
         impacts = get_impacts(response)
         assert len(impacts) == 2
         assert 'impact_published_later' not in impacts
 
-        response = self.query_region('traffic_report?datetime=20140101T000000'
+        response = self.query_region('traffic_reports?datetime=20140101T000000'
                                      '&_current_datetime=20140128T130000', display=True)
 
         impacts = get_impacts(response)

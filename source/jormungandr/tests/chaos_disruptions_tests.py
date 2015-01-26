@@ -389,10 +389,10 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         test /disruptions and check that an update of a disruption is correctly done
         """
         self.wait_for_rabbitmq_cnx()
-        query = 'traffic_report?datetime=20140101T000000&_current_datetime=20140101T000000'
+        query = 'traffic_reports?datetime=20140101T000000&_current_datetime=20140101T000000'
         response = self.query_region(query)
 
-        disrupt = get_disruptions(response['traffic_report'][0]['network'], response)
+        disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
         eq_(len(disrupt), 1)
 
@@ -407,7 +407,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         response = self.query_region(query)
 
-        disrupt = get_disruptions(response['traffic_report'][0]['network'], response)
+        disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
         eq_(len(disrupt), 2)
 
@@ -424,7 +424,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         response = self.query_region(query)
 
-        disrupt = get_disruptions(response['traffic_report'][0]['network'], response)
+        disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
         eq_(len(disrupt), 2)
         for disruption in disrupt:
@@ -440,7 +440,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         response = self.query_region(query)
 
-        disrupt = get_disruptions(response['traffic_report'][0]['network'], response)
+        disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
         eq_(len(disrupt), 1)
         for disruption in disrupt:
