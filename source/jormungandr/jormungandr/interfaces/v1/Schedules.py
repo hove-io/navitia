@@ -86,6 +86,11 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="Id of the calendar")
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
+        parser_get.add_argument("_use_old_disruptions", type=bool,
+                                description="temporary boolean to use the old disruption interface. "
+                                            "Will be deleted soon, just needed for synchronization with the front end",
+                                default=False)
+
         self.method_decorators.append(complete_links(self))
 
     def get(self, uri=None, region=None, lon=None, lat=None):

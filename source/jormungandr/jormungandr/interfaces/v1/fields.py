@@ -390,6 +390,7 @@ disruption_message = {
 disruption_severity = {
     "name": fields.String(),
     "effect": fields.String(),
+    "color": fields.String(),
     "color": fields.String()
 }
 
@@ -443,7 +444,7 @@ display_informations_route = {
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
     "messages": NonNullList(NonNullNested(generic_message)),
-    "disruptions": NonNullList(NonNullNested(disruption)),
+    "links": DisruptionLinks(),
 }
 
 display_informations_vj = {
@@ -458,7 +459,7 @@ display_informations_vj = {
     "equipments": equipments(attribute="has_equipments"),
     "headsign": fields.String(attribute="headsign"),
     "messages": NonNullList(NonNullNested(generic_message)),
-    "disruptions": NonNullList(NonNullNested(disruption))
+    "links": DisruptionLinks(),
 }
 
 coord = {
@@ -690,7 +691,8 @@ instance_parameters = {
 instance_status_with_parameters = deepcopy(instance_status)
 instance_status_with_parameters['parameters'] = fields.Nested(instance_parameters, allow_null=True)
 
-class use_old_disruptions:
+
+class use_old_disruptions_if_needed:
     """
     delete disruption links and put the disruptions directly in the owner objets
 

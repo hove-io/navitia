@@ -41,7 +41,7 @@ from errors import ManageError
 from datetime import datetime
 import aniso8601
 from datetime import timedelta
-from jormungandr.interfaces.v1.fields import use_old_disruptions, DisruptionsField
+from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
 
 disruption = {
     "network": PbField(network, attribute='network'),
@@ -98,7 +98,7 @@ class Disruptions(ResourceUri):
                                             "Will be deleted soon, just needed for synchronization with the front end",
                                 default=False)
 
-    @use_old_disruptions()
+    @use_old_disruptions_if_needed()
     @marshal_with(disruptions)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
@@ -170,7 +170,7 @@ class TrafficReport(ResourceUri):
                                 dest="forbidden_uris[]",
                                 action="append")
 
-    @use_old_disruptions()
+    @use_old_disruptions_if_needed()
     @marshal_with(traffic)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):

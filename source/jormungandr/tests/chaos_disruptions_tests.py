@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from collections import defaultdict
 from kombu.connection import BrokerConnection
 from kombu.entity import Exchange
 from kombu.pools import producers
@@ -121,8 +122,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         #at first no disruption
         assert 'disruptions' not in stop
 
-        self.send_chaos_disruption_and_sleep("bob_the_disruption", "stopB",
-                "stop_area")
+        self.send_chaos_disruption_and_sleep("bob_the_disruption", "stopB", "stop_area")
 
         #and we call again, we must have the disruption now
         response = self.query_region('stop_areas/stopB')
@@ -130,7 +130,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert len(stops) == 1
         stop = stops[0]
 
-        disruptions = get_not_null(stop, 'disruptions')
+        disruptions = get_disruptions(stop, response)
 
         #at first we got only one disruption on B
         assert len(disruptions) == 1
@@ -168,13 +168,11 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         assert len(lines) == 1
         line = lines[0]
 
-        disruptions = get_not_null(line, 'disruptions')
+        disruptions = get_disruptions(line, response)
 
         #at first we got only one disruption
         assert len(disruptions) == 1
         assert any(d['uri'] == 'bobette_the_disruption' for d in disruptions)
-
-
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -197,7 +195,8 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         assert stops_b_to
 
         for b in stops_b_to:
-            assert 'disruptions' not in b['stop_area']
+            assert not get_disruptions(b['stop_area'], response)
+
         #we create a list with every 'to' section to the stop B (the one we added the disruption on)
         self.send_chaos_disruption_and_sleep("bob_the_disruption", "stopB", "stop_area")
 
@@ -212,12 +211,13 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         assert stops_b_to
 
         for b in stops_b_to:
-            disruptions = get_not_null(b['stop_area'], 'disruptions')
+            disruptions = get_disruptions(b['stop_area'], response)
 
             #at first we got only one disruption on A
             assert len(disruptions) == 1
 
             assert any(d['uri'] == 'bob_the_disruption' for d in disruptions)
+
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
@@ -229,13 +229,11 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         ChaosDisruptionsFixture.__init__(self)
 
     def get_nb_disruptions(self):
-        nb_disruptions_map = {}
+        nb_disruptions_map = defaultdict(int)
+
         def set_nb_disruptions(l):
             for i in l:
-                if not "disruptions" in i:
-                    nb_disruptions_map[i['id']] = 0
-                    continue
-                nb_disruptions_map[i['id']] = len(i['disruptions'])
+                nb_disruptions_map[i['id']] = len([link for link in i['links'] if link['type'] == 'disruption'])
 
         response = self.query_region("routes")
         set_nb_disruptions(response['routes'])
@@ -253,16 +251,16 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         self.send_chaos_disruption_and_sleep(disruption_uri, object_id, type_, blocking=True)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions_map[object_id] - nb_disruptions) == 1
-        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+        response = self.query_region(journey_basic_query + "&disruption_active=true")
 
         links = []
         def get_type_id(k, v):
-            if k != "links" or not "type" in v or not "id" in v or v["type"] != type_:
+            if k != "links" or "type" not in v or "id" not in v or v["type"] != type_:
                 return
             links.append(v["id"])
 
-        walk_dict(response, get_type_id)
-        assert all(map(lambda id_ : id_ != object_id, links))
+        utils.walk_dict(response, get_type_id)
+        assert all(map(lambda id_: id_ != object_id, links))
 
         #We delete the disruption
         nb_disruptions_map = self.get_nb_disruptions()
@@ -271,11 +269,10 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
                 blocking=True, is_deleted=True)
         nb_disruptions_map = self.get_nb_disruptions()
         assert (nb_disruptions - nb_disruptions_map[object_id]) == 1
-        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+        response = self.query_region(journey_basic_query + "&disruption_active=true")
         links = []
-        walk_dict(response, get_type_id)
-        assert any(map(lambda id_ : id_ == object_id, links))
-
+        utils.walk_dict(response, get_type_id)
+        assert any(map(lambda id_: id_ == object_id, links))
 
     def test_disruption_on_journey(self):
         """
@@ -284,16 +281,13 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         Then we delete it and test if use the blocked object
         """
         self.wait_for_rabbitmq_cnx()
-        self.get_nb_disruptions()
-        response = self.query_region(journey_basic_query)
+        response = self.query_region(journey_basic_query, display=True)
 
         assert "journeys" in response
 
         self.run_check('A', 'line')
         self.run_check('A:0', 'route')
         self.run_check('base_network', 'network')
-
-
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -312,16 +306,32 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         response = self.query_region(journey_basic_query)
 
         assert "journeys" in response
+        disruptions = self.get_disruptions(response)
+        #no disruptions for the moment
+        assert not disruptions
 
         self.send_chaos_disruption_and_sleep("blocking_line_disruption", "A",
                 "line", blocking=True)
         self.send_chaos_disruption_and_sleep("blocking_network_disruption",
                 "base_network", "network", blocking=True)
 
-        response = self.query_region(journey_basic_query+ "&disruption_active=true")
+        response = self.query_region(journey_basic_query + "&disruption_active=true")
 
         assert all(map(lambda j: len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0,
                        response["journeys"]))
+
+        # we should then not have disruptions (since we don't get any journey)
+        disruptions = self.get_disruptions(response)
+        assert not disruptions
+
+        # we then query for the same journey but without disruptions,
+        # so we'll have a journey (but the disruptions will be displayed
+        response = self.query_region(journey_basic_query + "&disruption_active=false")
+        disruptions = self.get_disruptions(response)
+        assert disruptions
+        eq_(len(disruptions), 2)
+        assert 'blocking_line_disruption' in disruptions
+        assert 'blocking_network_disruption' in disruptions
 
         self.send_chaos_disruption_and_sleep("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
         response = self.query_region(journey_basic_query+ "&disruption_active=true")
@@ -330,11 +340,43 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
             if k != "links" or not "type" in v or not "id" in v or v["type"] != "line":
                 return
             links.append(v["id"])
-        walk_dict(response, get_line_id)
-        assert all(map(lambda id_ : id_ != "A", links))
+        utils.walk_dict(response, get_line_id)
+        assert all(map(lambda id_: id_ != "A", links))
+
+        #we also query without disruption and obviously we should not have the network disruptions
+        response = self.query_region(journey_basic_query + "&disruption_active=false")
+        disruptions = self.get_disruptions(response)
+        assert disruptions
+        eq_(len(disruptions), 1)
+        assert 'blocking_line_disruption' in disruptions
 
 
+    def get_disruptions(self, response):
+        """
+        return a map with the disruption id as key and the list of disruption + impacted object as value
+        """
+        disruption_by_obj = defaultdict(list)
 
+        all_disruptions = {d['id']: d for d in response['disruptions']}
+
+        def disruptions_filler(_, obj):
+            try:
+                if 'links' not in obj:
+                    return
+            except TypeError:
+                return
+
+            real_disruptions = [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
+
+            for d in real_disruptions:
+                disruption_by_obj[d['id']].append((d, obj))
+
+        utils.walk_dict(response, disruptions_filler)
+
+        print "============================="
+        print disruption_by_obj
+        print "+++++++++++++++++++++++++++++"
+        return disruption_by_obj
 
 
 
@@ -348,11 +390,12 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         test /disruptions and check that an update of a disruption is correctly done
         """
         self.wait_for_rabbitmq_cnx()
-        query = 'disruptions?datetime=20140101T000000&_current_datetime=20140101T000000'
+        query = 'traffic_report?datetime=20140101T000000&_current_datetime=20140101T000000'
         response = self.query_region(query)
 
-        assert response['disruptions'][0]['network']['disruptions']
-        eq_(len(response['disruptions'][0]['network']['disruptions']), 1)
+        disrupt = get_disruptions(response['traffic_report'][0]['network'], response)
+        assert disrupt
+        eq_(len(disrupt), 1)
 
         status = self.query_region('status')
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
@@ -365,12 +408,12 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         response = self.query_region(query)
 
-        assert 'disruptions' in response
-        eq_(len(response['disruptions']), 1)
-        assert response['disruptions'][0]['network']['disruptions']
-        eq_(len(response['disruptions'][0]['network']['disruptions']), 2)
-        for disruption in response['disruptions'][0]['network']['disruptions']:
-            if disruption['uri'] == 'test_disruption':
+        disrupt = get_disruptions(response['traffic_report'][0]['network'], response)
+        assert disrupt
+        eq_(len(disrupt), 2)
+
+        for disruption in disrupt:
+            if disruption['id'] == 'test_disruption':
                 eq_(disruption['messages'][0]['text'], 'message')
 
         status = self.query_region('status')
@@ -382,12 +425,11 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         response = self.query_region(query)
 
-        assert 'disruptions' in response
-        eq_(len(response['disruptions']), 1)
-        assert response['disruptions'][0]['network']['disruptions']
-        eq_(len(response['disruptions'][0]['network']['disruptions']), 2)
-        for disruption in response['disruptions'][0]['network']['disruptions']:
-            if disruption['uri'] == 'test_disruption':
+        disrupt = get_disruptions(response['traffic_report'][0]['network'], response)
+        assert disrupt
+        eq_(len(disrupt), 2)
+        for disruption in disrupt:
+            if disruption['id'] == 'test_disruption':
                 eq_(disruption['messages'][0]['text'], 'update')
 
         status = self.query_region('status')
@@ -398,10 +440,12 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         self.poll_until_reload(last_loaded_data)
 
         response = self.query_region(query)
-        assert response['disruptions'][0]['network']['disruptions']
-        eq_(len(response['disruptions'][0]['network']['disruptions']), 1)
-        for disruption in response['disruptions'][0]['network']['disruptions']:
-                assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
+
+        disrupt = get_disruptions(response['traffic_report'][0]['network'], response)
+        assert disrupt
+        eq_(len(disrupt), 1)
+        for disruption in disrupt:
+            assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
 
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
@@ -435,11 +479,19 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     # Impacts
     impact = disruption.impacts.add()
     impact.id = "impact_" + disruption_name + "_1"
-    impact.severity.id = "SeverityTest"
-    impact.severity.wording = "SeverityTest"
-    impact.severity.color = "#FFFF00"
     enums_impact = gtfs_realtime_pb2.Alert.DESCRIPTOR.enum_values_by_name
-    impact.severity.effect = enums_impact["NO_SERVICE"].number if blocking else enums_impact["UNKNOWN_EFFECT"].number
+    if blocking:
+        impact.severity.effect = enums_impact["NO_SERVICE"].number
+        impact.severity.id = 'blocking'
+        impact.severity.priority = 10
+        impact.severity.wording = "blocking"
+        impact.severity.color = "#FFFF00"
+    else:
+        impact.severity.effect = enums_impact["UNKNOWN_EFFECT"].number
+        impact.severity.id = ' not blocking'
+        impact.severity.priority = 1
+        impact.severity.wording = "not blocking"
+        impact.severity.color = "#FFFFF0"
 
     # ApplicationPeriods
     application_period = impact.application_periods.add()

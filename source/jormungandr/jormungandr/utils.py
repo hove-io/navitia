@@ -157,7 +157,7 @@ def walk_dict(tree, visitor):
     add_elt("main", tree, first=True)
     while queue:
         elem = queue.pop()
-        #we don't want to visit the list, we'll visit each node separatly
+        #we don't want to visit the list, we'll visit each node separately
         if not isinstance(elem[1], (list, tuple)):
             visitor(elem[0], elem[1])
         #for list and tuple, the name is the parent's name
@@ -170,7 +170,6 @@ def walk_protobuf(pb_object, visitor):
     >>> journeys = response_pb2.Response()
     >>> journey_standard = journeys.journeys.add()
     >>> journey_standard.type = "none"
-    >>> journey_standard.arrival_date_time = str_to_time_stamp("20131107T150000")
     >>> journey_standard.duration = 1
     >>> journey_standard.nb_transfers = 2
     >>> s = journey_standard.sections.add()
@@ -182,12 +181,12 @@ def walk_protobuf(pb_object, visitor):
     >>> journey_rapid.nb_transfers = 6
     >>> s = journey_rapid.sections.add()
     >>> s.duration = 7
-
+    >>>
     >>> from collections import defaultdict
     >>> types_counter = defaultdict(int)
     >>> def visitor(name, val):
     ...     types_counter[type(val)] +=1
-
+    >>>
     >>> walk_protobuf(journeys, visitor)
     >>> types_counter[response_pb2.Response]
     1
