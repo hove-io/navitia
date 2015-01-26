@@ -391,7 +391,7 @@ disruption_severity = {
     "name": fields.String(),
     "effect": fields.String(),
     "color": fields.String(),
-    "color": fields.String()
+    "priority": fields.Integer(),
 }
 
 disruption_marshaller = {

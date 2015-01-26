@@ -345,11 +345,13 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         #we also query without disruption and obviously we should not have the network disruptions
         response = self.query_region(journey_basic_query + "&disruption_active=false")
+        assert 'journeys' in response
         disruptions = self.get_disruptions(response)
         assert disruptions
         eq_(len(disruptions), 1)
         assert 'blocking_line_disruption' in disruptions
-
+        #we also check that the journey is tagged as disrupted
+        assert any(map(lambda j: j.get('status') == 'NO_SERVICE', response['journeys']))
 
     def get_disruptions(self, response):
         """
@@ -373,9 +375,6 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         utils.walk_dict(response, disruptions_filler)
 
-        print "============================="
-        print disruption_by_obj
-        print "+++++++++++++++++++++++++++++"
         return disruption_by_obj
 
 

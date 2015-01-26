@@ -120,6 +120,7 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     pb_severity->set_name(impact->severity->wording);
     pb_severity->set_color(impact->severity->color);
     pb_severity->set_effect(to_string(impact->severity->effect));
+    pb_severity->set_priority(impact->severity->priority);
 
     for (const auto& t: impact->disruption->tags) {
         pb_disrution->add_tags(t->name);
