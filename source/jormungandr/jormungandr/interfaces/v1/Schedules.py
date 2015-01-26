@@ -30,6 +30,7 @@
 # www.navitia.io
 
 from flask.ext.restful import fields, marshal_with, reqparse
+from flask.globals import g
 from jormungandr import i_manager, utils
 from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
@@ -42,6 +43,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
 from flask.ext.restful.types import natural, boolean
+from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
 from jormungandr.utils import ResourceUtc
 
 class RouteSchedulesLinkField(fields.Raw):
@@ -97,6 +99,8 @@ class Schedules(ResourceUri, ResourceUtc):
         args = self.parsers["get"].parse_args()
         args["nb_stoptimes"] = args["count"]
         args["interface_version"] = 1
+        g.use_old_disruptions = args['_use_old_disruptions']
+
         if uri is None:
             first_filter = args["filter"].lower().split("and")[0].strip()
             parts = first_filter.lower().split("=")
@@ -162,7 +166,8 @@ route_schedule_fields = {
 route_schedules = {
     "error": PbField(error, attribute='error'),
     "route_schedules": fields.List(fields.Nested(route_schedule_fields)),
-    "pagination": fields.Nested(pagination)
+    "pagination": fields.Nested(pagination),
+    "disruptions": DisruptionsField,
 }
 
 
@@ -171,6 +176,7 @@ class RouteSchedules(Schedules):
     def __init__(self):
         super(RouteSchedules, self).__init__("route_schedules")
 
+    @use_old_disruptions_if_needed()
     @marshal_with(route_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):
@@ -190,7 +196,8 @@ stop_schedule = {
 stop_schedules = {
     "stop_schedules": fields.List(fields.Nested(stop_schedule)),
     "pagination": fields.Nested(pagination),
-    "error": PbField(error, attribute='error')
+    "error": PbField(error, attribute='error'),
+    "disruptions": DisruptionsField,
 }
 
 
@@ -201,6 +208,7 @@ class StopSchedules(Schedules):
         self.parsers["get"].add_argument("interface_version", type=int,
                                          default=1, hidden=True)
 
+    @use_old_disruptions_if_needed()
     @marshal_with(stop_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):
@@ -218,13 +226,15 @@ departures = {
     "departures": fields.List(fields.Nested(passage),
                               attribute="next_departures"),
     "pagination": fields.Nested(pagination),
-    "error": PbField(error, attribute='error')
+    "error": PbField(error, attribute='error'),
+    "disruptions": DisruptionsField,
 }
 
 arrivals = {
     "arrivals": fields.List(fields.Nested(passage), attribute="next_arrivals"),
     "pagination": fields.Nested(pagination),
-    "error": PbField(error, attribute='error')
+    "error": PbField(error, attribute='error'),
+    "disruptions": DisruptionsField,
 }
 
 
@@ -233,6 +243,7 @@ class NextDepartures(Schedules):
     def __init__(self):
         super(NextDepartures, self).__init__("next_departures")
 
+    @use_old_disruptions_if_needed()
     @marshal_with(departures)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None,
@@ -246,6 +257,7 @@ class NextArrivals(Schedules):
     def __init__(self):
         super(NextArrivals, self).__init__("next_arrivals")
 
+    @use_old_disruptions_if_needed()
     @marshal_with(arrivals)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):

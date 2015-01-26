@@ -45,7 +45,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from errors import ManageError
 from Coord import Coord
-from jormungandr.interfaces.v1.fields import DisruptionsField
+from jormungandr.interfaces.v1.fields import DisruptionsField, use_old_disruptions_if_needed
 from jormungandr.timezone import set_request_timezone
 from flask.ext.restful.types import boolean
 from jormungandr.interfaces.parsers import option_value
@@ -89,6 +89,7 @@ class Uri(ResourceUri):
                                 description="The filter parameter")
         self.collection = collection
         self.method_decorators.insert(0, ManageError())
+        self.method_decorators.append(use_old_disruptions_if_needed())
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
@@ -102,10 +103,10 @@ class Uri(ResourceUri):
             if "external_code" in args and args["external_code"]:
                 type_ = collections_to_resource_type[collection]
                 for instance in i_manager.get_regions():
-		    res = i_manager.instances[instance].has_external_code(type_, args["external_code"]) 
+                    res = i_manager.instances[instance].has_external_code(type_, args["external_code"])
                     if res:
                         region = instance
-			id = res
+                        id = res
                         break
                 if not region:
                     abort(404, message="Unable to find an object for the uri %s"
