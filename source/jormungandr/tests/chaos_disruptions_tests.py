@@ -121,7 +121,8 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         #at first no disruption
         assert 'disruptions' not in stop
 
-        self.send_chaos_disruption_and_sleep("bob_the_disruption", "stopB", "stop_area")
+        self.send_chaos_disruption_and_sleep("bob_the_disruption", "stopB",
+                "stop_area")
 
         #and we call again, we must have the disruption now
         response = self.query_region('stop_areas/stopB')
@@ -129,7 +130,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert len(stops) == 1
         stop = stops[0]
 
-        disruptions = get_disruptions(stop, response)
+        disruptions = get_not_null(stop, 'disruptions')
 
         #at first we got only one disruption on B
         assert len(disruptions) == 1
@@ -172,6 +173,8 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         #at first we got only one disruption
         assert len(disruptions) == 1
         assert any(d['uri'] == 'bobette_the_disruption' for d in disruptions)
+
+
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
@@ -232,7 +235,10 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
         def set_nb_disruptions(l):
             for i in l:
-                nb_disruptions_map[i['id']] = len([link for link in i['links'] if link['type'] == 'disruption'])
+                if not "disruptions" in i:
+                    nb_disruptions_map[i['id']] = 0
+                    continue
+                nb_disruptions_map[i['id']] = len(i['disruptions'])
 
         response = self.query_region("routes")
         set_nb_disruptions(response['routes'])
@@ -240,6 +246,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         set_nb_disruptions(response['lines'])
         response = self.query_region('networks')
         set_nb_disruptions(response['networks'])
+        response = self.query_region('stop_areas')
         return nb_disruptions_map
 
     def run_check(self, object_id, type_):
@@ -254,7 +261,8 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
         links = []
         def get_type_id(k, v):
-            if k != "links" or "type" not in v or "id" not in v or v["type"] != type_:
+            if (k != "links" or not "type" in v or not "id" in v or v["type"] != type_) and\
+               (k != type_ or not "id" in v):
                 return
             links.append(v["id"])
 
@@ -287,6 +295,9 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         self.run_check('A', 'line')
         self.run_check('A:0', 'route')
         self.run_check('base_network', 'network')
+        self.run_check('stopA', 'stop_area')
+
+
 
 
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
