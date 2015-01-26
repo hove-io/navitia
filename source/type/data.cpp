@@ -93,7 +93,7 @@ bool Data::load(const std::string& filename,
         last_load = true;
         loaded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-                       % dataRaptor->arrival_times.size()
+                       % dataRaptor->best_stop_time_data.nb_stop_times()
                        % pt_data->stop_point_connections.size()
                        % pt_data->stop_points.size()
             );

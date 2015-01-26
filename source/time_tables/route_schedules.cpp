@@ -35,7 +35,6 @@ www.navitia.io
 #include "ptreferential/ptreferential.h"
 #include "utils/paginate.h"
 #include "type/datetime.h"
-#include "routing/best_stoptime.h"
 #include <boost/range/adaptor/reversed.hpp>
 
 namespace pt = boost::posix_time;

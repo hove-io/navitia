@@ -32,6 +32,7 @@ www.navitia.io
 #include "raptor_path.h"
 #include "raptor.h"
 #include "raptor_path_defs.h"
+#include "best_stoptime.h"
 
 
 namespace bt = boost::posix_time;

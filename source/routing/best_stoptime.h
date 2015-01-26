@@ -99,10 +99,4 @@ inline bool is_valid(const nt::StopTime* st, uint32_t date, bool is_arrival, boo
 DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted = false);
 DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted = false);
 
-inline bool bound_predicate_earliest(const uint32_t departure_time, const uint32_t hour) {
-    return departure_time < hour;
-}
-inline bool bound_predicate_tardiest(const uint32_t arrival_time, const uint32_t hour) {
-    return arrival_time > hour;
-}
 }}
