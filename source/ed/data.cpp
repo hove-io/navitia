@@ -659,7 +659,7 @@ void Data::build_associated_calendar() {
 
         for (types::Calendar* calendar : this->calendars) {
             for (types::Line* line : calendar->line_list) {
-                if (line->idx == first_vj->journey_pattern->route->line->idx)
+                if (line->uri == first_vj->journey_pattern->route->line->uri)
                     calendar_list.push_back(calendar);
             }
         }
