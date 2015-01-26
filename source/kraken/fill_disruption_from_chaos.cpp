@@ -222,7 +222,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     nt::PT_Data& pt_data;
     const nt::MetaData& meta;
 
-    apply_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
+    apply_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta) :
         impact(impact), pt_data(pt_data), meta(meta){}
 
@@ -250,11 +250,75 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
         return ref_uri;
     }
 
-    void operator()(const nt::StopArea* stop_area) {
+    virtual void operator()(const nt::StopArea* ) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                       "apply_impact_visitor on StopArea not implemented yet!");
+    }
+    void operator()(nt::new_disruption::LineSection & ls) {
+        this->operator()(ls.line);
+    }
+    void operator()(const nt::Line* line) {
+        for(auto route : line->route_list) {
+            this->operator()(route);
+        }
+    }
+    void operator()(const nt::Route* route) {
+        for (auto journey_pattern : route->journey_pattern_list) {
+            this->operator()(journey_pattern);
+        }
+    }
+
+    void operator()(const nt::JourneyPattern* journey_pattern) {
+        journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {
+                return func_on_vj(vj);
+        });
+    }
+
+};
+
+struct add_impacts_visitor : public apply_impacts_visitor {
+    add_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
+            nt::PT_Data& pt_data, const nt::MetaData& meta) : 
+        apply_impacts_visitor(impact, pt_data, meta) {}
+
+    using apply_impacts_visitor::operator();
+
+    bool func_on_vj(nt::VehicleJourney& vj) {
+        nt::ValidityPattern vp(vj.adapted_validity_pattern);
+        bool is_impacted = false;
+        for (auto period : impact->application_periods) {
+            bt::time_iterator titr(period.begin(), bt::hours(24));
+            for(;titr<period.end(); ++titr) {
+                if (!meta.production_date.contains(titr->date())) {
+                    continue;
+                }
+                auto day = (titr->date() - meta.production_date.begin()).days();
+                if (vp.check(day)) {
+                    vp.remove(day);
+                    is_impacted = true;
+                }
+            }
+        }
+        if (is_impacted) {
+            for (auto vp_ : pt_data.validity_patterns) {
+                if (vp_->days == vp.days) {
+                    vj.adapted_validity_pattern = vp_;
+                    return true;
+                }
+            }
+            // We haven't found this vp, so we need to create it
+            auto vp_ = new nt::ValidityPattern(vp);
+            pt_data.validity_patterns.push_back(vp_);
+            vj.adapted_validity_pattern = vp_;
+        }
+        return true;
+    }
+
+    void operator()(const nt::StopArea* stop_area) override {
         for (const auto stop_point : stop_area->stop_point_list) {
             // We block all the journey pattern of the stop_area according to the impact
-            for (auto jpp : stop_point->journey_pattern_point_list) {
-                this->operator()(jpp->journey_pattern);
+            for (const auto jpp : stop_point->journey_pattern_point_list) {
+                apply_impacts_visitor::operator()(jpp->journey_pattern);
             }
             if (stop_point->journey_pattern_point_list.empty() ||
                     stop_point->journey_pattern_point_list.front()->journey_pattern == nullptr) {
@@ -266,6 +330,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
             jp->uri = make_uri(jp->uri, pt_data.journey_patterns_map);
             jp->idx = pt_data.journey_patterns.size();
             pt_data.journey_patterns.push_back(jp);
+            pt_data.journey_patterns_map[jp->uri] = jp;
             if (jp->uri == jp_ref->uri) {
                 delete jp;
                 continue;
@@ -279,6 +344,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
                 auto jpp = new nt::JourneyPatternPoint(*jpp_ref);
                 jpp->idx = pt_data.journey_pattern_points.size();
                 pt_data.journey_pattern_points.push_back(jpp);
+                pt_data.journey_pattern_points_map[jpp->uri] = jpp;
                 jpp->journey_pattern = jp;
                 jpp->uri = make_uri(jpp->uri, pt_data.journey_pattern_points_map);
                 jp->journey_pattern_point_list.push_back(jpp);
@@ -322,67 +388,9 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
                     st.departure_time = st_ref.departure_time;
                 }
             }
-
             // The new journey_pattern is linked to the impact
+            impact->impacted_journey_patterns.push_back(jp);
         }
-
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                       "apply_impact_visitor on StopArea not implemented yet!");
-    }
-    void operator()(nt::new_disruption::LineSection & ls) {
-        this->operator()(ls.line);
-    }
-    void operator()(const nt::Line* line) {
-        for(auto route : line->route_list) {
-            this->operator()(route);
-        }
-    }
-    void operator()(const nt::Route* route) {
-        for (auto journey_pattern : route->journey_pattern_list) {
-            this->operator()(journey_pattern);
-        }
-    }
-
-    void operator()(const nt::JourneyPattern* journey_pattern) {
-        journey_pattern->for_each_vehicle_journey([&](nt::VehicleJourney& vj) {return f(vj);});
-    }
-
-};
-
-struct add_impacts_visitor : public apply_impacts_visitor {
-    add_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
-            nt::PT_Data& pt_data, const nt::MetaData& meta) : 
-        apply_impacts_visitor(impact, pt_data, meta) {}
-
-    bool func_on_vj(nt::VehicleJourney& vj) {
-        nt::ValidityPattern vp(*vj.adapted_validity_pattern);
-        bool is_impacted = false;
-        for (auto period : impact->application_periods) {
-            bt::time_iterator titr(period.begin(), bt::hours(24));
-            for(;titr<period.end(); ++titr) {
-                if (!meta.production_date.contains(titr->date())) {
-                    continue;
-                }
-                auto day = (titr->date() - meta.production_date.begin()).days();
-                if (vp.check(day)) {
-                    vp.remove(day);
-                    is_impacted = true;
-                }
-            }
-        }
-        if (is_impacted) {
-            for (auto vp_ : pt_data.validity_patterns) {
-                if (vp_->days == vp.days) {
-                    vj.adapted_validity_pattern = vp_;
-                    return true;
-                }
-            }
-            // We haven't found this vp, so we need to create it
-            auto vp_ = new nt::ValidityPattern(vp);
-            pt_data.validity_patterns.push_back(vp_);
-            vj.adapted_validity_pattern = vp_;
-        }
-        return true;
     }
 };
 
@@ -401,6 +409,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             nt::PT_Data& pt_data, const nt::MetaData& meta) : 
         apply_impacts_visitor(impact, pt_data, meta) {}
 
+    using apply_impacts_visitor::operator();
 
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
@@ -408,6 +417,36 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         vj.adapted_validity_pattern = vj.validity_pattern;
         return true;
     }
+
+    void operator()(const nt::StopArea*) override {
+        for (auto journey_pattern : impact->impacted_journey_patterns) {
+            for (auto& vehicle_journey : journey_pattern->discrete_vehicle_journey_list) {
+                const auto it_map = pt_data.vehicle_journeys_map.find(vehicle_journey->uri);
+                if (it_map != pt_data.vehicle_journeys_map.end()) {
+                    pt_data.vehicle_journeys_map.erase(it_map);
+                }
+                const auto it_vec = pt_data.vehicle_journeys.begin() + vehicle_journey->idx;
+                pt_data.vehicle_journeys.erase(it_vec);
+            }
+            for (auto journey_pattern_point : journey_pattern->journey_pattern_point_list) {
+                auto it_map = pt_data.journey_pattern_points_map.find(journey_pattern_point->uri);
+                if (it_map != pt_data.journey_pattern_points_map.end()) {
+                    pt_data.journey_pattern_points_map.erase(it_map);
+                }
+                const auto it_vec = pt_data.journey_pattern_points.begin() + journey_pattern_point->idx;
+                pt_data.journey_pattern_points.erase(it_vec);
+                delete journey_pattern_point;
+            }
+            auto it_map = pt_data.journey_patterns_map.find(journey_pattern->uri);
+            if (it_map != pt_data.journey_patterns_map.end()) {
+                pt_data.journey_patterns_map.erase(it_map);
+            }
+            const auto it_vec = pt_data.journey_patterns.begin() + journey_pattern->idx;
+            pt_data.journey_patterns.erase(it_vec);
+            delete journey_pattern;
+        }
+    }
+
 };
 
 void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
