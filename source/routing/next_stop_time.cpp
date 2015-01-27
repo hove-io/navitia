@@ -38,22 +38,20 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 template<typename Cmp>
-void NextStopTimeData::init(const Cmp& cmp,
-                            const type::JourneyPattern* jp,
-                            const type::JourneyPatternPoint* jpp,
-                            NextStopTimeData::TimesStopTimes& tst)
+void NextStopTimeData::TimesStopTimes<Cmp>::init(const type::JourneyPattern* jp,
+                                                 const type::JourneyPatternPoint* jpp)
 {
     // collect the stop times at the given jpp
     const size_t jpp_order = jpp->order;
-    tst.stop_times.reserve(jp->discrete_vehicle_journey_list.size());
+    stop_times.reserve(jp->discrete_vehicle_journey_list.size());
     for(const auto& vj: jp->discrete_vehicle_journey_list) {
         assert(vj->stop_time_list.at(jpp_order).journey_pattern_point ==
                jp->journey_pattern_point_list.at(jpp_order));
-        tst.stop_times.push_back(&vj->stop_time_list[jpp_order]);
+        stop_times.push_back(&vj->stop_time_list[jpp_order]);
     }
 
     // sort the stop times according to cmp
-    boost::sort(tst.stop_times, [&cmp](const type::StopTime* st1, const type::StopTime* st2) {
+    boost::sort(stop_times, [&](const type::StopTime* st1, const type::StopTime* st2) {
             const auto time1 = DateTimeUtils::hour(cmp.get_time(*st1));
             const auto time2 = DateTimeUtils::hour(cmp.get_time(*st2));
             if (time1 != time2) { return cmp(time1, time2); }
@@ -66,23 +64,10 @@ void NextStopTimeData::init(const Cmp& cmp,
         });
 
     // collect the corresponding times
-    tst.times.reserve(tst.stop_times.size());
-    for (const auto* st: tst.stop_times) {
-        tst.times.push_back(DateTimeUtils::hour(cmp.get_time(*st)));
+    times.reserve(stop_times.size());
+    for (const auto* st: stop_times) {
+        times.push_back(DateTimeUtils::hour(cmp.get_time(*st)));
     }
-}
-
-namespace {
-struct Less {
-    template<typename T> bool
-    operator()(const T& lhs, const T& rhs) const { return lhs < rhs; }
-    DateTime get_time(const type::StopTime& st) const { return st.departure_time; }
-};
-struct Greater {
-    template<typename T> bool
-    operator()(const T& lhs, const T& rhs) const { return lhs > rhs; }
-    DateTime get_time(const type::StopTime& st) const { return st.arrival_time; }
-};
 }
 
 void NextStopTimeData::load(const type::PT_Data &data) {
@@ -92,8 +77,8 @@ void NextStopTimeData::load(const type::PT_Data &data) {
     for(const auto* jp: data.journey_patterns) {
         for (const auto* jpp: jp->journey_pattern_point_list) {
             const JppIdx jpp_idx = JppIdx(*jpp);
-            init(Less(), jp, jpp, forward[jpp_idx]);
-            init(Greater(), jp, jpp, backward[jpp_idx]);
+            forward[jpp_idx].init(jp, jpp);
+            backward[jpp_idx].init(jp, jpp);
         }
     }
 }
