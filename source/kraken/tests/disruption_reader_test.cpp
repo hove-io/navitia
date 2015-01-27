@@ -184,7 +184,8 @@ struct Const_it {
 
 BOOST_AUTO_TEST_CASE(minimal_disruption) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
     const_it.set_disruption("1", "22");
@@ -202,7 +203,8 @@ BOOST_AUTO_TEST_CASE(minimal_disruption) {
 
 BOOST_AUTO_TEST_CASE(full_disruption) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
     const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
@@ -218,7 +220,8 @@ BOOST_AUTO_TEST_CASE(full_disruption) {
 
 BOOST_AUTO_TEST_CASE(minimal_cause) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
     reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
@@ -233,7 +236,8 @@ BOOST_AUTO_TEST_CASE(minimal_cause) {
 
 BOOST_AUTO_TEST_CASE(full_cause) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
     reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
@@ -249,7 +253,8 @@ BOOST_AUTO_TEST_CASE(full_cause) {
 
 BOOST_AUTO_TEST_CASE(minimal_tag) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
     reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
@@ -263,7 +268,8 @@ BOOST_AUTO_TEST_CASE(minimal_tag) {
 }
 BOOST_AUTO_TEST_CASE(full_tag) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
     reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
@@ -279,7 +285,8 @@ BOOST_AUTO_TEST_CASE(full_tag) {
 
 BOOST_AUTO_TEST_CASE(minimal_impact) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
     reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
@@ -297,7 +304,8 @@ BOOST_AUTO_TEST_CASE(minimal_impact) {
 
 BOOST_AUTO_TEST_CASE(full_impact) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
     reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
@@ -320,7 +328,8 @@ BOOST_AUTO_TEST_CASE(full_impact) {
 
 BOOST_AUTO_TEST_CASE(application_period) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
     const_it.set_application_period("0", "1", "2");
@@ -334,7 +343,8 @@ BOOST_AUTO_TEST_CASE(application_period) {
 
 BOOST_AUTO_TEST_CASE(pt_object) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
     reader.disruption = std::make_unique<chaos::Disruption>();
 
     Const_it const_it;
@@ -351,7 +361,8 @@ BOOST_AUTO_TEST_CASE(pt_object) {
 
 BOOST_AUTO_TEST_CASE(one_of_each) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
     const_it.set_disruption("1", "22", "33", "44", "55",
@@ -408,7 +419,8 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
 }
 BOOST_AUTO_TEST_CASE(two_tags) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
     const_it.set_disruption("1", "22", "33", "44", "55",
@@ -453,7 +465,8 @@ BOOST_AUTO_TEST_CASE(two_tags) {
 }
 BOOST_AUTO_TEST_CASE(two_impacts) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
     const_it.set_disruption("1", "22", "33", "44", "55",
@@ -499,7 +512,8 @@ BOOST_AUTO_TEST_CASE(two_impacts) {
 
 BOOST_AUTO_TEST_CASE(two_application_periods) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
     const_it.set_disruption("1", "22", "33", "44", "55",
@@ -543,7 +557,8 @@ BOOST_AUTO_TEST_CASE(two_application_periods) {
 
 BOOST_AUTO_TEST_CASE(two_ptobjects) {
     navitia::type::PT_Data pt_data;
-    navitia::DisruptionDatabaseReader reader(pt_data);
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
     const_it.set_disruption("1", "22", "33", "44", "55",

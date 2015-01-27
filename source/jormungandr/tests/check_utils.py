@@ -30,6 +30,7 @@
 from collections import deque
 from nose.tools import *
 import json
+from jormungandr import utils
 from navitiacommon import request_pb2, response_pb2
 from datetime import datetime
 import logging
@@ -300,59 +301,6 @@ def check_links(object, tester):
     return links
 
 
-def walk_dict(tree, visitor):
-    """
-    depth first search on a dict.
-    call the visit(elem) method on the visitor for each node
-
-    >>> bob = {'tutu': 1,
-    ... 'tata': [1, 2],
-    ... 'toto': {'bob':12, 'bobette': 13, 'nested_bob': {'bob': 3}},
-    ... 'tete': ('tuple1', ['ltuple1', 'ltuple2']),
-    ... 'titi': [{'a':1}, {'b':1}]}
-
-    >>> def my_visitor(name, val):
-    ...     print "{}={}".format(name, val)
-
-    >>> walk_dict(bob, my_visitor)
-    titi={'b': 1}
-    b=1
-    titi={'a': 1}
-    a=1
-    tete=ltuple2
-    tete=ltuple1
-    tete=tuple1
-    tutu=1
-    toto={'bobette': 13, 'bob': 12, 'nested_bob': {'bob': 3}}
-    nested_bob={'bob': 3}
-    bob=3
-    bob=12
-    bobette=13
-    tata=2
-    tata=1
-    """
-    queue = deque()
-
-    def add_elt(name, elt, first=False):
-        if isinstance(elt, (list, tuple)):
-            for val in elt:
-                queue.append((name, val))
-        elif hasattr(elt, 'iteritems'):
-            for k, v in elt.iteritems():
-                queue.append((k, v))
-        elif first:  # for the first elt, we add it even if it is no collection
-            queue.append((name, elt))
-
-    add_elt("main", tree, first=True)
-    while queue:
-        elem = queue.pop()
-        #we don't want to visit the list, we'll visit each node separatly
-        if not isinstance(elem[1], (list, tuple)):
-            visitor(elem[0], elem[1])
-        #for list and tuple, the name is the parent's name
-        add_elt(elem[0], elem[1])
-
-
 def check_internal_links(response, tester):
     """
     We want to check that all 'internal' link are correctly linked to an element in the response
@@ -373,7 +321,7 @@ def check_internal_links(response, tester):
                 internal_links_id.add(val['id'])
                 internal_link_types.add(val['rel'])
 
-    walk_dict(response, add_link_visitor)
+    utils.walk_dict(response, add_link_visitor)
 
     def check_node(name, val):
 
@@ -383,7 +331,7 @@ def check_internal_links(response, tester):
                 #found one ref, we can remove the link
                 internal_links_id.remove(val['id'])
 
-    walk_dict(response, check_node)
+    utils.walk_dict(response, check_node)
 
     assert not internal_links_id, "cannot find correct ref for internal links : {}".\
         format([lid for lid in internal_links_id])
@@ -519,40 +467,6 @@ def is_valid_journey(journey, tester, query):
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
 
 
-def can_have_disruptions(pt_obj):
-    if "disruptions" not in pt_obj:
-        #disruptions are not mandatory
-        return
-
-    disruptions = get_not_null(pt_obj, "disruptions")
-    for d in disruptions:
-        get_not_null(d, 'uri')
-        get_not_null(d, 'impact_uri')
-        get_valid_datetime(get_not_null(d, 'updated_at'))
-
-        status = get_not_null(d, 'status')
-        assert status in ['past', 'active', 'future']
-
-        periods = get_not_null(d, 'application_periods')
-        for p in periods:
-            b = get_valid_datetime(get_not_null(p, 'begin'))
-            e = get_valid_datetime(get_not_null(p, 'end'))
-
-            assert b <= e
-
-    # messages are the old school disruptions, will be refactored asap
-    msgs = get_not_null(pt_obj, "messages")
-    for m in msgs:
-        get_valid_time(get_not_null(m, 'end_application_daily_hour'))
-        get_valid_time(get_not_null(m, 'start_application_daily_hour'))
-
-        get_valid_datetime(get_not_null(m, 'start_application_date'))
-        get_valid_datetime(get_not_null(m, 'end_application_date'))
-        get_not_null(m, 'value')
-
-    eq_(len(disruptions), len(msgs))
-
-
 def is_valid_section(section, query):
     arrival = get_valid_datetime(section['arrival_date_time'])
     departure = get_valid_datetime(section['departure_date_time'])
@@ -605,8 +519,6 @@ def is_valid_stop_area(stop_area, depth_check=1):
     is_valid_label(get_not_null(stop_area, "label"))
     is_valid_coord(coord)
 
-    can_have_disruptions(stop_area)
-
 
 def is_valid_stop_point(stop_point, depth_check=1):
     """
@@ -617,8 +529,6 @@ def is_valid_stop_point(stop_point, depth_check=1):
     is_valid_label(get_not_null(stop_point, "label"))
     coord = get_not_null(stop_point, "coord")
     is_valid_coord(coord)
-
-    can_have_disruptions(stop_point)
 
     if depth_check > 0:
         is_valid_stop_area(get_not_null(stop_point, "stop_area"), depth_check-1)
@@ -636,8 +546,6 @@ def is_valid_route(route, depth_check=1):
     assert get_not_null(direction, "embedded_type") == "stop_point"
     is_valid_stop_point(get_not_null(direction, "stop_point"), depth_check - 1)
 
-    can_have_disruptions(route)
-
     if depth_check > 0:
         is_valid_line(get_not_null(route, "line"), depth_check - 1)
     else:
@@ -651,8 +559,6 @@ def is_valid_route(route, depth_check=1):
 def is_valid_line(line, depth_check=1):
     get_not_null(line, "name")
     get_not_null(line, "id")
-
-    can_have_disruptions(line)
 
     if depth_check > 0:
         is_valid_network(get_not_null(line, 'network'), depth_check - 1)
@@ -725,16 +631,12 @@ def is_valid_network(network, depth_check=1):
     get_not_null(network, "id")
     get_not_null(network, "name")
 
-    can_have_disruptions(network)
-
 
 def is_valid_vehicle_journey(vj, depth_check=1):
     if depth_check < 0:
         return
     get_not_null(vj, "id")
     get_not_null(vj, "name")
-
-    can_have_disruptions(vj)
 
     if depth_check > 0:
         is_valid_journey_pattern(get_not_null(vj, 'journey_pattern'), depth_check=depth_check-1)
@@ -796,9 +698,20 @@ def is_valid_label(label):
     return m is not None
 
 
+def get_disruptions(obj, response):
+    """
+    unref disruption links are return the list of disruptions
+    """
+    all_disruptions = {d['id']: d for d in response['disruptions']}
+
+    if 'links' not in obj:
+        return None
+    return [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
+
+
 def is_valid_disruption(disruption):
-    get_not_null(disruption, 'uri')
-    get_not_null(disruption, 'impact_uri')
+    get_not_null(disruption, 'id')
+    get_not_null(disruption, 'impact_id')
     s = get_not_null(disruption, 'severity')
     get_not_null(s, 'name')
     get_not_null(s, 'color')

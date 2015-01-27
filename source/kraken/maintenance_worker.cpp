@@ -49,8 +49,9 @@ namespace navitia {
 void MaintenanceWorker::load(){
     const std::string database = conf.databases_path();
     auto chaos_database = conf.chaos_database();
+    auto contributors = conf.rt_topics();
     LOG4CPLUS_INFO(logger, "Loading database from file: " + database);
-    if(this->data_manager.load(database, chaos_database)){
+    if(this->data_manager.load(database, chaos_database, contributors)){
         auto data = data_manager.get_data();
     }
 }
@@ -104,15 +105,15 @@ void MaintenanceWorker::handle_rt(AmqpClient::Envelope::ptr_t envelope){
         }
         if(entity.is_deleted()){
             LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
-            delete_disruption(*data->pt_data, entity.id());
+            delete_disruption(entity.id(), *data->pt_data, *data->meta);
         }else if(entity.HasExtension(chaos::disruption)){
             LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
-            add_disruption(*data->pt_data, entity.GetExtension(chaos::disruption));
+            add_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
         }else{
             LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
         }
     }
-    if (data) { data_manager.set_data(std::move(data)); }
+    if (data) { data->build_raptor(); data_manager.set_data(std::move(data)); }
     LOG4CPLUS_DEBUG(logger, "data updated");
 }
 

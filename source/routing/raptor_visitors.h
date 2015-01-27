@@ -6,11 +6,10 @@ struct raptor_visitor {
         return a <= st.section_end_date(DateTimeUtils::date(current_dt), clockwise());
     }
 
-    inline
-    std::pair<std::vector<type::JourneyPatternPoint*>::const_iterator, std::vector<type::JourneyPatternPoint*>::const_iterator>
-    journey_pattern_points(const std::vector<type::JourneyPatternPoint*> &, const type::JourneyPattern* journey_pattern, size_t order) const {
-        return std::make_pair(journey_pattern->journey_pattern_point_list.begin() + order,
-                              journey_pattern->journey_pattern_point_list.end());
+    inline boost::iterator_range<std::vector<dataRAPTOR::JppsFromJp::Jpp>::const_iterator>
+    jpps_from_order(const dataRAPTOR::JppsFromJp& jpps_from_jp, JpIdx jp_idx, uint16_t jpp_order) const {
+        const auto& jpps = jpps_from_jp[jp_idx];
+        return boost::make_iterator_range(jpps.begin() + jpp_order, jpps.end());
     }
 
     typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
@@ -59,13 +58,10 @@ struct raptor_reverse_visitor {
         return a >= st.section_end_date(DateTimeUtils::date(current_dt), clockwise());
     }
 
-    inline
-    std::pair<std::vector<type::JourneyPatternPoint*>::const_reverse_iterator, std::vector<type::JourneyPatternPoint*>::const_reverse_iterator>
-    journey_pattern_points(const std::vector<type::JourneyPatternPoint*> &/*journey_pattern_points*/, const type::JourneyPattern* journey_pattern, size_t order) const {
-        size_t offset = journey_pattern->journey_pattern_point_list.size() - order - 1;
-        const auto begin = journey_pattern->journey_pattern_point_list.rbegin() + offset;
-        const auto end = journey_pattern->journey_pattern_point_list.rend();
-        return std::make_pair(begin, end);
+    inline boost::iterator_range<std::vector<dataRAPTOR::JppsFromJp::Jpp>::const_reverse_iterator>
+    jpps_from_order(const dataRAPTOR::JppsFromJp& jpps_from_jp, JpIdx jp_idx, uint16_t jpp_order) const {
+        const auto& jpps = jpps_from_jp[jp_idx];
+        return boost::make_iterator_range(jpps.rbegin() + jpps.size() - jpp_order - 1, jpps.rend());
     }
 
     typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;

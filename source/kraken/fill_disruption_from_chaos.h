@@ -34,11 +34,15 @@ www.navitia.io
 #include "type/message.h"
 #include "type/chaos.pb.h"
 #include "type/gtfs-realtime.pb.h"
+#include "type/meta_data.h"
 
 namespace navitia {
 
-void add_disruption(navitia::type::PT_Data& pt_data,
-                    const chaos::Disruption& chaos_disruption);
+void add_disruption(const chaos::Disruption& chaos_disruption,
+                    navitia::type::PT_Data& pt_data,
+                    const navitia::type::MetaData& meta);
 
-void delete_disruption(nt::PT_Data& pt_data, const std::string& disruption_id);
+void delete_disruption(const std::string& disruption_id,
+                       nt::PT_Data& pt_data,
+                       const nt::MetaData& meta);
 } // namespace navitia

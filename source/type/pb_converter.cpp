@@ -120,6 +120,7 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     pb_severity->set_name(impact->severity->wording);
     pb_severity->set_color(impact->severity->color);
     pb_severity->set_effect(to_string(impact->severity->effect));
+    pb_severity->set_priority(impact->severity->priority);
 
     for (const auto& t: impact->disruption->tags) {
         pb_disrution->add_tags(t->name);
@@ -143,7 +144,11 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     // we also fill the old message for the customer using it.
     //will be removed as soon as possible
     auto pb_message = pb_object->add_messages();
-    pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
+    if(impact->severity->effect == type::new_disruption::Effect::NO_SERVICE){
+        pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
+    }else{
+        pb_message->set_message_status(pbnavitia::MessageStatus::warning);
+    }
     pb_message->set_uri(impact->uri);
     if (! impact->messages.empty()) {
         const auto& msg = impact->messages.front();
@@ -152,10 +157,8 @@ void fill_message(const boost::weak_ptr<type::new_disruption::Impact>& impact_we
     }
 
     if (! impact->application_periods.empty()) {
-        pb_message->set_start_application_date(
-                    navitia::to_iso_string_no_fractional(impact->application_periods.front().begin()));
-        pb_message->set_end_application_date(
-                    navitia::to_iso_string_no_fractional(impact->application_periods.back().last()));
+        pb_message->set_start_application_date(navitia::to_posix_timestamp(impact->application_periods.front().begin()));
+        pb_message->set_end_application_date(navitia::to_posix_timestamp(impact->application_periods.back().last()));
         //start/end daily hour are not relevent anymore
         pb_message->set_start_application_daily_hour("000000");
         pb_message->set_end_application_daily_hour("235959");

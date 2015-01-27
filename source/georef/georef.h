@@ -279,7 +279,7 @@ struct GeoRef {
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
 
 
-    const std::vector<Admin*> &find_admins(const type::GeographicalCoord&) const;
+    const std::vector<Admin*> find_admins(const type::GeographicalCoord&) const;
 
     /**
      * Project each stop_point on the georef network

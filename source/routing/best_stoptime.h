@@ -61,10 +61,29 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
 /// either a vehicle that leaves or that arrives depending on clockwise
 std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const type::JourneyPatternPoint* jpp,
-          const DateTime dt,
-          /*const type::Properties &required_properties*/
-          const type::VehicleProperties & vehicle_properties,
-          const bool clockwise, bool disruption_active, const type::Data &data, bool reconstructing_path = false);
+               const DateTime dt,
+               const type::VehicleProperties & vehicle_properties,
+               const bool clockwise,
+               bool disruption_active,
+               const type::Data &data,
+               bool reconstructing_path = false);
+
+// As the other best_stop_time, but cache friendly and less
+// comfortable to use.  The last parametter, check_freq, allow to
+// forget to test frequency vehicle journey, a big improvement in
+// speed if you know your journey pattern don't have frequency vehicle
+// journeys.  This method is used by raptor.
+std::pair<const type::StopTime*, uint32_t>
+best_stop_time(const JpIdx jp_idx,
+               const uint16_t jpp_order,
+               const DateTime dt,
+               const type::VehicleProperties& vehicle_properties,
+               const bool clockwise,
+               bool disruption_active,
+               const type::Data &data,
+               bool reconstructing_path = false,
+               bool check_freq = true);
+
 
 /// For timetables in frequency-model
 inline bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) {
@@ -80,10 +99,4 @@ inline bool is_valid(const nt::StopTime* st, uint32_t date, bool is_arrival, boo
 DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted = false);
 DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted = false);
 
-inline bool bound_predicate_earliest(const uint32_t departure_time, const uint32_t hour) {
-    return departure_time < hour;
-}
-inline bool bound_predicate_tardiest(const uint32_t arrival_time, const uint32_t hour) {
-    return arrival_time > hour;
-}
 }}

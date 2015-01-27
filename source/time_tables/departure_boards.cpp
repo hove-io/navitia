@@ -160,8 +160,15 @@ departure_board(const std::string& request,
                 continue;
             }
             if(stop_point->idx == jpp->journey_pattern->journey_pattern_point_list.back()->stop_point->idx) { // for terminus
-                response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
-                continue;
+                auto it = response_status.find(route->idx);
+                if (it == response_status.end()) {
+                    response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
+                }
+            } else {
+                auto it = response_status.find(route->idx);
+                if (it != response_status.end() && it->second == pbnavitia::ResponseStatus::terminus) {
+                    response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
+                }
             }
             std::vector<datetime_stop_time> tmp;
             if (! calendar_id) {

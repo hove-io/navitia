@@ -36,6 +36,7 @@ www.navitia.io
 #include "type/data.h"
 #include "type/pt_data.h"
 #include <boost/dynamic_bitset.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 namespace ed{ namespace connectors{
 
@@ -78,6 +79,7 @@ void load_disruptions(
         navitia::type::PT_Data& pt_data,
         const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time){
+    using boost::local_time::local_date_time;
     //pour le moment on vire les timezone et on considére que c'est de l'heure local
     std::string request = "SELECT id, uri, start_publication_date::timestamp, "
         "end_publication_date::timestamp, start_application_date::timestamp, "
@@ -111,7 +113,7 @@ void load_disruptions(
     nt::new_disruption::DisruptionHolder& disruptions = pt_data.disruption_holder;
     boost::shared_ptr<nt::new_disruption::Impact> impact;
     std::string current_uri = "";
-
+    boost::local_time::time_zone_ptr zone(new boost::local_time::posix_time_zone("CET+1CEST,M3.5.0/2,M10.5.0/3"));
     for (auto cursor = result.begin(); cursor != result.end(); ++cursor) {
         //we can have several message for each impact, (and one impact by disruption)
         if (cursor["uri"].as<std::string>() != current_uri) {
@@ -123,15 +125,23 @@ void load_disruptions(
 
             impact = boost::make_shared<nt::new_disruption::Impact>();
             cursor["uri"].to(impact->uri);
+            auto start_pub = pt::time_from_string(cursor["start_publication_date"].as<std::string>());
+            auto end_pub = pt::time_from_string(cursor["end_publication_date"].as<std::string>());
 
             disruption->publication_period = boost::posix_time::time_period(
-                        pt::time_from_string(cursor["start_publication_date"].as<std::string>()),
-                    pt::time_from_string(cursor["end_publication_date"].as<std::string>())
+                    local_date_time(start_pub.date(), start_pub.time_of_day(), zone,
+                                    local_date_time::NOT_DATE_TIME_ON_ERROR).utc_time(),
+                    local_date_time(end_pub.date(), end_pub.time_of_day(), zone,
+                                    local_date_time::NOT_DATE_TIME_ON_ERROR).utc_time()
                     );
 
             //we need to handle the active days to split the period
-            pt::ptime start = pt::time_from_string(cursor["start_application_date"].as<std::string>());
-            pt::ptime end = pt::time_from_string(cursor["end_application_date"].as<std::string>());
+            auto start_app = pt::time_from_string(cursor["start_application_date"].as<std::string>());
+            auto end_app = pt::time_from_string(cursor["end_application_date"].as<std::string>());
+            pt::ptime start = local_date_time(start_app.date(), start_app.time_of_day(),
+                                              zone, local_date_time::NOT_DATE_TIME_ON_ERROR).utc_time();
+            pt::ptime end = local_date_time(end_app.date(), end_app.time_of_day(),
+                                              zone, local_date_time::NOT_DATE_TIME_ON_ERROR).utc_time();;
 
             auto daily_start_hour = pt::duration_from_string(
                         cursor["start_application_daily_hour"].as<std::string>());
@@ -144,7 +154,6 @@ void load_disruptions(
                                                        daily_start_hour, daily_end_hour,
                                                        active_days);
             disruption->add_impact(impact);
-            disruptions.disruptions.push_back(std::move(disruption));
         }
         auto message = nt::new_disruption::Message();
         cursor["body"].to(message.text);
@@ -205,7 +214,7 @@ std::vector<ed::AtPerturbation> load_at_perturbations(
 
     std::vector<ed::AtPerturbation> perturbations;
     for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
-       ed::AtPerturbation perturbation;
+        ed::AtPerturbation perturbation;
         cursor["uri"].to(perturbation.uri);
         //on construit le message
         cursor["object_uri"].to(perturbation.object_uri);

@@ -27,18 +27,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from tests_mechanism import AbstractTestFixture, dataset
+from jormungandr import utils
 from check_utils import *
 
 
 def get_impacts(response):
-    impacts_by_uri = {}
-
-    def fill_dict(name, val):
-        if name == 'disruptions':
-            impacts_by_uri[val["impact_uri"]] = val
-
-    walk_dict(get_not_null(response, 'disruptions'), fill_dict)
-    return impacts_by_uri
+    return {d['impact_id']: d for d in response['disruptions']}
 
 # for the tests we need custom datetime to display the disruptions
 default_date_filter = 'datetime=20140101T000000&_current_datetime=20140101T000000'
@@ -60,46 +54,46 @@ class TestDisruptions(AbstractTestFixture):
         one impacted stop_area
         """
 
-        response = self.query_region('disruptions?' + default_date_filter, display=True)
+        response = self.query_region('traffic_reports?' + default_date_filter, display=True)
 
-        disruptions = get_not_null(response, 'disruptions')
+        traffic_report = get_not_null(response, 'traffic_reports')
 
         # the disruptions are grouped by network and we have only one network
-        assert len(disruptions) == 1
+        assert len(traffic_report) == 1
 
-        impacted_lines = get_not_null(disruptions[0], 'lines')
+        impacted_lines = get_not_null(traffic_report[0], 'lines')
         assert len(impacted_lines) == 1
         is_valid_line(impacted_lines[0], depth_check=0)
         assert impacted_lines[0]['id'] == 'A'
 
-        lines_disrupt = get_not_null(impacted_lines[0], 'disruptions')
+        lines_disrupt = get_disruptions(impacted_lines[0], response)
         assert len(lines_disrupt) == 1
         for d in lines_disrupt:
             is_valid_disruption(d)
         assert lines_disrupt[0]['uri'] == 'disruption_on_line_A'
-        assert lines_disrupt[0]['impact_uri'] == 'too_bad_again'
+        assert lines_disrupt[0]['impact_id'] == 'too_bad_again'
         assert lines_disrupt[0]['severity']['name'] == 'bad severity'
 
-        impacted_network = get_not_null(disruptions[0], 'network')
+        impacted_network = get_not_null(traffic_report[0], 'network')
         is_valid_network(impacted_network, depth_check=0)
         assert impacted_network['id'] == 'base_network'
-        network_disrupt = get_not_null(impacted_network, 'disruptions')
+        network_disrupt = get_disruptions(impacted_network, response)
         assert len(network_disrupt) == 1
         for d in network_disrupt:
             is_valid_disruption(d)
         assert network_disrupt[0]['uri'] == 'disruption_on_line_A'
-        assert network_disrupt[0]['impact_uri'] == 'too_bad_again'
+        assert network_disrupt[0]['impact_id'] == 'too_bad_again'
 
-        impacted_stop_areas = get_not_null(disruptions[0], 'stop_areas')
+        impacted_stop_areas = get_not_null(traffic_report[0], 'stop_areas')
         assert len(impacted_stop_areas) == 1
         is_valid_stop_area(impacted_stop_areas[0], depth_check=0)
         assert impacted_stop_areas[0]['id'] == 'stopA'
-        stop_disrupt = get_not_null(impacted_stop_areas[0], 'disruptions')
+        stop_disrupt = get_disruptions(impacted_stop_areas[0], response)
         assert len(stop_disrupt) == 1
         for d in stop_disrupt:
             is_valid_disruption(d)
         assert stop_disrupt[0]['uri'] == 'disruption_on_stop_A'
-        assert stop_disrupt[0]['impact_uri'] == 'too_bad'
+        assert stop_disrupt[0]['impact_id'] == 'too_bad'
 
         """
         by querying directly the impacted object, we find the same results
@@ -162,7 +156,7 @@ class TestDisruptions(AbstractTestFixture):
         lines_disrupt = get_not_null(impacted_lines[0], 'disruptions')
         assert len(lines_disrupt) == 1
         assert lines_disrupt[0]['uri'] == 'disruption_on_line_A'
-        assert lines_disrupt[0]['impact_uri'] == 'too_bad_again'
+        assert lines_disrupt[0]['impact_id'] == 'too_bad_again'
 
         impacted_network = get_not_null(disruptions[0], 'network')
 
@@ -171,7 +165,7 @@ class TestDisruptions(AbstractTestFixture):
         network_disrupt = get_not_null(impacted_network, 'disruptions')
         assert len(network_disrupt) == 1
         assert network_disrupt[0]['uri'] == 'disruption_on_line_A'
-        assert network_disrupt[0]['impact_uri'] == 'too_bad_again'
+        assert network_disrupt[0]['impact_id'] == 'too_bad_again'
 
         # but we should not have disruption on stop area, B is not disrupted
         assert 'stop_areas' not in disruptions[0]
@@ -202,13 +196,13 @@ class TestDisruptions(AbstractTestFixture):
 
         """
 
-        response = self.query_region('disruptions?duration=P3D&' + default_date_filter)
+        response = self.query_region('traffic_reports?duration=P3D&' + default_date_filter)
 
         impacts = get_impacts(response)
         assert len(impacts) == 2
         assert 'later_impact' not in impacts
 
-        response = self.query_region('disruptions?duration=P3Y&' + default_date_filter)
+        response = self.query_region('traffic_reports?duration=P3Y&' + default_date_filter)
 
         impacts = get_impacts(response)
         assert len(impacts) == 3
@@ -222,14 +216,14 @@ class TestDisruptions(AbstractTestFixture):
 
         so at 9 it is not in the list, at 11, we get it
         """
-        response = self.query_region('disruptions?datetime=20140101T000000'
+        response = self.query_region('traffic_reports?datetime=20140101T000000'
                                      '&_current_datetime=20140128T090000', display=True)
 
         impacts = get_impacts(response)
         assert len(impacts) == 2
         assert 'impact_published_later' not in impacts
 
-        response = self.query_region('disruptions?datetime=20140101T000000'
+        response = self.query_region('traffic_reports?datetime=20140101T000000'
                                      '&_current_datetime=20140128T130000', display=True)
 
         impacts = get_impacts(response)

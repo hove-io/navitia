@@ -147,13 +147,15 @@ public:
             throw wrong_version(msg.str());
         }
         ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq;
+        //@TODO: remove this, this done twice when we load data from rabbitmq
         build_raptor();
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     /** Charge les données et effectue les initialisations nécessaires */
     bool load(const std::string & filename,
-            const boost::optional<std::string>& chaos_database = {});
+            const boost::optional<std::string>& chaos_database = {},
+            const std::vector<std::string>& contributors = {});
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;

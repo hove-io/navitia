@@ -32,14 +32,15 @@ www.navitia.io
 #include "raptor_path.h"
 #include "raptor.h"
 #include "raptor_path_defs.h"
+#include "best_stoptime.h"
 
 
 namespace bt = boost::posix_time;
 namespace navitia { namespace routing {
 
 Solutions
-get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
-             const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
+get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+             const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations,
              bool clockwise, const type::AccessibiliteParams & accessibilite_params,
              bool disruption_active, const RAPTOR& raptor) {
       Solutions result;
@@ -59,14 +60,14 @@ get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> >
 
 
 Solutions
-get_solutions(const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
-              const DateTime &dep, bool clockwise, const type::Data & data, bool) {
+get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+              const DateTime &dep, bool clockwise, const RAPTOR& raptor, bool) {
     Solutions result;
     for(auto dep_dist : departs) {
-        for(auto journey_pattern : data.pt_data->stop_points[dep_dist.first]->journey_pattern_point_list) {
+        for(const auto* jpp: raptor.get_sp(dep_dist.first)->journey_pattern_point_list) {
             Solution d;
             d.count = 0;
-            d.jpp_idx = journey_pattern->idx;
+            d.jpp_idx = JppIdx(*jpp);
             d.walking_time = dep_dist.second;
             if(clockwise)
                 d.arrival = dep + d.walking_time.total_seconds();
@@ -101,7 +102,7 @@ static bool is_equal(const DateTime& best_so_far,
 }
 
 static size_t nb_jpp_of_path(int count,
-                             type::idx_t jpp_idx,
+                             JppIdx jpp_idx,
                              bool clockwise,
                              bool disruption_active,
                              const type::AccessibiliteParams& accessibilite_params,
@@ -124,8 +125,8 @@ static size_t nb_jpp_of_path(int count,
 }
 
 Solutions
-get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
-               const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
+get_pareto_front(bool clockwise, const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+               const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations,
                const type::AccessibiliteParams & accessibilite_params, bool disruption_active, const RAPTOR& raptor) {
     Solutions result;
 
@@ -140,25 +141,26 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
     for(unsigned int round=1; round <= raptor.count; ++round) {
         // For every round with look for the best journey pattern point that belongs to one of the destination stop points
         // We must not forget to walking duration
-        type::idx_t best_jpp = type::invalid_idx;
+        JppIdx best_jpp = JppIdx();
         size_t best_nb_jpp_of_path = std::numeric_limits<size_t>::max();
         for(auto spid_dist : destinations) {
-            for(auto journey_pattern_point : raptor.data.pt_data->stop_points[spid_dist.first]->journey_pattern_point_list) {
-                type::idx_t jppidx = journey_pattern_point->idx;
-                auto& l = raptor.labels[round][jppidx];
-                if (!l.pt_is_initialized()) {
+            for(auto journey_pattern_point : raptor.get_sp(spid_dist.first)->journey_pattern_point_list) {
+                const JppIdx jppidx = JppIdx(*journey_pattern_point);
+                const auto& ls = raptor.labels[round];
+                if (!ls.pt_is_initialized(jppidx)) {
                     continue;
                 }
                 size_t nb_jpp = nb_jpp_of_path(round, jppidx, clockwise, disruption_active,
                                                accessibilite_params, raptor);
-                if(!improves(best_dt, clockwise, l.dt_pt, spid_dist.second.total_seconds())) {
-                    if (!is_equal(best_dt, clockwise, l.dt_pt, spid_dist.second.total_seconds()) ||
+                const auto& dt_pt = ls.dt_pt(jppidx);
+                if(!improves(best_dt, clockwise, dt_pt, spid_dist.second.total_seconds())) {
+                    if (!is_equal(best_dt, clockwise, dt_pt, spid_dist.second.total_seconds()) ||
                              best_nb_jpp_of_path <= nb_jpp) {
                         continue;
                     }
                 }
                 best_jpp = jppidx;
-                best_dt_jpp = l.dt_pt;
+                best_dt_jpp = dt_pt;
                 best_nb_jpp_of_path = nb_jpp;
                 // When computing with clockwise, in the second pass we store deparutre time
                 // in labels, but we want arrival time, so we need to retrive the good stop_time
@@ -166,8 +168,13 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                 const type::StopTime* st = nullptr;
                 DateTime dt = 0;
 
-                std::tie(st, dt) = get_current_stidx_gap(round, jppidx, raptor.labels, accessibilite_params,
-                                                                      !clockwise, raptor.data, disruption_active);
+                std::tie(st, dt) = get_current_stidx_gap(round,
+                                                         jppidx,
+                                                         raptor.labels,
+                                                         accessibilite_params,
+                                                         !clockwise,
+                                                         raptor,
+                                                         disruption_active);
                 if(st != nullptr) {
                     if(clockwise) {
                         auto arrival_time = !st->is_frequency() ? 
@@ -181,13 +188,13 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
                         DateTimeUtils::update(best_dt_jpp, departure_time, true);
                     }
                     if(clockwise)
-                        best_dt = l.dt_pt - spid_dist.second.total_seconds();
+                        best_dt = dt_pt - spid_dist.second.total_seconds();
                     else
-                        best_dt = l.dt_pt + spid_dist.second.total_seconds();
+                        best_dt = dt_pt + spid_dist.second.total_seconds();
                 }
             }
         }
-        if(best_jpp != type::invalid_idx) {
+        if (best_jpp.is_valid()) {
             Solution s;
             s.jpp_idx = best_jpp;
             s.count = round;
@@ -196,11 +203,11 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
             s.arrival = best_dt_jpp;
             s.ratio = 0;
             s.total_arrival = best_dt;
-            type::idx_t final_jpp_idx;
+            JppIdx final_jpp_idx;
             std::tie(final_jpp_idx, s.upper_bound) = get_final_jppidx_and_date(round, best_jpp, clockwise,
                                                                              disruption_active, accessibilite_params, raptor);
             for(auto spid_dep : departs) {
-                if(raptor.data.pt_data->journey_pattern_points[final_jpp_idx]->stop_point->idx == spid_dep.first) {
+                if (SpIdx(*raptor.get_jpp(final_jpp_idx)->stop_point) == spid_dep.first) {
                     if(clockwise) {
                         s.upper_bound = s.upper_bound + spid_dep.second.total_seconds();
                     }else {
@@ -220,23 +227,23 @@ get_pareto_front(bool clockwise, const std::vector<std::pair<type::idx_t, naviti
 
 
 Solutions
-get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
-                      const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations, const Solution& best,
+get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+                      const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations, const Solution& best,
                       const bool disruption_active, const type::AccessibiliteParams &accessibilite_params,
                       const RAPTOR& raptor) {
     Solutions result;
 
-    std::/*unordered_*/map<type::idx_t, Solution> tmp;
+    std::map<JppIdx, Solution> tmp;
     // We start at 1 because we don't want results of the first round
     for(uint32_t i=1; i <= raptor.count; ++i) {
         for(auto spid_dist : destinations) {
             Solution best_departure;
             best_departure.ratio = 2;
-            best_departure.jpp_idx = type::invalid_idx;
-            for(auto journey_pattern_point : raptor.data.pt_data->stop_points[spid_dist.first]->journey_pattern_point_list) {
-                type::idx_t jppidx = journey_pattern_point->idx;
+            best_departure.jpp_idx = JppIdx();
+            for(auto journey_pattern_point: raptor.get_sp(spid_dist.first)->journey_pattern_point_list) {
+                JppIdx jppidx = JppIdx(*journey_pattern_point);
                 // We only want solution ending by a vehicle journey or a stay_in
-                if(raptor.labels[i][journey_pattern_point->idx].pt_is_initialized()) {
+                if(raptor.labels[i].pt_is_initialized(jppidx)) {
                     navitia::time_duration walking_time = getWalkingTime(i, jppidx, departs, destinations, clockwise,
                                                                          disruption_active, accessibilite_params, raptor);
                     if(best.walking_time < walking_time) {
@@ -245,10 +252,10 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                     float lost_time;
                     if(clockwise)
                         lost_time = best.total_arrival -
-                                    (raptor.labels[i][jppidx].dt_pt - best.walking_time.total_seconds());
+                            (raptor.labels[i].dt_pt(jppidx) - best.walking_time.total_seconds());
                     else
-                        lost_time = (raptor.labels[i][jppidx].dt_pt + spid_dist.second.total_seconds()) -
-                                best.total_arrival;
+                        lost_time = (raptor.labels[i].dt_pt(jppidx) + spid_dist.second.total_seconds()) -
+                            best.total_arrival;
 
 
                     //Si je gagne 5 minutes de marche a pied, je suis pret à perdre jusqu'à 10 minutes.
@@ -259,27 +266,28 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                             continue;
                         }
                         Solution s;
-                            s.jpp_idx = jppidx;
+                        s.jpp_idx = jppidx;
                         s.count = i;
                         s.ratio = ratio;
                         s.walking_time = walking_time;
-                        s.arrival = raptor.labels[i][jppidx].dt_pt;
-                        type::idx_t final_jpp_idx;
+                        s.arrival = raptor.labels[i].dt_pt(jppidx);
+                        JppIdx final_jpp_idx;
                         DateTime last_time;
                         std::tie(final_jpp_idx, last_time) = get_final_jppidx_and_date(i, jppidx, clockwise,
                                             disruption_active, accessibilite_params, raptor);
+                        const SpIdx final_sp_idx = SpIdx(*raptor.get_jpp(final_jpp_idx)->stop_point);
 
                         if(clockwise) {
                             s.upper_bound = last_time;
                             for(auto spid_dep : departs) {
-                                if(raptor.data.pt_data->journey_pattern_points[final_jpp_idx]->stop_point->idx == spid_dep.first) {
+                                if(final_sp_idx == spid_dep.first) {
                                     s.upper_bound = s.upper_bound + (spid_dep.second.total_seconds());
                                 }
                             }
                         } else {
                             s.upper_bound = last_time;
                             for(auto spid_dep : departs) {
-                                if(raptor.data.pt_data->journey_pattern_points[final_jpp_idx]->stop_point->idx == spid_dep.first) {
+                                if(final_sp_idx == spid_dep.first) {
                                     s.upper_bound = s.upper_bound - (spid_dep.second.total_seconds());
                                 }
                             }
@@ -288,7 +296,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
                     }
                 }
             }
-            if(best_departure.jpp_idx != type::invalid_idx) {
+            if (best_departure.jpp_idx.is_valid()) {
                 if(tmp.find(best_departure.jpp_idx) == tmp.end()) {
                     tmp.insert(std::make_pair(best_departure.jpp_idx, best_departure));
                 } else if(tmp[best_departure.jpp_idx].ratio > best_departure.ratio) {
@@ -314,17 +322,17 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<type::idx_t, n
 }
 
 struct VisitorFinalJppAndDate : public BasePathVisitor {
-    type::idx_t current_jpp = type::invalid_idx;
+    JppIdx current_jpp = JppIdx();
     DateTime last_time = DateTimeUtils::inf;
-    void final_step(const type::idx_t current_jpp, size_t count, const std::vector<label_vector_t> &labels) {
+    void final_step(const JppIdx current_jpp, size_t count, const std::vector<Labels> &labels) {
         this->current_jpp = current_jpp;
-        last_time = labels[count][current_jpp].dt_pt;
+        last_time = labels[count].dt_pt(current_jpp);
     }
 };
 
 // Reparcours l’itinéraire rapidement pour avoir le JPP et la date de départ (si on cherchait l’arrivée au plus tôt)
-std::pair<type::idx_t, DateTime>
-get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, bool disruption_active,
+std::pair<JppIdx, DateTime>
+get_final_jppidx_and_date(int count, JppIdx jpp_idx, bool clockwise, bool disruption_active,
                           const type::AccessibiliteParams & accessibilite_params, const RAPTOR& raptor) {
     VisitorFinalJppAndDate v;
     read_path(v, jpp_idx, count, !clockwise, disruption_active, accessibilite_params, raptor);
@@ -334,7 +342,7 @@ get_final_jppidx_and_date(int count, type::idx_t jpp_idx, bool clockwise, bool d
 
 struct VisitorWalkingTime : public BasePathVisitor {
     navitia::time_duration walking_time = {};
-    type::idx_t departure_jpp_idx = type::invalid_idx;
+    JppIdx departure_jpp_idx = JppIdx();
     void connection(type::StopPoint* , type::StopPoint* ,
                 boost::posix_time::ptime dep_time, boost::posix_time::ptime arr_time,
                 type::StopPointConnection*) {
@@ -342,39 +350,39 @@ struct VisitorWalkingTime : public BasePathVisitor {
         walking_time += navitia::seconds((arr_time - dep_time).total_seconds());
     }
 
-    void final_step(type::idx_t current_jpp, size_t , const std::vector<std::vector<Label>> &){
+    void final_step(JppIdx current_jpp, size_t , const std::vector<Labels> &){
         departure_jpp_idx = current_jpp;
     }
 
 };
 
 
-navitia::time_duration getWalkingTime(int count, type::idx_t jpp_idx, const std::vector<std::pair<type::idx_t, navitia::time_duration> > &departs,
-                     const std::vector<std::pair<type::idx_t, navitia::time_duration> > &destinations,
+navitia::time_duration getWalkingTime(int count, JppIdx jpp_idx, const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+                     const std::vector<std::pair<SpIdx, navitia::time_duration> > &destinations,
                      bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
                      const RAPTOR& raptor) {
 
-    const auto* current_jpp = raptor.data.pt_data->journey_pattern_points[jpp_idx];
+    const auto* current_jpp = raptor.get_jpp(jpp_idx);
     navitia::time_duration walking_time = {};
 
     //Marche à la fin
     for(auto dest_dist : destinations) {
-        if(dest_dist.first == current_jpp->stop_point->idx) {
+        if(dest_dist.first == SpIdx(*current_jpp->stop_point)) {
             walking_time = dest_dist.second;
             break;
         }
     }
 
     VisitorWalkingTime v;
-    read_path(v, current_jpp->idx, count, !clockwise, disruption_active, accessibilite_params, raptor);
+    read_path(v, jpp_idx, count, !clockwise, disruption_active, accessibilite_params, raptor);
     walking_time += v.walking_time;
-    if (v.departure_jpp_idx == type::invalid_idx) {
+    if (!v.departure_jpp_idx.is_valid()) {
         return walking_time;
     }
-    const auto* departure_jpp = raptor.data.pt_data->journey_pattern_points[v.departure_jpp_idx];
+    const auto* departure_jpp = raptor.get_jpp(v.departure_jpp_idx);
     //Marche au départ
     for(auto dep_dist : departs) {
-        if(dep_dist.first == departure_jpp->stop_point->idx) {
+        if (dep_dist.first == SpIdx(*departure_jpp->stop_point)) {
             walking_time += dep_dist.second;
             break;
         }

@@ -396,15 +396,23 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                     }
 
                     auto begin_section_time = arrival_time;
+                    int nb_section = pb_journey->mutable_sections()->size();
                     fill_street_sections(enhanced_response, destination, temp, d, pb_journey,
                             begin_section_time);
                     arrival_time = arrival_time + temp.duration.to_posix();
+                    if(pb_journey->mutable_sections()->size() > nb_section){
+                        //We add coherence between the destination of the PT part of the journey
+                        //and the origin of the street network part
+                        auto section = pb_journey->mutable_sections(nb_section);
+                        bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
+                                              navitia::from_posix_timestamp(section->end_date_time()));
+                        fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
+                    }
 
+                    //We add coherence with the destination object of the request
                     auto section = pb_journey->mutable_sections(pb_journey->mutable_sections()->size()-1);
                     bt::time_period action_period(navitia::from_posix_timestamp(section->begin_date_time()),
                                               navitia::from_posix_timestamp(section->end_date_time()));
-                    fill_pb_placemark(arrival_stop_point, d, section->mutable_origin(), 2, now, action_period, show_codes);
-                    //We add coherence with the destination object of the request
                     fill_pb_placemark(destination, d, section->mutable_destination(), 2, now, action_period, show_codes);
                 }
             }
@@ -500,23 +508,24 @@ static void add_isochrone_response(RAPTOR& raptor,
     bt::ptime now = bt::second_clock::local_time();
     for(const type::StopPoint* sp : stop_points) {
         DateTime best = bound;
-        type::idx_t best_jpp = type::invalid_idx;
+        JppIdx best_jpp = JppIdx();
         int best_round = -1;
         for(auto jpp : sp->journey_pattern_point_list) {
-            if((clockwise && raptor.best_labels[jpp->idx] < best) ||
-                (!clockwise && raptor.best_labels[jpp->idx] > best)){
-                int round = raptor.best_round(jpp->idx);
-                if(round != -1 && raptor.labels[round][jpp->idx].pt_is_initialized()) {
-                    best = raptor.best_labels[jpp->idx];
-                    best_jpp = jpp->idx;
+            const JppIdx jpp_idx = JppIdx(*jpp);
+            if((clockwise && raptor.best_labels[jpp_idx] < best) ||
+                (!clockwise && raptor.best_labels[jpp_idx] > best)){
+                int round = raptor.best_round(jpp_idx);
+                if(round != -1 && raptor.labels[round].pt_is_initialized(jpp_idx)) {
+                    best = raptor.best_labels[jpp_idx];
+                    best_jpp = jpp_idx;
                     best_round = round;
                 }
             }
         }
 
-        if(best_jpp != type::invalid_idx) {
+        if (best_jpp.is_valid()) {
             auto label = raptor.best_labels[best_jpp];
-            type::idx_t initial_jpp;
+            JppIdx initial_jpp;
             DateTime initial_dt;
             boost::tie(initial_jpp, initial_dt) = get_final_jppidx_and_date(best_round,
                     best_jpp, !clockwise, disruption_active, accessibilite_params, raptor);
@@ -536,10 +545,10 @@ static void add_isochrone_response(RAPTOR& raptor,
                 bt::time_period action_period(navitia::to_posix_time(label-duration, raptor.data),
                         navitia::to_posix_time(label, raptor.data));
                 if (show_stop_area)
-                    fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point->stop_area,
+                    fill_pb_placemark(raptor.get_jpp(best_jpp)->stop_point->stop_area,
                             raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
                else
-                    fill_pb_placemark(raptor.data.pt_data->journey_pattern_points[best_jpp]->stop_point,
+                   fill_pb_placemark(raptor.get_jpp(best_jpp)->stop_point,
                             raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
             }
         }
@@ -586,10 +595,10 @@ std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::
 }
 
 static
-std::vector<std::pair<type::idx_t, navitia::time_duration> >
+std::vector<std::pair<SpIdx, navitia::time_duration> >
 get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         georef::StreetNetwork & worker, bool use_second = false){
-    std::vector<std::pair<type::idx_t, navitia::time_duration> > result;
+    std::vector<std::pair<SpIdx, navitia::time_duration> > result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_TRACE(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
@@ -597,15 +606,16 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 || ep.type == type::Type_e::Coord
                 || ep.type == type::Type_e::StopArea
                 || ep.type == type::Type_e::POI) {
-        std::set<type::idx_t> stop_points;
+        std::set<SpIdx> stop_points;
 
         if (ep.type == type::Type_e::StopArea) {
             auto it = data.pt_data->stop_areas_map.find(ep.uri);
             if (it!= data.pt_data->stop_areas_map.end()) {
                 for (auto stop_point : it->second->stop_point_list) {
-                    if (stop_points.find(stop_point->idx) == stop_points.end()) {
-                        result.push_back({stop_point->idx, {}});
-                        stop_points.insert(stop_point->idx);
+                    const SpIdx sp_idx = SpIdx(*stop_point);
+                    if (stop_points.find(sp_idx) == stop_points.end()) {
+                        result.push_back({sp_idx, {}});
+                        stop_points.insert(sp_idx);
                     }
                 }
             }
@@ -615,8 +625,9 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         const auto& admins = find_admins(ep, data);
         for (const auto* admin: admins) {
             for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
-                result.push_back({odt_admin_stop_point->idx, {}});
-                stop_points.insert(odt_admin_stop_point->idx);
+                const SpIdx sp_idx = SpIdx(*odt_admin_stop_point);
+                result.push_back({sp_idx, {}});
+                stop_points.insert(sp_idx);
             }
         }
 
@@ -625,16 +636,16 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                     data.pt_data->stop_point_proximity_list,
                     use_second);
         for(auto idx_duration : tmp_sn) {
-            auto sp_idx = idx_duration.first;
+            auto sp_idx = SpIdx(idx_duration.first);
             if(stop_points.find(sp_idx) == stop_points.end()) {
                 stop_points.insert(sp_idx);
-                result.push_back(idx_duration);
+                result.push_back({sp_idx, idx_duration.second});
             }
         }
     } else if (ep.type == type::Type_e::StopPoint) {
         auto it = data.pt_data->stop_points_map.find(ep.uri);
         if (it != data.pt_data->stop_points_map.end()){
-            result.push_back({it->second->idx, {}});
+            result.push_back({SpIdx(*it->second), {}});
         }
     } else if(ep.type == type::Type_e::Admin) {
         //for an admin, we want to leave from it's main stop areas if we have some, else we'll leave from the center of the admin
@@ -648,15 +659,18 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         if (! admin->main_stop_areas.empty()) {
             for (auto stop_area: admin->main_stop_areas) {
                 for(auto stop_point : stop_area->stop_point_list) {
-                    result.push_back({stop_point->idx, {}});
+                    result.push_back({SpIdx(*stop_point), {}});
                 }
             }
         } else {
             //we only add the center of the admin, and look for the stop points around
-            result = worker.find_nearest_stop_points(
+            auto nearest = worker.find_nearest_stop_points(
                         ep.streetnetwork_params.max_duration,
                         data.pt_data->stop_point_proximity_list,
                         use_second);
+            for (const auto& elt: nearest) {
+                result.push_back({SpIdx(elt.first), elt.second});
+            }
         }
         LOG4CPLUS_ERROR(logger, result.size() << " sp found for admin");
     }
@@ -801,13 +815,13 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
         return pb_response;
     }
 
-    std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > departures;
-    std::vector<std::pair<type::EntryPoint, std::vector<std::pair<type::idx_t, navitia::time_duration> > > > arrivals;
+    std::vector<std::pair<type::EntryPoint, std::vector<std::pair<SpIdx, navitia::time_duration> > > > departures;
+    std::vector<std::pair<type::EntryPoint, std::vector<std::pair<SpIdx, navitia::time_duration> > > > arrivals;
 
     for(const type::EntryPoint& org : origins) {
         worker.init(org);
         auto org_stop_points = get_stop_points(org, raptor.data, worker);
-        for (std::pair<type::idx_t, navitia::time_duration>& org_stop_point : org_stop_points) {
+        for (auto& org_stop_point: org_stop_points) {
             org_stop_point.second += navitia::seconds(org.access_duration);
         }
         departures.push_back(std::make_pair(org, org_stop_points));
@@ -816,7 +830,7 @@ make_nm_response(RAPTOR &raptor, const std::vector<type::EntryPoint> &origins,
     for(const type::EntryPoint& dst : destinations) {
         worker.init(dst);
         auto dst_stop_points = get_stop_points(dst, raptor.data, worker);
-        for (std::pair<type::idx_t, navitia::time_duration>& dst_stop_point : dst_stop_points) {
+        for (auto& dst_stop_point: dst_stop_points) {
             dst_stop_point.second += navitia::seconds(dst.access_duration);
         }
         arrivals.push_back(std::make_pair(dst, dst_stop_points));

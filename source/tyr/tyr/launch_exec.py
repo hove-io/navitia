@@ -35,6 +35,32 @@ import os
 import select
 import re
 
+class LogLine(object):
+    def __init__(self, line):
+        if line.startswith('DEBUG') or line.startswith('TRACE') or line.startswith('NOTICE') or not line:
+            self.level = 10
+        elif line.startswith('INFO'):
+            self.level = 20
+        elif line.startswith('WARN'):
+            self.level = 30
+        else:
+            self.level = 40
+
+        pos = line.find(' - ')
+        if 0 < pos < 10:
+            self.msg = line[pos+3:]
+        else:
+            self.msg = line
+
+def parse_log(buff):
+    logs = []
+    line, sep, buff = buff.partition('\n')
+    while sep and buff:
+        logs.append(LogLine(line))
+        line, sep, buff = buff.partition('\n')
+    if not sep:
+        buff = line#we put back the last unterminated line in the buffer
+    return (logs, buff)
 
 def launch_exec(exec_name, args, logger):
     """ Launch an exec with args, log the outputs """
@@ -49,10 +75,13 @@ def launch_exec(exec_name, args, logger):
                          stdout=fdw, close_fds=True)
         poller = select.poll()
         poller.register(fdr)
+        line = ''
         while True:
             if poller.poll(1000):
-                line = os.read(fdr, 1000)
-                logger.info(line)
+                line += os.read(fdr, 1000)
+                logs, line = parse_log(line)
+                for l in logs:
+                    logger.log(l.level, l.msg)
             if proc.poll() is not None:
                 break
 

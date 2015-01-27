@@ -256,16 +256,16 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
         BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
         pbnavitia::Message message = line.messages(0);
         BOOST_REQUIRE_EQUAL(message.uri(), "mess1");
-        BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131219T123200");
-        BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131221T123200");
+        BOOST_REQUIRE_EQUAL(message.start_application_date(), navitia::test::to_posix_timestamp("20131219T123200"));
+        BOOST_REQUIRE_EQUAL(message.end_application_date(), navitia::test::to_posix_timestamp("20131221T123200"));
         BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
         BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235959");
         line = disruptions.lines(1);
         BOOST_REQUIRE_EQUAL(line.messages_size(), 1);
         message = line.messages(0);
         BOOST_REQUIRE_EQUAL(message.uri(), "mess0");
-        BOOST_REQUIRE_EQUAL(message.start_application_date(), "20131219T123200");
-        BOOST_REQUIRE_EQUAL(message.end_application_date(), "20131221T123200");
+        BOOST_REQUIRE_EQUAL(message.start_application_date(), navitia::test::to_posix_timestamp("20131219T123200"));
+        BOOST_REQUIRE_EQUAL(message.end_application_date(), navitia::test::to_posix_timestamp("20131221T123200"));
         BOOST_REQUIRE_EQUAL(message.start_application_daily_hour(), "000000");
         BOOST_REQUIRE_EQUAL(message.end_application_daily_hour(), "235959");
     }

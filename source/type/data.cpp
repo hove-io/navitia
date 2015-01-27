@@ -81,7 +81,8 @@ Data::Data(size_t data_identifier) :
 Data::~Data(){}
 
 bool Data::load(const std::string& filename,
-        const boost::optional<std::string>& chaos_database) {
+        const boost::optional<std::string>& chaos_database,
+        const std::vector<std::string>& contributors) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     loading = true;
     try {
@@ -92,9 +93,13 @@ bool Data::load(const std::string& filename,
         last_load = true;
         loaded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-                % dataRaptor->arrival_times.size()
-                % dataRaptor->foot_path_forward.size() % pt_data->stop_points.size()
-                );
+                       % dataRaptor->best_stop_time_data.nb_stop_times()
+                       % pt_data->stop_point_connections.size()
+                       % pt_data->stop_points.size()
+            );
+        if (chaos_database) {
+            fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
+        }
     } catch(const wrong_version& ex) {
         LOG4CPLUS_ERROR(logger, "Cannot laod data: " << ex.what());
         last_load = false;
@@ -104,10 +109,7 @@ bool Data::load(const std::string& filename,
     } catch(...) {
         LOG4CPLUS_ERROR(logger, "Data loading failed");
         last_load = false;
-    }
-    if (chaos_database) {
-        fill_disruption_from_database(*chaos_database, *pt_data);
-    }
+	}
     loading = false;
     return this->last_load;
 }

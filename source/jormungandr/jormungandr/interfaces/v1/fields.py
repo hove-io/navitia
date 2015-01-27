@@ -26,13 +26,16 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-from flask.ext.restful import fields
+from functools import wraps
+from flask.ext.restful import fields, marshal
 from copy import deepcopy
 from collections import OrderedDict
 import datetime
 import logging
+from flask.globals import g
 import pytz
+from jormungandr import utils
+from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.timezone import get_timezone
 from navitiacommon import response_pb2, type_pb2
 
@@ -336,6 +339,15 @@ class SectionGeoJson(fields.Raw):
         return response
 
 
+class DisruptionLinks(fields.Raw):
+    """
+    Add link to disruptions on a pt object
+    """
+    def output(self, key, obj):
+        return [create_internal_link(_type="disruption", rel="disruptions", id=d.uri)
+                for d in obj.disruptions]
+
+
 validity_pattern = {
     'beginning_date': fields.String(),
     'days': fields.String(),
@@ -354,8 +366,8 @@ Note: the 'generic_messages' are the old 'disruptions'
 generic_message = {
     "level": enum_type(attribute="message_status"),
     "value": fields.String(attribute="message"),
-    "start_application_date": fields.String(),
-    "end_application_date": fields.String(),
+    "start_application_date": DateTime(),
+    "end_application_date": DateTime(),
     "start_application_daily_hour": fields.String(),
     "end_application_daily_hour": fields.String(),
 }
@@ -378,12 +390,13 @@ disruption_message = {
 disruption_severity = {
     "name": fields.String(),
     "effect": fields.String(),
-    "color": fields.String()
+    "color": fields.String(),
+    "priority": fields.Integer(),
 }
 
-disruption = {
-    "uri": fields.String(),
-    "impact_uri": fields.String(),
+disruption_marshaller = {
+    "id": fields.String(attribute="uri"),
+    "impact_id": fields.String(attribute="impact_uri"),
     "title": fields.String(),
     "application_periods": NonNullList(NonNullNested(period)),
     "status": disruption_status,
@@ -394,6 +407,33 @@ disruption = {
     "messages": NonNullList(NonNullNested(disruption_message)),
 }
 
+#OLD disruption, DEPRECATED
+disruption = deepcopy(disruption_marshaller)
+disruption_marshaller["uri"] = fields.String()
+disruption_marshaller["impact_uri"] = fields.String()
+
+
+class DisruptionsField(fields.Raw):
+    """
+    Dump the real disruptions (and there will be link to them)
+    """
+
+    def output(self, key, obj):
+        all_disruptions = {}
+
+        def get_all_disruptions(_, val):
+            if not hasattr(val, 'disruptions'):
+                return
+            disruptions = val.disruptions
+            if not disruptions or not hasattr(disruptions[0], 'uri'):
+                return
+
+            for d in disruptions:
+                all_disruptions[d.uri] = d
+
+        utils.walk_protobuf(obj, get_all_disruptions)
+
+        return [marshal(d, disruption_marshaller, display_null=False) for d in all_disruptions.values()]
 
 display_informations_route = {
     "network": fields.String(attribute="network"),
@@ -403,7 +443,7 @@ display_informations_route = {
     "color": fields.String(attribute="color"),
     "code": fields.String(attribute="code"),
     "messages": NonNullList(NonNullNested(generic_message)),
-    "disruptions": NonNullList(NonNullNested(disruption))
+    "links": DisruptionLinks(),
 }
 
 display_informations_vj = {
@@ -418,7 +458,7 @@ display_informations_vj = {
     "equipments": equipments(attribute="has_equipments"),
     "headsign": fields.String(attribute="headsign"),
     "messages": NonNullList(NonNullNested(generic_message)),
-    "disruptions": NonNullList(NonNullNested(disruption))
+    "links": DisruptionLinks(),
 }
 
 coord = {
@@ -444,13 +484,13 @@ generic_type_admin["administrative_regions"] = admins
 
 stop_point = deepcopy(generic_type_admin)
 stop_point["messages"] = NonNullList(NonNullNested(generic_message))
-stop_point["disruptions"] = NonNullList(NonNullNested(disruption))
+stop_point["links"] = DisruptionLinks()
 stop_point["comment"] = fields.String()
 stop_point["codes"] = NonNullList(NonNullNested(code))
 stop_point["label"] = fields.String()
 stop_area = deepcopy(generic_type_admin)
 stop_area["messages"] = NonNullList(NonNullNested(generic_message))
-stop_area["disruptions"] = NonNullList(NonNullNested(disruption))
+stop_area["links"] = DisruptionLinks()
 stop_area["comment"] = fields.String()
 stop_area["codes"] = NonNullList(NonNullNested(code))
 stop_area["timezone"] = fields.String()
@@ -471,7 +511,7 @@ stop_time = {
 
 line = deepcopy(generic_type)
 line["messages"] = NonNullList(NonNullNested(generic_message))
-line["disruptions"] = NonNullList(NonNullNested(disruption))
+line["links"] = DisruptionLinks()
 line["code"] = fields.String()
 line["color"] = fields.String()
 line["comment"] = fields.String()
@@ -480,7 +520,7 @@ line["geojson"] = MultiLineString(attribute="geojson")
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))
-route["disruptions"] = NonNullList(NonNullNested(disruption))
+route["links"] = DisruptionLinks()
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
 route["stop_points"] = NonNullList(NonNullNested(stop_point))
@@ -491,7 +531,7 @@ journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
 network["messages"] = NonNullList(NonNullNested(generic_message))
-network["disruptions"] = NonNullList(NonNullNested(disruption))
+network["links"] = DisruptionLinks()
 network["lines"] = NonNullList(NonNullNested(line))
 network["codes"] = NonNullList(NonNullNested(code))
 line["network"] = PbField(network)
@@ -650,3 +690,58 @@ instance_parameters = {
 instance_status_with_parameters = deepcopy(instance_status)
 instance_status_with_parameters['parameters'] = fields.Nested(instance_parameters, allow_null=True)
 
+
+class use_old_disruptions_if_needed:
+    """
+    delete disruption links and put the disruptions directly in the owner objets
+
+    TEMPORARY: delete this as soon as the front end has the new disruptions integrated
+    """
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            response = f(*args, **kwargs)
+
+            if hasattr(g, 'use_old_disruptions') and g.use_old_disruptions:
+                self._change_links(response)
+            else:
+                # we clean the old AT messages
+                # after the refacto, we'll not dump those messages anymore
+                # but for the moment they have to be cleaned in the new output
+                self._clean_old_at(response)
+
+            return response
+        return wrapper
+
+    def _change_links(self, responses):
+        response = responses[0]
+
+        disruption_node = response['all_disruptions'] if 'all_disruptions' in response else response['disruptions']
+        all_disruptions = {d['id']: d for d in disruption_node}
+
+        def change_to_real_disruption(key, obj):
+            try:
+                if 'links' not in obj:
+                    return
+            except TypeError:
+                return
+
+            real_disruptions = [deepcopy(all_disruptions[d['id']]) for d in obj['links'] if d['type'] == 'disruption']
+
+            obj['disruptions'] = real_disruptions
+
+        utils.walk_dict(response, change_to_real_disruption)
+
+    def _clean_old_at(self, responses):
+        response = responses[0]
+
+        def remove_messages(_, obj):
+            try:
+                if not obj.get('messages') or 'end_application_daily_hour' not in obj.get('messages')[0]:
+                    return
+            except AttributeError:
+                return
+
+            del obj['messages']
+
+        utils.walk_dict(response, remove_messages)

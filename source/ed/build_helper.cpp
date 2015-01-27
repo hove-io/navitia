@@ -231,7 +231,9 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
         jpp->stop_point = sp;
         sp->journey_pattern_point_list.push_back(jpp);
         jpp->journey_pattern = vj->journey_pattern;
-        jpp->uri = "stop:" + sp->uri + "::jp:" + vj->journey_pattern->uri;
+        std::stringstream ss;
+        ss << "stop:" << sp->uri << "::jp:" << vj->journey_pattern->uri;
+        jpp->uri = ss.str();
         if (!vj->stop_time_list.empty()) {
             jpp->shape_from_prev.push_back(vj->stop_time_list.back().journey_pattern_point->stop_point->coord);
             jpp->shape_from_prev.push_back(jpp->stop_point->coord);

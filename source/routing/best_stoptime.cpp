@@ -32,57 +32,59 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+static const type::JourneyPatternPoint*
+get_jpp(JpIdx jp_idx, uint16_t jpp_order, const type::Data& data) {
+    return data.pt_data->journey_patterns[jp_idx.val]->journey_pattern_point_list[jpp_order];
+}
+
 std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const type::JourneyPatternPoint* jpp,
                const DateTime dt,
                const type::VehicleProperties& vehicle_properties,
-               const bool clockwise, bool disruption_active, const type::Data &data, bool reconstructing_path) {
+               const bool clockwise,
+               bool disruption_active,
+               const type::Data &data,
+               bool reconstructing_path) {
     if(clockwise)
-        return earliest_stop_time(jpp, dt, data, disruption_active, reconstructing_path, vehicle_properties);
+        return earliest_stop_time(jpp, dt, data, disruption_active,
+                                  reconstructing_path, vehicle_properties);
     else
-        return tardiest_stop_time(jpp, dt, data, disruption_active, reconstructing_path, vehicle_properties);
+        return tardiest_stop_time(jpp, dt, data, disruption_active,
+                                  reconstructing_path, vehicle_properties);
 }
 
 /** Which is the first valid stop_time in this range ?
  *  Returns invalid_idx is none is
  */
-std::pair<const type::StopTime*, DateTime>
-next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime dt,
-        const type::Data &data, bool reconstructing_path,
-        const type::VehicleProperties &required_vehicle_properties,
-        bool disruption_active){
+static std::pair<const type::StopTime*, DateTime>
+next_valid_discrete_pick_up(const JpIdx jp_idx,
+                            uint16_t jpp_order,
+                            const DateTime dt,
+                            const dataRAPTOR& dataRaptor,
+                            bool reconstructing_path,
+                            const type::VehicleProperties& required_vehicle_properties,
+                            bool disruption_active) {
 
-    if (data.dataRaptor->departure_times.empty()) {
+    if (dataRaptor.best_stop_time_data.empty()) {
         return {nullptr, DateTimeUtils::inf};
     }
-    const auto begin = data.dataRaptor->departure_times.begin() +
-            data.dataRaptor->first_stop_time[jpp->journey_pattern->idx] +
-            jpp->order * data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
-    const auto end_it = begin + data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
-    const auto it = std::lower_bound(begin, end_it, DateTimeUtils::hour(dt),
-                               bound_predicate_earliest);
-
-    type::idx_t idx = it - data.dataRaptor->departure_times.begin();
-    const type::idx_t end = (begin - data.dataRaptor->departure_times.begin()) +
-                           data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
-
 
     auto date = DateTimeUtils::date(dt);
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor->st_forward[idx];
-        BOOST_ASSERT(st->journey_pattern_point == jpp);
+    for (const auto* st: dataRaptor.best_stop_time_data.stop_time_range_after(jp_idx, jpp_order, dt)) {
+        BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
+        BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, false, disruption_active, reconstructing_path, required_vehicle_properties)) {
-                return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
     //if none was found, we try again the next day
-    idx = begin - data.dataRaptor->departure_times.begin();
     date++;
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor->st_forward[idx];
+    for (const auto* st: dataRaptor.best_stop_time_data.stop_time_range_forward(jp_idx, jpp_order)) {
+        BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
+        BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, false, disruption_active, reconstructing_path, required_vehicle_properties)) {
-                return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, DateTimeUtils::set(date, st->departure_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
@@ -90,7 +92,7 @@ next_valid_discrete_pick_up(const type::JourneyPatternPoint* jpp, const DateTime
     return {nullptr, DateTimeUtils::inf};
 }
 
-std::pair<const type::StopTime*, DateTime>
+static std::pair<const type::StopTime*, DateTime>
 next_valid_frequency_pick_up(const type::JourneyPatternPoint* jpp, const DateTime dt,
                              bool reconstructing_path,
                              const type::VehicleProperties &vehicle_properties,
@@ -163,7 +165,11 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
     }
 
     if (best.first == nullptr) {
-        const auto previous_date = DateTimeUtils::set(DateTimeUtils::date(dt) - 1, DateTimeUtils::SECONDS_PER_DAY - 1);
+        auto date = DateTimeUtils::date(dt);
+        if (date == 0) {
+            return best;
+        }
+        const auto previous_date = DateTimeUtils::set(date - 1, DateTimeUtils::SECONDS_PER_DAY - 1);
         for (const auto& freq_vj: jpp->journey_pattern->frequency_vehicle_journey_list) {
             //we get stop time corresponding to the jpp
             const auto& st = freq_vj->stop_time_list[jpp->order];
@@ -187,40 +193,35 @@ previous_valid_frequency_drop_off(const type::JourneyPatternPoint* jpp, const Da
 }
 
 static std::pair<const type::StopTime*, DateTime>
-previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const DateTime dt,
-               const type::Data &data, bool reconstructing_path,
-               const type::VehicleProperties &required_vehicle_properties,
-               bool disruption_active){
+previous_valid_discrete_drop_off(const JpIdx jp_idx,
+                                 uint16_t jpp_order,
+                                 const DateTime dt,
+                                 const dataRAPTOR& dataRaptor,
+                                 bool reconstructing_path,
+                                 const type::VehicleProperties& required_vehicle_properties,
+                                 bool disruption_active) {
     //On cherche le plus grand stop time de la journey_pattern <= dt.hour()
-    if (data.dataRaptor->arrival_times.empty()) {
+    if (dataRaptor.best_stop_time_data.empty()) {
         return {nullptr, DateTimeUtils::inf};
     }
-    const auto begin = data.dataRaptor->arrival_times.begin() +
-                       data.dataRaptor->first_stop_time[jpp->journey_pattern->idx] +
-                       jpp->order * data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
-    const auto end_it = begin + data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
-    const auto it = std::lower_bound(begin, end_it, DateTimeUtils::hour(dt), bound_predicate_tardiest);
-
-    type::idx_t idx = it - data.dataRaptor->arrival_times.begin();
-    const type::idx_t end = (begin - data.dataRaptor->arrival_times.begin()) +
-                           data.dataRaptor->nb_trips[jpp->journey_pattern->idx];
 
     auto date = DateTimeUtils::date(dt);
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor->st_backward[idx];
+    for (const auto* st: dataRaptor.best_stop_time_data.stop_time_range_before(jp_idx, jpp_order, dt)) {
+        BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
+        BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, true, disruption_active, !reconstructing_path, required_vehicle_properties)) {
-                return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
+            return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
     }
 
     if (date == 0) {
         return {nullptr, DateTimeUtils::not_valid};
     }
-    idx = begin - data.dataRaptor->arrival_times.begin();
 
     --date;
-    for(; idx < end; ++idx) {
-        const type::StopTime* st = data.dataRaptor->st_backward[idx];
+    for (const auto* st: dataRaptor.best_stop_time_data.stop_time_range_backward(jp_idx, jpp_order)) {
+        BOOST_ASSERT(JpIdx(*st->journey_pattern_point->journey_pattern) == jp_idx);
+        BOOST_ASSERT(st->journey_pattern_point->order == jpp_order);
         if (is_valid(st, date, true, disruption_active, !reconstructing_path, required_vehicle_properties)) {
             return {st, DateTimeUtils::set(date, st->arrival_time % DateTimeUtils::SECONDS_PER_DAY)};
         }
@@ -228,7 +229,6 @@ previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const Dat
 
     return {nullptr, DateTimeUtils::not_valid};
 }
-
 
 /**
  * earliest_stop_time function:
@@ -240,57 +240,121 @@ previous_valid_discrete_drop_off(const type::JourneyPatternPoint* jpp, const Dat
  *
  *      Note: if nothing found, we do the same lookup the day after
  */
+static std::pair<const type::StopTime*, DateTime>
+earliest_stop_time(JpIdx jp_idx,
+                   uint16_t jpp_order,
+                   const DateTime dt,
+                   const type::Data &data,
+                   bool disruption_active,
+                   bool reconstructing_path,
+                   const type::VehicleProperties& vehicle_properties,
+                   bool check_freq = true) {
+    //We look for the earliest stop time of the journey_pattern >= dt.hour()
+
+    //Return the first valid trip
+    const auto first_discrete_st_pair =
+        next_valid_discrete_pick_up(jp_idx, jpp_order, dt, *data.dataRaptor, reconstructing_path,
+                                    vehicle_properties, disruption_active);
+
+    if (check_freq) {
+        //TODO use first_discrete as a LB ?
+        const auto first_frequency_st_pair =
+            next_valid_frequency_pick_up(get_jpp(jp_idx, jpp_order, data), dt, reconstructing_path,
+                                         vehicle_properties, disruption_active);
+
+        //we need to find the earliest between the frequency one and the 'normal' one
+        if (first_frequency_st_pair.second < first_discrete_st_pair.second) {
+            return first_frequency_st_pair;
+        }
+    }
+
+    return first_discrete_st_pair;
+}
+
 std::pair<const type::StopTime*, DateTime>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
                    const DateTime dt, const type::Data &data,
                    bool disruption_active,
                    bool reconstructing_path,
                    const type::VehicleProperties& vehicle_properties) {
-    //We look for the earliest stop time of the journey_pattern >= dt.hour()
-
-    //Return the first valid trip
-    const auto first_discrete_st_pair =
-            next_valid_discrete_pick_up(jpp, dt, data, reconstructing_path, vehicle_properties, disruption_active);
-
-    //TODO use first_discrete as a LB ?
-    const auto first_frequency_st_pair =
-            next_valid_frequency_pick_up(jpp, dt, reconstructing_path, vehicle_properties, disruption_active);
-
-    //we need to find the earliest between the frequency one and the 'normal' one
-    if (first_discrete_st_pair.second <= first_frequency_st_pair.second) {
-        //discrete's better
-        return first_discrete_st_pair;
-    }
-    return first_frequency_st_pair;
+    return earliest_stop_time(JpIdx(*jpp->journey_pattern),
+                              jpp->order,
+                              dt,
+                              data,
+                              disruption_active,
+                              reconstructing_path,
+                              vehicle_properties);
 }
 
+static std::pair<const type::StopTime*, DateTime>
+tardiest_stop_time(JpIdx jp_idx,
+                   uint16_t jpp_order,
+                   const DateTime dt,
+                   const type::Data &data,
+                   bool disruption_active,
+                   bool reconstructing_path,
+                   const type::VehicleProperties& vehicle_properties,
+                   bool check_freq = true) {
+
+    const auto first_discrete_st_pair =
+        previous_valid_discrete_drop_off(jp_idx, jpp_order, dt, *data.dataRaptor, reconstructing_path,
+                                         vehicle_properties, disruption_active);
+
+    if (check_freq) {
+        //TODO use first_discrete as a LB ?
+        const auto first_frequency_st_pair =
+            previous_valid_frequency_drop_off(get_jpp(jp_idx, jpp_order, data), dt, reconstructing_path,
+                                              vehicle_properties, disruption_active);
+
+        // since the default value is DateTimeUtils::not_valid (== DateTimeUtils::max)
+        // we need to check first that they are
+        if (first_discrete_st_pair.second == DateTimeUtils::not_valid) {
+            return first_frequency_st_pair;
+        }
+        if (first_frequency_st_pair.second == DateTimeUtils::not_valid) {
+            return first_discrete_st_pair;
+        }
+        //we need to find the tardiest between the frequency one and the 'normal' one
+        if (first_frequency_st_pair.second < first_discrete_st_pair.second) {
+            return first_frequency_st_pair;
+        }
+    }
+
+    return first_discrete_st_pair;
+}
 
 std::pair<const type::StopTime*, DateTime>
 tardiest_stop_time(const type::JourneyPatternPoint* jpp,
-                   const DateTime dt, const type::Data &data, bool disruption_active,
+                   const DateTime dt,
+                   const type::Data &data,
+                   bool disruption_active,
                    bool reconstructing_path,
                    const type::VehicleProperties& vehicle_properties) {
+    return tardiest_stop_time(JpIdx(*jpp->journey_pattern),
+                              jpp->order,
+                              dt,
+                              data,
+                              disruption_active,
+                              reconstructing_path,
+                              vehicle_properties);
+}
 
-    const auto first_discrete_st_pair =
-            previous_valid_discrete_drop_off(jpp, dt, data, reconstructing_path, vehicle_properties, disruption_active);
-
-    //TODO use first_discrete as a LB ?
-    const auto first_frequency_st_pair =
-            previous_valid_frequency_drop_off(jpp, dt, reconstructing_path, vehicle_properties, disruption_active);
-
-    // since the default value is DateTimeUtils::not_valid (== DateTimeUtils::max)
-    // we need to check first that they are
-    if (first_discrete_st_pair.second == DateTimeUtils::not_valid) {
-        return first_frequency_st_pair;
-    }
-    if (first_frequency_st_pair.second == DateTimeUtils::not_valid) {
-        return first_discrete_st_pair;
-    }
-    //we need to find the tardiest between the frequency one and the 'normal' one
-    if (first_discrete_st_pair.second >= first_frequency_st_pair.second) {
-        return first_discrete_st_pair;
-    }
-    return first_frequency_st_pair;
+std::pair<const type::StopTime*, uint32_t>
+best_stop_time(const JpIdx jp_idx,
+               const uint16_t jpp_order,
+               const DateTime dt,
+               const type::VehicleProperties& vehicle_properties,
+               const bool clockwise,
+               bool disruption_active,
+               const type::Data &data,
+               bool reconstructing_path,
+               bool check_freq) {
+    if(clockwise)
+        return earliest_stop_time(jp_idx, jpp_order, dt, data, disruption_active,
+                                  reconstructing_path, vehicle_properties, check_freq);
+    else
+        return tardiest_stop_time(jp_idx, jpp_order, dt, data, disruption_active,
+                                  reconstructing_path, vehicle_properties, check_freq);
 }
 
 /** get all stop times for a given jpp and a given calendar

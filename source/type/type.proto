@@ -63,10 +63,10 @@ enum ResponseStatus{
 	no_departure_this_day = 1;
 	no_active_mode_this_day = 2;
 	no_active_circulation_this_day = 3;
-	no_direct_route_this_day = 4;
-	no_departure_stoppoint = 5;
 	terminus = 6;
 	date_out_of_bound = 7;
+	partial_terminus = 8;
+    ok = 9;
 }
 
 
@@ -108,8 +108,8 @@ message Message {
     optional string uri = 1;
     optional string message = 2;
     optional string title = 3;
-    optional string start_application_date = 4;
-    optional string end_application_date = 5;
+    optional uint64 start_application_date = 4;
+    optional uint64 end_application_date = 5;
     optional string start_application_daily_hour = 6;
     optional string end_application_daily_hour = 7;
     optional MessageStatus message_status = 8;
@@ -119,6 +119,7 @@ message Severity {
     optional string name                           = 1;
     optional string color                          = 2;
     optional string effect                         = 3;
+    optional int32  priority                       = 4;
 }
 
 message Disruption {

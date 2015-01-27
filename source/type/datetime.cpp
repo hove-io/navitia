@@ -94,8 +94,9 @@ std::vector<pt::time_period>
 expand_calendar(pt::ptime start, pt::ptime end,
              pt::time_duration beg_of_day, pt::time_duration end_of_day,
              std::bitset<7> days) {
-    if (days.all() && beg_of_day == pt::hours(0) && (pt::hours(24) - end_of_day) <= (1_s).to_posix()) {
-        //Note, we have one second tolerance on the end of the day
+    auto diff = beg_of_day < end_of_day ? end_of_day - beg_of_day : beg_of_day - end_of_day;
+    if (days.all() && (diff <= (1_min).to_posix() || diff >= (23_h + 59_min).to_posix())) {
+        //Note, we have one minute tolerance on the end of the day
         return {{start, end}};
     }
     auto period = boost::gregorian::date_period(start.date(), end.date() + boost::gregorian::days(1));
