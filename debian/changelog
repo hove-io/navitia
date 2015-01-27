@@ -1,3 +1,9 @@
+navitia2 (1.9.1) unstable; urgency=low
+
+  * fix integration tests <https://github.com/CanalTP/navitia/pull/842> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 27 Jan 2015 18:01:35 +0100
+
 navitia2 (1.9.0) unstable; urgency=low
 
   * Kraken: add partial_terminus in stop_schedules  <https://github.com/CanalTP/navitia/pull/839>
