@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from tests_mechanism import AbstractTestFixture, dataset
-from jormungandr import utils
 from check_utils import *
 
 
