@@ -307,7 +307,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
 
     logger = get_instance_logger(instance)
     try:
-        output_file = instance_config.tmp_file
+        output_file = instance_config.target_file
 
         if custom_output_dir:
             # we change the target_filename to store it in a subdir
@@ -336,36 +336,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
 @Lock(10*60)
 def nav2rt(self, instance_config, job_id, custom_output_dir=None):
     """ Launch nav2rt"""
-    job = models.Job.query.get(job_id)
-    instance = job.instance
-
-    logger = get_instance_logger(instance)
-    try:
-        source_filename = instance_config.tmp_file
-        target_filename = instance_config.target_file
-
-        if custom_output_dir:
-            # we change destination to store it in a subdir
-            source_path = os.path.dirname(source_filename)
-            source_filename = os.path.join(source_path, custom_output_dir, os.path.basename(source_filename))
-
-            target_path = os.path.join(os.path.dirname(target_filename), custom_output_dir)
-            target_filename = os.path.join(target_path, os.path.basename(target_filename))
-            if not os.path.exists(target_path):
-                os.makedirs(target_path)
-
-        connection_string = make_connection_string(instance_config)
-        res = launch_exec('nav2rt',
-                    ["-i", source_filename, "-o", target_filename,
-                        "--connection-string", connection_string],
-                    logger)
-        if res != 0:
-            raise ValueError('nav2rt failed')
-    except:
-        logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
-        raise
+    pass
 
 
 @celery.task(bind=True)
