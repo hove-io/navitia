@@ -148,6 +148,8 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"].add_argument("start_page", type=int, default=0,
                                          description="The page number of the\
                                          ptref result")
+        self.parsers["get"].add_argument("admin_uri[]", type=str, action='append',
+                                         description="list of admin uri used for restrict the searched area")
 
     @use_old_disruptions_if_needed()
     @marshal_with(places_nearby)
