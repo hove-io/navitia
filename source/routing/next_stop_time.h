@@ -127,10 +127,10 @@ struct NextStopTime {
                    const bool reconstructing_path = false,
                    const bool check_freq = true) {
         if (clockwise) {
-            return next_forward_stop_time(jpp_idx, dt, vehicle_properties, disruption_active,
+            return earliest_stop_time(jpp_idx, dt, vehicle_properties, disruption_active,
                                           reconstructing_path, check_freq);
         } else {
-            return next_backward_stop_time(jpp_idx, dt, vehicle_properties, disruption_active,
+            return tardiest_stop_time(jpp_idx, dt, vehicle_properties, disruption_active,
                                            reconstructing_path, check_freq);
         }
     }
@@ -140,24 +140,24 @@ struct NextStopTime {
     /// point.  Return the stop time and the next departure
     /// hour(datetime).
     std::pair<const type::StopTime*, DateTime>
-    next_forward_stop_time(const JppIdx jpp_idx,
-                           const DateTime dt,
-                           const type::VehicleProperties& vehicle_properties,
-                           const bool disruption_active,
-                           const bool reconstructing_path = false,
-                           const bool check_freq = true);
+    earliest_stop_time(const JppIdx jpp_idx,
+                       const DateTime dt,
+                       const type::VehicleProperties& vehicle_properties,
+                       const bool disruption_active,
+                       const bool reconstructing_path = false,
+                       const bool check_freq = true);
 
     /// Next backward stop time for a given datetime (dt).  Look for
     /// the first stop_time arriving before dt on the journey pattern
     /// point.  Return the stop time and the next arrival
     /// hour(datetime).
     std::pair<const type::StopTime*, DateTime>
-    next_backward_stop_time(const JppIdx jpp_idx,
-                            const DateTime dt,
-                            const type::VehicleProperties& vehicle_properties,
-                            const bool disruption_active,
-                            const bool reconstructing_path = false,
-                            const bool check_freq = true);
+    tardiest_stop_time(const JppIdx jpp_idx,
+                       const DateTime dt,
+                       const type::VehicleProperties& vehicle_properties,
+                       const bool disruption_active,
+                       const bool reconstructing_path = false,
+                       const bool check_freq = true);
 
 private:
     const type::Data& data;

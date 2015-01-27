@@ -260,12 +260,12 @@ previous_valid_discrete_drop_off(const JppIdx jpp_idx,
 }
 
 std::pair<const type::StopTime*, DateTime>
-NextStopTime::next_forward_stop_time(const JppIdx jpp_idx,
-                                     const DateTime dt,
-                                     const type::VehicleProperties& vehicle_properties,
-                                     const bool disruption_active,
-                                     const bool reconstructing_path,
-                                     const bool check_freq)
+NextStopTime::earliest_stop_time(const JppIdx jpp_idx,
+                                 const DateTime dt,
+                                 const type::VehicleProperties& vehicle_properties,
+                                 const bool disruption_active,
+                                 const bool reconstructing_path,
+                                 const bool check_freq)
 {
     const auto first_discrete_st_pair =
         next_valid_discrete_pick_up(jpp_idx, dt, *data.dataRaptor, reconstructing_path,
@@ -285,12 +285,12 @@ NextStopTime::next_forward_stop_time(const JppIdx jpp_idx,
 }
 
 std::pair<const type::StopTime*, DateTime>
-NextStopTime::next_backward_stop_time(const JppIdx jpp_idx,
-                                      const DateTime dt,
-                                      const type::VehicleProperties& vehicle_properties,
-                                      const bool disruption_active,
-                                      const bool reconstructing_path,
-                                      const bool check_freq)
+NextStopTime::tardiest_stop_time(const JppIdx jpp_idx,
+                                 const DateTime dt,
+                                 const type::VehicleProperties& vehicle_properties,
+                                 const bool disruption_active,
+                                 const bool reconstructing_path,
+                                 const bool check_freq)
 {
     const auto first_discrete_st_pair =
         previous_valid_discrete_drop_off(jpp_idx, dt, *data.dataRaptor, reconstructing_path,
