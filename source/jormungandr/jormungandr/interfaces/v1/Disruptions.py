@@ -96,7 +96,7 @@ class Disruptions(ResourceUri):
         parser_get.add_argument("_use_old_disruptions", type=bool,
                                 description="temporary boolean to use the old disruption interface. "
                                             "Will be deleted soon, just needed for synchronization with the front end",
-                                default=False)
+                                default=True)
 
     @use_old_disruptions_if_needed()
     @marshal_with(disruptions)
