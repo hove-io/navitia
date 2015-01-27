@@ -28,13 +28,13 @@
 # www.navitia.io
 
 import os
-import subprocess
-from check_utils import *
-
 # set default config file if not defined in other tests
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
         + '/integration_tests_settings.py'
+
+import subprocess
+from check_utils import *
 from jormungandr import app, i_manager
 from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
