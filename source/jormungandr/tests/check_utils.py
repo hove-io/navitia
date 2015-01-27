@@ -30,7 +30,6 @@
 from collections import deque
 from nose.tools import *
 import json
-from jormungandr import utils
 from navitiacommon import request_pb2, response_pb2
 from datetime import datetime
 import logging
@@ -312,6 +311,8 @@ def check_internal_links(response, tester):
 
      At the end the internal link list must be empty
     """
+    from jormungandr import utils  #import late not to load it before updating the conf for the tests
+
     internal_links_id = set()
     internal_link_types = set()  # set with the types we look for
 
