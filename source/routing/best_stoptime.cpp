@@ -377,10 +377,17 @@ get_all_stop_times(const type::JourneyPatternPoint* jpp,
     });
     std::vector<const type::VehicleJourney*> vjs;
     for (const auto meta_vj: meta_vjs) {
+                                                       std::cout << " for calendar " << calendar_id << " and vj " << meta_vj->theoric_vj.front()->uri << std::endl;
+         for (auto c: meta_vj->associated_calendars) {
+                                                        std::cout << "cal " << c.first << std::endl;
+
+}
+
         if (meta_vj->associated_calendars.find(calendar_id) == meta_vj->associated_calendars.end()) {
             //meta vj not associated with the calender, we skip
             continue;
         }
+                                                        std::cout << "hop associated" << std::endl;
         //we can get only the first theoric one, because BY CONSTRUCTION all theoric vj have the same local times
         vjs.push_back(meta_vj->theoric_vj.front());
     }
