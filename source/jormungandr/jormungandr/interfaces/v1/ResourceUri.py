@@ -30,6 +30,7 @@
 from flask.ext.restful import Resource
 from converters_collection_type import collections_to_resource_type
 from converters_collection_type import resource_type_to_collection
+from jormungandr import utils
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.stat_manager import manage_stat_caller
 from make_links import add_id_links, clean_links, add_pagination_links
@@ -255,6 +256,32 @@ class update_journeys_status(object):
     def __init__(self, resource):
         self.resource = resource
 
+    def update_status(self, journey, disruptions):
+
+        class find_most_dangerous_disruption:
+            def __init__(self):
+                self.max_priority_label = None
+                self.max_priority = []
+
+            def __call__(self, key, obj):
+                try:
+                    if 'links' not in obj:
+                        return
+                except TypeError:
+                    return
+                real_disruptions = [disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
+                for d in real_disruptions:
+                    prio = d['severity']['priority']
+                    self.max_priority = prio if not self.max_priority else max(self.max_priority, prio)
+                    if self.max_priority == prio:
+                        self.max_priority_label = d['severity']['effect']
+
+        v = find_most_dangerous_disruption()
+        utils.walk_dict(journey, v)
+
+        if v.max_priority_label:
+            journey['status'] = v.max_priority_label
+
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -264,33 +291,12 @@ class update_journeys_status(object):
             else:
                 data = objects
 
-            def update_status(journey, _items):
-
-                if isinstance(_items, list) or isinstance(_items, tuple):
-                    for item in _items:
-                        update_status(journey, item)
-                elif isinstance(_items, dict) or\
-                        isinstance(_items, OrderedDict):
-                    if 'messages' in _items.keys():
-                        for msg in _items["messages"]:
-                            if not "status" in journey.keys():
-                                journey["status"] = msg["level"]
-                            else:
-                                desc = type_pb2.Message.DESCRIPTOR
-                                fields = desc.fields_by_name
-                                f_status = fields['message_status'].enum_type
-                                values = f_status.values_by_name
-                                status = values[journey["status"]]
-                                level = values[msg["level"]]
-                                if status < level:
-                                    journey["status"] = msg["level"]
-                    else:
-                        for v in _items.items():
-                            update_status(journey, v)
-
             if self.resource.region and "journeys" in data:
+
+                all_disruptions = {d['id']: d for d in data['disruptions']}
+
                 for journey in data["journeys"]:
-                    update_status(journey, journey)
+                    self.update_status(journey, all_disruptions)
 
             if isinstance(objects, tuple):
                 return data, code, header

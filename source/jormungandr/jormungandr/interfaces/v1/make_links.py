@@ -77,6 +77,7 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
     d = {
         "templated": templated,
         "rel": rel,
+        "internal": True,
         "type": _type
     }
     if description:

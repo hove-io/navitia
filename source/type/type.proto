@@ -119,6 +119,7 @@ message Severity {
     optional string name                           = 1;
     optional string color                          = 2;
     optional string effect                         = 3;
+    optional int32  priority                       = 4;
 }
 
 message Disruption {

@@ -28,11 +28,15 @@
 # www.navitia.io
 
 import calendar
+from collections import deque
 from datetime import datetime
+from google.protobuf.descriptor import FieldDescriptor
+from google.protobuf.internal.containers import RepeatedScalarFieldContainer
 from jormungandr import i_manager
 import logging
 import pytz
 from jormungandr.exceptions import RegionNotFound
+from navitiacommon import response_pb2
 
 
 def str_to_time_stamp(str):
@@ -105,3 +109,113 @@ class ResourceUtc:
             dt = dt.astimezone(self.tz())
             return dt.strftime("%Y%m%dT%H%M%S")
         return None  # for the moment I prefer not to display anything instead of something wrong
+
+
+def walk_dict(tree, visitor):
+    """
+    depth first search on a dict.
+    call the visit(elem) method on the visitor for each node
+
+    >>> bob = {'tutu': 1,
+    ... 'tata': [1, 2],
+    ... 'toto': {'bob':12, 'bobette': 13, 'nested_bob': {'bob': 3}},
+    ... 'tete': ('tuple1', ['ltuple1', 'ltuple2']),
+    ... 'titi': [{'a':1}, {'b':1}]}
+
+    >>> def my_visitor(name, val):
+    ...     print "{}={}".format(name, val)
+
+    >>> walk_dict(bob, my_visitor)
+    titi={'b': 1}
+    b=1
+    titi={'a': 1}
+    a=1
+    tete=ltuple2
+    tete=ltuple1
+    tete=tuple1
+    tutu=1
+    toto={'bobette': 13, 'bob': 12, 'nested_bob': {'bob': 3}}
+    nested_bob={'bob': 3}
+    bob=3
+    bob=12
+    bobette=13
+    tata=2
+    tata=1
+    """
+    queue = deque()
+
+    def add_elt(name, elt, first=False):
+        if isinstance(elt, (list, tuple)):
+            for val in elt:
+                queue.append((name, val))
+        elif hasattr(elt, 'iteritems'):
+            for k, v in elt.iteritems():
+                queue.append((k, v))
+        elif first:  # for the first elt, we add it even if it is no collection
+            queue.append((name, elt))
+
+    add_elt("main", tree, first=True)
+    while queue:
+        elem = queue.pop()
+        #we don't want to visit the list, we'll visit each node separately
+        if not isinstance(elem[1], (list, tuple)):
+            visitor(elem[0], elem[1])
+        #for list and tuple, the name is the parent's name
+        add_elt(elem[0], elem[1])
+
+
+def walk_protobuf(pb_object, visitor):
+    """
+    Walk on a protobuf and call the visitor for each nodes
+    >>> journeys = response_pb2.Response()
+    >>> journey_standard = journeys.journeys.add()
+    >>> journey_standard.type = "none"
+    >>> journey_standard.duration = 1
+    >>> journey_standard.nb_transfers = 2
+    >>> s = journey_standard.sections.add()
+    >>> s.duration = 3
+    >>> s = journey_standard.sections.add()
+    >>> s.duration = 4
+    >>> journey_rapid = journeys.journeys.add()
+    >>> journey_rapid.duration = 5
+    >>> journey_rapid.nb_transfers = 6
+    >>> s = journey_rapid.sections.add()
+    >>> s.duration = 7
+    >>>
+    >>> from collections import defaultdict
+    >>> types_counter = defaultdict(int)
+    >>> def visitor(name, val):
+    ...     types_counter[type(val)] +=1
+    >>>
+    >>> walk_protobuf(journeys, visitor)
+    >>> types_counter[response_pb2.Response]
+    1
+    >>> types_counter[response_pb2.Journey]
+    2
+    >>> types_counter[response_pb2.Section]
+    3
+    >>> types_counter[int]  # and 7 int in all
+    7
+    """
+    queue = deque()
+
+    def add_elt(name, elt):
+        try:
+            fields = elt.ListFields()
+        except AttributeError:
+            return
+        for field, value in fields:
+            if field.label == FieldDescriptor.LABEL_REPEATED:
+                for v in value:
+                    queue.append((field.name, v))
+            else:
+                queue.append((field.name, value))
+
+    # add_elt("main", pb_object)
+    queue.append(('main', pb_object))
+    while queue:
+        elem = queue.pop()
+
+        visitor(elem[0], elem[1])
+
+        add_elt(elem[0], elem[1])
