@@ -32,7 +32,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/datetime.h"
 #include "routing/raptor_utils.h"
-#include "routing/idx_map.h"
+#include "utils/idx_map.h"
 #include "routing/next_stop_time.h"
 
 #include <boost/foreach.hpp>

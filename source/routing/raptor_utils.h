@@ -31,7 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "type/datetime.h"
-#include "routing/idx_map.h"
+#include "utils/idx_map.h"
 
 namespace navitia {
 

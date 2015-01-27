@@ -227,7 +227,7 @@ static void add_pathes(EnhancedResponse& enhanced_response,
                 int length = 0;
 
                 if (!vp) {
-                    vp = vj->validity_pattern;
+                    vp = *vj->validity_pattern;
                 } else {
                     assert(vp->beginning_date == vj->validity_pattern->beginning_date);
                     vp->days &= vj->validity_pattern->days;

@@ -31,7 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "routing/raptor_utils.h"
-#include "idx_map.h"
+#include "utils/idx_map.h"
 
 #include <boost/range/algorithm/lower_bound.hpp>
 
