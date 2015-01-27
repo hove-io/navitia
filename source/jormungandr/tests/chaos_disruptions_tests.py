@@ -31,14 +31,13 @@ from kombu.connection import BrokerConnection
 from kombu.entity import Exchange
 from kombu.pools import producers
 from retrying import Retrying
-from jormungandr.interfaces.parsers import parse_input_date
-from jormungandr.utils import str_to_time_stamp
 from tests import gtfs_realtime_pb2
 from tests_mechanism import AbstractTestFixture, dataset
 from check_utils import *
 import chaos_pb2
 from time import sleep
 import uuid
+from jormungandr import utils
 
 
 #we need to generate a unique topic not to have conflict between tests
@@ -464,8 +463,8 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     disruption.cause.id = "CauseTest"
     disruption.cause.wording = "CauseTest"
     disruption.reference = "DisruptionTest"
-    disruption.publication_period.start = str_to_time_stamp("20100412T165200")
-    disruption.publication_period.end = str_to_time_stamp("20200412T165200")
+    disruption.publication_period.start = utils.str_to_time_stamp("20100412T165200")
+    disruption.publication_period.end = utils.str_to_time_stamp("20200412T165200")
 
     # Tag
     tag = disruption.tags.add()
@@ -494,8 +493,8 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
 
     # ApplicationPeriods
     application_period = impact.application_periods.add()
-    application_period.start = str_to_time_stamp("20100412T165200")
-    application_period.end = str_to_time_stamp("20200412T165200")
+    application_period.start = utils.str_to_time_stamp("20100412T165200")
+    application_period.end = utils.str_to_time_stamp("20200412T165200")
 
     # PTobject
     type_col = {
