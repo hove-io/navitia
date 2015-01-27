@@ -11,9 +11,39 @@ Endpoint
 
 The only endpoint of this version of the api is : https://api.navitia.io/v1/
 
+Examples
+********
+
+Coverage of the service
+https://api.navitia.io/v1/coverage 
+
+Where am I? (WGS coordinates)
+https://api.navitia.io/v1/coord/2.377310;48.847002
+
+I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
+
+Which service available in this coverage?
+https://api.navitia.io/v1/coverage/fr-idf
+
+Networks available?
+https://api.navitia.io/v1/coverage/paris/networks 
+
+RATP lines?
+https://api.navitia.io/v1/coverage/paris/networks/network:RTP/lines 
+
+Too much lines, let's use mode filtering
+https://api.navitia.io/v1/coverage/paris/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
+
+By the way, what is close to me?
+https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_points
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
+or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
+or ...
 
 Resources
-#########
+*********
+
 All the resources return a response containing a links object, a paging object, and the requested object.
 
 * **Coverage** : List of the region covered by navitia
@@ -25,10 +55,6 @@ All the resources return a response containing a links object, a paging object, 
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/*region_id*/coords/*lon;lat*                | Information about a specific region |
 +---------------------------------------------------------------+-------------------------------------+
-
-Example
-*******
-https://api.navitia.io/v1/coverage/fr-idf/coords/2.6667;48.7667/places_nearby
 
 * **Public transportation objects** : List of the public transport objects of a region
 
@@ -87,6 +113,7 @@ https://api.navitia.io/v1/coverage/fr-idf/coords/2.6667;48.7667/places_nearby
 +---------------------------------------------------------------+-------------------------------------+
 | ``get`` /coverage/*lon;lat*/places_nearby                     | List of objects near the resource   |
 +---------------------------------------------------------------+-------------------------------------+
+
 
 Authentication
 ================
@@ -397,114 +424,116 @@ The other one, the most used, is to access the 'journey' api endpoint: `<https:/
 | If only one is defined an isochrone is computed with every possible journeys from or to the point.                                                          |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+.. _journeys_parameters:
 
 Parameters
 ##########
 
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| Required | Name                | Type        Description                               | Default value   |
-+==========+=====================+===========+===========================================+=================+
-| nop      | from                | id        | The id of the departure of your journey   |                 |
-|          |                     |           | If none are provided an isochrone is      |                 |
-|          |                     |           | computed                                  |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | to                  | id        | The id of the arrival of your journey     |                 |
-|          |                     |           | If none are provided an isochrone is      |                 |
-|          |                     |           | computed                                  |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| yep      | datetime            | datetime  | A datetime                                |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | datetime_represents | string    | Can be ``departure`` or ``arrival``.      | departure       |
-|          |                     |           |                                           |                 |
-|          |                     |           | If ``departure``, the request will        |                 |
-|          |                     |           | retrieve journeys starting after          |                 |
-|          |                     |           | datetime.                                 |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | If ``arrival`` it will retrieve journeys  |                 |
-|          |                     |           | arriving before datetime.                 |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | forbidden_uris[]    | id        | If you want to avoid lines, modes ...     |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | first_section_mode[]| array of  | Force the first section mode if the first | walking         |
-|          |                     | string    | section is not a public transport one.    |                 |
-|          |                     |           | It takes one the following values:        |                 |
-|          |                     |           | ``walking``, ``car``, ``bike``, ``bss``   |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | bss stands for bike sharing system        |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | It's an array, you can give multiple      |                 |
-|          |                     |           | modes                                     |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | Note: choosing ``bss`` implicitly allows  |                 |
-|          |                     |           | the ``walking`` mode since you might have |                 |
-|          |                     |           | to walk to the bss station                |                 |
-|          |                     |           |                                           |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | last_section_mode[] | array of  | Same as first_section_mode but for the    | walking         |
-|          |                     | string    | last section                              |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_duration_to_pt  | int       | Maximum allowed duration to reach the     | 15*60 s         |
-|          |                     |           | public transport                          |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | Use this to limit the walking/biking part |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | Unit is seconds                           |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | walking_speed       | float     | Walking speed for the fallback sections   | 1.12 m/s        |
-|          |                     |           |                                           |                 |
-|          |                     |           | Speed unit must be in meter/seconds       | (4 km/h)        |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | bike_speed          | float     | Biking speed for the fallback sections    | 4.1 m/s         |
-|          |                     |           |                                           |                 |
-|          |                     |           | Speed unit must be in meter/seconds       | (14.7 km/h)     |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | bss_speed           | float     | Speed while using a bike from a bike      | 4.1 m/s         |
-|          |                     |           | sharing system for the fallback sections  | (14.7 km/h)     |
-|          |                     |           |                                           |                 |
-|          |                     |           | Speed unit must be in meter/seconds       |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | car_speed           | float     | Driving speed for the fallback sections   | 16.8 m/s        |
-|          |                     |           |                                           |                 |
-|          |                     |           | Speed unit must be in meter/seconds       | (60 km/h)       |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | min_nb_journeys     | int       | Minimum number of different suggested     |                 |
-|          |                     |           | trips                                     |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | More in `multiple_journeys`_              |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_nb_journeys     | int       | Maximum number of different suggested     |                 |
-|          |                     |           | trips                                     |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | More in `multiple_journeys`_              |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | count               | int       | Fixed number of different journeys        |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | More in `multiple_journeys`_              |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | disruption_active   | boolean   | If true the algorithm take the disruptions| False           |
-|          |                     |           | into account, and thus avoid disrupted    |                 |
-|          |                     |           | public transport                          |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | max_duration        | int       | Maximum duration of the journey           | 3600*24 s (24h) |
-|          |                     |           |                                           |                 |
-|          |                     |           | Like all duration, the unit is seconds    |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | wheelchair          | boolean   | If true the traveler is considered to     | False           |
-|          |                     |           | be using a wheelchair, thus only          |                 |
-|          |                     |           | accessible public transport are used      |                 |
-|          |                     |           |                                           |                 |
-|          |                     |           | be warned: many data are currently too    |                 |
-|          |                     |           | faint to provide acceptable answers       |                 |
-|          |                     |           | with this parameter on                    |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | show_codes          | boolean   | If true add internal id in the response   | False           |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
-| nop      | debug               | boolean   | Debug mode                                | False           |
-|          |                     |           |                                           |                 |
-|          |                     |           | No journeys are filtered in this mode     |                 |
-+----------+---------------------+-----------+-------------------------------------------+-----------------+
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| Required | Name                  | Type      | Description                               | Default value   |
++==========+=======================+===========+===========================================+=================+
+| nop      | from                  | id        | The id of the departure of your journey   |                 |
+|          |                       |           | If none are provided an isochrone is      |                 |
+|          |                       |           | computed                                  |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | to                    | id        | The id of the arrival of your journey     |                 |
+|          |                       |           | If none are provided an isochrone is      |                 |
+|          |                       |           | computed                                  |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| yep      | datetime              | datetime  | A datetime                                |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | datetime_represents   | string    | Can be ``departure`` or ``arrival``.      | departure       |
+|          |                       |           |                                           |                 |
+|          |                       |           | If ``departure``, the request will        |                 |
+|          |                       |           | retrieve journeys starting after          |                 |
+|          |                       |           | datetime.                                 |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | If ``arrival`` it will retrieve journeys  |                 |
+|          |                       |           | arriving before datetime.                 |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | forbidden_uris[]      | id        | If you want to avoid lines, modes,        |                 |
+|          |                       |           | networks, etc.                            |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | first_section_mode[]  | array of  | Force the first section mode if the first | walking         |
+|          |                       | string    | section is not a public transport one.    |                 |
+|          |                       |           | It takes one the following values:        |                 |
+|          |                       |           | ``walking``, ``car``, ``bike``, ``bss``   |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | bss stands for bike sharing system        |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | It's an array, you can give multiple      |                 |
+|          |                       |           | modes                                     |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | Note: choosing ``bss`` implicitly allows  |                 |
+|          |                       |           | the ``walking`` mode since you might have |                 |
+|          |                       |           | to walk to the bss station                |                 |
+|          |                       |           |                                           |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | last_section_mode[]   | array of  | Same as first_section_mode but for the    | walking         |
+|          |                       | string    | last section                              |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_duration_to_pt    | int       | Maximum allowed duration to reach the     | 15*60 s         |
+|          |                       |           | public transport                          |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | Use this to limit the walking/biking part |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | Unit is seconds                           |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | walking_speed         | float     | Walking speed for the fallback sections   | 1.12 m/s        |
+|          |                       |           |                                           |                 |
+|          |                       |           | Speed unit must be in meter/seconds       | (4 km/h)        |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | bike_speed            | float     | Biking speed for the fallback sections    | 4.1 m/s         |
+|          |                       |           |                                           |                 |
+|          |                       |           | Speed unit must be in meter/seconds       | (14.7 km/h)     |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | bss_speed             | float     | Speed while using a bike from a bike      | 4.1 m/s         |
+|          |                       |           | sharing system for the fallback sections  | (14.7 km/h)     |
+|          |                       |           |                                           |                 |
+|          |                       |           | Speed unit must be in meter/seconds       |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | car_speed             | float     | Driving speed for the fallback sections   | 16.8 m/s        |
+|          |                       |           |                                           |                 |
+|          |                       |           | Speed unit must be in meter/seconds       | (60 km/h)       |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | min_nb_journeys       | int       | Minimum number of different suggested     |                 |
+|          |                       |           | trips                                     |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | More in `multiple_journeys`_              |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_nb_journeys       | int       | Maximum number of different suggested     |                 |
+|          |                       |           | trips                                     |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | More in `multiple_journeys`_              |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | count                 | int       | Fixed number of different journeys        |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | More in `multiple_journeys`_              |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_nb_tranfers       | int       | Maximum of number transfers               | 10              |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | disruption_active     | boolean   | If true the algorithm take the disruptions| False           |
+|          |                       |           | into account, and thus avoid disrupted    |                 |
+|          |                       |           | public transport                          |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_duration          | int       | Maximum duration of the journey           | 3600*24 s (24h) |
+|          |                       |           |                                           |                 |
+|          |                       |           | Like all duration, the unit is seconds    |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | wheelchair            | boolean   | If true the traveler is considered to     | False           |
+|          |                       |           | be using a wheelchair, thus only          |                 |
+|          |                       |           | accessible public transport are used      |                 |
+|          |                       |           |                                           |                 |
+|          |                       |           | be warned: many data are currently too    |                 |
+|          |                       |           | faint to provide acceptable answers       |                 |
+|          |                       |           | with this parameter on                    |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | show_codes            | boolean   | If true add internal id in the response   | False           |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
+| nop      | debug                 | boolean   | Debug mode                                | False           |
+|          |                       |           |                                           |                 |
+|          |                       |           | No journeys are filtered in this mode     |                 |
++----------+-----------------------+-----------+-------------------------------------------+-----------------+
 
 Objects
 #######
@@ -968,6 +997,29 @@ id                   string                           Identifier of the physical
 name                 string                           Name of the physical mode
 commercial_modes     array of `commercial_mode`_      Commercial modes of this physical mode
 ==================== ================================ ========================================
+
+Physical modes are fastened and normalized. If you want to propose modes filter in your application,
+you should use `physical_mode`_ rather than `commercial_mode`_.
+
+Here is the valid id list:
+
+* physical_mode:Air
+* physical_mode:Boat
+* physical_mode:Bus
+* physical_mode:BusRapidTransit
+* physical_mode:Coach
+* physical_mode:Ferry
+* physical_mode:Funicular
+* physical_mode:LocalTrain
+* physical_mode:LongDistanceTrain
+* physical_mode:Metro
+* physical_mode:RapidTransit
+* physical_mode:Shuttle
+* physical_mode:Taxi
+* physical_mode:Train
+* physical_mode:Tramway
+
+You can use these ids in the forbidden_uris[] parameter from `journeys_parameters`_ for exemple.
 
 .. _company:
 
