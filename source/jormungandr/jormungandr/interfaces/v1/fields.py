@@ -396,7 +396,7 @@ disruption_severity = {
 
 disruption_marshaller = {
     "id": fields.String(attribute="uri"),
-    "impact_uri": fields.String(),
+    "impact_id": fields.String(attribute="impact_uri"),
     "title": fields.String(),
     "application_periods": NonNullList(NonNullNested(period)),
     "status": disruption_status,
@@ -410,6 +410,7 @@ disruption_marshaller = {
 #OLD disruption, DEPRECATED
 disruption = deepcopy(disruption_marshaller)
 disruption_marshaller["uri"] = fields.String()
+disruption_marshaller["impact_uri"] = fields.String()
 
 
 class DisruptionsField(fields.Raw):
@@ -420,13 +421,11 @@ class DisruptionsField(fields.Raw):
     def output(self, key, obj):
         all_disruptions = {}
 
-        def get_all_disruptions(name, val):
-            # print "{} = {}".format(name, val)
-            try:
-                disruptions = val.disruptions
-                if disruptions:
-                    disruptions[0].uri
-            except AttributeError:
+        def get_all_disruptions(_, val):
+            if not hasattr(val, 'disruptions'):
+                return
+            disruptions = val.disruptions
+            if not disruptions or not hasattr(disruptions[0], 'uri'):
                 return
 
             for d in disruptions:
