@@ -825,10 +825,10 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
 
     //then we fill the links between a metavj and its associated calendars
     request = "SELECT l.name as name, meta.associated_calendar_id as associated_calendar_id,"
-            " l2.name as associated_calendar_name"
+            " c.uri as associated_calendar_name"
             " from navitia.rel_metavj_associated_calendar as meta, navitia.meta_vj as l,"
-            " navitia.associated_calendar as l2"
-            " WHERE meta.meta_vj_id = l.id and meta.associated_calendar_id = l2.id";
+            " navitia.associated_calendar as l2, navitia.calendar c"
+            " WHERE meta.meta_vj_id = l.id and meta.associated_calendar_id = l2.id and c.id = l2.calendar_id";
     result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         const std::string name = const_it["name"].as<std::string>();

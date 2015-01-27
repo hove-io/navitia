@@ -1,14 +1,14 @@
 """Add new tables that associate calendars and exception dates to a meta vj
 
 Revision ID: 3b17c15627cb
-Revises: 43822e80c45a
+Revises: 2d86200bcb93
 Create Date: 2015-01-20 17:08:23.570348
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '3b17c15627cb'
-down_revision = '43822e80c45a'
+down_revision = '2d86200bcb93'
 
 from alembic import op
 import sqlalchemy as sa
