@@ -60,7 +60,7 @@ void ValidityPattern::add(int duration){
 void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days){
     for(long i=0; i < (end - start).days(); ++i){
         boost::gregorian::date current_date = start + boost::gregorian::days(i);
-        if(active_days[current_date.day_of_week()]){
+        if(active_days[(6 + current_date.day_of_week()) % 7]){
             add(current_date);
         }else{
             remove(current_date);
