@@ -99,6 +99,8 @@ public:
 
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map; //meta vj by original vj name
 
+    std::vector<types::AssociatedCalendar*> associated_calendars;
+
     navitia::type::MetaData meta;
 
     std::set<types::VehicleJourney*> vj_to_erase; //badly formated vj, to erase
@@ -130,6 +132,10 @@ public:
 
     /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
     void build_journey_patterns();
+
+    /// Construit les associated_calendar
+    void build_grid_validity_pattern();
+    void build_associated_calendar();
 
     /// Shift stop_times, we want the first stop_time to have its
     /// arrival time in [0; NUMBER OF SECONDS IN A DAY[
@@ -166,16 +172,50 @@ public:
 
     types::ValidityPattern* get_or_create_validity_pattern(const types::ValidityPattern& vp);
 
+    /**
+      * we want the resulting bit set that model the differences between
+      * the calender validity pattern and the vj validity pattern.
+      *
+      * We want to limit this differences for the days the calendar is active.
+      * we thus do a XOR to have the differences between the 2 bitsets and then do a AND on the calendar
+      * to restrict those diff on the calendar
+      */
+    template <size_t N>
+    std::bitset<N> get_difference(const std::bitset<N>& calendar, const std::bitset<N>& vj) {
+        auto res = (calendar ^ vj) & calendar;
+        return res;
+    }
+
+    std::vector<std::pair<const types::Calendar*, types::ValidityPattern::year_bitset>>
+    find_matching_calendar(const Data&, const std::string& name, const types::ValidityPattern& validity_pattern,
+                           const std::vector<types::Calendar*>& calendar_list, double relative_threshold = 0.1);
+
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;
         ITERATE_NAVITIA_PT_TYPES(DELETE_ALL_ELEMENTS)
         for(ed::types::StopTime* stop : stops){
             delete stop;
         }
+        for (ed::types::AssociatedCalendar* cal: associated_calendars) {
+            delete cal;
+        }
     }
 
 };
 
+/**
+  * we want the resulting bit set that model the differences between
+  * the calender validity pattern and the vj validity pattern.
+  *
+  * We want to limit this differences for the days the calendar is active.
+  * we thus do a XOR to have the differences between the 2 bitsets and then do a AND on the calendar
+  * to restrict those diff on the calendar
+  */
+template <size_t N>
+std::bitset<N> get_difference(const std::bitset<N>& calendar, const std::bitset<N>& vj) {
+    auto res = (calendar ^ vj) & calendar;
+    return res;
+}
 
 struct Georef{
     std::unordered_map<std::string, types::Node* > nodes;

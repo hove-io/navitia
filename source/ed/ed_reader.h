@@ -84,6 +84,7 @@ private:
     std::unordered_map<idx_t, navitia::georef::POI*> poi_map;
     std::unordered_map<idx_t, navitia::georef::POIType*> poi_type_map;
     std::unordered_map<uint64_t, navitia::type::Calendar*> calendar_map;
+    std::unordered_map<uint64_t, navitia::type::AssociatedCalendar*> associated_calendar_map;
 
     std::unordered_map<uint64_t, uint64_t> node_map;
 
@@ -108,6 +109,7 @@ private:
 
     void fill_journey_pattern_points(navitia::type::Data& data, pqxx::work& work);
     void fill_vehicle_journeys(navitia::type::Data& data, pqxx::work& work);
+    void fill_associated_calendar(navitia::type::Data& data, pqxx::work& work);
     void fill_meta_vehicle_journeys(navitia::type::Data& data, pqxx::work& work);
 
     void fill_stop_times(navitia::type::Data& data, pqxx::work& work);

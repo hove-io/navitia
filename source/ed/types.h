@@ -76,19 +76,60 @@ struct StopPointConnection: public Header, hasProperties {
 
 };
 
+struct ValidityPattern: public Header {
+    const static nt::Type_e type = nt::Type_e::ValidityPattern;
+private:
+    bool is_valid(int duration);
+    int slide(boost::gregorian::date day) const;
+public:
+    using year_bitset = std::bitset<366>;
+    year_bitset days;
+    boost::gregorian::date beginning_date;
+    ValidityPattern(){}
+    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
+    void add(boost::gregorian::date day);
+    void add(int day);
+    void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
+    void remove(boost::gregorian::date day);
+    void remove(int day);
+
+    bool check(int day) const;
+    bool check(boost::gregorian::date day) const;
+
+    bool operator<(const ValidityPattern& other) const;
+    bool operator==(const ValidityPattern& other) const;
+};
+
 struct Calendar : public Nameable, public Header {
     const static nt::Type_e type = nt::Type_e::Calendar;
     typedef std::bitset<7> Week;
-    std::string external_code;
     Week week_pattern;
+    std::string external_code;
     std::vector<Line*> line_list;
     std::vector<boost::gregorian::date_period> period_list;
     std::vector<navitia::type::ExceptionDate> exceptions;
 
+    ValidityPattern validity_pattern; //computed validity pattern
+
     Calendar() {}
+    Calendar(boost::gregorian::date beginning_date);
+
+    //we limit the validity pattern to the production period
+    void build_validity_pattern(boost::gregorian::date_period production_period);
 
     bool operator<(const Calendar & other) const { return this < &other; }
 };
+
+struct AssociatedCalendar : public Header {
+    ///calendar matched
+    const Calendar* calendar;
+
+    ///exceptions to this association (not to be mixed up with the exceptions in the calendar)
+    ///the calendar exceptions change it's validity pattern
+    /// the AssociatedCalendar exceptions are the differences between the vj validity pattern and the calendar's
+    std::vector<navitia::type::ExceptionDate> exceptions;
+};
+struct MetaVehicleJourney;
 
 struct StopArea : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopArea;
@@ -245,29 +286,6 @@ struct JourneyPatternPoint : public Header, Nameable{
     bool operator<(const JourneyPatternPoint& other) const;
 };
 
-struct ValidityPattern: public Header {
-    const static nt::Type_e type = nt::Type_e::ValidityPattern;
-private:
-    bool is_valid(int duration);
-    int slide(boost::gregorian::date day) const;
-public:
-    std::bitset<366> days;
-    boost::gregorian::date beginning_date;
-    ValidityPattern(){}
-    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
-    void add(boost::gregorian::date day);
-    void add(int day);
-    void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
-    void remove(boost::gregorian::date day);
-    void remove(int day);
-
-    bool check(int day) const;
-    bool check(boost::gregorian::date day) const;
-
-    bool operator<(const ValidityPattern& other) const;
-    bool operator==(const ValidityPattern& other) const;
-};
-
 struct StopPoint : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopPoint;
     std::string external_code;
@@ -315,11 +333,32 @@ struct StopTime : public Nameable {
     }
 };
 
-
+/**
+ * A meta vj is a shell around some vehicle journeys
+ *
+ * It has 2 purposes:
+ *
+ *  - to store the adapted and real time vj
+ *
+ *  - sometime we have to split a vj.
+ *    For example we have to split a vj because of dst (day saving light see gtfs parser for that)
+ *    the meta vj can thus make the link between the split vjs
+ *    *NOTE*: An IMPORTANT prerequisite is that ALL theoric vj have the same local time
+ *            (even if the UTC time is different because of DST)
+ *            That prerequisite is very important for calendar association and departure board over period
+ *
+ *
+ */
 struct MetaVehicleJourney {
+    //store the name ?
+    //TODO if needed use a flat_enum_map
     std::vector<VehicleJourney*> theoric_vj;
     std::vector<VehicleJourney*> adapted_vj;
     std::vector<VehicleJourney*> real_time_vj;
+
+    /// map of the calendars that nearly match union of the validity pattern
+    /// of the theoric vj, key is the calendar name
+    std::map<std::string, AssociatedCalendar*> associated_calendars;
 };
 
 /// Données Geographique

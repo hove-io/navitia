@@ -92,14 +92,11 @@ BOOST_AUTO_TEST_CASE(test1) {
     BOOST_REQUIRE_EQUAL(resp.error().id(), pbnavitia::Error::date_out_of_bounds);
 }
 
-
-
 BOOST_FIXTURE_TEST_CASE(test_data_set, calendar_fixture) {
     //simple test on the data set creation
 
     //we check that each vj is associated with the right calendar
     //NOTE: this is better checked in the UT for associated cal
-
     BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["week"]->associated_calendars.size(), 1);
     BOOST_REQUIRE(b.data->pt_data->meta_vj["week"]->associated_calendars["week_cal"]);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->meta_vj["week_bis"]->associated_calendars.size(), 1);
@@ -111,6 +108,7 @@ BOOST_FIXTURE_TEST_CASE(test_data_set, calendar_fixture) {
     BOOST_REQUIRE(b.data->pt_data->meta_vj["all"]->associated_calendars["weekend_cal"]);
     BOOST_REQUIRE(b.data->pt_data->meta_vj["wednesday"]->associated_calendars.empty());
 }
+
 /*
  * unknown calendar in request => error
  */
@@ -202,9 +200,22 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     exception_date.type = navitia::type::ExceptionDate::ExceptionType::add;
     nearly_cal->exceptions.push_back(exception_date);
 
-
     b.data->pt_data->calendars.push_back(nearly_cal);
     b.lines["line:A"]->calendar_list.push_back(nearly_cal);
+
+    // load metavj calendar association from database (association is tested in ed/tests/associated_calendar_test.cpp)
+    navitia::type::AssociatedCalendar* associated_nearly_calendar = new navitia::type::AssociatedCalendar();
+    associated_nearly_calendar->calendar = nearly_cal;
+    exception_date.date = date("20120618");
+    exception_date.type = navitia::type::ExceptionDate::ExceptionType::sub;
+    associated_nearly_calendar->exceptions.push_back(exception_date);
+    exception_date.date = date("20120619");
+    exception_date.type = navitia::type::ExceptionDate::ExceptionType::sub;
+    associated_nearly_calendar->exceptions.push_back(exception_date);
+    b.data->pt_data->associated_calendars.push_back(associated_nearly_calendar);
+    b.data->pt_data->meta_vj["week"]->associated_calendars[nearly_cal->uri] = associated_nearly_calendar;
+    b.data->pt_data->meta_vj["week_bis"]->associated_calendars[nearly_cal->uri] = associated_nearly_calendar;
+    b.data->pt_data->meta_vj["all"]->associated_calendars[nearly_cal->uri] = associated_nearly_calendar;
 
     //call all the init again
     b.finish();
@@ -238,7 +249,6 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     BOOST_REQUIRE_EQUAL(exception.uri(), "exception:120120619");
     BOOST_REQUIRE_EQUAL(exception.date(), "20120619");
     BOOST_REQUIRE_EQUAL(exception.type(), pbnavitia::ExceptionType::Remove);
-
 }
 
 struct small_cal_fixture {
@@ -269,6 +279,12 @@ struct small_cal_fixture {
         b.data->pt_data->calendars.push_back(empty_cal);
         b.lines["line:A"]->calendar_list.push_back(empty_cal);
 
+        // load metavj calendar association from database
+        navitia::type::AssociatedCalendar* associated_calendar = new navitia::type::AssociatedCalendar();
+        associated_calendar->calendar = cal;
+        b.data->pt_data->associated_calendars.push_back(associated_calendar);
+        b.data->pt_data->meta_vj["vj1"]->associated_calendars[cal->uri] = associated_calendar;
+
         //call all the init again
         b.finish();
         b.data->build_uri();
@@ -283,6 +299,7 @@ struct small_cal_fixture {
  * test that when asked for a schedule from a given time in the day
  * we have the schedule from this time and 'cycling' to the next day
  */
+
 BOOST_FIXTURE_TEST_CASE(test_calendar_start_time, small_cal_fixture) {
 
     pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("cal"), {}, d("20120615T080000"), 
@@ -305,11 +322,11 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time, small_cal_fixture) {
     }
 }
 
-
 /**
  * test the departarture board with a calenday without activity
  * No board must be returned
  */
+
 BOOST_FIXTURE_TEST_CASE(test_not_matched_cal, small_cal_fixture) {
 
     pbnavitia::Response resp = departure_board("stop_point.uri=stop1", std::string("empty_cal"), {}, d("20120615T080000"),
@@ -350,7 +367,6 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time_period, small_cal_fixture) {
         BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     }
 }
-
 
 /**
  * test that when asked for a schedule from a given *period* in a day, 
