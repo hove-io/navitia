@@ -1203,7 +1203,7 @@ Special Parameters
 datetime
 ########
 
-A date time with the format YYYYMMDDTHHMMSS
+A date time with the format YYYYMMDDThhmmss
 
 Misc mechanisms
 ***************
