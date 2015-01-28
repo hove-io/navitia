@@ -12,8 +12,11 @@ ADD_BOOST_TEST(gtfs_parser_test)
 add_executable(adapted_test adapted_test.cpp)
 target_link_libraries(adapted_test ed adapted types connectors pq pqxx data fare georef pb_lib
     routing utils autocomplete ${BOOST_LIBS} log4cplus protobuf)
-
 ADD_BOOST_TEST(adapted_test)
+
+add_executable(associated_calendar_test associated_calendar_test.cpp)
+target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+ADD_BOOST_TEST(associated_calendar_test)
 
 add_executable(fare_parser_test fare_parser_test.cpp)
 target_link_libraries(fare_parser_test connectors fare utils ${BOOST_LIBS} log4cplus)
