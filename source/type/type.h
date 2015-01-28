@@ -36,6 +36,7 @@ www.navitia.io
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
 #include "utils/functions.h"
+#include "utils/idx_map.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <vector>
 #include <bitset>
@@ -56,7 +57,7 @@ namespace navitia { namespace georef {
  struct GeoRef;
 }}
 namespace navitia { namespace type {
-typedef uint32_t idx_t;
+typedef navitia::idx_t idx_t;
 
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
@@ -519,10 +520,6 @@ struct hasOdtProperties {
         odt_properties.reset();
     }
 
-    void operator=(const type::hasOdtProperties& other) {
-        odt_properties = other.odt_properties;
-    }
-
     void operator|=(const type::hasOdtProperties& other) {
         odt_properties |= other.odt_properties;
     }
@@ -876,8 +873,6 @@ public:
     ValidityPattern()  {}
     ValidityPattern(const boost::gregorian::date& beginning_date) : beginning_date(beginning_date){}
     ValidityPattern(const boost::gregorian::date& beginning_date, const std::string & vp) : days(vp), beginning_date(beginning_date){}
-    ValidityPattern(const ValidityPattern & vp) : days(vp.days), beginning_date(vp.beginning_date){}
-    ValidityPattern(const ValidityPattern* vp) : days(vp->days), beginning_date(vp->beginning_date){}
 
     int slide(boost::gregorian::date day) const;
     void add(boost::gregorian::date day);

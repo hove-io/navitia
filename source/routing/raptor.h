@@ -64,6 +64,8 @@ struct RAPTOR
 {
     const navitia::type::Data & data;
 
+    NextStopTime next_st;
+
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
     std::vector<Labels> labels;
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
@@ -84,7 +86,10 @@ struct RAPTOR
 
     //Constructeur
     explicit RAPTOR(const navitia::type::Data &data) :
-        data(data), best_labels(data.pt_data->journey_pattern_points.size()), count(0),
+        data(data),
+        next_st(data),
+        best_labels(data.pt_data->journey_pattern_points.size()),
+        count(0),
         best_jpp_by_sp(data.pt_data->stop_points.size()),
         valid_journey_patterns(data.pt_data->journey_patterns.size()),
         valid_journey_pattern_points(data.pt_data->journey_pattern_points.size()),
