@@ -211,10 +211,14 @@ void Data::shift_stop_times() {
 
 
 void Data::complete(){
-    shift_stop_times();
     build_journey_patterns();
     build_journey_pattern_points();
     build_block_id();
+
+    build_grid_validity_pattern();
+    build_associated_calendar();
+
+    shift_stop_times();
     finalize_frequency();
 
     ::ed::normalize_uri(journey_patterns);
@@ -569,6 +573,153 @@ void Data::build_journey_pattern_points(){
     }
     LOG4CPLUS_INFO(logger, "Number of journey_pattern points : " << journey_pattern_points.size()
                    << " for " << nb_stop_time << " stop times");
+}
+
+types::ValidityPattern get_union_validity_pattern(const types::MetaVehicleJourney* meta_vj) {
+    types::ValidityPattern validity;
+
+    for (auto* vj: meta_vj->theoric_vj) {
+        if (validity.beginning_date.is_not_a_date()) {
+            validity.beginning_date = vj->validity_pattern->beginning_date;
+        } else {
+            if (validity.beginning_date != vj->validity_pattern->beginning_date) {
+                throw navitia::exception("the beginning date of the meta_vj are not all the same");
+            }
+        }
+        validity.days |= vj->validity_pattern->days;
+    }
+    return validity;
+}
+
+using list_cal_bitset = std::vector<std::pair<const types::Calendar*, types::ValidityPattern::year_bitset>>;
+
+list_cal_bitset
+Data::find_matching_calendar(const Data&, const std::string& name, const types::ValidityPattern& validity_pattern,
+                        const std::vector<types::Calendar*>& calendar_list, double relative_threshold) {
+    list_cal_bitset res;
+    //for the moment we keep lot's of trace, but they will be removed after a while
+    auto log = log4cplus::Logger::getInstance("kraken::type::Data::Calendar");
+    LOG4CPLUS_TRACE(log, "meta vj " << name << " :" << validity_pattern.days.to_string());
+
+    for (const auto calendar : calendar_list) {
+        // sometimes a calendar can be empty (for example if it's validity period does not
+        // intersect the data's validity period)
+        // we do not filter those calendar since it's a user input, but we do not match them
+        if (! calendar->validity_pattern.days.any()) {
+            continue;
+        }
+        auto diff = get_difference(calendar->validity_pattern.days, validity_pattern.days);
+        size_t nb_diff = diff.count();
+
+        LOG4CPLUS_TRACE(log, "cal " << calendar->uri << " :" << calendar->validity_pattern.days.to_string());
+
+        //we associate the calendar to the vj if the diff are below a relative threshold
+        //compared to the number of active days in the calendar
+        size_t threshold = std::round(relative_threshold * calendar->validity_pattern.days.count());
+        LOG4CPLUS_TRACE(log, "**** diff: " << nb_diff << " and threshold: " << threshold << (nb_diff <= threshold ? ", we keep it!!":""));
+
+        if (nb_diff > threshold) {
+            continue;
+        }
+        res.push_back({calendar, diff});
+    }
+
+    return res;
+}
+
+void Data::build_grid_validity_pattern() {
+    for(types::Calendar* cal : this->calendars){
+        cal->validity_pattern.beginning_date = meta.production_date.begin();
+        cal->build_validity_pattern(meta.production_date);
+    }
+}
+
+void Data::build_associated_calendar() {
+    auto log = log4cplus::Logger::getInstance("kraken::type::Data");
+    std::multimap<types::ValidityPattern, types::AssociatedCalendar*> associated_vp;
+    size_t nb_not_matched_vj(0);
+    size_t nb_matched(0);
+
+    for(auto meta_vj_pair : meta_vj_map) {
+        auto& meta_vj = meta_vj_map[meta_vj_pair.first]; //meta_vj_pair.second;
+
+        assert (! meta_vj.theoric_vj.empty());
+
+        // we check the theoric vj of a meta vj
+        // because we start from the postulate that the theoric VJs are the same VJ
+        // split because of dst (day saving time)
+        // because of that we try to match the calendar with the union of all theoric vj validity pattern
+       types::ValidityPattern meta_vj_validity_pattern = get_union_validity_pattern(&meta_vj);
+
+        //some check can be done on any theoric vj, we do them on the first
+        auto* first_vj = meta_vj.theoric_vj.front();
+
+        //some check can be done on any theoric vj, we do them on the first
+        std::vector<types::Calendar*> calendar_list;
+
+        for (types::Calendar* calendar : this->calendars) {
+            for (types::Line* line : calendar->line_list) {
+                if (line->uri == first_vj->journey_pattern->route->line->uri)
+                    calendar_list.push_back(calendar);
+            }
+        }
+
+        if (calendar_list.empty()) {
+            LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no calendar");
+            nb_not_matched_vj++;
+            continue;
+        }
+
+        //we check if we already computed the associated val for this validity pattern
+        //since a validity pattern can be shared by many vj
+        auto it = associated_vp.find(meta_vj_validity_pattern);
+        if (it != associated_vp.end()) {
+            for (; it->first == meta_vj_validity_pattern; ++it) {
+                meta_vj.associated_calendars.insert({it->second->calendar->uri, it->second});
+            }
+            continue;
+        }
+
+        auto close_cal = find_matching_calendar(*this, meta_vj_pair.first, meta_vj_validity_pattern, calendar_list);
+
+        if (close_cal.empty()) {
+            LOG4CPLUS_TRACE(log, "the meta vj " << meta_vj_pair.first << " has been attached to no calendar");
+            nb_not_matched_vj++;
+            continue;
+        }
+        nb_matched++;
+
+        std::stringstream cal_uri;
+        for (auto cal_bit_set: close_cal) {
+            auto associated_calendar = new types::AssociatedCalendar();
+            associated_calendar->idx = this->associated_calendars.size();
+            this->associated_calendars.push_back(associated_calendar);
+
+            associated_calendar->calendar = cal_bit_set.first;
+            //we need to create the associated exceptions
+            for (size_t i = 0; i < cal_bit_set.second.size(); ++i) {
+                if (! cal_bit_set.second[i]) {
+                    continue; //cal_bit_set.second is the resulting differences, so 0 means no exception
+                }
+                navitia::type::ExceptionDate ex;
+                ex.date = meta_vj_validity_pattern.beginning_date + boost::gregorian::days(i);
+                //if the vj is active this day it's an addition, else a removal
+                ex.type = (meta_vj_validity_pattern.days[i] ? navitia::type::ExceptionDate::ExceptionType::add : navitia::type::ExceptionDate::ExceptionType::sub);
+                associated_calendar->exceptions.push_back(ex);
+            }
+
+            meta_vj.associated_calendars.insert({associated_calendar->calendar->uri, associated_calendar});
+            associated_vp.insert({meta_vj_validity_pattern, associated_calendar});
+            cal_uri << associated_calendar->calendar->uri << " ";
+        }
+
+        LOG4CPLUS_DEBUG(log, "the meta vj " << meta_vj_pair.first << " has been attached to " << cal_uri.str());
+    }
+
+    LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one calendar");
+    if (nb_not_matched_vj) {
+        LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
+    }
 }
 
 // Check if two vehicle_journey's belong to the same journey_pattern

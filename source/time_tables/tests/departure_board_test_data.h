@@ -70,6 +70,19 @@ struct calendar_fixture {
         b.lines["line:A"]->calendar_list.push_back(week_cal);
         b.lines["line:A"]->calendar_list.push_back(weekend_cal);
 
+        // load metavj calendar association from database (association is tested in ed/tests/associated_calendar_test.cpp)
+        navitia::type::AssociatedCalendar* associated_calendar_for_week = new navitia::type::AssociatedCalendar();
+        navitia::type::AssociatedCalendar* associated_calendar_for_week_end = new navitia::type::AssociatedCalendar();
+        associated_calendar_for_week->calendar = week_cal;
+        associated_calendar_for_week_end->calendar = weekend_cal;
+        b.data->pt_data->associated_calendars.push_back(associated_calendar_for_week);
+        b.data->pt_data->associated_calendars.push_back(associated_calendar_for_week_end);
+        b.data->pt_data->meta_vj["week"]->associated_calendars[week_cal->uri] = associated_calendar_for_week;
+        b.data->pt_data->meta_vj["week_bis"]->associated_calendars[week_cal->uri] = associated_calendar_for_week;
+        b.data->pt_data->meta_vj["weekend"]->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
+        b.data->pt_data->meta_vj["all"]->associated_calendars[week_cal->uri] = associated_calendar_for_week;
+        b.data->pt_data->meta_vj["all"]->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
+
         b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();
