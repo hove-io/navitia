@@ -73,75 +73,12 @@ void dataRAPTOR::JppsFromJp::load(const type::PT_Data &data) {
         const bool has_freq = !jp->frequency_vehicle_journey_list.empty();
         for (const auto* jpp: jp->journey_pattern_point_list) {
             jpps_from_jp[JpIdx(*jp)].push_back(
-                {JppIdx(*jpp), SpIdx(*jpp->stop_point), jpp->order, has_freq});
+                {JppIdx(*jpp), SpIdx(*jpp->stop_point), has_freq});
         }
     }
     for (auto& jpps: jpps_from_jp.values()) { jpps.shrink_to_fit(); }
 }
 
-void dataRAPTOR::BestStopTimeData::load(const type::PT_Data &data) {
-    arrival_times.clear();
-    departure_times.clear();
-    st_forward.clear();
-    st_backward.clear();
-    first_stop_time.assign(data.journey_patterns.size());
-    nb_trips.assign(data.journey_patterns.size());
-
-    for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
-        const JpIdx jp_idx = JpIdx(*journey_pattern);
-        first_stop_time[jp_idx] = arrival_times.size();
-        nb_trips[jp_idx] = journey_pattern->discrete_vehicle_journey_list.size();
-
-        //we group all discrete stop times from all
-        //journey_pattern_point. the frequency stop times are not
-        //considered here, they are search for a different way in
-        //best_stop_time
-        for(unsigned int i=0; i < journey_pattern->journey_pattern_point_list.size(); ++i) {
-            std::vector<const type::StopTime*> vec_st;
-            for(const auto& vj : journey_pattern->discrete_vehicle_journey_list) {
-                assert(vj->stop_time_list[i].journey_pattern_point ==
-                       journey_pattern->journey_pattern_point_list[i]);
-                vec_st.push_back(&vj->stop_time_list[i]);
-            }
-            std::sort(vec_st.begin(), vec_st.end(),
-                      [](const type::StopTime* st1, const type::StopTime* st2) {
-                          uint32_t time1 = DateTimeUtils::hour(st1->departure_time);
-                          uint32_t time2 = DateTimeUtils::hour(st2->departure_time);
-                          if (time1 != time2) { return time1 < time2; }
-                          const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
-                          const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
-                          if (st1_first.departure_time != st2_first.departure_time) {
-                              return st1_first.departure_time < st2_first.departure_time;
-                          }
-                          return st1_first.vehicle_journey->idx < st2_first.vehicle_journey->idx;
-                      });
-
-            st_forward.insert(st_forward.end(), vec_st.begin(), vec_st.end());
-
-            for(auto st : vec_st) {
-                departure_times.push_back(DateTimeUtils::hour(st->departure_time));
-            }
-
-            std::sort(vec_st.begin(), vec_st.end(),
-                      [](const type::StopTime* st1, const type::StopTime* st2) {
-                          uint32_t time1 = DateTimeUtils::hour(st1->arrival_time);
-                          uint32_t time2 = DateTimeUtils::hour(st2->arrival_time);
-                          if(time1 != time2) { return time1 > time2; }
-                          const auto& st1_first = st1->vehicle_journey->stop_time_list.front();
-                          const auto& st2_first = st2->vehicle_journey->stop_time_list.front();
-                          if(st1_first.arrival_time == st2_first.arrival_time) {
-                              return st1_first.arrival_time > st2_first.arrival_time;
-                          }
-                          return st1_first.vehicle_journey->idx > st2_first.vehicle_journey->idx;
-                      });
-
-            st_backward.insert(st_backward.end(), vec_st.begin(), vec_st.end());
-            for(auto st : vec_st) {
-                arrival_times.push_back(DateTimeUtils::hour(st->arrival_time));
-            }
-        }
-    }
-}
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
@@ -151,7 +88,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
     connections.load(data);
     jpps_from_sp.load(data);
     jpps_from_jp.load(data);
-    best_stop_time_data.load(data);
+    next_stop_time_data.load(data);
 
     jp_validity_patterns.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));
     jp_adapted_validity_pattern.assign(366, boost::dynamic_bitset<>(data.journey_patterns.size()));
