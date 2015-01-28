@@ -615,9 +615,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     if(prec_labels.transfer_is_initialized(jpp.idx) &&
                        (!boarding_idx.is_valid() || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
                         const auto tmp_st_dt = next_st.next_stop_time(
-                            visitor.clockwise(), jpp.idx, previous_dt,
-                            accessibilite_params.vehicle_properties,
-                            disruption_active, false, jpp.has_freq);
+                            jpp.idx, previous_dt, visitor.clockwise(), disruption_active,
+                            accessibilite_params.vehicle_properties, jpp.has_freq);
 
                         if(tmp_st_dt.first != nullptr && (!boarding_idx.is_valid() || tmp_st_dt.first != &*it_st || tmp_st_dt.second != workingDt)) {
                             boarding_idx = jpp.idx;

@@ -18,7 +18,7 @@ ADD_BOOST_TEST(routing_api_test)
 add_executable(next_stop_time_test next_stop_time_test.cpp)
 target_link_libraries(next_stop_time_test ed connectors data fare types routing
     autocomplete pb_lib thermometer autocomplete georef utils ${BOOST_LIBS} log4cplus protobuf)
-ADD_BOOST_TEST(best_stoptime_test)
+ADD_BOOST_TEST(next_stop_time_test)
 
 add_executable(raptor_adapted_test raptor_adapted_test.cpp)
 target_link_libraries(raptor_adapted_test adapted ed data types routing fare pb_lib thermometer georef

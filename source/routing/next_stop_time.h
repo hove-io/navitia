@@ -119,19 +119,16 @@ struct NextStopTime {
     // you know your journey pattern don't have frequency vehicle
     // journeys.
     inline std::pair<const type::StopTime*, DateTime>
-    next_stop_time(const bool clockwise,
-                   const JppIdx jpp_idx,
+    next_stop_time(const JppIdx jpp_idx,
                    const DateTime dt,
-                   const type::VehicleProperties& vehicle_properties,
-                   const bool disruption_active,
-                   const bool reconstructing_path = false,
+                   const bool clockwise,
+                   const bool adapted,
+                   const type::VehicleProperties& vehicle_props,
                    const bool check_freq = true) {
         if (clockwise) {
-            return earliest_stop_time(jpp_idx, dt, vehicle_properties, disruption_active,
-                                          reconstructing_path, check_freq);
+            return earliest_stop_time(jpp_idx, dt, adapted, vehicle_props, check_freq);
         } else {
-            return tardiest_stop_time(jpp_idx, dt, vehicle_properties, disruption_active,
-                                           reconstructing_path, check_freq);
+            return tardiest_stop_time(jpp_idx, dt, adapted, vehicle_props, check_freq);
         }
     }
 
@@ -142,9 +139,8 @@ struct NextStopTime {
     std::pair<const type::StopTime*, DateTime>
     earliest_stop_time(const JppIdx jpp_idx,
                        const DateTime dt,
-                       const type::VehicleProperties& vehicle_properties,
-                       const bool disruption_active,
-                       const bool reconstructing_path = false,
+                       const bool adapted,
+                       const type::VehicleProperties& vehicle_props,
                        const bool check_freq = true);
 
     /// Next backward stop time for a given datetime (dt).  Look for
@@ -154,9 +150,8 @@ struct NextStopTime {
     std::pair<const type::StopTime*, DateTime>
     tardiest_stop_time(const JppIdx jpp_idx,
                        const DateTime dt,
-                       const type::VehicleProperties& vehicle_properties,
-                       const bool disruption_active,
-                       const bool reconstructing_path = false,
+                       const bool adapted,
+                       const type::VehicleProperties& vehicle_props,
                        const bool check_freq = true);
 
 private:
