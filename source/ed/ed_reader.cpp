@@ -737,7 +737,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
     //fill associated_calendar
-    std::string request = "SELECT id, calendar_id from associated_calendar";
+    std::string request = "SELECT id, calendar_id from navitia.associated_calendar";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         nt::AssociatedCalendar* associated_calendar;
