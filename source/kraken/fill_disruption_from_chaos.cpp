@@ -262,7 +262,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         apply_impacts_visitor(impact, pt_data, meta) {}
 
     bool func_on_vj(nt::VehicleJourney& vj) {
-        nt::ValidityPattern vp(vj.adapted_validity_pattern);
+        nt::ValidityPattern vp(*vj.adapted_validity_pattern);
         bool is_impacted = false;
         for (auto period : impact->application_periods) {
             bt::time_iterator titr(period.begin(), bt::hours(24));
