@@ -1,3 +1,9 @@
+navitia2 (1.9.2) unstable; urgency=low
+
+  * Move associated calendars building from ed2nav to fusio2ed <https://github.com/CanalTP/navitia/pull/831>
+
+ -- srassinoux <srassinoux@gmail.com>  Wed, 28 Jan 2015 09:01:31 +0100
+
 navitia2 (1.9.1) unstable; urgency=low
 
   * fix integration tests <https://github.com/CanalTP/navitia/pull/842> 
