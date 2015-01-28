@@ -89,7 +89,34 @@ rel_metavj_vj = Table('rel_metavj_vj', metadata,*[
     Column('vehicle_journey', BIGINT(), primary_key=False),
     Column('vj_class', ENUM(u'Theoric', u'Adapted', u'RealTime', name='vj_classification'), primary_key=False, nullable=False),
     ForeignKeyConstraint(['vehicle_journey'], [u'navitia.vehicle_journey.id'], name=u'rel_metavj_vj_vehicle_journey_fkey'),
-    ForeignKeyConstraint(['meta_vj'], [u'navitia.meta_vj.id'], name=u'rel_metavj_vj_meta_vj_fkey'),],
+    ForeignKeyConstraint(['meta_vj'], [u'navitia.meta_vj.id'], name=u'rel_metavj_vj_meta_vj_fkey'),
+    ],
+    schema='navitia')
+
+associated_calendar = Table('associated_calendar', metadata,*[
+    Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u'nextval(\'"navitia".associated_calendar_id_seq\'::regclass)')),
+    Column('calendar_id', BIGINT(), primary_key=False, nullable=False),
+    Column('name', TEXT(), primary_key=False, nullable=False),
+    ForeignKeyConstraint(['calendar_id'], [u'navitia.calendar.id'], name=u'associated_calendar_calendar_fkey'),
+    ],
+    schema='navitia')
+
+
+associated_exception_date = Table('associated_exception_date', metadata,*[
+    Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u'nextval(\'"navitia".associated_exception_date_id_seq\'::regclass)')),
+    Column('datetime', DATE(), primary_key=False, nullable=False),
+    Column('type_ex', ENUM(u'Add', u'Sub', name='associated_exception_type'), primary_key=False, nullable=False),
+    Column('associated_calendar_id', BIGINT(), primary_key=False, nullable=False),
+    ForeignKeyConstraint(['associated_calendar_id'], [u'navitia.associated_calendar.id'], name=u'associated_exception_date_associated_calendar_fkey'),
+    ],
+    schema='navitia')
+
+
+rel_metavj_associated_calendar = Table('rel_metavj_associated_calendar', metadata,*[
+    Column('meta_vj_id', BIGINT(), primary_key=False),
+    Column('associated_calendar_id', BIGINT(), primary_key=False),
+    ForeignKeyConstraint(['meta_vj_id'], [u'navitia.meta_vj.id'], name=u'rel_metavj_associated_calendar_meta_vj_fkey'),
+    ForeignKeyConstraint(['associated_calendar_id'], [u'navitia.associated_calendar.id'], name=u'rel_metavj_associated_calendar_associated_calendar_fkey')],
     schema='navitia')
 
 

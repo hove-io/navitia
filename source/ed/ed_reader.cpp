@@ -65,8 +65,6 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     this->fill_validity_patterns(data, work);
     this->fill_vehicle_journeys(data, work);
-    this->fill_meta_vehicle_journeys(data, work);
-
 
     this->fill_stop_times(data, work);
 
@@ -105,6 +103,10 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
     this->fill_periods(data, work);
     this->fill_exception_dates(data, work);
     this->fill_rel_calendars_lines(data, work);
+
+    /// meta vj associated calendars
+    this->fill_associated_calendar(data, work);
+    this->fill_meta_vehicle_journeys(data, work);
 
     check_coherence(data);
 }
@@ -733,6 +735,51 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     }
 }
 
+void EdReader::fill_associated_calendar(nt::Data& data, pqxx::work& work) {
+    //fill associated_calendar
+    std::string request = "SELECT id, calendar_id from associated_calendar";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        nt::AssociatedCalendar* associated_calendar;
+        int associated_calendar_idx = const_it["id"].as<idx_t>();
+
+        int calendar_idx = const_it["calendar_id"].as<idx_t>();
+        const auto calendar_it = this->calendar_map.find(calendar_idx);
+        if (calendar_it == this->calendar_map.end()) {
+            LOG4CPLUS_ERROR(log, "Impossible to find the calendar " << calendar_idx << ", we won't add associated calendar");
+            continue;
+        }
+
+        associated_calendar = new nt::AssociatedCalendar();
+        associated_calendar->calendar = calendar_it->second;
+        data.pt_data->associated_calendars.push_back(associated_calendar);
+        this->associated_calendar_map[associated_calendar_idx] = associated_calendar;
+    }
+
+    //then we fill the links
+    request = "SELECT l.datetime as datetime, l.type_ex as type_ex,"
+            " calendar.id as id, calendar.calendar_id as calendar_id"
+            " from navitia.associated_calendar as calendar, navitia.associated_exception_date as l"
+            " WHERE calendar.id = l.associated_calendar_id ORDER BY calendar.id";
+    result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        int associated_calendar_idx = const_it["id"].as<idx_t>();
+
+        const auto associated_calendar_it = this->associated_calendar_map.find(associated_calendar_idx);
+
+        if (associated_calendar_it == this->associated_calendar_map.end()) {
+            LOG4CPLUS_ERROR(log, "Impossible to find the associated calendar " << associated_calendar_idx << ", we won't add exception date");
+            continue;
+        }
+
+        nt::ExceptionDate exception_date;
+        exception_date.date = bg::from_string(const_it["datetime"].as<std::string>());
+        exception_date.type = navitia::type::to_exception_type(const_it["type_ex"].as<std::string>());
+
+        auto associated_calendar = associated_calendar_it->second;
+        associated_calendar->exceptions.push_back(exception_date);
+    }
+}
 
 void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
     //then we fill the links
@@ -774,6 +821,35 @@ void EdReader::fill_meta_vehicle_journeys(nt::Data& data, pqxx::work& work) {
             throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
         }
         vj->meta_vj = meta_vj;
+    }
+
+    //then we fill the links between a metavj and its associated calendars
+    request = "SELECT l.name as name, meta.associated_calendar_id as associated_calendar_id,"
+            " c.uri as associated_calendar_name"
+            " from navitia.rel_metavj_associated_calendar as meta, navitia.meta_vj as l,"
+            " navitia.associated_calendar as l2, navitia.calendar c"
+            " WHERE meta.meta_vj_id = l.id and meta.associated_calendar_id = l2.id and c.id = l2.calendar_id";
+    result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        const std::string name = const_it["name"].as<std::string>();
+        nt::MetaVehicleJourney* meta_vj;
+        auto it_mvj = data.pt_data->meta_vj.find(name);
+        if (it_mvj == data.pt_data->meta_vj.end()) {
+            LOG4CPLUS_ERROR(log, "Impossible to find the meta vj " << name << ", we won't add associated calendar");
+            continue;
+        }
+        meta_vj = it_mvj->second;
+
+        int associated_calendar_idx = const_it["associated_calendar_id"].as<idx_t>();
+        nt::AssociatedCalendar* associated_calendar;
+        auto it_ac = this->associated_calendar_map.find(associated_calendar_idx);
+        if (it_ac == this->associated_calendar_map.end()) {
+            LOG4CPLUS_ERROR(log, "Impossible to find the associated calendar " << associated_calendar_idx << ", we won't add it to meta vj");
+            continue;
+        }
+        associated_calendar = it_ac->second;
+
+        meta_vj->associated_calendars[const_it["associated_calendar_name"].as<std::string>()] = associated_calendar;
     }
 }
 

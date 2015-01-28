@@ -291,8 +291,8 @@ void Data::complete(){
     int admin, sort, autocomplete;
 
     build_grid_validity_pattern();
-    build_associated_calendar();
-
+    //build_associated_calendar(); read from database
+    
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building administrative regions");
     build_administrative_regions();
