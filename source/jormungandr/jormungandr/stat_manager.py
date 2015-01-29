@@ -51,6 +51,12 @@ def init_journey(stat_journey):
     stat_journey.nb_transfers = 0
     stat_journey.type = ''
 
+def get_mode(mode, previous_section):
+    if mode == 'bike' and previous_section:
+        if previous_section.type == 'bss_rent':
+            return 'bss'
+    return mode
+
 
 class StatManager(object):
 
@@ -218,7 +224,7 @@ class StatManager(object):
 
         return result
 
-    def fill_section(self, stat_section, resp_section):
+    def fill_section(self, stat_section, resp_section, previous_section):
         if 'departure_date_time' in resp_section:
             stat_section.departure_date_time = utils.str_to_time_stamp(resp_section['departure_date_time'])
 
@@ -229,7 +235,7 @@ class StatManager(object):
             stat_section.duration = resp_section['duration']
 
         if 'mode' in resp_section:
-            stat_section.mode = resp_section['mode']
+            stat_section.mode = get_mode(resp_section['mode'], previous_section)
 
         if 'type' in resp_section:
             stat_section.type = resp_section['type']
@@ -307,10 +313,12 @@ class StatManager(object):
             logging.getLogger(__name__).warn('Unable to parse coordinates: %s', str(e))
 
     def fill_sections(self, stat_journey, resp_journey):
+        previous_section = None
         if 'sections' in resp_journey:
             for resp_section in resp_journey['sections']:
                 stat_section = stat_journey.sections.add()
-                self.fill_section(stat_section, resp_section)
+                self.fill_section(stat_section, resp_section, previous_section)
+                previous_section = stat_section
 
     def publish_request(self, stat_request):
         try:
