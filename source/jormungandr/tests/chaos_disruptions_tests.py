@@ -175,8 +175,6 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         assert any(d['uri'] == 'bobette_the_disruption' for d in disruptions)
 
 
-
-
 @dataset([("main_routing_test", ['--BROKER.rt_topics='+chaos_rt_topic, 'spawn_maintenance_worker'])])
 class TestChaosDisruptions2(ChaosDisruptionsFixture):
     """
@@ -259,8 +257,8 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
         links = []
         def get_type_id(k, v):
-            if (k != "links" or not "type" in v or not "id" in v or v["type"] != type_) and\
-               (k != type_ or not "id" in v):
+            if (k != "links" or "type" not in v or "id" not in v or v["type"] != type_) and\
+               (k != type_ or "id" not in v):
                 return
             links.append(v["id"])
 

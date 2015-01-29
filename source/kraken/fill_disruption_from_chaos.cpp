@@ -36,7 +36,11 @@ www.navitia.io
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/range/algorithm/for_each.hpp>
-#include "boost/date_time/posix_time/posix_time.hpp"
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 namespace navitia {
 
@@ -238,16 +242,11 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
 
 
-    template<typename T>
-    static std::string make_uri(const std::string& ref_uri, T uris) {
-        auto adapted_uri = ref_uri + ":adapted-";
-        for (size_t i=0; i < uris.size(); ++i) {
-            auto uri = adapted_uri + "-" + boost::lexical_cast<std::string>(i);
-            if (uris.find(uri) == uris.end()) {
-                return uri;
-            }
-        }
-        return ref_uri;
+    static std::string make_uri(const std::string& ref_uri) {
+        boost::uuids::uuid uuid = boost::uuids::random_generator()();
+        std::stringstream uuid_stream;
+        uuid_stream << uuid;
+        return ref_uri + ":adapted-" + uuid_stream.str();
     }
 
     virtual void operator()(const nt::StopArea* ) {
@@ -264,7 +263,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     }
     void operator()(const nt::Route* route) {
         for (auto journey_pattern : route->journey_pattern_list) {
-            this->operator()(journey_pattern);
+            (*this)(journey_pattern);
         }
     }
 
@@ -330,14 +329,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             jp->journey_pattern_point_list.clear();
             jp->discrete_vehicle_journey_list.clear();
             jp->frequency_vehicle_journey_list.clear();
-            jp->uri = make_uri(jp->uri, pt_data.journey_patterns_map);
+            jp->uri = make_uri(jp->uri);
             jp->idx = pt_data.journey_patterns.size();
             pt_data.journey_patterns.push_back(jp);
             pt_data.journey_patterns_map[jp->uri] = jp;
-            if (jp->uri == jp_ref->uri) {
-                delete jp;
-                continue;
-            }
             // We copy each journey_pattern_point but the ones which are linked
             // to the impacted stop_area
             for (const auto jpp_ref : jp_ref->journey_pattern_point_list) {
@@ -349,7 +344,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 pt_data.journey_pattern_points.push_back(jpp);
                 pt_data.journey_pattern_points_map[jpp->uri] = jpp;
                 jpp->journey_pattern = jp;
-                jpp->uri = make_uri(jpp->uri, pt_data.journey_pattern_points_map);
+                jpp->uri = make_uri(jpp->uri);
                 jp->journey_pattern_point_list.push_back(jpp);
             }
 
@@ -360,10 +355,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 vj->journey_pattern = jp;
                 vj->idx = pt_data.vehicle_journeys.size();
                 pt_data.vehicle_journeys.push_back(vj);
-                vj->uri = make_uri(vj->uri, pt_data.vehicle_journeys_map);
+                vj->uri = make_uri(vj->uri);
                 // The validity_pattern is only active on the period of the impact
                 auto vp = new nt::ValidityPattern();
-                vp->uri = make_uri(vp->uri, pt_data.validity_patterns_map);
+                vp->uri = make_uri(vp->uri);
 
                 for (auto period : impact->application_periods) {
                     bt::time_iterator titr(period.begin(), bt::hours(24));
