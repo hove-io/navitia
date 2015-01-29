@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_best_stoptime
+#define BOOST_TEST_MODULE next_stop_time_test
 #include <boost/test/unit_test.hpp>
 
 #include "routing/next_stop_time.h"

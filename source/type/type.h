@@ -825,7 +825,10 @@ struct StopTime {
 
 
 
-    /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
+    /// can we start with this stop time (according to clockwise)
+    bool valid_begin(bool clockwise) const {return clockwise ? pick_up_allowed() : drop_off_allowed();}
+
+    /// can we finish with this stop time (according to clockwise)
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
     bool is_odt_and_date_time_estimated() const{ return (this->odt() && this->date_time_estimated());}

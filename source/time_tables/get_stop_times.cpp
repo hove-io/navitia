@@ -61,9 +61,8 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
             }
             auto st = next_st.earliest_stop_time(routing::JppIdx(*jpp),
                                                  next_requested_datetime[jpp_idx],
-                                                 accessibilite_params.vehicle_properties,
                                                  disruption_active,
-                                                 false);
+                                                 accessibilite_params.vehicle_properties);
 
             if (st.first != nullptr) {
                 DateTime dt_temp = st.second;
