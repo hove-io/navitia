@@ -130,7 +130,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert len(stops) == 1
         stop = stops[0]
 
-        disruptions = get_not_null(stop, 'disruptions')
+        disruptions = get_disruptions(stop, response)
 
         #at first we got only one disruption on B
         assert len(disruptions) == 1
@@ -235,10 +235,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
         def set_nb_disruptions(l):
             for i in l:
-                if not "disruptions" in i:
-                    nb_disruptions_map[i['id']] = 0
-                    continue
-                nb_disruptions_map[i['id']] = len(i['disruptions'])
+                nb_disruptions_map[i['id']] = len([link for link in i['links'] if link['type'] == 'disruption'])
 
         response = self.query_region("routes")
         set_nb_disruptions(response['routes'])
@@ -247,6 +244,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
         response = self.query_region('networks')
         set_nb_disruptions(response['networks'])
         response = self.query_region('stop_areas')
+        set_nb_disruptions(response['stop_areas'])
         return nb_disruptions_map
 
     def run_check(self, object_id, type_):
