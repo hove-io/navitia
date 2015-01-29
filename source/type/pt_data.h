@@ -80,17 +80,18 @@ struct PT_Data : boost::noncopyable{
     //Message
     new_disruption::DisruptionHolder disruption_holder;
 
-    // comments for stop times, indexed by (jp->uri, jpp->order)
+    // comments for stop times, indexed by (vj->uri, jpp->order)
     std::map<std::pair<std::string, uint16_t>, std::string> stop_time_comment;
-    const std::string &get_comment(const StopTime& st) const {
+
+    const std::string& get_comment(const StopTime& st) const {
         const auto* jpp = st.journey_pattern_point;
         return find_or_default(
-            std::pair<const std::string&, uint16_t>(jpp->journey_pattern->uri, jpp->order),
+            std::pair<const std::string&, uint16_t>(st.vehicle_journey->uri, jpp->order),
             stop_time_comment);
     }
     void set_comment(const std::string& comment, const StopTime& st) {
         const auto* jpp = st.journey_pattern_point;
-        const auto key = std::make_pair(jpp->journey_pattern->uri, jpp->order);
+        const auto key = std::make_pair(st.vehicle_journey->uri, jpp->order);
         if (comment.empty()) {
             stop_time_comment.erase(key);
         } else {
