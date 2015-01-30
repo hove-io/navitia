@@ -892,6 +892,7 @@ public:
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
     void remove(boost::gregorian::date day);
     void remove(int day);
+    void reset() { days.reset(); }
     std::string str() const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & beginning_date & days & idx & uri;
