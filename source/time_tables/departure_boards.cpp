@@ -163,11 +163,15 @@ departure_board(const std::string& request,
                 auto it = response_status.find(route->idx);
                 if (it == response_status.end()) {
                     response_status[route->idx] = pbnavitia::ResponseStatus::terminus;
+                } else {
+                    response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
                 }
             } else {
                 auto it = response_status.find(route->idx);
                 if (it != response_status.end() && it->second == pbnavitia::ResponseStatus::terminus) {
                     response_status[route->idx] = pbnavitia::ResponseStatus::partial_terminus;
+                } else {
+                    response_status[route->idx] = pbnavitia::ResponseStatus::none;
                 }
             }
             std::vector<datetime_stop_time> tmp;
