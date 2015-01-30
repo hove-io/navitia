@@ -197,9 +197,11 @@ def purge_instance(instance_id, nb_to_keep):
     logger.info('purge of backup directories for %s', instance.name)
     instance_config = load_instance_config(instance.name)
     backups = set(glob.glob('{}/*'.format(instance_config.backup_directory)))
-    logger.debug('backups are: %s', backups)
-    loaded = set(os.path.dirname(dataset.name) for dataset in instance.last_datasets(nb_to_keep))
-    logger.debug('loaded  data are: %s', loaded)
+    logger.info('backups are: %s', backups)
+    # we add the realpath not to have problems with double / or stuff like that
+    loaded = set(os.path.realpath(os.path.dirname(dataset.name))
+                 for dataset in instance.last_datasets(nb_to_keep))
+    logger.info('loaded  data are: %s', loaded)
     to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded]
     logger.info('we remove: %s', to_remove)
     for path in to_remove:

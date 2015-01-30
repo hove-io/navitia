@@ -628,7 +628,7 @@ void fill_pb_object(const nt::VehicleJourney* vj,
                        depth-1);
         fill_pb_object(vj->validity_pattern, data, vehicle_journey->mutable_validity_pattern(), max_depth-1);
         fill_pb_object(vj->adapted_validity_pattern, data, vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
-        vptranslator::fill_pb_object(vptranslator::translate(vj->validity_pattern),
+        vptranslator::fill_pb_object(vptranslator::translate(*vj->validity_pattern),
                                      data,
                                      vehicle_journey,
                                      max_depth - 1,

@@ -57,7 +57,7 @@ static pt::ptime d(std::string str) {
     return boost::posix_time::from_iso_string(str);
 }
 
-BOOST_AUTO_TEST_CASE(test1) {
+BOOST_AUTO_TEST_CASE(departureboard_test1) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 36000, 36100)("stop2", 36150,362000);
     b.vj("B")("stop1", 36000, 36100)("stop2", 36150,36200)("stop3", 36250,36300);
@@ -91,6 +91,41 @@ BOOST_AUTO_TEST_CASE(test1) {
     resp = departure_board("stop_point.uri=stop2", {}, {}, d("20120701T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
     BOOST_REQUIRE_EQUAL(resp.error().id(), pbnavitia::Error::date_out_of_bounds);
 }
+
+
+BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
+    /*
+     * Check partial terminus tag
+     *
+     * 2VJ on the line, one A->B->C and one A->B
+     *
+     * stop schedule for B must say it is a partial_terminus and stop_schedule on C must say it is a real terminus
+     * */
+    ed::builder b("20120614");
+    b.vj("A", "11111111", "", true, "vj1", "", "jp1")("stop1", 36000, 36100)("stop2", 36150,362000);
+    b.vj("A", "11111111", "", true, "vj2", "", "jp2")("stop1", 36000, 36100)("stop2", 36150,36200)("stop3", 36250,36300);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
+
+    b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+
+    pbnavitia::Response resp = departure_board("stop_point.uri=stop2", {}, {}, d("20120615T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK(stop_schedule.date_times_size() != 0);
+    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::partial_terminus);
+
+    resp = departure_board("stop_point.uri=stop3", {}, {}, d("20120615T094500"), 86400, 0, std::numeric_limits<int>::max(), 1, 10, 0, *(b.data), false);
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK(stop_schedule.date_times_size() == 0);
+    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::terminus);
+}
+
 
 BOOST_FIXTURE_TEST_CASE(test_data_set, calendar_fixture) {
     //simple test on the data set creation
