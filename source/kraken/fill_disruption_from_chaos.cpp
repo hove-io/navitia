@@ -285,14 +285,26 @@ struct functor_add_vj {
             nt::PT_Data& pt_data, const nt::MetaData& meta) :
         impact(impact), jp(jp), stop_area(stop_area), pt_data(pt_data), meta(meta) {}
 
-    void init_vj(nt::VehicleJourney* vj) const {
-        vj->stop_time_list.clear();
+    void init_vj(nt::VehicleJourney* vj, const nt::VehicleJourney& vj_ref) const {
         vj->journey_pattern = jp;
         vj->idx = pt_data.vehicle_journeys.size();
         vj->uri = make_uri(vj->uri);
-
+        vj->is_adapted = true;
+        pt_data.vehicle_journeys.push_back(vj);
+        pt_data.vehicle_journeys_map[vj->uri] = vj;
+        vj->name = vj_ref.name;
+        vj->company = vj_ref.company;
+        vj->theoric_vehicle_journey = &vj_ref;
+        vj->comment = vj_ref.comment;
+        vj->next_vj = vj_ref.next_vj;
+        vj->prev_vj = vj_ref.prev_vj;
+        vj->meta_vj = vj_ref.meta_vj;
+        vj->utc_to_local_offset = vj_ref.utc_to_local_offset;
         auto vp = new nt::ValidityPattern();
+        vp->idx = pt_data.validity_patterns.size();
         vp->uri = make_uri(vp->uri);
+        pt_data.validity_patterns.push_back(vp);
+        pt_data.validity_patterns_map[vp->uri] = vp;
 
         // The validity_pattern is only active on the period of the impact
         for (auto period : impact->application_periods) {
@@ -305,37 +317,35 @@ struct functor_add_vj {
                 vp->add(day);
             }
         }
-        // We skip the stop_time linked to impacted journey_pattern_point
-        size_t nb_skipped = 0;
-        for (const auto st_ref : vj->stop_time_list) {
+        size_t order = 0;
+        // We skip the stop_time linked to impacted stop_area
+        for (const auto& st_ref : vj_ref->stop_time_list) {
             if (st_ref.journey_pattern_point->stop_point->stop_area == stop_area) {
-                ++nb_skipped;
                 continue;
             }
-            vj->stop_time_list.emplace_back();
+            vj->stop_time_list.emplace_back(st_ref);
             auto& st = vj->stop_time_list.back();
+            // We link the journey_pattern_point to the stop_time
+            st.journey_pattern_point = jp->journey_pattern_point_list[order];
             st.vehicle_journey = vj;
-            const size_t ref_order = st_ref.journey_pattern_point->order;
-            st.journey_pattern_point = jp->journey_pattern_point_list[ref_order - nb_skipped];
-            st.properties = st_ref.properties;
-            st.local_traffic_zone = st_ref.local_traffic_zone;
-            st.arrival_time = st_ref.arrival_time;
-            st.departure_time = st_ref.departure_time;
+            ++ order;
         }
-        pt_data.vehicle_journeys.push_back(vj);
     }
 
     bool operator()(nt::DiscreteVehicleJourney& vj_ref) const {
-        jp->discrete_vehicle_journey_list.emplace_back(&vj_ref);
+        jp->discrete_vehicle_journey_list.emplace_back(new nt::DiscreteVehicleJourney());
         auto vj = jp->discrete_vehicle_journey_list.back().get();
-        init_vj(vj);
+        init_vj(vj, vj_ref);
         return true;
     }
 
     bool operator()(nt::FrequencyVehicleJourney& vj_ref ) const {
-        jp->frequency_vehicle_journey_list.emplace_back(&vj_ref);
+        jp->frequency_vehicle_journey_list.emplace_back(new nt::FrequencyVehicleJourney());
         auto vj = jp->frequency_vehicle_journey_list.back().get();
-        init_vj(vj);
+        vj->start_time = vj_ref->start_time;
+        vj->end_time = vj_ref->end_time;
+        vj->headway_secs= vj_ref->headway_secs;
+        init_vj(vj, vj_ref);
         return true;
     }
 };
@@ -383,40 +393,44 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             for (const auto jpp : stop_point->journey_pattern_point_list) {
                 apply_impacts_visitor::operator()(jpp->journey_pattern);
             }
-            if (stop_point->journey_pattern_point_list.empty() ||
-                    stop_point->journey_pattern_point_list.front()->journey_pattern == nullptr) {
+            if (stop_point->journey_pattern_point_list.empty()) {
                 continue;
             }
             // We copy this journey_pattern
-            const auto jp_ref = stop_point->journey_pattern_point_list.front()->journey_pattern;
-            auto jp = new nt::JourneyPattern(*jp_ref);
-            jp->journey_pattern_point_list.clear();
-            jp->discrete_vehicle_journey_list.clear();
-            jp->frequency_vehicle_journey_list.clear();
-            jp->uri = make_uri(jp->uri);
-            jp->idx = pt_data.journey_patterns.size();
-            pt_data.journey_patterns.push_back(jp);
-            pt_data.journey_patterns_map[jp->uri] = jp;
-            // We copy each journey_pattern_point but the ones which are linked
-            // to the impacted stop_area
-            for (const auto jpp_ref : jp_ref->journey_pattern_point_list) {
-                if (jpp_ref->stop_point->stop_area == stop_area) {
-                    continue;
+            for (const auto jpp_ref : stop_point->journey_pattern_point_list) {
+                const auto jp_ref = jpp_ref->journey_pattern;
+                auto new_jp = new nt::JourneyPattern(*jp_ref);
+                new_jp->uri = make_uri(new_jp->uri);
+                new_jp->idx = pt_data.journey_patterns.size();
+                pt_data.journey_patterns.push_back(new_jp);
+                pt_data.journey_patterns_map[new_jp->uri] = new_jp;
+                new_jp->journey_pattern_point_list.clear();
+                new_jp->discrete_vehicle_journey_list.clear();
+                new_jp->frequency_vehicle_journey_list.clear();
+                // We copy each journey_pattern_point but the ones which are linked
+                // to the impacted stop_area
+                size_t order = 0;
+                for (const auto jpp_to_copy : jp_ref->journey_pattern_point_list) {
+                    if (jpp_to_copy->stop_point->stop_area == stop_area) {
+                        continue;
+                    }
+                    auto new_jpp = new nt::JourneyPatternPoint(*jpp_to_copy);
+                    new_jpp->idx = pt_data.journey_pattern_points.size();
+                    new_jpp->uri = make_uri(new_jpp->uri);
+                    new_jp->journey_pattern_point_list.push_back(new_jpp);
+                    pt_data.journey_pattern_points.push_back(new_jpp);
+                    pt_data.journey_pattern_points_map[new_jpp->uri] = new_jpp;
+                    new_jpp->journey_pattern = new_jp;
+                    new_jpp->order = order;
+                    ++ order;
                 }
-                auto jpp = new nt::JourneyPatternPoint(*jpp_ref);
-                jpp->idx = pt_data.journey_pattern_points.size();
-                pt_data.journey_pattern_points.push_back(jpp);
-                pt_data.journey_pattern_points_map[jpp->uri] = jpp;
-                jpp->journey_pattern = jp;
-                jpp->uri = make_uri(jpp->uri);
-                jp->journey_pattern_point_list.push_back(jpp);
-            }
 
-            // We copy the vehicle_journeys of the journey_pattern_points
-            functor_add_vj v(impact, jp, stop_area, pt_data, meta);
-            jp_ref->for_each_vehicle_journey(v);
-            // The new journey_pattern is linked to the impact
-            impact->impacted_journey_patterns.push_back(jp);
+                // We copy the vehicle_journeys of the journey_pattern_points
+                functor_add_vj v(impact, new_jp, stop_area, pt_data, meta);
+                jp_ref->for_each_vehicle_journey(v);
+                // The new journey_pattern is linked to the impact
+                impact->impacted_journey_patterns.push_back(new_jp);
+            }
         }
     }
 };

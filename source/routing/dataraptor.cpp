@@ -116,8 +116,6 @@ void dataRAPTOR::load(const type::PT_Data &data)
             });
         }
     }
-
-
 }
 
 }}
