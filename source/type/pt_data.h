@@ -36,6 +36,7 @@ www.navitia.io
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
 #include "utils/flat_enum_map.h"
+#include "utils/functions.h"
 
 #include <boost/serialization/map.hpp>
 #include "utils/serialization_unordered_map.h"
@@ -55,6 +56,26 @@ typedef flat_enum_map<pbnavitia::PlaceCodeRequest::Type, type_code_codes_map_typ
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::unordered_map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
+
+#define REINDEX(type_name, collection_name) void reindex_##collection_name() {\
+        std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());}
+    ITERATE_NAVITIA_PT_TYPES(REINDEX)
+
+#define ERASE_OBJ(type_name, collection_name) \
+    void erase_obj(const type_name& obj) { \
+        const auto it_map = collection_name##_map.find(obj.uri);\
+        if (it_map != collection_name##_map.end()) {\
+            collection_name##_map.erase(it_map);\
+        }\
+        const auto it_vec = collection_name.begin() + obj.idx;\
+        collection_name.erase(it_vec);\
+        reindex_##collection_name();\
+    }\
+    void erase_obj(const type_name* obj) {\
+        erase_obj(*obj);\
+        delete obj;\
+    }
+    ITERATE_NAVITIA_PT_TYPES(ERASE_OBJ)
 
     ext_codes_map_type ext_codes_map;
     std::vector<StopPointConnection*> stop_point_connections;
