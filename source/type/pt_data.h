@@ -144,6 +144,21 @@ struct PT_Data : boost::noncopyable{
         return nb;
     }
 
+    type::ValidityPattern* get_or_create_validity_pattern(const std::bitset<366>& days) {
+        for (auto vp : validity_patterns) {
+            if (vp->days == days) {
+                return vp;
+            }
+        }
+        auto vp = new nt::ValidityPattern();
+        vp->idx = validity_patterns.size();
+        vp->uri = make_adapted_uri(vp->uri);
+        validity_patterns.push_back(vp);
+        validity_patterns_map[vp->uri] = vp;
+        vp->days = days;
+        return vp;
+    }
+
     /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
       *
       * Le template a été surchargé pour gérer des const char* (string passée comme literal)
