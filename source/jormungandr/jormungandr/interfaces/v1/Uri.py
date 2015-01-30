@@ -127,7 +127,7 @@ class Uri(ResourceUri):
             return {"error": "No region"}, 404
         if collection and id:
             args["filter"] = collections_to_resource_type[collection] + ".uri="
-            args["filter"] += id
+            args["filter"] += '"' + id + '"'
         elif uri:
             if uri[-1] == "/":
                 uri = uri[:-1]
