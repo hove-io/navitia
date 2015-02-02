@@ -37,6 +37,19 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
+DateTime NextStopTimeData::Forward::get_time(const type::StopTime& st) const {
+    return st.departure_time;
+}
+bool NextStopTimeData::Forward::is_valid(const type::StopTime& st) const {
+    return st.valid_begin(true);
+}
+DateTime NextStopTimeData::Backward::get_time(const type::StopTime& st) const {
+    return st.arrival_time;
+}
+bool NextStopTimeData::Backward::is_valid(const type::StopTime& st) const {
+    return st.valid_begin(false);
+}
+
 template<typename Cmp>
 void NextStopTimeData::TimesStopTimes<Cmp>::init(const type::JourneyPattern* jp,
                                                  const type::JourneyPatternPoint* jpp)
@@ -47,7 +60,9 @@ void NextStopTimeData::TimesStopTimes<Cmp>::init(const type::JourneyPattern* jp,
     for(const auto& vj: jp->discrete_vehicle_journey_list) {
         assert(vj->stop_time_list.at(jpp_order).journey_pattern_point ==
                jp->journey_pattern_point_list.at(jpp_order));
-        stop_times.push_back(&vj->stop_time_list[jpp_order]);
+        const auto& st = vj->stop_time_list[jpp_order];
+        if (! cmp.is_valid(st)) { continue; }
+        stop_times.push_back(&st);
     }
 
     // sort the stop times according to cmp
@@ -90,8 +105,7 @@ is_valid(const nt::StopTime* st,
          const bool adapted,
          const type::VehicleProperties& vehicle_props)
 {
-    return st->valid_begin(clockwise) &&
-        st->is_valid_day(date, !clockwise, adapted) &&
+    return st->is_valid_day(date, !clockwise, adapted) &&
         st->vehicle_journey->accessible(vehicle_props);
 }
 
