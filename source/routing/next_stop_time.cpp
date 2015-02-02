@@ -327,8 +327,8 @@ inline static bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) 
 * Note: If hour in [0, end] we have to check the previous day's validity pattern
 **/
 DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted) {
-    const u_int32_t lower_bound = (freq_vj.start_time + st.departure_time) % DateTimeUtils::SECONDS_PER_DAY;
-    const u_int32_t upper_bound = (freq_vj.end_time + st.departure_time) % DateTimeUtils::SECONDS_PER_DAY;
+    const u_int32_t lower_bound = DateTimeUtils::hour(freq_vj.start_time + st.departure_time);
+    const u_int32_t upper_bound = DateTimeUtils::hour(freq_vj.end_time + st.departure_time);
 
     auto hour = DateTimeUtils::hour(dt);
     auto date = DateTimeUtils::date(dt);
@@ -378,12 +378,12 @@ DateTime get_next_departure(DateTime dt, const type::FrequencyVehicleJourney& fr
     double diff = hour - lower_bound + DateTimeUtils::SECONDS_PER_DAY;
     const int32_t x = std::ceil(diff / double(freq_vj.headway_secs));
 
-    return DateTimeUtils::set(date, (lower_bound + x * freq_vj.headway_secs) % DateTimeUtils::SECONDS_PER_DAY);
+    return DateTimeUtils::set(date, DateTimeUtils::hour(lower_bound + x * freq_vj.headway_secs));
 }
 
 DateTime get_previous_arrival(DateTime dt, const type::FrequencyVehicleJourney& freq_vj, const type::StopTime& st, const bool adapted) {
-    const u_int32_t lower_bound = (freq_vj.start_time + st.arrival_time) % DateTimeUtils::SECONDS_PER_DAY;
-    const u_int32_t upper_bound = (freq_vj.end_time + st.arrival_time) % DateTimeUtils::SECONDS_PER_DAY;
+    const u_int32_t lower_bound = DateTimeUtils::hour(freq_vj.start_time + st.arrival_time);
+    const u_int32_t upper_bound = DateTimeUtils::hour(freq_vj.end_time + st.arrival_time);
 
     auto hour = DateTimeUtils::hour(dt);
     auto date = DateTimeUtils::date(dt);
