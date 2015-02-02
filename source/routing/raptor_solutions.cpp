@@ -339,14 +339,7 @@ get_final_jppidx_and_date(int count, JppIdx jpp_idx, bool clockwise, bool disrup
 
 
 struct VisitorWalkingTime : public BasePathVisitor {
-    navitia::time_duration walking_time = {};
     JppIdx departure_jpp_idx = JppIdx();
-    void connection(type::StopPoint* , type::StopPoint* ,
-                boost::posix_time::ptime dep_time, boost::posix_time::ptime arr_time,
-                type::StopPointConnection*) {
-
-        walking_time += navitia::seconds((arr_time - dep_time).total_seconds());
-    }
 
     void final_step(JppIdx current_jpp, size_t , const std::vector<Labels> &){
         departure_jpp_idx = current_jpp;
@@ -373,7 +366,6 @@ navitia::time_duration getWalkingTime(int count, JppIdx jpp_idx, const std::vect
 
     VisitorWalkingTime v;
     read_path(v, jpp_idx, count, !clockwise, disruption_active, accessibilite_params, raptor);
-    walking_time += v.walking_time;
     if (!v.departure_jpp_idx.is_valid()) {
         return walking_time;
     }
