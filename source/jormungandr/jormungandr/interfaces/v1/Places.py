@@ -91,6 +91,7 @@ class Places(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
         g.use_old_disruptions = args['_use_old_disruptions']
+        self._register_interpreted_parameters(args)
 
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
@@ -171,6 +172,7 @@ class PlacesNearby(ResourceUri):
         else:
             abort(404)
         args["filter"] = args["filter"].replace(".id", ".uri")
+        self._register_interpreted_parameters(args)
         response = i_manager.dispatch(args, "places_nearby",
                                       instance_name=self.region)
         return response, 200

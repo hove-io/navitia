@@ -130,6 +130,8 @@ class Calendars(ResourceUri):
             args["filter"] = self.get_filter(uris)
         else:
             args["filter"] = ""
+
+        self._register_interpreted_parameters(args)
         response = i_manager.dispatch(args, "calendars",
                                       instance_name=self.region)
         return response

@@ -16,62 +16,63 @@ message StatCoverage{
 }
 
 message StatRequest {
-    //POSIX time (i.e., number of seconds since January 1st 1970 00:00:00 UTC)    
-    optional uint64	request_date = 1;
-    optional int32	user_id = 2;
-    optional string	user_name = 3;
-    optional int32	application_id = 4;
-    optional string	application_name = 5;
-    optional int32	request_duration = 6;
-    optional string	api = 7;
+    //POSIX time (i.e., number of seconds since January 1st 1970 00:00:00 UTC)
+    optional uint64 request_date = 1;
+    optional int32  user_id = 2;
+    optional string user_name = 3;
+    optional int32  application_id = 4;
+    optional string application_name = 5;
+    optional int32  request_duration = 6;
+    optional string api = 7;
     optional string   path = 8;
-    optional string	host = 10;
-    optional int32	response_size = 11;
-    optional string	client = 12;
+    optional string host = 10;
+    optional int32  response_size = 11;
+    optional string client = 12;
     repeated StatCoverage coverages = 13;
     repeated StatParameter parameters = 14;
     optional StatError error = 15;
     repeated StatJourneyResponse journeys = 16;
+    repeated StatParameter interpreted_parameters = 17;
 }
 
 message StatJourneyResponse {
-    optional uint64 	requested_date_time = 1;
-    optional uint64 	departure_date_time = 2;
-    optional uint64 	arrival_date_time = 3;
-    optional int32 	duration = 4;
-    optional int32 	nb_transfers = 5;
-    optional string 	type = 6;
+    optional uint64     requested_date_time = 1;
+    optional uint64     departure_date_time = 2;
+    optional uint64     arrival_date_time = 3;
+    optional int32      duration = 4;
+    optional int32      nb_transfers = 5;
+    optional string     type = 6;
     repeated StatJourneySection sections = 7;
 }
 
 message StatJourneySection {
-    optional uint64 	departure_date_time = 1;
-    optional uint64 	arrival_date_time = 2;
-    optional int32 	duration = 3;
-    optional string 	type = 4;
+    optional uint64     departure_date_time = 1;
+    optional uint64     arrival_date_time = 2;
+    optional int32  duration = 3;
+    optional string     type = 4;
     optional string   mode = 5;
-    optional string 	from_embedded_type = 6;
-    optional string 	from_id = 7;
-    optional string 	from_name = 8;
+    optional string     from_embedded_type = 6;
+    optional string     from_id = 7;
+    optional string     from_name = 8;
     optional GeographicalCoord from_coord = 9;
-    optional string 	from_admin_id = 10;
-    optional string 	from_admin_name = 11;
-    optional string 	to_embedded_type = 12;
-    optional string 	to_id = 13;
-    optional string 	to_name = 14;
+    optional string     from_admin_id = 10;
+    optional string     from_admin_name = 11;
+    optional string     to_embedded_type = 12;
+    optional string     to_id = 13;
+    optional string     to_name = 14;
     optional GeographicalCoord to_coord = 15;
-    optional string 	to_admin_id = 16;
-    optional string 	to_admin_name = 17;
-    optional string 	vehicle_journey_id = 18;
-    optional string 	line_id = 19;
-    optional string 	line_code = 20;
-    optional string 	route_id = 21;
-    optional string 	network_id = 22;
-    optional string 	network_name = 23;
-    optional string 	physical_mode_id = 24;
-    optional string 	physical_mode_name = 25;
-    optional string 	commercial_mode_id = 26;
-    optional string 	commercial_mode_name = 27;
+    optional string     to_admin_id = 16;
+    optional string     to_admin_name = 17;
+    optional string     vehicle_journey_id = 18;
+    optional string     line_id = 19;
+    optional string     line_code = 20;
+    optional string     route_id = 21;
+    optional string     network_id = 22;
+    optional string     network_name = 23;
+    optional string     physical_mode_id = 24;
+    optional string     physical_mode_name = 25;
+    optional string     commercial_mode_id = 26;
+    optional string     commercial_mode_name = 27;
 }
 
 

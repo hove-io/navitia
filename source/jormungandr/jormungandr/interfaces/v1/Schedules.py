@@ -128,7 +128,7 @@ class Schedules(ResourceUri, ResourceUtc):
             args['from_datetime'] = utils.date_to_timestamp(new_datetime)
         else:
             args['from_datetime'] = utils.date_to_timestamp(args['from_datetime'])
-
+        self._register_interpreted_parameters(args)
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)
 

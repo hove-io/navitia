@@ -91,7 +91,7 @@ class Ptobjects(ResourceUri):
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
         g.use_old_disruptions = args['_use_old_disruptions']
-
+        self._register_interpreted_parameters(args)
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
         response = i_manager.dispatch(args, "pt_objects",

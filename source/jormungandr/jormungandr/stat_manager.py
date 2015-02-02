@@ -151,14 +151,33 @@ class StatManager(object):
             stat_request.client = request.remote_addr
         elif request.headers.getlist("X-Forwarded-For"):
             stat_request.client = request.headers.getlist("X-Forwarded-For")[0]
+        stat_request.path = request.path
 
         stat_request.response_size = sys.getsizeof(call_result[0])
+
+    def register_interpreted_parameters(self, args):
+        """
+        allow to add calculated parameters for a request
+        """
+        g.stat_interpreted_parameters = args
 
     def fill_parameters(self, stat_request):
         for item in request.args.iteritems():
             stat_parameter = stat_request.parameters.add()
             stat_parameter.key = item[0]
             stat_parameter.value = item[1]
+
+        if hasattr(g, 'stat_interpreted_parameters'):
+            for item in g.stat_interpreted_parameters.iteritems():
+                if isinstance(item[1], list):
+                    for value in item[1]:
+                        stat_parameter = stat_request.interpreted_parameters.add()
+                        stat_parameter.key = item[0]
+                        stat_parameter.value = unicode(value)
+                else:
+                    stat_parameter = stat_request.interpreted_parameters.add()
+                    stat_parameter.key = item[0]
+                    stat_parameter.value = unicode(item[1])
 
     def fill_coverages(self, stat_request):
         if 'region' in request.view_args:

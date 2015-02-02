@@ -666,6 +666,8 @@ class Journeys(ResourceUri, ResourceUtc):
 
         # we save the original datetime for debuging purpose
         args['original_datetime'] = args['datetime']
+        #we add the interpreted parameters to the stats
+        self._register_interpreted_parameters(args)
 
         #we want to store the different errors
         responses = {}
@@ -783,6 +785,10 @@ class Journeys(ResourceUri, ResourceUtc):
         # we save the original datetime for debuging purpose
         args['original_datetime'] = args['datetime']
         original_datetime = args['original_datetime']
+
+        #we add the interpreted parameters to the stats
+        self._register_interpreted_parameters(args)
+
         new_datetime = self.convert_to_utc(original_datetime)
         args['datetime'] = date_to_timestamp(new_datetime)
 
