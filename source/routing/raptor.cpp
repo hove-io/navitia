@@ -170,10 +170,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     const size_t journey_pattern_points_size = data.pt_data->journey_pattern_points.size();
     b_dest.reinit(journey_pattern_points_size, bound);
     this->make_queue();
-    if(clockwise)
-        boost::fill(best_labels.values(), DateTimeUtils::inf);
-    else
-        boost::fill(best_labels.values(), DateTimeUtils::min);
+    boost::fill(best_labels.values(), bound);
 }
 
 
