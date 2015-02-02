@@ -165,18 +165,19 @@ struct PT_Data : boost::noncopyable{
         return nb;
     }
 
-    type::ValidityPattern* get_or_create_validity_pattern(const std::bitset<366>& days) {
+    type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
         for (auto vp : validity_patterns) {
-            if (vp->days == days) {
+            if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
                 return vp;
             }
         }
         auto vp = new nt::ValidityPattern();
         vp->idx = validity_patterns.size();
         vp->uri = make_adapted_uri(vp->uri);
+        vp->beginning_date = vp_ref.beginning_date;
+        vp->days = vp_ref.days;
         validity_patterns.push_back(vp);
         validity_patterns_map[vp->uri] = vp;
-        vp->days = days;
         return vp;
     }
 

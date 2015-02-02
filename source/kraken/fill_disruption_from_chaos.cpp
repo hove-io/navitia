@@ -239,16 +239,16 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
         }
     }
 
-
-
     void operator()(nt::new_disruption::LineSection & ls) {
         this->operator()(ls.line);
     }
+
     void operator()(const nt::Line* line) {
         for(auto route : line->route_list) {
             this->operator()(route);
         }
     }
+
     void operator()(const nt::Route* route) {
         for (auto journey_pattern : route->journey_pattern_list) {
             (*this)(journey_pattern);
@@ -278,7 +278,7 @@ struct functor_add_vj {
     void init_vj(nt::VehicleJourney* vj, const nt::VehicleJourney& vj_ref) const {
         vj->journey_pattern = jp;
         vj->idx = pt_data.vehicle_journeys.size();
-        vj->uri = make_adapted_uri(vj->uri);
+        vj->uri = make_adapted_uri(vj_ref.uri);
         vj->is_adapted = true;
         pt_data.vehicle_journeys.push_back(vj);
         pt_data.vehicle_journeys_map[vj->uri] = vj;
@@ -301,9 +301,10 @@ struct functor_add_vj {
                 tmp_vp.add(day);
             }
         }
-        vj->adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp.days);
+        vj->adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
+        // The vehicle_journey is never active on theorical validity_pattern
         tmp_vp.reset();
-        vj->validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp.days);
+        vj->validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
         size_t order = 0;
         // We skip the stop_time linked to impacted stop_area
         for (const auto& st_ref : vj_ref.stop_time_list) {
@@ -344,8 +345,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     using apply_impacts_visitor::operator();
 
     bool func_on_vj(nt::VehicleJourney& vj) {
-        nt::ValidityPattern vp(vj.adapted_validity_pattern);
-        bool is_impacted = false;
+        nt::ValidityPattern tmp_vp;
+        for (size_t i = 0; i < vj.adapted_validity_pattern->days.size(); ++i) {
+            tmp_vp.days.set(i, vj.adapted_validity_pattern->days[i]);
+        }
         for (auto period : impact->application_periods) {
             bt::time_iterator titr(period.begin(), bt::hours(24));
             for(;titr<period.end(); ++titr) {
@@ -353,24 +356,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     continue;
                 }
                 auto day = (titr->date() - meta.production_date.begin()).days();
-                if (vp.check(day)) {
-                    vp.remove(day);
-                    is_impacted = true;
+                if (tmp_vp.check(day)) {
+                    tmp_vp.remove(day);
                 }
             }
         }
-        if (is_impacted) {
-            for (auto vp_ : pt_data.validity_patterns) {
-                if (vp_->days == vp.days) {
-                    vj.adapted_validity_pattern = vp_;
-                    return true;
-                }
-            }
-            // We haven't found this vp, so we need to create it
-            auto vp_ = new nt::ValidityPattern(vp);
-            pt_data.validity_patterns.push_back(vp_);
-            vj.adapted_validity_pattern = vp_;
-        }
+        vj.adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
         return true;
     }
 
