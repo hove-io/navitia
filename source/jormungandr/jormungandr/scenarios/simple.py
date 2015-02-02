@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from flask.ext.restful import abort
 from jormungandr.utils import date_to_timestamp
 
 import navitiacommon.type_pb2 as type_pb2
@@ -96,6 +97,9 @@ class Scenario(object):
         req.places.search_type = request['search_type']
         if request["type[]"]:
             for type in request["type[]"]:
+                if type not in pb_type:
+                    abort(422, message="{} is not an acceptable type".format(type))
+
                 req.places.types.append(pb_type[type])
 
         if request["admin_uri[]"]:
@@ -202,6 +206,9 @@ class Scenario(object):
         req.places_nearby.start_page = request["start_page"]
         if request["type[]"]:
             for type in request["type[]"]:
+                if type not in pb_type:
+                    abort(422, message="{} is not an acceptable type".format(type))
+
                 req.places_nearby.types.append(pb_type[type])
         req.places_nearby.filter = request["filter"]
         resp = instance.send_and_receive(req)
