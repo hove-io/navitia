@@ -89,11 +89,11 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             if(!v.comp(workingDt, bound)) {
                 continue;
             }
-            working_labels.mut_dt_pt(jpp_idx) = workingDt;
             working_labels.mut_boarding_jpp_pt(jpp_idx) = state.boarding_jpp_idx;
-            best_labels[jpp_idx] = working_labels.dt_pt(jpp_idx);
+            working_labels.mut_dt_pt(jpp_idx) = workingDt;
+            best_labels[jpp_idx] = workingDt;
+            this->b_dest.add_best(v, jpp_idx, workingDt, this->count);
             add_vj = true;
-            this->b_dest.add_best(v, jpp_idx, working_labels.dt_pt(jpp_idx), this->count);
             auto& best_jpp = best_jpp_by_sp[SpIdx(*jpp->stop_point)];
             if(!best_jpp.is_valid() || v.comp(workingDt, working_labels.dt_pt(best_jpp))) {
                 best_jpp = jpp_idx;
@@ -141,8 +141,8 @@ bool RAPTOR::foot_path(const Visitor & v) {
                     if (jpp_ptr->journey_pattern->odt_properties.is_zonal_odt()) { continue; }
                 }
 
-                working_labels.mut_dt_transfer(jpp.idx) = next;
                 working_labels.mut_boarding_jpp_transfer(jpp.idx) = best_jpp_idx;
+                working_labels.mut_dt_transfer(jpp.idx) = next;
                 best_labels[jpp.idx] = next;
                 if(v.comp(jpp.order, Q[jpp.jp_idx])) {
                     Q[jpp.jp_idx] = jpp.order;
@@ -676,7 +676,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
 
 int RAPTOR::best_round(JppIdx journey_pattern_point_idx){
     for(size_t i = 0; i <= this->count; ++i){
-        if(labels[i].mut_dt_pt(journey_pattern_point_idx) == best_labels[journey_pattern_point_idx]){
+        if(labels[i].dt_pt(journey_pattern_point_idx) == best_labels[journey_pattern_point_idx]){
             return i;
         }
     }
