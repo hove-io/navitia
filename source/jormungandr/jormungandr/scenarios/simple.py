@@ -153,6 +153,7 @@ class Scenario(object):
         st.departure_filter = departure_filter
         st.arrival_filter = arrival_filter
         st.from_datetime = request["from_datetime"]
+        st.until_datetime = request["until_datetime"]
         st.duration = request["duration"]
         st.depth = request["depth"]
         st.show_codes = request["show_codes"]
