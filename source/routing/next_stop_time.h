@@ -76,14 +76,14 @@ private:
     struct Forward {
         template<typename T> inline bool
         operator()(const T& lhs, const T& rhs) const { return lhs < rhs; }
-        template<typename ST> // a template only to not depend on type.h
-        inline DateTime get_time(const ST& st) const { return st.departure_time; }
+        DateTime get_time(const type::StopTime& st) const;
+        bool is_valid(const type::StopTime& st) const;
     };
     struct Backward {
         template<typename T> inline bool
         operator()(const T& lhs, const T& rhs) const { return lhs > rhs; }
-        template<typename ST> // a template only to not depend on type.h
-        inline DateTime get_time(const ST& st) const { return st.arrival_time; }
+        DateTime get_time(const type::StopTime& st) const;
+        bool is_valid(const type::StopTime& st) const;
     };
     // This structure allow to iterate on stop times in the interesting order
     template<typename Cmp> struct TimesStopTimes {
