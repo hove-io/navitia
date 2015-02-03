@@ -120,6 +120,7 @@ class Disruptions(ResourceUri):
             period_end = args['datetime'] + timedelta(days=args.get('period'))
 
         args['period_end'] = period_end
+        self._register_interpreted_parameters(args)
 
         response = i_manager.dispatch(args, "disruptions",
                                       instance_name=self.region)

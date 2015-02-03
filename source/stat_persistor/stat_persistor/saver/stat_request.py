@@ -47,37 +47,44 @@ def persist_stat_request(meta, conn, stat):
     error_table = meta.tables['stat.errors']
     journey_table = meta.tables['stat.journeys']
     journey_section_table = meta.tables['stat.journey_sections']
+    interpreted_parameters_table = meta.tables['stat.interpreted_parameters']
 
-    #Inserer dans la table stat.requests
+    #stat.requests
     query = request_table.insert()
     request_id = conn.execute(query.values(build_stat_request_dict(stat)))
 
-    #Inserer dans la tables stat.coverages
+    #stat.coverages
     query = coverage_table.insert()
     for coverage in stat.coverages:
         conn.execute(query.values(
             build_stat_coverage_dict(coverage, request_id.inserted_primary_key[0])))
 
-    #Inserer dans la table stat.parameters
+    #stat.parameters
     query = parameter_table.insert()
     for param in stat.parameters:
         conn.execute(query.values(
             build_stat_parameter_dict(param, request_id.inserted_primary_key[0])))
 
-    #Inserer dans la table stat.parameters
+    #stat.interpreted_parameters
+    query = interpreted_parameters_table.insert()
+    for param in stat.interpreted_parameters:
+        conn.execute(query.values(
+            build_stat_parameter_dict(param, request_id.inserted_primary_key[0])))
+
+    #stat.errors
     query = error_table.insert()
     if stat.error.id:
         conn.execute(query.values(
             build_stat_error_dict(stat.error, request_id.inserted_primary_key[0])))
 
-    #Inserer les journeys dans la table stat.journeys
+    #stat.journeys
     for journey in stat.journeys:
         query = journey_table.insert()
         journey_id = conn.execute(
             query.values(build_stat_journey_dict(journey,
                                                  request_id.inserted_primary_key[0])))
 
-        #Inserer les sections de la journey dans la table stat.journey_sections:
+        #stat.journey_sections:
         query = journey_section_table.insert()
         for section in journey.sections:
             conn.execute(query.values(build_stat_section_dict(section,

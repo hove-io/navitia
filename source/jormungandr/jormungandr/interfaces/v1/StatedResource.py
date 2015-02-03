@@ -40,3 +40,6 @@ class StatedResource(Resource):
 
         if stat_manager.save_stat:
             self.method_decorators.append(manage_stat_caller(stat_manager))
+
+    def _register_interpreted_parameters(self, args):
+        stat_manager.register_interpreted_parameters(args)
