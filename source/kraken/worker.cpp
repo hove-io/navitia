@@ -36,6 +36,7 @@ www.navitia.io
 #include "ptreferential/ptreferential_api.h"
 #include "time_tables/route_schedules.h"
 #include "time_tables/next_passages.h"
+#include "time_tables/previous_passages.h"
 #include "time_tables/2stops_schedules.h"
 #include "time_tables/departure_boards.h"
 #include "disruption/disruption_api.h"
@@ -230,6 +231,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     this->init_worker_data(data);
 
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
+    bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
     try {
         switch(api) {
         case pbnavitia::NEXT_DEPARTURES:
@@ -239,7 +241,19 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     type::AccessibiliteParams(), *data, false, request.count(),
                     request.start_page(), request.show_codes());
         case pbnavitia::NEXT_ARRIVALS:
-            return timetables::next_arrivals(request.arrival_filter(),
+            return timetables::previous_arrivals(request.arrival_filter(),
+                    forbidden_uri, until_datetime,
+                    request.duration(), request.nb_stoptimes(), request.depth(),
+                    type::AccessibiliteParams(),
+                    *data, false, request.count(), request.start_page(), request.show_codes());
+        case pbnavitia::PREVIOUS_DEPARTURES:
+            return timetables::previous_departures(request.departure_filter(),
+                    forbidden_uri, until_datetime,
+                    request.duration(), request.nb_stoptimes(), request.depth(),
+                    type::AccessibiliteParams(), *data, false, request.count(),
+                    request.start_page(), request.show_codes());
+        case pbnavitia::PREVIOUS_ARRIVALS:
+            return timetables::previous_arrivals(request.arrival_filter(),
                     forbidden_uri, from_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
@@ -591,6 +605,8 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         case pbnavitia::ROUTE_SCHEDULES:
         case pbnavitia::NEXT_DEPARTURES:
         case pbnavitia::NEXT_ARRIVALS:
+        case pbnavitia::PREVIOUS_DEPARTURES:
+        case pbnavitia::PREVIOUS_ARRIVALS:
         case pbnavitia::STOPS_SCHEDULES:
         case pbnavitia::DEPARTURE_BOARDS:
             response = next_stop_times(request.next_stop_times(), request.requested_api()); break;

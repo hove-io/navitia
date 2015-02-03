@@ -68,10 +68,10 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument("filter", type=str)
         parser_get.add_argument("from_datetime", type=date_time_format,
                                 description="The datetime from which you want\
-                                the schedules")
+                                the schedules", default=None)
         parser_get.add_argument("until_datetime", type=date_time_format,
                                 description="The datetime until which you want\
-                                the schedules")
+                                the schedules", default=None)
         parser_get.add_argument("duration", type=int, default=3600 * 24,
                                 description="Maximum duration between datetime\
                                 and the retrieved stop time")
@@ -118,7 +118,7 @@ class Schedules(ResourceUri, ResourceUtc):
             self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
 
-        if not args["from_datetime"]:
+        if not args["from_datetime"] and not args["until_datetime"]:
             args['from_datetime'] = datetime.now()
             args['from_datetime'] = args['from_datetime'].replace(hour=13, minute=37)
 
@@ -132,6 +132,11 @@ class Schedules(ResourceUri, ResourceUtc):
         else:
             args['from_datetime'] = utils.date_to_timestamp(args['from_datetime'])
             args['until_datetime'] = utils.date_to_timestamp(args['until_datetime'])
+
+        if not args["from_datetime"] and args["until_datetime"]\
+                and self.endpoint[4:] == "next":
+            self.endpoint = "prev" + self.endpoint[4:]
+		
 		self._register_interpreted_parameters(args)
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)

@@ -45,6 +45,7 @@ message NextStopTimeRequest {
     repeated string forbidden_uri       = 12;
     optional string calendar            = 13;
     optional bool show_codes            = 14;
+    required uint64 until_datetime      = 15;
 }
 
 message StreetNetworkParams{

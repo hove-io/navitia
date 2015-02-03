@@ -42,6 +42,8 @@ enum API {
     NMPLANNER = 19;
     pt_objects = 20;
     place_code = 21;
+    PREVIOUS_DEPARTURES = 23;
+    PREVIOUS_ARRIVALS = 24;
 }
 
 enum VehicleJourneyType{
