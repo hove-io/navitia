@@ -50,15 +50,12 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, connection_string;
-    uint32_t coord_system;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Show this message")
         ("input,i", po::value<std::string>(&input), "Input directory")
         ("version,v", "Show version")
         ("config-file", po::value<std::string>(), "Path to config file")
-        ("coord-system,c", po::value<uint32_t>(&coord_system)->default_value(27572),
-             "Coordinate system: 27572 for \" lambert 2 Etendu\"")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
              "Database connection parameters: host=localhost user=navitia "
              "dbname=navitia password=navitia");

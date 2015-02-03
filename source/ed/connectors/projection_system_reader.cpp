@@ -34,13 +34,11 @@ www.navitia.io
 
 namespace ed { namespace connectors {
 
-ProjectionSystemReader::ProjectionSystemReader(const std::string& p): file(p) {}
+ProjectionSystemReader::ProjectionSystemReader(const std::string& p, ConvCoord d): file(p), default_conv_coord(d){}
 
-ConvCoord ProjectionSystemReader::read_conv_coord() {
+ConvCoord ProjectionSystemReader::read_conv_coord() const {
 
     CsvReader reader(file, ';', true, true);
-
-    ConvCoord default_conv_coord = ConvCoord(Projection("Lambert 2 étendu", "27572", false));
 
     if (! reader.is_open()) {
         LOG4CPLUS_INFO(logger, "No projection file given, we use the default projection system: "

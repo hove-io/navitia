@@ -57,9 +57,11 @@ bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
     return boost::algorithm::starts_with(filename, prefex);
 }
 
-void GeopalParser::fill(){
+void GeopalParser::fill() {
 
-    conv_coord = ProjectionSystemReader(path + "/projection.txt").read_conv_coord();
+    //default input coord system is lambert 2
+    conv_coord = ProjectionSystemReader(path + "/projection.txt",
+                                        ConvCoord(Projection("Lambert 2 étendu", "27572", false))).read_conv_coord();
 
     LOG4CPLUS_INFO(logger, "projection system: " << this->conv_coord.origin.name <<
                    "(" << this->conv_coord.origin.definition << ")");

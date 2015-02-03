@@ -40,11 +40,13 @@ namespace ed { namespace connectors {
 class ProjectionSystemReader {
 private:
     std::string file;
-    log4cplus::Logger logger;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    ConvCoord default_conv_coord;
 public:
-    ProjectionSystemReader(const std::string& file);
+    //default conv coord is WGS84->WGS84
+    ProjectionSystemReader(const std::string& file, ConvCoord default_conv = ConvCoord(Projection(), Projection()));
 
-    ConvCoord read_conv_coord();
+    ConvCoord read_conv_coord() const;
 
 };
 
