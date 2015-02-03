@@ -50,6 +50,8 @@ BOOST_AUTO_TEST_CASE(test1){
     auto result = get_stop_times(jpps, navitia::DateTimeUtils::min, navitia::DateTimeUtils::inf, 1, *b.data, false);
     BOOST_REQUIRE_EQUAL(result.size(), 1);
 
+    result = get_stop_times(jpps, navitia::DateTimeUtils::set(0, 86399), navitia::DateTimeUtils::min, 1, *b.data, false, {}, false);
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
 }
 
 /**
