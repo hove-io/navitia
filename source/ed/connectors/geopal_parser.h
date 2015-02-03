@@ -57,11 +57,14 @@ private:
     void fill_ways_edges();
     bool starts_with(std::string filename, const std::string& prefex);
 
+    void read_projection_system();
 public:
-    ed::connectors::ConvCoord conv_coord;
+    ConvCoord conv_coord = ConvCoord(Projection("Lambert 2 étendu", "27572", false));
+
     ed::Georef data;
 
-    GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord);
+    GeopalParser(const std::string& path);
+
     void fill();
 
 };

@@ -35,8 +35,8 @@ namespace ed { namespace connectors {
 
 GeopalParserException::~GeopalParserException() noexcept {}
 
-GeopalParser::GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord): path(path),
-                            conv_coord(conv_coord) {
+GeopalParser::GeopalParser(const std::string& path):
+    path(path) {
     logger = log4cplus::Logger::getInstance("log");
     try{
             boost::filesystem::path directory(this->path);
@@ -57,6 +57,10 @@ bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
 }
 
 void GeopalParser::fill(){
+
+    this->read_projection_system();
+    LOG4CPLUS_INFO(logger, "projection system: " << this->conv_coord.origin.name <<
+                   "(" << this->conv_coord.origin.definition << ")");
 
     this->fill_admins();
     LOG4CPLUS_INFO(logger, "Admin count: " << this->data.admins.size());
@@ -406,5 +410,51 @@ void GeopalParser::fill_ways_edges(){
     }
 }
 
+void GeopalParser::read_projection_system() {
+
+    CsvReader reader(path + "/projection.txt" , ';', true, true);
+
+    if (! reader.is_open()) {
+        LOG4CPLUS_INFO(logger, "No projection file given, we use the default projection system: "
+                       << conv_coord.origin.name);
+        return;
+    }
+
+    std::vector<std::string> mandatory_headers = {"name", "definition"};
+
+    if (! reader.validate(mandatory_headers)) {
+        throw GeopalParserException("Impossible to parse file " + reader.filename +" . Cannot find column : " + reader.missing_headers(mandatory_headers));
+    }
+
+    //we only have one line
+    if (reader.eof()) {
+        LOG4CPLUS_INFO(logger, "Projection file empty, we use the default projection system: "
+                       << conv_coord.origin.name);
+        return;
+    }
+
+    std::vector<std::string> row = reader.next();
+    if (reader.eof()) {
+        LOG4CPLUS_INFO(logger, "Projection file empty, we use the default projection system: "
+                       << conv_coord.origin.name);
+        return;
+    }
+
+    auto name = row.at(reader.get_pos_col("name"));
+    auto definition = row.at(reader.get_pos_col("definition"));
+
+    int is_degree_col = reader.get_pos_col("is_degree");
+
+    //is degree is false by default
+    auto is_degree = false;
+    if (reader.has_col(is_degree_col, row)) {
+        try {
+            is_degree = boost::lexical_cast<bool>(row.at(is_degree_col));
+        } catch (boost::bad_lexical_cast) {
+            LOG4CPLUS_INFO(logger, "Unable to cast '" << row[is_degree_col] << "' to bool, ignoring parameter");
+        }
+    }
+
+    conv_coord = ConvCoord(Projection(name, definition, is_degree));
 }
-}//namespace
+}}//namespace
