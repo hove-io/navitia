@@ -127,17 +127,20 @@ class Schedules(ResourceUri, ResourceUtc):
 
         if not args.get('calendar'):
             #if a calendar is given all times will be given in local (because it might span over dst)
-            new_datetime = self.convert_to_utc(args['from_datetime'])
-            args['from_datetime'] = utils.date_to_timestamp(new_datetime)
+            if args['from_datetime']:
+                new_datetime = self.convert_to_utc(args['from_datetime'])
+                args['from_datetime'] = utils.date_to_timestamp(new_datetime)
+            if args['until_datetime']:
+                new_datetime = self.convert_to_utc(args['until_datetime'])
+                args['until_datetime'] = utils.date_to_timestamp(new_datetime)
         else:
             args['from_datetime'] = utils.date_to_timestamp(args['from_datetime'])
-            args['until_datetime'] = utils.date_to_timestamp(args['until_datetime'])
 
         if not args["from_datetime"] and args["until_datetime"]\
-                and self.endpoint[4:] == "next":
-            self.endpoint = "prev" + self.endpoint[4:]
-		
-		self._register_interpreted_parameters(args)
+                and self.endpoint[:4] == "next":
+            self.endpoint = "previous" + self.endpoint[4:]
+        
+        self._register_interpreted_parameters(args) 
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)
 
