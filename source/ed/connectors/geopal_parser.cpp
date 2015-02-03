@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "geopal_parser.h"
 #include "data_cleaner.h"
+#include "projection_system_reader.h"
 
 namespace ed { namespace connectors {
 
@@ -58,7 +59,8 @@ bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
 
 void GeopalParser::fill(){
 
-    this->read_projection_system();
+    conv_coord = ProjectionSystemReader(path + "/projection.txt").read_conv_coord();
+
     LOG4CPLUS_INFO(logger, "projection system: " << this->conv_coord.origin.name <<
                    "(" << this->conv_coord.origin.definition << ")");
 
@@ -410,51 +412,4 @@ void GeopalParser::fill_ways_edges(){
     }
 }
 
-void GeopalParser::read_projection_system() {
-
-    CsvReader reader(path + "/projection.txt" , ';', true, true);
-
-    if (! reader.is_open()) {
-        LOG4CPLUS_INFO(logger, "No projection file given, we use the default projection system: "
-                       << conv_coord.origin.name);
-        return;
-    }
-
-    std::vector<std::string> mandatory_headers = {"name", "definition"};
-
-    if (! reader.validate(mandatory_headers)) {
-        throw GeopalParserException("Impossible to parse file " + reader.filename +" . Cannot find column : " + reader.missing_headers(mandatory_headers));
-    }
-
-    //we only have one line
-    if (reader.eof()) {
-        LOG4CPLUS_INFO(logger, "Projection file empty, we use the default projection system: "
-                       << conv_coord.origin.name);
-        return;
-    }
-
-    std::vector<std::string> row = reader.next();
-    if (reader.eof()) {
-        LOG4CPLUS_INFO(logger, "Projection file empty, we use the default projection system: "
-                       << conv_coord.origin.name);
-        return;
-    }
-
-    auto name = row.at(reader.get_pos_col("name"));
-    auto definition = row.at(reader.get_pos_col("definition"));
-
-    int is_degree_col = reader.get_pos_col("is_degree");
-
-    //is degree is false by default
-    auto is_degree = false;
-    if (reader.has_col(is_degree_col, row)) {
-        try {
-            is_degree = boost::lexical_cast<bool>(row.at(is_degree_col));
-        } catch (boost::bad_lexical_cast) {
-            LOG4CPLUS_INFO(logger, "Unable to cast '" << row[is_degree_col] << "' to bool, ignoring parameter");
-        }
-    }
-
-    conv_coord = ConvCoord(Projection(name, definition, is_degree));
-}
 }}//namespace

@@ -10,6 +10,7 @@ SET(SOURCE_LIB
     fare_utils.cpp
     geopal_parser.cpp
     conv_coord.cpp
+    projection_system_reader.cpp
     data_cleaner.cpp
     poi_parser.cpp
     synonym_parser.cpp
