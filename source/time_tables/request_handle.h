@@ -48,7 +48,7 @@ struct RequestHandle {
                   const std::vector<std::string>& forbidden_uris,
                   const boost::posix_time::ptime datetime, uint32_t duration,
                   const type::Data& data,
-                  boost::optional<const std::string> calendar_id);
+                  boost::optional<const std::string> calendar_id, const bool clockwise = true);
 };
 }
 

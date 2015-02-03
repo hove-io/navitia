@@ -31,6 +31,7 @@ www.navitia.io
 #include "get_stop_times.h"
 #include "routing/next_stop_time.h"
 #include "type/pb_converter.h"
+#include <functional>
 
 namespace navitia { namespace timetables {
 
@@ -40,7 +41,8 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
                                                const size_t max_departures,
                                                const type::Data& data, 
                                                bool disruption_active,
-                                               const type::AccessibiliteParams& accessibilite_params) {
+                                               const type::AccessibiliteParams& accessibilite_params,
+                                               const bool clockwise) {
     std::vector<datetime_stop_time> result;
     auto test_add = true;
     routing::NextStopTime next_st = routing::NextStopTime(data);
@@ -51,6 +53,10 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
     for(auto jpp_idx : journey_pattern_points){
         next_requested_datetime[jpp_idx] = dt;
     }
+    auto next_stop_times = std::bind(
+            clockwise ? &routing::NextStopTime::earliest_stop_time : &routing::NextStopTime::tardiest_stop_time,
+            &next_st, std::placeholders::_1, std::placeholders::_2, disruption_active,
+            accessibilite_params.vehicle_properties, true);
 
     while(test_add && result.size() < max_departures) {
         test_add = false;
@@ -59,23 +65,23 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            auto st = next_st.earliest_stop_time(routing::JppIdx(*jpp),
-                                                 next_requested_datetime[jpp_idx],
-                                                 disruption_active,
-                                                 accessibilite_params.vehicle_properties);
+            auto st = next_stop_times(routing::JppIdx(*jpp), next_requested_datetime[jpp_idx]);
 
             if (st.first != nullptr) {
                 DateTime dt_temp = st.second;
-                if (dt_temp <= max_dt) {
+                if ( (clockwise && dt_temp <= max_dt) || (!clockwise && dt_temp >= max_dt)) {
                     result.push_back(std::make_pair(dt_temp, st.first));
                     test_add = true;
                     // The next stop time must be at least one second after
-                    next_requested_datetime[jpp_idx] = dt_temp + 1;
+                    next_requested_datetime[jpp_idx] = clockwise ? dt_temp + 1 : dt_temp - 1;
                 }
             }
         }
-     }
-    std::sort(result.begin(), result.end(),[](datetime_stop_time dst1, datetime_stop_time dst2) {return dst1.first < dst2.first;});
+    }
+    std::sort(result.begin(), result.end(),
+            [&clockwise](datetime_stop_time dst1, datetime_stop_time dst2) {
+            return (clockwise && dst1.first < dst2.first) || (!clockwise && dst1.first > dst2.first);
+    });
     if (result.size() > max_departures) {
         result.resize(max_departures);
     }
@@ -98,7 +104,6 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
             continue;
         }
         auto st = get_all_stop_times(jpp, calendar_id, accessibilite_params.vehicle_properties);
-
         //afterward we filter the datetime not in [dt, max_dt]
         //the difficult part comes from the fact that for calendar dt are max_dt are not really datetime,
         //there are time but max_dt can be the day after like [today 4:00, tomorow 3:00]
