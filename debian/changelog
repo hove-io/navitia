@@ -1,3 +1,13 @@
+navitia2 (1.10.0) unstable; urgency=low
+
+  * Timetable: fix partial_terminus  <https://github.com/CanalTP/navitia/pull/852>
+  * Jormungandr: fix uri with spaces  <https://github.com/CanalTP/navitia/pull/851>
+  * Tyr: fix purge problem  <https://github.com/CanalTP/navitia/pull/850>
+  * Jormungandr: in stats, change mode of bike section to bss if applicable  <https://github.com/CanalTP/navitia/pull/849>
+  * Kraken: stop_time's comment are now indexed on (vj->uri, jpp->order)  <https://github.com/CanalTP/navitia/pull/848>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 30 Jan 2015 14:01:18 +0100
+
 navitia2 (1.9.2) unstable; urgency=low
 
   * missing schema in ed_reader 
