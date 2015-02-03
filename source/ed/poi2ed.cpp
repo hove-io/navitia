@@ -93,16 +93,16 @@ int main(int argc, char * argv[])
 
     try{
         poi_parser.fill();
-        LOG4CPLUS_INFO(logger, "On a  " << poi_parser.data.poi_types.size() << " POITypes");
-        LOG4CPLUS_INFO(logger, "On a  " << poi_parser.data.pois.size() << " POIs");
+        LOG4CPLUS_INFO(logger, "There are " << poi_parser.data.poi_types.size() << " POITypes loaded");
+        LOG4CPLUS_INFO(logger, "There are  " << poi_parser.data.pois.size() << " POIs loaded");
     }catch(const ed::connectors::PoiParserException& e){
-        LOG4CPLUS_FATAL(logger, "Erreur :"+ std::string(e.what()) + "  backtrace :" + e.backtrace());
+        LOG4CPLUS_FATAL(logger, "Error: " + std::string(e.what()) + "  backtrace :" + e.backtrace());
         return -1;
     }
 
     ed::EdPersistor p(connection_string);
     p.persist_pois(poi_parser.data);
-    LOG4CPLUS_INFO(logger, "temps :"<<to_simple_string(pt::microsec_clock::local_time() - start));
+    LOG4CPLUS_INFO(logger, "time to load the pois: " << to_simple_string(pt::microsec_clock::local_time() - start));
 
     return 0;
 }
