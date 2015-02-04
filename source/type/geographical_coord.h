@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/geometry/geometries/linestring.hpp>
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 #include <boost/geometry/multi/geometries/register/multi_linestring.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace navitia { namespace type {
 
@@ -51,6 +52,8 @@ struct GeographicalCoord{
 
     double lon() const { return _lon;}
     double lat() const { return _lat;}
+    std::string uri() const { return boost::lexical_cast<std::string>(_lon) +
+                ";" + boost::lexical_cast<std::string>(_lat);}
 
     void set_lon(double lon) { this->_lon = lon;}
     void set_lat(double lat) { this->_lat = lat;}
