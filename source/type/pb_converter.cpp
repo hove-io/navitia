@@ -1002,7 +1002,11 @@ void fill_pb_placemark(const type::EntryPoint& point, const type::Data &data,
             auto address = data.geo_ref->nearest_addr(point.coordinates);
             fill_pb_placemark(address.second, data, place, address.first, point.coordinates, max_depth, now,
                     action_period);
-        }catch(proximitylist::NotFound){}
+        }catch(proximitylist::NotFound){
+            place->set_name("");
+            place->set_uri(point.coordinates.uri());
+            place->set_embedded_type(pbnavitia::ADDRESS);
+        }
 
     }
 }
