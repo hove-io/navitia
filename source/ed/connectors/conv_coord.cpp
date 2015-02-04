@@ -48,6 +48,34 @@ Projection::Projection(const Projection& other) {
     proj_pj = pj_init_plus(definition.c_str());
 }
 
+Projection& Projection::operator=(const Projection& other) {
+    name = other.name;
+    is_degree = other.is_degree;
+    definition = other.definition;
+    //we allocate a new proj
+    proj_pj = pj_init_plus(definition.c_str());
+    return *this;
+}
+
+Projection& Projection::operator=(Projection&& other) {
+    pj_free(proj_pj);
+
+    name = other.name;
+    is_degree = other.is_degree;
+    definition = other.definition;
+    //we allocate a new proj
+    proj_pj = other.proj_pj;
+    other.proj_pj = nullptr;
+    return *this;
+}
+
+Projection::Projection(Projection&& other):
+    name(other.name), definition(other.definition),
+    is_degree(other.is_degree), proj_pj(other.proj_pj) {
+    //we got the proj4 ptr, no need for another allocation
+    other.proj_pj = nullptr;
+}
+
 Projection::~Projection() {
     pj_free(this->proj_pj);
 }

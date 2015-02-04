@@ -30,13 +30,14 @@ www.navitia.io
 
 #include "geopal_parser.h"
 #include "data_cleaner.h"
+#include "projection_system_reader.h"
 
 namespace ed { namespace connectors {
 
 GeopalParserException::~GeopalParserException() noexcept {}
 
-GeopalParser::GeopalParser(const std::string& path, const ed::connectors::ConvCoord& conv_coord): path(path),
-                            conv_coord(conv_coord) {
+GeopalParser::GeopalParser(const std::string& path):
+    path(path) {
     logger = log4cplus::Logger::getInstance("log");
     try{
             boost::filesystem::path directory(this->path);
@@ -56,7 +57,14 @@ bool GeopalParser::starts_with(std::string filename, const std::string& prefex){
     return boost::algorithm::starts_with(filename, prefex);
 }
 
-void GeopalParser::fill(){
+void GeopalParser::fill() {
+
+    //default input coord system is lambert 2
+    conv_coord = ProjectionSystemReader(path + "/projection.txt",
+                                        ConvCoord(Projection("Lambert 2 étendu", "27572", false))).read_conv_coord();
+
+    LOG4CPLUS_INFO(logger, "projection system: " << this->conv_coord.origin.name <<
+                   "(" << this->conv_coord.origin.definition << ")");
 
     this->fill_admins();
     LOG4CPLUS_INFO(logger, "Admin count: " << this->data.admins.size());
@@ -406,5 +414,4 @@ void GeopalParser::fill_ways_edges(){
     }
 }
 
-}
-}//namespace
+}}//namespace
