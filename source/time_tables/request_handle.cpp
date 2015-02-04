@@ -55,7 +55,7 @@ RequestHandle::RequestHandle(const std::string &request,
 
     if(! pb_response.has_error()){
         date_time = DateTimeUtils::set((datetime.date() - data.meta->production_date.begin()).days(), datetime.time_of_day().total_seconds());
-        max_datetime = clockwise ? (date_time + duration) : (date_time - duration);
+        max_datetime = date_time + duration * (clockwise ? 1 : -1);
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
 
         try {
