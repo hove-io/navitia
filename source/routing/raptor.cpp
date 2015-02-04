@@ -615,12 +615,17 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             jpp.idx, previous_dt, visitor.clockwise(), disruption_active,
                             accessibilite_params.vehicle_properties, jpp.has_freq);
 
-                        if(tmp_st_dt.first != nullptr && (!boarding_idx.is_valid() || tmp_st_dt.first != &*it_st || tmp_st_dt.second != workingDt)) {
+                        if (tmp_st_dt.first != nullptr) {
+                            if (! boarding_idx.is_valid() || &*it_st != tmp_st_dt.first) {
+                                // first_stoptime is quite cache
+                                // unfriendly, so avoid using it if
+                                // not really needed.
+                                it_st = visitor.first_stoptime(*tmp_st_dt.first);
+                            }
                             boarding_idx = jpp.idx;
-                            it_st = visitor.first_stoptime(*tmp_st_dt.first);
                             workingDt = tmp_st_dt.second;
-                            BOOST_ASSERT(visitor.comp(previous_dt, workingDt) || previous_dt == workingDt);
                             l_zone = it_st->local_traffic_zone;
+                            BOOST_ASSERT(! visitor.comp(workingDt, previous_dt));
                         }
                     }
                 }
