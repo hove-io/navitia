@@ -45,6 +45,7 @@ from errors import ManageError
 from flask.ext.restful.types import natural, boolean
 from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
 from jormungandr.utils import ResourceUtc
+from make_links import create_external_link
 
 class RouteSchedulesLinkField(fields.Raw):
 
@@ -249,6 +250,37 @@ arrivals = {
     "disruptions": DisruptionsField,
 }
 
+class add_passages_links:
+    """
+    delete disruption links and put the disruptions directly in the owner objets
+
+    TEMPORARY: delete this as soon as the front end has the new disruptions integrated
+    """
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            response = f(*args, **kwargs)
+            api = "departures" if "departures" in response else "arrivals" if "arrivals" in response else None
+            if not api:
+                return response
+            passages = response[api]
+
+            min = "10000101T000000"
+            max = "29991231T235959"
+            time_field = "arrival_date_time" if api == "arrivals" else "departure_date_time"
+            for passage_ in passages:
+                dt = passage_["stop_date_time"][time_field]
+                if min > dt:
+                    min = dt
+                if max < dt:
+                    max = dt
+            if "links" not in response:
+                response["links"] = []
+            response["links"].append(create_external_link("v1."+api,  rel="prev", type=api))
+            response["links"].append(create_external_link("v1."+api,  rel="next", type=api))
+            return response
+        return wrapper
+
 
 class NextDepartures(Schedules):
 
@@ -256,6 +288,7 @@ class NextDepartures(Schedules):
         super(NextDepartures, self).__init__("next_departures")
 
     @use_old_disruptions_if_needed()
+    @add_passages_links()
     @marshal_with(departures)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None,
@@ -270,6 +303,7 @@ class NextArrivals(Schedules):
         super(NextArrivals, self).__init__("next_arrivals")
 
     @use_old_disruptions_if_needed()
+    @add_passages_links()
     @marshal_with(arrivals)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):
