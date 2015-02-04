@@ -241,7 +241,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     type::AccessibiliteParams(), *data, false, request.count(),
                     request.start_page(), request.show_codes());
         case pbnavitia::NEXT_ARRIVALS:
-            return timetables::previous_arrivals(request.arrival_filter(),
+            return timetables::next_arrivals(request.arrival_filter(),
                     forbidden_uri, until_datetime,
                     request.duration(), request.nb_stoptimes(), request.depth(),
                     type::AccessibiliteParams(),
