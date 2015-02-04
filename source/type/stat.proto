@@ -38,8 +38,8 @@ message StatRequest {
 
 message JourneyRequest {
     //POSIX time (i.e., number of seconds since January 1st 1970 00:00:00 UTC)
-    optional uint64 requested_date_time = 1;
-    optional bool clockwise = 2;
+    required uint64 requested_date_time = 1;
+    required bool clockwise = 2;
     optional string departure_insee = 3;
     optional string departure_admin = 4;
     optional string arrival_insee = 5;

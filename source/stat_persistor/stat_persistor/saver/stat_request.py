@@ -48,6 +48,7 @@ def persist_stat_request(meta, conn, stat):
     journey_table = meta.tables['stat.journeys']
     journey_section_table = meta.tables['stat.journey_sections']
     interpreted_parameters_table = meta.tables['stat.interpreted_parameters']
+    journey_request_table = meta.tables['stat.journey_request']
 
     #stat.requests
     query = request_table.insert()
@@ -76,6 +77,12 @@ def persist_stat_request(meta, conn, stat):
     if stat.error.id:
         conn.execute(query.values(
             build_stat_error_dict(stat.error, request_id.inserted_primary_key[0])))
+
+    #stat.journey_request
+    query = journey_request_table.insert()
+    if stat.journey_request.IsInitialized():
+        conn.execute(query.values(
+            build_journey_request_dict(stat.journey_request, request_id.inserted_primary_key[0])))
 
     #stat.journeys
     for journey in stat.journeys:
@@ -107,6 +114,21 @@ def build_stat_request_dict(stat):
         'host': stat.host,
         'client': stat.client,
         'response_size': stat.response_size
+    }
+
+def build_journey_request_dict(journey_request, request_id):
+    """
+    Construit à partir d'un object protobuf pbnavitia.stat.HitStat
+    Utilisé pour l'insertion dans la table stat.requests
+    """
+    return{
+        'requested_date_time': get_datetime_from_timestamp(journey_request.requested_date_time),
+        'clockwise': journey_request.clockwise,
+        'departure_insee': journey_request.departure_insee,
+        'departure_admin': journey_request.departure_admin,
+        'arrival_insee': journey_request.arrival_insee,
+        'arrival_admin': journey_request.arrival_admin,
+        'request_id': request_id
     }
 
 
