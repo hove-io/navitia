@@ -57,6 +57,39 @@ def get_mode(mode, previous_section):
             return 'bss'
     return mode
 
+class FindAdminVisitor(object):
+    def __init__(self):
+        self.admins = []
+
+    def __call__(self, name, value):
+        if name in ['administrative_regions', 'administrative_region'] and 'level' in value and value['level'] == 8:
+            self.admins.append(value)
+
+    def get_admin_id(self):
+        if not self.admins:
+            return None
+        return self.admins[0]['id']
+
+    def get_admin_insee(self):
+        if not self.admins:
+            return None
+        return self.admins[0]['insee']
+
+def find_origin_admin(journey):
+    if 'sections' not in journey:
+        return (None, None)
+    visitor = FindAdminVisitor()
+    utils.walk_dict(journey['sections'][0]['from'], visitor)
+    return (visitor.get_admin_id(), visitor.get_admin_insee())
+
+
+def find_destination_admin(journey):
+    if 'sections' not in journey:
+        return (None, None)
+    visitor = FindAdminVisitor()
+    utils.walk_dict(journey['sections'][-1]['to'], visitor)
+    return (visitor.get_admin_id(), visitor.get_admin_insee())
+
 
 class StatManager(object):
 
@@ -227,7 +260,22 @@ class StatManager(object):
         """
         Fill journeys and sections for each journey
         """
-        if 'journeys' in call_result[0]:
+        journey_request = stat_request.journey_request
+        if hasattr(g, 'stat_interpreted_parameters') and g.stat_interpreted_parameters['original_datetime']:
+            journey_request.requested_date_time = int(time.mktime(g.stat_interpreted_parameters['original_datetime'].timetuple()))
+            journey_request.clockwise = g.stat_interpreted_parameters['clockwise']
+        if 'journeys' in call_result[0] and call_result[0]['journeys']:
+            first_journey = call_result[0]['journeys'][0]
+            origin = find_origin_admin(first_journey)
+            if origin[0]:
+                journey_request.departure_admin = origin[0]
+            if origin[1]:
+                journey_request.departure_insee = origin[1]
+            destination = find_destination_admin(first_journey)
+            if destination[0]:
+                journey_request.arrival_admin = destination[0]
+            if destination[1]:
+                journey_request.arrival_insee = destination[1]
             for resp_journey in call_result[0]['journeys']:
                 stat_journey = stat_request.journeys.add()
                 self.fill_journey(stat_journey, resp_journey)
