@@ -73,14 +73,17 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
                     result.push_back(std::make_pair(dt_temp, st.first));
                     test_add = true;
                     // The next stop time must be at least one second after
-                    next_requested_datetime[jpp_idx] = clockwise ? dt_temp + 1 : dt_temp - 1;
+                    next_requested_datetime[jpp_idx] = dt_temp + (clockwise? 1 : -1);
                 }
             }
         }
     }
     std::sort(result.begin(), result.end(),
             [&clockwise](datetime_stop_time dst1, datetime_stop_time dst2) {
-            return (clockwise && dst1.first < dst2.first) || (!clockwise && dst1.first > dst2.first);
+            if (clockwise) {
+                return dst1.first < dst2.first;
+            }
+            return dst1.first > dst2.first;
     });
     if (result.size() > max_departures) {
         result.resize(max_departures);
@@ -104,6 +107,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
             continue;
         }
         auto st = get_all_stop_times(jpp, calendar_id, accessibilite_params.vehicle_properties);
+
         //afterward we filter the datetime not in [dt, max_dt]
         //the difficult part comes from the fact that for calendar dt are max_dt are not really datetime,
         //there are time but max_dt can be the day after like [today 4:00, tomorow 3:00]
