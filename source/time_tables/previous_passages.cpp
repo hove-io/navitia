@@ -50,7 +50,7 @@ previous_passages(const std::string &request,
               const type::AccessibiliteParams & accessibilite_params,
               const type::Data & data, bool disruption_active, Visitor vis, uint32_t count,
               uint32_t start_page, const bool show_codes) {
-    RequestHandle handler(vis.api_str, request, forbidden_uris, datetime, duration, data, {}, false);
+    RequestHandle handler(request, forbidden_uris, datetime, duration, data, {}, false);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
@@ -71,10 +71,11 @@ previous_passages(const std::string &request,
 
     for(auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage * passage;
-        if(vis.api_str == "NEXT_ARRIVALS")
+        if(vis.api_pb == pbnavitia::PREVIOUS_ARRIVALS) {
             passage = handler.pb_response.add_next_arrivals();
-        else
+        } else {
             passage = handler.pb_response.add_next_departures();
+        }
         auto departure_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
         auto arrival_date = navitia::to_posix_timestamp(dt_stop_time.first, data);
         passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
@@ -121,11 +122,10 @@ pbnavitia::Response previous_departures(const std::string &request,
                 return jpp == last_jpp;
             }
         };
-        std::string api_str;
         pbnavitia::API api_pb;
         predicate_t predicate;
         vis_previous_departures(const type::Data& data) :
-            api_str("NEXT_DEPARTURES"), api_pb(pbnavitia::NEXT_DEPARTURES), predicate(data) {}
+            api_pb(pbnavitia::PREVIOUS_DEPARTURES), predicate(data) {}
     };
     vis_previous_departures vis(data);
     return previous_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,
@@ -148,11 +148,10 @@ pbnavitia::Response previous_arrivals(const std::string &request,
                 return data.pt_data->journey_pattern_points[jppidx]->order == 0;
             }
         };
-        std::string api_str;
         pbnavitia::API api_pb;
         predicate_t predicate;
         vis_previous_arrivals(const type::Data& data) :
-            api_str("PREVIOUS_ARRIVALS"), api_pb(pbnavitia::PREVIOUS_ARRIVALS), predicate(data) {}
+            api_pb(pbnavitia::PREVIOUS_ARRIVALS), predicate(data) {}
     };
     vis_previous_arrivals vis(data);
     return previous_passages(request, forbidden_uris, datetime, duration, nb_stoptimes, depth,

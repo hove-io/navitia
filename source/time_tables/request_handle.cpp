@@ -34,7 +34,7 @@ www.navitia.io
 
 namespace navitia { namespace timetables {
 
-RequestHandle::RequestHandle(const std::string& /*api*/, const std::string &request,
+RequestHandle::RequestHandle(const std::string &request,
                              const std::vector<std::string>& forbidden_uris,
                              const pt::ptime datetime, uint32_t duration,
                              const type::Data &data,

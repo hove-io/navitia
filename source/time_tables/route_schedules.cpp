@@ -181,7 +181,7 @@ route_schedule(const std::string& filter,
                uint32_t duration, uint32_t interface_version,
                const uint32_t max_depth, int count, int start_page,
                const type::Data &d, bool disruption_active, const bool show_codes) {
-    RequestHandle handler("ROUTE_SCHEDULE", filter, forbidden_uris, datetime, duration, d, {});
+    RequestHandle handler(filter, forbidden_uris, datetime, duration, d, {});
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
