@@ -31,6 +31,7 @@
 
 from flask.ext.restful import fields, marshal_with, reqparse
 from flask.globals import g
+from flask import request
 from jormungandr import i_manager, utils
 from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
@@ -38,7 +39,7 @@ from fields import stop_point, route, pagination, PbField, stop_date_time, \
     display_informations_route, additional_informations_vj, UrisToLinks, error, \
     enum_type, SplitDateTime, MultiLineString
 from ResourceUri import ResourceUri, complete_links
-from datetime import datetime
+import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
@@ -46,6 +47,9 @@ from flask.ext.restful.types import natural, boolean
 from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
 from jormungandr.utils import ResourceUtc
 from make_links import create_external_link
+from functools import wraps
+from copy import deepcopy
+
 
 class RouteSchedulesLinkField(fields.Raw):
 
@@ -120,7 +124,7 @@ class Schedules(ResourceUri, ResourceUtc):
         timezone.set_request_timezone(self.region)
 
         if not args["from_datetime"] and not args["until_datetime"]:
-            args['from_datetime'] = datetime.now()
+            args['from_datetime'] = datetime.datetime.now()
             args['from_datetime'] = args['from_datetime'].replace(hour=13, minute=37)
 
         # we save the original datetime for debuging purpose
@@ -259,26 +263,38 @@ class add_passages_links:
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            response = f(*args, **kwargs)
+            response, status, other = f(*args, **kwargs)
             api = "departures" if "departures" in response else "arrivals" if "arrivals" in response else None
             if not api:
-                return response
+                return response, status, other
             passages = response[api]
 
-            min = "10000101T000000"
-            max = "29991231T235959"
+            max_dt = "10000101T000000"
+            min_dt = "29991231T235959"
             time_field = "arrival_date_time" if api == "arrivals" else "departure_date_time"
             for passage_ in passages:
                 dt = passage_["stop_date_time"][time_field]
-                if min > dt:
-                    min = dt
-                if max < dt:
-                    max = dt
+                if min_dt > dt:
+                    min_dt = dt
+                if max_dt < dt:
+                    max_dt = dt
             if "links" not in response:
                 response["links"] = []
-            response["links"].append(create_external_link("v1."+api,  rel="prev", type=api))
-            response["links"].append(create_external_link("v1."+api,  rel="next", type=api))
-            return response
+            kwargs_links = dict(deepcopy(request.args))
+            if "region" in kwargs:
+                kwargs_links["region"] = kwargs["region"]
+            if "uri" in kwargs:
+                kwargs_links["uri"] = kwargs["uri"]
+            if 'from_datetime' in kwargs_links:
+                kwargs_links.pop('from_datetime')
+            delta = datetime.timedelta(seconds=1)
+            dt = datetime.datetime.strptime(min_dt, "%Y%m%dT%H%M%S")
+            kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
+            response["links"].append(create_external_link("v1."+api, rel="prev", _type=api, **kwargs_links))
+            kwargs_links.pop('until_datetime')
+            kwargs_links['from_datetime'] = (datetime.datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
+            response["links"].append(create_external_link("v1."+api, rel="next", _type=api, **kwargs_links))
+            return response, status, other
         return wrapper
 
 
