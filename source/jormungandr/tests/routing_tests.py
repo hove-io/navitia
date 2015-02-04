@@ -276,7 +276,7 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
 
         response = self.query_region(query, display=False)
-        eq_(len(response['journeys']), 3)
+        eq_(len(response['journeys']), 2)
         eq_(response['journeys'][0]['arrival_date_time'], "20120614T150000")
         eq_(response['journeys'][0]['type'], "")
         eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
