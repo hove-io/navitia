@@ -469,4 +469,13 @@ inline void FileParser<Handler>::fill(Data& data) {
     handler.finish(data);
 }
 
+template<typename T> bool
+empty(const std::pair<T, T>& r) {
+    return r.first == r.second;
+}
+
+template<typename T> bool more_than_one_elt(const std::pair<T, T>& r) {
+    return ! empty(r) && boost::next(r.first) != r.second;
+}
+
 }}
