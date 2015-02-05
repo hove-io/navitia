@@ -331,14 +331,6 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         models.db.session.commit()
         raise
 
-
-@celery.task(bind=True)
-@Lock(10*60)
-def nav2rt(self, instance_config, job_id, custom_output_dir=None):
-    """ Launch nav2rt"""
-    pass
-
-
 @celery.task(bind=True)
 @Lock(timeout=10*60)
 def fare2ed(self, instance_config, filename, job_id):

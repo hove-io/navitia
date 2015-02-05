@@ -29,7 +29,7 @@
 
 from celery import chain, group
 from celery.signals import task_postrun
-from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, nav2rt, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed
+from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from flask import current_app
 import glob
@@ -167,8 +167,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             action.kwargs['job_id'] = job.id
         #We pass the job id to each tasks, but job need to be commited for
         #having an id
-        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir),
-                        nav2rt.si(instance_config, job.id, custom_output_dir)]
+        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
         #We pass the job id to each tasks, but job need to be commited for
         #having an id
         actions.append(chain(*binarisation))
@@ -226,21 +225,6 @@ def scan_instances():
 
 
 @celery.task()
-def reload_at(instance_id):
-    instance = models.Instance.query.get(instance_id)
-    job = models.Job()
-    job.instance = instance
-    job.state = 'pending'
-    instance_config = load_instance_config(instance.name)
-    models.db.session.add(job)
-    models.db.session.commit()
-    chain(nav2rt.si(instance_config, job.id),
-          reload_data.si(instance_config, job.id),
-          finish_job.si(job.id)
-          ).delay()
-
-
-@celery.task()
 def reload_kraken(instance_id):
     instance = models.Instance.query.get(instance_id)
     job = models.Job()
@@ -267,8 +251,7 @@ def build_data(instance):
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
-    chain(ed2nav.si(instance_config, job.id, None),
-                        nav2rt.si(instance_config, job.id, None), finish_job.si(job.id)).delay()
+    chain(ed2nav.si(instance_config, job.id, None), finish_job.si(job.id)).delay()
     current_app.logger.info("Job build data of : %s queued"%instance.name)
 
 

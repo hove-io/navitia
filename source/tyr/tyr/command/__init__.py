@@ -27,8 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.reload_at import ReloadAtCommand
-from tyr.command.at_reloader import AtReloader
 from tyr.command.reload_kraken import ReloadKrakenCommand
 from tyr.command.build_data import BuildDataCommand
 from tyr.command.load_data import LoadDataCommand
