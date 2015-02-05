@@ -70,14 +70,17 @@ void Data::build_block_id() {
     /// Two vehicle_journeys with the same block_id vj1 are consecutive if
     /// the last arrival_time of vj1 <= to the departure_time of vj2
     std::sort(vehicle_journeys.begin(), vehicle_journeys.end(),
-            [](const types::VehicleJourney* vj1, const types::VehicleJourney* vj2) {
-            if(vj1->block_id != vj2->block_id) {
-                return vj1->block_id < vj2->block_id;
-            } else {
-                return vj1->stop_time_list.back()->arrival_time <=
-                        vj2->stop_time_list.front()->departure_time;
-            }
+              [](const types::VehicleJourney* vj1, const types::VehicleJourney* vj2) {
+        if(vj1->block_id != vj2->block_id) {
+            return vj1->block_id < vj2->block_id;
+        } else if (vj1->utc_to_local_offset != vj2->utc_to_local_offset) {
+            // we don't want to link the splited vjs
+            return vj1->utc_to_local_offset < vj2->utc_to_local_offset;
+        } else {
+            return vj1->stop_time_list.back()->departure_time <=
+                    vj2->stop_time_list.front()->departure_time;
         }
+    }
     );
 
     types::VehicleJourney* prev_vj = nullptr;
@@ -95,8 +98,12 @@ void Data::build_block_id() {
                 // @TODO: Add a parameter to avoid too long connection
                 // they can be for instance due to bad data
                 if(vj->stop_time_list.front()->departure_time >= prev_vj->stop_time_list.back()->arrival_time) {
-                    prev_vj->next_vj = vj;
-                    vj->prev_vj = prev_vj;
+
+                    //we add another check that the vjs are on the same offset (that they are not the from vj split on different dst)
+                    if (vj->utc_to_local_offset == prev_vj->utc_to_local_offset) {
+                        prev_vj->next_vj = vj;
+                        vj->prev_vj = prev_vj;
+                    }
                 }
             }
         }
