@@ -1,3 +1,9 @@
+navitia2 (1.10.2) unstable; urgency=low
+
+  * ED: Fix retrieving of validity pattern in trip reading 
+
+ -- l-vincent-l <lara.vincent@gmail.com>  Thu, 05 Feb 2015 12:02:47 +0100
+
 navitia2 (1.10.1) unstable; urgency=low
 
   * Kraken: handle coord without address in protobuf
