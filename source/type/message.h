@@ -106,7 +106,7 @@ struct Severity {
 
     int priority;
 
-    Effect effect;
+    Effect effect = Effect::UNKNOWN_EFFECT;
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
