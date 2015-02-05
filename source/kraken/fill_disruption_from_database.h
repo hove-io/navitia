@@ -100,7 +100,8 @@ namespace navitia {
             if (impact && (last_ptobject_id != const_it["ptobject_id"].template as<std::string>())) {
                 fill_pt_object(const_it);
             }
-            if (impact && (last_message_id != const_it["message_id"].template as<std::string>())) {
+            if (impact && !const_it["message_id"].is_null() &&
+                    (last_message_id != const_it["message_id"].template as<std::string>())) {
                 fill_message(const_it);
             }
         }
