@@ -77,7 +77,7 @@ void Data::build_block_id() {
             // we don't want to link the splited vjs
             return vj1->utc_to_local_offset < vj2->utc_to_local_offset;
         } else {
-            return vj1->stop_time_list.back()->arrival_time <=
+            return vj1->stop_time_list.back()->departure_time <=
                     vj2->stop_time_list.front()->departure_time;
         }
     }

@@ -62,10 +62,6 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
     bool add_vj = false;
     bool result = false;
     while(vj) {
-        if (! vj->validity_pattern->check(DateTimeUtils::date(workingDt))) {
-            // we need to check that the extension is valid on the day
-            break;
-        }
         const auto& stop_time_list = v.stop_time_list(vj);
         const auto& st_begin = *stop_time_list.first;
         const auto current_time = st_begin.section_end_time(v.clockwise(),
