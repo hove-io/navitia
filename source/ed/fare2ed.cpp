@@ -60,7 +60,7 @@ int main(int argc, char * argv[])
         ("version,v", "Show version")
         ("config-file", po::value<std::string>(), "Path to configuration file")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
-         "Connection paramters to database: host=localhost user=navitia dbname=navitia password=navitia")
+         "Connection parameters to database: host=localhost user=navitia dbname=navitia password=navitia")
         ("fare,f", po::value<std::string>(&fare_dir)->required(), "Directory of fare files");
 
     po::variables_map vm;

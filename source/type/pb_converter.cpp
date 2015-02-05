@@ -785,17 +785,17 @@ void fill_fare_section(EnhancedResponse& enhanced_response, pbnavitia::Journey* 
 
         pbnavitia::Ticket* pb_ticket = nullptr;
         if (ticket.is_default_ticket()) {
-            if (! enhanced_response.unkown_ticket) {
+            if (! enhanced_response.unknown_ticket) {
                 pb_ticket = enhanced_response.response.add_tickets();
                 pb_ticket->set_name(ticket.key);
                 pb_ticket->set_found(false);
                 pb_ticket->set_id("unknown_ticket");
                 pb_ticket->set_comment("unknown ticket");
-                enhanced_response.unkown_ticket = pb_ticket;
+                enhanced_response.unknown_ticket = pb_ticket;
                 pb_fare->add_ticket_id(pb_ticket->id());
             }
             else {
-                pb_ticket = enhanced_response.unkown_ticket;
+                pb_ticket = enhanced_response.unknown_ticket;
             }
         }
         else {
