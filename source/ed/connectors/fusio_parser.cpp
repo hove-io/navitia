@@ -325,8 +325,8 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     }
     ed::types::Route* route = it->second;
 
-    auto vp_it = gtfs_data.tz.vp_by_name.lower_bound(row[service_c]);
-    if(vp_it == gtfs_data.tz.vp_by_name.end()) {
+    auto vp_range = gtfs_data.tz.vp_by_name.equal_range(row[service_c]);
+    if(empty(vp_range)) {
         LOG4CPLUS_WARN(logger, "Impossible to find the service " + row[service_c]
                        + " referenced by trip " + row[trip_c]);
         ignored++;
@@ -346,14 +346,11 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     // get shape if possible
     const std::string &shape_id = has_col(geometry_id_c, row) ? row.at(geometry_id_c) : "";
 
-    const auto vp_end_it = gtfs_data.tz.vp_by_name.upper_bound(row[service_c]);
-
-    auto second_elt = vp_it;
-    bool has_been_split = (++second_elt != vp_end_it); //check if the trip has been split over dst
+    bool has_been_split = more_than_one_elt(vp_range); //check if the trip has been split over dst
 
     size_t cpt_vj(1);
     //the validity pattern may have been split because of DST, so we need to create one vj for each
-    for (; vp_it != vp_end_it; ++vp_it, cpt_vj++) {
+    for (auto vp_it = vp_range.first; vp_it != vp_range.second; ++vp_it, cpt_vj++) {
 
         ed::types::ValidityPattern* vp_xx = vp_it->second;
 
