@@ -161,6 +161,9 @@ class StatManager(object):
         """
         g.stat_interpreted_parameters = args
 
+    def register_regions(self, regions):
+        g.stat_regions = regions
+
     def fill_parameters(self, stat_request):
         for item in request.args.iteritems():
             stat_parameter = stat_request.parameters.add()
@@ -183,10 +186,10 @@ class StatManager(object):
         if 'region' in request.view_args:
             stat_coverage = stat_request.coverages.add()
             stat_coverage.region_id = request.view_args['region']
-        elif hasattr(g, 'regions_called'):
-            for region_id in g.regions_called:
+        elif hasattr(g, 'stat_regions'):
+            for region_id in g.stat_regions:
                 stat_coverage = stat_request.coverages.add()
-                stat_coverage.region_id = g.regions_called[0]
+                stat_coverage.region_id = region_id
         else:
             # We need an empty coverage.
             stat_request.coverages.add()
