@@ -104,6 +104,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
             });
         }
 
+        //A journey pattern is valid is at least one validity pattern of its vj is valid on [day-1;day+1]
         for(int i=0; i<=365; ++i) {
             journey_pattern->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
                 if(vj.adapted_validity_pattern->check2(i)) {
