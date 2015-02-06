@@ -101,9 +101,8 @@ class FareLinks(fields.Raw):
             return None
         response = []
         for value in ticket_ids:
-            response.append({"type": "ticket", "rel": "tickets",
-                             "internal": True, "templated": False,
-                             "id": value})
+            response.append(create_internal_link(_type="ticket", rel="tickets",
+                                                 id=value))
         return response
 
 
