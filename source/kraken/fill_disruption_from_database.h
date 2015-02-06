@@ -154,7 +154,7 @@ namespace navitia {
             FILL_NULLABLE(severity, priority, uint32_t)
             if (!const_it["severity_effect"].is_null()) {
                 const auto& effect = const_it["severity_effect"].template as<std::string>();
-                if (effect == "blocking") {
+                if (effect == "blocking" || effect == "no_service") {
                     severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_NO_SERVICE);
                 }
             }else{
