@@ -22,7 +22,7 @@ https://api.navitia.io/v1/coord/2.377310;48.847002
 
 I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
 
-Which service are available on this coverage?
+Which services are available on this coverage?
 https://api.navitia.io/v1/coverage/fr-idf
 
 Networks available?
@@ -35,10 +35,15 @@ Too much lines, let's use mode filtering
 https://api.navitia.io/v1/coverage/paris/networks/network:RTP/physical_modes/physical_mode:Metro/lines 
 
 By the way, what is close to me?
+
 https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby
+
 or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_points
+
 or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines
+
 or https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules
+
 or ...
 
 Resources
@@ -161,25 +166,26 @@ Interface
 We aim to implement `HATEOAS <http://en.wikipedia.org/wiki/HATEOAS>`_ concept with Navitia.
 
 Each response contains a linkable object and lots of links. 
-Links allow you to know all accessible uri and services for a given point.
+Links allow you to know all accessible uris and services for a given point.
 
 templated url
 *************
 
-Under some link section, you can find a "templated" property. If *templated* is true, 
+Under some link sections, you will find a "templated" property. If "templated" is true, 
 then you will have to format the link with one id. 
 
-For example, in response of https://api.navitia.io/v1/coverage/fr-idf/lines you will find a *links* section.
+For example, in response of https://api.navitia.io/v1/coverage/fr-idf/lines 
+you will find a *links* section:
 
 .. code-block:: json
 
 	{
-		"href": "https://api.navitia.io/v1/coverage/fr-idf/lines/{lines.id}/stop_schedules",
+		"href": "https://api.navitia.io/v1/coverage/fr-idf/lines/ *{lines.id}* /stop_schedules",
 		"rel": "route_schedules",
 		"templated": true
 	}
 
-You have to put one line id instead of {lines.id}. For example:
+You have to put one line id instead of "{lines.id}". For example:
 https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines/line:RTP:1197611/stop_schedules
 
 Inner references
