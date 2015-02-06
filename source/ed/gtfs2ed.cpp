@@ -99,7 +99,8 @@ int main(int argc, char * argv[])
     ed::connectors::GtfsParser gtfs_parser(input);
     gtfs_parser.fill(data, date);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
+    LOG4CPLUS_INFO(logger, "We excluded " << data.count_too_long_connections << " connections "
+                   " because they were too long");
     start = pt::microsec_clock::local_time();
     data.complete();
     complete = (pt::microsec_clock::local_time() - start).total_milliseconds();

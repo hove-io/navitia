@@ -576,7 +576,10 @@ void TransfersGtfsHandler::fill_stop_point_connection(nm::StopPointConnection* c
 
 void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     GtfsData::vector_sp departures, arrivals;
+    // We don't want to have these connections, because it could lead to weird things
+    // And also we don't want to show that to our users, this must be a data problem
     if (boost::lexical_cast<int>(row[time_c]) > 24*3600) {
+        ++data.count_too_long_connections;
         return;
     }
     auto it = gtfs_data.stop_map.find(row[from_c]);
