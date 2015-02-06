@@ -22,13 +22,13 @@ https://api.navitia.io/v1/coord/2.377310;48.847002
 
 I'm on the "/fr-idf" coverage, at "20, rue Hector Malot in Paris, France"
 
-Which service available in this coverage?
+Which service are available on this coverage?
 https://api.navitia.io/v1/coverage/fr-idf
 
 Networks available?
 https://api.navitia.io/v1/coverage/paris/networks 
 
-RATP lines?
+RATP network lines?
 https://api.navitia.io/v1/coverage/paris/networks/network:RTP/lines 
 
 Too much lines, let's use mode filtering
@@ -156,16 +156,50 @@ start_page      int  The page number
 count           int  Number of items per page
 =============== ==== =======================================
 
-HATEOAS
-=======
-Each response contains a link object. It allows you to know all the accessible urls for a given point
+Interface
+=========
+We aim to implement `HATEOAS <http://en.wikipedia.org/wiki/HATEOAS>`_ concept with Navitia.
+
+Each response contains a linkable object and lots of links. 
+Links allow you to know all accessible uri and services for a given point.
 
 templated url
 *************
 
+Under some link section, you can find a "templated" property. If *templated* is true, 
+then you will have to format the link with one id. 
+
+For example, in response of https://api.navitia.io/v1/coverage/fr-idf/lines you will find a *links* section.
+
+.. code-block:: json
+
+	{
+		"href": "https://api.navitia.io/v1/coverage/fr-idf/lines/{lines.id}/stop_schedules",
+		"rel": "route_schedules",
+		"templated": true
+	}
+
+You have to put one line id instead of {lines.id}. For example:
+https://api.navitia.io/v1/coverage/fr-idf/networks/network:RTP/lines/line:RTP:1197611/stop_schedules
+
 Inner references
 ****************
 
+Some link section looks like
+	
+.. code-block:: json
+
+	{
+		"internal": true,
+		"type": "disruption",
+		"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2",
+		"rel": "disruptions",
+		"templated": false
+	}
+
+That means you will find inside the same stream ( *"internal": true* ) a "disruptions" section 
+( *"rel": "disruptions"* ) containing disruptions objects ( *"type": "disruption"* ) where you can find
+the details of your object ( *"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"* ).
 
 Errors
 ======
@@ -220,9 +254,6 @@ Code 204
 
 When your request is good but we are not able to find a journey
 
-Redirections
-============
-
 Apis
 ====
 
@@ -250,8 +281,26 @@ Collections
 * physical_modes
 * companies
 
-Example
-#######
+Some parameters
+###############
+
+There are som specific parameters.
+A least, there is one: *odt_level* which can be applied only on /lines collection...
+
+It allows you to request navitia for specific pick up lines. "odt_level" can take one of these values:
+
+* none : to get standard public transport lines. Trips are predefined.
+* mixt : to get lines with some non-predefined trips 
+* zonal : to get lines with only non-predefined trips 
+* all (default value) : to get all public transport lines
+
+for example
+
+https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines
+https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=none
+
+Examples
+########
 
 Response example for this request https://api.navitia.io/v1/coverage/fr-idf/physical_modes
 
@@ -276,6 +325,15 @@ Response example for this request https://api.navitia.io/v1/coverage/fr-idf/phys
             ...
         ]
     }
+
+Other examples
+
+Network list: https://api.navitia.io/v1/coverage/fr-idf/networks
+Physical mode list: https://api.navitia.io/v1/coverage/fr-idf/physical_modes
+Line list: https://api.navitia.io/v1/coverage/fr-idf/lines
+Line list for one mode: https://api.navitia.io/v1/coverage/fr-idf/physical_modes/physical_mode:Metro/lines
+...
+
 
 Places
 ******
@@ -906,7 +964,6 @@ Field  Type          Description
 ====== ============= ==========================
 id     string        Identifier of the network
 name   string        Name of the network
-coord  `coord`_      Center of the network
 ====== ============= ==========================
 
 .. _line:
@@ -951,7 +1008,7 @@ id                      string                Identifier of the line
 name                    string                Name of the line
 coord                   `coord`_              Coordinates of the stop point
 administrative_regions  array of `admin`_     Administrative regions of the stop point in which is the stop point
-equipments              array of string       Equipments of the stop point
+equipments              array of string       list of `equipment`_ of the stop point
 stop_area               `stop_area`_          Stop Area containing this stop point
 ======================= ===================== =====================================================================
 
@@ -967,7 +1024,6 @@ id                     string                      Identifier of the line
 name                   string                      Name of the line
 coord                  `coord`_                    Coordinates of the stop area
 administrative_regions array of `admin`_           Administrative regions of the stop area in which is the stop area
-equipments             array of string             Equipments of the stop area
 stop_points            array of `stop_point`_      Stop points contained in this stop area
 ====================== =========================== ==================================================================
 
@@ -1168,6 +1224,27 @@ Field      Type                                  Description
 date_time  `date_time <date_time_object>`_       A date time
 stop_point stop_point_                           A stop point
 ========== ===================================== ============
+
+.. _equipment:
+
+equipment
+#########
+
+Enum from
+* has_wheelchair_accessibility
+* has_bike_accepted
+* has_air_conditioned
+* has_visual_announcement
+* has_audible_announcement
+* has_appropriate_escort
+* has_appropriate_signage
+* has_school_vehicle
+* has_wheelchair_boarding
+* has_sheltered
+* has_elevator
+* has_escalator
+* has_bike_depot
+
 
 .. _display_informations:
 
