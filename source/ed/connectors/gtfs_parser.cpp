@@ -576,6 +576,9 @@ void TransfersGtfsHandler::fill_stop_point_connection(nm::StopPointConnection* c
 
 void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     GtfsData::vector_sp departures, arrivals;
+    if (boost::lexical_cast<int>(row[time_c]) > 24*3600) {
+        return;
+    }
     auto it = gtfs_data.stop_map.find(row[from_c]);
     if(it == gtfs_data.stop_map.end()){
         auto it_sa = gtfs_data.sa_spmap.find(row[from_c]);
