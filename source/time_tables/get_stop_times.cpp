@@ -53,10 +53,6 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
     for(auto jpp_idx : journey_pattern_points){
         next_requested_datetime[jpp_idx] = dt;
     }
-    auto next_stop_times = std::bind(
-            clockwise ? &routing::NextStopTime::earliest_stop_time : &routing::NextStopTime::tardiest_stop_time,
-            &next_st, std::placeholders::_1, std::placeholders::_2, disruption_active,
-            accessibilite_params.vehicle_properties, true);
 
     while(test_add && result.size() < max_departures) {
         test_add = false;
@@ -65,7 +61,9 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t>& j
             if(!jpp->stop_point->accessible(accessibilite_params.properties)) {
                 continue;
             }
-            auto st = next_stop_times(routing::JppIdx(*jpp), next_requested_datetime[jpp_idx]);
+            auto st = next_st.next_stop_time(routing::JppIdx(*jpp), next_requested_datetime[jpp_idx],
+                                             clockwise, disruption_active,
+                                             accessibilite_params.vehicle_properties, true);
 
             if (st.first != nullptr) {
                 DateTime dt_temp = st.second;
