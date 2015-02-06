@@ -129,8 +129,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     LEFT JOIN pt_object AS ls_line ON line_section.line_object_id = ls_line.id"
                "     LEFT JOIN pt_object AS ls_start ON line_section.start_object_id = ls_start.id"
                "     LEFT JOIN pt_object AS ls_end ON line_section.end_object_id = ls_end.id"
-               "     JOIN message AS m ON m.impact_id = i.id"
-               "     JOIN channel AS ch ON m.channel_id = ch.id"
+               "     LEFT JOIN message AS m ON m.impact_id = i.id"
+               "     LEFT JOIN channel AS ch ON m.channel_id = ch.id"
                "     WHERE co.contributor_code = ANY('{%s}')" // it's like a "IN" but won't crash if empty
                "     AND d.status = 'published'"
                "     AND i.status = 'published'"
