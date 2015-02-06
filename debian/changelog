@@ -1,3 +1,10 @@
+navitia2 (1.10.3) unstable; urgency=low
+
+  * Ed: add check on connection duration  <https://github.com/CanalTP/navitia/pull/873> 
+  * Kraken: all severity were blocking  <https://github.com/CanalTP/navitia/pull/871>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 06 Feb 2015 14:02:28 +0100
+
 navitia2 (1.10.2) unstable; urgency=low
 
   * ED: Fix retrieving of validity pattern in trip reading 
