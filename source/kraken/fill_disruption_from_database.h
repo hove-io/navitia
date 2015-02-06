@@ -157,6 +157,8 @@ namespace navitia {
                 if (effect == "blocking") {
                     severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_NO_SERVICE);
                 }
+            }else{
+                severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_UNKNOWN_EFFECT);
             }
         }
 
