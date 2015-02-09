@@ -32,14 +32,15 @@ www.navitia.io
 #include "type/data.h"
 #include "utils/csv.h"
 #include "utils/functions.h"
+#include "projection_system_reader.h"
 
 
 namespace ed{ namespace connectors{
 
 PoiParserException::~PoiParserException() noexcept {}
 
-PoiParser::PoiParser(const std::string & path, const ed::connectors::ConvCoord& conv_coord): path(path), conv_coord(conv_coord){
-        logger = log4cplus::Logger::getInstance("log");
+PoiParser::PoiParser(const std::string & path): path(path) {
+    logger = log4cplus::Logger::getInstance("log");
 }
 
 
@@ -156,6 +157,13 @@ void PoiParser::fill_poi_properties(){
 }
 
 void PoiParser::fill(){
+
+    //default input coord system is lambert 2
+    conv_coord = ProjectionSystemReader(path + "/projection.txt").read_conv_coord();
+
+    LOG4CPLUS_INFO(logger, "projection system: " << this->conv_coord.origin.name <<
+                   "(" << this->conv_coord.origin.definition << ")");
+
     fill_poi_type();
     fill_poi();
     fill_poi_properties();

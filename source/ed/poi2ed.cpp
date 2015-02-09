@@ -51,15 +51,12 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, connection_string;
-    uint32_t coord_system;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Show this message")
         ("input,i", po::value<std::string>(&input), "Input file")
         ("version,v", "Show version")
         ("config-file", po::value<std::string>(), "Configuration file")
-        ("coord-system,c", po::value<uint32_t>(&coord_system)->default_value(4326),
-             "Coordinate system: 4326 pour WGS84 (4326 is default value)")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
              "Database connection parameters: host=localhost user=navitia"
              " dbname=navitia password=navitia");
@@ -92,21 +89,20 @@ int main(int argc, char * argv[])
 
     pt::ptime start;
     start = pt::microsec_clock::local_time();
-   ed::connectors::Projection origin("WGS84", std::to_string(coord_system), false);
-    ed::connectors::PoiParser poi_parser(input, origin);
+    ed::connectors::PoiParser poi_parser(input);
 
     try{
         poi_parser.fill();
-        LOG4CPLUS_TRACE(logger, "On a  " << poi_parser.data.poi_types.size() << " POITypes");
-        LOG4CPLUS_TRACE(logger, "On a  " << poi_parser.data.pois.size() << " POIs");
+        LOG4CPLUS_INFO(logger, "There are " << poi_parser.data.poi_types.size() << " POITypes loaded");
+        LOG4CPLUS_INFO(logger, "There are  " << poi_parser.data.pois.size() << " POIs loaded");
     }catch(const ed::connectors::PoiParserException& e){
-        LOG4CPLUS_FATAL(logger, "Erreur :"+ std::string(e.what()) + "  backtrace :" + e.backtrace());
+        LOG4CPLUS_FATAL(logger, "Error: " + std::string(e.what()) + "  backtrace :" + e.backtrace());
         return -1;
     }
 
     ed::EdPersistor p(connection_string);
     p.persist_pois(poi_parser.data);
-    LOG4CPLUS_FATAL(logger, "temps :"<<to_simple_string(pt::microsec_clock::local_time() - start));
+    LOG4CPLUS_INFO(logger, "time to load the pois: " << to_simple_string(pt::microsec_clock::local_time() - start));
 
     return 0;
 }

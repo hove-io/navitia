@@ -202,6 +202,9 @@ void fill_pb_object(const georef::Admin* adm, const nt::Data&,
         admin->mutable_coord()->set_lat(adm->coord.lat());
         admin->mutable_coord()->set_lon(adm->coord.lon());
     }
+    if(!adm->insee.empty()){
+        admin->set_insee(adm->insee);
+    }
 }
 
 

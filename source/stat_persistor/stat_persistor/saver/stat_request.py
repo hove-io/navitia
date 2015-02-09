@@ -47,37 +47,51 @@ def persist_stat_request(meta, conn, stat):
     error_table = meta.tables['stat.errors']
     journey_table = meta.tables['stat.journeys']
     journey_section_table = meta.tables['stat.journey_sections']
+    interpreted_parameters_table = meta.tables['stat.interpreted_parameters']
+    journey_request_table = meta.tables['stat.journey_request']
 
-    #Inserer dans la table stat.requests
+    #stat.requests
     query = request_table.insert()
     request_id = conn.execute(query.values(build_stat_request_dict(stat)))
 
-    #Inserer dans la tables stat.coverages
+    #stat.coverages
     query = coverage_table.insert()
     for coverage in stat.coverages:
         conn.execute(query.values(
             build_stat_coverage_dict(coverage, request_id.inserted_primary_key[0])))
 
-    #Inserer dans la table stat.parameters
+    #stat.parameters
     query = parameter_table.insert()
     for param in stat.parameters:
         conn.execute(query.values(
             build_stat_parameter_dict(param, request_id.inserted_primary_key[0])))
 
-    #Inserer dans la table stat.parameters
+    #stat.interpreted_parameters
+    query = interpreted_parameters_table.insert()
+    for param in stat.interpreted_parameters:
+        conn.execute(query.values(
+            build_stat_parameter_dict(param, request_id.inserted_primary_key[0])))
+
+    #stat.errors
     query = error_table.insert()
     if stat.error.id:
         conn.execute(query.values(
             build_stat_error_dict(stat.error, request_id.inserted_primary_key[0])))
 
-    #Inserer les journeys dans la table stat.journeys
+    #stat.journey_request
+    query = journey_request_table.insert()
+    if stat.journey_request.IsInitialized():
+        conn.execute(query.values(
+            build_journey_request_dict(stat.journey_request, request_id.inserted_primary_key[0])))
+
+    #stat.journeys
     for journey in stat.journeys:
         query = journey_table.insert()
         journey_id = conn.execute(
             query.values(build_stat_journey_dict(journey,
                                                  request_id.inserted_primary_key[0])))
 
-        #Inserer les sections de la journey dans la table stat.journey_sections:
+        #stat.journey_sections:
         query = journey_section_table.insert()
         for section in journey.sections:
             conn.execute(query.values(build_stat_section_dict(section,
@@ -100,6 +114,21 @@ def build_stat_request_dict(stat):
         'host': stat.host,
         'client': stat.client,
         'response_size': stat.response_size
+    }
+
+def build_journey_request_dict(journey_request, request_id):
+    """
+    Construit à partir d'un object protobuf pbnavitia.stat.HitStat
+    Utilisé pour l'insertion dans la table stat.requests
+    """
+    return{
+        'requested_date_time': get_datetime_from_timestamp(journey_request.requested_date_time),
+        'clockwise': journey_request.clockwise,
+        'departure_insee': journey_request.departure_insee,
+        'departure_admin': journey_request.departure_admin,
+        'arrival_insee': journey_request.arrival_insee,
+        'arrival_admin': journey_request.arrival_admin,
+        'request_id': request_id
     }
 
 

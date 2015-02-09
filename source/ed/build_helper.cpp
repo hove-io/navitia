@@ -136,7 +136,9 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     vj->meta_vj = mvj;
     vj->idx = b.data->pt_data->vehicle_journeys.size();
     vj->name = "vehicle_journey " + std::to_string(vj->idx);
+    vj->uri = vj->name;
     b.data->pt_data->vehicle_journeys.push_back(vj);
+    b.data->pt_data->vehicle_journeys_map[vj->uri] = vj;
 
     nt::ValidityPattern* vp = new nt::ValidityPattern(b.begin, validity_pattern);
     auto find_vp_predicate = [&](nt::ValidityPattern* vp1) { return vp->days == vp1->days;};

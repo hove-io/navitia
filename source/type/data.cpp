@@ -101,7 +101,7 @@ bool Data::load(const std::string& filename,
             fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
         }
     } catch(const wrong_version& ex) {
-        LOG4CPLUS_ERROR(logger, "Cannot laod data: " << ex.what());
+        LOG4CPLUS_ERROR(logger, "Cannot load data: " << ex.what());
         last_load = false;
     } catch(const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, "Data loading failed: " << ex.what());

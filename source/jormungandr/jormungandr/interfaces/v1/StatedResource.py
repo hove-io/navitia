@@ -30,6 +30,7 @@
 from flask.ext.restful import Resource
 from jormungandr.stat_manager import manage_stat_caller
 from jormungandr import stat_manager
+from functools import wraps
 
 
 class StatedResource(Resource):
@@ -39,4 +40,18 @@ class StatedResource(Resource):
         self.method_decorators = []
 
         if stat_manager.save_stat:
+            self.method_decorators.append(self._stat_regions)
             self.method_decorators.append(manage_stat_caller(stat_manager))
+
+    def _register_interpreted_parameters(self, args):
+        stat_manager.register_interpreted_parameters(args)
+
+    def _stat_regions(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            result = f(*args, **kwargs)
+            region = getattr(self, 'region', None)
+            if region:
+                stat_manager.register_regions([region])
+            return result
+        return wrapper

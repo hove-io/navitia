@@ -100,7 +100,8 @@ namespace navitia {
             if (impact && (last_ptobject_id != const_it["ptobject_id"].template as<std::string>())) {
                 fill_pt_object(const_it);
             }
-            if (impact && (last_message_id != const_it["message_id"].template as<std::string>())) {
+            if (impact && !const_it["message_id"].is_null() &&
+                    (last_message_id != const_it["message_id"].template as<std::string>())) {
                 fill_message(const_it);
             }
         }
@@ -153,10 +154,28 @@ namespace navitia {
             FILL_NULLABLE(severity, priority, uint32_t)
             if (!const_it["severity_effect"].is_null()) {
                 const auto& effect = const_it["severity_effect"].template as<std::string>();
-                if (effect == "blocking") {
+                if (effect == "blocking" || effect == "no_service") {
                     severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_NO_SERVICE);
+                } else if (effect == "reduced_service") {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_REDUCED_SERVICE);
+                } else if (effect == "significant_delays'") {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_SIGNIFICANT_DELAYS);
+                } else if (effect == "detour") {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_DETOUR);
+                } else if (effect == "additional_service") {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_ADDITIONAL_SERVICE);
+                } else if (effect == "modified_service") {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_MODIFIED_SERVICE);
+                } else if (effect == "other_effect") {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_OTHER_EFFECT);
+                } else if (effect == "unknown_effect") {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_UNKNOWN_EFFECT);
+                } else if (effect == "stop_moved") {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_STOP_MOVED);
+                } else {
+                    severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_UNKNOWN_EFFECT);
                 }
-            }else{
+            } else {
                 severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_UNKNOWN_EFFECT);
             }
         }

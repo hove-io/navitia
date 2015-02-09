@@ -28,45 +28,26 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+
 #pragma once
 #include <utils/logger.h>
-#include <boost/filesystem.hpp>
-#include "utils/csv.h"
-#include "utils/functions.h"
-#include "ed/data.h"
 #include "ed/connectors/conv_coord.h"
 
-
-namespace ed{ namespace connectors{
-struct GeopalParserException: public navitia::exception{
-    GeopalParserException(const std::string& message): navitia::exception(message){}
-    GeopalParserException(const GeopalParserException&) = default;
-    GeopalParserException& operator=(const GeopalParserException&) = default;
-    virtual ~GeopalParserException() noexcept;
-};
-
-class GeopalParser{
+namespace ed { namespace connectors {
+/**
+ * Read a projection system file and return a coord conv
+ */
+class ProjectionSystemReader {
 private:
-    std::string path;///< Path files
-    log4cplus::Logger logger;
-    std::vector<std::string> files;
-
-    ed::types::Node* add_node(const navitia::type::GeographicalCoord& coord, const std::string& uri);
-    void fill_admins();
-    void fill_nodes();
-    void fill_ways_edges();
-    bool starts_with(std::string filename, const std::string& prefex);
-
+    std::string file;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    ConvCoord default_conv_coord;
 public:
-    ConvCoord conv_coord = ConvCoord(Projection("Lambert 2 étendu", "27572", false));
+    //default conv coord is WGS84->WGS84
+    ProjectionSystemReader(const std::string& file, ConvCoord default_conv = ConvCoord(Projection(), Projection()));
 
-    ed::Georef data;
-
-    GeopalParser(const std::string& path);
-
-    void fill();
+    ConvCoord read_conv_coord() const;
 
 };
-}//namespace connectors
-}//namespace ed
 
+}}

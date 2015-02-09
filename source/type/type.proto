@@ -148,6 +148,7 @@ message AdministrativeRegion {
     optional int32 level = 5;
     optional GeographicalCoord coord = 6;
     optional string label = 7;
+    optional string insee = 8;
 }
 
 message StopArea {

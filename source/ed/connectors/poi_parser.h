@@ -48,7 +48,7 @@ class PoiParser
 private:
     std::string path;///< Chemin vers les fichiers
     log4cplus::Logger logger;
-    ed::connectors::ConvCoord conv_coord;
+    ed::connectors::ConvCoord conv_coord = ConvCoord(Projection());
 
     void fill_poi_type();
     void fill_poi();
@@ -56,7 +56,7 @@ private:
 public:
     ed::Georef data;
 
-    PoiParser(const std::string & path, const ed::connectors::ConvCoord& conv_coord);
+    PoiParser(const std::string & path);
     void fill();
 };
 }}

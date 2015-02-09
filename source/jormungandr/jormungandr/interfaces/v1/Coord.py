@@ -64,6 +64,7 @@ class Coord(ResourceUri):
                 "start_page": 0,
                 "filter": ""
             }
+            self._register_interpreted_parameters(args)
             pb_result = i_manager.dispatch(args, "places_nearby",
                                            instance_name=self.region)
             if len(pb_result.places_nearby) > 0:
