@@ -40,12 +40,6 @@ namespace bt = boost::posix_time;
 
 namespace navitia { namespace routing {
 
-void RAPTOR::make_queue() {
-    for(auto& jpp_idx : best_jpp_by_sp.values()) {
-        jpp_idx = JppIdx();
-    }
-}
-
 /*
  * Check if the given vj is valid for the given datetime,
  * If it is for every stoptime of the vj,
@@ -82,23 +76,18 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
                state.l_zone == st.local_traffic_zone) {
                 continue;
             }
-            auto jpp = st.journey_pattern_point;
-            const auto jpp_idx = JppIdx(*jpp);
-            const DateTime bound = (v.comp(best_labels[jpp_idx], b_dest.best_now) || !global_pruning) ?
-                                        best_labels[jpp_idx] : b_dest.best_now;
+            auto sp = st.journey_pattern_point->stop_point;
+            const auto sp_idx = SpIdx(*sp);
+            const DateTime bound = (v.comp(best_labels[sp_idx], b_dest.best_now) || !global_pruning) ?
+                                        best_labels[sp_idx] : b_dest.best_now;
             if(!v.comp(workingDt, bound)) {
                 continue;
             }
-            working_labels.mut_boarding_jpp_pt(jpp_idx) = state.boarding_jpp_idx;
-            working_labels.mut_dt_pt(jpp_idx) = workingDt;
-            best_labels[jpp_idx] = workingDt;
-            this->b_dest.add_best(v, jpp_idx, workingDt, this->count);
+            working_labels.mut_boarding_jpp_pt(sp_idx) = state.boarding_jpp_idx;
+            working_labels.mut_dt_pt(sp_idx) = workingDt;
+            best_labels[sp_idx] = workingDt;
+            this->b_dest.add_best(v, sp_idx, workingDt, this->count);
             add_vj = true;
-            auto& best_jpp = best_jpp_by_sp[SpIdx(*jpp->stop_point)];
-            if(!best_jpp.is_valid() || v.comp(workingDt, working_labels.dt_pt(best_jpp))) {
-                best_jpp = jpp_idx;
-                result = true;
-            }
         }
         //If we never marked a vj, we don't want to continue
         //This is usefull when there is a loop
@@ -113,37 +102,39 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
 
 
 template<typename Visitor>
-bool RAPTOR::foot_path(const Visitor & v) {
+bool RAPTOR::foot_path(const Visitor& v) {
     bool result = false;
-    auto &working_labels = labels[count];
-    for (const auto& elt: best_jpp_by_sp) {
-        const auto sp_idx = elt.first;
-        const auto best_jpp_idx = elt.second;
-        if (!best_jpp_idx.is_valid()) { continue; }
+    auto& working_labels = labels[count];
+    const auto& cnx_list = v.clockwise() ?
+                data.dataRaptor->connections.forward_connections :
+                data.dataRaptor->connections.backward_connections;
 
-        // Now we apply all the connections
-        const DateTime previous = working_labels.dt_pt(best_jpp_idx);
-        const auto best_is_odt = get_jpp(best_jpp_idx)->journey_pattern->odt_properties.is_zonal_odt();
+    for (const auto sp_cnx: cnx_list) {
+        // for all stop point, we check if we can improve the stop points they are in connection with
+        const auto& sp_idx = sp_cnx.first;
 
-        const auto& conns = v.clockwise() ?
-            data.dataRaptor->connections.get_forward(sp_idx) :
-            data.dataRaptor->connections.get_backward(sp_idx);
-        for (const auto& conn: conns) {
+        if (! working_labels.pt_is_initialized(sp_idx)) { continue; }
+
+        const DateTime previous = working_labels.dt_pt(sp_idx);
+
+        for (const auto& conn: sp_cnx.second) {
+            const SpIdx destination_sp_idx = conn.sp_idx;
+
             const DateTime next = v.combine(previous, conn.duration);
-            for(const auto& jpp: jpps_from_sp[conn.sp_idx]) {
-                if (jpp.idx == best_jpp_idx) { continue; }
-                if (! v.comp(next, best_labels[jpp.idx])) { continue; }
-                if (best_is_odt) {
-                    // we want to limit the access to the Jpp object
-                    // to optimize the cache, so we only dereference
-                    // it in this cold branch
-                    const auto* jpp_ptr = get_jpp(jpp.idx);
-                    if (jpp_ptr->journey_pattern->odt_properties.is_zonal_odt()) { continue; }
-                }
 
-                working_labels.mut_boarding_jpp_transfer(jpp.idx) = best_jpp_idx;
-                working_labels.mut_dt_transfer(jpp.idx) = next;
-                best_labels[jpp.idx] = next;
+            if (! v.comp(next, working_labels.dt_transfer(destination_sp_idx))) { continue; }
+
+            working_labels.mut_boarding_sp_transfer(destination_sp_idx) = sp_idx;
+
+            working_labels.mut_dt_transfer(destination_sp_idx) = next;
+
+            if (v.comp(next, best_labels[destination_sp_idx])) {
+                //if we can improve the best label, we mark it
+                best_labels[destination_sp_idx] = next;
+            }
+
+            // we mark the jpp order
+            for(const auto& jpp: jpps_from_sp[destination_sp_idx]) {
                 if(v.comp(jpp.order, Q[jpp.jp_idx])) {
                     Q[jpp.jp_idx] = jpp.order;
                     result = true;
@@ -151,6 +142,9 @@ bool RAPTOR::foot_path(const Visitor & v) {
             }
         }
     }
+
+    //TODO try to loop on all touched stop point here
+
     return result;
 }
 
@@ -167,9 +161,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
         lbl_list.clear(clean_labels);
     }
 
-    const size_t journey_pattern_points_size = data.pt_data->journey_pattern_points.size();
-    b_dest.reinit(journey_pattern_points_size, bound);
-    this->make_queue();
+    b_dest.reinit(data.pt_data->stop_points.size(), bound);
     boost::fill(best_labels.values(), bound);
 }
 
@@ -179,29 +171,28 @@ void RAPTOR::init(Solutions departs,
                   DateTime bound,  const bool clockwise,
                   const type::Properties &required_properties) {
     for(Solution item : departs) {
-        if (! valid_journey_pattern_points[item.jpp_idx.val]) { continue; }
-        const type::JourneyPatternPoint* journey_pattern_point = get_jpp(item.jpp_idx);
-        const type::StopPoint* stop_point = journey_pattern_point->stop_point;
+        const type::StopPoint* stop_point = get_sp(item.sp_idx);
         if(stop_point->accessible(required_properties) &&
                 ((clockwise && item.arrival <= bound) || (!clockwise && item.arrival >= bound))) {
-            labels[0].mut_dt_transfer(item.jpp_idx) = item.arrival;
 
-            if(clockwise && Q[JpIdx(*journey_pattern_point->journey_pattern)] > journey_pattern_point->order)
-                Q[JpIdx(*journey_pattern_point->journey_pattern)] = journey_pattern_point->order;
-            else if(!clockwise && Q[JpIdx(*journey_pattern_point->journey_pattern)] < journey_pattern_point->order)
-                Q[JpIdx(*journey_pattern_point->journey_pattern)] = journey_pattern_point->order;
+            for (const auto jpp: jpps_from_sp[item.sp_idx]) {
+                labels[0].mut_dt_transfer(item.sp_idx) = item.arrival;
+
+                if(clockwise && Q[jpp.jp_idx] > jpp.order)
+                    Q[jpp.jp_idx] = jpp.order;
+                else if(!clockwise && Q[jpp.jp_idx] < jpp.order)
+                    Q[jpp.jp_idx] = jpp.order;
+            }
         }
     }
 
     for(auto item : destinations) {
         const type::StopPoint* sp = get_sp(item.first);
-        if(sp->accessible(required_properties)) {
-            for(auto journey_pattern_point : sp->journey_pattern_point_list) {
-                if(valid_journey_pattern_points.test(journey_pattern_point->idx)) {
-                    b_dest.add_destination(JppIdx(*journey_pattern_point), item.second);
-                }
-            }
-        }
+        if (! sp->accessible(required_properties)) { continue; }
+        // we add the destination stop point only if there is at least one jpp valid for this stop point
+        if (jpps_from_sp[item.first].empty()) { continue; }
+
+        b_dest.add_destination(item.first, item.second);
     }
 }
 
@@ -238,7 +229,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     //auto tmp = makePathes(calc_dep, calc_dest, accessibilite_params, *this, clockwise, disruption_active);
     //result.insert(result.end(), tmp.begin(), tmp.end());
     // No solution found, or the solution has initialize with init
-    if(! b_dest.best_now_jpp_idx.is_valid() || b_dest.count == 0) {
+    if(! b_dest.best_now_sp_idx.is_valid() || b_dest.count == 0) {
         return result;
     }
 
@@ -253,7 +244,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
 
         boucleRAPTOR(accessibilite_params, !clockwise, disruption_active, true, max_transfers);
 
-        if(! b_dest.best_now_jpp_idx.is_valid()) {
+        if(! b_dest.best_now_sp_idx.is_valid()) {
             continue;
         }
         std::vector<Path> temp = makePathes(calc_dest, calc_dep, accessibilite_params, *this, !clockwise, disruption_active);
@@ -399,7 +390,9 @@ void RAPTOR::set_valid_jp_and_jpp(
     }else{
         valid_journey_patterns = data.dataRaptor->jp_validity_patterns[date];
     }
+    boost::dynamic_bitset<> valid_journey_pattern_points(data.pt_data->journey_pattern_points.size());
     valid_journey_pattern_points.set();
+
     // We will forbiden every object designated in forbidden
     for (const auto& uri : forbidden) {
         const auto it_line = data.pt_data->lines_map.find(uri);
@@ -554,9 +547,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                 this->labels.push_back(this->data.dataRaptor->labels_const_reverse);
             }
         }
-        const auto & prec_labels=labels[count -1];
+        const auto& prec_labels = labels[count -1];
         auto& working_labels = labels[this->count];
-        this->make_queue();
         /*
          * We need to store it so we can apply stay_in after applying normal vjs
          * We want to do it, to favoritize normal vj against stay_in vjs
@@ -587,20 +579,15 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                         if(st.valid_end(visitor.clockwise())&&
                                 (l_zone == std::numeric_limits<uint16_t>::max() ||
                                  l_zone != st.local_traffic_zone)) {
-                            const DateTime bound = (visitor.comp(best_labels[jpp.idx], b_dest.best_now) || !global_pruning) ?
-                                                        best_labels[jpp.idx] : b_dest.best_now;
+                            const DateTime bound = (visitor.comp(best_labels[jpp.sp_idx], b_dest.best_now) || !global_pruning) ?
+                                                        best_labels[jpp.sp_idx] : b_dest.best_now;
                             // We want to update the labels, if it's better than the one computed before
                             // Or if it's an destination point if it's equal and not unitialized before
-                            const bool best_add_result = this->b_dest.add_best(visitor, jpp.idx, workingDt, this->count);
-                            if(visitor.comp(workingDt, bound) || best_add_result ) {
-                                working_labels.mut_dt_pt(jpp.idx) = workingDt;
-                                working_labels.mut_boarding_jpp_pt(jpp.idx) = boarding_idx;
-                                best_labels[jpp.idx] = working_labels.dt_pt(jpp.idx);
-                                auto& best_jpp = best_jpp_by_sp[jpp.sp_idx];
-                                if(!best_jpp.is_valid() || visitor.comp(workingDt, working_labels.dt_pt(best_jpp))) {
-                                    best_jpp = jpp.idx;
-                                    end_algorithm = false;
-                                }
+                            const bool best_add_result = this->b_dest.add_best(visitor, jpp.sp_idx, workingDt, this->count);
+                            if (visitor.comp(workingDt, bound) || best_add_result) {
+                                working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
+                                working_labels.mut_boarding_jpp_pt(jpp.sp_idx) = boarding_idx;
+                                best_labels[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
                             }
                         }
                     }
@@ -608,8 +595,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                     // We try to get on a vehicle, if we were already on a vehicle, but we arrived
                     // before on the previous via a connection, we try to catch a vehicle leaving this
                     // journey pattern point before
-                    const DateTime previous_dt = prec_labels.dt_transfer(jpp.idx);
-                    if(prec_labels.transfer_is_initialized(jpp.idx) &&
+                    const DateTime previous_dt = prec_labels.dt_transfer(jpp.sp_idx);
+                    if(prec_labels.transfer_is_initialized(jpp.sp_idx) &&
                        (!boarding_idx.is_valid() || visitor.better_or_equal(previous_dt, workingDt, *it_st))) {
                         const auto tmp_st_dt = next_st.next_stop_time(
                             jpp.idx, previous_dt, visitor.clockwise(), disruption_active,
@@ -676,13 +663,27 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
 }
 
 
-int RAPTOR::best_round(JppIdx journey_pattern_point_idx){
-    for(size_t i = 0; i <= this->count; ++i){
-        if(labels[i].dt_pt(journey_pattern_point_idx) == best_labels[journey_pattern_point_idx]){
+int RAPTOR::best_round(SpIdx sp_idx){
+    //Q: a mon avis on peut virer cette methode
+    for (size_t i = 0; i <= this->count; ++i) {
+        if (labels[i].dt_pt(sp_idx) == best_labels[sp_idx]) {
             return i;
         }
     }
     return -1;
+}
+
+const type::JourneyPatternPoint* RAPTOR::get_used_jpp(const Labels& label, SpIdx sp_idx) const {
+    //get the first jpp corresponding to the stop point, for the jp used by raptor
+    const auto jpp_idx = label.boarding_jpp_pt(sp_idx);
+    const auto boarding_jpp = get_jpp(jpp_idx);
+    for (const auto& jpp: boarding_jpp->journey_pattern->journey_pattern_point_list) {
+        if (SpIdx(*jpp->stop_point) == sp_idx) {
+            return jpp;
+        }
+    }
+    LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "impossible rebuild the raptor path, cannot find stop point idx ");
+    throw navitia::exception("impossible to rebuild the raptor path");
 }
 
 }}

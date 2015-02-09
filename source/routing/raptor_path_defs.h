@@ -6,26 +6,42 @@
 
 namespace navitia { namespace routing {
 
+inline const JppIdx get_boarding_jpp(const size_t countb, const SpIdx current_sp_idx, const RAPTOR &raptor_) {
+    const auto boarding_sp_idx = raptor_.labels[countb].boarding_sp_transfer(current_sp_idx);
+
+    if (! boarding_sp_idx.is_valid()) {
+        return JppIdx();
+    }
+    //TODO com'!
+    return JppIdx(*raptor_.get_used_jpp(raptor_.labels[countb], boarding_sp_idx));
+}
+//TODO refacto cette partie
+inline const JppIdx get_used_jpp(const size_t countb, const SpIdx current_sp_idx, const RAPTOR &raptor_) {
+    //TODO com'!
+    return JppIdx(*raptor_.get_used_jpp(raptor_.labels[countb], current_sp_idx));
+}
+
 template<typename Visitor>
-void handle_connection(const size_t countb, const JppIdx current_jpp_idx, Visitor& v,
+void handle_connection(const size_t countb, const SpIdx current_sp_idx, Visitor& v,
                        bool clockwise, const RAPTOR &raptor_) {
-    const auto& departure = raptor_.get_jpp(current_jpp_idx)->stop_point;
-    const auto& boarding_jpp_idx = raptor_.labels[countb].boarding_jpp_transfer(current_jpp_idx);
-    const auto& destination_jpp = raptor_.get_jpp(boarding_jpp_idx);
-    const auto& destination = destination_jpp->stop_point;
+    const auto& departure = raptor_.get_sp(current_sp_idx);
+
+    const auto& destination_sp_idx = raptor_.labels[countb].boarding_sp_transfer(current_sp_idx);
+
+    const auto& destination_sp = raptor_.get_sp(destination_sp_idx);
     const auto& connections = departure->stop_point_connection_list;
-    const auto& l = raptor_.labels[countb].dt_transfer(current_jpp_idx);
+    const auto& l = raptor_.labels[countb].dt_transfer(current_sp_idx);
     // We try to find the connection that was taken by the algorithm
     auto find_predicate = [&](type::StopPointConnection* connection)->bool {
-        return departure == connection->departure && destination == connection->destination;
+        return departure == connection->departure && destination_sp == connection->destination;
     };
 
     auto it = std::find_if(connections.begin(), connections.end(), find_predicate);
     type::StopPointConnection* stop_point_connection = nullptr;
     boost::posix_time::ptime dep_ptime, arr_ptime;
-    // It might not be find, for instance if we stayed on the same stop point
+    // It might not be found, for instance if we stayed on the same stop point
     if(it == connections.end()) {
-        const auto& dt_pt = raptor_.labels[countb].dt_pt(boarding_jpp_idx);
+        const auto& dt_pt = raptor_.labels[countb].dt_pt(SpIdx(*destination_sp));
         if(clockwise) {
             dep_ptime = to_posix_time(dt_pt, raptor_.data);
             arr_ptime = to_posix_time(l, raptor_.data);
@@ -45,7 +61,7 @@ void handle_connection(const size_t countb, const JppIdx current_jpp_idx, Visito
         }
     }
 
-    v.connection(departure, destination, dep_ptime, arr_ptime, stop_point_connection);
+    v.connection(departure, destination_sp, dep_ptime, arr_ptime, stop_point_connection);
 }
 
 
@@ -89,21 +105,25 @@ handle_st(const type::StopTime* st, DateTime& workingDate, bool clockwise, const
     return std::make_pair(departure, arrival);
 }
 
-
-
+/**
+ *TODO remonte le vj + extension
+ */
 template<typename Visitor>
-void handle_vj(const size_t countb, JppIdx current_jpp_idx, Visitor& v,
-               bool clockwise, bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
+void handle_vj(const size_t countb, SpIdx current_sp_idx, Visitor& v,
+               bool clockwise, bool disruption_active, const type::AccessibiliteParams& accessibilite_params,
                const RAPTOR &raptor_) {
     v.init_vj();
-    const auto& boarding_jpp_idx = raptor_.labels[countb].boarding_jpp_pt(current_jpp_idx);
+    const auto& boarding_jpp_idx = raptor_.labels[countb].boarding_jpp_pt(current_sp_idx);
     const type::StopTime* current_st;
     DateTime workingDate;
-    std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_jpp_idx, raptor_.labels,
+
+    auto current_jpp_idx = get_used_jpp(countb, current_sp_idx, raptor_);
+    std::tie(current_st, workingDate) = get_current_stidx_gap(countb, current_sp_idx, raptor_.labels,
                                                               accessibilite_params, clockwise,
                                                               raptor_, disruption_active);
     while(boarding_jpp_idx != current_jpp_idx) {
         // There is a side effect on workingDate caused by workingDate
+        //TODO remove the side effect
         auto departure_arrival = handle_st(current_st, workingDate, clockwise, raptor_.data);
         v.loop_vj(current_st, departure_arrival.first, departure_arrival.second);
         size_t order = current_st->journey_pattern_point->order;
@@ -155,20 +175,23 @@ void handle_vj(const size_t countb, JppIdx current_jpp_idx, Visitor& v,
  *
  * */
 template<typename Visitor>
-void read_path(Visitor& v, JppIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
+void read_path(Visitor& v, SpIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
           const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_) {
-    JppIdx current_jpp_idx = destination_idx;
+    SpIdx current_sp_idx = destination_idx;
     while (countb>0) {
-        handle_vj(countb, current_jpp_idx, v, clockwise, disruption_active, accessibilite_params, raptor_);
-        current_jpp_idx = raptor_.labels[countb].boarding_jpp_pt(current_jpp_idx);
+        handle_vj(countb, current_sp_idx, v, clockwise, disruption_active, accessibilite_params, raptor_);
+        auto current_jpp_idx = raptor_.labels[countb].boarding_jpp_pt(current_sp_idx);
+        current_sp_idx = SpIdx(*raptor_.get_jpp(current_jpp_idx)->stop_point);
+
         --countb;
-        v.final_step(current_jpp_idx, countb, raptor_.labels);
+        v.final_step(current_sp_idx, countb, raptor_.labels);
         if (countb == 0) {
             break;
         }
-        handle_connection(countb, current_jpp_idx, v, clockwise, raptor_);
-        current_jpp_idx = raptor_.labels[countb].boarding_jpp_transfer(current_jpp_idx);
-        v.final_step(current_jpp_idx, countb, raptor_.labels);
+        handle_connection(countb, current_sp_idx, v, clockwise, raptor_);
+        current_jpp_idx = get_boarding_jpp(countb, current_sp_idx, raptor_);
+        current_sp_idx = SpIdx(*raptor_.get_jpp(current_jpp_idx)->stop_point);
+        v.final_step(current_sp_idx, countb, raptor_.labels);
     }
 }
 

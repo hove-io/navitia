@@ -507,49 +507,40 @@ static void add_isochrone_response(RAPTOR& raptor,
                                    bool show_stop_area) {
     bt::ptime now = bt::second_clock::local_time();
     for(const type::StopPoint* sp : stop_points) {
-        DateTime best = bound;
-        JppIdx best_jpp = JppIdx();
-        int best_round = -1;
-        for(auto jpp : sp->journey_pattern_point_list) {
-            const JppIdx jpp_idx = JppIdx(*jpp);
-            if((clockwise && raptor.best_labels[jpp_idx] < best) ||
-                (!clockwise && raptor.best_labels[jpp_idx] > best)){
-                int round = raptor.best_round(jpp_idx);
-                if(round != -1 && raptor.labels[round].pt_is_initialized(jpp_idx)) {
-                    best = raptor.best_labels[jpp_idx];
-                    best_jpp = jpp_idx;
-                    best_round = round;
+        SpIdx sp_idx(*sp);
+        const auto best_lbl = raptor.best_labels[sp_idx];
+        if ((clockwise && best_lbl < bound) ||
+            (!clockwise && best_lbl > bound)) {
+            //TODO reverse the condition to continue
+            int round = raptor.best_round(sp_idx);
+
+            if (round != -1 && raptor.labels[round].pt_is_initialized(sp_idx)) { //Q: le pt initialize est utile la ?
+
+                const auto sp_and_date = get_final_spidx_and_date(round,
+                        sp_idx, !clockwise, disruption_active, accessibilite_params, raptor);
+                DateTime initial_dt = sp_and_date.second;
+
+                int duration = ::abs(best_lbl - init_dt); //Q: c'est pas initial_dt qu'il faut utiliser la ?
+
+                if(duration <= max_duration) {
+                    auto pb_journey = response.add_journeys();
+                    const auto str_departure = to_posix_timestamp(best_lbl, raptor.data);
+                    const auto str_arrival = to_posix_timestamp(best_lbl, raptor.data);
+                    const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
+                    pb_journey->set_arrival_date_time(str_arrival);
+                    pb_journey->set_departure_date_time(str_departure);
+                    pb_journey->set_requested_date_time(str_requested);
+                    pb_journey->set_duration(duration);
+                    pb_journey->set_nb_transfers(round); //Q: round there ? if round = 1, there are 0 transfer no ?
+                    bt::time_period action_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
+                            navitia::to_posix_time(best_lbl, raptor.data));
+                    if (show_stop_area)
+                        fill_pb_placemark(sp->stop_area,
+                                raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
+                   else
+                       fill_pb_placemark(sp,
+                                raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
                 }
-            }
-        }
-
-        if (best_jpp.is_valid()) {
-            auto label = raptor.best_labels[best_jpp];
-            JppIdx initial_jpp;
-            DateTime initial_dt;
-            boost::tie(initial_jpp, initial_dt) = get_final_jppidx_and_date(best_round,
-                    best_jpp, !clockwise, disruption_active, accessibilite_params, raptor);
-
-            int duration = ::abs(label - init_dt);
-
-            if(duration <= max_duration) {
-                auto pb_journey = response.add_journeys();
-                const auto str_departure = to_posix_timestamp(label, raptor.data);
-                const auto str_arrival = to_posix_timestamp(label, raptor.data);
-                const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
-                pb_journey->set_arrival_date_time(str_arrival);
-                pb_journey->set_departure_date_time(str_departure);
-                pb_journey->set_requested_date_time(str_requested);
-                pb_journey->set_duration(duration);
-                pb_journey->set_nb_transfers(best_round);
-                bt::time_period action_period(navitia::to_posix_time(label-duration, raptor.data),
-                        navitia::to_posix_time(label, raptor.data));
-                if (show_stop_area)
-                    fill_pb_placemark(raptor.get_jpp(best_jpp)->stop_point->stop_area,
-                            raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
-               else
-                   fill_pb_placemark(raptor.get_jpp(best_jpp)->stop_point,
-                            raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
             }
         }
     }

@@ -36,12 +36,12 @@ www.navitia.io
 namespace navitia { namespace routing {
     struct RAPTOR;
      ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
-    Path makePathreverse(JppIdx destination_idx, unsigned int countb,
-            const type::AccessibiliteParams & accessibilite_params,
-            const RAPTOR &raptor_, bool disruption_active);
+//    Path makePathreverse(SpIdx destination_idx, unsigned int countb,
+//            const type::AccessibiliteParams & accessibilite_params,
+//            const RAPTOR &raptor_, bool disruption_active);
 
     ///Construit un chemin
-    Path makePath(JppIdx destination_idx, size_t countb, bool clockwise,
+    Path makePath(SpIdx destination_idx, size_t countb, bool clockwise,
             bool disruption_active, const type::AccessibiliteParams & accessibilite_params,
             const RAPTOR &raptor_);
 
@@ -58,21 +58,21 @@ namespace navitia { namespace routing {
 
     std::pair<const type::StopTime*, uint32_t>
     get_current_stidx_gap(size_t count,
-                          JppIdx journey_pattern_point,
+                          SpIdx stop_point,
                           const std::vector<Labels> &labels,
                           const type::AccessibiliteParams & accessibilite_params,
                           bool clockwise,
                           const RAPTOR &raptor,
                           bool disruption_active);
 
-    template<typename Visitor>
-    void read_path(Visitor& v, JppIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
-              const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_);
+//    template<typename Visitor>
+//    void read_path(Visitor& v, JppIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
+//              const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_);
 
     struct BasePathVisitor {
-        void connection(type::StopPoint* /*departure*/, type::StopPoint* /*destination*/,
+        void connection(const type::StopPoint* /*departure*/, const type::StopPoint* /*destination*/,
                     boost::posix_time::ptime /*dep_time*/, boost::posix_time::ptime /*arr_time*/,
-                    type::StopPointConnection* /*stop_point_connection*/) {
+                    const type::StopPointConnection* /*stop_point_connection*/) {
             return ;
         }
 
@@ -94,7 +94,7 @@ namespace navitia { namespace routing {
             return ;
         }
 
-        void final_step(JppIdx /*current_jpp*/, size_t /*count*/, const std::vector<Labels> &/*labels*/) {
+        void final_step(SpIdx /*current_jpp*/, size_t /*count*/, const std::vector<Labels> &/*labels*/) {
             return ;
         }
     };

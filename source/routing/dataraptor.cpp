@@ -82,8 +82,8 @@ void dataRAPTOR::JppsFromJp::load(const type::PT_Data &data) {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    labels_const.init_inf(data.journey_pattern_points.size());
-    labels_const_reverse.init_min(data.journey_pattern_points.size());
+    labels_const.init_inf(data.stop_points.size());
+    labels_const_reverse.init_min(data.stop_points.size());
 
     connections.load(data);
     jpps_from_sp.load(data);

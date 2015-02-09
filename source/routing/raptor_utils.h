@@ -50,12 +50,12 @@ typedef Idx<type::StopPoint> SpIdx;
 
 struct Labels {
     // initialize the structure according to the number of jpp
-    inline void init_inf(size_t nb_jpp) {
-        init(nb_jpp, DateTimeUtils::inf);
+    inline void init_inf(size_t nb_sp) {
+        init(nb_sp, DateTimeUtils::inf);
     }
     // initialize the structure according to the number of jpp
-    inline void init_min(size_t nb_jpp) {
-        init(nb_jpp, DateTimeUtils::min);
+    inline void init_min(size_t nb_sp) {
+        init(nb_sp, DateTimeUtils::min);
     }
     // clear the structure according to a given structure. Same as a
     // copy without touching the boarding_jpp fields
@@ -63,100 +63,100 @@ struct Labels {
         dt_pts = clean.dt_pts;
         dt_transfers = clean.dt_transfers;
         boarding_jpp_pts.resize(clean.boarding_jpp_pts.size());
-        boarding_jpp_transfers.resize(clean.boarding_jpp_transfers.size());
+        boarding_sp_transfers.resize(clean.boarding_sp_transfers.size());
+    }
+    inline const SpIdx&
+    boarding_sp_transfer(SpIdx sp_idx) const {
+        return boarding_sp_transfers[sp_idx];
     }
     inline const JppIdx&
-    boarding_jpp_transfer(JppIdx jpp_idx) const {
-        return boarding_jpp_transfers[jpp_idx];
+    boarding_jpp_pt(SpIdx sp_idx) const {
+        return boarding_jpp_pts[sp_idx];
     }
-    inline const JppIdx&
-    boarding_jpp_pt(JppIdx jpp_idx) const {
-        return boarding_jpp_pts[jpp_idx];
+    inline const DateTime& dt_transfer(SpIdx sp_idx) const {
+        return dt_transfers[sp_idx];
     }
-    inline const DateTime& dt_transfer(JppIdx jpp_idx) const {
-        return dt_transfers[jpp_idx];
-    }
-    inline const DateTime& dt_pt(JppIdx jpp_idx) const {
-        return dt_pts[jpp_idx];
+    inline const DateTime& dt_pt(SpIdx sp_idx) const {
+        return dt_pts[sp_idx];
     }
 
-    inline JppIdx&
-    mut_boarding_jpp_transfer(JppIdx jpp_idx) {
-        return boarding_jpp_transfers[jpp_idx];
+    inline SpIdx&
+    mut_boarding_sp_transfer(SpIdx sp_idx) {
+        return boarding_sp_transfers[sp_idx];
     }
     inline JppIdx&
-    mut_boarding_jpp_pt(JppIdx jpp_idx) {
-        return boarding_jpp_pts[jpp_idx];
+    mut_boarding_jpp_pt(SpIdx sp_idx) {
+        return boarding_jpp_pts[sp_idx];
     }
-    inline DateTime& mut_dt_transfer(JppIdx jpp_idx) {
-        return dt_transfers[jpp_idx];
+    inline DateTime& mut_dt_transfer(SpIdx sp_idx) {
+        return dt_transfers[sp_idx];
     }
-    inline DateTime& mut_dt_pt(JppIdx jpp_idx) {
-        return dt_pts[jpp_idx];
+    inline DateTime& mut_dt_pt(SpIdx sp_idx) {
+        return dt_pts[sp_idx];
     }
 
-    inline bool pt_is_initialized(JppIdx jpp_idx) const {
-        return dt_pt(jpp_idx) != DateTimeUtils::inf && dt_pt(jpp_idx) != DateTimeUtils::min;
+    inline bool pt_is_initialized(SpIdx sp_idx) const {
+        return dt_pt(sp_idx) != DateTimeUtils::inf && dt_pt(sp_idx) != DateTimeUtils::min;
     }
-    inline bool transfer_is_initialized(JppIdx jpp_idx) const {
-        return dt_transfer(jpp_idx) != DateTimeUtils::inf && dt_transfer(jpp_idx) != DateTimeUtils::min;
+    inline bool transfer_is_initialized(SpIdx sp_idx) const {
+        return dt_transfer(sp_idx) != DateTimeUtils::inf && dt_transfer(sp_idx) != DateTimeUtils::min;
     }
 
 private:
-    inline void init(size_t nb_jpp, DateTime val) {
-        dt_pts.assign(nb_jpp, val);
-        dt_transfers.assign(nb_jpp, val);
-        boarding_jpp_pts.resize(nb_jpp);
-        boarding_jpp_transfers.resize(nb_jpp);
+    inline void init(size_t nb_sp, DateTime val) {
+        dt_pts.assign(nb_sp, val);
+        dt_transfers.assign(nb_sp, val);
+        boarding_jpp_pts.resize(nb_sp);
+        boarding_sp_transfers.resize(nb_sp);
     }
 
-    // All these vectors are indexed by jpp_idx
+    // All these vectors are indexed by sp_idx
     //
     // At what time can we reach this label with public transport
-    IdxMap<type::JourneyPatternPoint, DateTime> dt_pts;
+    IdxMap<type::StopPoint, DateTime> dt_pts;
     // At what time wan we reach this label with a transfer
-    IdxMap<type::JourneyPatternPoint, DateTime> dt_transfers;
+    IdxMap<type::StopPoint, DateTime> dt_transfers;
     // jpp used to reach this label with public transport
-    IdxMap<type::JourneyPatternPoint, JppIdx> boarding_jpp_pts;
-    // jpp used to reach this label with a transfer
-    IdxMap<type::JourneyPatternPoint, JppIdx> boarding_jpp_transfers;
+    IdxMap<type::StopPoint, JppIdx> boarding_jpp_pts;
+    // sp used to reach this label with a transfer.
+    // Note: the sp is enough here (no need for jpp), it is used only for path reconstruction
+    IdxMap<type::StopPoint, SpIdx> boarding_sp_transfers;
 };
 
 
 struct best_dest {
-    IdxMap<type::JourneyPatternPoint, navitia::time_duration> jpp_idx_duration;
+    // fallback time at the end of the journey. Only the stoppoint that can be reached by the fallback are marked
+    IdxMap<type::StopPoint, navitia::time_duration> sp_idx_duration;
     DateTime best_now;
-    JppIdx best_now_jpp_idx;
+    SpIdx best_now_sp_idx;
     size_t count;
 
-    void add_destination(const JppIdx jpp, const time_duration duration_to_dest) {
-        jpp_idx_duration[jpp] = duration_to_dest;
+    void add_destination(const SpIdx sp, const time_duration duration_to_dest) {
+        sp_idx_duration[sp] = duration_to_dest;
     }
 
-
-    inline bool is_eligible_solution(const JppIdx jpp_idx) const {
-        return jpp_idx_duration[jpp_idx] != boost::posix_time::pos_infin;
+    inline bool is_eligible_solution(const SpIdx sp_idx) const {
+        return sp_idx_duration[sp_idx] != boost::posix_time::pos_infin;
     }
-
 
     template<typename Visitor>
-    inline bool add_best(const Visitor & v, JppIdx jpp_idx, const DateTime &t, size_t cnt) {
-        if(is_eligible_solution(jpp_idx)) {
+    inline bool add_best(const Visitor & v, SpIdx sp_idx, const DateTime &t, size_t cnt) {
+        if (is_eligible_solution(sp_idx)) {
             if(v.clockwise())
-                return add_best_clockwise(jpp_idx, t, cnt);
+                return add_best_clockwise(sp_idx, t, cnt);
             else
-                return add_best_unclockwise(jpp_idx, t, cnt);
+                return add_best_unclockwise(sp_idx, t, cnt);
         }
         return false;
     }
 
 
-    inline bool add_best_clockwise(JppIdx jpp_idx, const DateTime &t, size_t cnt) {
-        if(t != DateTimeUtils ::inf) {
-            const auto tmp_dt = t + jpp_idx_duration[jpp_idx];
+    inline bool add_best_clockwise(SpIdx sp_idx, const DateTime& t, size_t cnt) {
+        if (t != DateTimeUtils ::inf) {
+            const auto tmp_dt = t + sp_idx_duration[sp_idx];
             if((tmp_dt < best_now) || ((tmp_dt == best_now) && (count > cnt))) {
                 best_now = tmp_dt;
-                best_now_jpp_idx = jpp_idx;
+                best_now_sp_idx = sp_idx;
                 count = cnt;
                 return true;
             }
@@ -165,12 +165,12 @@ struct best_dest {
         return false;
     }
 
-    inline bool add_best_unclockwise(JppIdx jpp_idx, const DateTime &t, size_t cnt) {
-        if(t != DateTimeUtils::min) {
-            const auto tmp_dt = t - jpp_idx_duration[jpp_idx];
+    inline bool add_best_unclockwise(SpIdx sp_idx, const DateTime& t, size_t cnt) {
+        if (t != DateTimeUtils::min) {
+            const auto tmp_dt = t - sp_idx_duration[sp_idx];
             if((tmp_dt > best_now) || ((tmp_dt == best_now) && (count > cnt))) {
                 best_now = tmp_dt;
-                best_now_jpp_idx = jpp_idx;
+                best_now_sp_idx = sp_idx;
                 count = cnt;
                 return true;
             }
@@ -178,21 +178,21 @@ struct best_dest {
         return false;
     }
 
-    void reinit(const size_t nb_jpp_idx) {
-        jpp_idx_duration.assign(nb_jpp_idx, boost::posix_time::pos_infin);
+    void reinit(const size_t nb_sp_idx) {
+        sp_idx_duration.assign(nb_sp_idx, boost::posix_time::pos_infin);
         best_now = DateTimeUtils::inf;
-        best_now_jpp_idx = JppIdx();
+        best_now_sp_idx = SpIdx();
         count = std::numeric_limits<size_t>::max();
     }
 
-    void reinit(size_t nb_jpp_idx, const DateTime &borne) {
-        reinit(nb_jpp_idx);
-        best_now = borne;
+    void reinit(size_t nb_sp_idx, const DateTime& bound) {
+        reinit(nb_sp_idx);
+        best_now = bound;
     }
 
-    void reverse() {
-        best_now = DateTimeUtils::min;
-    }
+//    void reverse() {
+//        best_now = DateTimeUtils::min;
+//    }
 };
 
 } // namespace routing

@@ -62,37 +62,31 @@ struct RoutingState {
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
 {
-    const navitia::type::Data & data;
+    const navitia::type::Data& data;
 
     NextStopTime next_st;
 
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
     std::vector<Labels> labels;
-    ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
-    IdxMap<type::JourneyPatternPoint, DateTime> best_labels;
+    ///Contains the best arrival (or departure time) for each stoppoint
+    IdxMap<type::StopPoint, DateTime> best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
     best_dest b_dest;
     ///Nombre de correspondances effectuées jusqu'à présent
     unsigned int count;
-    /// The best jpp reached for every stop point during a round of raptor algorithm
-    /// Used by footpath()
-    IdxMap<type::StopPoint, JppIdx> best_jpp_by_sp;
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> valid_journey_patterns;
-    boost::dynamic_bitset<> valid_journey_pattern_points;
     dataRAPTOR::JppsFromSp jpps_from_sp;
-    ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
+    ///L'ordre du premier journey_pattern point de la journey_pattern
     IdxMap<type::JourneyPattern, int> Q;
 
     //Constructeur
-    explicit RAPTOR(const navitia::type::Data &data) :
+    explicit RAPTOR(const navitia::type::Data& data) :
         data(data),
         next_st(data),
         best_labels(data.pt_data->journey_pattern_points.size()),
         count(0),
-        best_jpp_by_sp(data.pt_data->stop_points.size()),
         valid_journey_patterns(data.pt_data->journey_patterns.size()),
-        valid_journey_pattern_points(data.pt_data->journey_pattern_points.size()),
         Q(data.pt_data->journey_patterns.size()) {
             labels.assign(10, data.dataRaptor->labels_const);
     }
@@ -111,9 +105,12 @@ struct RAPTOR
     const type::JourneyPattern* get_jp(JpIdx idx) const {
         return data.pt_data->journey_patterns[idx.val];
     }
-    const type::JourneyPatternPoint* get_jpp(JppIdx idx) const {
-        return data.pt_data->journey_pattern_points[idx.val];
+    const type::JourneyPatternPoint* get_jpp(JppIdx jpp_idx) const {
+        return data.pt_data->journey_pattern_points[jpp_idx.val];
     }
+
+    const type::JourneyPatternPoint* get_used_jpp(const Labels& label, SpIdx sp_idx) const;
+
     const type::StopPoint* get_sp(SpIdx idx) const {
         return data.pt_data->stop_points[idx.val];
     }
@@ -202,8 +199,6 @@ struct RAPTOR
                             const bool disruption_active,
                             const RoutingState& state);
 
-    void make_queue();
-
     ///Boucle principale
     template<typename Visitor>
     void raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active, bool global_pruning = true, uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
@@ -211,7 +206,7 @@ struct RAPTOR
 
     /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint
     /// Retourne -1 s'il n'existe pas de meilleure solution
-    int best_round(JppIdx journey_pattern_point_idx);
+    int best_round(SpIdx sp_idx);
 
     ~RAPTOR() {}
 };
