@@ -578,7 +578,11 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     GtfsData::vector_sp departures, arrivals;
     // We don't want to have these connections, because it could lead to weird things
     // And also we don't want to show that to our users, this must be a data problem
-    if (row[time_c].empty() || boost::lexical_cast<int>(row[time_c]) > 24*3600) {
+    if (row[time_c].empty()) {
+        ++data.count_empty_connections;
+        return;
+    }
+    if(boost::lexical_cast<int>(row[time_c]) > 24*3600) {
         ++data.count_too_long_connections;
         return;
     }

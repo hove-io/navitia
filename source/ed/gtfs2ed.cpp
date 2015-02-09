@@ -101,6 +101,8 @@ int main(int argc, char * argv[])
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
     LOG4CPLUS_INFO(logger, "We excluded " << data.count_too_long_connections << " connections "
                    " because they were too long");
+    LOG4CPLUS_INFO(logger, "We excluded " << data.count_empty_connections << " connections "
+                   " because they had no duration time");
     start = pt::microsec_clock::local_time();
     data.complete();
     complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
