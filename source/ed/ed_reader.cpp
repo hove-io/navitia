@@ -1189,7 +1189,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work) {
     }
 
     if (nb_edges_no_way) {
-        LOG4CPLUS_WARN(log, nb_edges_no_way << " edges have an unkown way");
+        LOG4CPLUS_WARN(log, nb_edges_no_way << " edges have an unknown way");
     }
 
     LOG4CPLUS_INFO(log, boost::num_edges(data.geo_ref->graph) << " edges added ");

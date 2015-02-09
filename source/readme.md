@@ -166,7 +166,7 @@ Persists Jormungandr calls in a database
 :snake: **python module**
 
 ### tests
-Contains kraken mock excecutable used in Jormungandr integration tests
+Contains kraken mock executable used in Jormungandr integration tests
 
 ### third_party
 Various third party libraries
