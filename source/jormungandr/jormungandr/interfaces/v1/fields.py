@@ -476,6 +476,7 @@ admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
 admin["label"] = fields.String()
+admin["insee"] = fields.String()
 
 generic_type_admin = deepcopy(generic_type)
 admins = NonNullList(NonNullNested(admin))

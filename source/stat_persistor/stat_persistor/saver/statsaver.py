@@ -75,6 +75,10 @@ class StatSaver(object):
                                      autoload=True,
                                      schema='stat')
 
+        self.journey_request = Table('journey_request', self.meta,
+                                     autoload=True,
+                                     schema='stat')
+
     def persist_stat(self, config, stat_request):
         self.__persist(config, stat_request, persist_stat_request)
 

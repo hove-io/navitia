@@ -33,6 +33,17 @@ message StatRequest {
     optional StatError error = 15;
     repeated StatJourneyResponse journeys = 16;
     repeated StatParameter interpreted_parameters = 17;
+    optional JourneyRequest journey_request = 18;
+}
+
+message JourneyRequest {
+    //POSIX time (i.e., number of seconds since January 1st 1970 00:00:00 UTC)
+    required uint64 requested_date_time = 1;
+    required bool clockwise = 2;
+    optional string departure_insee = 3;
+    optional string departure_admin = 4;
+    optional string arrival_insee = 5;
+    optional string arrival_admin = 6;
 }
 
 message StatJourneyResponse {
