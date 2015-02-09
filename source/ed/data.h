@@ -105,7 +105,8 @@ public:
 
     std::set<types::VehicleJourney*> vj_to_erase; //badly formated vj, to erase
 
-    size_t count_too_long_connections = 0;
+    size_t count_too_long_connections = 0,
+           count_empty_connections = 0;
 
     /**
          * trie les différentes donnée et affecte l'idx
