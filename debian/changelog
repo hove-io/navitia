@@ -1,3 +1,36 @@
+navitia2 (1.11.0) unstable; urgency=low
+
+  * Ed: don't import empty connection  <https://github.com/CanalTP/navitia/pull/876>
+  * Kraken: handle new enum in chaos effect  <https://github.com/CanalTP/navitia/pull/875>
+  * Ed: add check on connection duration  <https://github.com/CanalTP/navitia/pull/873>
+  * Kraken: all severity were blocking  <https://github.com/CanalTP/navitia/pull/871>
+  * Kraken: fix reading of disruption from database without message  <https://github.com/CanalTP/navitia/pull/870>
+  * Jormgandr: add internal to tickets' links  <https://github.com/CanalTP/navitia/pull/868>
+  * Ed: check range of validity_patterns  <https://github.com/CanalTP/navitia/pull/867>
+  * Jormungandr: stat the region for each call, even if the region isn't specified  <https://github.com/CanalTP/navitia/pull/866>
+  * Documentation: change architecture diagram  <https://github.com/CanalTP/navitia/pull/865>
+  * All: Small typo laod -> load  <https://github.com/CanalTP/navitia/pull/864>
+  * Kraken: handle coords without address in fill_pb  <https://github.com/CanalTP/navitia/pull/863>
+  * Stat: add journey_request  <https://github.com/CanalTP/navitia/pull/862>
+  * Raptor: the Y bug: EXTERMINATE! EXTERMINATE!  <https://github.com/CanalTP/navitia/pull/861>
+  * Raptor: activate global bound  <https://github.com/CanalTP/navitia/pull/860>
+  * Ed: Add coord system  <https://github.com/CanalTP/navitia/pull/859>
+  * Raptor: Cleanups  <https://github.com/CanalTP/navitia/pull/857>
+  * Kraken: don't take in account transfer time in walking time  <https://github.com/CanalTP/navitia/pull/856>
+  * Ed: fix bug on vj extension creation  <https://github.com/CanalTP/navitia/pull/855>
+  * Stat: interpreted parameters  <https://github.com/CanalTP/navitia/pull/854>
+  * Jormungandr: add check before accessing types  <https://github.com/CanalTP/navitia/pull/853>
+  * Timetable: fix partial_terminus  <https://github.com/CanalTP/navitia/pull/852>
+  * Jormungandr: fix uri with spaces  <https://github.com/CanalTP/navitia/pull/851>
+  * Tyr: fix purge problem  <https://github.com/CanalTP/navitia/pull/850>
+  * Jormungandr: in stats, change mode of bike section to bss if applicable  <https://github.com/CanalTP/navitia/pull/849>
+  * Kraken: stop_time's comment are now indexed on (vj->uri, jpp->order)  <https://github.com/CanalTP/navitia/pull/848>
+  * Fix compilation on dev  <https://github.com/CanalTP/navitia/pull/845>
+  * Kraken: remove useless "reconstructing_path" condition in next_stop_time  <https://github.com/CanalTP/navitia/pull/844>
+  * Documntation: Time representation in navitia.io documentation  <https://github.com/CanalTP/navitia/pull/843>
+
+ -- l-vincent-l <lara.vincent@gmail.com>  Mon, 09 Feb 2015 16:02:19 +0100
+
 navitia2 (1.10.3) unstable; urgency=low
 
   * Ed: add check on connection duration  <https://github.com/CanalTP/navitia/pull/873> 
