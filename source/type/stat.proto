@@ -57,6 +57,9 @@ message JourneyRequest {
     optional string departure_admin = 4;
     optional string arrival_insee = 5;
     optional string arrival_admin = 6;
+
+    optional string departure_admin_name = 7;
+    optional string arrival_admin_name = 8;
 }
 
 message StatJourneyResponse {
@@ -67,6 +70,19 @@ message StatJourneyResponse {
     optional int32      nb_transfers = 5;
     optional string     type = 6;
     repeated StatJourneySection sections = 7;
+    optional string     first_pt_id = 8;
+    optional string     first_pt_name = 9;
+    optional GeographicalCoord  first_pt_coord = 10;
+    optional string     first_pt_admin_id = 11;
+    optional string     first_pt_admin_name = 12;
+    optional string     first_pt_admin_insee = 13;
+
+    optional string     last_pt_id = 14;
+    optional string     last_pt_name = 15;
+    optional GeographicalCoord  last_pt_coord = 16;
+    optional string     last_pt_admin_id = 17;
+    optional string     last_pt_admin_name = 18;
+    optional string     last_pt_admin_insee = 19;
 }
 
 message StatJourneySection {
@@ -97,6 +113,9 @@ message StatJourneySection {
     optional string     physical_mode_name = 25;
     optional string     commercial_mode_id = 26;
     optional string     commercial_mode_name = 27;
+
+    optional string     from_admin_insee = 28;
+    optional string     to_admin_insee = 29;
 }
 
 
