@@ -30,26 +30,20 @@ www.navitia.io
 
 #pragma once
 #include "type/pb_converter.h"
-#include "routing/routing.h"
-#include <limits>
 namespace navitia { namespace timetables {
 
-/** Parse et valide la date et durée et retrouve les journey_pattern_points associés au filtre
 
-  Il est persistant tout le long de la requête
-*/
-struct RequestHandle {
-    pbnavitia::Response pb_response;
-    DateTime date_time, max_datetime;
-    std::vector<type::idx_t> journey_pattern_points;
-    int total_result;
+pbnavitia::Response previous_departures(const std::string &request,
+        const std::vector<std::string>& forbidden_uris,
+        const boost::posix_time::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
+        const int depth, const type::AccessibiliteParams & accessibilite_params,
+        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const bool show_codes);
+pbnavitia::Response previous_arrivals(const std::string &request,
+        const std::vector<std::string>& forbidden_uris,
+        const boost::posix_time::ptime datetime, uint32_t duration, uint32_t nb_stoptimes,
+        const int depth, const type::AccessibiliteParams & accessibilite_params,
+        const type::Data & data, bool disruption_active, uint32_t count, uint32_t start_page,
+        const bool show_codes);
 
-    RequestHandle(const std::string& request,
-                  const std::vector<std::string>& forbidden_uris,
-                  const boost::posix_time::ptime datetime, uint32_t duration,
-                  const type::Data& data,
-                  boost::optional<const std::string> calendar_id, const bool clockwise = true);
-};
-}
-
-}
+}}

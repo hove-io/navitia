@@ -31,6 +31,7 @@
 
 from flask.ext.restful import fields, marshal_with, reqparse
 from flask.globals import g
+from flask import request
 from jormungandr import i_manager, utils
 from jormungandr import timezone
 from fields import stop_point, route, pagination, PbField, stop_date_time, \
@@ -38,13 +39,17 @@ from fields import stop_point, route, pagination, PbField, stop_date_time, \
     display_informations_route, additional_informations_vj, UrisToLinks, error, \
     enum_type, SplitDateTime, MultiLineString
 from ResourceUri import ResourceUri, complete_links
-from datetime import datetime
+import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format
 from errors import ManageError
 from flask.ext.restful.types import natural, boolean
 from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
 from jormungandr.utils import ResourceUtc
+from make_links import create_external_link
+from functools import wraps
+from copy import deepcopy
+
 
 class RouteSchedulesLinkField(fields.Raw):
 
@@ -68,7 +73,10 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument("filter", type=str)
         parser_get.add_argument("from_datetime", type=date_time_format,
                                 description="The datetime from which you want\
-                                the schedules")
+                                the schedules", default=None)
+        parser_get.add_argument("until_datetime", type=date_time_format,
+                                description="The datetime until which you want\
+                                the schedules", default=None)
         parser_get.add_argument("duration", type=int, default=3600 * 24,
                                 description="Maximum duration between datetime\
                                 and the retrieved stop time")
@@ -115,8 +123,8 @@ class Schedules(ResourceUri, ResourceUtc):
             self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
 
-        if not args["from_datetime"]:
-            args['from_datetime'] = datetime.now()
+        if not args["from_datetime"] and not args["until_datetime"]:
+            args['from_datetime'] = datetime.datetime.now()
             args['from_datetime'] = args['from_datetime'].replace(hour=13, minute=37)
 
         # we save the original datetime for debuging purpose
@@ -124,10 +132,19 @@ class Schedules(ResourceUri, ResourceUtc):
 
         if not args.get('calendar'):
             #if a calendar is given all times will be given in local (because it might span over dst)
-            new_datetime = self.convert_to_utc(args['from_datetime'])
-            args['from_datetime'] = utils.date_to_timestamp(new_datetime)
+            if args['from_datetime']:
+                new_datetime = self.convert_to_utc(args['from_datetime'])
+                args['from_datetime'] = utils.date_to_timestamp(new_datetime)
+            if args['until_datetime']:
+                new_datetime = self.convert_to_utc(args['until_datetime'])
+                args['until_datetime'] = utils.date_to_timestamp(new_datetime)
         else:
             args['from_datetime'] = utils.date_to_timestamp(args['from_datetime'])
+
+        if not args["from_datetime"] and args["until_datetime"]\
+                and self.endpoint[:4] == "next":
+            self.endpoint = "previous" + self.endpoint[4:]
+        
         self._register_interpreted_parameters(args)
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)
@@ -237,6 +254,49 @@ arrivals = {
     "disruptions": DisruptionsField,
 }
 
+class add_passages_links:
+    """
+    delete disruption links and put the disruptions directly in the owner objets
+
+    TEMPORARY: delete this as soon as the front end has the new disruptions integrated
+    """
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            response, status, other = f(*args, **kwargs)
+            api = "departures" if "departures" in response else "arrivals" if "arrivals" in response else None
+            if not api:
+                return response, status, other
+            passages = response[api]
+
+            max_dt = "10000101T000000"
+            min_dt = "29991231T235959"
+            time_field = "arrival_date_time" if api == "arrivals" else "departure_date_time"
+            for passage_ in passages:
+                dt = passage_["stop_date_time"][time_field]
+                if min_dt > dt:
+                    min_dt = dt
+                if max_dt < dt:
+                    max_dt = dt
+            if "links" not in response:
+                response["links"] = []
+            kwargs_links = dict(deepcopy(request.args))
+            if "region" in kwargs:
+                kwargs_links["region"] = kwargs["region"]
+            if "uri" in kwargs:
+                kwargs_links["uri"] = kwargs["uri"]
+            if 'from_datetime' in kwargs_links:
+                kwargs_links.pop('from_datetime')
+            delta = datetime.timedelta(seconds=1)
+            dt = datetime.datetime.strptime(min_dt, "%Y%m%dT%H%M%S")
+            kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
+            response["links"].append(create_external_link("v1."+api, rel="prev", _type=api, **kwargs_links))
+            kwargs_links.pop('until_datetime')
+            kwargs_links['from_datetime'] = (datetime.datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
+            response["links"].append(create_external_link("v1."+api, rel="next", _type=api, **kwargs_links))
+            return response, status, other
+        return wrapper
+
 
 class NextDepartures(Schedules):
 
@@ -244,6 +304,7 @@ class NextDepartures(Schedules):
         super(NextDepartures, self).__init__("next_departures")
 
     @use_old_disruptions_if_needed()
+    @add_passages_links()
     @marshal_with(departures)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None,
@@ -258,6 +319,7 @@ class NextArrivals(Schedules):
         super(NextArrivals, self).__init__("next_arrivals")
 
     @use_old_disruptions_if_needed()
+    @add_passages_links()
     @marshal_with(arrivals)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):

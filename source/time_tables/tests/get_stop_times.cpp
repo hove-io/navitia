@@ -39,7 +39,7 @@ using namespace navitia;
 
 BOOST_AUTO_TEST_CASE(test1){
     ed::builder b("20120614");
-    b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
+    b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150)("stop3", 8200, 8250);
     b.finish();
     b.data->pt_data->index();
     b.data->build_raptor();
@@ -47,8 +47,21 @@ BOOST_AUTO_TEST_CASE(test1){
     std::vector<navitia::type::idx_t> jpps;
     for(auto jpp : b.data->pt_data->journey_pattern_points)
         jpps.push_back(jpp->idx);
-    auto result = get_stop_times(jpps, navitia::DateTimeUtils::min, navitia::DateTimeUtils::inf, 1, *b.data, false);
-    BOOST_REQUIRE_EQUAL(result.size(), 1);
+
+    auto result = get_stop_times(jpps, navitia::DateTimeUtils::min, navitia::DateTimeUtils::set(1, 0), 100, *b.data, false);
+    BOOST_REQUIRE_EQUAL(result.size(), 2);
+    BOOST_CHECK(std::any_of(result.begin(), result.end(),
+                            [](timetables::datetime_stop_time& dt_st) {return dt_st.second->journey_pattern_point->idx == 0;}));
+    BOOST_CHECK(std::any_of(result.begin(), result.end(),
+                            [](timetables::datetime_stop_time& dt_st) {return dt_st.second->journey_pattern_point->idx == 1;}));
+
+    result = get_stop_times(jpps, navitia::DateTimeUtils::set(0, 86399), navitia::DateTimeUtils::min, 100, *b.data, false, {}, false);
+    BOOST_REQUIRE_EQUAL(result.size(), 2);
+    BOOST_CHECK(std::any_of(result.begin(), result.end(),
+                            [](timetables::datetime_stop_time& dt_st) {return dt_st.second->journey_pattern_point->idx == 1;}));
+    BOOST_CHECK(std::any_of(result.begin(), result.end(),
+                            [](timetables::datetime_stop_time& dt_st) {return dt_st.second->journey_pattern_point->idx == 2;}));
+
 
 }
 

@@ -34,11 +34,12 @@ www.navitia.io
 
 namespace navitia { namespace timetables {
 
-RequestHandle::RequestHandle(const std::string& /*api*/, const std::string &request,
+RequestHandle::RequestHandle(const std::string &request,
                              const std::vector<std::string>& forbidden_uris,
                              const pt::ptime datetime, uint32_t duration,
                              const type::Data &data,
-                             boost::optional<const std::string> calendar_id) :
+                             boost::optional<const std::string> calendar_id,
+                             const bool clockwise) :
     date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf){
 
     if (! calendar_id) {
@@ -54,7 +55,7 @@ RequestHandle::RequestHandle(const std::string& /*api*/, const std::string &requ
 
     if(! pb_response.has_error()){
         date_time = DateTimeUtils::set((datetime.date() - data.meta->production_date.begin()).days(), datetime.time_of_day().total_seconds());
-        max_datetime = date_time + duration;
+        max_datetime = date_time + duration * (clockwise ? 1 : -1);
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
 
         try {
