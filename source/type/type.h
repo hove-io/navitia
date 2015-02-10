@@ -51,6 +51,8 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/optional.hpp>
+#include <boost/optional.hpp>
 
 namespace navitia { namespace georef {
  struct Admin;
@@ -590,7 +592,7 @@ struct Line : public Header, Nameable, HasMessages, Codes{
     std::vector<PhysicalMode*> physical_mode_list;
     std::vector<Calendar*> calendar_list;
     MultiLineString shape;
-    std::string opening_time = "", closing_time = "";
+    boost::optional<boost::posix_time::time_duration> opening_time, closing_time;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & code & forward_name & backward_name

@@ -195,22 +195,21 @@ struct PhysicalMode : public Header, Nameable{
 
 struct Line : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::Line;
-    std::string external_code = "";
-    std::string code = "";
-    std::string forward_name = "";
-    std::string backward_name = "";
+    std::string external_code;
+    std::string code;
+    std::string forward_name;
+    std::string backward_name;
 
-    std::string additional_data = "";
-    std::string color = "";
+    std::string additional_data;
+    std::string color;
     int sort = std::numeric_limits<int>::max();
 
     CommercialMode* commercial_mode = nullptr;
     Network* network = nullptr;
     Company* company = nullptr;
     nt::MultiLineString shape;
-    std::string opening_time = "", closing_time = "";
-
-    Line() {}
+    boost::posix_time::time_duration opening_time,
+                                     closing_time;
 
     bool operator<(const Line & other) const;
 
