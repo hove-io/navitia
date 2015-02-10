@@ -468,15 +468,21 @@ class StatManager(object):
                 self.producer.publish(stat_request.SerializeToString())
 
     def fill_admin_from(self, stat_section, admin):
-        stat_section.from_admin_id = admin[0]
-        stat_section.from_admin_name = admin[2]
-        stat_section.from_admin_insee = admin[1]
+        if admin[0]:
+            stat_section.from_admin_id = admin[0]
+        if admin[2]:
+            stat_section.from_admin_name = admin[2]
+        if admin[1]:
+            stat_section.from_admin_insee = admin[1]
 
 
     def fill_admin_to(self, stat_section, admin):
-        stat_section.to_admin_id = admin[0]
-        stat_section.to_admin_name = admin[2]
-        stat_section.to_admin_insee = admin[1]
+        if admin[0]:
+            stat_section.to_admin_id = admin[0]
+        if admin[2]:
+            stat_section.to_admin_name = admin[2]
+        if admin[1]:
+            stat_section.to_admin_insee = admin[1]
 
     def fill_section_display_informations(self, stat_section, resp_section):
         if 'display_informations' in resp_section:
