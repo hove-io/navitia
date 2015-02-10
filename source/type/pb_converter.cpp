@@ -1213,6 +1213,7 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         if(!stop_time->vehicle_journey->odt_message.empty()){
             fill_pb_object(stop_time->vehicle_journey->odt_message, data, hn->add_notes(),max_depth,now,action_period);
         }
+        rs_date_time->mutable_properties()->set_vehicle_journey_id(stop_time->vehicle_journey->uri);
     }
 
     if((calendar_id) && (stop_time->vehicle_journey != nullptr)) {
