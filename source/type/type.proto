@@ -263,6 +263,7 @@ message Properties{
     repeated Note notes = 5;
     repeated CalendarException exceptions = 6;
     optional Destination destination = 7;
+    optional string vehicle_journey_id = 8;
 }
 
 message hasEquipments{
