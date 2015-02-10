@@ -512,6 +512,8 @@ void LineFusioHandler::init(Data &){
     commercial_mode_c = csv.get_pos_col("commercial_mode_id");
     sort_c = csv.get_pos_col("line_sort");
     geometry_id_c = csv.get_pos_col("geometry_id");
+    opening_c = csv.get_pos_col("line_opening_time");
+    closing_c = csv.get_pos_col("line_closing_time");
 }
 void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
     if(! is_first_line && ! has_col(id_c, row)) {
@@ -580,6 +582,12 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     if (is_valid(sort_c, row) && row[sort_c] != "-1") {
         //sort == -1 means no sort
         line->sort =  boost::lexical_cast<int>(row[sort_c]);
+    }
+    if (is_valid(opening_c, row)) {
+        line->opening_time = row[opening_c];
+    }
+    if (is_valid(closing_c, row)) {
+        line->closing_time = row[closing_c];
     }
 
     data.lines.push_back(line);
