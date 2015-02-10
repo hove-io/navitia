@@ -49,6 +49,7 @@ def persist_stat_request(meta, conn, stat):
     journey_section_table = meta.tables['stat.journey_sections']
     interpreted_parameters_table = meta.tables['stat.interpreted_parameters']
     journey_request_table = meta.tables['stat.journey_request']
+    filter_table = meta.tables['stat.filter']
 
     #stat.requests
     query = request_table.insert()
@@ -68,9 +69,14 @@ def persist_stat_request(meta, conn, stat):
 
     #stat.interpreted_parameters
     query = interpreted_parameters_table.insert()
+    query_filter = filter_table.insert()
     for param in stat.interpreted_parameters:
-        conn.execute(query.values(
+        res = conn.execute(query.values(
             build_stat_parameter_dict(param, request_id.inserted_primary_key[0])))
+        for filter in param.filters:
+            conn.execute(query_filter.values(
+                build_filter_dict(filter, res.inserted_primary_key[0])))
+
 
     #stat.errors
     query = error_table.insert()
@@ -129,6 +135,15 @@ def build_journey_request_dict(journey_request, request_id):
         'arrival_insee': journey_request.arrival_insee,
         'arrival_admin': journey_request.arrival_admin,
         'request_id': request_id
+    }
+
+def build_filter_dict(filter, interpreted_param_id):
+    return{
+        'object': filter.object,
+        'attribute': filter.attribute,
+        'operator': filter.operator,
+        'value': filter.value,
+        'interpreted_parameter_id': interpreted_param_id,
     }
 
 

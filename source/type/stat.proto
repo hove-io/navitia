@@ -37,7 +37,7 @@ message StatRequest {
     optional string application_name = 5;
     optional int32  request_duration = 6;
     optional string api = 7;
-    optional string   path = 8;
+    optional string path = 8;
     optional string host = 10;
     optional int32  response_size = 11;
     optional string client = 12;

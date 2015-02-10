@@ -226,7 +226,7 @@ class StatManager(object):
         """
         if not value:
             return
-        for elem in value.split('and'):
+        for elem in re.split('\s+and\s+', r, flags=re.IGNORECASE):
             match = re.match('^\s*(\w+).(\w+)\s*([=!><]{1,2}|DWITHIN)\s*(.*)$', elem, re.IGNORECASE)
             if match:
                 filter = stat_parameter.filters.add()
