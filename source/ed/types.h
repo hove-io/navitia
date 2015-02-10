@@ -208,8 +208,8 @@ struct Line : public Header, Nameable {
     Network* network = nullptr;
     Company* company = nullptr;
     nt::MultiLineString shape;
-    boost::posix_time::time_duration opening_time,
-                                     closing_time;
+    boost::optional<boost::posix_time::time_duration> opening_time,
+                                                      closing_time;
 
     bool operator<(const Line & other) const;
 

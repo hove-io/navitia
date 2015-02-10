@@ -588,8 +588,8 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
     }
     if (is_valid(closing_c, row)) {
         line->closing_time = boost::posix_time::duration_from_string(row[closing_c]);
-        while(line->closing_time.hours() >= 24) {
-            line->closing_time = line->closing_time - boost::posix_time::time_duration(24, 0, 0);
+        while(line->closing_time->hours() >= 24) {
+            line->closing_time = *line->closing_time - boost::posix_time::time_duration(24, 0, 0);
         }
     }
 

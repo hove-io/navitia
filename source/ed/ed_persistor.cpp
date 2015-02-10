@@ -654,8 +654,8 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
             shape << std::setprecision(16) << boost::geometry::wkt(line->shape);
         values.push_back(shape.str());
 
-        values.push_back(!line->opening_time.seconds() > 0 ? boost::posix_time::to_simple_string(line->opening_time) : "NULL");
-        values.push_back(!line->closing_time.seconds() > 0 ? boost::posix_time::to_simple_string(line->closing_time) : "NULL");
+        values.push_back(line->opening_time ? boost::posix_time::to_simple_string(*line->opening_time) : "NULL");
+        values.push_back(line->closing_time ? boost::posix_time::to_simple_string(*line->closing_time) : "NULL");
 
         this->lotus.insert(values);
     }

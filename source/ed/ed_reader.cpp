@@ -440,10 +440,10 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
         const_it["color"].to(line->color);
         const_it["sort"].to(line->sort);
         const_it["external_code"].to(line->codes["external_code"]);
-        if (const_it["opening_time"].as<std::string>() != "NULL") {
+        if (!const_it["opening_time"].is_null()) {
             line->opening_time = boost::posix_time::duration_from_string(const_it["opening_time"].as<std::string>());
         }
-        if (const_it["closing_time"].as<std::string>() != "NULL") {
+        if (!const_it["closing_time"].is_null()) {
             line->closing_time = boost::posix_time::duration_from_string(const_it["closing_time"].as<std::string>());
         }
 

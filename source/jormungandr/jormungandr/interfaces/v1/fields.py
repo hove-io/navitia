@@ -518,6 +518,8 @@ line["color"] = fields.String()
 line["comment"] = fields.String()
 line["codes"] = NonNullList(NonNullNested(code))
 line["geojson"] = MultiLineString(attribute="geojson")
+line["opening_time"] = fields.String()
+line["closing_time"] = fields.String()
 
 route = deepcopy(generic_type)
 route["messages"] = NonNullList(NonNullNested(generic_message))

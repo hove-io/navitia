@@ -362,6 +362,12 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         line->set_color(l->color);
     line->set_name(l->name);
     line->set_uri(l->uri);
+    if (l->opening_time) {
+        line->set_opening_time(boost::posix_time::to_simple_string(*l->opening_time));
+    }
+    if (l->closing_time) {
+        line->set_closing_time(boost::posix_time::to_simple_string(*l->closing_time));
+    }
 
 
     if (depth > 0) {
