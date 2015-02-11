@@ -510,38 +510,39 @@ static void add_isochrone_response(RAPTOR& raptor,
         SpIdx sp_idx(*sp);
         const auto best_lbl = raptor.best_labels[sp_idx];
         if ((clockwise && best_lbl < bound) ||
-            (!clockwise && best_lbl > bound)) {
-            //TODO reverse the condition to continue
+                (!clockwise && best_lbl > bound)) {
             int round = raptor.best_round(sp_idx);
 
-            if (round != -1 && raptor.labels[round].pt_is_initialized(sp_idx)) { //Q: le pt initialize est utile la ?
-
-                const auto sp_and_date = get_final_spidx_and_date(round,
-                        sp_idx, !clockwise, disruption_active, accessibilite_params, raptor);
-                DateTime initial_dt = sp_and_date.second;
-
-                int duration = ::abs(best_lbl - init_dt); //Q: c'est pas initial_dt qu'il faut utiliser la ?
-
-                if(duration <= max_duration) {
-                    auto pb_journey = response.add_journeys();
-                    const auto str_departure = to_posix_timestamp(best_lbl, raptor.data);
-                    const auto str_arrival = to_posix_timestamp(best_lbl, raptor.data);
-                    const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
-                    pb_journey->set_arrival_date_time(str_arrival);
-                    pb_journey->set_departure_date_time(str_departure);
-                    pb_journey->set_requested_date_time(str_requested);
-                    pb_journey->set_duration(duration);
-                    pb_journey->set_nb_transfers(round); //Q: round there ? if round = 1, there are 0 transfer no ?
-                    bt::time_period action_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
-                            navitia::to_posix_time(best_lbl, raptor.data));
-                    if (show_stop_area)
-                        fill_pb_placemark(sp->stop_area,
-                                raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
-                   else
-                       fill_pb_placemark(sp,
-                                raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
-                }
+            if (round == -1 || ! raptor.labels[round].pt_is_initialized(sp_idx)) {
+                continue;
             }
+
+            const auto sp_and_date = get_final_spidx_and_date(round,
+                    sp_idx, !clockwise, disruption_active, accessibilite_params, raptor);
+            DateTime initial_dt = sp_and_date.second;
+
+            int duration = ::abs(best_lbl - init_dt); //Q: I don't see the point of the get_final_spidx_and_date call
+
+            if(duration > max_duration) {
+                continue;
+            }
+            auto pb_journey = response.add_journeys();
+            const auto str_departure = to_posix_timestamp(best_lbl, raptor.data);
+            const auto str_arrival = to_posix_timestamp(best_lbl, raptor.data);
+            const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
+            pb_journey->set_arrival_date_time(str_arrival);
+            pb_journey->set_departure_date_time(str_departure);
+            pb_journey->set_requested_date_time(str_requested);
+            pb_journey->set_duration(duration);
+            pb_journey->set_nb_transfers(round); //Q: round there ? if round = 1, there are 0 transfer no ?
+            bt::time_period action_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
+                                          navitia::to_posix_time(best_lbl, raptor.data));
+            if (show_stop_area)
+                fill_pb_placemark(sp->stop_area,
+                                  raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
+            else
+                fill_pb_placemark(sp,
+                                  raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
         }
     }
 }
