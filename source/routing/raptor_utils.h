@@ -202,9 +202,6 @@ struct best_dest {
         best_now = bound;
     }
 
-//    void reverse() {
-//        best_now = DateTimeUtils::min;
-//    }
 };
 
 } // namespace routing

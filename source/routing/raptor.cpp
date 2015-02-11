@@ -675,17 +675,4 @@ int RAPTOR::best_round(SpIdx sp_idx){
     return -1;
 }
 
-const type::JourneyPatternPoint* RAPTOR::get_used_jpp(const Labels& label, SpIdx sp_idx) const {
-    //get the first jpp corresponding to the stop point, for the jp used by raptor
-    const auto jpp_idx = label.boarding_jpp_pt(sp_idx);
-    const auto boarding_jpp = get_jpp(jpp_idx);
-    for (const auto& jpp: boarding_jpp->journey_pattern->journey_pattern_point_list) {
-        if (SpIdx(*jpp->stop_point) == sp_idx) {
-            return jpp;
-        }
-    }
-    LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "impossible rebuild the raptor path, cannot find stop point idx ");
-    throw navitia::exception("impossible to rebuild the raptor path");
-}
-
 }}

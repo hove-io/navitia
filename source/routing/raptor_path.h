@@ -35,10 +35,6 @@ www.navitia.io
 #include <vector>
 namespace navitia { namespace routing {
     struct RAPTOR;
-     ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
-//    Path makePathreverse(SpIdx destination_idx, unsigned int countb,
-//            const type::AccessibiliteParams & accessibilite_params,
-//            const RAPTOR &raptor_, bool disruption_active);
 
     ///Construit un chemin
     Path makePath(SpIdx destination_idx, size_t countb, bool clockwise,
@@ -64,10 +60,6 @@ namespace navitia { namespace routing {
                           bool clockwise,
                           const RAPTOR &raptor,
                           bool disruption_active);
-
-//    template<typename Visitor>
-//    void read_path(Visitor& v, JppIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
-//              const type::AccessibiliteParams & accessibilite_params, const RAPTOR &raptor_);
 
     struct BasePathVisitor {
         void connection(const type::StopPoint* /*departure*/, const type::StopPoint* /*destination*/,

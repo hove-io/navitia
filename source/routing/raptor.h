@@ -91,8 +91,6 @@ struct RAPTOR
             labels.assign(10, data.dataRaptor->labels_const);
     }
 
-
-
     void clear(bool clockwise, DateTime bound);
 
     ///Initialise les structure retour et b_dest
@@ -108,8 +106,6 @@ struct RAPTOR
     const type::JourneyPatternPoint* get_jpp(JppIdx jpp_idx) const {
         return data.pt_data->journey_pattern_points[jpp_idx.val];
     }
-
-    const type::JourneyPatternPoint* get_used_jpp(const Labels& label, SpIdx sp_idx) const;
 
     const type::StopPoint* get_sp(SpIdx idx) const {
         return data.pt_data->stop_points[idx.val];

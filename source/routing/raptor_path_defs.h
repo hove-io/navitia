@@ -6,6 +6,9 @@
 
 namespace navitia { namespace routing {
 
+/**
+ * Returns the jpp used to board on the jp for a given stop point and label
+ */
 inline const JppIdx get_boarding_jpp(const size_t countb, const SpIdx current_sp_idx, const RAPTOR &raptor_) {
     const auto boarding_sp_idx = raptor_.labels[countb].boarding_sp_transfer(current_sp_idx);
 
@@ -14,13 +17,15 @@ inline const JppIdx get_boarding_jpp(const size_t countb, const SpIdx current_sp
     }
     //TODO com'!
     return raptor_.labels[countb].used_jpp(boarding_sp_idx);
-//    return JppIdx(*raptor_.get_used_jpp(raptor_.labels[countb], boarding_sp_idx));
 }
-//TODO refacto cette partie
+/**
+ * Returns the jpp used to mark the stop point in the label
+ *
+ * Note: this should not be necessary, since we should be able to recompute this used jpp
+ * (by iterating on the jpp of the label.boarding_jpp's journey pattern), but because of service extension we cannot do that
+ */
 inline const JppIdx get_used_jpp(const size_t countb, const SpIdx current_sp_idx, const RAPTOR &raptor_) {
-    //TODO com'!
     return raptor_.labels[countb].used_jpp(current_sp_idx);
-//    return JppIdx(*raptor_.get_used_jpp(raptor_.labels[countb], current_sp_idx));
 }
 
 template<typename Visitor>

@@ -52,9 +52,8 @@ makePathes(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departu
 }
 
 /**
- * TODO
  * For a given round, return the (stop time, time of departure/arrival) used by raptor
- * to at a given stop point
+ * to mark a given stop point
  */
 std::pair<const type::StopTime*, uint32_t>
 get_current_stidx_gap(size_t count,
