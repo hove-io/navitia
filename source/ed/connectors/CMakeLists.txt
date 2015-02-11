@@ -5,7 +5,6 @@ SET(SOURCE_LIB
     fusio_parser.cpp
     osm_tags_reader.cpp
     poi_parser.cpp
-    messages_connector.cpp
     fare_parser.cpp
     fare_utils.cpp
     geopal_parser.cpp

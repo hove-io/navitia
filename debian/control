@@ -67,18 +67,6 @@ Section: devel
 Priority: optional
 Description: Navitia-Jormungandr
 
-Package: navitia-sindri
-Build-Depends:
-    dh-python
-    python
-    python-all
-X-Python-Version: >=2.7
-Architecture: all
-Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
-Depends: python-protobuf, python-sqlalchemy, python-configobj
-Section: devel
-Priority: optional
-Description: Navitia-sindri
 
 Package: navitia-kraken-dbg
 Architecture: amd64
@@ -113,19 +101,6 @@ Priority: optional
 Description: Navitia-Tyr
     Tyr is a web service for managing ed and account used on jormungandr
 
-Package: navitia-connector-at
-Build-Depends:
-    dh-python
-    python
-    python-all
-X-Python-Version: >=2.7
-Architecture: all
-Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
-Depends: python-sqlalchemy, python-argparse, python-requests, python-configobj, python-protobuf, python-wsgiref, navitia-common (= ${binary:Version})
-Section: devel
-Priority: optional
-Description: Navitia-connector-at
-    This service connects to alerte trafic database, reads it and sends to rabbit mq messages
 
 Package: navitia-monitor-kraken
 Build-Depends:

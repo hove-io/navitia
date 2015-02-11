@@ -73,9 +73,7 @@ class InstanceConfig(object):
     def __init__(self):
         self.source_directory = None
         self.backup_directory = None
-        self.tmp_file = None
         self.target_file = None
-        self.rt_topics = None
         self.exchange = None
         self.synonyms_file = None
         self.aliases_file = None
@@ -91,9 +89,7 @@ def load_instance_config(instance_name):
     confspec.append('[instance]')
     confspec.append('source-directory = string()')
     confspec.append('backup-directory = string()')
-    confspec.append('tmp-file = string()')
     confspec.append('target-file = string()')
-    confspec.append('rt-topics = string_list()')
     confspec.append('exchange = string(default="navitia")')
     confspec.append('synonyms_file = string(default="")')
     confspec.append('aliases_file = string(default="")')
@@ -122,9 +118,7 @@ def load_instance_config(instance_name):
     instance = InstanceConfig()
     instance.source_directory = config['instance']['source-directory']
     instance.backup_directory = config['instance']['backup-directory']
-    instance.tmp_file = config['instance']['tmp-file']
     instance.target_file = config['instance']['target-file']
-    instance.rt_topics = config['instance']['rt-topics']
     instance.exchange = config['instance']['exchange']
     instance.synonyms_file = config['instance']['synonyms_file']
     instance.aliases_file = config['instance']['aliases_file']

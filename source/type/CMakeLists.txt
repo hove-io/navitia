@@ -51,17 +51,7 @@ add_custom_command (TARGET pb_lib
     task.proto realtime.proto stat.proto
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
-add_custom_command (TARGET pb_lib
-    PRE_BUILD
-    COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/sindri/sindri" type.proto
-    task.proto realtime.proto
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
-add_custom_command (TARGET pb_lib
-    PRE_BUILD
-    COMMAND protoc ARGS "--python_out=${CMAKE_SOURCE_DIR}/connectors/connectors" type.proto
-    task.proto realtime.proto
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM)
 
 #we don't want a dependancy to navitiacommon for monitor
 add_custom_command (TARGET pb_lib
