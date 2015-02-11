@@ -603,6 +603,11 @@ Parameters
 Objects
 #######
 
+Here is a typical journey, all sections are detailed below
+
+.. image:: typical_itinerary.png
+
+
 * main response
 
 =================== ================== ===========================================================================
