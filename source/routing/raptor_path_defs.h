@@ -13,12 +13,14 @@ inline const JppIdx get_boarding_jpp(const size_t countb, const SpIdx current_sp
         return JppIdx();
     }
     //TODO com'!
-    return JppIdx(*raptor_.get_used_jpp(raptor_.labels[countb], boarding_sp_idx));
+    return raptor_.labels[countb].used_jpp(boarding_sp_idx);
+//    return JppIdx(*raptor_.get_used_jpp(raptor_.labels[countb], boarding_sp_idx));
 }
 //TODO refacto cette partie
 inline const JppIdx get_used_jpp(const size_t countb, const SpIdx current_sp_idx, const RAPTOR &raptor_) {
     //TODO com'!
-    return JppIdx(*raptor_.get_used_jpp(raptor_.labels[countb], current_sp_idx));
+    return raptor_.labels[countb].used_jpp(current_sp_idx);
+//    return JppIdx(*raptor_.get_used_jpp(raptor_.labels[countb], current_sp_idx));
 }
 
 template<typename Visitor>

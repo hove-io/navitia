@@ -84,6 +84,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
                 continue;
             }
             working_labels.mut_boarding_jpp_pt(sp_idx) = state.boarding_jpp_idx;
+            working_labels.mut_used_jpp(sp_idx) = JppIdx(*st.journey_pattern_point);
             working_labels.mut_dt_pt(sp_idx) = workingDt;
             best_labels[sp_idx] = workingDt;
             this->b_dest.add_best(v, sp_idx, workingDt, this->count);
@@ -587,6 +588,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             if (visitor.comp(workingDt, bound) || best_add_result) {
                                 working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
                                 working_labels.mut_boarding_jpp_pt(jpp.sp_idx) = boarding_idx;
+                                working_labels.mut_used_jpp(jpp.sp_idx) = jpp.idx;
                                 best_labels[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
                             }
                         }
