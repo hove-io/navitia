@@ -42,6 +42,10 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
+from elasticsearch import Elasticsearch
+from elasticsearch.connection.http_urllib3 import ConnectionError
+from jormungandr.exceptions import TechnicalError
+from functools import wraps
 
 
 places = {
@@ -51,11 +55,78 @@ places = {
 }
 
 
+def marshal_es_admin(dict):
+    return {
+        "id": dict["id"],
+        "insee": dict["id"][6:],
+        #"coord": ??
+        "level": dict["level"],
+        "name": dict["name"],
+        "label": dict["name"],
+        "zip_code": dict["zip_code"],
+    }
+
+def marshal_es_place(place):
+    source = place["_source"]
+    if place["_type"] == "addr":
+        id = "{lat};{lon}".format(**source["coord"])
+        return {
+            "embeded_type": "address",
+            "id": id,
+            "name": source["name"],
+            "address": {
+                "id": id,
+                "coord": source["coord"],
+                "house_number": source["house_number"],
+                "label": source["name"],
+                "name": source["street"]["street_name"],
+                "administrative_regions": [
+                    marshal_es_admin(source["street"]["administrative_region"])
+                ]
+            }
+        }
+    if place["_type"] == "street":
+        return {
+            "embeded_type": "address",
+            #"id": id,
+            "name": source["name"],
+            "address": {
+                #"id": id,
+                #"coord": source["coord"],
+                #"house_number": 0,
+                "label": source["name"],
+                "name": source["street_name"],
+                "administrative_regions": [
+                    marshal_es_admin(source["administrative_region"])
+                ]
+            }
+        }
+    if place["_type"] == "admin":
+        return {
+            "embeded_type": "administrative_region",
+            "id": source["id"],
+            "name": source["name"],
+            "administrative_region": marshal_es_admin(source)
+        }
+    return place
+
+class marshal_es:
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            resp, code = f(*args, **kwargs)
+            return {
+                "places": map(marshal_es_place, resp),
+                "disruptions": []
+            }, code
+        return wrapper
+
+
 class Places(ResourceUri):
     parsers = {}
 
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, *args, **kwargs)
+        ResourceUri.__init__(self, authentication=False, *args, **kwargs)
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
@@ -86,18 +157,106 @@ class Places(ResourceUri):
                                 default=False)
 
     @use_old_disruptions_if_needed()
-    @marshal_with(places)
     def get(self, region=None, lon=None, lat=None):
-        self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
-        g.use_old_disruptions = args['_use_old_disruptions']
         self._register_interpreted_parameters(args)
-
+        g.use_old_disruptions = args['_use_old_disruptions']
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
-        response = i_manager.dispatch(args, "places",
-                                      instance_name=self.region)
+
+        if not any([region, lon, lat]):
+            return self.get_ww(args)
+        else:
+            return self.get_region(args, region, lon, lat)
+
+    @marshal_with(places)
+    def get_region(self, args, region=None, lon=None, lat=None):
+        self.region = i_manager.get_region(region, lon, lat)
+        response = i_manager.dispatch(args, "places", instance_name=self.region)
         return response, 200
+
+    @marshal_es()
+    def get_ww(self, args):
+        q = args['q']
+        query = {
+            "query": {
+                "filtered": {
+                    "query": {
+                        "bool": {
+                            "should": [
+                                {
+                                    "term": {
+                                        "_type": {
+                                            "value": "addr",
+                                            "boost": 1000
+                                        }
+                                    }
+                                },
+                                {
+                                    "match": {
+                                        "name.prefix": {
+                                            "query": q,
+                                            "boost": 100
+                                        }
+                                    }
+                                },
+                                {
+                                    "match": {
+                                        "name.ngram": {
+                                            "query": q,
+                                            "boost": 1
+                                        }
+                                    }
+                                },
+                                {
+                                    "function_score": {
+                                        "query": { "match_all": { } },
+                                        "field_value_factor": {
+                                            "field": "weight",
+                                            "modifier": "log1p",
+                                            "factor": 1
+                                        },
+                                        "boost_mode": "multiply",
+                                        "boost": 30
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "filter": {
+                        "bool": {
+                            "should": [
+                                { "missing": { "field": "house_number" } },
+                                {
+                                    "query": {
+                                        "match": { "house_number": q }
+                                    }
+                                }
+                            ],
+                            "must": [
+                                {
+                                    "query": {
+                                        "match": {
+                                            "name.ngram": {
+                                                "query": q,
+                                                "minimum_should_match": "50%"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+        try:
+            # TODO: get params?
+            es = Elasticsearch()
+            res = es.search(index="munin", size=args['count'], body=query)
+            return res['hits']['hits'], 200
+        except ConnectionError:
+            raise TechnicalError("world wide autocompletion service not available")
 
 
 class PlaceUri(ResourceUri):
