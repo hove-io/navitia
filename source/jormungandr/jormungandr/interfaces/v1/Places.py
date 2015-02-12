@@ -35,7 +35,7 @@ from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import use_old_disruptions_if_needed, DisruptionsField
 from make_links import add_id_links
-from fields import place, NonNullList, NonNullNested, PbField, pagination, error
+from fields import place, NonNullList, NonNullNested, PbField, pagination, error, coord
 from ResourceUri import ResourceUri
 from make_links import add_id_links
 from jormungandr.interfaces.argument import ArgumentDoc
@@ -46,6 +46,15 @@ from elasticsearch import Elasticsearch
 from elasticsearch.connection.http_urllib3 import ConnectionError
 from jormungandr.exceptions import TechnicalError
 from functools import wraps
+from flask_restful import marshal
+
+
+class Lit(fields.Raw):
+    def __init__(self, val):
+        self.val = val
+
+    def output(self, key, obj):
+        return self.val
 
 
 places = {
@@ -54,69 +63,70 @@ places = {
     "disruptions": DisruptionsField,
 }
 
+ww_admin = {
+    "id": fields.String,
+    #"insee": dict["id"][6:],
+    #"coord": ??
+    "level": fields.Integer,
+    "name": fields.String,
+    "label": fields.String(attribute="name"),
+    "zip_code": fields.String,
+}
 
-def marshal_es_admin(dict):
-    return {
-        "id": dict["id"],
-        "insee": dict["id"][6:],
-        #"coord": ??
-        "level": dict["level"],
-        "name": dict["name"],
-        "label": dict["name"],
-        "zip_code": dict["zip_code"],
+ww_address = {
+    "embeded_type": Lit("address"),
+    "id": fields.String,
+    "name": fields.String,
+    "address": {
+        "id": fields.String,
+        "coord": {
+            "lon": fields.Float(attribute="coord.lon"),
+            "lat": fields.Float(attribute="coord.lat"),
+        },
+        "house_number": fields.String,
+        "label": fields.String(attribute="name"),
+        "name": fields.String(attribute="street.street_name"),
+        "administrative_regions":
+            fields.List(fields.Nested(ww_admin), attribute="street.administrative_region")
     }
+}
 
-def marshal_es_place(place):
-    source = place["_source"]
-    if place["_type"] == "addr":
-        id = "{lat};{lon}".format(**source["coord"])
-        return {
-            "embeded_type": "address",
-            "id": id,
-            "name": source["name"],
-            "address": {
-                "id": id,
-                "coord": source["coord"],
-                "house_number": source["house_number"],
-                "label": source["name"],
-                "name": source["street"]["street_name"],
-                "administrative_regions": [
-                    marshal_es_admin(source["street"]["administrative_region"])
-                ]
-            }
-        }
-    if place["_type"] == "street":
-        return {
-            "embeded_type": "address",
-            #"id": id,
-            "name": source["name"],
-            "address": {
-                #"id": id,
-                #"coord": source["coord"],
-                #"house_number": 0,
-                "label": source["name"],
-                "name": source["street_name"],
-                "administrative_regions": [
-                    marshal_es_admin(source["administrative_region"])
-                ]
-            }
-        }
-    if place["_type"] == "admin":
-        return {
-            "embeded_type": "administrative_region",
-            "id": source["id"],
-            "name": source["name"],
-            "administrative_region": marshal_es_admin(source)
-        }
-    return place
+ww_street = {
+    "embeded_type": Lit("address"),
+    #"id": id,
+    "name": fields.String,
+    "address": {
+        #"id": id,
+        #"coord": source["coord"],
+        #"house_number": 0,
+        "label": fields.String(attribute="name"),
+        "name": fields.String(attribute="street_name"),
+        "administrative_regions":
+            fields.List(fields.Nested(ww_admin), attribute="administrative_region")
+    }
+}
 
-class marshal_es:
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            resp, code = f(*args, **kwargs)
-            return { "places": map(marshal_es_place, resp) }, code
-        return wrapper
+class WWPlace(fields.Raw):
+    def format(self, place):
+        source = place["_source"]
+        if place["_type"] == "addr":
+            source["id"] = "{lat};{lon}".format(**source["coord"])
+            return marshal(source, ww_address)
+        if place["_type"] == "street":
+            return marshal(source, ww_street)
+        if place["_type"] == "admin":
+            return {
+                "embeded_type": "administrative_region",
+                "id": source["id"],
+                "name": source["name"],
+                "administrative_region": marshal(source, ww_admin)
+            }
+        return place
+
+
+ww_places = {
+    "places": fields.List(WWPlace, attribute='hits')
+}
 
 
 class Places(ResourceUri):
@@ -172,7 +182,7 @@ class Places(ResourceUri):
         response = i_manager.dispatch(args, "places", instance_name=self.region)
         return response, 200
 
-    @marshal_es()
+    @marshal_with(ww_places)
     def get_ww(self, args):
         q = args['q']
         query = {
@@ -251,7 +261,7 @@ class Places(ResourceUri):
             # TODO: get params?
             es = Elasticsearch()
             res = es.search(index="munin", size=args['count'], body=query)
-            return res['hits']['hits'], 200
+            return res['hits'], 200
         except ConnectionError:
             raise TechnicalError("world wide autocompletion service not available")
 
