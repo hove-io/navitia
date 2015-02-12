@@ -151,7 +151,7 @@ bool RAPTOR::foot_path(const Visitor& v) {
 
 void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     const int queue_value = clockwise ?  std::numeric_limits<int>::max() : -1;
-    Q.assign(data.pt_data->journey_patterns.size(), queue_value);
+    Q.assign(data.pt_data->journey_patterns, queue_value);
     if (labels.empty()) {
         labels.resize(5);
     }
@@ -161,7 +161,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
         lbl_list.clear(clean_labels);
     }
 
-    b_dest.reinit(data.pt_data->stop_points.size(), bound);
+    b_dest.reinit(data.pt_data->stop_points, bound);
     boost::fill(best_labels.values(), bound);
 }
 

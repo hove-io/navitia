@@ -37,8 +37,8 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 void dataRAPTOR::Connections::load(const type::PT_Data &data) {
-    forward_connections.assign(data.stop_points.size());
-    backward_connections.assign(data.stop_points.size());
+    forward_connections.assign(data.stop_points);
+    backward_connections.assign(data.stop_points);
     for (const auto* conn: data.stop_point_connections) {
         forward_connections[SpIdx(*conn->departure)].push_back(
             {DateTime(conn->duration), SpIdx(*conn->destination)});
@@ -50,7 +50,7 @@ void dataRAPTOR::Connections::load(const type::PT_Data &data) {
 }
 
 void dataRAPTOR::JppsFromSp::load(const type::PT_Data &data) {
-    jpps_from_sp.assign(data.stop_points.size());
+    jpps_from_sp.assign(data.stop_points);
     for (const auto* sp: data.stop_points) {
         for (const auto* jpp: sp->journey_pattern_point_list) {
             jpps_from_sp[SpIdx(*sp)].push_back({JppIdx(*jpp), JpIdx(*jpp->journey_pattern), jpp->order});
@@ -68,7 +68,7 @@ void dataRAPTOR::JppsFromSp::filter_jpps(const boost::dynamic_bitset<>& valid_jp
 }
 
 void dataRAPTOR::JppsFromJp::load(const type::PT_Data &data) {
-    jpps_from_jp.assign(data.journey_patterns.size());
+    jpps_from_jp.assign(data.journey_patterns);
     for (const auto* jp: data.journey_patterns) {
         const bool has_freq = !jp->frequency_vehicle_journey_list.empty();
         for (const auto* jpp: jp->journey_pattern_point_list) {
@@ -82,8 +82,8 @@ void dataRAPTOR::JppsFromJp::load(const type::PT_Data &data) {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    labels_const.init_inf(data.stop_points.size());
-    labels_const_reverse.init_min(data.stop_points.size());
+    labels_const.init_inf(data.stop_points);
+    labels_const_reverse.init_min(data.stop_points);
 
     connections.load(data);
     jpps_from_sp.load(data);

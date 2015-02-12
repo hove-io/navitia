@@ -50,21 +50,21 @@ typedef Idx<type::StopPoint> SpIdx;
 
 struct Labels {
     // initialize the structure according to the number of jpp
-    inline void init_inf(size_t nb_sp) {
-        init(nb_sp, DateTimeUtils::inf);
+    inline void init_inf(const std::vector<type::StopPoint*>& stops) {
+        init(stops, DateTimeUtils::inf);
     }
     // initialize the structure according to the number of jpp
-    inline void init_min(size_t nb_sp) {
-        init(nb_sp, DateTimeUtils::min);
+    inline void init_min(const std::vector<type::StopPoint*>& stops) {
+        init(stops, DateTimeUtils::min);
     }
     // clear the structure according to a given structure. Same as a
     // copy without touching the boarding_jpp fields
     inline void clear(const Labels& clean) {
         dt_pts = clean.dt_pts;
         dt_transfers = clean.dt_transfers;
-        boarding_jpp_pts.resize(clean.boarding_jpp_pts.size());
-        boarding_sp_transfers.resize(clean.boarding_sp_transfers.size());
-        used_jpps.resize(clean.used_jpps.size());
+        boarding_jpp_pts.resize(clean.boarding_jpp_pts);
+        boarding_sp_transfers.resize(clean.boarding_sp_transfers);
+        used_jpps.resize(clean.used_jpps);
     }
     inline const SpIdx&
     boarding_sp_transfer(SpIdx sp_idx) const {
@@ -110,12 +110,12 @@ struct Labels {
         return used_jpps[sp_idx];
     }
 private:
-    inline void init(size_t nb_sp, DateTime val) {
-        dt_pts.assign(nb_sp, val);
-        dt_transfers.assign(nb_sp, val);
-        boarding_jpp_pts.resize(nb_sp);
-        boarding_sp_transfers.resize(nb_sp);
-        used_jpps.resize(nb_sp);
+    inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {
+        dt_pts.assign(stops, val);
+        dt_transfers.assign(stops, val);
+        boarding_jpp_pts.resize(stops);
+        boarding_sp_transfers.resize(stops);
+        used_jpps.resize(stops);
     }
 
     // All these vectors are indexed by sp_idx
@@ -190,15 +190,15 @@ struct best_dest {
         return false;
     }
 
-    void reinit(const size_t nb_sp_idx) {
-        sp_idx_duration.assign(nb_sp_idx, boost::posix_time::pos_infin);
+    void reinit(const std::vector<type::StopPoint*>& stops) {
+        sp_idx_duration.assign(stops, boost::posix_time::pos_infin);
         best_now = DateTimeUtils::inf;
         best_now_sp_idx = SpIdx();
         count = std::numeric_limits<size_t>::max();
     }
 
-    void reinit(size_t nb_sp_idx, const DateTime& bound) {
-        reinit(nb_sp_idx);
+    void reinit(const std::vector<type::StopPoint*>& stops, const DateTime& bound) {
+        reinit(stops);
         best_now = bound;
     }
 

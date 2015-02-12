@@ -86,8 +86,8 @@ void NextStopTimeData::TimesStopTimes<Cmp>::init(const type::JourneyPattern* jp,
 }
 
 void NextStopTimeData::load(const type::PT_Data &data) {
-    forward.assign(data.journey_pattern_points.size());
-    backward.assign(data.journey_pattern_points.size());
+    forward.assign(data.journey_pattern_points);
+    backward.assign(data.journey_pattern_points);
 
     for(const auto* jp: data.journey_patterns) {
         for (const auto* jpp: jp->journey_pattern_point_list) {
