@@ -35,6 +35,7 @@ www.navitia.io
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/fill.hpp>
+#include "raptor_solution_filter.h"
 
 namespace bt = boost::posix_time;
 
@@ -269,7 +270,8 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
         }));
     }
     BOOST_ASSERT( departures.size() > 0 );    //Assert that reversal search was symetric
-    return result;
+
+    return filter_journeys(result);
 }
 
 std::vector<std::pair<type::EntryPoint, std::vector<Path>>>
