@@ -121,13 +121,11 @@ bool RAPTOR::foot_path(const Visitor& v) {
 
         for (const auto& conn: sp_cnx.second) {
             const SpIdx destination_sp_idx = conn.sp_idx;
-
             const DateTime next = v.combine(previous, conn.duration);
 
             if (! v.comp(next, working_labels.dt_transfer(destination_sp_idx))) { continue; }
 
             working_labels.mut_boarding_sp_transfer(destination_sp_idx) = sp_idx;
-
             working_labels.mut_dt_transfer(destination_sp_idx) = next;
 
             if (v.comp(next, best_labels[destination_sp_idx])) {
@@ -668,7 +666,6 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
 
 
 int RAPTOR::best_round(SpIdx sp_idx){
-    //Q: a mon avis on peut virer cette methode
     for (size_t i = 0; i <= this->count; ++i) {
         if (labels[i].dt_pt(sp_idx) == best_labels[sp_idx]) {
             return i;

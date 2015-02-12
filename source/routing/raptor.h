@@ -77,7 +77,7 @@ struct RAPTOR
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> valid_journey_patterns;
     dataRAPTOR::JppsFromSp jpps_from_sp;
-    ///L'ordre du premier journey_pattern point de la journey_pattern
+    ///Order of the first journey_pattern point of each journey_pattern
     IdxMap<type::JourneyPattern, int> Q;
 
     //Constructeur

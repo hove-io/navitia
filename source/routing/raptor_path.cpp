@@ -293,13 +293,4 @@ void patch_datetimes(Path &path){
     }
 }
 
-
-//Path
-//makePathreverse(SpIdx destination_idx, unsigned int countb,
-//                const type::AccessibiliteParams & accessibilite_params,
-//                const RAPTOR &raptor_, bool disruption_active) {
-//    return makePath(destination_idx, countb, disruption_active, false, accessibilite_params, raptor_);
-//}
-
-
 }}
