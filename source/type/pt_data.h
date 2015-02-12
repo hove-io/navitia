@@ -36,6 +36,7 @@ www.navitia.io
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
 #include "utils/flat_enum_map.h"
+#include "utils/functions.h"
 
 #include <boost/serialization/map.hpp>
 #include "utils/serialization_unordered_map.h"
@@ -55,6 +56,24 @@ typedef flat_enum_map<pbnavitia::PlaceCodeRequest::Type, type_code_codes_map_typ
 struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::unordered_map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
+
+#define REINDEX(type_name, collection_name) void reindex_##collection_name() {\
+        std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());}
+    ITERATE_NAVITIA_PT_TYPES(REINDEX)
+
+#define ERASE_OBJ(type_name, collection_name) \
+    void remove_from_collections(const type_name& obj) { \
+        const auto it_map = collection_name##_map.find(obj.uri);\
+        if (it_map != collection_name##_map.end()) {\
+            collection_name##_map.erase(it_map);\
+        }\
+        collection_name.erase(collection_name.begin() + obj.idx);\
+    }\
+    void erase_obj(const type_name* obj) {\
+        remove_from_collections(*obj);\
+        delete obj;\
+    }
+    ITERATE_NAVITIA_PT_TYPES(ERASE_OBJ)
 
     ext_codes_map_type ext_codes_map;
     std::vector<StopPointConnection*> stop_point_connections;
@@ -142,6 +161,22 @@ struct PT_Data : boost::noncopyable{
             });
         };
         return nb;
+    }
+
+    type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
+        for (auto vp : validity_patterns) {
+            if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
+                return vp;
+            }
+        }
+        auto vp = new nt::ValidityPattern();
+        vp->idx = validity_patterns.size();
+        vp->uri = make_adapted_uri(vp->uri);
+        vp->beginning_date = vp_ref.beginning_date;
+        vp->days = vp_ref.days;
+        validity_patterns.push_back(vp);
+        validity_patterns_map[vp->uri] = vp;
+        return vp;
     }
 
     /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
