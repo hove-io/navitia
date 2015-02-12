@@ -84,7 +84,7 @@ struct RAPTOR
     explicit RAPTOR(const navitia::type::Data& data) :
         data(data),
         next_st(data),
-        best_labels(data.pt_data->journey_pattern_points.size()),
+        best_labels(data.pt_data->stop_points.size()),
         count(0),
         valid_journey_patterns(data.pt_data->journey_patterns.size()),
         Q(data.pt_data->journey_patterns.size()) {
