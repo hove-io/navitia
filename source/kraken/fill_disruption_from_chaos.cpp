@@ -432,38 +432,78 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     delete_impacts_visitor(boost::shared_ptr<nt::new_disruption::Impact> impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta) : 
         apply_impacts_visitor(impact, pt_data, meta) {}
-
+    size_t nb_vj_reassigned = 0;
     using apply_impacts_visitor::operator();
 
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     bool func_on_vj(nt::VehicleJourney& vj) {
         vj.adapted_validity_pattern = vj.validity_pattern;
+        ++ nb_vj_reassigned;
         return true;
     }
 
     void operator()(const nt::StopArea* stop_area) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                       "Deleting impacts on stop_area " << stop_area->uri);
+        // We need to erase vehicle journeys from the collections and the map
+        // We do not remove the link journey_pattern->vj, because we will
+        // remove the journey_pattern_after
+
+        std::set<nt::idx_t> vehicle_journeys_to_erase;
+        std::set<nt::idx_t> jpp_to_erase;
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "Removing jpp from stop_points");
         for (auto journey_pattern : impact->impacted_journey_patterns) {
-            auto remove_vj = [&](const nt::VehicleJourney& vehicle_journey) {
-                pt_data.erase_obj(vehicle_journey);
+            journey_pattern->for_each_vehicle_journey(
+                        [&vehicle_journeys_to_erase](const type::VehicleJourney& vj) {
+                vehicle_journeys_to_erase.insert(vj.idx);
                 return true;
-            };
-            journey_pattern->for_each_vehicle_journey(remove_vj);
+            });
+
+            // We need to remove the journey_pattern_point from its stop_point
+            // because we will remove the journey_pattern_point after.
             for (auto journey_pattern_point : journey_pattern->journey_pattern_point_list) {
                 journey_pattern_point->stop_point->journey_pattern_point_list.erase(
                             boost::remove_if(journey_pattern_point->stop_point->journey_pattern_point_list,
-                                             [&](nt::JourneyPatternPoint* jpp) {return journey_pattern_point == jpp;})
-                            );
-                pt_data.erase_obj(journey_pattern_point);
+                                [&](nt::JourneyPatternPoint* jpp) {return journey_pattern_point->uri == jpp->uri;}),
+                        journey_pattern_point->stop_point->journey_pattern_point_list.end());
+                jpp_to_erase.insert(journey_pattern_point->idx);
             }
-            pt_data.erase_obj(journey_pattern);
         }
 
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "Removing vehicle_journeys");
+        for(auto it = vehicle_journeys_to_erase.rbegin(); it != vehicle_journeys_to_erase.rend(); ++it) {
+            pt_data.remove_from_collections(*pt_data.vehicle_journeys[*it]);
+        }
+        pt_data.reindex_vehicle_journeys();
+
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "Removing journey_pattern_points");
+        for(auto it = jpp_to_erase.rbegin(); it != jpp_to_erase.rend(); ++it) {
+            pt_data.erase_obj(pt_data.journey_pattern_points[*it]);
+        }
+        pt_data.reindex_journey_pattern_points();
+
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "Removing journey_patterns");
+        for (auto journey_pattern : impact->impacted_journey_patterns) {
+            // Now we can erase journey_patterns from the dataset
+            pt_data.erase_obj(journey_pattern);
+            pt_data.reindex_journey_patterns();
+        }
+
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "Reassigning validity_pattern");
         for (auto stop_point : stop_area->stop_point_list) {
             for (auto journey_pattern_point : stop_point->journey_pattern_point_list) {
                 apply_impacts_visitor::operator ()(journey_pattern_point->journey_pattern);
             }
         }
+
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        nb_vj_reassigned << " validity pattern reassigned");
     }
 };
 
