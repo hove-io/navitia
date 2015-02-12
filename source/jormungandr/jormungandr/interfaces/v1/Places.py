@@ -115,10 +115,7 @@ class marshal_es:
         @wraps(f)
         def wrapper(*args, **kwargs):
             resp, code = f(*args, **kwargs)
-            return {
-                "places": map(marshal_es_place, resp),
-                "disruptions": []
-            }, code
+            return { "places": map(marshal_es_place, resp) }, code
         return wrapper
 
 
