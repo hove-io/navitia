@@ -65,13 +65,9 @@ get_current_stidx_gap(size_t count,
                       bool disruption_active) {
     const auto jpp_idx = get_used_jpp(count, sp_idx, raptor);
 
-    if (! jpp_idx.is_valid()) {
-        throw "c'est la merde";
-        return std::make_pair(nullptr, std::numeric_limits<uint32_t>::max());
-    }
     const auto& ls = labels[count];
 
-    if(ls.pt_is_initialized(sp_idx)) { //TODO donc ca c'est a enlever,checke au dessus
+    if(ls.pt_is_initialized(sp_idx)) {
         const auto& dt_pt = ls.dt_pt(sp_idx);
         const auto date = DateTimeUtils::date(dt_pt);
         const auto hour = DateTimeUtils::hour(dt_pt);

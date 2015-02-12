@@ -15,7 +15,6 @@ inline const JppIdx get_boarding_jpp(const size_t countb, const SpIdx current_sp
     if (! boarding_sp_idx.is_valid()) {
         return JppIdx();
     }
-    //TODO com'!
     return raptor_.labels[countb].used_jpp(boarding_sp_idx);
 }
 /**
@@ -113,7 +112,9 @@ handle_st(const type::StopTime* st, DateTime& workingDate, bool clockwise, const
 }
 
 /**
- *TODO remonte le vj + extension
+ * loop through all stop times of the vj and call the visitor call backs
+ *
+ * continues to other vjs if there are service extensions
  */
 template<typename Visitor>
 void handle_vj(const size_t countb, SpIdx current_sp_idx, Visitor& v,
