@@ -58,6 +58,7 @@ void fill_disruption_from_database(const std::string& connection_string,
     DisruptionDatabaseReader reader(pt_data, meta);
     pqxx::result result;
     std::string contributors_array = boost::algorithm::join(contributors, ", ");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"), "Reading disruptions from database");
     do{
         std::string request = (boost::format(
                "SELECT "
@@ -145,8 +146,8 @@ void fill_disruption_from_database(const std::string& connection_string,
 
         offset += result.size();
     }while(result.size() > 0);
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),"Loading " << offset << " disruptions");
     reader.finalize();
-
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),offset << " disruptions loaded");
 }
 
