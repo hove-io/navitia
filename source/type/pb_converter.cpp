@@ -1259,11 +1259,14 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
 
     }else{
         //Here we format display_informations.direction for route_schedules.
-        navitia::type::StopPoint* spt = data.pt_data->stop_points[r->main_destination()];
-        pt_display_info->set_direction(spt->name);
-        for(auto admin : spt->admin_list) {
-            if (admin->level == 8){
-                pt_display_info->set_direction(spt->name + " (" + admin->name + ")");
+        auto main_destination = r->main_destination();
+        if (main_destination != nt::invalid_idx) {
+            navitia::type::StopPoint* spt = data.pt_data->stop_points[main_destination];
+            pt_display_info->set_direction(spt->name);
+            for(auto admin : spt->admin_list) {
+                if (admin->level == 8){
+                    pt_display_info->set_direction(spt->name + " (" + admin->name + ")");
+                }
             }
         }
     }
