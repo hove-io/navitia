@@ -235,7 +235,11 @@ void Data::build_autocomplete(){
 }
 
 void Data::build_raptor() {
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                    "Start to build dataRaptor");
     dataRaptor->load(*this->pt_data);
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                    "Finished to build dataRaptor");
 }
 
 ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
