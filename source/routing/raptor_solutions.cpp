@@ -239,7 +239,6 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia
 
             SpIdx sp_idx = spid_dist.first;
 
-            // We only want solution ending by a vehicle journey or a stay_in
             if(! raptor.labels[i].pt_is_initialized(sp_idx)) {
                 continue;
             }
@@ -257,8 +256,7 @@ get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia
                 lost_time = (raptor.labels[i].dt_pt(sp_idx) + spid_dist.second.total_seconds()) -
                     best.total_arrival;
 
-
-            //Si je gagne 5 minutes de marche a pied, je suis pret à perdre jusqu'à 10 minutes.
+            // We accept to have a 10mn worst solution if we can reduce the walking time by 5mn
             int walking_time_diff_in_s = (best.walking_time - walking_time).total_seconds();
             if (walking_time_diff_in_s > 0) {
                 float ratio = lost_time / walking_time_diff_in_s;

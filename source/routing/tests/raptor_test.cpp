@@ -1527,3 +1527,34 @@ BOOST_AUTO_TEST_CASE(y_line_the_ultimate_political_blocking_bug){
     BOOST_CHECK_EQUAL(res1[0].items[2].departure.time_of_day().total_seconds(), 8500);
     BOOST_CHECK_EQUAL(res1[0].items[2].arrival.time_of_day().total_seconds(), 8600);
 }
+
+/*
+ *    A --------------- B --------------- C --------------- D
+ *
+ * l1   ----------------x-----------------x----------------->
+ *
+ * l2                    -----------------
+ *                                       | service extension
+ * l3                                    ------------------->
+ *
+ * We want to test that raptor stops at the second iteration (because the service extension does not improve the solution)
+ * */
+BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
+    ed::builder b("20120614");
+    b.vj("l1", "1", "", true)("A", 8000, 8000)("B", 8100, 8100)("C", 8200, 8200)("D", 8500, 8500);
+    b.vj("l2", "1", "toto", true)("B", 8400, 8400)("C", 8600, 8600);
+    b.vj("l3", "1", "toto", true)("C", 8600, 8600)("D", 10000, 10000);
+
+    b.connection("B", "B", 10);
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->build_raptor();
+    RAPTOR raptor(*(b.data));
+    type::PT_Data& d = *b.data->pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas_map["A"], d.stop_areas_map["D"], 7900, 0, DateTimeUtils::inf, false, false);
+    BOOST_CHECK_EQUAL(res1.size(), 1);
+
+    //and raptor has to stop on count 2
+    BOOST_CHECK_EQUAL(raptor.count, 2);
+}

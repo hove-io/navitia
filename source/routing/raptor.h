@@ -70,7 +70,9 @@ struct RAPTOR
     /// Each element of index i in this vector represents the labels with i transfers
     std::vector<Labels> labels;
     ///Contains the best arrival (or departure time) for each stoppoint
-    IdxMap<type::StopPoint, DateTime> best_labels;
+    IdxMap<type::StopPoint, DateTime> best_labels_pts;
+    IdxMap<type::StopPoint, DateTime> best_labels_transfers;
+
     /// Contains the best way to reach a destination point
     best_dest b_dest;
     /// Number of transfers done for the moment

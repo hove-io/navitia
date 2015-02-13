@@ -188,8 +188,6 @@ void RAPTOR::init(Solutions departs,
     }
 
     for(auto item : destinations) {
-        const type::StopPoint* sp = get_sp(item.first);
-        if (! sp->accessible(required_properties)) { continue; }
         // we add the destination stop point only if there is at least one jpp valid for this stop point
         if (jpps_from_sp[item.first].empty()) { continue; }
 
@@ -536,12 +534,12 @@ void RAPTOR::set_valid_jp_and_jpp(
 template<typename Visitor>
 void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active,
         bool global_pruning, uint32_t max_transfers) {
-    bool end_algorithm = false;
+    bool continue_algorithm = true;
     count = 0; //< Count iteration of raptor algorithm
 
-    while(!end_algorithm && count <= max_transfers) {
+    while(continue_algorithm && count <= max_transfers) {
         ++count;
-        end_algorithm = true;
+        continue_algorithm = false;
         if(count == labels.size()) {
             if(visitor.clockwise()) {
                 this->labels.push_back(this->data.dataRaptor->labels_const);
@@ -591,6 +589,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                                 working_labels.mut_boarding_jpp_pt(jpp.sp_idx) = boarding_idx;
                                 working_labels.mut_used_jpp(jpp.sp_idx) = jpp.idx;
                                 best_labels[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
+                                continue_algorithm = true;
                             }
                         }
                     }
@@ -615,6 +614,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
                             boarding_idx = jpp.idx;
                             workingDt = tmp_st_dt.second;
                             l_zone = it_st->local_traffic_zone;
+                            continue_algorithm = true;
                             BOOST_ASSERT(! visitor.comp(workingDt, previous_dt));
                         }
                     }
@@ -629,9 +629,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
             q_elt.second = visitor.init_queue_item();
         }
         for (auto state : states_stay_in) {
-            end_algorithm &= !apply_vj_extension(visitor, global_pruning, disruption_active, state);
+            bool applied = apply_vj_extension(visitor, global_pruning, disruption_active, state);
+            continue_algorithm = continue_algorithm || applied;
         }
-        end_algorithm &= !this->foot_path(visitor);
+        continue_algorithm = continue_algorithm && this->foot_path(visitor);
     }
 }
 
