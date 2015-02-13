@@ -299,6 +299,11 @@ public:
             const boost::posix_time::ptime& current_time,
             const boost::posix_time::time_period& action_period) const;
 
+    bool has_publishable_message(const boost::posix_time::ptime& current_time) const;
+
+    std::vector<boost::weak_ptr<new_disruption::Impact>> get_publishable_messages(
+            const boost::posix_time::ptime& current_time) const;
+
 
     std::vector<boost::weak_ptr<new_disruption::Impact>> get_impacts() const {
         return impacts;

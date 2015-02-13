@@ -38,24 +38,20 @@ namespace bt = boost::posix_time;
 namespace navitia { namespace disruption {
 
 pbnavitia::Response disruptions(const navitia::type::Data& d,
-                                uint64_t posix_application_period_begin,
-                                uint64_t posix_application_period_end,
-                                uint64_t posix_publication_dt,
+                                uint64_t posix_now_dt,
                                 const size_t depth,
                                 size_t count,
                                 size_t start_page,
                                 const std::string &filter,
                                 const std::vector<std::string>& forbidden_uris) {
     pbnavitia::Response pb_response;
-    bt::ptime period_begin = bt::from_time_t(posix_application_period_begin);
-    bt::ptime period_end = bt::from_time_t(posix_application_period_end);
-    auto action_period = boost::posix_time::time_period(period_begin, period_end);
 
-    bt::ptime publication_date = bt::from_time_t(posix_publication_dt);
+    bt::ptime now_dt = bt::from_time_t(posix_now_dt);
+    auto action_period = bt::time_period(now_dt, bt::seconds(1));
 
     Disruption result;
     try {
-        result.disruptions_list(filter, forbidden_uris, d, action_period, publication_date);
+        result.disruptions_list(filter, forbidden_uris, d, now_dt);
     } catch(const ptref::parsing_error& parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse,
                 "Unable to parse filter" + parse_error.more, pb_response.mutable_error());
@@ -71,14 +67,14 @@ pbnavitia::Response disruptions(const navitia::type::Data& d,
     for (disrupt dist: disrupts) {
         pbnavitia::Disruptions* pb_disruption = pb_response.add_disruptions();
         pbnavitia::Network* pb_network = pb_disruption->mutable_network();
-        navitia::fill_pb_object(d.pt_data->networks[dist.network_idx], d, pb_network, depth, publication_date, action_period);
+        navitia::fill_pb_object(d.pt_data->networks[dist.network_idx], d, pb_network, depth, now_dt, action_period, false, true);
         for (type::idx_t idx : dist.line_idx) {
             pbnavitia::Line* pb_line = pb_disruption->add_lines();
-            navitia::fill_pb_object(d.pt_data->lines[idx], d, pb_line, depth-1, publication_date, action_period);
+            navitia::fill_pb_object(d.pt_data->lines[idx], d, pb_line, depth-1, now_dt, action_period, false, true);
         }
         for (type::idx_t idx : dist.stop_area_idx) {
             pbnavitia::StopArea* pb_stop_area = pb_disruption->add_stop_areas();
-            navitia::fill_pb_object(d.pt_data->stop_areas[idx], d, pb_stop_area, depth-1, publication_date, action_period);
+            navitia::fill_pb_object(d.pt_data->stop_areas[idx], d, pb_stop_area, depth-1, now_dt, action_period, false, true);
         }
     }
     auto pagination = pb_response.mutable_pagination();

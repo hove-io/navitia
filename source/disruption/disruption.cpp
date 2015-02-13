@@ -55,7 +55,6 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
                       const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
-                      const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now){
 
     for(auto idx : network_idx){
@@ -77,7 +76,7 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
         }
         for(auto stop_area_idx : line_list){
             const auto* stop_area = d.pt_data->stop_areas[stop_area_idx];
-            if (stop_area->has_applicable_message(now, action_period)){
+            if (stop_area->has_publishable_message(now)){
                 disrupt& dist = this->disrupts[this->find_or_create(network)];
                 auto find_predicate = [&](type::idx_t idx ) {
                     return stop_area->idx == idx;
@@ -95,12 +94,11 @@ void Disruption::add_stop_areas(const std::vector<type::idx_t>& network_idx,
 
 void Disruption::add_networks(const std::vector<type::idx_t>& network_idx,
                       const type::Data &d,
-                      const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now){
 
     for(auto idx : network_idx){
         const auto* network = d.pt_data->networks[idx];
-        if (network->has_applicable_message(now, action_period)){
+        if (network->has_publishable_message(now)){
             this->disrupts[this->find_or_create(network)];
         }
     }
@@ -109,7 +107,6 @@ void Disruption::add_networks(const std::vector<type::idx_t>& network_idx,
 void Disruption::add_lines(const std::string& filter,
                       const std::vector<std::string>& forbidden_uris,
                       const type::Data &d,
-                      const boost::posix_time::time_period action_period,
                       const boost::posix_time::ptime now){
 
     std::vector<type::idx_t> line_list;
@@ -123,7 +120,7 @@ void Disruption::add_lines(const std::string& filter,
     }
     for(auto idx : line_list){
         const auto* line = d.pt_data->lines[idx];
-        if (line->has_applicable_message(now, action_period)){
+        if (line->has_publishable_message(now)){
             disrupt& dist = this->disrupts[this->find_or_create(line->network)];
             auto find_predicate = [&](type::idx_t idx ) {
                 return line->idx == idx;
@@ -162,14 +159,13 @@ void Disruption::sort_disruptions(const type::Data &d){
 void Disruption::disruptions_list(const std::string& filter,
                         const std::vector<std::string>& forbidden_uris,
                         const type::Data &d,
-                        const boost::posix_time::time_period action_period,
                         const boost::posix_time::ptime now){
 
     std::vector<type::idx_t> network_idx = ptref::make_query(type::Type_e::Network, filter,
                                                                                       forbidden_uris, d);
-    add_networks(network_idx, d, action_period, now);
-    add_lines(filter, forbidden_uris, d, action_period, now);
-    add_stop_areas(network_idx, filter, forbidden_uris, d, action_period, now);
+    add_networks(network_idx, d, now);
+    add_lines(filter, forbidden_uris, d, now);
+    add_stop_areas(network_idx, filter, forbidden_uris, d, now);
     sort_disruptions(d);
 }
 const std::vector<disrupt>& Disruption::get_disrupts() const{

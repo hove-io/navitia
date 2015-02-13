@@ -80,6 +80,25 @@ std::vector<boost::weak_ptr<new_disruption::Impact>> HasMessages::get_applicable
 
 }
 
+std::vector<boost::weak_ptr<new_disruption::Impact>> HasMessages::get_publishable_messages(
+            const boost::posix_time::ptime& current_time) const{
+    std::vector<boost::weak_ptr<new_disruption::Impact>> result;
+
+    //we cleanup the released pointer (not in the loop for code clarity)
+    clean_up_weak_ptr(impacts);
+
+    for (auto impact : this->impacts) {
+        auto impact_acquired = impact.lock();
+        if (! impact_acquired) {
+            continue; //pointer might still have become invalid
+        }
+        if (impact_acquired->disruption->is_publishable(current_time)) {
+            result.push_back(impact);
+        }
+    }
+    return result;
+}
+
 bool HasMessages::has_applicable_message(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
@@ -92,6 +111,22 @@ bool HasMessages::has_applicable_message(
             continue; //pointer might still have become invalid
         }
         if (impact_acquired->is_valid(current_time, action_period)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool HasMessages::has_publishable_message(const boost::posix_time::ptime& current_time) const{
+    //we cleanup the released pointer (not in the loop for code clarity)
+    clean_up_weak_ptr(impacts);
+
+    for (auto impact : this->impacts) {
+        auto impact_acquired = impact.lock();
+        if (! impact_acquired) {
+            continue; //pointer might still have become invalid
+        }
+        if (impact_acquired->disruption->is_publishable(current_time)) {
             return true;
         }
     }
