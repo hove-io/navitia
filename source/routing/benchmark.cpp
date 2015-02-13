@@ -181,7 +181,6 @@ int main(int argc, char** argv){
     Timer t("Calcul avec l'algorithme ");
     //ProfilerStart("bench.prof");
     int nb_reponses = 0;
-    size_t nb_exceptions(0);
     for(auto demand : demands){
         ++show_progress;
         Timer t2;
@@ -194,17 +193,12 @@ int main(int argc, char** argv){
                       << ", " << demand.hour
                       << "\n";
         }
-        Path path;
-        try {
-            auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target], demand.hour, demand.date, DateTimeUtils::set(demand.date + 1, demand.hour),false, true);
+        auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target], demand.hour, demand.date, DateTimeUtils::set(demand.date + 1, demand.hour),false, true);
 
-            if(res.size() > 0) {
-                path = res[0];
-                ++ nb_reponses;
-            }
-        }
-        catch (const navitia::recoverable_exception&) {
-            ++nb_exceptions;
+        Path path;
+        if(res.size() > 0) {
+            path = res[0];
+            ++ nb_reponses;
         }
 
         Result result(path);
@@ -244,7 +238,6 @@ int main(int argc, char** argv){
     }
     out_file.close();
 
-    std::cout << "Number of requests : " << demands.size() << std::endl;
-    std::cout << "Number of results with solution " << nb_reponses << std::endl;
-    std::cout << "Number of recoverable excetions caught " << nb_exceptions << std::endl;
+    std::cout << "Number of requests: " << demands.size() << std::endl;
+    std::cout << "Number of results with solution: " << nb_reponses << std::endl;
 }
