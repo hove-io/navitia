@@ -21,7 +21,8 @@ inline const JppIdx get_boarding_jpp(const size_t countb, const SpIdx current_sp
  * Returns the jpp used to mark the stop point in the label
  *
  * Note: this should not be necessary, since we should be able to recompute this used jpp
- * (by iterating on the jpp of the label.boarding_jpp's journey pattern), but because of service extension we cannot do that
+ * (by iterating on the jpp of the label.boarding_jpp's journey pattern),
+ * but because of service extension we cannot do that
  */
 inline const JppIdx get_used_jpp(const size_t countb, const SpIdx current_sp_idx, const RAPTOR &raptor_) {
     return raptor_.labels[countb].used_jpp(current_sp_idx);

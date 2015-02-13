@@ -81,8 +81,8 @@ get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &depa
 
 //This one is hacky, it's used to retrieve the departures.
 Solutions
-get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
-             const DateTime &dep, bool clockwise, const RAPTOR& raptor, bool disruption_active);
+init_departures(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+             const DateTime &dep, bool clockwise, bool disruption_active);
 
 Solutions
 get_walking_solutions(bool clockwise, const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,

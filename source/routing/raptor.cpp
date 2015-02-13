@@ -90,6 +90,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v, const bool global_pruning,
             best_labels[sp_idx] = workingDt;
             this->b_dest.add_best(v, sp_idx, workingDt, this->count);
             add_vj = true;
+            result = true;
         }
         //If we never marked a vj, we don't want to continue
         //This is usefull when there is a loop
@@ -220,7 +221,7 @@ RAPTOR::compute_all(const vec_stop_point_duration& departures_,
     auto calc_dep = clockwise ? departures_ : destinations;
     auto calc_dest = clockwise ? destinations : departures_;
 
-    auto departures = get_solutions(calc_dep, departure_datetime, clockwise, *this, disruption_active);
+    auto departures = init_departures(calc_dep, departure_datetime, clockwise, disruption_active);
     clear(clockwise, bound);
     init(departures, calc_dest, bound, clockwise);
 
@@ -298,7 +299,7 @@ RAPTOR::compute_nm_all(const std::vector<std::pair<type::EntryPoint, vec_stop_po
         for (const auto& n_stop_point : n_point.second)
             calc_dep.push_back(n_stop_point);
 
-    auto calc_dep_solutions = get_solutions(calc_dep, departure_datetime, clockwise, *this, disruption_active);
+    auto calc_dep_solutions = init_departures(calc_dep, departure_datetime, clockwise, disruption_active);
     clear(clockwise, bound);
     init(calc_dep_solutions, {}, bound, clockwise); // no exit condition (should be improved)
 
@@ -368,7 +369,7 @@ RAPTOR::isochrone(const vec_stop_point_duration &departures_,
                          forbidden,
                          disruption_active,
                          allow_odt);
-    auto departures = get_solutions(departures_, departure_datetime, true, *this, disruption_active);
+    auto departures = init_departures(departures_, departure_datetime, true, disruption_active);
     clear(clockwise, bound);
     init(departures, {}, bound, true);
 

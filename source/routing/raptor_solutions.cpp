@@ -58,8 +58,8 @@ get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &depa
 
 
 Solutions
-get_solutions(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
-              const DateTime &dep, bool clockwise, const RAPTOR& raptor, bool) {
+init_departures(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departs,
+              const DateTime &dep, bool clockwise, bool) {
     Solutions result;
     for(auto dep_dist : departs) {
         Solution d;

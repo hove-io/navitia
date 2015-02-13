@@ -539,10 +539,12 @@ static void add_isochrone_response(RAPTOR& raptor,
                                           navitia::to_posix_time(best_lbl, raptor.data));
             if (show_stop_area)
                 fill_pb_placemark(sp->stop_area,
-                                  raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
+                                  raptor.data, pb_journey->mutable_destination(),
+                                  0, now, action_period, show_codes);
             else
                 fill_pb_placemark(sp,
-                                  raptor.data, pb_journey->mutable_destination(), 0, now, action_period, show_codes);
+                                  raptor.data, pb_journey->mutable_destination(),
+                                  0, now, action_period, show_codes);
         }
     }
 }

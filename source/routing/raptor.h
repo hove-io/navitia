@@ -66,21 +66,21 @@ struct RAPTOR
 
     NextStopTime next_st;
 
-    ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
+    /// Contains the different labels used by raptor.
+    /// Each element of index i in this vector represents the labels with i transfers
     std::vector<Labels> labels;
     ///Contains the best arrival (or departure time) for each stoppoint
     IdxMap<type::StopPoint, DateTime> best_labels;
-    ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
+    /// Contains the best way to reach a destination point
     best_dest b_dest;
-    ///Nombre de correspondances effectuées jusqu'à présent
+    /// Number of transfers done for the moment
     unsigned int count;
-    ///La journey_pattern est elle valide ?
+    /// Are the journey pattern valid
     boost::dynamic_bitset<> valid_journey_patterns;
     dataRAPTOR::JppsFromSp jpps_from_sp;
-    ///Order of the first journey_pattern point of each journey_pattern
+    /// Order of the first journey_pattern point of each journey_pattern
     IdxMap<type::JourneyPattern, int> Q;
 
-    //Constructeur
     explicit RAPTOR(const navitia::type::Data& data) :
         data(data),
         next_st(data),
@@ -195,13 +195,13 @@ struct RAPTOR
                             const bool disruption_active,
                             const RoutingState& state);
 
-    ///Boucle principale
+    ///Main loop
     template<typename Visitor>
     void raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params, bool disruption_active, bool global_pruning = true, uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
 
-    /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint
-    /// Retourne -1 s'il n'existe pas de meilleure solution
+    /// Return the round that has found the best solution for this stop point
+    /// Return -1 if no solution found
     int best_round(SpIdx sp_idx);
 
     ~RAPTOR() {}
