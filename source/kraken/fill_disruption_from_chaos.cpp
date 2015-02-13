@@ -469,6 +469,9 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     bool func_on_vj(nt::VehicleJourney& vj) {
         vj.adapted_validity_pattern = vj.validity_pattern;
         ++ nb_vj_reassigned;
+        for (auto impact : vj.get_impacts()) {
+            apply_impact(impact.lock(), pt_data, meta);
+        }
         return true;
     }
 
@@ -549,93 +552,6 @@ void delete_impact(boost::shared_ptr<nt::new_disruption::Impact>impact,
                     impact.get()->uri << " deleted");
 }
 
-struct get_related_impacts_visitor : public boost::static_visitor<> {
-    const std::string disruption_uri;
-    nt::PT_Data& pt_data;
-    const nt::MetaData& meta;
-    get_related_impacts_visitor(nt::PT_Data& pt_data, const nt::MetaData& meta) :
-         pt_data(pt_data), meta(meta) {}
-
-    void operator()(nt::new_disruption::UnknownPtObj&) {
-    }
-
-    void operator()(const nt::Network* network) {
-        if (network == nullptr) {
-            return;
-        }
-        for (auto impact : network->get_impacts()) {
-            if (!impact.expired()) {
-                apply_impact(impact.lock(), pt_data, meta);
-            }
-        }
-        for (auto line : network->line_list) {
-            for (auto impact : line->get_impacts()) {
-                if (!impact.expired()) {
-                    apply_impact(impact.lock(), pt_data, meta);
-                }
-            }
-            for (auto route : line->route_list) {
-                for (auto impact : route->get_impacts()) {
-                    if (!impact.expired()) {
-                        apply_impact(impact.lock(), pt_data, meta);
-                    }
-                }
-            }
-        }
-    }
-
-    void operator()(const nt::StopArea* ) {
-    }
-    void operator()(nt::new_disruption::LineSection & ls) {
-        this->operator()(ls.line);
-    }
-    void operator()(const nt::Line* line) {
-        if (line == nullptr) {
-            return;
-        }
-        for (auto impact : line->get_impacts()) {
-            if (!impact.expired()) {
-                apply_impact(impact.lock(), pt_data, meta);
-            }
-        }
-        for (auto impact: line->network->get_impacts()) {
-            if (!impact.expired()) {
-                apply_impact(impact.lock(), pt_data, meta);
-            }
-        }
-        for (auto route : line->route_list) {
-            for (auto impact : route->get_impacts()) {
-                if (!impact.expired()) {
-                    apply_impact(impact.lock(), pt_data, meta);
-                }
-            }
-        }
-
-    }
-    void operator()(const nt::Route* route) {
-        if (route == nullptr) {
-            return;
-        }
-        for (auto impact : route->get_impacts()) {
-            if (!impact.expired()) {
-                apply_impact(impact.lock(), pt_data, meta);
-            }
-        }
-
-        for (auto impact : route->line->get_impacts()) {
-            if (!impact.expired()) {
-                apply_impact(impact.lock(), pt_data, meta);
-            }
-        }
-        for (auto impact : route->line->network->get_impacts()) {
-            if (!impact.expired()) {
-                apply_impact(impact.lock(), pt_data, meta);
-            }
-        }
-    }
-};
-
-
 void delete_disruption(const std::string& disruption_id,
                        nt::PT_Data& pt_data,
                        const nt::MetaData& meta) {
@@ -656,11 +572,6 @@ void delete_disruption(const std::string& disruption_id,
             delete_impact(impact, pt_data, meta);
         }
         holder.disruptions.erase(it);
-        //the disruption has ownership over the impacts so all items a deleted in cascade
-        //Now ne need to re-apply all disruptions, other disruptions may disrupt
-        //vehicle journeys impacted by this disruption
-        get_related_impacts_visitor v(pt_data, meta);
-        boost::for_each(informed_entities, boost::apply_visitor(v));
     }
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                     disruption_id << " disruption deleted");
