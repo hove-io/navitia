@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/type.h"
 #include "tests/utils_test.h"
 #include "departure_board_test_data.h"
+#include "routing/raptor.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -431,4 +432,17 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_start_time_period_before, small_cal_fixtur
         BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(hour, 10, 00));
         BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
     }
+}
+
+
+BOOST_FIXTURE_TEST_CASE(test_journey, calendar_fixture) {
+    // some jormungandr test use the calendar_fixture for simple journey computation, so we add a simple test on journey
+    navitia::routing::RAPTOR raptor(*(b.data));
+    navitia::type::PT_Data& d = *b.data->pt_data;
+
+    std::cout << "== " << d.stop_areas_map["stop1"] << std::endl;
+    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 8*60*60, 0, navitia::DateTimeUtils::inf, false, true);
+
+    //we must have a journey
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
