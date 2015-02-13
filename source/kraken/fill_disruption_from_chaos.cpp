@@ -340,6 +340,8 @@ struct functor_add_vj {
             st.vehicle_journey = vj;
             ++ order;
         }
+        // We need to link the newly created vj with this impact
+        vj->add_impact(impact);
     }
 
     bool operator()(nt::DiscreteVehicleJourney& vj_ref) const {
@@ -359,6 +361,8 @@ struct functor_add_vj {
         return true;
     }
 };
+
+
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::new_disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta) : 
@@ -384,6 +388,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
         }
         vj.adapted_validity_pattern = pt_data.get_or_create_validity_pattern(tmp_vp);
+        vj.add_impact(impact);
         return true;
     }
 
@@ -469,8 +474,9 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     bool func_on_vj(nt::VehicleJourney& vj) {
         vj.adapted_validity_pattern = vj.validity_pattern;
         ++ nb_vj_reassigned;
-        for (auto impact : vj.get_impacts()) {
-            apply_impact(impact.lock(), pt_data, meta);
+        vj.remove_impact(impact);
+        for (auto i: vj.get_impacts()) {
+            apply_impact(i.lock(), pt_data, meta);
         }
         return true;
     }
