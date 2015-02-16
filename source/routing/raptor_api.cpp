@@ -517,11 +517,7 @@ static void add_isochrone_response(RAPTOR& raptor,
                 continue;
             }
 
-            const auto sp_and_date = get_final_spidx_and_date(round,
-                    sp_idx, !clockwise, disruption_active, accessibilite_params, raptor);
-            DateTime initial_dt = sp_and_date.second;
-
-            int duration = ::abs(best_lbl - init_dt); //Q: I don't see the point of the get_final_spidx_and_date call
+            int duration = ::abs(best_lbl - init_dt);
 
             if(duration > max_duration) {
                 continue;
@@ -534,7 +530,7 @@ static void add_isochrone_response(RAPTOR& raptor,
             pb_journey->set_departure_date_time(str_departure);
             pb_journey->set_requested_date_time(str_requested);
             pb_journey->set_duration(duration);
-            pb_journey->set_nb_transfers(round); //Q: round there ? if round = 1, there are 0 transfer no ?
+            pb_journey->set_nb_transfers(round - 1);
             bt::time_period action_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
                                           navitia::to_posix_time(best_lbl, raptor.data));
             if (show_stop_area)

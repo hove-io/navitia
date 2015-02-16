@@ -86,7 +86,7 @@ namespace navitia { namespace routing {
             return ;
         }
 
-        void final_step(SpIdx /*current_sp*/, size_t /*count*/, const std::vector<Labels> &/*labels*/) {
+        void final_step(const SpIdx /*current_sp*/, size_t /*count*/, const std::vector<Labels> &/*labels*/) {
             return ;
         }
     };
