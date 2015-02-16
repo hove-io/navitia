@@ -211,6 +211,7 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     BOOST_REQUIRE_EQUAL(line.disruptions_size(), 1);
     auto disruption = line.disruptions(0);
     BOOST_CHECK_EQUAL(disruption.uri(), "mess1");
+    //we are in the publication period of the disruption but the application_period of the impact is in the future
     BOOST_CHECK_EQUAL(disruption.status(), pbnavitia::ActiveStatus::future);
 
     BOOST_REQUIRE_EQUAL(disruption.application_periods_size(), 1);

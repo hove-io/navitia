@@ -62,7 +62,6 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
         }
     }
     return false;
-
 }
 
 bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) const{
@@ -74,7 +73,6 @@ bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) co
         return true;
     }
     return false;
-
 }
 
 void Disruption::add_impact(const boost::shared_ptr<Impact>& impact){
