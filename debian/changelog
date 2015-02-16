@@ -1,3 +1,10 @@
+navitia2 (1.11.1) unstable; urgency=low
+
+  * Kraken: fix segfault in route_schedule if a route has no vehiclejourney  <https://github.com/CanalTP/navitia/pull/888>
+  * Disruption: Fix deletion impact stop area   <https://github.com/CanalTP/navitia/pull/886>
+
+ -- antoine-de <antoine.desbordes@gmail.com> Mon, 16 Feb 2015 11:50:28 +0100
+
 navitia2 (1.11.0) unstable; urgency=low
 
   * Ed: don't import empty connection  <https://github.com/CanalTP/navitia/pull/876>
@@ -30,6 +37,13 @@ navitia2 (1.11.0) unstable; urgency=low
   * Documntation: Time representation in navitia.io documentation  <https://github.com/CanalTP/navitia/pull/843>
 
  -- l-vincent-l <lara.vincent@gmail.com>  Mon, 09 Feb 2015 16:02:19 +0100
+
+navitia2 (1.10.4) unstable; urgency=low
+
+  * Kraken: fix segfault in route_schedule if a route has no vehiclejourney  <https://github.com/CanalTP/navitia/pull/888>
+  * Disruption: Fix deletion impact stop area   <https://github.com/CanalTP/navitia/pull/886>
+
+ -- antoine-de <antoine.desbordes@gmail.com> Mon, 16 Feb 2015 10:02:28 +0100
 
 navitia2 (1.10.3) unstable; urgency=low
 
