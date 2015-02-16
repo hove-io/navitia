@@ -71,6 +71,10 @@ struct dataRAPTOR {
         void load(const navitia::type::PT_Data &data);
         void filter_jpps(const boost::dynamic_bitset<>& valid_jpps);
 
+        inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator
+        begin() const { return jpps_from_sp.begin(); }
+        inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator
+        end() const { return jpps_from_sp.end(); }
     private:
         IdxMap<type::StopPoint, std::vector<Jpp>> jpps_from_sp;
     };
