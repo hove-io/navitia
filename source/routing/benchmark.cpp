@@ -37,6 +37,9 @@ www.navitia.io
 #include <fstream>
 #include "utils/init.h"
 #include "utils/csv.h"
+#ifdef __BENCH_WITH_CALGRIND__
+#include "valgrind/callgrind.h"
+#endif
 
 using namespace navitia;
 using namespace routing;
@@ -181,6 +184,9 @@ int main(int argc, char** argv){
     Timer t("Calcul avec l'algorithme ");
     //ProfilerStart("bench.prof");
     int nb_reponses = 0;
+#ifdef __BENCH_WITH_CALGRIND__
+    CALLGRIND_START_INSTRUMENTATION;
+#endif
     for(auto demand : demands){
         ++show_progress;
         Timer t2;
@@ -206,6 +212,9 @@ int main(int argc, char** argv){
         results.push_back(result);
     }
     //ProfilerStop();
+#ifdef __BENCH_WITH_CALGRIND__
+    CALLGRIND_STOP_INSTRUMENTATION;
+#endif
 
 
     Timer ecriture("Writing results");
@@ -238,6 +247,6 @@ int main(int argc, char** argv){
     }
     out_file.close();
 
-    std::cout << "Number of requests :" << demands.size() << std::endl;
-    std::cout << "Number of results with solution" << nb_reponses << std::endl;
+    std::cout << "Number of requests: " << demands.size() << std::endl;
+    std::cout << "Number of results with solution: " << nb_reponses << std::endl;
 }

@@ -45,26 +45,34 @@ makePathes(const std::vector<std::pair<SpIdx, navitia::time_duration> > &departu
     std::vector<Path> result;
     auto solutions = get_solutions(departures, destinations, !clockwise, accessibilite_params, disruption_active, raptor_);
     for(Solution solution : solutions) {
-        result.push_back(makePath(solution.jpp_idx, solution.count, clockwise, disruption_active, accessibilite_params, raptor_));
+        result.push_back(makePath(solution.sp_idx, solution.count, clockwise, disruption_active, accessibilite_params, raptor_));
     }
 
     return result;
 }
 
+/**
+ * For a given round, return the (stop time, time of departure/arrival) used by raptor
+ * to mark a given stop point
+ */
 std::pair<const type::StopTime*, uint32_t>
 get_current_stidx_gap(size_t count,
-                      JppIdx jpp_idx,
+                      SpIdx sp_idx,
                       const std::vector<Labels>& labels,
                       const type::AccessibiliteParams& accessibilite_params,
                       bool clockwise,
                       const RAPTOR &raptor,
                       bool disruption_active) {
+    const auto jpp_idx = get_used_jpp(count, sp_idx, raptor);
+
     const auto& ls = labels[count];
-    if(ls.pt_is_initialized(jpp_idx)) {
-        const auto& dt_pt = ls.dt_pt(jpp_idx);
+
+    if(ls.pt_is_initialized(sp_idx)) {
+        const auto& dt_pt = ls.dt_pt(sp_idx);
         const auto date = DateTimeUtils::date(dt_pt);
         const auto hour = DateTimeUtils::hour(dt_pt);
         const type::JourneyPatternPoint* jpp = raptor.get_jpp(jpp_idx);
+
         for (const auto& vj : jpp->journey_pattern->discrete_vehicle_journey_list) {
             const type::StopTime& st = vj->stop_time_list[jpp->order];
             auto st_hour = clockwise ? st.arrival_time : st.departure_time;
@@ -125,14 +133,14 @@ get_current_stidx_gap(size_t count,
 }
 
 Path
-makePath(JppIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
+makePath(SpIdx destination_idx, size_t countb, bool clockwise, bool disruption_active,
          const type::AccessibiliteParams & accessibilite_params,
          const RAPTOR &raptor_) {
     struct Visitor: public BasePathVisitor {
         Path result;
-        void connection(type::StopPoint* departure, type::StopPoint* destination,
+        void connection(const type::StopPoint* departure, const type::StopPoint* destination,
                     boost::posix_time::ptime dep_time, boost::posix_time::ptime arr_time,
-                    type::StopPointConnection* stop_point_connection) {
+                    const type::StopPointConnection* stop_point_connection) {
             PathItem item(dep_time, arr_time);
             item.stop_points.push_back(departure);
             item.stop_points.push_back(destination);
@@ -284,14 +292,5 @@ void patch_datetimes(Path &path){
         path.items.erase(path.items.begin() + pos_value);
     }
 }
-
-
-Path
-makePathreverse(JppIdx destination_idx, unsigned int countb,
-                const type::AccessibiliteParams & accessibilite_params,
-                const RAPTOR &raptor_, bool disruption_active) {
-    return makePath(destination_idx, countb, disruption_active, false, accessibilite_params, raptor_);
-}
-
 
 }}

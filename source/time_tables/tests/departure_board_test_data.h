@@ -84,9 +84,8 @@ struct calendar_fixture {
         b.data->pt_data->meta_vj["all"]->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
 
         b.data->build_uri();
-        b.data->pt_data->index();
+        b.data->complete();
         b.data->build_raptor();
         b.data->geo_ref->init();
-        b.data->complete();
     }
 };
