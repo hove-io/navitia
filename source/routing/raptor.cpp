@@ -131,6 +131,7 @@ bool RAPTOR::foot_path(const Visitor& v) {
             working_labels.mut_dt_transfer(destination_sp_idx) = next;
 
             best_labels_transfers[destination_sp_idx] = next;
+            result = true;
         }
     }
 
@@ -141,7 +142,6 @@ bool RAPTOR::foot_path(const Visitor& v) {
         for (const auto& jpp: sp_jpps.second) {
             if (v.comp(jpp.order, Q[jpp.jp_idx])) {
                 Q[jpp.jp_idx] = jpp.order;
-                result = true;
             }
         }
     }
