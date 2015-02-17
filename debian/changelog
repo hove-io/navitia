@@ -1,3 +1,9 @@
+navitia2 (1.10.5) unstable; urgency=low
+
+  * Kraken: fix segfault in route_schedule if a route has no vehiclejourney <https://github.com/CanalTP/navitia/pull/888> 
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Mon, 17 Feb 2015 10:02:28 +0100
+
 navitia2 (1.10.4) unstable; urgency=low
 
   * Kraken: fix segfault in route_schedule if a route has no vehiclejourney <https://github.com/CanalTP/navitia/pull/888> 
